@@ -17,7 +17,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.11"
-qtpyvcp = "^0.3.19"
+#qtpyvcp = "^4.0.85"
 
 
 [tool.poetry.scripts]

@@ -1,15 +1,13 @@
 import datetime
 import threading
 import time
-from enum import Enum, auto
-from abc import ABC, abstractmethod
 from collections import deque
+from enum import Enum, auto
 
 import linuxcnc
 from qtpyvcp.actions.machine_actions import issue_mdi, jog, mode
 from qtpyvcp.plugins.status import STAT
 
-from teachinlathe.feed_helper import getTaperTurningCommand, getStraightTurningCommand
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 
 CMD = linuxcnc.command()
@@ -26,6 +24,12 @@ class JoystickDirection(Enum):
     X_MINUS = auto()
     Z_PLUS = auto()
     Z_MINUS = auto()
+
+
+class JoggedAxis(Enum):
+    NONE = auto()
+    X = auto()
+    Z = auto()
 
 
 class JoystickFunction(Enum):
@@ -52,17 +56,6 @@ class FeedMode(Enum):
 
 def isSpindleOn():
     return STAT.spindle[0]['direction'] != 0
-
-
-class Event(Enum):
-    JOYSTICK_TO_NEUTRAL_SP_OFF = auto()
-    JOYSTICK_TO_NEUTRAL_SP_ON = auto()
-    JOYSTICK_TO_FEED_SP_ON = auto()
-    JOYSTICK_TO_FEED_SP_OFF = auto()
-    JOYSTICK_TO_JOG_SP_ON = auto()
-    JOYSTICK_TO_JOG_SP_OFF = auto()
-    FEED_DELAY_EXPIRED = auto()
-    FEED_DELAY_CANCELED = auto()
 
 
 class UserMessage(Enum):
@@ -98,7 +91,6 @@ class MessageStack:
 class ManualLathe:
     _instance = None
     latheComponent = TeachInLatheComponent()
-    manualTurningStateMachine = None
     messageStack = MessageStack()
     spindleRpm = 300
     spindleCss = 200
@@ -110,6 +102,7 @@ class ManualLathe:
     spindleLever = SpindleLever.NONE
     joystickDirection = JoystickDirection.NONE
     isJoystickRapid = False
+    joggedAxis = JoggedAxis.NONE
     spindleMode = SpindleMode.Rpm
     feedMode = FeedMode.PerRev
     startFeedingTimer = None
@@ -117,123 +110,6 @@ class ManualLathe:
     joystickResetRequired = None
     isTaperTurning = False
     feedTaperAngle = 0
-
-    class MachineState(ABC):
-        @abstractmethod
-        def on_entered(self, machine):
-            pass
-
-    class IdleState(MachineState):
-        def on_entered(self, machine):
-            print("ManualLathe.IdleState entered")
-            ManualLathe.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
-            ManualLathe.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = False
-
-    class SpindleOnReadyToFeed(MachineState):
-        def on_entered(self, machine):
-            print("ManualLathe.SpindleOnReadyToFeed entered")
-            if not isSpindleOn():
-                ManualLathe.handleSpindleSwitch(ManualLathe._instance)
-            # ManualLathe.messageStack.pop(UserMessage.CANNOT_FEED_WITH_SPINDLE_OFF)
-
-    class PreFeedDelay(MachineState):
-        def on_entered(self, machine):
-            print_with_timestamp("PreFeedDelay entered")
-            if ManualLathe.startFeedingTimer is not None:
-                ManualLathe.startFeedingTimer.cancel()
-            ManualLathe.startFeedingTimer = threading.Timer(0.2, self.startFeeding)  # Delay for 200ms
-            ManualLathe.startFeedingTimer.start()
-
-        def startFeeding(self):
-            print_with_timestamp("PreFeedDelay finished")
-            ManualLathe.startFeedingTimer = None
-            ManualLathe._instance.manualTurningStateMachine.handle_event(Event.FEED_DELAY_EXPIRED)
-
-    class Feeding(MachineState):
-        def on_entered(self, machine):
-            print_with_timestamp("Feeding entered")
-            if ManualLathe.isTaperTurning:
-                cmd = getTaperTurningCommand(self, ManualLathe.joystickDirection, ManualLathe.feedTaperAngle)
-            else:
-                cmd = getStraightTurningCommand(self, ManualLathe.joystickDirection)
-
-            if ManualLathe.feedMode == FeedMode.PerRev:
-                cmd += f" F{ManualLathe.feedPerRev}"
-            else:
-                cmd += f" F{ManualLathe.feedPerMin}"
-
-            issue_mdi(cmd)
-            ManualLathe.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
-
-    class CannotFeedWithSpindleOff(MachineState):
-        def on_entered(self, machine):
-            print("CannotFeedWithSpindleOff entered")
-            ManualLathe.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = False
-            ManualLathe.messageStack.push(UserMessage.CANNOT_FEED_WITH_SPINDLE_OFF)
-
-    class JoystickResetRequired(MachineState):
-        def on_entered(self, machine):
-            print("JoystickResetRequired entered")
-            ManualLathe.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = False
-            ManualLathe.messageStack.push(UserMessage.JOYSTICK_RESET_REQUIRED)
-
-    class Jogging(MachineState):
-        def on_entered(self, machine):
-            print("Jogging entered")
-
-    class ManualTurningStateMachine:
-        def __init__(self):
-            self.previous_state = None
-            self.current_state = ManualLathe.IdleState()
-            self.transition_map = {
-                # joystick is neutral and spindle was turned on
-                (ManualLathe.IdleState, Event.JOYSTICK_TO_NEUTRAL_SP_ON): ManualLathe.SpindleOnReadyToFeed,
-                # the joystick is moved to feeding position, but the spindle is off
-                (ManualLathe.IdleState, Event.JOYSTICK_TO_FEED_SP_OFF): ManualLathe.CannotFeedWithSpindleOff,
-                # joystick is neutral and spindle was turned off
-                (ManualLathe.SpindleOnReadyToFeed, Event.JOYSTICK_TO_NEUTRAL_SP_OFF): ManualLathe.IdleState,
-                # spindle is on, and the joystick is moved into feeding position
-                (ManualLathe.SpindleOnReadyToFeed, Event.JOYSTICK_TO_FEED_SP_ON): ManualLathe.PreFeedDelay,
-                # before starting the feed there is a delay of 200ms, in case the initial intention was jogging
-                (ManualLathe.PreFeedDelay, Event.FEED_DELAY_EXPIRED): ManualLathe.Feeding,
-                # spindle is on, the joystick was in feeding position, but it was moved to neutral,
-                (ManualLathe.Feeding, Event.JOYSTICK_TO_NEUTRAL_SP_ON): ManualLathe.SpindleOnReadyToFeed,
-                # spindle was turned off while the joystick has remained in feeding position
-                (ManualLathe.Feeding, Event.JOYSTICK_TO_FEED_SP_OFF): ManualLathe.JoystickResetRequired,
-                # spindle is on, it was feeding, but now the joystick is moved to jog
-                (ManualLathe.Feeding, Event.JOYSTICK_TO_JOG_SP_ON): ManualLathe.Jogging,
-                # the spindle was turned off, the joystick remained in feeding position, and the spindle is turned on again
-                (ManualLathe.CannotFeedWithSpindleOff, Event.JOYSTICK_TO_FEED_SP_ON): ManualLathe.JoystickResetRequired,
-                # jog position is always after the feed position, in fact jog position is the same as feed position + the rapid switch
-                # if the joystick is already in feed position, do the jog even if for the feed was needed a reset
-                (ManualLathe.CannotFeedWithSpindleOff, Event.JOYSTICK_TO_JOG_SP_ON): ManualLathe.Jogging,
-                # if the spindle is off and the joystick is moved to jog (which is passing through feed) do the jog
-                (ManualLathe.CannotFeedWithSpindleOff, Event.JOYSTICK_TO_JOG_SP_OFF): ManualLathe.Jogging,
-                # if the joystick remained in a feed position while the spindle was turned off, bringing the joystick to neutral, will trigger the ManualLathe.IdleState
-                (ManualLathe.CannotFeedWithSpindleOff, Event.JOYSTICK_TO_NEUTRAL_SP_OFF): ManualLathe.IdleState,
-                # if the joystick has remained in feeding position when the spindle has started, bringing the joystick to neutral,
-                # will bring the machine again into ManualLathe.ReadyToFeed
-                (ManualLathe.JoystickResetRequired, Event.JOYSTICK_TO_NEUTRAL_SP_ON): ManualLathe.SpindleOnReadyToFeed,
-                # if the joystick has remained in feeding position when the spindle was stopped started, bringing the joystick to neutral,
-                # will move the machine into ManualLathe.IdleState
-                (ManualLathe.JoystickResetRequired, Event.JOYSTICK_TO_NEUTRAL_SP_OFF): ManualLathe.IdleState,
-                # after finishing a jog, the first rest position of the joystick will be the feeding position,
-                # so before any eventual feeding, it needs to be reset
-                (ManualLathe.Jogging, Event.JOYSTICK_TO_FEED_SP_ON): ManualLathe.JoystickResetRequired,
-                (ManualLathe.Jogging, Event.JOYSTICK_TO_FEED_SP_OFF): ManualLathe.JoystickResetRequired,
-                (ManualLathe.Jogging, Event.JOYSTICK_TO_JOG_SP_OFF): ManualLathe.Jogging,  # this is the same state, it should be commented out
-            }
-
-        def handle_event(self, event):
-            print("CurrentState: ", self.current_state, " Event: ", event)
-            next_state_class = self.transition_map.get((type(self.current_state), event))
-            if next_state_class:
-                self.transition_to(next_state_class())
-
-        def transition_to(self, new_state):
-            self.previous_state = self.current_state
-            self.current_state = new_state
-            self.current_state.on_entered(self)
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -253,8 +129,6 @@ class ManualLathe:
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickZMinus, instance.onJoystickZMinus)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickZPlus, instance.onJoystickZPlus)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickRapid, instance.onJoystickRapid)
-
-        instance.manualTurningStateMachine = ManualLathe.ManualTurningStateMachine()
 
     def onSpindleModeChanged(self, value=0):
         self.spindleMode = SpindleMode(value)
@@ -284,38 +158,38 @@ class ManualLathe:
 
     def onSpindleSwitchRev(self, value=False):
         self.spindleLever = SpindleLever.REV if value else SpindleLever.NONE
-        self.evaluateJoystickAndSpindle()
+        self.handleSpindleSwitch()
 
     def onSpindleSwitchFwd(self, value=False):
         self.spindleLever = SpindleLever.FWD if value else SpindleLever.NONE
-        self.evaluateJoystickAndSpindle()
+        self.handleSpindleSwitch()
 
     def onJoystickXPlus(self, value=False):
         self.joystickDirection = JoystickDirection.X_PLUS if value else JoystickDirection.NONE
-        self.evaluateJoystickAndSpindle()
+        self.handleJoystick()
 
     def onJoystickXMinus(self, value=False):
         self.joystickDirection = JoystickDirection.X_MINUS if value else JoystickDirection.NONE
-        self.evaluateJoystickAndSpindle()
+        self.handleJoystick()
 
     def onJoystickZPlus(self, value=False):
         self.joystickDirection = JoystickDirection.Z_PLUS if value else JoystickDirection.NONE
-        self.evaluateJoystickAndSpindle()
+        self.handleJoystick()
 
     def onJoystickZMinus(self, value=False):
         self.joystickDirection = JoystickDirection.Z_MINUS if value else JoystickDirection.NONE
-        self.evaluateJoystickAndSpindle()
+        self.handleJoystick()
 
     def onJoystickRapid(self, value=False):
         self.isJoystickRapid = value
-        self.evaluateJoystickAndSpindle()
+        self.handleJoystick()
 
     def handleSpindleSwitch(self):
         match self.spindleLever:
             case SpindleLever.REV:
-                cmd = 'M3'
-            case SpindleLever.FWD:
                 cmd = 'M4'
+            case SpindleLever.FWD:
+                cmd = 'M3'
             case _:
                 cmd = None
 
@@ -333,41 +207,34 @@ class ManualLathe:
         print(cmd)
         if cmd is not None and STAT.task_mode is not linuxcnc.MODE_MDI:
             issue_mdi(cmd)
+            mode.manual()
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
         else:
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
 
-    def evaluateJoystickAndSpindle(self):
-        event = None
-        # print("evaluateJoystickAndSpindle:", self.joystickDirection, self.spindleLever)
-        match self.spindleLever:
-            case SpindleLever.REV | SpindleLever.FWD:
-                match self.joystickDirection:
-                    case JoystickDirection.X_PLUS | JoystickDirection.X_MINUS | JoystickDirection.Z_PLUS | JoystickDirection.Z_MINUS:
-                        if self.isJoystickRapid:
-                            event = Event.JOYSTICK_TO_JOG_SP_ON
-                        else:
-                            event = Event.JOYSTICK_TO_FEED_SP_ON
-                    case JoystickDirection.NONE:
-                        if self.isJoystickRapid:
-                            event = Event.JOYSTICK_TO_JOG_SP_ON
-                        else:
-                            event = Event.JOYSTICK_TO_NEUTRAL_SP_ON
-            case SpindleLever.NONE:
-                match self.joystickDirection:
-                    case JoystickDirection.X_PLUS | JoystickDirection.X_MINUS | JoystickDirection.Z_PLUS | JoystickDirection.Z_MINUS:
-                        if self.isJoystickRapid:
-                            event = Event.JOYSTICK_TO_JOG_SP_OFF
-                        else:
-                            event = Event.JOYSTICK_TO_FEED_SP_OFF
-                    case JoystickDirection.NONE:
-                        if self.isJoystickRapid:
-                            event = Event.JOYSTICK_TO_JOG_SP_OFF
-                        else:
-                            event = Event.JOYSTICK_TO_NEUTRAL_SP_OFF
+    def handleJoystick(self):
+        if self.joystickDirection == JoystickDirection.NONE:
+            self.handleJoystickNeutral()
+        elif self.joystickDirection is not JoystickDirection.NONE and self.isJoystickRapid:
+            self.startJogging()
+            self.joystickResetRequired = True
+        elif self.joystickFunction == JoystickFunction.JOGGING:
+            self.stopJogging()
+            self.joystickResetRequired = True
 
-        if event is not None:
-            self.manualTurningStateMachine.handle_event(event)
+        if self.spindleLever is not SpindleLever.NONE:
+            if self.joystickResetRequired:
+                print("Joystick is not in the neutral state")
+            else:
+                self.delayedFeed()
+        else:
+            match self.joystickFunction:
+                case JoystickFunction.FEEDING:
+                    self.stopFeeding()
+                case JoystickFunction.JOGGING:
+                    print("")
+                case JoystickFunction.NONE:
+                    print("feed attempted while spindle is off")
 
     def delayedFeed(self):
         if self.startFeedingTimer is not None:
@@ -377,30 +244,31 @@ class ManualLathe:
 
     def startFeeding(self):
         print("startFeeding")
-        if self.isTaperTurning:
-            cmd = getTaperTurningCommand(self, self.joystickDirection, self.feedTaperAngle)
-        else:
-            cmd = getStraightTurningCommand(self, self.joystickDirection)
+        # if self.isTaperTurning:
+        #     cmd = getTaperTurningCommand(self, self.joystickDirection, self.feedTaperAngle)
+        # else:
+        #     cmd = getStraightTurningCommand(self, self.joystickDirection)
 
+        cmd = self.getStraightTurningCommand()
         self.joystickFunction = JoystickFunction.FEEDING
-        if self.feedMode == FeedMode.PerRev:
-            cmd += f" F{self.feedPerRev}"
-        else:
-            cmd += f" F{self.feedPerMin}"
-
+        mode.mdi()
         issue_mdi(cmd)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
 
     def handleJoystickNeutral(self):
         print("handleJoystickNeutral")
         self.startFeedingTimer.cancel()
-        if self.joystickFunction == JoystickFunction.FEEDING:
-            self.stopFeeding()
-        elif self.joystickFunction == JoystickFunction.JOGGING:
-            self.stopJogging()
-        else:
-            print("Joystick neutral")
-            # remove message: cannot feed with spindle off
+
+        match self.joystickFunction:
+            case JoystickFunction.FEEDING:
+                self.stopFeeding()
+            case JoystickFunction.JOGGING:
+                self.stopJogging()
+            case JoystickFunction.NONE:
+                print("Joystick neutral")
+                self.joggedAxis = JoggedAxis.NONE
+                # remove message: cannot feed with spindle off
+
         if self.joystickResetRequired:
             self.joystickResetRequired = False
             # remove message: joystick reset required
@@ -414,34 +282,54 @@ class ManualLathe:
             return True
         return False
 
-    def startJogging(self, joystickDirection=None):
+    def startJogging(self):
         if self.stopFeeding():
             time.sleep(0.1)  # Wait 100ms for the feed to stop before we start jogging
 
         if self.joystickDirection is not None:
-            print("jogDirection: ", joystickDirection)
+            print("jogDirection: ", self.joystickDirection)
             self.joystickFunction = JoystickFunction.JOGGING
-            jogSpeed = 3000  # use the real value
+            jogSpeed = 1000  # use the real value
             mode.manual()
-            match joystickDirection:
+            match self.joystickDirection:
                 case JoystickDirection.X_PLUS:
                     jog.axis('X', 1, speed=jogSpeed)
+                    self.joggedAxis = JoggedAxis.X
                 case JoystickDirection.X_MINUS:
                     jog.axis('X', -1, speed=jogSpeed)
+                    self.joggedAxis = JoggedAxis.X
                 case JoystickDirection.Z_PLUS:
                     jog.axis('Z', 1, speed=jogSpeed)
+                    self.joggedAxis = JoggedAxis.Z
                 case JoystickDirection.Z_MINUS:
                     jog.axis('Z', -1, speed=jogSpeed)
+                    self.joggedAxis = JoggedAxis.Z
 
-    def stopJogging(self, joystickDirection=None):
+    def stopJogging(self):
         if self.joystickFunction == JoystickFunction.JOGGING:
             print("stopJogging")
             mode.manual()
-            match joystickDirection:
-                case JoystickDirection.X_PLUS | JoystickDirection.X_MINUS:
+            match self.joggedAxis:
+                case JoggedAxis.X:
                     jog.axis('X')
-                case JoystickDirection.Z_PLUS | JoystickDirection.Z_MINUS:
+                case JoggedAxis.Z:
                     jog.axis('Z')
             self.joystickFunction = None
 
-    # ---------------- Internal class
+    def getStraightTurningCommand(self):
+        # TODO use the actual limits from the machine
+        xMinLimit = 10
+        xMaxLimit = 280
+        zMinLimit = 10
+        zMaxLimit = 500
+
+        if self.joystickDirection == JoystickDirection.X_PLUS:
+            return 'G53 G1 X%f' % xMaxLimit
+        elif self.joystickDirection == JoystickDirection.X_MINUS:
+            return 'G53 G1 X%f' % xMinLimit
+        elif self.joystickDirection == JoystickDirection.Z_PLUS:
+            return 'G53 G1 Z%f' % zMaxLimit
+        elif self.joystickDirection == JoystickDirection.Z_MINUS:
+            return 'G53 G1 Z%f' % zMinLimit
+        else:
+            return ""
