@@ -1,0 +1,40 @@
+[build-system]
+requires = ["poetry-core", "versioneer[toml]"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "teachinlathe"
+authors = [
+  "Vasi Mihalca <vasimihalca@gmail.com>"
+]
+description = "TeachInLathe - A LinuxCNC controller for TeachIn Lathes"
+readme = "README.md"
+version = "0.0.1"
+
+packages = [
+    { include = "teachinlathe", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+qtpyvcp = "^0.3.19"
+
+
+[tool.poetry.scripts]
+teachinlathe = "teachinlathe:main"
+
+[tool.poetry.plugins]
+
+[tool.poetry.plugins."qtpyvcp.vcp"]
+teachinlathe = "teachinlathe"
+
+[tool.poetry.plugins."qtpyvcp.widgets"]
+teachin_lathe_widgets = "teachinlathe.widgets"
+
+[tool.versioneer]
+VCS = "git"
+style = "pep440"
+versionfile_source = "src/teachinlathe/_version.py"
+versionfile_build = "teachinlathe/_version.py"
+tag_prefix = ""
+parentdir_prefix = ""

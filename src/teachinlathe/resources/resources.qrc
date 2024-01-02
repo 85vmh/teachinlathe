@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="newPrefix">
+    <file>joystick_center.png</file>
+  </qresource>
+</RCC>
