@@ -262,7 +262,9 @@ class ManualLathe:
         # mode.mdi()
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
         LINUXCNC_CMD.wait_complete()
+        print("mdi command: ", cmd)
         LINUXCNC_CMD.mdi(cmd)
+        LINUXCNC_CMD.wait_complete()
         # issue_mdi(cmd)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
 
