@@ -222,6 +222,7 @@ class ManualLathe:
             self.handleJoystickNeutral()
             return
         elif self.joystickDirection is not JoystickDirection.NONE and self.isJoystickRapid:
+            print("joystick not none, rapid on")
             self.startJogging()
             self.joystickResetRequired = True
         elif self.joystickFunction == JoystickFunction.JOGGING:
@@ -260,14 +261,13 @@ class ManualLathe:
 
         cmd = self.getStraightTurningCommand()
         self.joystickFunction = JoystickFunction.FEEDING
-        # mode.mdi()
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
         LINUXCNC_CMD.wait_complete()
         print("execute mdi command: ", cmd)
         LINUXCNC_CMD.mdi(cmd)
+        print("mdi command sent: ", cmd)
         LINUXCNC_CMD.wait_complete()
         print("mdi command wait complete: ", cmd)
-        # issue_mdi(cmd)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
 
     def handleJoystickNeutral(self):
@@ -310,9 +310,12 @@ class ManualLathe:
             self.joystickFunction = JoystickFunction.JOGGING
             jogSpeed = 500  # use the real value
 
+            print("task mode: ", STAT.task_mode)
+
             if STAT.task_mode is not linuxcnc.MODE_MANUAL:
                 LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
                 LINUXCNC_CMD.wait_complete()
+                print("task mode changed: ", STAT.task_mode)
 
             match self.joystickDirection:
                 case JoystickDirection.X_PLUS:
