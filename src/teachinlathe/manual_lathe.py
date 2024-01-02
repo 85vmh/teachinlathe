@@ -303,15 +303,17 @@ class ManualLathe:
 
     def startJogging(self):
         if self.stopFeeding():
-            time.sleep(0.1)  # Wait 100ms for the feed to stop before we start jogging
+            time.sleep(0.2)  # Wait 100ms for the feed to stop before we start jogging
 
         if self.joystickDirection is not None:
             print("jogDirection: ", self.joystickDirection)
             self.joystickFunction = JoystickFunction.JOGGING
             jogSpeed = 500  # use the real value
-            # mode.manual()
-            # LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
-            # LINUXCNC_CMD.wait_complete()
+
+            if STAT.task_mode is not linuxcnc.MODE_MANUAL:
+                LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+                LINUXCNC_CMD.wait_complete()
+
             match self.joystickDirection:
                 case JoystickDirection.X_PLUS:
                     jog.axis('X', 1, speed=jogSpeed)
@@ -329,9 +331,11 @@ class ManualLathe:
     def stopJogging(self):
         if self.joystickFunction == JoystickFunction.JOGGING:
             print("stopJogging")
-            #mode.manual()
-            # LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
-            # LINUXCNC_CMD.wait_complete()
+
+            if STAT.task_mode is not linuxcnc.MODE_MANUAL:
+                LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+                LINUXCNC_CMD.wait_complete()
+
             match self.joggedAxis:
                 case JoggedAxis.X:
                     jog.axis('X')
