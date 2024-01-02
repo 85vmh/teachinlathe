@@ -247,11 +247,12 @@ class ManualLathe:
         if self.startFeedingTimer is not None:
             self.startFeedingTimer.cancel()
 
-        self.startFeedingTimer = threading.Timer(0.2, self.startFeeding)  # Delay for 200ms
+        self.startFeedingTimer = threading.Timer(2, self.startFeeding)  # Delay for 200ms
         self.startFeedingTimer.start()
 
     def startFeeding(self):
         print("startFeeding")
+        self.startFeedingTimer = None
         # if self.isTaperTurning:
         #     cmd = getTaperTurningCommand(self, self.joystickDirection, self.feedTaperAngle)
         # else:
@@ -262,15 +263,17 @@ class ManualLathe:
         # mode.mdi()
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
         LINUXCNC_CMD.wait_complete()
-        print("mdi command: ", cmd)
+        print("execute mdi command: ", cmd)
         LINUXCNC_CMD.mdi(cmd)
         LINUXCNC_CMD.wait_complete()
+        print("mdi command wait complete: ", cmd)
         # issue_mdi(cmd)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
 
     def handleJoystickNeutral(self):
         print("handleJoystickNeutral")
         if self.startFeedingTimer is not None:
+
             self.startFeedingTimer.cancel()
 
         match self.joystickFunction:
@@ -289,6 +292,7 @@ class ManualLathe:
 
     def stopFeeding(self):
         if self.startFeedingTimer is not None:
+            print("timer was on, canceling")
             self.startFeedingTimer.cancel()
 
         if self.joystickFunction == JoystickFunction.FEEDING:
@@ -305,10 +309,10 @@ class ManualLathe:
         if self.joystickDirection is not None:
             print("jogDirection: ", self.joystickDirection)
             self.joystickFunction = JoystickFunction.JOGGING
-            jogSpeed = 1000  # use the real value
+            jogSpeed = 500  # use the real value
             # mode.manual()
-            LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
-            LINUXCNC_CMD.wait_complete()
+            # LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+            # LINUXCNC_CMD.wait_complete()
             match self.joystickDirection:
                 case JoystickDirection.X_PLUS:
                     jog.axis('X', 1, speed=jogSpeed)
