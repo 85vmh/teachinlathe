@@ -10,7 +10,7 @@ from qtpyvcp.plugins.status import STAT
 
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 
-CMD = linuxcnc.command()
+LINUXCNC_CMD = linuxcnc.command()
 
 
 def print_with_timestamp(message):
@@ -206,8 +206,13 @@ class ManualLathe:
 
         print(cmd)
         if cmd is not None and STAT.task_mode is not linuxcnc.MODE_MDI:
-            issue_mdi(cmd)
-            mode.manual()
+            # issue_mdi(cmd)
+            # mode.manual()
+            LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
+            LINUXCNC_CMD.wait_complete()
+            LINUXCNC_CMD.mdi(cmd)
+            LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+            LINUXCNC_CMD.wait_complete()
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
         else:
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
@@ -254,8 +259,11 @@ class ManualLathe:
 
         cmd = self.getStraightTurningCommand()
         self.joystickFunction = JoystickFunction.FEEDING
-        mode.mdi()
-        issue_mdi(cmd)
+        # mode.mdi()
+        LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
+        LINUXCNC_CMD.wait_complete()
+        LINUXCNC_CMD.mdi(cmd)
+        # issue_mdi(cmd)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
 
     def handleJoystickNeutral(self):
@@ -296,7 +304,9 @@ class ManualLathe:
             print("jogDirection: ", self.joystickDirection)
             self.joystickFunction = JoystickFunction.JOGGING
             jogSpeed = 1000  # use the real value
-            mode.manual()
+            # mode.manual()
+            LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+            LINUXCNC_CMD.wait_complete()
             match self.joystickDirection:
                 case JoystickDirection.X_PLUS:
                     jog.axis('X', 1, speed=jogSpeed)
@@ -314,7 +324,9 @@ class ManualLathe:
     def stopJogging(self):
         if self.joystickFunction == JoystickFunction.JOGGING:
             print("stopJogging")
-            mode.manual()
+            #mode.manual()
+            LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+            LINUXCNC_CMD.wait_complete()
             match self.joggedAxis:
                 case JoggedAxis.X:
                     jog.axis('X')
