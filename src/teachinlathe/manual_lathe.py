@@ -215,6 +215,7 @@ class ManualLathe:
     def handleJoystick(self):
         if self.joystickDirection == JoystickDirection.NONE:
             self.handleJoystickNeutral()
+            return
         elif self.joystickDirection is not JoystickDirection.NONE and self.isJoystickRapid:
             self.startJogging()
             self.joystickResetRequired = True
@@ -237,8 +238,10 @@ class ManualLathe:
                     print("feed attempted while spindle is off")
 
     def delayedFeed(self):
+        print("delayedFeed")
         if self.startFeedingTimer is not None:
             self.startFeedingTimer.cancel()
+
         self.startFeedingTimer = threading.Timer(0.2, self.startFeeding)  # Delay for 200ms
         self.startFeedingTimer.start()
 
@@ -257,7 +260,8 @@ class ManualLathe:
 
     def handleJoystickNeutral(self):
         print("handleJoystickNeutral")
-        self.startFeedingTimer.cancel()
+        if self.startFeedingTimer is not None:
+            self.startFeedingTimer.cancel()
 
         match self.joystickFunction:
             case JoystickFunction.FEEDING:
@@ -274,7 +278,9 @@ class ManualLathe:
             # remove message: joystick reset required
 
     def stopFeeding(self):
-        self.startFeedingTimer.cancel()
+        if self.startFeedingTimer is not None:
+            self.startFeedingTimer.cancel()
+
         if self.joystickFunction == JoystickFunction.FEEDING:
             print("stopFeeding")
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = False
