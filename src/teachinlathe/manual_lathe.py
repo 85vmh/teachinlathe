@@ -310,6 +310,10 @@ class ManualLathe:
             self.joystickFunction = JoystickFunction.JOGGING
             jogSpeed = 500  # use the real value
 
+            print("MODE_MANUAL: ", linuxcnc.MODE_MANUAL)
+            print("MODE_MDI: ", linuxcnc.MODE_MDI)
+            print("MODE_AUTO: ", linuxcnc.MODE_AUTO)
+
             print("task mode: ", STAT.task_mode)
 
             if STAT.task_mode is not linuxcnc.MODE_MANUAL:
