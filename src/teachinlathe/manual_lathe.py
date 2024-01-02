@@ -310,15 +310,16 @@ class ManualLathe:
             self.joystickFunction = JoystickFunction.JOGGING
             jogSpeed = 500  # use the real value
 
-            print("MODE_MANUAL: ", linuxcnc.MODE_MANUAL)
-            print("MODE_MDI: ", linuxcnc.MODE_MDI)
-            print("MODE_AUTO: ", linuxcnc.MODE_AUTO)
+            # MANUAL 1, MDI 3
 
-            print("task mode: ", STAT.task_mode)
+            STAT.poll()
+            current_state = STAT.state
+            print("task mode: ", current_state)
 
-            if STAT.task_mode is not linuxcnc.MODE_MANUAL:
+            if current_state is not linuxcnc.MODE_MANUAL:
                 LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
                 LINUXCNC_CMD.wait_complete()
+                STAT.poll()
                 print("task mode changed: ", STAT.task_mode)
 
             match self.joystickDirection:
