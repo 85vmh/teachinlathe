@@ -247,7 +247,7 @@ class ManualLathe:
         if self.startFeedingTimer is not None:
             self.startFeedingTimer.cancel()
 
-        self.startFeedingTimer = threading.Timer(2, self.startFeeding)  # Delay for 200ms
+        self.startFeedingTimer = threading.Timer(0.2, self.startFeeding)  # Delay for 200ms
         self.startFeedingTimer.start()
 
     def startFeeding(self):
@@ -273,7 +273,6 @@ class ManualLathe:
     def handleJoystickNeutral(self):
         print("handleJoystickNeutral")
         if self.startFeedingTimer is not None:
-
             self.startFeedingTimer.cancel()
 
         match self.joystickFunction:
@@ -331,8 +330,8 @@ class ManualLathe:
         if self.joystickFunction == JoystickFunction.JOGGING:
             print("stopJogging")
             #mode.manual()
-            LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
-            LINUXCNC_CMD.wait_complete()
+            # LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+            # LINUXCNC_CMD.wait_complete()
             match self.joggedAxis:
                 case JoggedAxis.X:
                     jog.axis('X')
