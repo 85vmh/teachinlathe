@@ -192,7 +192,8 @@ class ManualLathe:
                 cmd = 'M3'
             case _:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
-                self.handleJoystick()
+                if self.stopFeeding():
+                    self.joystickResetRequired = True
                 return
 
         if cmd is not None:
@@ -214,8 +215,6 @@ class ManualLathe:
             LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
             LINUXCNC_CMD.wait_complete()
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
-        else:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
 
     def handleJoystick(self):
         if self.joystickDirection == JoystickDirection.NONE:
@@ -231,7 +230,7 @@ class ManualLathe:
 
         if self.spindleLever is not SpindleLever.NONE:
             if self.joystickResetRequired:
-                print("Joystick is not in the neutral state")
+                print("Joystick reset required")
             else:
                 self.delayedFeed()
         else:
