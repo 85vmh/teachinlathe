@@ -243,7 +243,7 @@ class ManualLathe:
                     print("feed attempted while spindle is off")
 
     def delayedFeed(self):
-        print("delayedFeed")
+        print_with_timestamp("delayedFeed")
         if self.startFeedingTimer is not None:
             self.startFeedingTimer.cancel()
 
@@ -251,7 +251,7 @@ class ManualLathe:
         self.startFeedingTimer.start()
 
     def startFeeding(self):
-        print("startFeeding")
+        print_with_timestamp("startFeeding")
         self.startFeedingTimer = None
         # if self.isTaperTurning:
         #     cmd = getTaperTurningCommand(self, self.joystickDirection, self.feedTaperAngle)
@@ -273,13 +273,13 @@ class ManualLathe:
 
         if STAT.motion_mode == linuxcnc.TRAJ_MODE_COORD and STAT.queue > 0:
             if STAT.motion_type == 0:  # motion_type == 0 means the command is not executed
-                print("mdi command failed, wait_complete" + cmd)
+                print_with_timestamp("mdi command failed, wait_complete: " + cmd)
                 LINUXCNC_CMD.wait_complete()
-                print("wait_complete finished")
+                print_with_timestamp("wait_complete finished")
             elif STAT.motion_type == 2:  # motion_type == 2 means "Feed"
-                print("mdi command succeeded at first attempt")
+                print_with_timestamp("mdi command succeeded at first attempt")
             else:
-                print("unhandled motion type is: ", STAT.motion_type)
+                print_with_timestamp("unhandled motion type is: " + STAT.motion_type)
 
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
 
