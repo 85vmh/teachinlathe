@@ -262,8 +262,16 @@ class ManualLathe:
         self.joystickFunction = JoystickFunction.FEEDING
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
         LINUXCNC_CMD.wait_complete()
+        STAT.poll()
         print_with_timestamp("execute mdi command: " + cmd)
         LINUXCNC_CMD.mdi(cmd)
+
+        print("motion mode: ", STAT.motion_mode)
+        print("motion type: ", STAT.motion_type)
+        print("mdi queue: ", STAT.queue)
+        # if STAT.motion_mode == linuxcnc.TRAJ_MODE_COORD:
+        # STAT.queue
+
         print_with_timestamp("mdi command sent: " + cmd)
         STAT.poll()
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
