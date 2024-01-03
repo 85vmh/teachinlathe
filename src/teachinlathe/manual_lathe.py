@@ -14,7 +14,7 @@ LINUXCNC_CMD = linuxcnc.command()
 
 
 def print_with_timestamp(message):
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.datetime.now().strftime("%H:%M:%S.%f")[:23]  # Slice to get milliseconds
     print(f"{timestamp}: {message}")
 
 
@@ -206,8 +206,6 @@ class ManualLathe:
 
         print(cmd)
         if cmd is not None and STAT.task_mode is not linuxcnc.MODE_MDI:
-            # issue_mdi(cmd)
-            # mode.manual()
             LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
             LINUXCNC_CMD.wait_complete()
             LINUXCNC_CMD.mdi(cmd)
@@ -263,11 +261,12 @@ class ManualLathe:
         self.joystickFunction = JoystickFunction.FEEDING
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
         LINUXCNC_CMD.wait_complete()
-        print("execute mdi command: ", cmd)
+        print_with_timestamp("execute mdi command: " + cmd)
         LINUXCNC_CMD.mdi(cmd)
-        print("mdi command sent: ", cmd)
-        LINUXCNC_CMD.wait_complete()
-        print("mdi command wait complete: ", cmd)
+        print_with_timestamp("mdi command sent: " + cmd)
+        # LINUXCNC_CMD.wait_complete()
+        STAT.poll()
+        print_with_timestamp("mdi command wait complete")
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
 
     def handleJoystickNeutral(self):
