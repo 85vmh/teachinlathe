@@ -265,7 +265,7 @@ class ManualLathe:
         STAT.poll()
         print_with_timestamp("execute mdi command: " + cmd)
         LINUXCNC_CMD.mdi(cmd)
-
+        STAT.poll()
         print("motion mode: ", STAT.motion_mode)
         print("motion type: ", STAT.motion_type)
         print("mdi queue: ", STAT.queue)
