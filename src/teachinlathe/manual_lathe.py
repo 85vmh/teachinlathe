@@ -247,7 +247,7 @@ class ManualLathe:
         if self.startFeedingTimer is not None:
             self.startFeedingTimer.cancel()
 
-        self.startFeedingTimer = threading.Timer(0.2, self.startFeeding)  # Delay for 200ms
+        self.startFeedingTimer = threading.Timer(0.3, self.startFeeding)  # Delay for 300ms
         self.startFeedingTimer.start()
 
     def startFeeding(self):
@@ -262,18 +262,24 @@ class ManualLathe:
         self.joystickFunction = JoystickFunction.FEEDING
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
         LINUXCNC_CMD.wait_complete()
-        STAT.poll()
+
         print_with_timestamp("execute mdi command: " + cmd)
         LINUXCNC_CMD.mdi(cmd)
         STAT.poll()
+
         print("motion mode: ", STAT.motion_mode)
         print("motion type: ", STAT.motion_type)
         print("mdi queue: ", STAT.queue)
-        # if STAT.motion_mode == linuxcnc.TRAJ_MODE_COORD:
-        # STAT.queue
 
-        print_with_timestamp("mdi command sent: " + cmd)
-        STAT.poll()
+        if STAT.motion_mode == linuxcnc.TRAJ_MODE_COORD and STAT.queue > 0:
+            if STAT.motion_type == 0:  # motion_type == 0 means the command is not executed
+                print("mdi command failed, retrying")
+                LINUXCNC_CMD.mdi(cmd)
+            elif STAT.motion_type == 2:  # motion_type == 2 means "Feed"
+                print("mdi command succeeded at first attempt")
+            else:
+                print("motion type is: ", STAT.motion_type)
+
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
 
     def handleJoystickNeutral(self):
