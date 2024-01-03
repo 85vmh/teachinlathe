@@ -273,11 +273,9 @@ class ManualLathe:
 
         if STAT.motion_mode == linuxcnc.TRAJ_MODE_COORD and STAT.queue > 0:
             if STAT.motion_type == 0:  # motion_type == 0 means the command is not executed
-                print("mdi command failed, retrying" + cmd)
-                # LINUXCNC_CMD.wait_complete()
-                time.sleep(2)
-                LINUXCNC_CMD.mdi(cmd)
-                print("retried mdi command: " + cmd)
+                print("mdi command failed, wait_complete" + cmd)
+                LINUXCNC_CMD.wait_complete()
+                print("wait_complete finished")
             elif STAT.motion_type == 2:  # motion_type == 2 means "Feed"
                 print("mdi command succeeded at first attempt")
             else:
