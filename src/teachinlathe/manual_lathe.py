@@ -191,7 +191,9 @@ class ManualLathe:
             case SpindleLever.FWD:
                 cmd = 'M3'
             case _:
-                cmd = None
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
+                self.handleJoystick()
+                return
 
         if cmd is not None:
             if self.spindleMode == SpindleMode.Rpm:
@@ -264,9 +266,7 @@ class ManualLathe:
         print_with_timestamp("execute mdi command: " + cmd)
         LINUXCNC_CMD.mdi(cmd)
         print_with_timestamp("mdi command sent: " + cmd)
-        # LINUXCNC_CMD.wait_complete()
         STAT.poll()
-        print_with_timestamp("mdi command wait complete")
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
 
     def handleJoystickNeutral(self):
@@ -308,8 +308,6 @@ class ManualLathe:
             print("jogDirection: ", self.joystickDirection)
             self.joystickFunction = JoystickFunction.JOGGING
             jogSpeed = 500  # use the real value
-
-            # MANUAL 1, MDI 3
 
             STAT.poll()
             current_state = STAT.state
