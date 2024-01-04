@@ -331,15 +331,14 @@ class ManualLathe:
             time.sleep(0.2)  # Wait 100ms for the feed to stop before we start jogging
 
         if self.joystickDirection is not None:
-            print("jogDirection: ", self.joystickDirection)
+            jog_speed = float(SETTINGS.get('machine.jog.linear-speed').getValue())
+
+            print("jogDirection: " + self.joystickDirection.name + ", jogSpeed: " + str(jog_speed))
             self.joystickFunction = JoystickFunction.JOGGING
 
             STAT.poll()
             current_state = STAT.state
             print("task mode: ", current_state)
-
-            jogSpeed = float(SETTINGS.get('machine.jog.linear-speed').getValue())
-            print("jogSpeed: ", jogSpeed)
 
             if current_state is not linuxcnc.MODE_MANUAL:
                 LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
@@ -349,16 +348,16 @@ class ManualLathe:
 
             match self.joystickDirection:
                 case JoystickDirection.X_PLUS:
-                    jog.axis('X', 1, speed=jogSpeed)
+                    jog.axis('X', 1, speed=jog_speed / 60)
                     self.joggedAxis = JoggedAxis.X
                 case JoystickDirection.X_MINUS:
-                    jog.axis('X', -1, speed=jogSpeed)
+                    jog.axis('X', -1, speed=jog_speed / 60)
                     self.joggedAxis = JoggedAxis.X
                 case JoystickDirection.Z_PLUS:
-                    jog.axis('Z', 1, speed=jogSpeed)
+                    jog.axis('Z', 1, speed=jog_speed / 60)
                     self.joggedAxis = JoggedAxis.Z
                 case JoystickDirection.Z_MINUS:
-                    jog.axis('Z', -1, speed=jogSpeed)
+                    jog.axis('Z', -1, speed=jog_speed / 60)
                     self.joggedAxis = JoggedAxis.Z
 
     def stopJogging(self):
