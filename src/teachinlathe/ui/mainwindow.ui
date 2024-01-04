@@ -63,7 +63,7 @@
        <item>
         <widget class="VCPStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <property name="rules" stdset="0">
           <string>[{&quot;name&quot;: &quot;MachineState&quot;, &quot;property&quot;: &quot;currentIndex&quot;, &quot;expression&quot;: &quot;1 if not ch[0] and ch[1] and ch[2] == 1 and ch[3] == 1 else 0&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:joint.0.homed&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:joint.1.homed&quot;, &quot;trigger&quot;: true}]}]</string>
@@ -333,6 +333,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
            <property name="styleSheet">
             <string notr="true"/>
            </property>
@@ -359,10 +364,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
              </property>
              <property name="geometry">
               <rect>
-               <x>10</x>
+               <x>5</x>
                <y>190</y>
-               <width>301</width>
-               <height>281</height>
+               <width>286</width>
+               <height>286</height>
               </rect>
              </property>
              <property name="font">
@@ -393,16 +398,16 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>20</y>
-                <width>281</width>
+                <y>25</y>
+                <width>266</width>
                 <height>131</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">QTabBar::tab {\nheight: 30px; width: 80px;\nfont: 12pt &quot;DejaVu Sans&quot;; }</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tabSpindleRpm">
                <attribute name="title">
@@ -418,7 +423,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>1000</string>
@@ -437,7 +442,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Set speed:</string>
@@ -453,7 +458,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>rev/min</string>
@@ -474,7 +479,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>m/min</string>
@@ -490,7 +495,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>250</string>
@@ -509,7 +514,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Surface speed:</string>
@@ -525,7 +530,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>rev/min</string>
@@ -541,7 +546,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Max RPM:</string>
@@ -557,7 +562,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>1500</string>
@@ -572,13 +577,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>19</x>
-                <y>160</y>
+                <y>165</y>
                 <width>111</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Actual speed:</string>
@@ -588,13 +593,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>160</y>
+                <y>165</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>rev/min</string>
@@ -604,13 +609,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>140</x>
-                <y>160</y>
+                <y>165</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>0000</string>
@@ -623,13 +628,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>240</y>
+                <y>245</y>
                 <width>61</width>
                 <height>24</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>deg</string>
@@ -639,13 +644,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>140</x>
-                <y>237</y>
+                <y>242</y>
                 <width>61</width>
                 <height>31</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -655,13 +660,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>19</x>
-                <y>200</y>
+                <y>205</y>
                 <width>111</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Override:</string>
@@ -671,13 +676,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>140</x>
-                <y>200</y>
+                <y>205</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>100</string>
@@ -690,13 +695,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>210</x>
-                <y>200</y>
+                <y>205</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>%</string>
@@ -706,20 +711,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>19</x>
-                <y>240</y>
+                <y>245</y>
                 <width>111</width>
                 <height>24</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">QCheckBox {
-        spacing: 4px; /* Adjusts the space between the checkbox and its label */
-		font: 12pt &quot;Noto Sans&quot;;
-    }
-    QCheckBox::indicator {
-        width: 18px; /* Width of the checkbox */
-        height: 18px; /* Height of the checkbox */
-    }</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Stop at:</string>
@@ -729,8 +727,8 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>220</y>
-                <width>271</width>
+                <y>225</y>
+                <width>266</width>
                 <height>16</height>
                </rect>
               </property>
@@ -755,10 +753,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
             <widget class="QGroupBox" name="groupBox_2">
              <property name="geometry">
               <rect>
-               <x>320</x>
+               <x>300</x>
                <y>190</y>
                <width>301</width>
-               <height>281</height>
+               <height>286</height>
               </rect>
              </property>
              <property name="font">
@@ -786,13 +784,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>70</y>
+                <y>75</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>rev/min</string>
@@ -802,13 +800,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>70</y>
+                <y>75</y>
                 <width>111</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Actual feed:</string>
@@ -818,13 +816,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>130</x>
-                <y>70</y>
+                <y>75</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>0.00</string>
@@ -837,13 +835,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>110</y>
+                <y>115</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>%</string>
@@ -853,13 +851,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>130</x>
-                <y>110</y>
+                <y>115</y>
                 <width>61</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>100</string>
@@ -872,13 +870,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>110</y>
+                <y>115</y>
                 <width>111</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Override:</string>
@@ -888,7 +886,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>25</y>
+                <y>30</y>
                 <width>91</width>
                 <height>31</height>
                </rect>
@@ -896,7 +894,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="font">
                <font>
                 <family>Noto Sans</family>
-                <pointsize>12</pointsize>
+                <pointsize>11</pointsize>
                </font>
               </property>
               <property name="currentText">
@@ -910,13 +908,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>130</x>
-                <y>25</y>
+                <y>30</y>
                 <width>61</width>
                 <height>31</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>0.02</string>
@@ -929,13 +927,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>30</y>
+                <y>35</y>
                 <width>111</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Set feed:</string>
@@ -945,7 +943,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>132</y>
+                <y>135</y>
                 <width>281</width>
                 <height>16</height>
                </rect>
@@ -958,13 +956,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>145</y>
+                <y>155</y>
                 <width>61</width>
                 <height>31</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>deg</string>
@@ -974,20 +972,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>145</y>
+                <y>155</y>
                 <width>101</width>
                 <height>31</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">QCheckBox {
-        spacing: 4px; /* Adjusts the space between the checkbox and its label */
-		font: 12pt &quot;Noto Sans&quot;;
-    }
-    QCheckBox::indicator {
-        width: 18px; /* Width of the checkbox */
-        height: 18px; /* Height of the checkbox */
-    }</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Taper:</string>
@@ -997,10 +988,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>130</x>
-                <y>145</y>
+                <y>155</y>
                 <width>61</width>
                 <height>31</height>
                </rect>
+              </property>
+              <property name="styleSheet">
+               <string>font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>45</string>
@@ -1013,7 +1007,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>10</x>
-                <y>180</y>
+                <y>190</y>
                 <width>281</width>
                 <height>16</height>
                </rect>
@@ -1022,7 +1016,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                <enum>QFrame::Sunken</enum>
               </property>
               <property name="lineWidth">
-               <number>2</number>
+               <number>1</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -1032,7 +1026,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
               <property name="geometry">
                <rect>
                 <x>15</x>
-                <y>240</y>
+                <y>245</y>
                 <width>271</width>
                 <height>30</height>
                </rect>
@@ -1136,13 +1130,13 @@ border-radius: 4px;
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>210</y>
+                <y>215</y>
                 <width>261</width>
                 <height>21</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="rules" stdset="0">
                <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;settings:machine.jog.linear-speed&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:program_units?text&quot;, &quot;trigger&quot;: false}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'Joystick Jog Speed: {:.0f}'.format(ch[0]) +\&quot; \&quot;+ ch[1] + '/min'&quot;, &quot;name&quot;: &quot;Linear Jog Speed&quot;}]</string>
@@ -1152,9 +1146,9 @@ border-radius: 4px;
             <widget class="QGroupBox" name="groupBox_4">
              <property name="geometry">
               <rect>
-               <x>720</x>
-               <y>200</y>
-               <width>261</width>
+               <x>610</x>
+               <y>190</y>
+               <width>221</width>
                <height>221</height>
               </rect>
              </property>
@@ -1182,51 +1176,28 @@ border-radius: 4px;
              <property name="alignment">
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
              </property>
-             <widget class="QDial" name="dial_2">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="geometry">
-               <rect>
-                <x>140</x>
-                <y>70</y>
-                <width>91</width>
-                <height>91</height>
-               </rect>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-             </widget>
-             <widget class="QDial" name="dial">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="geometry">
-               <rect>
-                <x>30</x>
-                <y>10</y>
-                <width>91</width>
-                <height>111</height>
-               </rect>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-             </widget>
              <widget class="QCheckBox" name="checkBox_2">
               <property name="geometry">
                <rect>
-                <x>20</x>
+                <x>15</x>
                 <y>180</y>
                 <width>101</width>
                 <height>24</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <pointsize>11</pointsize>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="styleSheet">
                <string notr="true">QCheckBox {
         spacing: 4px; /* Adjusts the space between the checkbox and its label */
-		font: 12pt &quot;Noto Sans&quot;;
+		font: 11pt &quot;Noto Sans&quot;;
     }
     QCheckBox::indicator {
         width: 18px; /* Width of the checkbox */
@@ -1240,14 +1211,23 @@ border-radius: 4px;
              <widget class="QLabel" name="rpmUnit_9">
               <property name="geometry">
                <rect>
-                <x>210</x>
+                <x>185</x>
                 <y>180</y>
-                <width>61</width>
+                <width>36</width>
                 <height>24</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <pointsize>11</pointsize>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>deg</string>
@@ -1256,11 +1236,16 @@ border-radius: 4px;
              <widget class="QLineEdit" name="inputRpm_6">
               <property name="geometry">
                <rect>
-                <x>140</x>
+                <x>115</x>
                 <y>175</y>
                 <width>61</width>
                 <height>31</height>
                </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1271,7 +1256,7 @@ border-radius: 4px;
                <rect>
                 <x>10</x>
                 <y>160</y>
-                <width>241</width>
+                <width>201</width>
                 <height>16</height>
                </rect>
               </property>
@@ -1282,8 +1267,8 @@ border-radius: 4px;
              <widget class="QLabel" name="label_7">
               <property name="geometry">
                <rect>
-                <x>160</x>
-                <y>30</y>
+                <x>138</x>
+                <y>35</y>
                 <width>55</width>
                 <height>20</height>
                </rect>
@@ -1292,7 +1277,7 @@ border-radius: 4px;
                <enum>Qt::LeftToRight</enum>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 14pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>0.001</string>
@@ -1304,8 +1289,8 @@ border-radius: 4px;
              <widget class="QLabel" name="label_8">
               <property name="geometry">
                <rect>
-                <x>157</x>
-                <y>50</y>
+                <x>135</x>
+                <y>55</y>
                 <width>61</width>
                 <height>20</height>
                </rect>
@@ -1317,54 +1302,80 @@ border-radius: 4px;
                <set>Qt::AlignCenter</set>
               </property>
              </widget>
-             <widget class="QLabel" name="label_11">
+             <widget class="QPushButton" name="pushButton">
               <property name="geometry">
                <rect>
-                <x>60</x>
-                <y>50</y>
-                <width>31</width>
-                <height>31</height>
+                <x>20</x>
+                <y>30</y>
+                <width>70</width>
+                <height>70</height>
                </rect>
               </property>
               <property name="font">
                <font>
-                <family>Noto Sans</family>
                 <pointsize>20</pointsize>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+       border-radius: 35px;
+		background-color: lightblue;
+		border-style: solid;
+		border-width: 1px;
+		border-color: gray;
+}
+QPushButton:pressed {
+		background-color: blue;
+}</string>
               </property>
               <property name="text">
                <string>X</string>
               </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
              </widget>
-             <widget class="QLabel" name="label_12">
+             <widget class="QPushButton" name="pushButton_2">
               <property name="geometry">
                <rect>
-                <x>170</x>
-                <y>100</y>
-                <width>31</width>
-                <height>31</height>
+                <x>130</x>
+                <y>85</y>
+                <width>70</width>
+                <height>70</height>
                </rect>
               </property>
               <property name="font">
                <font>
-                <family>Noto Sans</family>
                 <pointsize>20</pointsize>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+       border-radius: 35px;
+		background-color: lightblue;
+		border-style: solid;
+		border-width: 1px;
+		border-color: gray;
+}
+QPushButton:pressed {
+		background-color: blue;
+}</string>
+              </property>
               <property name="text">
                <string>Z</string>
               </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
              </widget>
+            </widget>
+            <widget class="HalButton" name="halbutton">
+             <property name="geometry">
+              <rect>
+               <x>255</x>
+               <y>535</y>
+               <width>80</width>
+               <height>26</height>
+              </rect>
+             </property>
             </widget>
            </widget>
            <widget class="QWidget" name="conversationalTab">
@@ -1435,6 +1446,11 @@ border-radius: 4px;
    <class>VCPSettingsSlider</class>
    <extends>QSlider</extends>
    <header>qtpyvcp.widgets.input_widgets.setting_slider</header>
+  </customwidget>
+  <customwidget>
+   <class>HalButton</class>
+   <extends>QPushButton</extends>
+   <header>qtpyvcp.widgets.hal_widgets.hal_button</header>
   </customwidget>
   <customwidget>
    <class>VCPStackedWidget</class>
