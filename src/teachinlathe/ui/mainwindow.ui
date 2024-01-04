@@ -63,7 +63,7 @@
        <item>
         <widget class="VCPStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <property name="rules" stdset="0">
           <string>[{&quot;name&quot;: &quot;MachineState&quot;, &quot;property&quot;: &quot;currentIndex&quot;, &quot;expression&quot;: &quot;1 if not ch[0] and ch[1] and ch[2] == 1 and ch[3] == 1 else 0&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:joint.0.homed&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:joint.1.homed&quot;, &quot;trigger&quot;: true}]}]</string>
@@ -91,8 +91,8 @@
           <widget class="QWidget" name="formLayoutWidget">
            <property name="geometry">
             <rect>
-             <x>405</x>
-             <y>345</y>
+             <x>400</x>
+             <y>235</y>
              <width>221</width>
              <height>186</height>
             </rect>
@@ -201,6 +201,118 @@
             </item>
            </layout>
           </widget>
+          <widget class="QGroupBox" name="groupBox">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>610</y>
+             <width>966</width>
+             <height>86</height>
+            </rect>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">ActionButton {
+min-height: 30px;
+min-width: 50px;
+font: 12pt &quot;DejaVu Sans&quot;;
+}</string>
+           </property>
+           <property name="title">
+            <string>Debugging Tools</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+           <widget class="QWidget" name="horizontalLayoutWidget">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>30</y>
+              <width>946</width>
+              <height>51</height>
+             </rect>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <property name="spacing">
+              <number>10</number>
+             </property>
+             <property name="leftMargin">
+              <number>4</number>
+             </property>
+             <property name="rightMargin">
+              <number>4</number>
+             </property>
+             <item>
+              <widget class="ActionButton" name="actionbutton">
+               <property name="text">
+                <string>Hal Show</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>tool.halshow</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="ActionButton" name="actionbutton_2">
+               <property name="text">
+                <string>Hal Meter</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>tool.halmeter</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="ActionButton" name="actionbutton_3">
+               <property name="text">
+                <string>Hal Scope</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>tool.halscope</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="ActionButton" name="actionbutton_4">
+               <property name="text">
+                <string>Classic Ladder</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>tool.classicladder</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="ActionButton" name="actionbutton_5">
+               <property name="text">
+                <string>LCNC Status</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>tool.status</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="ActionButton" name="actionbutton_6">
+               <property name="text">
+                <string>Calibration</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>tool.calibration</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
          </widget>
          <widget class="QWidget" name="pageReady">
           <widget class="QTabWidget" name="tabWidget">
@@ -287,10 +399,10 @@
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">QTabBar::tab {\nheight: 30px; width: 50px;\nfont: 12pt &quot;DejaVu Sans&quot;; }</string>
+               <string notr="true">QTabBar::tab {\nheight: 30px; width: 80px;\nfont: 12pt &quot;DejaVu Sans&quot;; }</string>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="tabSpindleRpm">
                <attribute name="title">
@@ -916,77 +1028,90 @@
                <enum>Qt::Horizontal</enum>
               </property>
              </widget>
-             <widget class="QLabel" name="label_13">
+             <widget class="VCPSettingsSlider" name="settings_slider_2">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>205</y>
-                <width>106</width>
-                <height>21</height>
+                <x>15</x>
+                <y>240</y>
+                <width>271</width>
+                <height>30</height>
                </rect>
               </property>
-              <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
               </property>
-              <property name="text">
-               <string>Rapid speed:</string>
-              </property>
-             </widget>
-             <widget class="QLabel" name="rpmUnit_10">
-              <property name="geometry">
-               <rect>
-                <x>130</x>
-                <y>205</y>
-                <width>61</width>
-                <height>21</height>
-               </rect>
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>0000</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-             <widget class="QLabel" name="rpmUnit_15">
-              <property name="geometry">
-               <rect>
-                <x>200</x>
-                <y>205</y>
-                <width>81</width>
-                <height>21</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>mm/min</string>
-              </property>
-             </widget>
-             <widget class="ActionSlider" name="actionslider">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>245</y>
-                <width>281</width>
-                <height>26</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true"/>
+               <string notr="true">QSlider::groove:horizontal {
+border: 1px solid #bbb;
+background: white;
+height: 15px;
+border-radius: 3px;
+}
+
+QSlider::sub-page:horizontal {
+background: qlineargradient(x1: 0, y1: 0,    x2: 0, y2: 1,
+    stop: 0 #66e, stop: 1 #bbf);
+background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 1,
+    stop: 0 #bbf, stop: 1 #55f);
+border: 1px solid #777;
+height: 15px;
+border-radius: 3px;
+}
+
+QSlider::add-page:horizontal {
+background: rgb(235, 235, 235);
+border: 1px solid #777;
+height: 15px;
+border-radius: 3px;
+}
+
+QSlider::handle:horizontal {
+background: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 255), stop:0.1 rgba(60, 60, 60, 255), stop:0.21 rgba(60, 60, 60, 255), stop:0.25 rgba(255, 255, 255, 255), stop:0.29 rgba(60, 60, 60, 255), stop:0.46 rgba(60, 60, 60, 255), stop:0.5 rgba(255, 255, 255, 255), stop:0.54 rgba(60, 60, 60, 255), stop:0.71 rgba(60, 60, 60, 255), stop:0.75 rgba(255, 255, 255, 255), stop:0.79 rgba(60, 60, 60, 255), stop:0.9 rgba(60, 60, 60, 255), stop:1 rgba(255, 255, 255, 255));
+border: 1px solid #777;
+border-color: rgba(40, 40, 40, 255);
+width: 20px;
+margin-top: -5px;
+margin-bottom: -5px;
+border-radius: 4px;
+}
+
+QSlider::handle:horizontal:hover {
+background: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 255), stop:0.1 rgba(60, 60, 60, 255), stop:0.21 rgba(60, 60, 60, 255), stop:0.25 rgba(255, 255, 255, 255), stop:0.29 rgba(60, 60, 60, 255), stop:0.46 rgba(60, 60, 60, 255), stop:0.5 rgba(255, 255, 255, 255), stop:0.54 rgba(60, 60, 60, 255), stop:0.71 rgba(60, 60, 60, 255), stop:0.75 rgba(255, 255, 255, 255), stop:0.79 rgba(60, 60, 60, 255), stop:0.9 rgba(60, 60, 60, 255), stop:1 rgba(255, 255, 255, 255));
+border: 1px solid #444;
+border-color: rgb(241, 239, 237);
+border-radius: 4px;
+}
+
+QSlider::sub-page:horizontal:disabled {
+background: #bbb;
+border-color: #999;
+}
+
+QSlider::add-page:horizontal:disabled {
+background: #eee;
+border-color: #999;
+}
+
+QSlider::handle:horizontal:disabled {
+background: #eee;
+border: 1px solid #aaa;
+border-radius: 4px;
+}</string>
               </property>
               <property name="minimum">
-               <number>5</number>
+               <number>0</number>
               </property>
               <property name="maximum">
                <number>100</number>
               </property>
-              <property name="pageStep">
-               <number>5</number>
+              <property name="value">
+               <number>50</number>
               </property>
               <property name="sliderPosition">
                <number>50</number>
@@ -994,14 +1119,30 @@
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
-              <property name="invertedAppearance">
-               <bool>false</bool>
-              </property>
               <property name="tickPosition">
                <enum>QSlider::TicksBelow</enum>
               </property>
-              <property name="actionName" stdset="0">
-               <string>machine.jog.set-linear-speed</string>
+              <property name="tickInterval">
+               <number>10</number>
+              </property>
+              <property name="settingName" stdset="0">
+               <string>machine.jog.linear-speed-percentage</string>
+              </property>
+             </widget>
+             <widget class="StatusLabel" name="statuslabel_32">
+              <property name="geometry">
+               <rect>
+                <x>20</x>
+                <y>210</y>
+                <width>261</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+              </property>
+              <property name="rules" stdset="0">
+               <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;settings:machine.jog.linear-speed&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:program_units?text&quot;, &quot;trigger&quot;: false}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'Joystick Jog Speed: {:.0f}'.format(ch[0]) +\&quot; \&quot;+ ch[1] + '/min'&quot;, &quot;name&quot;: &quot;Linear Jog Speed&quot;}]</string>
               </property>
              </widget>
             </widget>
@@ -1273,6 +1414,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>ActionButton</class>
+   <extends>QPushButton</extends>
+   <header>qtpyvcp.widgets.button_widgets.action_button</header>
+  </customwidget>
+  <customwidget>
    <class>StatusLabel</class>
    <extends>QLabel</extends>
    <header>qtpyvcp.widgets.display_widgets.status_label</header>
@@ -1283,9 +1429,9 @@
    <header>qtpyvcp.widgets.display_widgets.status_led</header>
   </customwidget>
   <customwidget>
-   <class>ActionSlider</class>
+   <class>VCPSettingsSlider</class>
    <extends>QSlider</extends>
-   <header>qtpyvcp.widgets.input_widgets.action_slider</header>
+   <header>qtpyvcp.widgets.input_widgets.setting_slider</header>
   </customwidget>
   <customwidget>
    <class>VCPStackedWidget</class>
