@@ -15,6 +15,7 @@ from qtpyvcp.utilities.info import Info
 
 LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
+from qtpyvcp import SETTINGS
 
 
 def print_with_timestamp(message):
@@ -332,11 +333,13 @@ class ManualLathe:
         if self.joystickDirection is not None:
             print("jogDirection: ", self.joystickDirection)
             self.joystickFunction = JoystickFunction.JOGGING
-            jogSpeed = 500  # use the real value
 
             STAT.poll()
             current_state = STAT.state
             print("task mode: ", current_state)
+
+            jogSpeed = float(SETTINGS.get('machine.jog.linear-speed').getValue())
+            print("jogSpeed: ", jogSpeed)
 
             if current_state is not linuxcnc.MODE_MANUAL:
                 LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)

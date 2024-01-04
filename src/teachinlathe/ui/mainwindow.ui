@@ -1028,7 +1028,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                <enum>Qt::Horizontal</enum>
               </property>
              </widget>
-             <widget class="VCPSettingsSlider" name="settings_slider_2">
+             <widget class="VCPSettingsSlider" name="jogSpeedSlider">
               <property name="geometry">
                <rect>
                 <x>15</x>
