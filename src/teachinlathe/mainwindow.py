@@ -69,4 +69,4 @@ class MyMainWindow(VCPMainWindow):
         # self.window.show()
 
     def onFeedTypeChanged(self, index):
-        print("onFeedChanged", index)
+        self.actualFeedType.setText(self.feedType.currentText())
