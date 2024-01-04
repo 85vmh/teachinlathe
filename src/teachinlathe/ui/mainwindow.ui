@@ -63,10 +63,10 @@
        <item>
         <widget class="VCPStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <property name="rules" stdset="0">
-          <string>[{&quot;name&quot;: &quot;MachineState&quot;, &quot;property&quot;: &quot;currentIndex&quot;, &quot;expression&quot;: &quot;1 if not ch[0] and ch[1] and ch[2] else 0&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:all_axes_homed&quot;, &quot;trigger&quot;: true}]}]</string>
+          <string>[{&quot;name&quot;: &quot;MachineState&quot;, &quot;property&quot;: &quot;currentIndex&quot;, &quot;expression&quot;: &quot;1 if not ch[0] and ch[1] and ch[2] == 1 and ch[3] == 1 else 0&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:joint.0.homed&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:joint.1.homed&quot;, &quot;trigger&quot;: true}]}]</string>
          </property>
          <widget class="QWidget" name="pageNotReady">
           <widget class="QLabel" name="label_14">
@@ -79,8 +79,7 @@
             </rect>
            </property>
            <property name="styleSheet">
-            <string notr="true">
-font: 75 72pt &quot;Bitstream Vera Sans&quot;;</string>
+            <string notr="true">font: 75 72pt &quot;Bitstream Vera Sans&quot;;</string>
            </property>
            <property name="text">
             <string>WEILER</string>
@@ -89,94 +88,118 @@ font: 75 72pt &quot;Bitstream Vera Sans&quot;;</string>
             <set>Qt::AlignCenter</set>
            </property>
           </widget>
-          <widget class="StatusLED" name="statusled">
+          <widget class="QWidget" name="formLayoutWidget">
            <property name="geometry">
             <rect>
-             <x>220</x>
-             <y>335</y>
-             <width>30</width>
-             <height>30</height>
+             <x>405</x>
+             <y>345</y>
+             <width>221</width>
+             <height>186</height>
             </rect>
            </property>
-           <property name="state">
-            <bool>true</bool>
-           </property>
-           <property name="flashing">
-            <bool>false</bool>
-           </property>
-           <property name="flashRate">
-            <number>500</number>
-           </property>
-           <property name="rules" stdset="0">
-            <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;On&quot;, &quot;expression&quot;: &quot;ch[0] == 1&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}]}]</string>
-           </property>
-          </widget>
-          <widget class="StatusLED" name="statusled_2">
-           <property name="geometry">
-            <rect>
-             <x>220</x>
-             <y>390</y>
-             <width>30</width>
-             <height>30</height>
-            </rect>
-           </property>
-           <property name="flashing">
-            <bool>false</bool>
-           </property>
-           <property name="flashRate">
-            <number>500</number>
-           </property>
-           <property name="rules" stdset="0">
-            <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;On&quot;, &quot;expression&quot;: &quot;not ch[0]&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}]}]</string>
-           </property>
-          </widget>
-          <widget class="StatusLED" name="statusled_3">
-           <property name="geometry">
-            <rect>
-             <x>220</x>
-             <y>450</y>
-             <width>30</width>
-             <height>30</height>
-            </rect>
-           </property>
-           <property name="flashing">
-            <bool>false</bool>
-           </property>
-           <property name="flashRate">
-            <number>500</number>
-           </property>
-           <property name="rules" stdset="0">
-            <string>[{&quot;name&quot;: &quot;x homed&quot;, &quot;property&quot;: &quot;On&quot;, &quot;expression&quot;: &quot;ch[0] == 0&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.0.homed&quot;, &quot;trigger&quot;: true}]}]</string>
-           </property>
-          </widget>
-          <widget class="StatusLED" name="statusled_4">
-           <property name="geometry">
-            <rect>
-             <x>220</x>
-             <y>505</y>
-             <width>30</width>
-             <height>30</height>
-            </rect>
-           </property>
-           <property name="flashing">
-            <bool>false</bool>
-           </property>
-           <property name="flashRate">
-            <number>500</number>
-           </property>
-           <property name="rules" stdset="0">
-            <string>[{&quot;name&quot;: &quot;z homed&quot;, &quot;property&quot;: &quot;On&quot;, &quot;expression&quot;: &quot;ch[0] == 0&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.1.homed&quot;, &quot;trigger&quot;: true}]}]</string>
-           </property>
-          </widget>
-          <widget class="StatusLabel" name="statuslabel">
-           <property name="geometry">
-            <rect>
-             <x>300</x>
-             <y>340</y>
-             <width>45</width>
-             <height>18</height>
-            </rect>
-           </property>
+           <layout class="QFormLayout" name="formLayout">
+            <property name="horizontalSpacing">
+             <number>15</number>
+            </property>
+            <property name="verticalSpacing">
+             <number>20</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="StatusLED" name="statusled">
+              <property name="state">
+               <bool>true</bool>
+              </property>
+              <property name="flashing">
+               <bool>false</bool>
+              </property>
+              <property name="flashRate">
+               <number>500</number>
+              </property>
+              <property name="rules" stdset="0">
+               <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;On&quot;, &quot;expression&quot;: &quot;ch[0] == 1&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}]}]</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="StatusLED" name="statusled_2">
+              <property name="flashing">
+               <bool>false</bool>
+              </property>
+              <property name="flashRate">
+               <number>500</number>
+              </property>
+              <property name="rules" stdset="0">
+               <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;On&quot;, &quot;expression&quot;: &quot;not ch[0]&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}]}]</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="StatusLabel" name="statuslabel_2">
+              <property name="styleSheet">
+               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+              </property>
+              <property name="rules" stdset="0">
+               <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'NC Enabled' if ch[0] else 'NC not Enabled'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}]}]</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="StatusLabel" name="statuslabel">
+              <property name="styleSheet">
+               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+              </property>
+              <property name="rules" stdset="0">
+               <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'E-Stop Button Pressed' if ch[0] == 1 else 'E-Stop Free'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}]}]</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="StatusLED" name="statusled_3">
+              <property name="flashing">
+               <bool>false</bool>
+              </property>
+              <property name="flashRate">
+               <number>500</number>
+              </property>
+              <property name="rules" stdset="0">
+               <string>[{&quot;name&quot;: &quot;x homed&quot;, &quot;property&quot;: &quot;On&quot;, &quot;expression&quot;: &quot;ch[0] == 0&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.0.homed&quot;, &quot;trigger&quot;: true}]}]</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="StatusLabel" name="statuslabel_3">
+              <property name="styleSheet">
+               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+              </property>
+              <property name="rules" stdset="0">
+               <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'X axis homed' if ch[0] else 'X axis NOT homed'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.0.homed&quot;, &quot;trigger&quot;: true}]}]</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="StatusLED" name="statusled_4">
+              <property name="flashing">
+               <bool>false</bool>
+              </property>
+              <property name="flashRate">
+               <number>500</number>
+              </property>
+              <property name="rules" stdset="0">
+               <string>[{&quot;name&quot;: &quot;z homed&quot;, &quot;property&quot;: &quot;On&quot;, &quot;expression&quot;: &quot;ch[0] == 0&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.1.homed&quot;, &quot;trigger&quot;: true}]}]</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="StatusLabel" name="statuslabel_4">
+              <property name="styleSheet">
+               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+              </property>
+              <property name="rules" stdset="0">
+               <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'Z axis homed' if ch[0] else 'Z axis NOT homed'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.1.homed&quot;, &quot;trigger&quot;: true}]}]</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </widget>
          <widget class="QWidget" name="pageReady">
