@@ -26,9 +26,3 @@ ActionButton[actionName="program.pause"]:enabled{
 ActionButton[actionName="program.abort"]:enabled{
     background: rgb(239, 41, 41);
 }
-
-QPushButton {
-    min-height: 50px;
-    min-width: 50px;
-    font: 14pt "DejaVu Sans";
-}

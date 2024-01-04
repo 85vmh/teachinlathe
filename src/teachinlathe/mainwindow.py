@@ -31,8 +31,9 @@ class MyMainWindow(VCPMainWindow):
         self.manualLathe.onMaxSpindleRpmChanged(self.inputMaxRpm.text())
         self.manualLathe.onStopAtActiveChanged(self.checkBoxStopAt.isChecked())
         self.manualLathe.onStopAtAngleChanged(self.inputStopAt.text())
-
         self.manualLathe.onInputFeedChanged(self.inputFeed.text())
+        self.manualLathe.onTaperTurningChanged(self.checkBoxTaperTurning.isChecked())
+        self.manualLathe.onFeedTaperAngleChanged(self.inputTaperAngle.text())
 
         # connect the signals
         self.tabSpindleMode.currentChanged.connect(self.manualLathe.onSpindleModeChanged)
@@ -44,6 +45,8 @@ class MyMainWindow(VCPMainWindow):
         self.checkBoxStopAt.stateChanged.connect(self.manualLathe.onStopAtAngleChanged)
         self.inputStopAt.textChanged.connect(self.manualLathe.onStopAtAngleChanged)
         self.inputFeed.textChanged.connect(self.manualLathe.onInputFeedChanged)
+        self.checkBoxTaperTurning.stateChanged.connect(self.manualLathe.onTaperTurningChanged)
+        self.inputTaperAngle.textChanged.connect(self.manualLathe.onFeedTaperAngleChanged)
 
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)

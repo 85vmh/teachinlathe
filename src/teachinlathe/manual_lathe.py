@@ -2,15 +2,19 @@ import datetime
 import threading
 import time
 from collections import deque
-from enum import Enum, auto
+from enum import Enum, auto, IntEnum
 
 import linuxcnc
 from qtpyvcp.actions.machine_actions import issue_mdi, jog, mode
+from qtpyvcp.plugins import getPlugin
 from qtpyvcp.plugins.status import STAT
+from qtpyvcp.widgets.base_widgets.dro_base_widget import RefType
 
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
+from qtpyvcp.utilities.info import Info
 
 LINUXCNC_CMD = linuxcnc.command()
+INFO = Info()
 
 
 def print_with_timestamp(message):
@@ -156,6 +160,12 @@ class ManualLathe:
     def onInputFeedChanged(self, value=feedPerRev):
         self.feedPerRev = value
 
+    def onTaperTurningChanged(self, value=False):
+        self.isTaperTurning = value
+
+    def onFeedTaperAngleChanged(self, value=0):
+        self.feedTaperAngle = value
+
     def onSpindleSwitchRev(self, value=False):
         self.spindleLever = SpindleLever.REV if value else SpindleLever.NONE
         self.handleSpindleSwitch()
@@ -208,6 +218,7 @@ class ManualLathe:
                 cmd += f" G94 F{self.feedPerMin}"
 
         print(cmd)
+        STAT.poll()
         if cmd is not None and STAT.task_mode is not linuxcnc.MODE_MDI:
             LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
             LINUXCNC_CMD.wait_complete()
@@ -253,12 +264,12 @@ class ManualLathe:
     def startFeeding(self):
         print_with_timestamp("startFeeding")
         self.startFeedingTimer = None
-        # if self.isTaperTurning:
-        #     cmd = getTaperTurningCommand(self, self.joystickDirection, self.feedTaperAngle)
-        # else:
-        #     cmd = getStraightTurningCommand(self, self.joystickDirection)
 
-        cmd = self.getStraightTurningCommand()
+        if self.isTaperTurning:
+            cmd = self.getTaperTurningCommand()
+        else:
+            cmd = self.getStraightTurningCommand()
+
         self.joystickFunction = JoystickFunction.FEEDING
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
         LINUXCNC_CMD.wait_complete()
@@ -271,15 +282,15 @@ class ManualLathe:
         print("motion type: ", STAT.motion_type)
         print("mdi queue: ", STAT.queue)
 
-        if STAT.motion_mode == linuxcnc.TRAJ_MODE_COORD and STAT.queue > 0:
-            if STAT.motion_type == 0:  # motion_type == 0 means the command is not executed
-                print_with_timestamp("mdi command failed, wait_complete: " + cmd)
-                LINUXCNC_CMD.wait_complete()
-                print_with_timestamp("wait_complete finished")
-            elif STAT.motion_type == 2:  # motion_type == 2 means "Feed"
-                print_with_timestamp("mdi command succeeded at first attempt")
-            else:
-                print_with_timestamp("unhandled motion type is: " + STAT.motion_type)
+        # if STAT.motion_mode == linuxcnc.TRAJ_MODE_COORD and STAT.queue > 0:
+        #     if STAT.motion_type == 0:  # motion_type == 0 means the command is not executed
+        #         print_with_timestamp("mdi command failed, wait_complete: " + cmd)
+        #         LINUXCNC_CMD.wait_complete()
+        #         print_with_timestamp("wait_complete finished")
+        #     elif STAT.motion_type == 2:  # motion_type == 2 means "Feed"
+        #         print_with_timestamp("mdi command succeeded at first attempt")
+        #     else:
+        #         print_with_timestamp("unhandled motion type is: " + STAT.motion_type)
 
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
 
@@ -351,6 +362,7 @@ class ManualLathe:
         if self.joystickFunction == JoystickFunction.JOGGING:
             print("stopJogging")
 
+            STAT.poll()
             if STAT.task_mode is not linuxcnc.MODE_MANUAL:
                 LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
                 LINUXCNC_CMD.wait_complete()
@@ -363,19 +375,55 @@ class ManualLathe:
             self.joystickFunction = None
 
     def getStraightTurningCommand(self):
-        # TODO use the actual limits from the machine
-        xMinLimit = 10
-        xMaxLimit = 280
-        zMinLimit = 10
-        zMaxLimit = 500
+        x_bounds = INFO.getAxisMinMax('X')[0]
+        z_bounds = INFO.getAxisMinMax('Z')[0]
+
+        x_min_limit = x_bounds[0]
+        x_max_limit = x_bounds[1]
+        z_min_limit = z_bounds[0]
+        z_max_limit = z_bounds[1]
 
         if self.joystickDirection == JoystickDirection.X_PLUS:
-            return 'G53 G1 X%f' % xMaxLimit
+            return 'G53 G1 X%f' % x_max_limit
         elif self.joystickDirection == JoystickDirection.X_MINUS:
-            return 'G53 G1 X%f' % xMinLimit
+            return 'G53 G1 X%f' % x_min_limit
         elif self.joystickDirection == JoystickDirection.Z_PLUS:
-            return 'G53 G1 Z%f' % zMaxLimit
+            return 'G53 G1 Z%f' % z_max_limit
         elif self.joystickDirection == JoystickDirection.Z_MINUS:
-            return 'G53 G1 Z%f' % zMinLimit
+            return 'G53 G1 Z%f' % z_min_limit
+        else:
+            return ""
+
+    class Axis(IntEnum):
+        X = 0
+        Z = 2
+
+    def getTaperTurningCommand(self):
+        x_bounds = INFO.getAxisMinMax('X')[0]
+        z_bounds = INFO.getAxisMinMax('Z')[0]
+
+        x_min_limit = x_bounds[0]
+        x_max_limit = x_bounds[1]
+        z_min_limit = z_bounds[0]
+        z_max_limit = z_bounds[1]
+
+        pos = getPlugin('position')
+        xPos = pos.abs(self.Axis.X)
+        zPos = pos.abs(self.Axis.Z)
+
+        print("xPos: ", getattr(pos, RefType.Absolute.name))
+        print("zPos: ", zPos)
+
+        # getattr(self.pos, self._ref_typ.name).notify(self.updateValue)
+        # self.updateValue()
+
+        if self.joystickDirection == JoystickDirection.X_PLUS:
+            return 'G53 G1 X%f' % x_max_limit
+        elif self.joystickDirection == JoystickDirection.X_MINUS:
+            return 'G53 G1 X%f' % x_min_limit
+        elif self.joystickDirection == JoystickDirection.Z_PLUS:
+            return 'G53 G1 Z%f' % z_max_limit
+        elif self.joystickDirection == JoystickDirection.Z_MINUS:
+            return 'G53 G1 Z%f' % z_min_limit
         else:
             return ""
