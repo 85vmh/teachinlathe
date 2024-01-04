@@ -63,7 +63,7 @@
        <item>
         <widget class="VCPStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <property name="rules" stdset="0">
           <string>[{&quot;name&quot;: &quot;MachineState&quot;, &quot;property&quot;: &quot;currentIndex&quot;, &quot;expression&quot;: &quot;1 if not ch[0] and ch[1] and ch[2] == 1 and ch[3] == 1 else 0&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:joint.0.homed&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:joint.1.homed&quot;, &quot;trigger&quot;: true}]}]</string>
@@ -335,11 +335,16 @@ font: 12pt &quot;DejaVu Sans&quot;;
            </property>
            <property name="font">
             <font>
-             <pointsize>12</pointsize>
+             <pointsize>14</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
             </font>
            </property>
            <property name="styleSheet">
             <string notr="true"/>
+           </property>
+           <property name="tabPosition">
+            <enum>QTabWidget::North</enum>
            </property>
            <property name="currentIndex">
             <number>0</number>
@@ -403,6 +408,15 @@ font: 12pt &quot;DejaVu Sans&quot;;
                 <height>131</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <pointsize>11</pointsize>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="styleSheet">
                <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
@@ -423,7 +437,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>1000</string>
@@ -442,7 +456,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Set speed:</string>
@@ -458,7 +472,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>rev/min</string>
@@ -479,7 +493,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>m/min</string>
@@ -495,7 +509,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>250</string>
@@ -514,7 +528,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Surface speed:</string>
@@ -530,7 +544,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>rev/min</string>
@@ -546,7 +560,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Max RPM:</string>
@@ -562,7 +576,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>1500</string>
@@ -583,7 +597,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Actual speed:</string>
@@ -599,7 +613,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>rev/min</string>
@@ -615,7 +629,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>0000</string>
@@ -634,7 +648,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>deg</string>
@@ -650,7 +664,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -666,7 +680,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Override:</string>
@@ -682,7 +696,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>100</string>
@@ -701,7 +715,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>%</string>
@@ -717,7 +731,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Stop at:</string>
@@ -1099,7 +1113,7 @@ border-radius: 4px;
 }</string>
               </property>
               <property name="minimum">
-               <number>0</number>
+               <number>10</number>
               </property>
               <property name="maximum">
                <number>100</number>
