@@ -63,6 +63,7 @@ class MyMainWindow(VCPMainWindow):
 
         # connect the signals
         self.tabSpindleMode.currentChanged.connect(self.manualLathe.onSpindleModeChanged)
+        self.tabSpindleMode.currentChanged.connect(self.handle_spindle_mode)
         self.feedType.currentIndexChanged.connect(self.manualLathe.onFeedModeChanged)
 
         self.inputRpm.textChanged.connect(self.manualLathe.onInputRpmChanged)
@@ -123,15 +124,15 @@ class MyMainWindow(VCPMainWindow):
             calculated_feed = float(self.inputFeed.text()) * override_factor
             match index:
                 case 0:
-                    self.actualFeed.setText(format(calculated_feed, '.2f'))
+                    self.actualFeed.setText(format(calculated_feed, '.3f'))
                 case 1:
-                    self.actualFeed.setText(format(calculated_feed, '.2f')) 
+                    self.actualFeed.setText(format(calculated_feed, '.3f'))
         else:
             match index:
                 case 0:
-                    self.actualFeed.setText("0.00")
+                    self.actualFeed.setText("0.000")
                 case 1:
-                    self.actualFeed.setText("0.00")
+                    self.actualFeed.setText("0.000")
 
     def onSpindleOverrideChanged(self, value):
         self.current_spindle_override = value

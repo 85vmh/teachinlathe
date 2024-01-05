@@ -421,7 +421,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="tabSpindleRpm">
                <attribute name="title">
@@ -665,7 +665,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
-                 <string>0000</string>
+                 <string>000</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -970,7 +970,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
-               <string>0.1</string>
+               <string>0.100</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
