@@ -212,11 +212,6 @@ class ManualLathe:
             else:
                 cmd += f" G96 S{self.spindleCss} D{self.maxSpindleRpm}"
 
-            if self.feedMode == FeedMode.PerRev:
-                cmd += f" G95 F{self.feedPerRev}"
-            else:
-                cmd += f" G94 F{self.feedPerMin}"
-
         print(cmd)
         STAT.poll()
         if cmd is not None and STAT.task_mode is not linuxcnc.MODE_MDI:
@@ -265,10 +260,15 @@ class ManualLathe:
         print_with_timestamp("startFeeding")
         self.startFeedingTimer = None
 
-        if self.isTaperTurning:
-            cmd = self.getTaperTurningCommand()
+        if self.feedMode == FeedMode.PerRev:
+            cmd = f"G95 F{self.feedPerRev} "
         else:
-            cmd = self.getStraightTurningCommand()
+            cmd = f"G94 F{self.feedPerMin} "
+
+        if self.isTaperTurning:
+            cmd += self.getTaperTurningCommand()
+        else:
+            cmd += self.getStraightTurningCommand()
 
         self.joystickFunction = JoystickFunction.FEEDING
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
