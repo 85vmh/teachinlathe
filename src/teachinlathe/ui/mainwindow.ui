@@ -494,7 +494,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  <string>Actual RPM:</string>
                 </property>
                </widget>
-               <widget class="QLabel" name="actualRpmValue">
+               <widget class="QLabel" name="actualRpm">
                 <property name="geometry">
                  <rect>
                   <x>120</x>
@@ -652,7 +652,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                  <string>Actual CSS:</string>
                 </property>
                </widget>
-               <widget class="QLabel" name="actualCssValue">
+               <widget class="QLabel" name="actualCss">
                 <property name="geometry">
                  <rect>
                   <x>120</x>

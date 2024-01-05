@@ -20,6 +20,7 @@ class MyMainWindow(VCPMainWindow):
         super(MyMainWindow, self).__init__(*args, **kwargs)
         self.manualLathe = ManualLathe()
         self.latheComponent = TeachInLatheComponent()
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
 
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
         STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
@@ -98,24 +99,24 @@ class MyMainWindow(VCPMainWindow):
         print("non debounced value", self.lastSpindleRpm)
 
     def onRpmDebounced(self):
-        self.actualRpmValue.setText(str(self.lastSpindleRpm))
+        self.actualRpm.setText(str(self.lastSpindleRpm))
 
     def handle_spindle_mode(self, index):
-        override_factor = int(self.current_spindle_override)
+        override_factor = self.current_spindle_override
         print("sp_override", override_factor)
         print("int(self.inputCss.text()) :", int(self.inputCss.text()))
-        print("result: ", str(int(self.inputCss.text()) * override_factor))
+        print("result: ", str(int(int(self.inputCss.text()) * override_factor)))
         if index == 1:
-            self.actualCssValue.setText(str(int(self.inputCss.text()) * override_factor))
+            self.actualCss.setText(str(int(int(self.inputCss.text()) * override_factor)))
 
     def handle_feed_mode(self, index):
-        override_factor = int(self.current_feed_override)
+        override_factor = self.current_feed_override
         print("sp_override", override_factor)
         match index:
             case 0:
-                self.actualFeedValue.setText(str(int(self.inputFeed.text()) * override_factor))
+                self.actualFeed.setText(str(int(self.inputFeed.text()) * override_factor))
             case 1:
-                self.actualFeedValue.setText(str(int(self.inputFeed.text()) * override_factor))
+                self.actualFeed.setText(str(int(self.inputFeed.text()) * override_factor))
 
     def onSpindleOverrideChanged(self, value):
         self.current_spindle_override = value
