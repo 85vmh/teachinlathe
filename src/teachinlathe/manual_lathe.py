@@ -5,7 +5,7 @@ from collections import deque
 from enum import Enum, auto, IntEnum
 
 import linuxcnc
-from qtpyvcp.actions.machine_actions import issue_mdi, jog, mode
+from qtpyvcp.actions.machine_actions import jog
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.plugins.status import STAT
 from qtpyvcp.widgets.base_widgets.dro_base_widget import RefType
@@ -16,9 +16,6 @@ from qtpyvcp.utilities.info import Info
 LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
 from qtpyvcp import SETTINGS
-
-STATUS = getPlugin('status')
-STAT = STATUS.stat
 
 def print_with_timestamp(message):
     timestamp = datetime.datetime.now().strftime("%H:%M:%S.%f")[:23]  # Slice to get milliseconds
@@ -136,15 +133,6 @@ class ManualLathe:
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickZMinus, instance.onJoystickZMinus)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickZPlus, instance.onJoystickZPlus)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickRapid, instance.onJoystickRapid)
-
-        STATUS.spindle[0].override.signal.connect(instance.onSpindleOverrideChanged)
-        STATUS.feedrate.signal.connect(instance.onFeedOverrideChanged)
-
-    def onSpindleOverrideChanged(self, value):
-        print("spindle override is: ", value)
-
-    def onFeedOverrideChanged(self, value):
-        print("feed override is: ", value)
 
     def onSpindleModeChanged(self, value=0):
         self.spindleMode = SpindleMode(value)

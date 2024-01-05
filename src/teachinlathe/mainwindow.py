@@ -1,5 +1,7 @@
 # Setup logging
+from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities import logger
+from PyQt5.QtCore import QTimer
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
@@ -8,18 +10,29 @@ from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
 
+STATUS = getPlugin('status')
+
 
 class MyMainWindow(VCPMainWindow):
     """Main window class for the VCP."""
 
     def __init__(self, *args, **kwargs):
         super(MyMainWindow, self).__init__(*args, **kwargs)
-        self.openDialog.clicked.connect(self.openNumPad)
         self.manualLathe = ManualLathe()
         self.latheComponent = TeachInLatheComponent()
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsSpindleStarted, self.onSpindleRunningChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
 
+        STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
+        STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
+
+        self.current_spindle_override = STATUS.spindle[0].override.value
+        self.current_feed_override = STATUS.feedrate.value
+
+        self.openDialog.clicked.connect(self.openNumPad)
+        self.lastSpindleRpm = 0
+        self.debounce_timer = QTimer()
+        self.debounce_timer.setSingleShot(True)
+        self.debounce_timer.setInterval(300)
+        self.debounce_timer.timeout.connect(self.onRpmDebounced)
 
         self.feedType.addItem("mm/rev")
         self.feedType.addItem("mm/min")
@@ -74,4 +87,33 @@ class MyMainWindow(VCPMainWindow):
         self.actualFeedType.setText(self.feedType.currentText())
 
     def onSpindleRpmChanged(self, value):
-        self.actualRpmValue.setText(str(value))
+        self.lastSpindleRpm = str(int(value))
+        if not self.debounce_timer.isActive():
+            self.debounce_timer.start()
+
+    def onRpmDebounced(self):
+        self.actualRpm.setText(self.lastSpindleRpm)
+
+    def onSpindleModeChanged(self, index):
+        override_factor = int(self.current_spindle_override)
+        match index:
+            case 0:
+                self.actualRpmValue.setText(int(int(self.inputRpm.text()) * override_factor))
+            case 1:
+                self.actualCssValue.setText(int(int(self.inputCss.text()) * override_factor))
+
+    def onFeedModeChanged(self, index):
+        override_factor = int(self.current_feed_override)
+        match index:
+            case 0:
+                self.actualFeedValue.setText(int(int(self.inputFeed.text()) * override_factor))
+            case 1:
+                self.actualFeedValue.setText(int(int(self.inputFeed.text()) * override_factor))
+
+    def onSpindleOverrideChanged(self, value):
+        self.current_spindle_override = value
+        self.onSpindleModeChanged(self.tabSpindleMode.currentIndex())
+
+    def onFeedOverrideChanged(self, value):
+        self.current_feed_override = value
+        self.onSpindleOverrideChanged(self.feedType.currentIndex())
