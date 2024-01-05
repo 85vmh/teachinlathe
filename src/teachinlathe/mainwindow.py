@@ -21,10 +21,15 @@ class MyMainWindow(VCPMainWindow):
         self.manualLathe = ManualLathe()
         self.latheComponent = TeachInLatheComponent()
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsSpindleStarted, self.onSpindleRunningChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsPowerFeeding, self.onPowerFeedingChanged)
 
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
         STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
 
+        self.lastSpindleRpm = 0
+        self.isPowerFeeding = False
+        # get the initial values
         self.current_spindle_override = STATUS.spindle[0].override.value
         self.current_feed_override = STATUS.feedrate.value
 
@@ -33,8 +38,6 @@ class MyMainWindow(VCPMainWindow):
 
         self.handle_spindle_mode(self.tabSpindleMode.currentIndex())
         self.handle_feed_mode(self.feedType.currentIndex())
-
-        self.lastSpindleRpm = 0
 
         self.debounce_timer = QTimer()
         self.debounce_timer.setInterval(300)
@@ -93,10 +96,14 @@ class MyMainWindow(VCPMainWindow):
 
     def onFeedTypeChanged(self, index):
         self.actualFeedType.setText(self.feedType.currentText())
+        self.handle_feed_mode(self.feedType.currentIndex())
+
+    def onPowerFeedingChanged(self, value):
+        self.isPowerFeeding = value
+        self.handle_feed_mode(self.feedType.currentIndex())
 
     def onSpindleRpmChanged(self, value):
-        self.lastSpindleRpm = int(value)
-        print("non debounced value", self.lastSpindleRpm)
+        self.lastSpindleRpm = abs(int(value))
 
     def onRpmDebounced(self):
         self.actualRpm.setText(str(self.lastSpindleRpm))
@@ -111,12 +118,20 @@ class MyMainWindow(VCPMainWindow):
 
     def handle_feed_mode(self, index):
         override_factor = self.current_feed_override
-        print("sp_override", override_factor)
-        match index:
-            case 0:
-                self.actualFeed.setText(str(int(self.inputFeed.text()) * override_factor))
-            case 1:
-                self.actualFeed.setText(str(int(self.inputFeed.text()) * override_factor))
+        print("feed_override", override_factor)
+        if self.isPowerFeeding:
+            calculated_feed = float(self.inputFeed.text()) * override_factor
+            match index:
+                case 0:
+                    self.actualFeed.setText(format(calculated_feed, '.2f'))
+                case 1:
+                    self.actualFeed.setText(format(calculated_feed, '.2f')) 
+        else:
+            match index:
+                case 0:
+                    self.actualFeed.setText("0.00")
+                case 1:
+                    self.actualFeed.setText("0.00")
 
     def onSpindleOverrideChanged(self, value):
         self.current_spindle_override = value
