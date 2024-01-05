@@ -26,12 +26,19 @@ class MyMainWindow(VCPMainWindow):
 
         self.current_spindle_override = STATUS.spindle[0].override.value
         self.current_feed_override = STATUS.feedrate.value
-        
+
+        print("self.current_spindle_override", self.current_spindle_override)
+        print("self.current_feed_override", self.current_feed_override)
+
+        self.handle_spindle_mode(self.tabSpindleMode.currentIndex())
+        self.handle_feed_mode(self.feedType.currentIndex())
+
         self.lastSpindleRpm = 0
+
         self.debounce_timer = QTimer()
-        self.debounce_timer.setSingleShot(True)
         self.debounce_timer.setInterval(300)
         self.debounce_timer.timeout.connect(self.onRpmDebounced)
+        self.debounce_timer.start()
 
         self.feedType.addItem("mm/rev")
         self.feedType.addItem("mm/min")
@@ -87,20 +94,23 @@ class MyMainWindow(VCPMainWindow):
         self.actualFeedType.setText(self.feedType.currentText())
 
     def onSpindleRpmChanged(self, value):
-        self.lastSpindleRpm = str(int(value))
-        if not self.debounce_timer.isActive():
-            self.debounce_timer.start()
+        self.lastSpindleRpm = int(value)
+        print("non debounced value", self.lastSpindleRpm)
 
     def onRpmDebounced(self):
-        self.actualRpmValue.setText(self.lastSpindleRpm)
+        self.actualRpmValue.setText(str(self.lastSpindleRpm))
 
-    def onSpindleModeChanged(self, index):
+    def handle_spindle_mode(self, index):
         override_factor = int(self.current_spindle_override)
+        print("sp_override", override_factor)
+        print("int(self.inputCss.text()) :", int(self.inputCss.text()))
+        print("result: ", str(int(self.inputCss.text()) * override_factor))
         if index == 1:
             self.actualCssValue.setText(str(int(self.inputCss.text()) * override_factor))
 
-    def onFeedModeChanged(self, index):
+    def handle_feed_mode(self, index):
         override_factor = int(self.current_feed_override)
+        print("sp_override", override_factor)
         match index:
             case 0:
                 self.actualFeedValue.setText(str(int(self.inputFeed.text()) * override_factor))
@@ -109,8 +119,8 @@ class MyMainWindow(VCPMainWindow):
 
     def onSpindleOverrideChanged(self, value):
         self.current_spindle_override = value
-        self.onSpindleModeChanged(self.tabSpindleMode.currentIndex())
+        self.handle_spindle_mode(self.tabSpindleMode.currentIndex())
 
     def onFeedOverrideChanged(self, value):
         self.current_feed_override = value
-        self.onSpindleOverrideChanged(self.feedType.currentIndex())
+        self.handle_feed_mode(self.feedType.currentIndex())
