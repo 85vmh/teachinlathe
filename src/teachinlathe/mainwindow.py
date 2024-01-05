@@ -16,6 +16,12 @@ STATUS = getPlugin('status')
 class MyMainWindow(VCPMainWindow):
     """Main window class for the VCP."""
 
+    def getSpindleModeIndex(self):
+        if self.radioRpm.isChecked():
+            return 0
+        else:
+            return 1
+
     def __init__(self, *args, **kwargs):
         super(MyMainWindow, self).__init__(*args, **kwargs)
         self.manualLathe = ManualLathe()
@@ -23,6 +29,7 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsSpindleStarted, self.onSpindleRunningChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsPowerFeeding, self.onPowerFeedingChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinJogIncrement, self.onJogIncrementChanged)
 
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
         STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
@@ -36,7 +43,7 @@ class MyMainWindow(VCPMainWindow):
         print("self.current_spindle_override", self.current_spindle_override)
         print("self.current_feed_override", self.current_feed_override)
 
-        self.handle_spindle_mode(self.tabSpindleMode.currentIndex())
+        self.handle_spindle_mode(self.getSpindleModeIndex)
         self.handle_feed_mode(self.feedType.currentIndex())
 
         self.debounce_timer = QTimer()
@@ -50,39 +57,38 @@ class MyMainWindow(VCPMainWindow):
 
         self.openDialog.clicked.connect(self.openNumPad)
         # set the current values
-        self.manualLathe.onSpindleModeChanged(self.tabSpindleMode.currentIndex())
+        self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
         self.manualLathe.onFeedModeChanged(self.feedType.currentIndex())
         self.manualLathe.onInputRpmChanged(self.inputRpm.text())
         self.manualLathe.onInputCssChanged(self.inputCss.text())
         self.manualLathe.onMaxSpindleRpmChanged(self.inputMaxRpm.text())
-        self.manualLathe.onStopAtActiveChanged(self.checkBoxStopAt.isChecked())
-        self.manualLathe.onStopAtAngleChanged(self.inputStopAt.text())
         self.manualLathe.onInputFeedChanged(self.inputFeed.text())
-        self.manualLathe.onTaperTurningChanged(self.checkBoxTaperTurning.isChecked())
         self.manualLathe.onFeedTaperAngleChanged(self.inputTaperAngle.text())
 
         # connect the signals
-        self.tabSpindleMode.currentChanged.connect(self.manualLathe.onSpindleModeChanged)
-        self.tabSpindleMode.currentChanged.connect(self.handle_spindle_mode)
+        self.radioRpm.toggled.connect(self.onRadioButtonToggled)
+        self.radioCss.toggled.connect(self.onRadioButtonToggled)
+
         self.feedType.currentIndexChanged.connect(self.manualLathe.onFeedModeChanged)
 
         self.inputRpm.textChanged.connect(self.manualLathe.onInputRpmChanged)
         self.inputCss.textChanged.connect(self.manualLathe.onInputCssChanged)
         self.inputMaxRpm.textChanged.connect(self.manualLathe.onMaxSpindleRpmChanged)
-        self.checkBoxStopAt.stateChanged.connect(self.manualLathe.onStopAtAngleChanged)
-        self.inputStopAt.textChanged.connect(self.manualLathe.onStopAtAngleChanged)
         self.inputFeed.textChanged.connect(self.manualLathe.onInputFeedChanged)
-        self.checkBoxTaperTurning.stateChanged.connect(self.manualLathe.onTaperTurningChanged)
         self.inputTaperAngle.textChanged.connect(self.manualLathe.onFeedTaperAngleChanged)
+
+    def onRadioButtonToggled(self):
+        self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
+        self.handle_spindle_mode(self.getSpindleModeIndex())
+        self.spindleModeWidget.setCurrentIndex(self.getSpindleModeIndex())
 
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)
-        self.tabSpindleMode.setEnabled(not value)
+        self.radioRpm.setEnabled(not value)
+        self.radioCss.setEnabled(not value)
         self.inputRpm.setEnabled(not value)
         self.inputCss.setEnabled(not value)
         self.inputMaxRpm.setEnabled(not value)
-        self.inputStopAt.setEnabled(not value)
-        self.checkBoxStopAt.setEnabled(not value)
         self.feedType.setEnabled(not value)
         self.inputFeed.setEnabled(not value)
 
@@ -103,11 +109,15 @@ class MyMainWindow(VCPMainWindow):
         self.isPowerFeeding = value
         self.handle_feed_mode(self.feedType.currentIndex())
 
+    def onJogIncrementChanged(self, value):
+        self.jogIncrement.setText(format(value, '.3f') + ' mm/div')
+
     def onSpindleRpmChanged(self, value):
         self.lastSpindleRpm = abs(int(value))
 
     def onRpmDebounced(self):
         self.actualRpm.setText(str(self.lastSpindleRpm))
+        self.actualRpmCss.setText(str(self.lastSpindleRpm))
 
     def handle_spindle_mode(self, index):
         override_factor = self.current_spindle_override
@@ -136,7 +146,7 @@ class MyMainWindow(VCPMainWindow):
 
     def onSpindleOverrideChanged(self, value):
         self.current_spindle_override = value
-        self.handle_spindle_mode(self.tabSpindleMode.currentIndex())
+        self.handle_spindle_mode(self.getSpindleModeIndex())
 
     def onFeedOverrideChanged(self, value):
         self.current_feed_override = value

@@ -278,9 +278,9 @@ class ManualLathe:
         LINUXCNC_CMD.mdi(cmd)
         STAT.poll()
 
-        print("motion mode: ", STAT.motion_mode)
-        print("motion type: ", STAT.motion_type)
-        print("mdi queue: ", STAT.queue)
+        # print("motion mode: ", STAT.motion_mode)
+        # print("motion type: ", STAT.motion_type)
+        # print("mdi queue: ", STAT.queue)
 
         # if STAT.motion_mode == linuxcnc.TRAJ_MODE_COORD and STAT.queue > 0:
         #     if STAT.motion_type == 0:  # motion_type == 0 means the command is not executed
