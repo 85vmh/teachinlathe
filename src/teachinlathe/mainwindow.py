@@ -18,6 +18,8 @@ class MyMainWindow(VCPMainWindow):
         self.manualLathe = ManualLathe()
         self.latheComponent = TeachInLatheComponent()
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsSpindleStarted, self.onSpindleRunningChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
+
 
         self.feedType.addItem("mm/rev")
         self.feedType.addItem("mm/min")
@@ -70,3 +72,6 @@ class MyMainWindow(VCPMainWindow):
 
     def onFeedTypeChanged(self, index):
         self.actualFeedType.setText(self.feedType.currentText())
+
+    def onSpindleRpmChanged(self, value):
+        self.actualRpmValue.setText(str(value))
