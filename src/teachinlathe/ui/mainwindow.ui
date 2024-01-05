@@ -1415,7 +1415,7 @@ QPushButton:pressed {
                <string>Handwheels</string>
               </property>
              </widget>
-             <widget class="QLabel" name="label">
+             <widget class="QLabel" name="jogIncrement">
               <property name="geometry">
                <rect>
                 <x>30</x>
