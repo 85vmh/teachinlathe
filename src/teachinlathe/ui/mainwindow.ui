@@ -559,6 +559,9 @@ font: 12pt &quot;DejaVu Sans&quot;;
                   <height>31</height>
                  </rect>
                 </property>
+                <property name="cursor">
+                 <cursorShape>ArrowCursor</cursorShape>
+                </property>
                 <property name="styleSheet">
                  <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
@@ -895,7 +898,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
-               <string>rev/min</string>
+               <string>mm/rev</string>
               </property>
              </widget>
              <widget class="QLabel" name="label_31">
@@ -912,28 +915,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
               </property>
               <property name="text">
                <string>Actual feed:</string>
-              </property>
-             </widget>
-             <widget class="QComboBox" name="feedType">
-              <property name="geometry">
-               <rect>
-                <x>335</x>
-                <y>5</y>
-                <width>86</width>
-                <height>31</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <family>Noto Sans</family>
-                <pointsize>11</pointsize>
-               </font>
-              </property>
-              <property name="currentText">
-               <string/>
-              </property>
-              <property name="currentIndex">
-               <number>-1</number>
               </property>
              </widget>
              <widget class="QLabel" name="label_32">
@@ -955,7 +936,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
              <widget class="Line" name="line_5">
               <property name="geometry">
                <rect>
-                <x>425</x>
+                <x>395</x>
                 <y>0</y>
                 <width>16</width>
                 <height>76</height>
@@ -965,12 +946,12 @@ font: 12pt &quot;DejaVu Sans&quot;;
                <enum>Qt::Vertical</enum>
               </property>
              </widget>
-             <widget class="QCheckBox" name="checkBoxTaperTurning">
+             <widget class="QCheckBox" name="checkBoxFeedAngle">
               <property name="geometry">
                <rect>
-                <x>445</x>
+                <x>410</x>
                 <y>20</y>
-                <width>71</width>
+                <width>126</width>
                 <height>31</height>
                </rect>
               </property>
@@ -985,7 +966,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
     }</string>
               </property>
               <property name="text">
-               <string>Taper:</string>
+               <string>Feed Angle:</string>
               </property>
               <property name="iconSize">
                <size>
@@ -1010,12 +991,15 @@ font: 12pt &quot;DejaVu Sans&quot;;
                <string>deg</string>
               </property>
              </widget>
-             <widget class="QLineEdit" name="inputTaperAngle">
+             <widget class="QLineEdit" name="inputFeedAngle">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
-                <x>535</x>
+                <x>540</x>
                 <y>20</y>
-                <width>61</width>
+                <width>56</width>
                 <height>31</height>
                </rect>
               </property>
@@ -1023,7 +1007,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                <string>font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
-               <string>45.023</string>
+               <string>45.23</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1049,6 +1033,22 @@ font: 12pt &quot;DejaVu Sans&quot;;
               </property>
               <property name="rules" stdset="0">
                <string>[{&quot;name&quot;: &quot;feed_override&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;str(int(ch[0]*100)) + '%'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:feedrate&quot;, &quot;trigger&quot;: true}]}]</string>
+              </property>
+             </widget>
+             <widget class="QLabel" name="actualFeedType_2">
+              <property name="geometry">
+               <rect>
+                <x>335</x>
+                <y>10</y>
+                <width>61</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+              </property>
+              <property name="text">
+               <string>mm/rev</string>
               </property>
              </widget>
             </widget>
@@ -1250,7 +1250,7 @@ border-radius: 4px;
              <widget class="QPushButton" name="pushButton_3">
               <property name="geometry">
                <rect>
-                <x>200</x>
+                <x>210</x>
                 <y>5</y>
                 <width>64</width>
                 <height>64</height>
@@ -1282,7 +1282,7 @@ QPushButton:pressed {
              <widget class="QPushButton" name="pushButton_4">
               <property name="geometry">
                <rect>
-                <x>325</x>
+                <x>315</x>
                 <y>5</y>
                 <width>64</width>
                 <height>64</height>
@@ -1314,7 +1314,7 @@ QPushButton:pressed {
              <widget class="Line" name="line_9">
               <property name="geometry">
                <rect>
-                <x>425</x>
+                <x>395</x>
                 <y>0</y>
                 <width>16</width>
                 <height>76</height>
@@ -1324,12 +1324,15 @@ QPushButton:pressed {
                <enum>Qt::Vertical</enum>
               </property>
              </widget>
-             <widget class="QLineEdit" name="inputRpm_7">
+             <widget class="QLineEdit" name="inputJogAngle">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="geometry">
                <rect>
-                <x>535</x>
+                <x>540</x>
                 <y>25</y>
-                <width>61</width>
+                <width>56</width>
                 <height>31</height>
                </rect>
               </property>
@@ -1367,12 +1370,12 @@ QPushButton:pressed {
                <string>deg</string>
               </property>
              </widget>
-             <widget class="QCheckBox" name="checkBox_3">
+             <widget class="QCheckBox" name="checkBoxJogAngle">
               <property name="geometry">
                <rect>
-                <x>445</x>
+                <x>410</x>
                 <y>25</y>
-                <width>81</width>
+                <width>116</width>
                 <height>31</height>
                </rect>
               </property>
@@ -1396,7 +1399,7 @@ QPushButton:pressed {
     }</string>
               </property>
               <property name="text">
-               <string>Angle:</string>
+               <string>Jog Angle:</string>
               </property>
              </widget>
              <widget class="QLabel" name="label_2">

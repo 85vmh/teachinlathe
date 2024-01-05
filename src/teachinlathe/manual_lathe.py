@@ -17,6 +17,7 @@ LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
 from qtpyvcp import SETTINGS
 
+
 def print_with_timestamp(message):
     timestamp = datetime.datetime.now().strftime("%H:%M:%S.%f")[:23]  # Slice to get milliseconds
     print(f"{timestamp}: {message}")
@@ -51,11 +52,6 @@ class SpindleLever(Enum):
 class SpindleMode(Enum):
     Rpm = 0
     Css = 1
-
-
-class FeedMode(Enum):
-    PerRev = 0
-    PerMin = 1
 
 
 def isSpindleOn():
@@ -102,13 +98,11 @@ class ManualLathe:
     stopAtActive = False
     stopAtAngle = 0
     feedPerRev = 0.1
-    feedPerMin = 10
     spindleLever = SpindleLever.NONE
     joystickDirection = JoystickDirection.NONE
     isJoystickRapid = False
     joggedAxis = JoggedAxis.NONE
     spindleMode = SpindleMode.Rpm
-    feedMode = FeedMode.PerRev
     startFeedingTimer = None
     joystickFunction = JoystickFunction.NONE
     joystickResetRequired = None
@@ -136,11 +130,6 @@ class ManualLathe:
 
     def onSpindleModeChanged(self, value=0):
         self.spindleMode = SpindleMode(value)
-        print("spindleMode changed to: ", self.spindleMode)
-
-    def onFeedModeChanged(self, value=0):
-        self.feedMode = FeedMode(value)
-        print("feedMode changed to: ", self.feedMode)
 
     def onInputRpmChanged(self, value=spindleRpm):
         self.spindleRpm = value
@@ -163,7 +152,7 @@ class ManualLathe:
     def onTaperTurningChanged(self, value=False):
         self.isTaperTurning = value
 
-    def onFeedTaperAngleChanged(self, value=0):
+    def onFeedAngleChanged(self, value=0):
         self.feedTaperAngle = value
 
     def onSpindleSwitchRev(self, value=False):
@@ -260,10 +249,7 @@ class ManualLathe:
         print_with_timestamp("startFeeding")
         self.startFeedingTimer = None
 
-        if self.feedMode == FeedMode.PerRev:
-            cmd = f"G95 F{self.feedPerRev} "
-        else:
-            cmd = f"G94 F{self.feedPerMin} "
+        cmd = f"G95 F{self.feedPerRev} "
 
         if self.isTaperTurning:
             cmd += self.getTaperTurningCommand()
