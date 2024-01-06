@@ -2,16 +2,14 @@ import datetime
 import threading
 import time
 from collections import deque
-from enum import Enum, auto, IntEnum
+from enum import Enum, auto
 
 import linuxcnc
 from qtpyvcp.actions.machine_actions import jog
-from qtpyvcp.plugins import getPlugin
 from qtpyvcp.plugins.status import STAT
-from qtpyvcp.widgets.base_widgets.dro_base_widget import RefType
+from qtpyvcp.utilities.info import Info
 
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
-from qtpyvcp.utilities.info import Info
 
 LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
@@ -249,12 +247,15 @@ class ManualLathe:
         print_with_timestamp("startFeeding")
         self.startFeedingTimer = None
 
+        # importing it in the beginning of the file causes circular import
+        from teachinlathe.turning_helper import TurningHelper
+
         cmd = f"G95 F{self.feedPerRev} "
 
         if self.isTaperTurning:
-            cmd += self.getTaperTurningCommand()
+            cmd += TurningHelper.getTaperTurningCommand(self.joystickDirection, self.feedTaperAngle)
         else:
-            cmd += self.getStraightTurningCommand()
+            cmd += TurningHelper.getStraightTurningCommand(self.joystickDirection)
 
         self.joystickFunction = JoystickFunction.FEEDING
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
@@ -262,8 +263,8 @@ class ManualLathe:
 
         print_with_timestamp("execute mdi command: " + cmd)
         LINUXCNC_CMD.mdi(cmd)
-        STAT.poll()
 
+        # STAT.poll()
         # print("motion mode: ", STAT.motion_mode)
         # print("motion type: ", STAT.motion_type)
         # print("mdi queue: ", STAT.queue)
@@ -360,57 +361,3 @@ class ManualLathe:
                 case JoggedAxis.Z:
                     jog.axis('Z')
             self.joystickFunction = None
-
-    def getStraightTurningCommand(self):
-        x_bounds = INFO.getAxisMinMax('X')[0]
-        z_bounds = INFO.getAxisMinMax('Z')[0]
-
-        x_min_limit = x_bounds[0]
-        x_max_limit = x_bounds[1]
-        z_min_limit = z_bounds[0]
-        z_max_limit = z_bounds[1]
-
-        if self.joystickDirection == JoystickDirection.X_PLUS:
-            return 'G53 G1 X%f' % x_max_limit
-        elif self.joystickDirection == JoystickDirection.X_MINUS:
-            return 'G53 G1 X%f' % x_min_limit
-        elif self.joystickDirection == JoystickDirection.Z_PLUS:
-            return 'G53 G1 Z%f' % z_max_limit
-        elif self.joystickDirection == JoystickDirection.Z_MINUS:
-            return 'G53 G1 Z%f' % z_min_limit
-        else:
-            return ""
-
-    class Axis(IntEnum):
-        X = 0
-        Z = 2
-
-    def getTaperTurningCommand(self):
-        x_bounds = INFO.getAxisMinMax('X')[0]
-        z_bounds = INFO.getAxisMinMax('Z')[0]
-
-        x_min_limit = x_bounds[0]
-        x_max_limit = x_bounds[1]
-        z_min_limit = z_bounds[0]
-        z_max_limit = z_bounds[1]
-
-        pos = getPlugin('position')
-        xPos = pos.abs(self.Axis.X)
-        zPos = pos.abs(self.Axis.Z)
-
-        print("xPos: ", getattr(pos, RefType.Absolute.name))
-        print("zPos: ", zPos)
-
-        # getattr(self.pos, self._ref_typ.name).notify(self.updateValue)
-        # self.updateValue()
-
-        if self.joystickDirection == JoystickDirection.X_PLUS:
-            return 'G53 G1 X%f' % x_max_limit
-        elif self.joystickDirection == JoystickDirection.X_MINUS:
-            return 'G53 G1 X%f' % x_min_limit
-        elif self.joystickDirection == JoystickDirection.Z_PLUS:
-            return 'G53 G1 Z%f' % z_max_limit
-        elif self.joystickDirection == JoystickDirection.Z_MINUS:
-            return 'G53 G1 Z%f' % z_min_limit
-        else:
-            return ""

@@ -18,7 +18,9 @@ class TeachInLatheComponent:
     PinSpindleSwitchRevIn = 'spindle.switch-rev-in'
     PinSpindleSwitchFwdIn = 'spindle.switch-fwd-in'
     PinSpindleActualRpm = 'spindle.actual-rpm'
-    PinJogIncrement = 'jog-increment-value'
+    PinHandwheelsJogIncrement = 'handwheels.jog-increment'
+    PinHandwheelsAngleJogEnable = 'handwheels.angle-jog-enabled'
+    PinHandwheelsAngleJogValue = 'handwheels.angle-jog-value'
     PinToolChangeToolNo = 'tool-change.number'
     PinToolChangeRequest = 'tool-change.change'
     PinToolChangeResponse = 'tool-change.changed'
@@ -38,7 +40,9 @@ class TeachInLatheComponent:
 
     @staticmethod
     def _initialize(instance):
-        instance.comp.addPin(instance.PinJogIncrement, 'float', 'in')
+        instance.comp.addPin(instance.PinHandwheelsJogIncrement, 'float', 'in')
+        instance.comp.addPin(instance.PinHandwheelsAngleJogEnable, 'bit', 'out')
+        instance.comp.addPin(instance.PinHandwheelsAngleJogValue, 'float', 'out')
         instance.comp.addPin(instance.PinJoystickXPlus, 'bit', 'in')
         instance.comp.addPin(instance.PinJoystickXMinus, 'bit', 'in')
         instance.comp.addPin(instance.PinJoystickZPlus, 'bit', 'in')

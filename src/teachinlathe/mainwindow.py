@@ -29,7 +29,7 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsSpindleStarted, self.onSpindleRunningChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsPowerFeeding, self.onPowerFeedingChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinJogIncrement, self.onJogIncrementChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
 
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
         STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
@@ -75,9 +75,13 @@ class MyMainWindow(VCPMainWindow):
 
     def checkBoxFeedAngleChanged(self, value):
         self.inputFeedAngle.setEnabled(value)
+        self.manualLathe.onTaperTurningChanged(value)
+        self.manualLathe.onFeedAngleChanged(self.inputFeedAngle.text())
 
     def checkBoxJogAngleChanged(self, value):
         self.inputJogAngle.setEnabled(value)
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsAngleJogEnable).value = value
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsAngleJogValue).value = float(self.inputJogAngle.text())
 
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)
