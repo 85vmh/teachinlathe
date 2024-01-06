@@ -151,7 +151,7 @@ class ManualLathe:
         self.isTaperTurning = value
 
     def onFeedAngleChanged(self, value=0):
-        self.feedTaperAngle = value
+        self.feedTaperAngle = float(value)
 
     def onSpindleSwitchRev(self, value=False):
         self.spindleLever = SpindleLever.REV if value else SpindleLever.NONE
