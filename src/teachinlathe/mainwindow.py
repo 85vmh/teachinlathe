@@ -1,7 +1,7 @@
 # Setup logging
+from PyQt5.QtCore import QTimer
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities import logger
-from PyQt5.QtCore import QTimer
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
@@ -9,6 +9,7 @@ from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
+from PyQt5.QtCore import Qt
 
 STATUS = getPlugin('status')
 
@@ -24,6 +25,8 @@ class MyMainWindow(VCPMainWindow):
 
     def __init__(self, *args, **kwargs):
         super(MyMainWindow, self).__init__(*args, **kwargs)
+        self.setWindowFlag(Qt.FramelessWindowHint)
+
         self.manualLathe = ManualLathe()
         self.latheComponent = TeachInLatheComponent()
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
@@ -48,6 +51,8 @@ class MyMainWindow(VCPMainWindow):
         self.debounce_timer.start()
 
         self.openDialog.clicked.connect(self.openNumPad)
+        self.btnLoadProgram.clicked.connect(self.loadProgram)
+
         # set the current values
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
         self.manualLathe.onInputRpmChanged(self.inputRpm.text())
@@ -67,6 +72,9 @@ class MyMainWindow(VCPMainWindow):
         self.inputFeedAngle.textChanged.connect(self.manualLathe.onFeedAngleChanged)
         self.checkBoxFeedAngle.stateChanged.connect(self.checkBoxFeedAngleChanged)
         self.checkBoxJogAngle.stateChanged.connect(self.checkBoxJogAngleChanged)
+
+    def loadProgram(self):
+        self.stackedProgramsTab.setCurrentIndex(1)
 
     def onRadioButtonToggled(self):
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
