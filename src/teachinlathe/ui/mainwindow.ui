@@ -68,6 +68,12 @@
        </property>
        <item>
         <widget class="VCPStackedWidget" name="stackedWidget">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="currentIndex">
           <number>1</number>
          </property>
@@ -210,15 +216,15 @@
           <widget class="QGroupBox" name="groupBox">
            <property name="geometry">
             <rect>
-             <x>20</x>
-             <y>610</y>
+             <x>25</x>
+             <y>655</y>
              <width>966</width>
-             <height>86</height>
+             <height>96</height>
             </rect>
            </property>
            <property name="font">
             <font>
-             <pointsize>10</pointsize>
+             <pointsize>12</pointsize>
             </font>
            </property>
            <property name="styleSheet">
@@ -241,7 +247,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>30</y>
+              <y>35</y>
               <width>946</width>
               <height>51</height>
              </rect>
@@ -319,6 +325,174 @@ font: 12pt &quot;DejaVu Sans&quot;;
             </layout>
            </widget>
           </widget>
+          <widget class="ActionButton" name="exit_button_3">
+           <property name="geometry">
+            <rect>
+             <x>635</x>
+             <y>235</y>
+             <width>75</width>
+             <height>35</height>
+            </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>75</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>75</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton {
+   	font: 15pt &quot;Bebas Kai&quot;;
+}</string>
+           </property>
+           <property name="text">
+            <string>E-STOP</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="actionName" stdset="0">
+            <string>machine.estop.toggle</string>
+           </property>
+          </widget>
+          <widget class="ActionButton" name="power_button_3">
+           <property name="geometry">
+            <rect>
+             <x>635</x>
+             <y>285</y>
+             <width>75</width>
+             <height>35</height>
+            </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>75</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>75</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton {
+   	font: 15pt &quot;Bebas Kai&quot;;
+}</string>
+           </property>
+           <property name="text">
+            <string>POWER</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="actionName" stdset="0">
+            <string>machine.power.toggle</string>
+           </property>
+          </widget>
+          <widget class="ActionButton" name="axisactionbutton_7">
+           <property name="geometry">
+            <rect>
+             <x>635</x>
+             <y>335</y>
+             <width>75</width>
+             <height>35</height>
+            </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>75</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>60</width>
+             <height>40</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton {
+   	font: 15pt &quot;Bebas Kai&quot;;
+}</string>
+           </property>
+           <property name="text">
+            <string>REF X</string>
+           </property>
+           <property name="actionName" stdset="0">
+            <string>machine.home.axis:x</string>
+           </property>
+          </widget>
+          <widget class="ActionButton" name="axisactionbutton_8">
+           <property name="geometry">
+            <rect>
+             <x>635</x>
+             <y>385</y>
+             <width>75</width>
+             <height>35</height>
+            </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>75</width>
+             <height>35</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>60</width>
+             <height>40</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton {
+   	font: 15pt &quot;Bebas Kai&quot;;
+}</string>
+           </property>
+           <property name="text">
+            <string>REF Z</string>
+           </property>
+           <property name="actionName" stdset="0">
+            <string>machine.home.axis:z</string>
+           </property>
+          </widget>
          </widget>
          <widget class="QWidget" name="pageReady">
           <widget class="QTabWidget" name="tabWidget">
@@ -347,13 +521,15 @@ font: 12pt &quot;DejaVu Sans&quot;;
             </font>
            </property>
            <property name="styleSheet">
-            <string notr="true"/>
+            <string notr="true">QTabBar::tab {
+height: 50px; min-width: 204px;
+font: 14pt &quot;DejaVu Sans&quot;; }</string>
            </property>
            <property name="tabPosition">
             <enum>QTabWidget::South</enum>
            </property>
            <property name="currentIndex">
-            <number>2</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="manualTurningTab">
             <attribute name="title">
@@ -1476,7 +1652,7 @@ QPushButton:pressed {
               </size>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="pageFileSystem">
               <widget class="QFrame" name="frame_34">
@@ -1485,7 +1661,7 @@ QPushButton:pressed {
                  <x>0</x>
                  <y>0</y>
                  <width>541</width>
-                 <height>721</height>
+                 <height>711</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -2292,32 +2468,25 @@ QComboBox QAbstractItemView{
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>611</width>
+                 <width>610</width>
                  <height>466</height>
                 </rect>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="backgroundColor" stdset="0">
-                <color>
-                 <red>32</red>
-                 <green>36</green>
-                 <blue>37</blue>
-                </color>
                </property>
               </widget>
              </widget>
             </widget>
            </widget>
            <widget class="QWidget" name="toolLibraryTab">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <attribute name="title">
              <string>Tool Library</string>
             </attribute>
             <widget class="ToolTable" name="tooltable">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="geometry">
               <rect>
                <x>0</x>
