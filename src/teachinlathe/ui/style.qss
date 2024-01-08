@@ -26,3 +26,26 @@ ActionButton[actionName="program.pause"]:enabled{
 ActionButton[actionName="program.abort"]:enabled{
     background: rgb(239, 41, 41);
 }
+
+QHeaderView {
+    font: 11pt "Noto";
+    background-color: rgb(220, 220, 220);
+    color: black;
+    border: none;
+}
+
+
+ToolTable, OffsetTable {
+    border-top: 8px rgb(120, 120, 120);
+    border-left: 4px  rgb(120, 120, 120);
+    border-bottom: 5px rgb(120, 120, 120);
+    border-right: 4px rgb(120, 120, 120);
+    border-radius: 5px;
+    border-color: rgb(120, 120, 120);
+    border-style: solid;
+    background-color: rgb(120, 120, 120);
+    gridline-color: rgb(203, 203, 203);
+    alternate-background-color: rgb(90, 90, 90);
+    color: white;
+    font: 12pt "Noto";
+}

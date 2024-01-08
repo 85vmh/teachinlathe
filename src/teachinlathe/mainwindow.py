@@ -52,6 +52,7 @@ class MyMainWindow(VCPMainWindow):
 
         self.openDialog.clicked.connect(self.openNumPad)
         self.btnLoadProgram.clicked.connect(self.loadProgram)
+        self.btnBackToPrograms.clicked.connect(self.backToPrograms)
 
         # set the current values
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
@@ -73,8 +74,14 @@ class MyMainWindow(VCPMainWindow):
         self.checkBoxFeedAngle.stateChanged.connect(self.checkBoxFeedAngleChanged)
         self.checkBoxJogAngle.stateChanged.connect(self.checkBoxJogAngleChanged)
 
+        self.vtk.setViewXZ2()
+        self.vtk.enable_panning(True)
+
     def loadProgram(self):
         self.stackedProgramsTab.setCurrentIndex(1)
+
+    def backToPrograms(self):
+        self.stackedProgramsTab.setCurrentIndex(0)
 
     def onRadioButtonToggled(self):
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())

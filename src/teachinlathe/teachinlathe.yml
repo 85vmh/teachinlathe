@@ -26,6 +26,11 @@ data_plugins:
     kwargs:
       cycle_time: 75
 
+  tooltable:
+    provider: qtpyvcp.plugins.tool_table:ToolTable
+    kwargs:
+      columns: TXZDQIJR
+
 windows:
 
   mainwindow:
@@ -45,7 +50,19 @@ windows:
       # Set the window title from from the date in the vcp section above.
       title: ( vcp.name ) ( vcp.version)
 
+      confirm_exit: false
+
 application:
   kwargs:
     # Specify the application wide stylesheet.
     stylesheet: {{ file.dir }}/ui/style.qss
+
+settings:
+  offset_table.xyzabcuvw-decimals:
+    default_value: 3
+
+  offset_table.ij-decimals:
+    default_value: 1
+
+  offset_table.d-decimals:
+    default_value: 1

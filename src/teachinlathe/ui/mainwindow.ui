@@ -119,7 +119,7 @@
             <item row="0" column="0">
              <widget class="StatusLED" name="statusled">
               <property name="state">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="flashing">
                <bool>false</bool>
@@ -529,7 +529,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <enum>QTabWidget::South</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>2</number>
            </property>
            <widget class="QWidget" name="manualTurningTab">
             <attribute name="title">
@@ -988,7 +988,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
-               <string>100%</string>
+               <string>0%</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1208,7 +1208,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
-               <string>100%</string>
+               <string>0%</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1382,7 +1382,7 @@ border-radius: 4px;
                <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
-               <string>2000 mm/min</string>
+               <string>180N/A/min</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1660,7 +1660,7 @@ QPushButton:pressed {
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>541</width>
+                 <width>581</width>
                  <height>711</height>
                 </rect>
                </property>
@@ -1718,11 +1718,11 @@ QPushButton:pressed {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>  FOLDER UP</string>
+                     <string>Folder Up</string>
                     </property>
                     <property name="icon">
                      <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
@@ -1757,7 +1757,7 @@ QPushButton:pressed {
                      </size>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Bebas Kai&quot;;</string>
+                     <string notr="true">font: 12pt &quot;Noto&quot;;</string>
                     </property>
                    </widget>
                   </item>
@@ -1786,11 +1786,11 @@ QPushButton:pressed {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>LOAD G-CODE</string>
+                     <string>Load G-Code</string>
                     </property>
                    </widget>
                   </item>
@@ -1801,7 +1801,7 @@ QPushButton:pressed {
                   <item>
                    <widget class="FileSystemTable" name="filesystemtable">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -1809,7 +1809,7 @@ QPushButton:pressed {
                     <property name="minimumSize">
                      <size>
                       <width>0</width>
-                      <height>800</height>
+                      <height>570</height>
                      </size>
                     </property>
                     <property name="focusPolicy">
@@ -1822,7 +1822,7 @@ QPushButton:pressed {
 	border-color: rgb(120, 120, 120);
 	border-style: solid;
 	background-color: rgb(238, 238, 236);
-    font: 12pt &quot;Bebas Kai&quot;;
+    font: 12pt &quot;Noto&quot;;
 }
 
 QHeaderView {
@@ -1831,7 +1831,7 @@ QHeaderView {
     border: none;
 	border-radius:none;
 	border-style: none;
-	font: 13pt &quot;Bebas Kai&quot;;
+	font: 13pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="sizeAdjustPolicy">
@@ -1904,12 +1904,11 @@ QHeaderView {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
-    padding-right: 8px;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string> TO USB</string>
+                     <string>To Usb</string>
                     </property>
                     <property name="icon">
                      <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
@@ -1942,11 +1941,11 @@ QHeaderView {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string> DELETE</string>
+                     <string>Delete</string>
                     </property>
                     <property name="icon">
                      <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
@@ -1985,11 +1984,11 @@ QHeaderView {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string> NEW FILE</string>
+                     <string>New File</string>
                     </property>
                     <property name="icon">
                      <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
@@ -2028,11 +2027,11 @@ QHeaderView {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string> NEW FOLDER</string>
+                     <string>New Folder</string>
                     </property>
                     <property name="icon">
                      <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
@@ -2071,11 +2070,11 @@ QHeaderView {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>RENAME</string>
+                     <string>Rename</string>
                     </property>
                    </widget>
                   </item>
@@ -2086,10 +2085,10 @@ QHeaderView {
               <widget class="QFrame" name="frame_40">
                <property name="geometry">
                 <rect>
-                 <x>540</x>
+                 <x>580</x>
                  <y>0</y>
-                 <width>476</width>
-                 <height>601</height>
+                 <width>436</width>
+                 <height>626</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -2140,11 +2139,11 @@ QHeaderView {
                    </size>
                   </property>
                   <property name="styleSheet">
-                   <string notr="true">font: 16pt &quot;Bebas Kai&quot;;
+                   <string notr="true">font: 16pt &quot;Noto&quot;;
 color: white;</string>
                   </property>
                   <property name="text">
-                   <string>G-CODE FILE EDITOR</string>
+                   <string>G-Code File Editor</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -2153,6 +2152,9 @@ color: white;</string>
                 </item>
                 <item>
                  <widget class="GcodeTextEdit" name="gcodetextedit">
+                  <property name="syntaxHighlighting" stdset="0">
+                   <bool>true</bool>
+                  </property>
                   <property name="currentLineBackground" stdset="0">
                    <color>
                     <red>214</red>
@@ -2202,7 +2204,7 @@ color: white;</string>
                     </property>
                     <property name="minimumSize">
                      <size>
-                      <width>100</width>
+                      <width>80</width>
                       <height>35</height>
                      </size>
                     </property>
@@ -2217,11 +2219,11 @@ color: white;</string>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
+   	font: 11pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>EDIT G-CODE</string>
+                     <string>Edit G-Code</string>
                     </property>
                     <property name="checkable">
                      <bool>true</bool>
@@ -2238,13 +2240,13 @@ color: white;</string>
                     </property>
                     <property name="minimumSize">
                      <size>
-                      <width>100</width>
+                      <width>80</width>
                       <height>35</height>
                      </size>
                     </property>
                     <property name="maximumSize">
                      <size>
-                      <width>100</width>
+                      <width>110</width>
                       <height>35</height>
                      </size>
                     </property>
@@ -2253,11 +2255,11 @@ color: white;</string>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
+   	font: 11pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>FIND/REPLACE</string>
+                     <string>Find/Replace</string>
                     </property>
                    </widget>
                   </item>
@@ -2271,13 +2273,13 @@ color: white;</string>
                     </property>
                     <property name="minimumSize">
                      <size>
-                      <width>100</width>
+                      <width>60</width>
                       <height>35</height>
                      </size>
                     </property>
                     <property name="maximumSize">
                      <size>
-                      <width>100</width>
+                      <width>60</width>
                       <height>35</height>
                      </size>
                     </property>
@@ -2286,11 +2288,11 @@ color: white;</string>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
+   	font: 11pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>SAVE</string>
+                     <string>Save</string>
                     </property>
                    </widget>
                   </item>
@@ -2304,13 +2306,13 @@ color: white;</string>
                     </property>
                     <property name="minimumSize">
                      <size>
-                      <width>100</width>
+                      <width>70</width>
                       <height>35</height>
                      </size>
                     </property>
                     <property name="maximumSize">
                      <size>
-                      <width>100</width>
+                      <width>70</width>
                       <height>35</height>
                      </size>
                     </property>
@@ -2319,11 +2321,11 @@ color: white;</string>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
+   	font: 11pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>SAVE AS</string>
+                     <string>Save As</string>
                     </property>
                    </widget>
                   </item>
@@ -2334,11 +2336,16 @@ color: white;</string>
               <widget class="QPushButton" name="btnLoadProgram">
                <property name="geometry">
                 <rect>
-                 <x>720</x>
-                 <y>615</y>
-                 <width>116</width>
-                 <height>26</height>
+                 <x>725</x>
+                 <y>645</y>
+                 <width>161</width>
+                 <height>46</height>
                 </rect>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+   	font: 14pt &quot;Noto&quot;;
+}</string>
                </property>
                <property name="text">
                 <string>Load Program</string>
@@ -2349,7 +2356,7 @@ color: white;</string>
               <widget class="RecentFileComboBox" name="recentfilecombobox">
                <property name="geometry">
                 <rect>
-                 <x>615</x>
+                 <x>620</x>
                  <y>-1</y>
                  <width>391</width>
                  <height>30</height>
@@ -2403,29 +2410,20 @@ QComboBox QAbstractItemView{
                 <string/>
                </property>
               </widget>
-              <widget class="GcodeTextEdit" name="gcodetextedit_2">
+              <widget class="GcodeTextEdit" name="gcodeview">
                <property name="geometry">
                 <rect>
                  <x>610</x>
-                 <y>35</y>
+                 <y>30</y>
                  <width>406</width>
-                 <height>431</height>
+                 <height>456</height>
                 </rect>
                </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="tabStopWidth">
-                <number>100</number>
-               </property>
                <property name="syntaxHighlighting" stdset="0">
-                <bool>false</bool>
+                <bool>true</bool>
+               </property>
+               <property name="readOnly" stdset="0">
+                <bool>true</bool>
                </property>
                <property name="currentLineBackground" stdset="0">
                 <color>
@@ -2463,36 +2461,75 @@ QComboBox QAbstractItemView{
                 </color>
                </property>
               </widget>
-              <widget class="VTKBackPlot" name="vtkbackplot_2">
+              <widget class="QWidget" name="horizontalLayoutWidget_2">
                <property name="geometry">
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>610</width>
-                 <height>466</height>
+                 <width>611</width>
+                 <height>486</height>
                 </rect>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_2">
+                <item>
+                 <widget class="VTKBackPlot" name="vtk">
+                  <widget class="QPushButton" name="btnBackToPrograms">
+                   <property name="geometry">
+                    <rect>
+                     <x>10</x>
+                     <y>10</y>
+                     <width>66</width>
+                     <height>26</height>
+                    </rect>
+                   </property>
+                   <property name="text">
+                    <string>Back</string>
+                   </property>
+                  </widget>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QPushButton" name="zoomOutView">
+               <property name="geometry">
+                <rect>
+                 <x>45</x>
+                 <y>520</y>
+                 <width>31</width>
+                 <height>31</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>-</string>
+               </property>
+              </widget>
+              <widget class="QPushButton" name="zoomInView">
+               <property name="geometry">
+                <rect>
+                 <x>90</x>
+                 <y>520</y>
+                 <width>31</width>
+                 <height>31</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>+</string>
                </property>
               </widget>
              </widget>
             </widget>
            </widget>
-           <widget class="QWidget" name="toolLibraryTab">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
+           <widget class="QWidget" name="toolsTab">
             <attribute name="title">
              <string>Tool Library</string>
             </attribute>
             <widget class="ToolTable" name="tooltable">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>701</width>
-               <height>426</height>
+               <width>661</width>
+               <height>376</height>
               </rect>
              </property>
             </widget>
@@ -2607,7 +2644,120 @@ QComboBox QAbstractItemView{
   <include location="../resources/resources.qrc"/>
   <include location="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>zoomInView</sender>
+   <signal>clicked()</signal>
+   <receiver>vtk</receiver>
+   <slot>zoomIn()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>94</x>
+     <y>452</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>309</x>
+     <y>246</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zoomOutView</sender>
+   <signal>clicked()</signal>
+   <receiver>vtk</receiver>
+   <slot>zoomOut()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>229</x>
+     <y>452</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>309</x>
+     <y>246</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>main_folder_up_button</sender>
+   <signal>clicked()</signal>
+   <receiver>filesystemtable</receiver>
+   <slot>viewParentDirectory()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>73</x>
+     <y>39</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>294</x>
+     <y>359</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>edit_gcode_button</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>gcodetextedit</receiver>
+   <slot>EditorReadWrite(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>655</x>
+     <y>601</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>801</x>
+     <y>314</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>find_replace_button</sender>
+   <signal>clicked()</signal>
+   <receiver>gcodetextedit</receiver>
+   <slot>findDialog()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>776</x>
+     <y>601</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>801</x>
+     <y>314</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>save_button</sender>
+   <signal>clicked()</signal>
+   <receiver>gcodetextedit</receiver>
+   <slot>saveFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>877</x>
+     <y>601</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>801</x>
+     <y>314</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>save_as_button</sender>
+   <signal>clicked()</signal>
+   <receiver>gcodetextedit</receiver>
+   <slot>saveFileAs()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>958</x>
+     <y>601</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>801</x>
+     <y>314</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
  <buttongroups>
   <buttongroup name="spindleMode"/>
  </buttongroups>
