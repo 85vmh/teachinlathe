@@ -529,7 +529,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <enum>QTabWidget::South</enum>
            </property>
            <property name="currentIndex">
-            <number>2</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="manualTurningTab">
             <attribute name="title">
@@ -2153,7 +2153,7 @@ color: white;</string>
                 <item>
                  <widget class="GcodeTextEdit" name="gcodetextedit">
                   <property name="syntaxHighlighting" stdset="0">
-                   <bool>true</bool>
+                   <bool>false</bool>
                   </property>
                   <property name="currentLineBackground" stdset="0">
                    <color>
@@ -2420,7 +2420,7 @@ QComboBox QAbstractItemView{
                 </rect>
                </property>
                <property name="syntaxHighlighting" stdset="0">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <property name="readOnly" stdset="0">
                 <bool>true</bool>
