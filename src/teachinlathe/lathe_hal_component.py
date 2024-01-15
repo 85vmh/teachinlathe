@@ -18,6 +18,7 @@ class TeachInLatheComponent:
     PinSpindleSwitchRevIn = 'spindle.switch-rev-in'
     PinSpindleSwitchFwdIn = 'spindle.switch-fwd-in'
     PinSpindleActualRpm = 'spindle.actual-rpm'
+    PinSpindleIsFirstGear = 'spindle.is-first-gear'
     PinHandwheelsJogIncrement = 'handwheels.jog-increment'
     PinHandwheelsAngleJogEnable = 'handwheels.angle-jog-enabled'
     PinHandwheelsAngleJogValue = 'handwheels.angle-jog-value'
@@ -52,6 +53,7 @@ class TeachInLatheComponent:
         instance.comp.addPin(instance.PinSpindleSwitchRevIn, 'bit', 'in')
         instance.comp.addPin(instance.PinSpindleSwitchFwdIn, 'bit', 'in')
         instance.comp.addPin(instance.PinSpindleActualRpm, 'float', 'in')
+        instance.comp.addPin(instance.PinSpindleIsFirstGear, 'bit', 'in')
         instance.comp.addPin(instance.PinAxisLimitXMin, 'float', 'in')
         instance.comp.addPin(instance.PinAxisLimitXMax, 'float', 'in')
         instance.comp.addPin(instance.PinAxisLimitZMin, 'float', 'in')

@@ -13,6 +13,8 @@ from PyQt5.QtCore import Qt
 
 STATUS = getPlugin('status')
 
+from resources import resources_rc
+
 
 class MyMainWindow(VCPMainWindow):
     """Main window class for the VCP."""
@@ -33,12 +35,16 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsSpindleStarted, self.onSpindleRunningChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsPowerFeeding, self.onPowerFeedingChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsFirstGear, self.onSpindleFirstGearChanged)
+        self.teachinlathedro.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
+        self.teachinlathedro.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
 
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
         STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
 
         self.lastSpindleRpm = 0
         self.isPowerFeeding = False
+        self.isFirstGear = True
         # get the initial values
         self.current_spindle_override = STATUS.spindle[0].override.value
         self.current_feed_override = STATUS.feedrate.value
@@ -74,11 +80,18 @@ class MyMainWindow(VCPMainWindow):
         self.checkBoxFeedAngle.stateChanged.connect(self.checkBoxFeedAngleChanged)
         self.checkBoxJogAngle.stateChanged.connect(self.checkBoxJogAngleChanged)
 
+        self.inputRpm.mousePressEvent = lambda _: self.openNumPad(self.inputRpm, True)
+        self.inputFeed.mousePressEvent = lambda _: self.openNumPad(self.inputFeed)
+        self.inputCss.mousePressEvent = lambda _: self.openNumPad(self.inputCss)
+        self.inputMaxRpm.mousePressEvent = lambda _: self.openNumPad(self.inputMaxRpm, True)
+        self.inputFeedAngle.mousePressEvent = lambda _: self.openNumPad(self.inputFeedAngle)
+
         self.vtk.setViewXZ2()
         self.vtk.enable_panning(True)
 
     def loadProgram(self):
         self.stackedProgramsTab.setCurrentIndex(1)
+        self.vtk.clearLivePlot()
 
     def backToPrograms(self):
         self.stackedProgramsTab.setCurrentIndex(0)
@@ -91,7 +104,9 @@ class MyMainWindow(VCPMainWindow):
     def checkBoxFeedAngleChanged(self, value):
         self.inputFeedAngle.setEnabled(value)
         self.manualLathe.onTaperTurningChanged(value)
-        self.manualLathe.onFeedAngleChanged(self.inputFeedAngle.text())
+        input_text = self.inputFeedAngle.text()
+        if input_text.isdigit():
+            self.manualLathe.onFeedAngleChanged(input_text)
 
     def checkBoxJogAngleChanged(self, value):
         self.inputJogAngle.setEnabled(value)
@@ -111,14 +126,17 @@ class MyMainWindow(VCPMainWindow):
         self.inputFeedAngle.setEnabled(not value and self.checkBoxFeedAngle.isChecked())
         self.inputJogAngle.setEnabled(not value and self.checkBoxJogAngle.isChecked())
 
-    def openNumPad(self):
-        self.dialog = SmartNumPadDialog(self)
-        self.dialog.show()
+    def openNumPad(self, line_edit, spindle_related=False):
+        if spindle_related:
+            suffix = '-1' if self.isFirstGear else '-2'
+        else:
+            suffix = ''
 
-        # self.window = QtWidgets.QDialog()
-        # self.ui = SmartNumPadDialog()
-        # self.ui.setupUi(self.window)
-        # self.window.show()
+        setting_name = getattr(line_edit, 'settingName', None)
+        dialog = SmartNumPadDialog(setting_name + suffix)
+        dialog.valueSelected.connect(lambda value: line_edit.setText(value))
+        line_edit.clearFocus()
+        dialog.exec_()
 
     def onPowerFeedingChanged(self, value):
         self.isPowerFeeding = value
@@ -126,6 +144,9 @@ class MyMainWindow(VCPMainWindow):
 
     def onJogIncrementChanged(self, value):
         self.jogIncrement.setText(format(value, '.3f') + ' mm/div')
+
+    def onSpindleFirstGearChanged(self, value):
+        self.isFirstGear = value
 
     def onSpindleRpmChanged(self, value):
         self.lastSpindleRpm = abs(int(value))
@@ -136,8 +157,10 @@ class MyMainWindow(VCPMainWindow):
 
     def handle_spindle_mode(self, index):
         override_factor = self.current_spindle_override
-        if index == 1:
-            self.actualCss.setText(str(int(int(self.inputCss.text()) * override_factor)))
+        input_text = self.inputCss.text()
+
+        if input_text.isdigit() and index == 1:  # Check if input_text is a digit and index is 1
+            self.actualCss.setText(str(int(input_text) * override_factor))
 
     def update_actual_feed(self):
         override_factor = self.current_feed_override
@@ -155,3 +178,22 @@ class MyMainWindow(VCPMainWindow):
     def onFeedOverrideChanged(self, value):
         self.current_feed_override = value
         self.update_actual_feed()
+
+    def onXPrimaryDroClicked(self, value):
+        print("onXPrimaryDroClicked", value)
+        dialog = SmartNumPadDialog("smart_numpad.x-offset", True)
+        dialog.valueSelected.connect(self.setXOffset)
+        dialog.exec_()
+
+    def onZPrimaryDroClicked(self, value):
+        print("onZPrimaryDroClicked", value)
+        dialog = SmartNumPadDialog("smart_numpad.z-offset", True)
+        dialog.valueSelected.connect(self.setZOffset)
+        dialog.exec_()
+
+    def setXOffset(self, value):
+        print("setXOffset", value)
+
+    def setZOffset(self, value):
+        print("setZOffset", value)
+

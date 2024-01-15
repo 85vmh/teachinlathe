@@ -15,84 +15,2472 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1024, 768)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
-        MainWindow.setMaximumSize(QtCore.QSize(1024, 768))
+        MainWindow.setMinimumSize(QtCore.QSize(1024, 768))
+        MainWindow.setMaximumSize(QtCore.QSize(2000, 1500))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.verticalFrame = QtWidgets.QFrame(self.centralwidget)
-        self.verticalFrame.setStyleSheet("QTabBar::tab {\n"
-"height: 50px; width: 90px;\n"
-"font: 14pt \"DejaVu Sans\"; }")
-        self.verticalFrame.setFrameShape(QtWidgets.QFrame.Box)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.verticalFrame.sizePolicy().hasHeightForWidth())
+        self.verticalFrame.setSizePolicy(sizePolicy)
         self.verticalFrame.setObjectName("verticalFrame")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.verticalFrame)
+        self.verticalLayout_2.setContentsMargins(2, 2, 2, 2)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.tabWidget = QtWidgets.QTabWidget(self.verticalFrame)
+        self.stackedWidget = VCPStackedWidget(self.verticalFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.stackedWidget.sizePolicy().hasHeightForWidth())
+        self.stackedWidget.setSizePolicy(sizePolicy)
+        self.stackedWidget.setObjectName("stackedWidget")
+        self.pageNotReady = QtWidgets.QWidget()
+        self.pageNotReady.setObjectName("pageNotReady")
+        self.label_14 = QtWidgets.QLabel(self.pageNotReady)
+        self.label_14.setGeometry(QtCore.QRect(295, 70, 416, 136))
+        self.label_14.setStyleSheet("font: 75 72pt \"Bitstream Vera Sans\";")
+        self.label_14.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_14.setObjectName("label_14")
+        self.formLayoutWidget = QtWidgets.QWidget(self.pageNotReady)
+        self.formLayoutWidget.setGeometry(QtCore.QRect(400, 235, 221, 186))
+        self.formLayoutWidget.setObjectName("formLayoutWidget")
+        self.formLayout = QtWidgets.QFormLayout(self.formLayoutWidget)
+        self.formLayout.setContentsMargins(0, 0, 0, 0)
+        self.formLayout.setHorizontalSpacing(15)
+        self.formLayout.setVerticalSpacing(20)
+        self.formLayout.setObjectName("formLayout")
+        self.statusled = StatusLED(self.formLayoutWidget)
+        self.statusled.setState(False)
+        self.statusled.setFlashing(False)
+        self.statusled.setFlashRate(500)
+        self.statusled.setObjectName("statusled")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.statusled)
+        self.statusled_2 = StatusLED(self.formLayoutWidget)
+        self.statusled_2.setFlashing(False)
+        self.statusled_2.setFlashRate(500)
+        self.statusled_2.setObjectName("statusled_2")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.statusled_2)
+        self.statuslabel_2 = StatusLabel(self.formLayoutWidget)
+        self.statuslabel_2.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.statuslabel_2.setObjectName("statuslabel_2")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.statuslabel_2)
+        self.statuslabel = StatusLabel(self.formLayoutWidget)
+        self.statuslabel.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.statuslabel.setObjectName("statuslabel")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.statuslabel)
+        self.statusled_3 = StatusLED(self.formLayoutWidget)
+        self.statusled_3.setFlashing(False)
+        self.statusled_3.setFlashRate(500)
+        self.statusled_3.setObjectName("statusled_3")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.statusled_3)
+        self.statuslabel_3 = StatusLabel(self.formLayoutWidget)
+        self.statuslabel_3.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.statuslabel_3.setObjectName("statuslabel_3")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.statuslabel_3)
+        self.statusled_4 = StatusLED(self.formLayoutWidget)
+        self.statusled_4.setFlashing(False)
+        self.statusled_4.setFlashRate(500)
+        self.statusled_4.setObjectName("statusled_4")
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.statusled_4)
+        self.statuslabel_4 = StatusLabel(self.formLayoutWidget)
+        self.statuslabel_4.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.statuslabel_4.setObjectName("statuslabel_4")
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.statuslabel_4)
+        self.groupBox = QtWidgets.QGroupBox(self.pageNotReady)
+        self.groupBox.setGeometry(QtCore.QRect(25, 655, 966, 96))
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        self.groupBox.setFont(font)
+        self.groupBox.setStyleSheet("ActionButton {\n"
+"min-height: 30px;\n"
+"min-width: 50px;\n"
+"font: 12pt \"DejaVu Sans\";\n"
+"}")
+        self.groupBox.setAlignment(QtCore.Qt.AlignCenter)
+        self.groupBox.setFlat(False)
+        self.groupBox.setObjectName("groupBox")
+        self.horizontalLayoutWidget = QtWidgets.QWidget(self.groupBox)
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(10, 35, 946, 51))
+        self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
+        self.horizontalLayout.setContentsMargins(4, 0, 4, 0)
+        self.horizontalLayout.setSpacing(10)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.actionbutton = ActionButton(self.horizontalLayoutWidget)
+        self.actionbutton.setObjectName("actionbutton")
+        self.horizontalLayout.addWidget(self.actionbutton)
+        self.actionbutton_2 = ActionButton(self.horizontalLayoutWidget)
+        self.actionbutton_2.setObjectName("actionbutton_2")
+        self.horizontalLayout.addWidget(self.actionbutton_2)
+        self.actionbutton_3 = ActionButton(self.horizontalLayoutWidget)
+        self.actionbutton_3.setObjectName("actionbutton_3")
+        self.horizontalLayout.addWidget(self.actionbutton_3)
+        self.actionbutton_4 = ActionButton(self.horizontalLayoutWidget)
+        self.actionbutton_4.setObjectName("actionbutton_4")
+        self.horizontalLayout.addWidget(self.actionbutton_4)
+        self.actionbutton_5 = ActionButton(self.horizontalLayoutWidget)
+        self.actionbutton_5.setObjectName("actionbutton_5")
+        self.horizontalLayout.addWidget(self.actionbutton_5)
+        self.actionbutton_6 = ActionButton(self.horizontalLayoutWidget)
+        self.actionbutton_6.setObjectName("actionbutton_6")
+        self.horizontalLayout.addWidget(self.actionbutton_6)
+        self.exit_button_3 = ActionButton(self.pageNotReady)
+        self.exit_button_3.setGeometry(QtCore.QRect(635, 235, 75, 35))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.exit_button_3.sizePolicy().hasHeightForWidth())
+        self.exit_button_3.setSizePolicy(sizePolicy)
+        self.exit_button_3.setMinimumSize(QtCore.QSize(75, 35))
+        self.exit_button_3.setMaximumSize(QtCore.QSize(75, 35))
+        self.exit_button_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.exit_button_3.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.exit_button_3.setCheckable(True)
+        self.exit_button_3.setObjectName("exit_button_3")
+        self.power_button_3 = ActionButton(self.pageNotReady)
+        self.power_button_3.setGeometry(QtCore.QRect(635, 285, 75, 35))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.power_button_3.sizePolicy().hasHeightForWidth())
+        self.power_button_3.setSizePolicy(sizePolicy)
+        self.power_button_3.setMinimumSize(QtCore.QSize(75, 35))
+        self.power_button_3.setMaximumSize(QtCore.QSize(75, 35))
+        self.power_button_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.power_button_3.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.power_button_3.setCheckable(True)
+        self.power_button_3.setObjectName("power_button_3")
+        self.axisactionbutton_7 = ActionButton(self.pageNotReady)
+        self.axisactionbutton_7.setGeometry(QtCore.QRect(635, 335, 75, 35))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.axisactionbutton_7.sizePolicy().hasHeightForWidth())
+        self.axisactionbutton_7.setSizePolicy(sizePolicy)
+        self.axisactionbutton_7.setMinimumSize(QtCore.QSize(75, 35))
+        self.axisactionbutton_7.setMaximumSize(QtCore.QSize(60, 40))
+        self.axisactionbutton_7.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.axisactionbutton_7.setObjectName("axisactionbutton_7")
+        self.axisactionbutton_8 = ActionButton(self.pageNotReady)
+        self.axisactionbutton_8.setGeometry(QtCore.QRect(635, 385, 75, 35))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.axisactionbutton_8.sizePolicy().hasHeightForWidth())
+        self.axisactionbutton_8.setSizePolicy(sizePolicy)
+        self.axisactionbutton_8.setMinimumSize(QtCore.QSize(75, 35))
+        self.axisactionbutton_8.setMaximumSize(QtCore.QSize(60, 40))
+        self.axisactionbutton_8.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.axisactionbutton_8.setObjectName("axisactionbutton_8")
+        self.stackedWidget.addWidget(self.pageNotReady)
+        self.pageReady = QtWidgets.QWidget()
+        self.pageReady.setObjectName("pageReady")
+        self.tabWidget = QtWidgets.QTabWidget(self.pageReady)
+        self.tabWidget.setEnabled(True)
+        self.tabWidget.setGeometry(QtCore.QRect(0, 0, 1020, 764))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
+        self.tabWidget.setSizePolicy(sizePolicy)
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        font.setBold(False)
+        font.setWeight(50)
+        self.tabWidget.setFont(font)
+        self.tabWidget.setStyleSheet("QTabBar::tab {\n"
+"height: 50px; min-width: 204px;\n"
+"font: 14pt \"DejaVu Sans\"; }")
         self.tabWidget.setTabPosition(QtWidgets.QTabWidget.South)
         self.tabWidget.setObjectName("tabWidget")
-        self.tab = QtWidgets.QWidget()
-        self.tab.setObjectName("tab")
-        self.dro_entry = DROLineEdit(self.tab)
-        self.dro_entry.setGeometry(QtCore.QRect(260, 380, 125, 26))
-        self.dro_entry.setProperty("referenceType", 1)
-        self.dro_entry.setProperty("axisNumber", 2)
-        self.dro_entry.setProperty("latheMode", 0)
-        self.dro_entry.setObjectName("dro_entry")
-        self.verticalLayoutWidget = QtWidgets.QWidget(self.tab)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 20, 631, 191))
-        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
-        self.manual_dro = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
-        self.manual_dro.setContentsMargins(0, 0, 0, 0)
-        self.manual_dro.setObjectName("manual_dro")
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.label = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.label.setStyleSheet("font: 60pt \"Noto Sans\";")
-        self.label.setObjectName("label")
-        self.horizontalLayout.addWidget(self.label)
-        self.drolabel = DROLabel(self.verticalLayoutWidget)
-        self.drolabel.setStyleSheet("font: 75 50pt \"C059\";")
-        self.drolabel.setObjectName("drolabel")
-        self.horizontalLayout.addWidget(self.drolabel)
-        self.statuslabel = StatusLabel(self.verticalLayoutWidget)
-        self.statuslabel.setStyleSheet("font: 30pt \"Noto Sans\";")
-        self.statuslabel.setObjectName("statuslabel")
-        self.horizontalLayout.addWidget(self.statuslabel)
-        self.manual_dro.addLayout(self.horizontalLayout)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.manualTurningTab = QtWidgets.QWidget()
+        self.manualTurningTab.setObjectName("manualTurningTab")
+        self.teachinlathedro = TeachInLatheDro(self.manualTurningTab)
+        self.teachinlathedro.setGeometry(QtCore.QRect(0, 0, 821, 191))
+        self.teachinlathedro.setObjectName("teachinlathedro")
+        self.openDialog = QtWidgets.QPushButton(self.manualTurningTab)
+        self.openDialog.setGeometry(QtCore.QRect(850, 20, 131, 71))
+        self.openDialog.setObjectName("openDialog")
+        self.frame = QtWidgets.QFrame(self.manualTurningTab)
+        self.frame.setGeometry(QtCore.QRect(5, 190, 641, 81))
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label_12 = QtWidgets.QLabel(self.frame)
+        self.label_12.setGeometry(QtCore.QRect(5, 20, 36, 46))
+        self.label_12.setStyleSheet("font: 75 40pt \"Bitstream Vera Sans\";")
+        self.label_12.setObjectName("label_12")
+        self.radioRpm = QtWidgets.QRadioButton(self.frame)
+        self.radioRpm.setGeometry(QtCore.QRect(95, 10, 61, 24))
+        self.radioRpm.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.radioRpm.setChecked(True)
+        self.radioRpm.setObjectName("radioRpm")
+        self.spindleMode = QtWidgets.QButtonGroup(MainWindow)
+        self.spindleMode.setObjectName("spindleMode")
+        self.spindleMode.addButton(self.radioRpm)
+        self.radioCss = QtWidgets.QRadioButton(self.frame)
+        self.radioCss.setGeometry(QtCore.QRect(95, 50, 61, 24))
+        self.radioCss.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.radioCss.setObjectName("radioCss")
+        self.spindleMode.addButton(self.radioCss)
+        self.spindleModeWidget = QtWidgets.QStackedWidget(self.frame)
+        self.spindleModeWidget.setGeometry(QtCore.QRect(160, 5, 476, 71))
+        self.spindleModeWidget.setFrameShape(QtWidgets.QFrame.Box)
+        self.spindleModeWidget.setLineWidth(1)
+        self.spindleModeWidget.setObjectName("spindleModeWidget")
+        self.pageRpm = QtWidgets.QWidget()
+        self.pageRpm.setObjectName("pageRpm")
+        self.rpmUnit_10 = QtWidgets.QLabel(self.pageRpm)
+        self.rpmUnit_10.setGeometry(QtCore.QRect(175, 40, 61, 21))
+        self.rpmUnit_10.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.rpmUnit_10.setObjectName("rpmUnit_10")
+        self.actualRpm = QtWidgets.QLabel(self.pageRpm)
+        self.actualRpm.setGeometry(QtCore.QRect(110, 40, 61, 21))
+        self.actualRpm.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.actualRpm.setAlignment(QtCore.Qt.AlignCenter)
+        self.actualRpm.setObjectName("actualRpm")
+        self.label_16 = QtWidgets.QLabel(self.pageRpm)
+        self.label_16.setGeometry(QtCore.QRect(15, 40, 91, 21))
+        self.label_16.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_16.setObjectName("label_16")
+        self.rpmUnit_7 = QtWidgets.QLabel(self.pageRpm)
+        self.rpmUnit_7.setGeometry(QtCore.QRect(175, 10, 61, 21))
+        self.rpmUnit_7.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.rpmUnit_7.setObjectName("rpmUnit_7")
+        self.label_15 = QtWidgets.QLabel(self.pageRpm)
+        self.label_15.setGeometry(QtCore.QRect(15, 10, 81, 21))
+        self.label_15.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_15.setObjectName("label_15")
+        self.inputRpm = VCPSettingsLineEdit(self.pageRpm)
+        self.inputRpm.setGeometry(QtCore.QRect(110, 5, 61, 31))
+        self.inputRpm.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.inputRpm.setAlignment(QtCore.Qt.AlignCenter)
+        self.inputRpm.setObjectName("inputRpm")
+        self.spindleModeWidget.addWidget(self.pageRpm)
+        self.pageCss = QtWidgets.QWidget()
+        self.pageCss.setObjectName("pageCss")
+        self.rpmUnit_11 = QtWidgets.QLabel(self.pageCss)
+        self.rpmUnit_11.setGeometry(QtCore.QRect(410, 40, 61, 21))
+        self.rpmUnit_11.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.rpmUnit_11.setObjectName("rpmUnit_11")
+        self.rpmUnit_14 = QtWidgets.QLabel(self.pageCss)
+        self.rpmUnit_14.setGeometry(QtCore.QRect(410, 10, 61, 21))
+        self.rpmUnit_14.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.rpmUnit_14.setObjectName("rpmUnit_14")
+        self.label_17 = QtWidgets.QLabel(self.pageCss)
+        self.label_17.setGeometry(QtCore.QRect(255, 40, 81, 21))
+        self.label_17.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_17.setObjectName("label_17")
+        self.label_19 = QtWidgets.QLabel(self.pageCss)
+        self.label_19.setGeometry(QtCore.QRect(255, 10, 81, 21))
+        self.label_19.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_19.setObjectName("label_19")
+        self.actualCss = QtWidgets.QLabel(self.pageCss)
+        self.actualCss.setGeometry(QtCore.QRect(345, 40, 61, 21))
+        self.actualCss.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.actualCss.setAlignment(QtCore.Qt.AlignCenter)
+        self.actualCss.setObjectName("actualCss")
+        self.actualRpmCss = QtWidgets.QLabel(self.pageCss)
+        self.actualRpmCss.setGeometry(QtCore.QRect(110, 40, 61, 21))
+        self.actualRpmCss.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.actualRpmCss.setAlignment(QtCore.Qt.AlignCenter)
+        self.actualRpmCss.setObjectName("actualRpmCss")
+        self.label_20 = QtWidgets.QLabel(self.pageCss)
+        self.label_20.setGeometry(QtCore.QRect(15, 40, 91, 21))
+        self.label_20.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_20.setObjectName("label_20")
+        self.rpmUnit_15 = QtWidgets.QLabel(self.pageCss)
+        self.rpmUnit_15.setGeometry(QtCore.QRect(175, 40, 61, 21))
+        self.rpmUnit_15.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.rpmUnit_15.setObjectName("rpmUnit_15")
+        self.rpmUnit_12 = QtWidgets.QLabel(self.pageCss)
+        self.rpmUnit_12.setGeometry(QtCore.QRect(175, 10, 61, 21))
+        self.rpmUnit_12.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.rpmUnit_12.setObjectName("rpmUnit_12")
+        self.label_18 = QtWidgets.QLabel(self.pageCss)
+        self.label_18.setGeometry(QtCore.QRect(15, 10, 81, 21))
+        self.label_18.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_18.setObjectName("label_18")
+        self.line_3 = QtWidgets.QFrame(self.pageCss)
+        self.line_3.setGeometry(QtCore.QRect(240, 5, 3, 61))
+        self.line_3.setFrameShape(QtWidgets.QFrame.VLine)
+        self.line_3.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_3.setObjectName("line_3")
+        self.inputMaxRpm = VCPSettingsLineEdit(self.pageCss)
+        self.inputMaxRpm.setGeometry(QtCore.QRect(110, 5, 61, 31))
+        self.inputMaxRpm.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.inputMaxRpm.setAlignment(QtCore.Qt.AlignCenter)
+        self.inputMaxRpm.setObjectName("inputMaxRpm")
+        self.inputCss = VCPSettingsLineEdit(self.pageCss)
+        self.inputCss.setGeometry(QtCore.QRect(345, 5, 61, 31))
+        self.inputCss.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.inputCss.setAlignment(QtCore.Qt.AlignCenter)
+        self.inputCss.setObjectName("inputCss")
+        self.spindleModeWidget.addWidget(self.pageCss)
+        self.statuslabel_6 = StatusLabel(self.frame)
+        self.statuslabel_6.setGeometry(QtCore.QRect(35, 45, 51, 21))
+        self.statuslabel_6.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.statuslabel_6.setAlignment(QtCore.Qt.AlignCenter)
+        self.statuslabel_6.setObjectName("statuslabel_6")
+        self.frame_2 = QtWidgets.QFrame(self.manualTurningTab)
+        self.frame_2.setGeometry(QtCore.QRect(5, 280, 641, 71))
+        self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_2.setObjectName("frame_2")
+        self.label_29 = QtWidgets.QLabel(self.frame_2)
+        self.label_29.setGeometry(QtCore.QRect(5, 15, 36, 46))
+        self.label_29.setStyleSheet("font: 75 40pt \"Bitstream Vera Sans\";")
+        self.label_29.setObjectName("label_29")
+        self.actualFeed = QtWidgets.QLabel(self.frame_2)
+        self.actualFeed.setGeometry(QtCore.QRect(270, 40, 61, 21))
+        self.actualFeed.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.actualFeed.setAlignment(QtCore.Qt.AlignCenter)
+        self.actualFeed.setObjectName("actualFeed")
+        self.actualFeedType = QtWidgets.QLabel(self.frame_2)
+        self.actualFeedType.setGeometry(QtCore.QRect(335, 40, 61, 21))
+        self.actualFeedType.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.actualFeedType.setObjectName("actualFeedType")
+        self.label_31 = QtWidgets.QLabel(self.frame_2)
+        self.label_31.setGeometry(QtCore.QRect(175, 40, 91, 21))
+        self.label_31.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_31.setObjectName("label_31")
+        self.label_32 = QtWidgets.QLabel(self.frame_2)
+        self.label_32.setGeometry(QtCore.QRect(175, 10, 76, 21))
+        self.label_32.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_32.setObjectName("label_32")
+        self.line_5 = QtWidgets.QFrame(self.frame_2)
+        self.line_5.setGeometry(QtCore.QRect(395, 0, 16, 76))
+        self.line_5.setFrameShape(QtWidgets.QFrame.VLine)
+        self.line_5.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_5.setObjectName("line_5")
+        self.checkBoxFeedAngle = QtWidgets.QCheckBox(self.frame_2)
+        self.checkBoxFeedAngle.setGeometry(QtCore.QRect(410, 20, 121, 31))
+        self.checkBoxFeedAngle.setStyleSheet("QCheckBox {\n"
+"        spacing: 4px; /* Adjusts the space between the checkbox and its label */\n"
+"        font: 11pt \"Noto Sans\";\n"
+"    }\n"
+"    QCheckBox::indicator {\n"
+"        width: 18px; /* Width of the checkbox */\n"
+"        height: 18px; /* Height of the checkbox */\n"
+"    }")
+        self.checkBoxFeedAngle.setIconSize(QtCore.QSize(18, 18))
+        self.checkBoxFeedAngle.setObjectName("checkBoxFeedAngle")
+        self.rpmUnit_23 = QtWidgets.QLabel(self.frame_2)
+        self.rpmUnit_23.setGeometry(QtCore.QRect(600, 20, 31, 31))
+        self.rpmUnit_23.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.rpmUnit_23.setObjectName("rpmUnit_23")
+        self.feedOverrideValue = StatusLabel(self.frame_2)
+        self.feedOverrideValue.setGeometry(QtCore.QRect(35, 40, 51, 21))
+        self.feedOverrideValue.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.feedOverrideValue.setAlignment(QtCore.Qt.AlignCenter)
+        self.feedOverrideValue.setObjectName("feedOverrideValue")
+        self.actualFeedType_2 = QtWidgets.QLabel(self.frame_2)
+        self.actualFeedType_2.setGeometry(QtCore.QRect(335, 10, 61, 21))
+        self.actualFeedType_2.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.actualFeedType_2.setObjectName("actualFeedType_2")
+        self.inputFeed = VCPSettingsLineEdit(self.frame_2)
+        self.inputFeed.setGeometry(QtCore.QRect(270, 5, 61, 31))
+        self.inputFeed.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.inputFeed.setAlignment(QtCore.Qt.AlignCenter)
+        self.inputFeed.setObjectName("inputFeed")
+        self.inputFeedAngle = VCPSettingsLineEdit(self.frame_2)
+        self.inputFeedAngle.setEnabled(False)
+        self.inputFeedAngle.setGeometry(QtCore.QRect(540, 20, 56, 31))
+        self.inputFeedAngle.setAlignment(QtCore.Qt.AlignCenter)
+        self.inputFeedAngle.setObjectName("inputFeedAngle")
+        self.frame_3 = QtWidgets.QFrame(self.manualTurningTab)
+        self.frame_3.setGeometry(QtCore.QRect(5, 525, 641, 66))
+        self.frame_3.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_3.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_3.setObjectName("frame_3")
+        self.jogSpeedSlider = VCPSettingsSlider(self.frame_3)
+        self.jogSpeedSlider.setGeometry(QtCore.QRect(200, 4, 426, 56))
+        self.jogSpeedSlider.setMinimumSize(QtCore.QSize(0, 30))
+        self.jogSpeedSlider.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.jogSpeedSlider.setStyleSheet("QSlider::groove:horizontal {\n"
+"border: 1px solid #bbb;\n"
+"background: white;\n"
+"height: 15px;\n"
+"border-radius: 3px;\n"
+"}\n"
+"\n"
+"QSlider::sub-page:horizontal {\n"
+"background: qlineargradient(x1: 0, y1: 0,    x2: 0, y2: 1,\n"
+"    stop: 0 #66e, stop: 1 #bbf);\n"
+"background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 1,\n"
+"    stop: 0 #bbf, stop: 1 #55f);\n"
+"border: 1px solid #777;\n"
+"height: 15px;\n"
+"border-radius: 3px;\n"
+"}\n"
+"\n"
+"QSlider::add-page:horizontal {\n"
+"background: rgb(235, 235, 235);\n"
+"border: 1px solid #777;\n"
+"height: 15px;\n"
+"border-radius: 3px;\n"
+"}\n"
+"\n"
+"QSlider::handle:horizontal {\n"
+"background: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 255), stop:0.1 rgba(60, 60, 60, 255), stop:0.21 rgba(60, 60, 60, 255), stop:0.25 rgba(255, 255, 255, 255), stop:0.29 rgba(60, 60, 60, 255), stop:0.46 rgba(60, 60, 60, 255), stop:0.5 rgba(255, 255, 255, 255), stop:0.54 rgba(60, 60, 60, 255), stop:0.71 rgba(60, 60, 60, 255), stop:0.75 rgba(255, 255, 255, 255), stop:0.79 rgba(60, 60, 60, 255), stop:0.9 rgba(60, 60, 60, 255), stop:1 rgba(255, 255, 255, 255));\n"
+"border: 1px solid #777;\n"
+"border-color: rgba(40, 40, 40, 255);\n"
+"width: 20px;\n"
+"margin-top: -5px;\n"
+"margin-bottom: -5px;\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::handle:horizontal:hover {\n"
+"background: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 255), stop:0.1 rgba(60, 60, 60, 255), stop:0.21 rgba(60, 60, 60, 255), stop:0.25 rgba(255, 255, 255, 255), stop:0.29 rgba(60, 60, 60, 255), stop:0.46 rgba(60, 60, 60, 255), stop:0.5 rgba(255, 255, 255, 255), stop:0.54 rgba(60, 60, 60, 255), stop:0.71 rgba(60, 60, 60, 255), stop:0.75 rgba(255, 255, 255, 255), stop:0.79 rgba(60, 60, 60, 255), stop:0.9 rgba(60, 60, 60, 255), stop:1 rgba(255, 255, 255, 255));\n"
+"border: 1px solid #444;\n"
+"border-color: rgb(241, 239, 237);\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::sub-page:horizontal:disabled {\n"
+"background: #bbb;\n"
+"border-color: #999;\n"
+"}\n"
+"\n"
+"QSlider::add-page:horizontal:disabled {\n"
+"background: #eee;\n"
+"border-color: #999;\n"
+"}\n"
+"\n"
+"QSlider::handle:horizontal:disabled {\n"
+"background: #eee;\n"
+"border: 1px solid #aaa;\n"
+"border-radius: 4px;\n"
+"}")
+        self.jogSpeedSlider.setMinimum(10)
+        self.jogSpeedSlider.setMaximum(100)
+        self.jogSpeedSlider.setSingleStep(5)
+        self.jogSpeedSlider.setProperty("value", 50)
+        self.jogSpeedSlider.setSliderPosition(50)
+        self.jogSpeedSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.jogSpeedSlider.setTickPosition(QtWidgets.QSlider.NoTicks)
+        self.jogSpeedSlider.setTickInterval(0)
+        self.jogSpeedSlider.setObjectName("jogSpeedSlider")
+        self.label_3 = QtWidgets.QLabel(self.frame_3)
+        self.label_3.setGeometry(QtCore.QRect(5, 0, 156, 36))
+        self.label_3.setStyleSheet("font: 57 20pt \"Noto Sans\";")
+        self.label_3.setObjectName("label_3")
+        self.statuslabel_38 = StatusLabel(self.frame_3)
+        self.statuslabel_38.setGeometry(QtCore.QRect(25, 35, 116, 21))
+        self.statuslabel_38.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.statuslabel_38.setAlignment(QtCore.Qt.AlignCenter)
+        self.statuslabel_38.setObjectName("statuslabel_38")
+        self.frame_4 = QtWidgets.QFrame(self.manualTurningTab)
+        self.frame_4.setGeometry(QtCore.QRect(5, 440, 641, 76))
+        self.frame_4.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_4.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_4.setObjectName("frame_4")
+        self.statuslabel_35 = StatusLabel(self.frame_4)
+        self.statuslabel_35.setGeometry(QtCore.QRect(40, 695, 66, 16))
+        self.statuslabel_35.setStyleSheet("")
+        self.statuslabel_35.setAlignment(QtCore.Qt.AlignCenter)
+        self.statuslabel_35.setObjectName("statuslabel_35")
+        self.pushButton_3 = QtWidgets.QPushButton(self.frame_4)
+        self.pushButton_3.setGeometry(QtCore.QRect(210, 5, 64, 64))
+        font = QtGui.QFont()
+        font.setPointSize(20)
+        font.setBold(True)
+        font.setWeight(75)
+        self.pushButton_3.setFont(font)
+        self.pushButton_3.setStyleSheet("QPushButton {\n"
+"       border-radius: 32px;\n"
+"        background-color: lightblue;\n"
+"        border-style: solid;\n"
+"        border-width: 1px;\n"
+"        border-color: gray;\n"
+"}\n"
+"QPushButton:pressed {\n"
+"        background-color: blue;\n"
+"}")
+        self.pushButton_3.setObjectName("pushButton_3")
+        self.pushButton_4 = QtWidgets.QPushButton(self.frame_4)
+        self.pushButton_4.setGeometry(QtCore.QRect(315, 5, 64, 64))
+        font = QtGui.QFont()
+        font.setPointSize(20)
+        font.setBold(True)
+        font.setWeight(75)
+        self.pushButton_4.setFont(font)
+        self.pushButton_4.setStyleSheet("QPushButton {\n"
+"       border-radius: 32px;\n"
+"        background-color: lightblue;\n"
+"        border-style: solid;\n"
+"        border-width: 1px;\n"
+"        border-color: gray;\n"
+"}\n"
+"QPushButton:pressed {\n"
+"        background-color: blue;\n"
+"}")
+        self.pushButton_4.setObjectName("pushButton_4")
+        self.line_9 = QtWidgets.QFrame(self.frame_4)
+        self.line_9.setGeometry(QtCore.QRect(395, 0, 16, 76))
+        self.line_9.setFrameShape(QtWidgets.QFrame.VLine)
+        self.line_9.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_9.setObjectName("line_9")
+        self.inputJogAngle = QtWidgets.QLineEdit(self.frame_4)
+        self.inputJogAngle.setEnabled(False)
+        self.inputJogAngle.setGeometry(QtCore.QRect(540, 25, 56, 31))
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        self.inputJogAngle.setFont(font)
+        self.inputJogAngle.setAlignment(QtCore.Qt.AlignCenter)
+        self.inputJogAngle.setObjectName("inputJogAngle")
+        self.rpmUnit_24 = QtWidgets.QLabel(self.frame_4)
+        self.rpmUnit_24.setGeometry(QtCore.QRect(600, 25, 36, 31))
+        font = QtGui.QFont()
+        font.setFamily("Noto Sans")
+        font.setPointSize(11)
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.rpmUnit_24.setFont(font)
+        self.rpmUnit_24.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.rpmUnit_24.setObjectName("rpmUnit_24")
+        self.checkBoxJogAngle = QtWidgets.QCheckBox(self.frame_4)
+        self.checkBoxJogAngle.setGeometry(QtCore.QRect(410, 25, 116, 31))
+        font = QtGui.QFont()
+        font.setFamily("Noto Sans")
+        font.setPointSize(11)
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.checkBoxJogAngle.setFont(font)
+        self.checkBoxJogAngle.setStyleSheet("QCheckBox {\n"
+"        spacing: 4px; /* Adjusts the space between the checkbox and its label */\n"
+"        font: 11pt \"Noto Sans\";\n"
+"    }\n"
+"    QCheckBox::indicator {\n"
+"        width: 18px; /* Width of the checkbox */\n"
+"        height: 18px; /* Height of the checkbox */\n"
+"    }")
+        self.checkBoxJogAngle.setObjectName("checkBoxJogAngle")
+        self.label_2 = QtWidgets.QLabel(self.frame_4)
+        self.label_2.setGeometry(QtCore.QRect(5, 5, 156, 36))
+        self.label_2.setStyleSheet("font: 57 20pt \"Noto Sans\";")
+        self.label_2.setObjectName("label_2")
+        self.jogIncrement = QtWidgets.QLabel(self.frame_4)
+        self.jogIncrement.setGeometry(QtCore.QRect(30, 45, 111, 18))
+        self.jogIncrement.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.jogIncrement.setAlignment(QtCore.Qt.AlignCenter)
+        self.jogIncrement.setObjectName("jogIncrement")
+        self.frame_5 = QtWidgets.QFrame(self.manualTurningTab)
+        self.frame_5.setGeometry(QtCore.QRect(5, 360, 641, 71))
+        self.frame_5.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_5.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_5.setObjectName("frame_5")
+        self.label_30 = QtWidgets.QLabel(self.frame_5)
+        self.label_30.setGeometry(QtCore.QRect(5, 10, 36, 46))
+        self.label_30.setStyleSheet("font: 75 40pt \"Bitstream Vera Sans\";")
+        self.label_30.setObjectName("label_30")
+        self.label_33 = QtWidgets.QLabel(self.frame_5)
+        self.label_33.setGeometry(QtCore.QRect(105, 5, 66, 27))
+        self.label_33.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_33.setObjectName("label_33")
+        self.label_34 = QtWidgets.QLabel(self.frame_5)
+        self.label_34.setGeometry(QtCore.QRect(105, 35, 66, 27))
+        self.label_34.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_34.setObjectName("label_34")
+        self.tool_diameter_7 = StatusLabel(self.frame_5)
+        self.tool_diameter_7.setGeometry(QtCore.QRect(175, 5, 81, 27))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tool_diameter_7.sizePolicy().hasHeightForWidth())
+        self.tool_diameter_7.setSizePolicy(sizePolicy)
+        self.tool_diameter_7.setMinimumSize(QtCore.QSize(60, 21))
+        self.tool_diameter_7.setMaximumSize(QtCore.QSize(90, 35))
+        self.tool_diameter_7.setStyleSheet("QLabel {\n"
+"    border-style: solid;\n"
+"    border-color: rgb(96, 96, 97);\n"
+"    border-width: 2px;\n"
+"    border-radius: 5px;\n"
+"    color: white;\n"
+"    background: rgb(86, 86, 87);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.tool_diameter_7.setAlignment(QtCore.Qt.AlignCenter)
+        self.tool_diameter_7.setObjectName("tool_diameter_7")
+        self.tool_diameter_8 = StatusLabel(self.frame_5)
+        self.tool_diameter_8.setGeometry(QtCore.QRect(175, 35, 80, 27))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tool_diameter_8.sizePolicy().hasHeightForWidth())
+        self.tool_diameter_8.setSizePolicy(sizePolicy)
+        self.tool_diameter_8.setMinimumSize(QtCore.QSize(70, 21))
+        self.tool_diameter_8.setMaximumSize(QtCore.QSize(90, 35))
+        self.tool_diameter_8.setStyleSheet("QLabel {\n"
+"    border-style: solid;\n"
+"    border-color: rgb(96, 96, 97);\n"
+"    border-width: 2px;\n"
+"    border-radius: 5px;\n"
+"    color: white;\n"
+"    background: rgb(86, 86, 87);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.tool_diameter_8.setAlignment(QtCore.Qt.AlignCenter)
+        self.tool_diameter_8.setObjectName("tool_diameter_8")
+        self.label_35 = QtWidgets.QLabel(self.frame_5)
+        self.label_35.setGeometry(QtCore.QRect(465, 5, 71, 27))
+        self.label_35.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_35.setObjectName("label_35")
+        self.label_36 = QtWidgets.QLabel(self.frame_5)
+        self.label_36.setGeometry(QtCore.QRect(465, 35, 71, 27))
+        self.label_36.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_36.setObjectName("label_36")
+        self.tool_diameter_9 = StatusLabel(self.frame_5)
+        self.tool_diameter_9.setGeometry(QtCore.QRect(540, 5, 61, 27))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tool_diameter_9.sizePolicy().hasHeightForWidth())
+        self.tool_diameter_9.setSizePolicy(sizePolicy)
+        self.tool_diameter_9.setMinimumSize(QtCore.QSize(60, 21))
+        self.tool_diameter_9.setMaximumSize(QtCore.QSize(90, 35))
+        self.tool_diameter_9.setStyleSheet("QLabel {\n"
+"    border-style: solid;\n"
+"    border-color: rgb(96, 96, 97);\n"
+"    border-width: 2px;\n"
+"    border-radius: 5px;\n"
+"    color: white;\n"
+"    background: rgb(86, 86, 87);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.tool_diameter_9.setAlignment(QtCore.Qt.AlignCenter)
+        self.tool_diameter_9.setObjectName("tool_diameter_9")
+        self.tool_diameter_10 = StatusLabel(self.frame_5)
+        self.tool_diameter_10.setGeometry(QtCore.QRect(540, 35, 60, 27))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tool_diameter_10.sizePolicy().hasHeightForWidth())
+        self.tool_diameter_10.setSizePolicy(sizePolicy)
+        self.tool_diameter_10.setMinimumSize(QtCore.QSize(60, 21))
+        self.tool_diameter_10.setMaximumSize(QtCore.QSize(90, 35))
+        self.tool_diameter_10.setStyleSheet("QLabel {\n"
+"    border-style: solid;\n"
+"    border-color: rgb(96, 96, 97);\n"
+"    border-width: 2px;\n"
+"    border-radius: 5px;\n"
+"    color: white;\n"
+"    background: rgb(86, 86, 87);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.tool_diameter_10.setAlignment(QtCore.Qt.AlignCenter)
+        self.tool_diameter_10.setObjectName("tool_diameter_10")
+        self.rpmUnit_25 = QtWidgets.QLabel(self.frame_5)
+        self.rpmUnit_25.setGeometry(QtCore.QRect(605, 5, 36, 27))
+        font = QtGui.QFont()
+        font.setFamily("Noto Sans")
+        font.setPointSize(11)
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.rpmUnit_25.setFont(font)
+        self.rpmUnit_25.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.rpmUnit_25.setObjectName("rpmUnit_25")
+        self.rpmUnit_26 = QtWidgets.QLabel(self.frame_5)
+        self.rpmUnit_26.setGeometry(QtCore.QRect(605, 35, 36, 27))
+        font = QtGui.QFont()
+        font.setFamily("Noto Sans")
+        font.setPointSize(11)
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.rpmUnit_26.setFont(font)
+        self.rpmUnit_26.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.rpmUnit_26.setObjectName("rpmUnit_26")
+        self.label_37 = QtWidgets.QLabel(self.frame_5)
+        self.label_37.setGeometry(QtCore.QRect(285, 5, 76, 27))
+        self.label_37.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_37.setObjectName("label_37")
+        self.tool_diameter_11 = StatusLabel(self.frame_5)
+        self.tool_diameter_11.setGeometry(QtCore.QRect(375, 5, 60, 27))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tool_diameter_11.sizePolicy().hasHeightForWidth())
+        self.tool_diameter_11.setSizePolicy(sizePolicy)
+        self.tool_diameter_11.setMinimumSize(QtCore.QSize(60, 21))
+        self.tool_diameter_11.setMaximumSize(QtCore.QSize(90, 35))
+        self.tool_diameter_11.setStyleSheet("QLabel {\n"
+"    border-style: solid;\n"
+"    border-color: rgb(96, 96, 97);\n"
+"    border-width: 2px;\n"
+"    border-radius: 5px;\n"
+"    color: white;\n"
+"    background: rgb(86, 86, 87);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.tool_diameter_11.setAlignment(QtCore.Qt.AlignCenter)
+        self.tool_diameter_11.setObjectName("tool_diameter_11")
+        self.tool_diameter_12 = StatusLabel(self.frame_5)
+        self.tool_diameter_12.setGeometry(QtCore.QRect(375, 35, 60, 27))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tool_diameter_12.sizePolicy().hasHeightForWidth())
+        self.tool_diameter_12.setSizePolicy(sizePolicy)
+        self.tool_diameter_12.setMinimumSize(QtCore.QSize(60, 21))
+        self.tool_diameter_12.setMaximumSize(QtCore.QSize(90, 35))
+        self.tool_diameter_12.setStyleSheet("QLabel {\n"
+"    border-style: solid;\n"
+"    border-color: rgb(96, 96, 97);\n"
+"    border-width: 2px;\n"
+"    border-radius: 5px;\n"
+"    color: white;\n"
+"    background: rgb(86, 86, 87);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.tool_diameter_12.setAlignment(QtCore.Qt.AlignCenter)
+        self.tool_diameter_12.setObjectName("tool_diameter_12")
+        self.label_38 = QtWidgets.QLabel(self.frame_5)
+        self.label_38.setGeometry(QtCore.QRect(285, 35, 86, 27))
+        self.label_38.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_38.setObjectName("label_38")
+        self.feedOverrideValue_2 = StatusLabel(self.frame_5)
+        self.feedOverrideValue_2.setGeometry(QtCore.QRect(35, 35, 31, 21))
+        self.feedOverrideValue_2.setStyleSheet("font: 12pt \"Noto Sans\";")
+        self.feedOverrideValue_2.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.feedOverrideValue_2.setObjectName("feedOverrideValue_2")
+        self.mdientry = MDIEntry(self.manualTurningTab)
+        self.mdientry.setGeometry(QtCore.QRect(720, 480, 211, 26))
+        self.mdientry.setObjectName("mdientry")
+        self.settings_lineedit = VCPSettingsLineEdit(self.manualTurningTab)
+        self.settings_lineedit.setGeometry(QtCore.QRect(690, 590, 125, 26))
+        self.settings_lineedit.setObjectName("settings_lineedit")
+        self.tabWidget.addTab(self.manualTurningTab, "")
+        self.conversationalTab = QtWidgets.QWidget()
+        self.conversationalTab.setObjectName("conversationalTab")
+        self.tabWidget.addTab(self.conversationalTab, "")
+        self.programsTab = QtWidgets.QWidget()
+        self.programsTab.setObjectName("programsTab")
+        self.stackedProgramsTab = QtWidgets.QStackedWidget(self.programsTab)
+        self.stackedProgramsTab.setGeometry(QtCore.QRect(0, 0, 1018, 800))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.stackedProgramsTab.sizePolicy().hasHeightForWidth())
+        self.stackedProgramsTab.setSizePolicy(sizePolicy)
+        self.stackedProgramsTab.setMinimumSize(QtCore.QSize(0, 800))
+        self.stackedProgramsTab.setObjectName("stackedProgramsTab")
+        self.pageFileSystem = QtWidgets.QWidget()
+        self.pageFileSystem.setObjectName("pageFileSystem")
+        self.frame_34 = QtWidgets.QFrame(self.pageFileSystem)
+        self.frame_34.setGeometry(QtCore.QRect(0, 0, 581, 711))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.frame_34.sizePolicy().hasHeightForWidth())
+        self.frame_34.setSizePolicy(sizePolicy)
+        self.frame_34.setStyleSheet(".QFrame{\n"
+"    background-color: rgb(51, 57, 59);\n"
+"}")
+        self.frame_34.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_34.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_34.setObjectName("frame_34")
+        self.verticalLayout_35 = QtWidgets.QVBoxLayout(self.frame_34)
+        self.verticalLayout_35.setSpacing(9)
+        self.verticalLayout_35.setObjectName("verticalLayout_35")
+        self.horizontalLayout_121 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_121.setContentsMargins(5, -1, 5, -1)
+        self.horizontalLayout_121.setObjectName("horizontalLayout_121")
+        self.main_folder_up_button = QtWidgets.QPushButton(self.frame_34)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.main_folder_up_button.sizePolicy().hasHeightForWidth())
+        self.main_folder_up_button.setSizePolicy(sizePolicy)
+        self.main_folder_up_button.setMinimumSize(QtCore.QSize(30, 35))
+        self.main_folder_up_button.setMaximumSize(QtCore.QSize(110, 35))
+        self.main_folder_up_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.main_folder_up_button.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/folder_up.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.main_folder_up_button.setIcon(icon)
+        self.main_folder_up_button.setIconSize(QtCore.QSize(30, 17))
+        self.main_folder_up_button.setObjectName("main_folder_up_button")
+        self.horizontalLayout_121.addWidget(self.main_folder_up_button)
+        self.btnNcFiles = QtWidgets.QPushButton(self.frame_34)
+        self.btnNcFiles.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}\\")
+        self.btnNcFiles.setObjectName("btnNcFiles")
+        self.horizontalLayout_121.addWidget(self.btnNcFiles)
+        self.removabledevicecombobox = RemovableDeviceComboBox(self.frame_34)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.removabledevicecombobox.sizePolicy().hasHeightForWidth())
+        self.removabledevicecombobox.setSizePolicy(sizePolicy)
+        self.removabledevicecombobox.setMinimumSize(QtCore.QSize(0, 35))
+        self.removabledevicecombobox.setMaximumSize(QtCore.QSize(16777215, 35))
+        self.removabledevicecombobox.setStyleSheet("font: 12pt \"Bebas Kai\";")
+        self.removabledevicecombobox.setObjectName("removabledevicecombobox")
+        self.horizontalLayout_121.addWidget(self.removabledevicecombobox)
+        self.verticalLayout_35.addLayout(self.horizontalLayout_121)
+        self.stackedFileSysTop = QtWidgets.QStackedWidget(self.frame_34)
+        self.stackedFileSysTop.setObjectName("stackedFileSysTop")
+        self.pageUsbStick = QtWidgets.QWidget()
+        self.pageUsbStick.setObjectName("pageUsbStick")
+        self.device_eject_usb_button = QtWidgets.QPushButton(self.pageUsbStick)
+        self.device_eject_usb_button.setGeometry(QtCore.QRect(425, 5, 100, 35))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.device_eject_usb_button.sizePolicy().hasHeightForWidth())
+        self.device_eject_usb_button.setSizePolicy(sizePolicy)
+        self.device_eject_usb_button.setMinimumSize(QtCore.QSize(100, 35))
+        self.device_eject_usb_button.setMaximumSize(QtCore.QSize(100, 35))
+        self.device_eject_usb_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.device_eject_usb_button.setStyleSheet("QPushButton {\n"
+"       font: 14pt \"Bebas Kai\";\n"
+"}")
+        self.device_eject_usb_button.setObjectName("device_eject_usb_button")
+        self.removabledevicecombobox_2 = RemovableDeviceComboBox(self.pageUsbStick)
+        self.removabledevicecombobox_2.setGeometry(QtCore.QRect(126, 5, 76, 35))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.removabledevicecombobox_2.sizePolicy().hasHeightForWidth())
+        self.removabledevicecombobox_2.setSizePolicy(sizePolicy)
+        self.removabledevicecombobox_2.setMinimumSize(QtCore.QSize(0, 35))
+        self.removabledevicecombobox_2.setMaximumSize(QtCore.QSize(16777215, 35))
+        self.removabledevicecombobox_2.setStyleSheet("font: 12pt \"Bebas Kai\";")
+        self.removabledevicecombobox_2.setObjectName("removabledevicecombobox_2")
+        self.device_folder_up_button = QtWidgets.QPushButton(self.pageUsbStick)
+        self.device_folder_up_button.setGeometry(QtCore.QRect(10, 5, 110, 35))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.device_folder_up_button.sizePolicy().hasHeightForWidth())
+        self.device_folder_up_button.setSizePolicy(sizePolicy)
+        self.device_folder_up_button.setMinimumSize(QtCore.QSize(110, 35))
+        self.device_folder_up_button.setMaximumSize(QtCore.QSize(110, 35))
+        self.device_folder_up_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.device_folder_up_button.setStyleSheet("QPushButton {\n"
+"       font: 14pt \"Bebas Kai\";\n"
+"}")
+        self.device_folder_up_button.setIcon(icon)
+        self.device_folder_up_button.setIconSize(QtCore.QSize(30, 17))
+        self.device_folder_up_button.setObjectName("device_folder_up_button")
+        self.stackedFileSysTop.addWidget(self.pageUsbStick)
+        self.pageLocalSystem = QtWidgets.QWidget()
+        self.pageLocalSystem.setObjectName("pageLocalSystem")
+        self.stackedFileSysTop.addWidget(self.pageLocalSystem)
+        self.verticalLayout_35.addWidget(self.stackedFileSysTop)
+        self.horizontalLayout_122 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_122.setObjectName("horizontalLayout_122")
+        self.filesystemtable = FileSystemTable(self.frame_34)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.filesystemtable.sizePolicy().hasHeightForWidth())
+        self.filesystemtable.setSizePolicy(sizePolicy)
+        self.filesystemtable.setMinimumSize(QtCore.QSize(0, 539))
+        self.filesystemtable.setFocusPolicy(QtCore.Qt.WheelFocus)
+        self.filesystemtable.setStyleSheet("FileSystemTable {\n"
+"    color: black;\n"
+"       border: 1px;\n"
+"    border-color: rgb(120, 120, 120);\n"
+"    border-style: solid;\n"
+"    background-color: rgb(238, 238, 236);\n"
+"    font: 12pt \"Noto\";\n"
+"}\n"
+"\n"
+"QHeaderView {\n"
+"    background-color: rgb(220, 220, 220);\n"
+"    color: black;\n"
+"    border: none;\n"
+"    border-radius:none;\n"
+"    border-style: none;\n"
+"    font: 13pt \"Noto\";\n"
+"}")
+        self.filesystemtable.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
+        self.filesystemtable.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.filesystemtable.setTextElideMode(QtCore.Qt.ElideRight)
+        self.filesystemtable.setShowGrid(False)
+        self.filesystemtable.setSortingEnabled(True)
+        self.filesystemtable.setProperty("fixedNameColumn", True)
+        self.filesystemtable.setProperty("nameColumnsWidth", 288)
+        self.filesystemtable.setObjectName("filesystemtable")
+        self.filesystemtable.horizontalHeader().setCascadingSectionResizes(True)
+        self.filesystemtable.horizontalHeader().setMinimumSectionSize(20)
+        self.filesystemtable.horizontalHeader().setStretchLastSection(True)
+        self.horizontalLayout_122.addWidget(self.filesystemtable)
+        self.verticalLayout_35.addLayout(self.horizontalLayout_122)
+        self.horizontalLayout_123 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_123.setSpacing(6)
+        self.horizontalLayout_123.setObjectName("horizontalLayout_123")
+        self.copy_to_usb_2 = QtWidgets.QPushButton(self.frame_34)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.copy_to_usb_2.sizePolicy().hasHeightForWidth())
+        self.copy_to_usb_2.setSizePolicy(sizePolicy)
+        self.copy_to_usb_2.setMinimumSize(QtCore.QSize(90, 35))
+        self.copy_to_usb_2.setMaximumSize(QtCore.QSize(90, 35))
+        self.copy_to_usb_2.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.copy_to_usb_2.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.copy_to_usb_2.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/left_arrow.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.copy_to_usb_2.setIcon(icon1)
+        self.copy_to_usb_2.setObjectName("copy_to_usb_2")
+        self.horizontalLayout_123.addWidget(self.copy_to_usb_2)
+        self.main_delete_item_button = QtWidgets.QPushButton(self.frame_34)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.main_delete_item_button.sizePolicy().hasHeightForWidth())
+        self.main_delete_item_button.setSizePolicy(sizePolicy)
+        self.main_delete_item_button.setMinimumSize(QtCore.QSize(90, 35))
+        self.main_delete_item_button.setMaximumSize(QtCore.QSize(90, 35))
+        self.main_delete_item_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.main_delete_item_button.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/delete.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.main_delete_item_button.setIcon(icon2)
+        self.main_delete_item_button.setIconSize(QtCore.QSize(14, 14))
+        self.main_delete_item_button.setObjectName("main_delete_item_button")
+        self.horizontalLayout_123.addWidget(self.main_delete_item_button)
+        self.main_new_file_button = QtWidgets.QPushButton(self.frame_34)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.main_new_file_button.sizePolicy().hasHeightForWidth())
+        self.main_new_file_button.setSizePolicy(sizePolicy)
+        self.main_new_file_button.setMinimumSize(QtCore.QSize(100, 35))
+        self.main_new_file_button.setMaximumSize(QtCore.QSize(100, 35))
+        self.main_new_file_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.main_new_file_button.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/new_file.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.main_new_file_button.setIcon(icon3)
+        self.main_new_file_button.setIconSize(QtCore.QSize(12, 16))
+        self.main_new_file_button.setObjectName("main_new_file_button")
+        self.horizontalLayout_123.addWidget(self.main_new_file_button)
+        self.main_new_folder_button = QtWidgets.QPushButton(self.frame_34)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.main_new_folder_button.sizePolicy().hasHeightForWidth())
+        self.main_new_folder_button.setSizePolicy(sizePolicy)
+        self.main_new_folder_button.setMinimumSize(QtCore.QSize(125, 35))
+        self.main_new_folder_button.setMaximumSize(QtCore.QSize(125, 35))
+        self.main_new_folder_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.main_new_folder_button.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/new_folder.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.main_new_folder_button.setIcon(icon4)
+        self.main_new_folder_button.setIconSize(QtCore.QSize(28, 15))
+        self.main_new_folder_button.setObjectName("main_new_folder_button")
+        self.horizontalLayout_123.addWidget(self.main_new_folder_button)
+        self.main_rename_item_button = QtWidgets.QPushButton(self.frame_34)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.main_rename_item_button.sizePolicy().hasHeightForWidth())
+        self.main_rename_item_button.setSizePolicy(sizePolicy)
+        self.main_rename_item_button.setMinimumSize(QtCore.QSize(90, 35))
+        self.main_rename_item_button.setMaximumSize(QtCore.QSize(90, 35))
+        self.main_rename_item_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.main_rename_item_button.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.main_rename_item_button.setObjectName("main_rename_item_button")
+        self.horizontalLayout_123.addWidget(self.main_rename_item_button)
+        self.verticalLayout_35.addLayout(self.horizontalLayout_123)
+        self.frame_40 = QtWidgets.QFrame(self.pageFileSystem)
+        self.frame_40.setGeometry(QtCore.QRect(580, 0, 436, 626))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.frame_40.sizePolicy().hasHeightForWidth())
+        self.frame_40.setSizePolicy(sizePolicy)
+        self.frame_40.setStyleSheet(".QFrame{\n"
+"    background-color: rgb(51, 57, 59);\n"
+"}")
+        self.frame_40.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_40.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_40.setObjectName("frame_40")
+        self.verticalLayout_38 = QtWidgets.QVBoxLayout(self.frame_40)
+        self.verticalLayout_38.setContentsMargins(10, 12, 10, 9)
+        self.verticalLayout_38.setSpacing(9)
+        self.verticalLayout_38.setObjectName("verticalLayout_38")
+        self.gcodeeditor_label = QtWidgets.QLabel(self.frame_40)
+        self.gcodeeditor_label.setMinimumSize(QtCore.QSize(0, 30))
+        self.gcodeeditor_label.setMaximumSize(QtCore.QSize(16777215, 30))
+        self.gcodeeditor_label.setStyleSheet("font: 16pt \"Noto\";\n"
+"color: white;")
+        self.gcodeeditor_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.gcodeeditor_label.setObjectName("gcodeeditor_label")
+        self.verticalLayout_38.addWidget(self.gcodeeditor_label)
+        self.gcodetextedit = GcodeTextEdit(self.frame_40)
+        self.gcodetextedit.setProperty("syntaxHighlighting", False)
+        self.gcodetextedit.setProperty("currentLineBackground", QtGui.QColor(214, 214, 221))
+        self.gcodetextedit.setProperty("marginBackground", QtGui.QColor(146, 150, 149))
+        self.gcodetextedit.setProperty("marginCurrentLineBackground", QtGui.QColor(110, 110, 110))
+        self.gcodetextedit.setProperty("marginColor", QtGui.QColor(49, 49, 49))
+        self.gcodetextedit.setProperty("marginCurrentLineColor", QtGui.QColor(255, 255, 255))
+        self.gcodetextedit.setObjectName("gcodetextedit")
+        self.verticalLayout_38.addWidget(self.gcodetextedit)
+        self.horizontalLayout_129 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_129.setObjectName("horizontalLayout_129")
+        self.edit_gcode_button = QtWidgets.QPushButton(self.frame_40)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.edit_gcode_button.sizePolicy().hasHeightForWidth())
+        self.edit_gcode_button.setSizePolicy(sizePolicy)
+        self.edit_gcode_button.setMinimumSize(QtCore.QSize(80, 35))
+        self.edit_gcode_button.setMaximumSize(QtCore.QSize(100, 35))
+        self.edit_gcode_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.edit_gcode_button.setStyleSheet("QPushButton {\n"
+"       font: 11pt \"Noto\";\n"
+"}")
+        self.edit_gcode_button.setCheckable(True)
+        self.edit_gcode_button.setObjectName("edit_gcode_button")
+        self.horizontalLayout_129.addWidget(self.edit_gcode_button)
+        self.find_replace_button = QtWidgets.QPushButton(self.frame_40)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.find_replace_button.sizePolicy().hasHeightForWidth())
+        self.find_replace_button.setSizePolicy(sizePolicy)
+        self.find_replace_button.setMinimumSize(QtCore.QSize(80, 35))
+        self.find_replace_button.setMaximumSize(QtCore.QSize(110, 35))
+        self.find_replace_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.find_replace_button.setStyleSheet("QPushButton {\n"
+"       font: 11pt \"Noto\";\n"
+"}")
+        self.find_replace_button.setObjectName("find_replace_button")
+        self.horizontalLayout_129.addWidget(self.find_replace_button)
+        self.save_button = QtWidgets.QPushButton(self.frame_40)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.save_button.sizePolicy().hasHeightForWidth())
+        self.save_button.setSizePolicy(sizePolicy)
+        self.save_button.setMinimumSize(QtCore.QSize(60, 35))
+        self.save_button.setMaximumSize(QtCore.QSize(60, 35))
+        self.save_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.save_button.setStyleSheet("QPushButton {\n"
+"       font: 11pt \"Noto\";\n"
+"}")
+        self.save_button.setObjectName("save_button")
+        self.horizontalLayout_129.addWidget(self.save_button)
+        self.save_as_button = QtWidgets.QPushButton(self.frame_40)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.save_as_button.sizePolicy().hasHeightForWidth())
+        self.save_as_button.setSizePolicy(sizePolicy)
+        self.save_as_button.setMinimumSize(QtCore.QSize(70, 35))
+        self.save_as_button.setMaximumSize(QtCore.QSize(70, 35))
+        self.save_as_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.save_as_button.setStyleSheet("QPushButton {\n"
+"       font: 11pt \"Noto\";\n"
+"}")
+        self.save_as_button.setObjectName("save_as_button")
+        self.horizontalLayout_129.addWidget(self.save_as_button)
+        self.verticalLayout_38.addLayout(self.horizontalLayout_129)
+        self.btnLoadProgram = QtWidgets.QPushButton(self.pageFileSystem)
+        self.btnLoadProgram.setGeometry(QtCore.QRect(725, 645, 161, 46))
+        self.btnLoadProgram.setStyleSheet("QPushButton {\n"
+"       font: 14pt \"Noto\";\n"
+"}")
+        self.btnLoadProgram.setObjectName("btnLoadProgram")
+        self.stackedProgramsTab.addWidget(self.pageFileSystem)
+        self.pageProgramLoaded = QtWidgets.QWidget()
+        self.pageProgramLoaded.setObjectName("pageProgramLoaded")
+        self.recentfilecombobox = RecentFileComboBox(self.pageProgramLoaded)
+        self.recentfilecombobox.setGeometry(QtCore.QRect(620, -1, 391, 30))
+        self.recentfilecombobox.setMinimumSize(QtCore.QSize(142, 30))
+        self.recentfilecombobox.setMaximumSize(QtCore.QSize(16777215, 30))
+        self.recentfilecombobox.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.recentfilecombobox.setStyleSheet("QComboBox {\n"
+"    border: 1px solid black;\n"
+"    border-radius: 3px;\n"
+"    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgb(81, 86, 85), stop:0.489795 rgb(99, 102, 102), stop:0.699799 rgb(85, 88, 94), stop:0.90444 rgb(77, 84, 86), stop:0.160246 rgb(83, 84, 91), stop:1 rgb(109, 115, 118));\n"
+"    padding: 1px 23px 1px 3px;\n"
+"    min-width: 6em;\n"
+"    color: #ffffff;\n"
+"    font: 12pt \"Bebas Kai\";\n"
+"}\n"
+"QComboBox::drop-down {\n"
+"    subcontrol-origin: padding;\n"
+"    subcontrol-position: top right;\n"
+"    width: 20px;\n"
+"     border-top-right-radius: 3px;\n"
+"    border-bottom-right-radius: 3px;\n"
+"    font: 12pt \"Bebas Kai\";\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+"     image: url(:/images/combobox-arrow.png);\n"
+"}\n"
+" \n"
+"QComboBox QAbstractItemView{\n"
+"    background-color: #4f4f4f;\n"
+"    color: #999999;\n"
+"     selection-background-color: #999999;\n"
+"    selection-color: #4f4f4f;\n"
+"}")
+        self.recentfilecombobox.setProperty("resource", "")
+        self.recentfilecombobox.setObjectName("recentfilecombobox")
+        self.gcodeview = GcodeTextEdit(self.pageProgramLoaded)
+        self.gcodeview.setGeometry(QtCore.QRect(610, 30, 406, 456))
+        self.gcodeview.setProperty("syntaxHighlighting", False)
+        self.gcodeview.setProperty("readOnly", True)
+        self.gcodeview.setProperty("currentLineBackground", QtGui.QColor(214, 214, 221))
+        self.gcodeview.setProperty("marginBackground", QtGui.QColor(146, 150, 149))
+        self.gcodeview.setProperty("marginCurrentLineBackground", QtGui.QColor(110, 110, 110))
+        self.gcodeview.setProperty("marginColor", QtGui.QColor(49, 49, 49))
+        self.gcodeview.setProperty("marginCurrentLineColor", QtGui.QColor(255, 255, 255))
+        self.gcodeview.setObjectName("gcodeview")
+        self.horizontalLayoutWidget_2 = QtWidgets.QWidget(self.pageProgramLoaded)
+        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(0, 0, 611, 486))
+        self.horizontalLayoutWidget_2.setObjectName("horizontalLayoutWidget_2")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_2)
+        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.manual_dro.addLayout(self.horizontalLayout_2)
-        self.statuslabel_2 = StatusLabel(self.tab)
-        self.statuslabel_2.setGeometry(QtCore.QRect(430, 320, 81, 18))
-        self.statuslabel_2.setObjectName("statuslabel_2")
-        self.actionbutton = ActionButton(self.tab)
-        self.actionbutton.setGeometry(QtCore.QRect(690, 360, 81, 26))
-        self.actionbutton.setObjectName("actionbutton")
-        self.actionbutton_2 = ActionButton(self.tab)
-        self.actionbutton_2.setGeometry(QtCore.QRect(690, 420, 81, 26))
-        self.actionbutton_2.setObjectName("actionbutton_2")
-        self.actionbutton_3 = ActionButton(self.tab)
-        self.actionbutton_3.setGeometry(QtCore.QRect(800, 390, 81, 26))
-        self.actionbutton_3.setObjectName("actionbutton_3")
-        self.actionbutton_4 = ActionButton(self.tab)
-        self.actionbutton_4.setGeometry(QtCore.QRect(590, 390, 81, 26))
-        self.actionbutton_4.setObjectName("actionbutton_4")
-        self.tabWidget.addTab(self.tab, "")
+        self.vtk = VTKBackPlot(self.horizontalLayoutWidget_2)
+        self.vtk.setProperty("backgroundColor", QtGui.QColor(246, 245, 244))
+        self.vtk.setObjectName("vtk")
+        self.btnBackToPrograms = QtWidgets.QPushButton(self.vtk)
+        self.btnBackToPrograms.setGeometry(QtCore.QRect(10, 10, 66, 26))
+        self.btnBackToPrograms.setObjectName("btnBackToPrograms")
+        self.horizontalLayout_2.addWidget(self.vtk)
+        self.zoomOutView = QtWidgets.QPushButton(self.pageProgramLoaded)
+        self.zoomOutView.setGeometry(QtCore.QRect(45, 520, 31, 31))
+        self.zoomOutView.setObjectName("zoomOutView")
+        self.zoomInView = QtWidgets.QPushButton(self.pageProgramLoaded)
+        self.zoomInView.setGeometry(QtCore.QRect(90, 520, 31, 31))
+        self.zoomInView.setObjectName("zoomInView")
+        self.stackedProgramsTab.addWidget(self.pageProgramLoaded)
+        self.tabWidget.addTab(self.programsTab, "")
+        self.toolsTab = QtWidgets.QWidget()
+        self.toolsTab.setObjectName("toolsTab")
+        self.toolsInnerTabs = QtWidgets.QTabWidget(self.toolsTab)
+        self.toolsInnerTabs.setGeometry(QtCore.QRect(0, 0, 1020, 713))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.toolsInnerTabs.sizePolicy().hasHeightForWidth())
+        self.toolsInnerTabs.setSizePolicy(sizePolicy)
+        self.toolsInnerTabs.setStyleSheet("#toolsInnerTabs QTabBar::tab {\n"
+"    height: 30; \n"
+"    min-width: 100;\n"
+"    font: 13pt \"DejaVu Sans\"; \n"
+"}")
+        self.toolsInnerTabs.setObjectName("toolsInnerTabs")
+        self.innerToolsTab = QtWidgets.QWidget()
+        self.innerToolsTab.setObjectName("innerToolsTab")
+        self.frame_13 = QtWidgets.QFrame(self.innerToolsTab)
+        self.frame_13.setEnabled(True)
+        self.frame_13.setGeometry(QtCore.QRect(5, 5, 616, 671))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.frame_13.sizePolicy().hasHeightForWidth())
+        self.frame_13.setSizePolicy(sizePolicy)
+        self.frame_13.setStyleSheet(".QFrame{\n"
+"    background-color: rgb(51, 57, 59);\n"
+"}")
+        self.frame_13.setObjectName("frame_13")
+        self.verticalLayout_20 = QtWidgets.QVBoxLayout(self.frame_13)
+        self.verticalLayout_20.setContentsMargins(-1, 9, -1, -1)
+        self.verticalLayout_20.setObjectName("verticalLayout_20")
+        self.horizontalLayout_38 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_38.setContentsMargins(5, 5, 5, -1)
+        self.horizontalLayout_38.setObjectName("horizontalLayout_38")
+        self.lathetooltable = LatheToolTable(self.frame_13)
+        self.lathetooltable.setStyleSheet("QTableView::item {\n"
+"    padding-top: 10px;  /* Increase as needed */\n"
+"    padding-bottom: 10px;  /* Increase as needed */\n"
+"}")
+        self.lathetooltable.setProperty("currentToolColor", QtGui.QColor(46, 194, 126))
+        self.lathetooltable.setProperty("currentToolBackground", QtGui.QColor(152, 106, 68))
+        self.lathetooltable.setObjectName("lathetooltable")
+        self.horizontalLayout_38.addWidget(self.lathetooltable)
+        self.verticalLayout_20.addLayout(self.horizontalLayout_38)
+        self.horizontalLayout_37 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_37.setObjectName("horizontalLayout_37")
+        self.tool_table_delete_button = QtWidgets.QPushButton(self.frame_13)
+        self.tool_table_delete_button.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tool_table_delete_button.sizePolicy().hasHeightForWidth())
+        self.tool_table_delete_button.setSizePolicy(sizePolicy)
+        self.tool_table_delete_button.setMinimumSize(QtCore.QSize(120, 33))
+        self.tool_table_delete_button.setMaximumSize(QtCore.QSize(120, 33))
+        self.tool_table_delete_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.tool_table_delete_button.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.tool_table_delete_button.setObjectName("tool_table_delete_button")
+        self.horizontalLayout_37.addWidget(self.tool_table_delete_button)
+        self.tool_table_save_button = QtWidgets.QPushButton(self.frame_13)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tool_table_save_button.sizePolicy().hasHeightForWidth())
+        self.tool_table_save_button.setSizePolicy(sizePolicy)
+        self.tool_table_save_button.setMinimumSize(QtCore.QSize(120, 33))
+        self.tool_table_save_button.setMaximumSize(QtCore.QSize(120, 33))
+        self.tool_table_save_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.tool_table_save_button.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.tool_table_save_button.setObjectName("tool_table_save_button")
+        self.horizontalLayout_37.addWidget(self.tool_table_save_button)
+        self.tool_table_reload_button = QtWidgets.QPushButton(self.frame_13)
+        self.tool_table_reload_button.setEnabled(True)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tool_table_reload_button.sizePolicy().hasHeightForWidth())
+        self.tool_table_reload_button.setSizePolicy(sizePolicy)
+        self.tool_table_reload_button.setMinimumSize(QtCore.QSize(140, 33))
+        self.tool_table_reload_button.setMaximumSize(QtCore.QSize(140, 33))
+        self.tool_table_reload_button.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.tool_table_reload_button.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.tool_table_reload_button.setObjectName("tool_table_reload_button")
+        self.horizontalLayout_37.addWidget(self.tool_table_reload_button)
+        self.verticalLayout_20.addLayout(self.horizontalLayout_37)
+        self.toolsOperations = QtWidgets.QTabWidget(self.innerToolsTab)
+        self.toolsOperations.setGeometry(QtCore.QRect(620, 5, 391, 671))
+        self.toolsOperations.setObjectName("toolsOperations")
+        self.addTool = QtWidgets.QWidget()
+        self.addTool.setObjectName("addTool")
+        self.formLayoutWidget_2 = QtWidgets.QWidget(self.addTool)
+        self.formLayoutWidget_2.setGeometry(QtCore.QRect(50, 10, 126, 66))
+        self.formLayoutWidget_2.setObjectName("formLayoutWidget_2")
+        self.formLayout_2 = QtWidgets.QFormLayout(self.formLayoutWidget_2)
+        self.formLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.formLayout_2.setObjectName("formLayout_2")
+        self.label = QtWidgets.QLabel(self.formLayoutWidget_2)
+        self.label.setObjectName("label")
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
+        self.lineEdit = QtWidgets.QLineEdit(self.formLayoutWidget_2)
+        self.lineEdit.setObjectName("lineEdit")
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.lineEdit)
+        self.label_4 = QtWidgets.QLabel(self.formLayoutWidget_2)
+        self.label_4.setObjectName("label_4")
+        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_4)
+        self.lineEdit_2 = QtWidgets.QLineEdit(self.formLayoutWidget_2)
+        self.lineEdit_2.setObjectName("lineEdit_2")
+        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.lineEdit_2)
+        self.groupBox_2 = QtWidgets.QGroupBox(self.addTool)
+        self.groupBox_2.setGeometry(QtCore.QRect(50, 80, 226, 246))
+        self.groupBox_2.setObjectName("groupBox_2")
+        self.gridWidget = QtWidgets.QWidget(self.groupBox_2)
+        self.gridWidget.setGeometry(QtCore.QRect(5, 25, 216, 216))
+        self.gridWidget.setObjectName("gridWidget")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.gridWidget)
+        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.lathe_control_point_4 = ActionButton(self.gridWidget)
+        self.lathe_control_point_4.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lathe_control_point_4.sizePolicy().hasHeightForWidth())
+        self.lathe_control_point_4.setSizePolicy(sizePolicy)
+        self.lathe_control_point_4.setMinimumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_4.setMaximumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_4.setStyleSheet("ActionButton{\n"
+"    border: none;\n"
+"    background: none;\n"
+"}\n"
+"\n"
+"ActionButton:pressed {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked[option=\"true\"] {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"")
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/lathe_resources/lathe_control_point_4.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.lathe_control_point_4.setIcon(icon5)
+        self.lathe_control_point_4.setIconSize(QtCore.QSize(65, 65))
+        self.lathe_control_point_4.setCheckable(True)
+        self.lathe_control_point_4.setAutoExclusive(True)
+        self.lathe_control_point_4.setObjectName("lathe_control_point_4")
+        self.gridLayout_2.addWidget(self.lathe_control_point_4, 0, 0, 1, 1)
+        self.lathe_control_point_7 = ActionButton(self.gridWidget)
+        self.lathe_control_point_7.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lathe_control_point_7.sizePolicy().hasHeightForWidth())
+        self.lathe_control_point_7.setSizePolicy(sizePolicy)
+        self.lathe_control_point_7.setMinimumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_7.setMaximumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_7.setStyleSheet("ActionButton{\n"
+"    border: none;\n"
+"    background: none;\n"
+"}\n"
+"\n"
+"ActionButton:pressed {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked[option=\"true\"] {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"")
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(":/lathe_resources/lathe_control_point_7.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.lathe_control_point_7.setIcon(icon6)
+        self.lathe_control_point_7.setIconSize(QtCore.QSize(65, 65))
+        self.lathe_control_point_7.setCheckable(True)
+        self.lathe_control_point_7.setAutoExclusive(True)
+        self.lathe_control_point_7.setObjectName("lathe_control_point_7")
+        self.gridLayout_2.addWidget(self.lathe_control_point_7, 1, 2, 1, 1)
+        self.lathe_control_point_9 = ActionButton(self.gridWidget)
+        self.lathe_control_point_9.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lathe_control_point_9.sizePolicy().hasHeightForWidth())
+        self.lathe_control_point_9.setSizePolicy(sizePolicy)
+        self.lathe_control_point_9.setMinimumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_9.setMaximumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_9.setStyleSheet("ActionButton{\n"
+"    border: none;\n"
+"    background: none;\n"
+"}\n"
+"\n"
+"ActionButton:pressed {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked[option=\"true\"] {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"")
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/lathe_resources/lathe_control_point_9.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.lathe_control_point_9.setIcon(icon7)
+        self.lathe_control_point_9.setIconSize(QtCore.QSize(50, 50))
+        self.lathe_control_point_9.setCheckable(True)
+        self.lathe_control_point_9.setAutoExclusive(True)
+        self.lathe_control_point_9.setObjectName("lathe_control_point_9")
+        self.gridLayout_2.addWidget(self.lathe_control_point_9, 1, 1, 1, 1)
+        self.lathe_control_point_3 = ActionButton(self.gridWidget)
+        self.lathe_control_point_3.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lathe_control_point_3.sizePolicy().hasHeightForWidth())
+        self.lathe_control_point_3.setSizePolicy(sizePolicy)
+        self.lathe_control_point_3.setMinimumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_3.setMaximumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_3.setStyleSheet("ActionButton{\n"
+"    border: none;\n"
+"    background: none;\n"
+"}\n"
+"\n"
+"ActionButton:pressed {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked[option=\"true\"] {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"")
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(":/lathe_resources/lathe_control_point_3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.lathe_control_point_3.setIcon(icon8)
+        self.lathe_control_point_3.setIconSize(QtCore.QSize(65, 65))
+        self.lathe_control_point_3.setCheckable(True)
+        self.lathe_control_point_3.setAutoExclusive(True)
+        self.lathe_control_point_3.setObjectName("lathe_control_point_3")
+        self.gridLayout_2.addWidget(self.lathe_control_point_3, 0, 2, 1, 1)
+        self.lathe_control_point_8 = ActionButton(self.gridWidget)
+        self.lathe_control_point_8.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lathe_control_point_8.sizePolicy().hasHeightForWidth())
+        self.lathe_control_point_8.setSizePolicy(sizePolicy)
+        self.lathe_control_point_8.setMinimumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_8.setMaximumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_8.setStyleSheet("ActionButton{\n"
+"    border: none;\n"
+"    background: none;\n"
+"}\n"
+"\n"
+"ActionButton:pressed {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked[option=\"true\"] {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"")
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/lathe_resources/lathe_control_point_8.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.lathe_control_point_8.setIcon(icon9)
+        self.lathe_control_point_8.setIconSize(QtCore.QSize(65, 65))
+        self.lathe_control_point_8.setCheckable(True)
+        self.lathe_control_point_8.setAutoExclusive(True)
+        self.lathe_control_point_8.setObjectName("lathe_control_point_8")
+        self.gridLayout_2.addWidget(self.lathe_control_point_8, 0, 1, 1, 1)
+        self.lathe_control_point_5 = ActionButton(self.gridWidget)
+        self.lathe_control_point_5.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lathe_control_point_5.sizePolicy().hasHeightForWidth())
+        self.lathe_control_point_5.setSizePolicy(sizePolicy)
+        self.lathe_control_point_5.setMinimumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_5.setMaximumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_5.setStyleSheet("ActionButton{\n"
+"    border: none;\n"
+"    background: none;\n"
+"}\n"
+"\n"
+"ActionButton:pressed {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked[option=\"true\"] {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"")
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(":/lathe_resources/lathe_control_point_5.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.lathe_control_point_5.setIcon(icon10)
+        self.lathe_control_point_5.setIconSize(QtCore.QSize(65, 65))
+        self.lathe_control_point_5.setCheckable(True)
+        self.lathe_control_point_5.setAutoExclusive(True)
+        self.lathe_control_point_5.setObjectName("lathe_control_point_5")
+        self.gridLayout_2.addWidget(self.lathe_control_point_5, 1, 0, 1, 1)
+        self.lathe_control_point_1 = ActionButton(self.gridWidget)
+        self.lathe_control_point_1.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lathe_control_point_1.sizePolicy().hasHeightForWidth())
+        self.lathe_control_point_1.setSizePolicy(sizePolicy)
+        self.lathe_control_point_1.setMinimumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_1.setMaximumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_1.setStyleSheet("ActionButton{\n"
+"    border: none;\n"
+"    background: none;\n"
+"}\n"
+"\n"
+"ActionButton:pressed {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked[option=\"true\"] {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"")
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(":/lathe_resources/lathe_control_point_1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.lathe_control_point_1.setIcon(icon11)
+        self.lathe_control_point_1.setIconSize(QtCore.QSize(65, 65))
+        self.lathe_control_point_1.setCheckable(True)
+        self.lathe_control_point_1.setAutoExclusive(True)
+        self.lathe_control_point_1.setObjectName("lathe_control_point_1")
+        self.gridLayout_2.addWidget(self.lathe_control_point_1, 2, 0, 1, 1)
+        self.lathe_control_point_6 = ActionButton(self.gridWidget)
+        self.lathe_control_point_6.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lathe_control_point_6.sizePolicy().hasHeightForWidth())
+        self.lathe_control_point_6.setSizePolicy(sizePolicy)
+        self.lathe_control_point_6.setMinimumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_6.setMaximumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_6.setStyleSheet("ActionButton{\n"
+"    border: none;\n"
+"    background: none;\n"
+"}\n"
+"\n"
+"ActionButton:pressed {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked[option=\"true\"] {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"")
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(":/lathe_resources/lathe_control_point_6.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.lathe_control_point_6.setIcon(icon12)
+        self.lathe_control_point_6.setIconSize(QtCore.QSize(65, 65))
+        self.lathe_control_point_6.setCheckable(True)
+        self.lathe_control_point_6.setAutoExclusive(True)
+        self.lathe_control_point_6.setObjectName("lathe_control_point_6")
+        self.gridLayout_2.addWidget(self.lathe_control_point_6, 2, 1, 1, 1)
+        self.lathe_control_point_2 = ActionButton(self.gridWidget)
+        self.lathe_control_point_2.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lathe_control_point_2.sizePolicy().hasHeightForWidth())
+        self.lathe_control_point_2.setSizePolicy(sizePolicy)
+        self.lathe_control_point_2.setMinimumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_2.setMaximumSize(QtCore.QSize(70, 70))
+        self.lathe_control_point_2.setStyleSheet("ActionButton{\n"
+"    border: none;\n"
+"    background: none;\n"
+"}\n"
+"\n"
+"ActionButton:pressed {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked[option=\"true\"] {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+"ActionButton:checked {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"")
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(":/lathe_resources/lathe_control_point_2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.lathe_control_point_2.setIcon(icon13)
+        self.lathe_control_point_2.setIconSize(QtCore.QSize(65, 65))
+        self.lathe_control_point_2.setCheckable(True)
+        self.lathe_control_point_2.setAutoExclusive(True)
+        self.lathe_control_point_2.setObjectName("lathe_control_point_2")
+        self.gridLayout_2.addWidget(self.lathe_control_point_2, 2, 2, 1, 1)
+        self.toolsOperations.addTab(self.addTool, "")
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
-        self.tabWidget.addTab(self.tab_2, "")
-        self.verticalLayout_2.addWidget(self.tabWidget)
+        self.loadSelectedTool = QtWidgets.QPushButton(self.tab_2)
+        self.loadSelectedTool.setGeometry(QtCore.QRect(100, 120, 181, 51))
+        self.loadSelectedTool.setObjectName("loadSelectedTool")
+        self.toolsOperations.addTab(self.tab_2, "")
+        self.toolsInnerTabs.addTab(self.innerToolsTab, "")
+        self.innerOffsetsTab = QtWidgets.QWidget()
+        self.innerOffsetsTab.setObjectName("innerOffsetsTab")
+        self.frame_46 = QtWidgets.QFrame(self.innerOffsetsTab)
+        self.frame_46.setGeometry(QtCore.QRect(0, 0, 311, 561))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.frame_46.sizePolicy().hasHeightForWidth())
+        self.frame_46.setSizePolicy(sizePolicy)
+        self.frame_46.setMinimumSize(QtCore.QSize(0, 500))
+        self.frame_46.setMaximumSize(QtCore.QSize(350, 700))
+        self.frame_46.setStyleSheet(".QFrame{\n"
+"    background-color: rgb(51, 57, 59);\n"
+"}")
+        self.frame_46.setObjectName("frame_46")
+        self.verticalLayout_50 = QtWidgets.QVBoxLayout(self.frame_46)
+        self.verticalLayout_50.setContentsMargins(-1, 9, -1, 5)
+        self.verticalLayout_50.setSpacing(4)
+        self.verticalLayout_50.setObjectName("verticalLayout_50")
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setContentsMargins(-1, -1, -1, 10)
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.offset_table = OffsetTable(self.frame_46)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.offset_table.sizePolicy().hasHeightForWidth())
+        self.offset_table.setSizePolicy(sizePolicy)
+        self.offset_table.setMinimumSize(QtCore.QSize(200, 428))
+        self.offset_table.setMaximumSize(QtCore.QSize(285, 428))
+        self.offset_table.setStyleSheet("")
+        self.offset_table.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.offset_table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.offset_table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
+        self.offset_table.setAutoScroll(False)
+        self.offset_table.setAutoScrollMargin(0)
+        self.offset_table.setWordWrap(False)
+        self.offset_table.setCornerButtonEnabled(False)
+        self.offset_table.setProperty("currentRowColor", QtGui.QColor(0, 38, 255))
+        self.offset_table.setObjectName("offset_table")
+        self.offset_table.horizontalHeader().setDefaultSectionSize(116)
+        self.offset_table.horizontalHeader().setHighlightSections(False)
+        self.offset_table.horizontalHeader().setMinimumSectionSize(78)
+        self.offset_table.horizontalHeader().setStretchLastSection(False)
+        self.offset_table.verticalHeader().setDefaultSectionSize(43)
+        self.offset_table.verticalHeader().setHighlightSections(False)
+        self.offset_table.verticalHeader().setMinimumSectionSize(43)
+        self.horizontalLayout_3.addWidget(self.offset_table)
+        self.verticalLayout_50.addLayout(self.horizontalLayout_3)
+        self.horizontalLayout_65 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_65.setContentsMargins(-1, 0, -1, 0)
+        self.horizontalLayout_65.setSpacing(10)
+        self.horizontalLayout_65.setObjectName("horizontalLayout_65")
+        self.btnClearOffsets = QtWidgets.QPushButton(self.frame_46)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnClearOffsets.sizePolicy().hasHeightForWidth())
+        self.btnClearOffsets.setSizePolicy(sizePolicy)
+        self.btnClearOffsets.setMinimumSize(QtCore.QSize(100, 33))
+        self.btnClearOffsets.setMaximumSize(QtCore.QSize(150, 33))
+        self.btnClearOffsets.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btnClearOffsets.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.btnClearOffsets.setObjectName("btnClearOffsets")
+        self.horizontalLayout_65.addWidget(self.btnClearOffsets)
+        self.btnClearSelOffset = QtWidgets.QPushButton(self.frame_46)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btnClearSelOffset.sizePolicy().hasHeightForWidth())
+        self.btnClearSelOffset.setSizePolicy(sizePolicy)
+        self.btnClearSelOffset.setMinimumSize(QtCore.QSize(100, 33))
+        self.btnClearSelOffset.setMaximumSize(QtCore.QSize(150, 33))
+        self.btnClearSelOffset.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btnClearSelOffset.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.btnClearSelOffset.setObjectName("btnClearSelOffset")
+        self.horizontalLayout_65.addWidget(self.btnClearSelOffset)
+        self.verticalLayout_50.addLayout(self.horizontalLayout_65)
+        self.horizontalLayout_137 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_137.setContentsMargins(-1, 5, -1, 5)
+        self.horizontalLayout_137.setSpacing(10)
+        self.horizontalLayout_137.setObjectName("horizontalLayout_137")
+        self.saveOffsets = QtWidgets.QPushButton(self.frame_46)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.saveOffsets.sizePolicy().hasHeightForWidth())
+        self.saveOffsets.setSizePolicy(sizePolicy)
+        self.saveOffsets.setMinimumSize(QtCore.QSize(100, 33))
+        self.saveOffsets.setMaximumSize(QtCore.QSize(150, 33))
+        self.saveOffsets.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.saveOffsets.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.saveOffsets.setObjectName("saveOffsets")
+        self.horizontalLayout_137.addWidget(self.saveOffsets)
+        self.reloadOffsets = QtWidgets.QPushButton(self.frame_46)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.reloadOffsets.sizePolicy().hasHeightForWidth())
+        self.reloadOffsets.setSizePolicy(sizePolicy)
+        self.reloadOffsets.setMinimumSize(QtCore.QSize(100, 33))
+        self.reloadOffsets.setMaximumSize(QtCore.QSize(150, 33))
+        self.reloadOffsets.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.reloadOffsets.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.reloadOffsets.setObjectName("reloadOffsets")
+        self.horizontalLayout_137.addWidget(self.reloadOffsets)
+        self.verticalLayout_50.addLayout(self.horizontalLayout_137)
+        self.frame_16 = QtWidgets.QFrame(self.innerOffsetsTab)
+        self.frame_16.setGeometry(QtCore.QRect(315, 0, 700, 560))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.frame_16.sizePolicy().hasHeightForWidth())
+        self.frame_16.setSizePolicy(sizePolicy)
+        self.frame_16.setMinimumSize(QtCore.QSize(700, 560))
+        self.frame_16.setMaximumSize(QtCore.QSize(700, 560))
+        self.frame_16.setStyleSheet(".QFrame{\n"
+"    background-color: rgb(51, 57, 59);\n"
+"}")
+        self.frame_16.setObjectName("frame_16")
+        self.verticalLayout_39 = QtWidgets.QVBoxLayout(self.frame_16)
+        self.verticalLayout_39.setContentsMargins(-1, 5, -1, 20)
+        self.verticalLayout_39.setSpacing(15)
+        self.verticalLayout_39.setObjectName("verticalLayout_39")
+        self.gridLayout_13 = QtWidgets.QGridLayout()
+        self.gridLayout_13.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
+        self.gridLayout_13.setContentsMargins(-1, 5, -1, -1)
+        self.gridLayout_13.setHorizontalSpacing(31)
+        self.gridLayout_13.setVerticalSpacing(12)
+        self.gridLayout_13.setObjectName("gridLayout_13")
+        self.machine_column_header_5 = QtWidgets.QLabel(self.frame_16)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.machine_column_header_5.sizePolicy().hasHeightForWidth())
+        self.machine_column_header_5.setSizePolicy(sizePolicy)
+        self.machine_column_header_5.setMinimumSize(QtCore.QSize(675, 55))
+        self.machine_column_header_5.setMaximumSize(QtCore.QSize(16777215, 55))
+        self.machine_column_header_5.setStyleSheet("QLabel{\n"
+"    border-style: solid;\n"
+"    border-color: rgb(176, 179,172);\n"
+"    border-width: 2px;\n"
+"    border-radius: 5px;\n"
+"    color: rgb(238, 238, 236);\n"
+"    background: rgb(90, 90, 90);\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.machine_column_header_5.setAlignment(QtCore.Qt.AlignCenter)
+        self.machine_column_header_5.setObjectName("machine_column_header_5")
+        self.gridLayout_13.addWidget(self.machine_column_header_5, 0, 0, 1, 5)
+        self.actionbutton_g54_3 = ActionButton(self.frame_16)
+        self.actionbutton_g54_3.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.actionbutton_g54_3.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g54_3.setSizePolicy(sizePolicy)
+        self.actionbutton_g54_3.setMinimumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g54_3.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g54_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g54_3.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.actionbutton_g54_3.setAutoExclusive(True)
+        self.actionbutton_g54_3.setObjectName("actionbutton_g54_3")
+        self.gridLayout_13.addWidget(self.actionbutton_g54_3, 1, 0, 1, 1)
+        self.actionbutton_g55_3 = ActionButton(self.frame_16)
+        self.actionbutton_g55_3.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.actionbutton_g55_3.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g55_3.setSizePolicy(sizePolicy)
+        self.actionbutton_g55_3.setMinimumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g55_3.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g55_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g55_3.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.actionbutton_g55_3.setAutoExclusive(True)
+        self.actionbutton_g55_3.setObjectName("actionbutton_g55_3")
+        self.gridLayout_13.addWidget(self.actionbutton_g55_3, 1, 1, 1, 1)
+        self.actionbutton_g56_3 = ActionButton(self.frame_16)
+        self.actionbutton_g56_3.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.actionbutton_g56_3.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g56_3.setSizePolicy(sizePolicy)
+        self.actionbutton_g56_3.setMinimumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g56_3.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g56_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g56_3.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.actionbutton_g56_3.setAutoExclusive(True)
+        self.actionbutton_g56_3.setObjectName("actionbutton_g56_3")
+        self.gridLayout_13.addWidget(self.actionbutton_g56_3, 1, 2, 1, 1)
+        self.actionbutton_g57_3 = ActionButton(self.frame_16)
+        self.actionbutton_g57_3.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.actionbutton_g57_3.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g57_3.setSizePolicy(sizePolicy)
+        self.actionbutton_g57_3.setMinimumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g57_3.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g57_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g57_3.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.actionbutton_g57_3.setAutoExclusive(True)
+        self.actionbutton_g57_3.setObjectName("actionbutton_g57_3")
+        self.gridLayout_13.addWidget(self.actionbutton_g57_3, 1, 3, 1, 1)
+        self.actionbutton_g58_3 = ActionButton(self.frame_16)
+        self.actionbutton_g58_3.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.actionbutton_g58_3.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g58_3.setSizePolicy(sizePolicy)
+        self.actionbutton_g58_3.setMinimumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g58_3.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g58_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g58_3.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.actionbutton_g58_3.setAutoExclusive(True)
+        self.actionbutton_g58_3.setObjectName("actionbutton_g58_3")
+        self.gridLayout_13.addWidget(self.actionbutton_g58_3, 1, 4, 1, 1)
+        self.actionbutton_g59_8 = ActionButton(self.frame_16)
+        self.actionbutton_g59_8.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.actionbutton_g59_8.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g59_8.setSizePolicy(sizePolicy)
+        self.actionbutton_g59_8.setMinimumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_8.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_8.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g59_8.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.actionbutton_g59_8.setAutoExclusive(True)
+        self.actionbutton_g59_8.setObjectName("actionbutton_g59_8")
+        self.gridLayout_13.addWidget(self.actionbutton_g59_8, 2, 1, 1, 1)
+        self.actionbutton_g59_9 = ActionButton(self.frame_16)
+        self.actionbutton_g59_9.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.actionbutton_g59_9.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g59_9.setSizePolicy(sizePolicy)
+        self.actionbutton_g59_9.setMinimumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_9.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_9.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g59_9.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.actionbutton_g59_9.setAutoExclusive(True)
+        self.actionbutton_g59_9.setObjectName("actionbutton_g59_9")
+        self.gridLayout_13.addWidget(self.actionbutton_g59_9, 2, 2, 1, 1)
+        self.actionbutton_g59_10 = ActionButton(self.frame_16)
+        self.actionbutton_g59_10.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.actionbutton_g59_10.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g59_10.setSizePolicy(sizePolicy)
+        self.actionbutton_g59_10.setMinimumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_10.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_10.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g59_10.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.actionbutton_g59_10.setAutoExclusive(True)
+        self.actionbutton_g59_10.setObjectName("actionbutton_g59_10")
+        self.gridLayout_13.addWidget(self.actionbutton_g59_10, 2, 3, 1, 1)
+        self.actionbutton_g59_11 = ActionButton(self.frame_16)
+        self.actionbutton_g59_11.setEnabled(False)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.actionbutton_g59_11.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g59_11.setSizePolicy(sizePolicy)
+        self.actionbutton_g59_11.setMinimumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_11.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_11.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g59_11.setStyleSheet("QPushButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.actionbutton_g59_11.setAutoExclusive(True)
+        self.actionbutton_g59_11.setObjectName("actionbutton_g59_11")
+        self.gridLayout_13.addWidget(self.actionbutton_g59_11, 2, 4, 1, 1)
+        self.verticalLayout_39.addLayout(self.gridLayout_13)
+        self.frame_37 = QtWidgets.QFrame(self.frame_16)
+        self.frame_37.setMaximumSize(QtCore.QSize(16777215, 80))
+        self.frame_37.setStyleSheet("QFrame{\n"
+"    border: none;\n"
+"}")
+        self.frame_37.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_37.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_37.setObjectName("frame_37")
+        self.verticalLayout_39.addWidget(self.frame_37)
+        self.frame_47 = QtWidgets.QFrame(self.frame_16)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.frame_47.sizePolicy().hasHeightForWidth())
+        self.frame_47.setSizePolicy(sizePolicy)
+        self.frame_47.setMaximumSize(QtCore.QSize(16777215, 70))
+        self.frame_47.setStyleSheet(".QFrame{\n"
+"    border-style: solid;\n"
+"    border-color: rgb(176, 179,172);\n"
+"    border-width: 2px;\n"
+"    border-radius: 6px;\n"
+"    background-color: rgb(90, 90, 90);\n"
+"    padding: -5px;\n"
+"}")
+        self.frame_47.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_47.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_47.setObjectName("frame_47")
+        self.verticalLayout_42 = QtWidgets.QVBoxLayout(self.frame_47)
+        self.verticalLayout_42.setContentsMargins(10, -1, 11, -1)
+        self.verticalLayout_42.setSpacing(5)
+        self.verticalLayout_42.setObjectName("verticalLayout_42")
+        self.horizontalLayout_13 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_13.setContentsMargins(0, -1, 0, -1)
+        self.horizontalLayout_13.setSpacing(13)
+        self.horizontalLayout_13.setObjectName("horizontalLayout_13")
+        self.axis_column_header_16 = QtWidgets.QLabel(self.frame_47)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.axis_column_header_16.sizePolicy().hasHeightForWidth())
+        self.axis_column_header_16.setSizePolicy(sizePolicy)
+        self.axis_column_header_16.setMinimumSize(QtCore.QSize(55, 50))
+        self.axis_column_header_16.setMaximumSize(QtCore.QSize(55, 50))
+        self.axis_column_header_16.setStyleSheet("QLabel{\n"
+"    color: rgb(238, 238, 236);\n"
+"    font: 16pt \"Bebas Kai\";\n"
+"}")
+        self.axis_column_header_16.setAlignment(QtCore.Qt.AlignCenter)
+        self.axis_column_header_16.setWordWrap(True)
+        self.axis_column_header_16.setObjectName("axis_column_header_16")
+        self.horizontalLayout_13.addWidget(self.axis_column_header_16)
+        self.axis_column_header_17 = QtWidgets.QLabel(self.frame_47)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.axis_column_header_17.sizePolicy().hasHeightForWidth())
+        self.axis_column_header_17.setSizePolicy(sizePolicy)
+        self.axis_column_header_17.setMinimumSize(QtCore.QSize(45, 50))
+        self.axis_column_header_17.setMaximumSize(QtCore.QSize(45, 50))
+        self.axis_column_header_17.setStyleSheet("QLabel{\n"
+"    color: rgb(238, 238, 236);\n"
+"    font: 16pt \"Bebas Kai\";\n"
+"}")
+        self.axis_column_header_17.setAlignment(QtCore.Qt.AlignCenter)
+        self.axis_column_header_17.setWordWrap(True)
+        self.axis_column_header_17.setObjectName("axis_column_header_17")
+        self.horizontalLayout_13.addWidget(self.axis_column_header_17)
+        self.machine_column_header_14 = QtWidgets.QLabel(self.frame_47)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.machine_column_header_14.sizePolicy().hasHeightForWidth())
+        self.machine_column_header_14.setSizePolicy(sizePolicy)
+        self.machine_column_header_14.setMinimumSize(QtCore.QSize(88, 50))
+        self.machine_column_header_14.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.machine_column_header_14.setStyleSheet("QLabel{\n"
+"    color: rgb(238, 238, 236);\n"
+"    font: 16pt \"Bebas Kai\";\n"
+"}")
+        self.machine_column_header_14.setAlignment(QtCore.Qt.AlignCenter)
+        self.machine_column_header_14.setWordWrap(True)
+        self.machine_column_header_14.setObjectName("machine_column_header_14")
+        self.horizontalLayout_13.addWidget(self.machine_column_header_14)
+        self.machine_column_header_15 = QtWidgets.QLabel(self.frame_47)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.machine_column_header_15.sizePolicy().hasHeightForWidth())
+        self.machine_column_header_15.setSizePolicy(sizePolicy)
+        self.machine_column_header_15.setMinimumSize(QtCore.QSize(85, 50))
+        self.machine_column_header_15.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.machine_column_header_15.setStyleSheet("QLabel{\n"
+"    color: rgb(238, 238, 236);\n"
+"    font: 16pt \"Bebas Kai\";\n"
+"}")
+        self.machine_column_header_15.setAlignment(QtCore.Qt.AlignCenter)
+        self.machine_column_header_15.setWordWrap(True)
+        self.machine_column_header_15.setObjectName("machine_column_header_15")
+        self.horizontalLayout_13.addWidget(self.machine_column_header_15)
+        self.machine_column_header_16 = QtWidgets.QLabel(self.frame_47)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.machine_column_header_16.sizePolicy().hasHeightForWidth())
+        self.machine_column_header_16.setSizePolicy(sizePolicy)
+        self.machine_column_header_16.setMinimumSize(QtCore.QSize(60, 50))
+        self.machine_column_header_16.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.machine_column_header_16.setStyleSheet("QLabel{\n"
+"    color: rgb(238, 238, 236);\n"
+"    font: 16pt \"Bebas Kai\";\n"
+"}")
+        self.machine_column_header_16.setAlignment(QtCore.Qt.AlignCenter)
+        self.machine_column_header_16.setWordWrap(True)
+        self.machine_column_header_16.setObjectName("machine_column_header_16")
+        self.horizontalLayout_13.addWidget(self.machine_column_header_16)
+        self.ref_coilumn_header_9 = QtWidgets.QLabel(self.frame_47)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.ref_coilumn_header_9.sizePolicy().hasHeightForWidth())
+        self.ref_coilumn_header_9.setSizePolicy(sizePolicy)
+        self.ref_coilumn_header_9.setMinimumSize(QtCore.QSize(65, 50))
+        self.ref_coilumn_header_9.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.ref_coilumn_header_9.setStyleSheet("QLabel{\n"
+"    color: rgb(238, 238, 236);\n"
+"    font: 16pt \"Bebas Kai\";\n"
+"}")
+        self.ref_coilumn_header_9.setAlignment(QtCore.Qt.AlignCenter)
+        self.ref_coilumn_header_9.setWordWrap(True)
+        self.ref_coilumn_header_9.setObjectName("ref_coilumn_header_9")
+        self.horizontalLayout_13.addWidget(self.ref_coilumn_header_9)
+        self.machine_column_header_17 = QtWidgets.QLabel(self.frame_47)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.machine_column_header_17.sizePolicy().hasHeightForWidth())
+        self.machine_column_header_17.setSizePolicy(sizePolicy)
+        self.machine_column_header_17.setMinimumSize(QtCore.QSize(65, 50))
+        self.machine_column_header_17.setMaximumSize(QtCore.QSize(16777215, 50))
+        self.machine_column_header_17.setStyleSheet("QLabel{\n"
+"    color: rgb(238, 238, 236);\n"
+"    font: 16pt \"Bebas Kai\";\n"
+"}")
+        self.machine_column_header_17.setAlignment(QtCore.Qt.AlignCenter)
+        self.machine_column_header_17.setWordWrap(True)
+        self.machine_column_header_17.setObjectName("machine_column_header_17")
+        self.horizontalLayout_13.addWidget(self.machine_column_header_17)
+        self.verticalLayout_42.addLayout(self.horizontalLayout_13)
+        self.verticalLayout_39.addWidget(self.frame_47)
+        self.dro_container_offsets_page = QtWidgets.QVBoxLayout()
+        self.dro_container_offsets_page.setContentsMargins(6, 0, 6, 5)
+        self.dro_container_offsets_page.setSpacing(15)
+        self.dro_container_offsets_page.setObjectName("dro_container_offsets_page")
+        self.x_axis_dro_layout_offset_page = QtWidgets.QHBoxLayout()
+        self.x_axis_dro_layout_offset_page.setContentsMargins(-1, 1, -1, 1)
+        self.x_axis_dro_layout_offset_page.setSpacing(12)
+        self.x_axis_dro_layout_offset_page.setObjectName("x_axis_dro_layout_offset_page")
+        self.zero_x_button_3 = MDIButton(self.frame_16)
+        self.zero_x_button_3.setEnabled(False)
+        self.zero_x_button_3.setMinimumSize(QtCore.QSize(55, 38))
+        self.zero_x_button_3.setMaximumSize(QtCore.QSize(55, 38))
+        self.zero_x_button_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.zero_x_button_3.setStyleSheet("MDIButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.zero_x_button_3.setObjectName("zero_x_button_3")
+        self.x_axis_dro_layout_offset_page.addWidget(self.zero_x_button_3)
+        self.x_axis_column_header = QtWidgets.QLabel(self.frame_16)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.x_axis_column_header.sizePolicy().hasHeightForWidth())
+        self.x_axis_column_header.setSizePolicy(sizePolicy)
+        self.x_axis_column_header.setMinimumSize(QtCore.QSize(45, 35))
+        self.x_axis_column_header.setMaximumSize(QtCore.QSize(45, 35))
+        self.x_axis_column_header.setStyleSheet("QLabel{\n"
+"    border-style: solid;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: rgb(238, 238, 236);\n"
+"    font: 18pt \"Bebas Kai\";\n"
+"}")
+        self.x_axis_column_header.setAlignment(QtCore.Qt.AlignCenter)
+        self.x_axis_column_header.setObjectName("x_axis_column_header")
+        self.x_axis_dro_layout_offset_page.addWidget(self.x_axis_column_header)
+        self.dro_wc_entry_x = DROLineEdit(self.frame_16)
+        self.dro_wc_entry_x.setMinimumSize(QtCore.QSize(100, 35))
+        self.dro_wc_entry_x.setMaximumSize(QtCore.QSize(100, 35))
+        font = QtGui.QFont()
+        font.setFamily("Bebas Kai")
+        font.setPointSize(17)
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.dro_wc_entry_x.setFont(font)
+        self.dro_wc_entry_x.setStyleSheet("QLineEdit{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    padding-right: 2px;\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.dro_wc_entry_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.dro_wc_entry_x.setObjectName("dro_wc_entry_x")
+        self.x_axis_dro_layout_offset_page.addWidget(self.dro_wc_entry_x)
+        self.dro_machine_coords_x = StatusLabel(self.frame_16)
+        self.dro_machine_coords_x.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.dro_machine_coords_x.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.dro_machine_coords_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.dro_machine_coords_x.setObjectName("dro_machine_coords_x")
+        self.x_axis_dro_layout_offset_page.addWidget(self.dro_machine_coords_x)
+        self.dro_wcOoffset_x = StatusLabel(self.frame_16)
+        self.dro_wcOoffset_x.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.dro_wcOoffset_x.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.dro_wcOoffset_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.dro_wcOoffset_x.setObjectName("dro_wcOoffset_x")
+        self.x_axis_dro_layout_offset_page.addWidget(self.dro_wcOoffset_x)
+        self.dro_g52_g92_offsets_x = StatusLabel(self.frame_16)
+        self.dro_g52_g92_offsets_x.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.dro_g52_g92_offsets_x.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.dro_g52_g92_offsets_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.dro_g52_g92_offsets_x.setObjectName("dro_g52_g92_offsets_x")
+        self.x_axis_dro_layout_offset_page.addWidget(self.dro_g52_g92_offsets_x)
+        self.dro_tool_offset_x = StatusLabel(self.frame_16)
+        self.dro_tool_offset_x.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.dro_tool_offset_x.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.dro_tool_offset_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.dro_tool_offset_x.setObjectName("dro_tool_offset_x")
+        self.x_axis_dro_layout_offset_page.addWidget(self.dro_tool_offset_x)
+        self.dro_container_offsets_page.addLayout(self.x_axis_dro_layout_offset_page)
+        self.z_axis_dro_layout_4 = QtWidgets.QHBoxLayout()
+        self.z_axis_dro_layout_4.setContentsMargins(-1, 1, -1, 1)
+        self.z_axis_dro_layout_4.setSpacing(12)
+        self.z_axis_dro_layout_4.setObjectName("z_axis_dro_layout_4")
+        self.zero_z_button_3 = MDIButton(self.frame_16)
+        self.zero_z_button_3.setEnabled(False)
+        self.zero_z_button_3.setMinimumSize(QtCore.QSize(55, 38))
+        self.zero_z_button_3.setMaximumSize(QtCore.QSize(55, 38))
+        self.zero_z_button_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.zero_z_button_3.setStyleSheet("MDIButton {\n"
+"       font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.zero_z_button_3.setObjectName("zero_z_button_3")
+        self.z_axis_dro_layout_4.addWidget(self.zero_z_button_3)
+        self.axis_column_header_20 = QtWidgets.QLabel(self.frame_16)
+        self.axis_column_header_20.setMinimumSize(QtCore.QSize(45, 35))
+        self.axis_column_header_20.setMaximumSize(QtCore.QSize(45, 35))
+        self.axis_column_header_20.setStyleSheet("QLabel{\n"
+"    border-style: solid;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: rgb(238, 238, 236);\n"
+"    font: 18pt \"Bebas Kai\";\n"
+"}")
+        self.axis_column_header_20.setAlignment(QtCore.Qt.AlignCenter)
+        self.axis_column_header_20.setObjectName("axis_column_header_20")
+        self.z_axis_dro_layout_4.addWidget(self.axis_column_header_20)
+        self.dro_entry_z = DROLineEdit(self.frame_16)
+        self.dro_entry_z.setMinimumSize(QtCore.QSize(100, 35))
+        self.dro_entry_z.setMaximumSize(QtCore.QSize(100, 35))
+        font = QtGui.QFont()
+        font.setFamily("Bebas Kai")
+        font.setPointSize(17)
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.dro_entry_z.setFont(font)
+        self.dro_entry_z.setStyleSheet("QLineEdit{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    padding-right: 2px;\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.dro_entry_z.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.dro_entry_z.setProperty("axisNumber", 2)
+        self.dro_entry_z.setObjectName("dro_entry_z")
+        self.z_axis_dro_layout_4.addWidget(self.dro_entry_z)
+        self.statuslabel_90 = StatusLabel(self.frame_16)
+        self.statuslabel_90.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.statuslabel_90.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.statuslabel_90.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.statuslabel_90.setObjectName("statuslabel_90")
+        self.z_axis_dro_layout_4.addWidget(self.statuslabel_90)
+        self.statuslabel_91 = StatusLabel(self.frame_16)
+        self.statuslabel_91.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.statuslabel_91.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.statuslabel_91.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.statuslabel_91.setObjectName("statuslabel_91")
+        self.z_axis_dro_layout_4.addWidget(self.statuslabel_91)
+        self.statuslabel_92 = StatusLabel(self.frame_16)
+        self.statuslabel_92.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.statuslabel_92.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.statuslabel_92.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.statuslabel_92.setObjectName("statuslabel_92")
+        self.z_axis_dro_layout_4.addWidget(self.statuslabel_92)
+        self.statuslabel_96 = StatusLabel(self.frame_16)
+        self.statuslabel_96.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.statuslabel_96.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 17pt \"Bebas Kai\";\n"
+"}")
+        self.statuslabel_96.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.statuslabel_96.setObjectName("statuslabel_96")
+        self.z_axis_dro_layout_4.addWidget(self.statuslabel_96)
+        self.dro_container_offsets_page.addLayout(self.z_axis_dro_layout_4)
+        self.verticalLayout_39.addLayout(self.dro_container_offsets_page)
+        self.frame_38 = QtWidgets.QFrame(self.frame_16)
+        self.frame_38.setMaximumSize(QtCore.QSize(16777215, 80))
+        self.frame_38.setStyleSheet("QFrame{\n"
+"    border: none;\n"
+"}")
+        self.frame_38.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_38.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_38.setObjectName("frame_38")
+        self.verticalLayout_39.addWidget(self.frame_38)
+        self.horizontalLayout_22 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_22.setContentsMargins(5, 2, 5, 2)
+        self.horizontalLayout_22.setSpacing(10)
+        self.horizontalLayout_22.setObjectName("horizontalLayout_22")
+        self.use_tcp = QtWidgets.QPushButton(self.frame_16)
+        self.use_tcp.setEnabled(True)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(5)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.use_tcp.sizePolicy().hasHeightForWidth())
+        self.use_tcp.setSizePolicy(sizePolicy)
+        self.use_tcp.setMinimumSize(QtCore.QSize(0, 40))
+        self.use_tcp.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.use_tcp.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.use_tcp.setStyleSheet("QPushButton{\n"
+"    font: 15pt \"Bebas Kai\";\n"
+"}")
+        self.use_tcp.setCheckable(True)
+        self.use_tcp.setObjectName("use_tcp")
+        self.horizontalLayout_22.addWidget(self.use_tcp)
+        self.set_g30_position = SubCallButton(self.frame_16)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(7)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.set_g30_position.sizePolicy().hasHeightForWidth())
+        self.set_g30_position.setSizePolicy(sizePolicy)
+        self.set_g30_position.setMinimumSize(QtCore.QSize(280, 40))
+        self.set_g30_position.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.set_g30_position.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.set_g30_position.setStyleSheet(".SubCallButton {\n"
+"    color: white;    \n"
+"    border-color: black;\n"
+"    border-style: solid;\n"
+"    border-radius: 5px;\n"
+"    border-width: 2px;\n"
+"    background: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(213, 218, 216, 255), stop:0.169312 rgba(82, 82, 83, 255), stop:0.328042 rgba(72, 70, 73, 255), stop:0.492063 rgba(78, 77, 79, 255), stop:0.703704 rgba(72, 70, 73, 255), stop:0.86 rgba(82, 82, 83, 255), stop:1 rgba(213, 218, 216, 255));\n"
+"}\n"
+"\n"
+".SubCallButton {\n"
+"    font-family: \"Bebas Kai\";\n"
+"    font-size: 15pt;\n"
+"}\n"
+"\n"
+".SubCallButton:disabled {\n"
+"    border-color: gray;\n"
+"}\n"
+"\n"
+".SubCallButton:hover {\n"
+"    background:  qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,\n"
+"                                     stop: 0 #A19E9E, stop: 1.0 #5C5959);\n"
+"}\n"
+"\n"
+".SubCallButton:pressed {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+".SubCallButton:checked[option=\"true\"] {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}\n"
+"\n"
+".SubCallButton:checked {\n"
+"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
+"}")
+        self.set_g30_position.setObjectName("set_g30_position")
+        self.horizontalLayout_22.addWidget(self.set_g30_position)
+        self.verticalLayout_39.addLayout(self.horizontalLayout_22)
+        self.horizontalLayout_27 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_27.setContentsMargins(-1, -1, 8, -1)
+        self.horizontalLayout_27.setSpacing(2)
+        self.horizontalLayout_27.setObjectName("horizontalLayout_27")
+        self.label_55 = QtWidgets.QLabel(self.frame_16)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label_55.sizePolicy().hasHeightForWidth())
+        self.label_55.setSizePolicy(sizePolicy)
+        self.label_55.setMinimumSize(QtCore.QSize(20, 33))
+        self.label_55.setMaximumSize(QtCore.QSize(20, 33))
+        self.label_55.setStyleSheet("QLabel{\n"
+"font: 75 16pt \"Bebas Kai\";\n"
+"color: rgb(255, 255, 255);\n"
+"padding-right: 1px;\n"
+"padding-left: 5px;\n"
+"}")
+        self.label_55.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_55.setObjectName("label_55")
+        self.horizontalLayout_27.addWidget(self.label_55)
+        self.x_tool_change_position = VCPSettingsLineEdit(self.frame_16)
+        self.x_tool_change_position.setMinimumSize(QtCore.QSize(75, 33))
+        self.x_tool_change_position.setMaximumSize(QtCore.QSize(16777215, 33))
+        self.x_tool_change_position.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.x_tool_change_position.setStyleSheet("VCPSettingsLineEdit {\n"
+"    border-style: transparent;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 75 15pt \"Bebas Kai\";\n"
+"}")
+        self.x_tool_change_position.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.x_tool_change_position.setProperty("textFormat", "")
+        self.x_tool_change_position.setObjectName("x_tool_change_position")
+        self.horizontalLayout_27.addWidget(self.x_tool_change_position)
+        self.label_58 = QtWidgets.QLabel(self.frame_16)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label_58.sizePolicy().hasHeightForWidth())
+        self.label_58.setSizePolicy(sizePolicy)
+        self.label_58.setMinimumSize(QtCore.QSize(23, 33))
+        self.label_58.setMaximumSize(QtCore.QSize(23, 33))
+        self.label_58.setStyleSheet("QLabel{\n"
+"font: 75 16pt \"Bebas Kai\";\n"
+"color: rgb(255, 255, 255);\n"
+"padding-right: 1px;\n"
+"padding-left: 5px;\n"
+"}")
+        self.label_58.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_58.setObjectName("label_58")
+        self.horizontalLayout_27.addWidget(self.label_58)
+        self.z_tool_change_position = VCPSettingsLineEdit(self.frame_16)
+        self.z_tool_change_position.setMinimumSize(QtCore.QSize(75, 33))
+        self.z_tool_change_position.setMaximumSize(QtCore.QSize(16777215, 33))
+        self.z_tool_change_position.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.z_tool_change_position.setStyleSheet("VCPSettingsLineEdit {\n"
+"    border-style: transparent;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 75 15pt \"Bebas Kai\";\n"
+"}")
+        self.z_tool_change_position.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.z_tool_change_position.setProperty("textFormat", "")
+        self.z_tool_change_position.setObjectName("z_tool_change_position")
+        self.horizontalLayout_27.addWidget(self.z_tool_change_position)
+        self.verticalLayout_39.addLayout(self.horizontalLayout_27)
+        self.toolsInnerTabs.addTab(self.innerOffsetsTab, "")
+        self.tabWidget.addTab(self.toolsTab, "")
+        self.settingsTab = QtWidgets.QWidget()
+        self.settingsTab.setObjectName("settingsTab")
+        self.scrollArea = QtWidgets.QScrollArea(self.settingsTab)
+        self.scrollArea.setGeometry(QtCore.QRect(0, 0, 1016, 711))
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 1014, 709))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.reset_qml = ActionButton(self.scrollAreaWidgetContents)
+        self.reset_qml.setGeometry(QtCore.QRect(135, 15, 111, 26))
+        self.reset_qml.setObjectName("reset_qml")
+        self.tooltouchoff = ToolTouchOff(self.scrollAreaWidgetContents)
+        self.tooltouchoff.setGeometry(QtCore.QRect(50, 265, 500, 300))
+        self.tooltouchoff.setObjectName("tooltouchoff")
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+        self.tabWidget.addTab(self.settingsTab, "")
+        self.stackedWidget.addWidget(self.pageReady)
+        self.verticalLayout_2.addWidget(self.stackedWidget)
         self.verticalLayout.addWidget(self.verticalFrame)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
         self.actionExit = QtWidgets.QAction(MainWindow)
         self.actionExit.setObjectName("actionExit")
         self.actionOPEN = QtWidgets.QAction(MainWindow)
@@ -104,28 +2492,287 @@ class Ui_MainWindow(object):
         self.actionFullscreen.setObjectName("actionFullscreen")
 
         self.retranslateUi(MainWindow)
+        self.stackedWidget.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(0)
+        self.spindleModeWidget.setCurrentIndex(0)
+        self.stackedProgramsTab.setCurrentIndex(0)
+        self.toolsInnerTabs.setCurrentIndex(0)
+        self.toolsOperations.setCurrentIndex(0)
+        self.zoomInView.clicked.connect(self.vtk.zoomIn) # type: ignore
+        self.zoomOutView.clicked.connect(self.vtk.zoomOut) # type: ignore
+        self.main_folder_up_button.clicked.connect(self.filesystemtable.viewParentDirectory) # type: ignore
+        self.edit_gcode_button.toggled['bool'].connect(self.gcodetextedit.EditorReadWrite) # type: ignore
+        self.find_replace_button.clicked.connect(self.gcodetextedit.findDialog) # type: ignore
+        self.save_button.clicked.connect(self.gcodetextedit.saveFile) # type: ignore
+        self.save_as_button.clicked.connect(self.gcodetextedit.saveFileAs) # type: ignore
+        self.btnClearOffsets.clicked.connect(self.offset_table.clearOffsetTable) # type: ignore
+        self.btnClearSelOffset.clicked.connect(self.offset_table.deleteSelectedOffset) # type: ignore
+        self.saveOffsets.clicked.connect(self.offset_table.saveOffsetTable) # type: ignore
+        self.reloadOffsets.clicked.connect(self.offset_table.loadOffsetTable) # type: ignore
+        self.btnNcFiles.clicked.connect(self.filesystemtable.viewNCFilesDirectory) # type: ignore
+        self.removabledevicecombobox.currentPathChanged['QString'].connect(self.filesystemtable.setRootPath) # type: ignore
+        self.reset_qml.clicked.connect(self.tooltouchoff.reset_tools) # type: ignore
+        self.loadSelectedTool.clicked.connect(self.lathetooltable.loadSelectedToolWithM61) # type: ignore
+        self.lathetooltable.anythingSelected['bool'].connect(self.tool_table_delete_button.setEnabled) # type: ignore
+        self.checkBoxFeedAngle.clicked['bool'].connect(self.inputFeedAngle.setEnabled) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.dro_entry.setProperty("inchFormat", _translate("MainWindow", "%9.4f"))
-        self.dro_entry.setProperty("millimeterFormat", _translate("MainWindow", "%10.3f"))
-        self.dro_entry.setProperty("degreeFormat", _translate("MainWindow", "%10.2f"))
-        self.label.setText(_translate("MainWindow", "X"))
-        self.statuslabel.setProperty("rules", _translate("MainWindow", "[{\"name\": \"X Unit\", \"property\": \"Text\", \"expression\": \"\'mm\' if ch[0] else \'in\'\", \"channels\": [{\"url\": \"status:linear_units\", \"trigger\": true}]}]"))
-        self.statuslabel_2.setProperty("rules", _translate("MainWindow", "[{\"name\": \"New Rule\", \"property\": \"Text\", \"expression\": \"\'Homed\' if ch[0] else \'Home All\'\", \"channels\": [{\"url\": \"status:all_axes_homed\", \"trigger\": true}]}]"))
-        self.actionbutton.setText(_translate("MainWindow", "X-"))
-        self.actionbutton.setProperty("actionName", _translate("MainWindow", "machine.jog.axis:x,neg"))
-        self.actionbutton_2.setText(_translate("MainWindow", "X+"))
-        self.actionbutton_2.setProperty("actionName", _translate("MainWindow", "machine.jog.axis:x,pos"))
-        self.actionbutton_3.setText(_translate("MainWindow", "Z+"))
-        self.actionbutton_3.setProperty("actionName", _translate("MainWindow", "machine.jog.axis:z,pos"))
-        self.actionbutton_4.setText(_translate("MainWindow", "Z-"))
-        self.actionbutton_4.setProperty("actionName", _translate("MainWindow", "machine.jog.axis:z,neg"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Tab 1"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))
+        self.stackedWidget.setProperty("rules", _translate("MainWindow", "[{\"name\": \"MachineState\", \"property\": \"currentIndex\", \"expression\": \"1 if not ch[0] and ch[1] and ch[2] == 1 and ch[3] == 1 else 0\", \"channels\": [{\"url\": \"status:estop\", \"trigger\": true}, {\"url\": \"status:enabled\", \"trigger\": true}, {\"url\": \"status:joint.0.homed\", \"trigger\": true}, {\"url\": \"status:joint.1.homed\", \"trigger\": true}]}]"))
+        self.label_14.setText(_translate("MainWindow", "WEILER"))
+        self.statusled.setProperty("rules", _translate("MainWindow", "[{\"name\": \"New Rule\", \"property\": \"On\", \"expression\": \"ch[0] == 1\", \"channels\": [{\"url\": \"status:estop\", \"trigger\": true}]}]"))
+        self.statusled_2.setProperty("rules", _translate("MainWindow", "[{\"name\": \"New Rule\", \"property\": \"On\", \"expression\": \"not ch[0]\", \"channels\": [{\"url\": \"status:enabled\", \"trigger\": true}]}]"))
+        self.statuslabel_2.setProperty("rules", _translate("MainWindow", "[{\"name\": \"New Rule\", \"property\": \"Text\", \"expression\": \"\'NC Enabled\' if ch[0] else \'NC not Enabled\'\", \"channels\": [{\"url\": \"status:enabled\", \"trigger\": true}]}]"))
+        self.statuslabel.setProperty("rules", _translate("MainWindow", "[{\"name\": \"New Rule\", \"property\": \"Text\", \"expression\": \"\'E-Stop Button Pressed\' if ch[0] == 1 else \'E-Stop Free\'\", \"channels\": [{\"url\": \"status:estop\", \"trigger\": true}]}]"))
+        self.statusled_3.setProperty("rules", _translate("MainWindow", "[{\"name\": \"x homed\", \"property\": \"On\", \"expression\": \"ch[0] == 0\", \"channels\": [{\"url\": \"status:joint.0.homed\", \"trigger\": true}]}]"))
+        self.statuslabel_3.setProperty("rules", _translate("MainWindow", "[{\"name\": \"New Rule\", \"property\": \"Text\", \"expression\": \"\'X axis homed\' if ch[0] else \'X axis NOT homed\'\", \"channels\": [{\"url\": \"status:joint.0.homed\", \"trigger\": true}]}]"))
+        self.statusled_4.setProperty("rules", _translate("MainWindow", "[{\"name\": \"z homed\", \"property\": \"On\", \"expression\": \"ch[0] == 0\", \"channels\": [{\"url\": \"status:joint.1.homed\", \"trigger\": true}]}]"))
+        self.statuslabel_4.setProperty("rules", _translate("MainWindow", "[{\"name\": \"New Rule\", \"property\": \"Text\", \"expression\": \"\'Z axis homed\' if ch[0] else \'Z axis NOT homed\'\", \"channels\": [{\"url\": \"status:joint.1.homed\", \"trigger\": true}]}]"))
+        self.groupBox.setTitle(_translate("MainWindow", "Debugging Tools"))
+        self.actionbutton.setText(_translate("MainWindow", "Hal Show"))
+        self.actionbutton.setProperty("actionName", _translate("MainWindow", "tool.halshow"))
+        self.actionbutton_2.setText(_translate("MainWindow", "Hal Meter"))
+        self.actionbutton_2.setProperty("actionName", _translate("MainWindow", "tool.halmeter"))
+        self.actionbutton_3.setText(_translate("MainWindow", "Hal Scope"))
+        self.actionbutton_3.setProperty("actionName", _translate("MainWindow", "tool.halscope"))
+        self.actionbutton_4.setText(_translate("MainWindow", "Classic Ladder"))
+        self.actionbutton_4.setProperty("actionName", _translate("MainWindow", "tool.classicladder"))
+        self.actionbutton_5.setText(_translate("MainWindow", "LCNC Status"))
+        self.actionbutton_5.setProperty("actionName", _translate("MainWindow", "tool.status"))
+        self.actionbutton_6.setText(_translate("MainWindow", "Calibration"))
+        self.actionbutton_6.setProperty("actionName", _translate("MainWindow", "tool.calibration"))
+        self.exit_button_3.setText(_translate("MainWindow", "E-STOP"))
+        self.exit_button_3.setProperty("actionName", _translate("MainWindow", "machine.estop.toggle"))
+        self.power_button_3.setText(_translate("MainWindow", "POWER"))
+        self.power_button_3.setProperty("actionName", _translate("MainWindow", "machine.power.toggle"))
+        self.axisactionbutton_7.setText(_translate("MainWindow", "REF X"))
+        self.axisactionbutton_7.setProperty("actionName", _translate("MainWindow", "machine.home.axis:x"))
+        self.axisactionbutton_8.setText(_translate("MainWindow", "REF Z"))
+        self.axisactionbutton_8.setProperty("actionName", _translate("MainWindow", "machine.home.axis:z"))
+        self.openDialog.setText(_translate("MainWindow", "PushButton"))
+        self.label_12.setText(_translate("MainWindow", "S"))
+        self.radioRpm.setText(_translate("MainWindow", "RPM"))
+        self.radioCss.setText(_translate("MainWindow", "CSS"))
+        self.rpmUnit_10.setText(_translate("MainWindow", "rev/min"))
+        self.actualRpm.setText(_translate("MainWindow", "0000"))
+        self.label_16.setText(_translate("MainWindow", "Actual RPM:"))
+        self.rpmUnit_7.setText(_translate("MainWindow", "rev/min"))
+        self.label_15.setText(_translate("MainWindow", "Set RPM:"))
+        self.inputRpm.setText(_translate("MainWindow", "0000"))
+        self.inputRpm.setProperty("settingName", _translate("MainWindow", "smart_numpad.input-rpm"))
+        self.rpmUnit_11.setText(_translate("MainWindow", "m/min"))
+        self.rpmUnit_14.setText(_translate("MainWindow", "m/min"))
+        self.label_17.setText(_translate("MainWindow", "Actual CSS:"))
+        self.label_19.setText(_translate("MainWindow", "Set CSS:"))
+        self.actualCss.setText(_translate("MainWindow", "000"))
+        self.actualRpmCss.setText(_translate("MainWindow", "0000"))
+        self.label_20.setText(_translate("MainWindow", "Actual RPM:"))
+        self.rpmUnit_15.setText(_translate("MainWindow", "rev/min"))
+        self.rpmUnit_12.setText(_translate("MainWindow", "rev/min"))
+        self.label_18.setText(_translate("MainWindow", "Max RPM:"))
+        self.inputMaxRpm.setText(_translate("MainWindow", "1500"))
+        self.inputMaxRpm.setProperty("settingName", _translate("MainWindow", "smart_numpad.input-css-max-rpm"))
+        self.inputCss.setText(_translate("MainWindow", "1500"))
+        self.inputCss.setProperty("settingName", _translate("MainWindow", "smart_numpad.input-css"))
+        self.statuslabel_6.setText(_translate("MainWindow", "0%"))
+        self.statuslabel_6.setProperty("rules", _translate("MainWindow", "[{\"name\": \"spindle_override\", \"property\": \"Text\", \"expression\": \"str(int(ch[0] * 100)) + \'%\'\", \"channels\": [{\"url\": \"status:spindle.0.override\", \"trigger\": true}]}]"))
+        self.label_29.setText(_translate("MainWindow", "F"))
+        self.actualFeed.setText(_translate("MainWindow", "0000"))
+        self.actualFeedType.setText(_translate("MainWindow", "mm/rev"))
+        self.label_31.setText(_translate("MainWindow", "Actual feed:"))
+        self.label_32.setText(_translate("MainWindow", "Set feed:"))
+        self.checkBoxFeedAngle.setText(_translate("MainWindow", "Feed Angle:"))
+        self.rpmUnit_23.setText(_translate("MainWindow", "deg"))
+        self.feedOverrideValue.setText(_translate("MainWindow", "0%"))
+        self.feedOverrideValue.setProperty("rules", _translate("MainWindow", "[{\"name\": \"feed_override\", \"property\": \"Text\", \"expression\": \"str(int(ch[0]*100)) + \'%\'\", \"channels\": [{\"url\": \"status:feedrate\", \"trigger\": true}]}]"))
+        self.actualFeedType_2.setText(_translate("MainWindow", "mm/rev"))
+        self.inputFeed.setProperty("settingName", _translate("MainWindow", "smart_numpad.input-feed"))
+        self.inputFeedAngle.setText(_translate("MainWindow", "45"))
+        self.inputFeedAngle.setProperty("settingName", _translate("MainWindow", "smart_numpad.input-feed-angle"))
+        self.jogSpeedSlider.setProperty("settingName", _translate("MainWindow", "machine.jog.linear-speed-percentage"))
+        self.label_3.setText(_translate("MainWindow", "Rapid speed"))
+        self.statuslabel_38.setText(_translate("MainWindow", "180N/A/min"))
+        self.statuslabel_38.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"settings:machine.jog.linear-speed\", \"trigger\": true}, {\"url\": \"status:program_units?text\", \"trigger\": false}], \"property\": \"Text\", \"expression\": \"\'{:.0f}\'.format(ch[0]) + ch[1] + \'/min\'\", \"name\": \"Rapid Speed\"}]"))
+        self.statuslabel_35.setText(_translate("MainWindow", "N/A/min"))
+        self.statuslabel_35.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:program_units?text\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"ch[0] + \'/min\'\", \"name\": \"Rapid Speed\"}]"))
+        self.pushButton_3.setText(_translate("MainWindow", "X"))
+        self.pushButton_4.setText(_translate("MainWindow", "Z"))
+        self.inputJogAngle.setText(_translate("MainWindow", "0"))
+        self.rpmUnit_24.setText(_translate("MainWindow", "deg"))
+        self.checkBoxJogAngle.setText(_translate("MainWindow", "Jog Angle:"))
+        self.label_2.setText(_translate("MainWindow", "Handwheels"))
+        self.jogIncrement.setText(_translate("MainWindow", "0.001 mm/div"))
+        self.label_30.setText(_translate("MainWindow", "T"))
+        self.label_33.setText(_translate("MainWindow", "X Offset:"))
+        self.label_34.setText(_translate("MainWindow", "Z Offset:"))
+        self.tool_diameter_7.setText(_translate("MainWindow", "0.000"))
+        self.tool_diameter_7.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?x\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0])\", \"name\": \"x_offset\"}]"))
+        self.tool_diameter_7.setProperty("format", _translate("MainWindow", "{:.3f}"))
+        self.tool_diameter_7.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
+        self.tool_diameter_8.setText(_translate("MainWindow", "0.000"))
+        self.tool_diameter_8.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?z\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0])\", \"name\": \"z_offset\"}]"))
+        self.tool_diameter_8.setProperty("format", _translate("MainWindow", "{:.3f}"))
+        self.tool_diameter_8.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
+        self.label_35.setText(_translate("MainWindow", "Fr Angle:"))
+        self.label_36.setText(_translate("MainWindow", "Bk Angle:"))
+        self.tool_diameter_9.setText(_translate("MainWindow", "0.0"))
+        self.tool_diameter_9.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?I\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.1f}\\\".format(ch[0])\", \"name\": \"front_angle\"}]"))
+        self.tool_diameter_9.setProperty("format", _translate("MainWindow", "{:.3f}"))
+        self.tool_diameter_9.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
+        self.tool_diameter_10.setText(_translate("MainWindow", "0.0"))
+        self.tool_diameter_10.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?J\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.1f}\\\".format(ch[0])\", \"name\": \"back_angle\"}]"))
+        self.tool_diameter_10.setProperty("format", _translate("MainWindow", "{:.3f}"))
+        self.tool_diameter_10.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
+        self.rpmUnit_25.setText(_translate("MainWindow", "deg"))
+        self.rpmUnit_26.setText(_translate("MainWindow", "deg"))
+        self.label_37.setText(_translate("MainWindow", "Tip Radius:"))
+        self.tool_diameter_11.setText(_translate("MainWindow", "0.0"))
+        self.tool_diameter_11.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?diameter\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.1f}\\\".format(ch[0])\", \"name\": \"tool_diameter\"}]"))
+        self.tool_diameter_11.setProperty("format", _translate("MainWindow", "{:.3f}"))
+        self.tool_diameter_11.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
+        self.tool_diameter_12.setText(_translate("MainWindow", "1"))
+        self.tool_diameter_12.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?q\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"str(ch[0])\", \"name\": \"orientation\"}]"))
+        self.tool_diameter_12.setProperty("format", _translate("MainWindow", "{:.3f}"))
+        self.tool_diameter_12.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
+        self.label_38.setText(_translate("MainWindow", "Orientation:"))
+        self.feedOverrideValue_2.setText(_translate("MainWindow", "0"))
+        self.feedOverrideValue_2.setProperty("rules", _translate("MainWindow", "[{\"name\": \"tool_number\", \"property\": \"Text\", \"expression\": \"ch[0]\", \"channels\": [{\"url\": \"status:tool_in_spindle?text\", \"trigger\": true}]}]"))
+        self.settings_lineedit.setProperty("settingName", _translate("MainWindow", "smart_numpad.input-rpm"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.manualTurningTab), _translate("MainWindow", "Manual Turning"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.conversationalTab), _translate("MainWindow", "Conversational"))
+        self.main_folder_up_button.setText(_translate("MainWindow", "Up"))
+        self.btnNcFiles.setText(_translate("MainWindow", "NC Files"))
+        self.device_eject_usb_button.setText(_translate("MainWindow", "EJECT USB"))
+        self.device_folder_up_button.setText(_translate("MainWindow", "  FOLDER UP"))
+        self.filesystemtable.setProperty("hiddenColumns", _translate("MainWindow", "2"))
+        self.copy_to_usb_2.setText(_translate("MainWindow", "To Usb"))
+        self.main_delete_item_button.setText(_translate("MainWindow", "Delete"))
+        self.main_new_file_button.setText(_translate("MainWindow", "New File"))
+        self.main_new_folder_button.setText(_translate("MainWindow", "New Folder"))
+        self.main_rename_item_button.setText(_translate("MainWindow", "Rename"))
+        self.gcodeeditor_label.setText(_translate("MainWindow", "G-Code File Editor"))
+        self.edit_gcode_button.setText(_translate("MainWindow", "Edit G-Code"))
+        self.find_replace_button.setText(_translate("MainWindow", "Find/Replace"))
+        self.save_button.setText(_translate("MainWindow", "Save"))
+        self.save_as_button.setText(_translate("MainWindow", "Save As"))
+        self.btnLoadProgram.setText(_translate("MainWindow", "Load Program"))
+        self.btnBackToPrograms.setText(_translate("MainWindow", "Back"))
+        self.zoomOutView.setText(_translate("MainWindow", "-"))
+        self.zoomInView.setText(_translate("MainWindow", "+"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.programsTab), _translate("MainWindow", "Programs"))
+        self.tool_table_delete_button.setText(_translate("MainWindow", "Delete"))
+        self.tool_table_save_button.setText(_translate("MainWindow", "Save Table"))
+        self.tool_table_reload_button.setText(_translate("MainWindow", "Reload Table"))
+        self.label.setText(_translate("MainWindow", "T#"))
+        self.label_4.setText(_translate("MainWindow", "Tip Radius"))
+        self.groupBox_2.setTitle(_translate("MainWindow", "Tip Orient"))
+        self.lathe_control_point_4.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation ==4 else False\", \"name\": \"orientation_4\"}]"))
+        self.lathe_control_point_7.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Enable\", \"expression\": \"True if ch[0][ch[1]].orientation == 7 else False\", \"name\": \"orientation_7\"}]"))
+        self.lathe_control_point_9.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 9 else False\", \"name\": \"orientation_9\"}]"))
+        self.lathe_control_point_3.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 3 else False\", \"name\": \"orientation_3\"}]"))
+        self.lathe_control_point_8.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 8 else False\", \"name\": \"orientation_8\"}]"))
+        self.lathe_control_point_5.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 5 else False\", \"name\": \"orientation_5\"}]"))
+        self.lathe_control_point_1.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 1 else False\", \"name\": \"orientation_1\"}]"))
+        self.lathe_control_point_6.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 6 else False\", \"name\": \"orientation_6\"}]"))
+        self.lathe_control_point_2.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 2 else False\", \"name\": \"orientation_2\"}]"))
+        self.toolsOperations.setTabText(self.toolsOperations.indexOf(self.addTool), _translate("MainWindow", "Tab 1"))
+        self.loadSelectedTool.setText(_translate("MainWindow", "Load selected Tool "))
+        self.toolsOperations.setTabText(self.toolsOperations.indexOf(self.tab_2), _translate("MainWindow", "Tab 2"))
+        self.toolsInnerTabs.setTabText(self.toolsInnerTabs.indexOf(self.innerToolsTab), _translate("MainWindow", "Tools"))
+        self.offset_table.setProperty("displayColumns", _translate("MainWindow", "XZ"))
+        self.btnClearOffsets.setText(_translate("MainWindow", "CLEAR ALL"))
+        self.btnClearSelOffset.setText(_translate("MainWindow", "CLEAR SELECTED"))
+        self.saveOffsets.setText(_translate("MainWindow", "SAVE TABLE"))
+        self.reloadOffsets.setText(_translate("MainWindow", "RELOAD TABLE"))
+        self.machine_column_header_5.setText(_translate("MainWindow", "WORK COORDINATE OFFSETS"))
+        self.actionbutton_g54_3.setText(_translate("MainWindow", "G54"))
+        self.actionbutton_g54_3.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G54"))
+        self.actionbutton_g55_3.setText(_translate("MainWindow", "G55"))
+        self.actionbutton_g55_3.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G55"))
+        self.actionbutton_g56_3.setText(_translate("MainWindow", "G56"))
+        self.actionbutton_g56_3.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G56"))
+        self.actionbutton_g57_3.setText(_translate("MainWindow", "G57"))
+        self.actionbutton_g57_3.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G57"))
+        self.actionbutton_g58_3.setText(_translate("MainWindow", "G58"))
+        self.actionbutton_g58_3.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G58"))
+        self.actionbutton_g59_8.setText(_translate("MainWindow", "G59"))
+        self.actionbutton_g59_8.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G59"))
+        self.actionbutton_g59_9.setText(_translate("MainWindow", "G59.1"))
+        self.actionbutton_g59_9.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G59.1"))
+        self.actionbutton_g59_10.setText(_translate("MainWindow", "G59.2"))
+        self.actionbutton_g59_10.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G59.2"))
+        self.actionbutton_g59_11.setText(_translate("MainWindow", "G59.3"))
+        self.actionbutton_g59_11.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G59.3"))
+        self.axis_column_header_16.setText(_translate("MainWindow", "SET TO ZERO"))
+        self.axis_column_header_17.setText(_translate("MainWindow", "AXIS"))
+        self.machine_column_header_14.setText(_translate("MainWindow", "WC CURRENT POSITION"))
+        self.machine_column_header_15.setText(_translate("MainWindow", "MACHINE\n"
+"COORDS"))
+        self.machine_column_header_16.setText(_translate("MainWindow", "WC\n"
+"OFFSET"))
+        self.ref_coilumn_header_9.setText(_translate("MainWindow", "G52/G92\n"
+"OFFSET"))
+        self.machine_column_header_17.setText(_translate("MainWindow", "TOOL\n"
+"OFFSET"))
+        self.zero_x_button_3.setText(_translate("MainWindow", "ZERO"))
+        self.zero_x_button_3.setProperty("rules", _translate("MainWindow", "[\n"
+"    {\n"
+"        \"channels\": [\n"
+"            {\n"
+"                \"url\": \"status:g5x_index\",\n"
+"                \"trigger\": true,\n"
+"                \"type\": \"int\"\n"
+"            }\n"
+"        ],\n"
+"        \"expression\": \"\",\n"
+"        \"name\": \"G5x Index\",\n"
+"        \"property\": \"None\"\n"
+"    }\n"
+"]"))
+        self.zero_x_button_3.setProperty("MDICommand", _translate("MainWindow", "G10 L20 P{ch[0]} X0.0"))
+        self.x_axis_column_header.setText(_translate("MainWindow", "X"))
+        self.dro_machine_coords_x.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:position\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.4f}\\\".format(ch[0][0])\", \"name\": \"position_dro_x\"}]"))
+        self.dro_wcOoffset_x.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:g5x_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.4f}\\\".format(ch[0][0])\", \"name\": \"g5x_offset_dro\"}]"))
+        self.dro_g52_g92_offsets_x.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:g92_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.4f}\\\".format(ch[0][0])\", \"name\": \"g92_offset_dro\"}]"))
+        self.dro_tool_offset_x.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.4f}\\\".format(ch[0][0])\", \"name\": \"tool_offset_dro\"}]"))
+        self.zero_z_button_3.setText(_translate("MainWindow", "ZERO"))
+        self.zero_z_button_3.setProperty("rules", _translate("MainWindow", "[\n"
+"    {\n"
+"        \"channels\": [\n"
+"            {\n"
+"                \"url\": \"status:g5x_index\",\n"
+"                \"trigger\": true,\n"
+"                \"type\": \"int\"\n"
+"            }\n"
+"        ],\n"
+"        \"expression\": \"\",\n"
+"        \"name\": \"G5x Index\",\n"
+"        \"property\": \"None\"\n"
+"    }\n"
+"]"))
+        self.zero_z_button_3.setProperty("MDICommand", _translate("MainWindow", "G10 L20 P{ch[0]} Z0.0"))
+        self.axis_column_header_20.setText(_translate("MainWindow", "Z"))
+        self.statuslabel_90.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:position\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.4f}\\\".format(ch[0][2])\", \"name\": \"pos_dro_z\"}]"))
+        self.statuslabel_91.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:g5x_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.4f}\\\".format(ch[0][2])\", \"name\": \"g5x_offset_dro\"}]"))
+        self.statuslabel_92.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:g92_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.4f}\\\".format(ch[0][2])\", \"name\": \"g92_offset_dro\"}]"))
+        self.statuslabel_96.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.4f}\\\".format(ch[0][2])\", \"name\": \"tool_offset_dro\"}]"))
+        self.use_tcp.setText(_translate("MainWindow", "USE TOOL CHANGE POSITION FOR M6"))
+        self.use_tcp.setProperty("checkedAction", _translate("MainWindow", "1"))
+        self.set_g30_position.setText(_translate("MainWindow", "SET G30 POSITION TOOL CHANGE POSITION"))
+        self.set_g30_position.setProperty("filename", _translate("MainWindow", "set_g30_position.ngc"))
+        self.label_55.setText(_translate("MainWindow", "X"))
+        self.x_tool_change_position.setPlaceholderText(_translate("MainWindow", "0.0000"))
+        self.x_tool_change_position.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:aout\", \"trigger\": true}], \"property\": \"Value\", \"expression\": \"ch[0][44]\", \"name\": \"x_axis_g30_set_position\"}]"))
+        self.x_tool_change_position.setProperty("settingName", _translate("MainWindow", "tool-change-position.x-tool-change-position"))
+        self.label_58.setText(_translate("MainWindow", "Z"))
+        self.z_tool_change_position.setPlaceholderText(_translate("MainWindow", "0.0000"))
+        self.z_tool_change_position.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:aout\", \"trigger\": true}], \"property\": \"Value\", \"expression\": \"ch[0][46]\", \"name\": \"z_axis_g30_set_position\"}]"))
+        self.z_tool_change_position.setProperty("settingName", _translate("MainWindow", "tool-change-position.z-tool-change-position"))
+        self.toolsInnerTabs.setTabText(self.toolsInnerTabs.indexOf(self.innerOffsetsTab), _translate("MainWindow", "Offsets"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.toolsTab), _translate("MainWindow", "Tools && Offsets"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.settingsTab), _translate("MainWindow", "Machine Settings"))
         self.actionExit.setText(_translate("MainWindow", "Exit"))
         self.actionExit.setShortcut(_translate("MainWindow", "Ctrl+Q"))
         self.actionOPEN.setText(_translate("MainWindow", "oPEN"))
@@ -134,6 +2781,21 @@ class Ui_MainWindow(object):
         self.actionFullscreen.setText(_translate("MainWindow", "Fullscreen"))
         self.actionFullscreen.setShortcut(_translate("MainWindow", "F11"))
 from qtpyvcp.widgets.button_widgets.action_button import ActionButton
-from qtpyvcp.widgets.display_widgets.dro_label import DROLabel
+from qtpyvcp.widgets.button_widgets.mdi_button import MDIButton
+from qtpyvcp.widgets.button_widgets.subcall_button import SubCallButton
+from qtpyvcp.widgets.containers.stack import VCPStackedWidget
 from qtpyvcp.widgets.display_widgets.status_label import StatusLabel
+from qtpyvcp.widgets.display_widgets.status_led import StatusLED
+from qtpyvcp.widgets.display_widgets.vtk_backplot.vtk_backplot import VTKBackPlot
 from qtpyvcp.widgets.input_widgets.dro_line_edit import DROLineEdit
+from qtpyvcp.widgets.input_widgets.file_system import FileSystemTable, RemovableDeviceComboBox
+from qtpyvcp.widgets.input_widgets.gcode_text_edit import GcodeTextEdit
+from qtpyvcp.widgets.input_widgets.mdientry_widget import MDIEntry
+from qtpyvcp.widgets.input_widgets.offset_table import OffsetTable
+from qtpyvcp.widgets.input_widgets.recent_file_combobox import RecentFileComboBox
+from qtpyvcp.widgets.input_widgets.setting_slider import VCPSettingsLineEdit, VCPSettingsSlider
+from teachinlathe.widgets.lathe_tool_table import LatheToolTable
+from teachinlathe.widgets.lathe_tool_touch_off.tool_touch_off import ToolTouchOff
+from teachinlathe.widgets.teachin_lathe_dro import TeachInLatheDro
+import probe_basic_lathe_rc
+import resources_rc

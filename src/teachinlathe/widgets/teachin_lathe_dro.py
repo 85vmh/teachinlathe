@@ -1,11 +1,11 @@
 import os
 
+from PyQt5 import QtCore, QtWidgets
 from qtpy import uic
 from qtpy.QtWidgets import QWidget
-from qtpyvcp.utilities import logger
 from qtpyvcp.plugins import getPlugin
-from qtpyvcp.widgets.base_widgets.dro_base_widget import Axis, DROBaseWidget
-from qtpyvcp.widgets.display_widgets.dro_widget import RefType
+from qtpyvcp.utilities import logger
+from qtpyvcp.widgets.base_widgets.dro_base_widget import Axis
 
 LOG = logger.getLogger(__name__)
 
@@ -13,6 +13,9 @@ UI_FILE = os.path.join(os.path.dirname(__file__), "teachin_lathe_dro.ui")
 
 
 class TeachInLatheDro(QWidget):
+    xPrimaryDroClicked = QtCore.pyqtSignal(float)
+    zPrimaryDroClicked = QtCore.pyqtSignal(float)
+
     def __init__(self, parent=None):
         super(TeachInLatheDro, self).__init__(parent)
         uic.loadUi(UI_FILE, self)
@@ -38,12 +41,30 @@ class TeachInLatheDro(QWidget):
         self.xAbsRel.clicked.connect(self.xAbsRelClicked)
         self.zAbsRel.clicked.connect(self.zAbsRelClicked)
 
+        self.xPrimaryDro.installEventFilter(self)
+        self.zPrimaryDro.installEventFilter(self)
+
         self.status.program_units.notify(self.updateUnits, 'string')
         self.status.gcodes.notify(self.updateDiameterMode)
         getattr(self.pos, 'rel').notify(self.updateValues)
         self.updateUnits()
         self.updateValues()
 
+    def eventFilter(self, source, event):
+        if event.type() == QtCore.QEvent.MouseButtonPress:
+            match source:
+                case self.xPrimaryDro:
+                    # Handle the mouse press event
+                    print("Label x clicked")
+                    self.xPrimaryDroClicked.emit(float(self.xPrimaryDro.text()))
+                    return True
+                case self.zPrimaryDro:
+                    # Handle the mouse press event
+                    print("Label z clicked")
+                    self.zPrimaryDroClicked.emit(float(self.zPrimaryDro.text()))
+                    return True
+
+        return super().eventFilter(source, event)
 
     def updateUnits(self, units=None):
         if units is None:
@@ -93,10 +114,11 @@ class TeachInLatheDro(QWidget):
             self.lastZAbsValue = 0
         self.updateDro()
 
+    def xDroClicked(self):
+        print("xDroClicked")
+
     def updateDro(self):
-        factor = 1.0
-        if self.isDiameterMode:
-            factor = 2.0
+        factor = 2.0 if self.isDiameterMode else 1.0
 
         if self.isXAbs:
             self.xPrimaryDro.setText(self._fmt % (factor * self.currentXAbsValue))
@@ -111,4 +133,3 @@ class TeachInLatheDro(QWidget):
         else:
             self.zPrimaryDro.setText(self._fmt % (self.currentZAbsValue - self.lastZAbsValue))
             self.zSecondaryDro.setText(self._fmt % self.currentZAbsValue)
-

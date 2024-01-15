@@ -1,5 +1,14 @@
 <RCC>
-  <qresource prefix="newPrefix">
-    <file>joystick_center.png</file>
-  </qresource>
+    <qresource prefix="/lathe_resources">
+        <file>joystick_center.png</file>
+        <file>lathe_control_point_9.png</file>
+        <file>lathe_control_point_8.png</file>
+        <file>lathe_control_point_7.png</file>
+        <file>lathe_control_point_6.png</file>
+        <file>lathe_control_point_5.png</file>
+        <file>lathe_control_point_4.png</file>
+        <file>lathe_control_point_3.png</file>
+        <file>lathe_control_point_2.png</file>
+        <file>lathe_control_point_1.png</file>
+    </qresource>
 </RCC>

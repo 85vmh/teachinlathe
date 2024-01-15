@@ -1,11 +1,26 @@
 from qtpyvcp.widgets.qtdesigner import _DesignerPlugin
 
+from .lathe_tool_touch_off.tool_touch_off import ToolTouchOff
 from .teachin_lathe_dro import TeachInLatheDro
+from .lathe_tool_table import LatheToolTable
+from .joystick_status import JoystickStatus
+
+
+
 class TeachInLatheDro_Plugin(_DesignerPlugin):
     def pluginClass(self):
         return TeachInLatheDro
 
-from .joystick_status import JoystickStatus
+
 class JoystickStatus_Plugin(_DesignerPlugin):
     def pluginClass(self):
         return JoystickStatus
+
+
+class LatheToolTable_Plugin(_DesignerPlugin):
+    def pluginClass(self):
+        return LatheToolTable
+
+class ToolTouchOff_Plugin(_DesignerPlugin):
+    def pluginClass(self):
+        return ToolTouchOff
