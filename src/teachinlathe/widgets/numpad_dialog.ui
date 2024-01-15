@@ -113,6 +113,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>3</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="0" column="1">
@@ -123,10 +126,13 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>8</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="2" column="4">
-      <widget class="QPushButton" name="pushButton_15">
+      <widget class="QPushButton" name="editBtn">
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
@@ -136,7 +142,7 @@ font: 14pt &quot;DejaVu Sans&quot;;
       </widget>
      </item>
      <item row="1" column="4">
-      <widget class="QPushButton" name="pushButton_10">
+      <widget class="QPushButton" name="clearBtn">
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
@@ -153,15 +159,18 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>+</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">operationsGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="3" column="2">
-      <widget class="QPushButton" name="pushButton_18">
+      <widget class="QPushButton" name="plusMinusBtn">
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
        <property name="text">
-        <string>+-</string>
+        <string/>
        </property>
       </widget>
      </item>
@@ -173,6 +182,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>9</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="3" column="3">
@@ -183,6 +195,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>/</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">operationsGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="2" column="3">
@@ -193,6 +208,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>*</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">operationsGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="1" column="1">
@@ -203,6 +221,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>5</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="3" column="1">
@@ -213,6 +234,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>0</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="2" column="0">
@@ -223,6 +247,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>1</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="1" column="0">
@@ -233,10 +260,13 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>4</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="3" column="4">
-      <widget class="QPushButton" name="pushButton_20">
+      <widget class="QPushButton" name="inputBtn">
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
@@ -253,10 +283,13 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>2</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="0" column="4">
-      <widget class="QPushButton" name="pushButton_5">
+      <widget class="QPushButton" name="backBtn">
        <property name="focusPolicy">
         <enum>Qt::NoFocus</enum>
        </property>
@@ -273,6 +306,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>-</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">operationsGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="3" column="0">
@@ -283,6 +319,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>.</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="0" column="0">
@@ -293,6 +332,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>7</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
      <item row="1" column="2">
@@ -303,6 +345,9 @@ font: 14pt &quot;DejaVu Sans&quot;;
        <property name="text">
         <string>6</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">numbersGroup</string>
+       </attribute>
       </widget>
      </item>
     </layout>
@@ -332,7 +377,7 @@ font: 14pt &quot;DejaVu Sans&quot;;
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit">
+   <widget class="QLineEdit" name="inputField">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -345,17 +390,24 @@ font: 14pt &quot;DejaVu Sans&quot;;
      <string notr="true">font: 16pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="text">
-     <string>0000</string>
+     <string/>
     </property>
     <property name="cursorPosition">
-     <number>4</number>
+     <number>0</number>
     </property>
     <property name="alignment">
      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+    <property name="placeholderText">
+     <string>0.0</string>
     </property>
    </widget>
   </widget>
  </widget>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="numbersGroup"/>
+  <buttongroup name="operationsGroup"/>
+ </buttongroups>
 </ui>

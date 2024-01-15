@@ -1,5 +1,6 @@
 # Setup logging
 from PyQt5.QtCore import QTimer
+from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities import logger
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
@@ -193,7 +194,8 @@ class MyMainWindow(VCPMainWindow):
 
     def setXOffset(self, value):
         print("setXOffset", value)
+        issue_mdi('o<touch_off_x> call [' + value + ']')
 
     def setZOffset(self, value):
         print("setZOffset", value)
-
+        issue_mdi('o<touch_off_z> call [' + value + ']')

@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qtpyvcp import SETTINGS
+from PyQt5.QtGui import QValidator
 
 from teachinlathe.widgets.QFlowLayout import QFlowLayout
 from teachinlathe.widgets.numpad_dialog_ui import Ui_NumPadDialog
@@ -53,10 +54,40 @@ class SmartNumPadDialog(QtWidgets.QDialog, Ui_NumPadDialog):
             self.selectValuesWidget.hide()
             self.enterValuesWidget.show()
 
-            self.lineEdit.setText("0.1234")
+            self.plusMinusBtn.setText(u"\u00B1")
+
+            # validator = QtGui.QDoubleValidator()
+            # validator.setRange(-9999.999, 9999.999, 3)
+            # self.inputField.setValidator(validator)
+            self.inputField.setValidator(self.SingleDotValidator())
+
             self.enterValueLabel.setText("Enter " + self.title_prefix)
             self.enterValuesWidget.setGeometry(QtCore.QRect(0, 0, 391, 420))
             self.resize(394, self.enter_values_height)
+
+            self.numbersGroup.buttonClicked.connect(self.numberKeys)
+            self.backBtn.clicked.connect(self.backKey)
+            self.clearBtn.clicked.connect(self.clearKey)
+            self.inputBtn.clicked.connect(self.inputKey)
+
+    def numberKeys(self, button):
+        text = self.inputField.text()  # copy the label text to the variable
+        if len(text) > 0:  # if there is something in the label
+            text += button.text()  # add the button text to the text variable
+        else:  # if the label is empty
+            text = button.text()  # assign the button text to the text variable
+        self.inputField.setText(text)  # set the text in label
+
+    def backKey(self):
+        text = self.inputField.text()[:-1]  # assign all but the last char to text
+        self.inputField.setText(text)
+
+    def clearKey(self):
+        self.inputField.setText("")
+
+    def inputKey(self):
+        self.valueSelected.emit(self.inputField.text())
+        self.close()
 
     def quickValueSelected(self):
         selected_value = self.sender().text()  # Get text of the clicked button
@@ -66,3 +97,9 @@ class SmartNumPadDialog(QtWidgets.QDialog, Ui_NumPadDialog):
     def resizeEvent(self, event):
         # Override resize event to prevent resizing
         pass
+
+    class SingleDotValidator(QValidator):
+        def validate(self, string, pos):
+            if string.count('.') > 1:
+                return (QValidator.Invalid, string, pos)
+            return (QValidator.Acceptable, string, pos)
