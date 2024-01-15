@@ -545,19 +545,6 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               </rect>
              </property>
             </widget>
-            <widget class="QPushButton" name="openDialog">
-             <property name="geometry">
-              <rect>
-               <x>850</x>
-               <y>20</y>
-               <width>131</width>
-               <height>71</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>PushButton</string>
-             </property>
-            </widget>
             <widget class="QFrame" name="frame">
              <property name="geometry">
               <rect>
@@ -2153,24 +2140,17 @@ QPushButton:pressed {
               </property>
              </widget>
             </widget>
-            <widget class="MDIEntry" name="mdientry">
+            <widget class="QPushButton" name="setZDatumBtn">
              <property name="geometry">
               <rect>
-               <x>720</x>
-               <y>480</y>
-               <width>211</width>
-               <height>26</height>
+               <x>680</x>
+               <y>540</y>
+               <width>101</width>
+               <height>46</height>
               </rect>
              </property>
-            </widget>
-            <widget class="QLineEdit" name="lineEdit_3">
-             <property name="geometry">
-              <rect>
-               <x>735</x>
-               <y>265</y>
-               <width>113</width>
-               <height>26</height>
-              </rect>
+             <property name="text">
+              <string>Set Z Datum</string>
              </property>
             </widget>
            </widget>
@@ -6120,11 +6100,6 @@ padding-left: 5px;
    <extends>QWidget</extends>
    <header>qtpyvcp.widgets.display_widgets.vtk_backplot.vtk_backplot</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>MDIEntry</class>
-   <extends>QLineEdit</extends>
-   <header>qtpyvcp.widgets.input_widgets.mdientry_widget</header>
   </customwidget>
   <customwidget>
    <class>GcodeTextEdit</class>

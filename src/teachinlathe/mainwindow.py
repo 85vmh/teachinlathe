@@ -57,7 +57,7 @@ class MyMainWindow(VCPMainWindow):
         self.debounce_timer.timeout.connect(self.onRpmDebounced)
         self.debounce_timer.start()
 
-        self.openDialog.clicked.connect(self.openNumPad)
+        self.setZDatumBtn.clicked.connect(self.setZDatum)
         self.btnLoadProgram.clicked.connect(self.loadProgram)
         self.btnBackToPrograms.clicked.connect(self.backToPrograms)
 
@@ -194,8 +194,11 @@ class MyMainWindow(VCPMainWindow):
 
     def setXOffset(self, value):
         print("setXOffset", value)
-        issue_mdi('o<touch_off_x> call [' + value + ']')
+        issue_mdi('o<touch_off_x> call [{}]'.format(value))
 
     def setZOffset(self, value):
         print("setZOffset", value)
-        issue_mdi('o<touch_off_z> call [' + value + ']')
+        issue_mdi('o<touch_off_z> call [{}]'.format(value))
+
+    def setZDatum(self):
+        issue_mdi('G10 L20 P0 Z0')
