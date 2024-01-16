@@ -203,11 +203,11 @@ class MyMainWindow(VCPMainWindow):
 
     def toggleXMpgEnable(self, value):
         print("toggleXMpgEnable to pin", value)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = not self.xMpgEnabled
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = value
 
     def toggleZMpgEnable(self, value):
         print("toggleZMpgEnable to pin", value)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = not self.zMpgEnabled
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = value
 
     def onXPrimaryDroClicked(self, value):
         print("onXPrimaryDroClicked", value)
