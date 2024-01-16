@@ -2116,7 +2116,7 @@ QCheckBox:checked {
                  <x>0</x>
                  <y>0</y>
                  <width>581</width>
-                 <height>666</height>
+                 <height>681</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -2897,7 +2897,7 @@ color: white;</string>
                <property name="geometry">
                 <rect>
                  <x>715</x>
-                 <y>600</y>
+                 <y>605</y>
                  <width>161</width>
                  <height>46</height>
                 </rect>
@@ -3113,7 +3113,7 @@ QComboBox QAbstractItemView{
 }</string>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="innerToolsTab">
               <attribute name="title">
@@ -3125,10 +3125,10 @@ QComboBox QAbstractItemView{
                </property>
                <property name="geometry">
                 <rect>
-                 <x>5</x>
-                 <y>5</y>
-                 <width>616</width>
-                 <height>616</height>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>746</width>
+                 <height>651</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -3222,39 +3222,6 @@ QComboBox QAbstractItemView{
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="tool_table_save_button">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>120</width>
-                      <height>33</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>120</width>
-                      <height>33</height>
-                     </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton {
-   	font: 12pt &quot;Noto&quot;;
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>Save Table</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
                    <widget class="QPushButton" name="tool_table_reload_button">
                     <property name="enabled">
                      <bool>true</bool>
@@ -3290,6 +3257,30 @@ QComboBox QAbstractItemView{
                     </property>
                    </widget>
                   </item>
+                  <item>
+                   <widget class="QPushButton" name="loadSelectedTool">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>140</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                    </property>
+                    <property name="text">
+                     <string>Load selected </string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                </layout>
@@ -3297,10 +3288,10 @@ QComboBox QAbstractItemView{
               <widget class="QTabWidget" name="toolsOperations">
                <property name="geometry">
                 <rect>
-                 <x>620</x>
+                 <x>755</x>
                  <y>5</y>
-                 <width>391</width>
-                 <height>616</height>
+                 <width>256</width>
+                 <height>641</height>
                 </rect>
                </property>
                <property name="currentIndex">
@@ -3313,7 +3304,7 @@ QComboBox QAbstractItemView{
                 <widget class="QWidget" name="formLayoutWidget_2">
                  <property name="geometry">
                   <rect>
-                   <x>50</x>
+                   <x>5</x>
                    <y>10</y>
                    <width>126</width>
                    <height>66</height>
@@ -3345,7 +3336,7 @@ QComboBox QAbstractItemView{
                 <widget class="QGroupBox" name="groupBox_2">
                  <property name="geometry">
                   <rect>
-                   <x>50</x>
+                   <x>5</x>
                    <y>80</y>
                    <width>226</width>
                    <height>246</height>
@@ -3939,19 +3930,6 @@ ActionButton:checked {
                 <attribute name="title">
                  <string>Tab 2</string>
                 </attribute>
-                <widget class="QPushButton" name="loadSelectedTool">
-                 <property name="geometry">
-                  <rect>
-                   <x>100</x>
-                   <y>120</y>
-                   <width>181</width>
-                   <height>51</height>
-                  </rect>
-                 </property>
-                 <property name="text">
-                  <string>Load selected Tool </string>
-                 </property>
-                </widget>
                </widget>
               </widget>
              </widget>
@@ -4121,11 +4099,11 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>CLEAR ALL</string>
+                     <string>Clear All</string>
                     </property>
                    </widget>
                   </item>
@@ -4154,11 +4132,11 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>CLEAR SELECTED</string>
+                     <string>Clear Selected</string>
                     </property>
                    </widget>
                   </item>
@@ -4200,11 +4178,11 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>SAVE TABLE</string>
+                     <string>Save Table</string>
                     </property>
                    </widget>
                   </item>
@@ -4233,11 +4211,11 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>RELOAD TABLE</string>
+                     <string>Reload Table</string>
                     </property>
                    </widget>
                   </item>
@@ -4329,11 +4307,11 @@ ActionButton:checked {
     border-radius: 5px;
     color: rgb(238, 238, 236);
     background: rgb(90, 90, 90);
-	font: 17pt &quot;Bebas Kai&quot;;
+	font: 14pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>WORK COORDINATE OFFSETS</string>
+                     <string>Work Coordinate Offsets</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
@@ -4368,7 +4346,7 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
@@ -4410,7 +4388,7 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
@@ -4452,7 +4430,7 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
@@ -4494,7 +4472,7 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
@@ -4536,7 +4514,7 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
@@ -4578,7 +4556,7 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
@@ -4620,7 +4598,7 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
@@ -4662,7 +4640,7 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
@@ -4704,7 +4682,7 @@ ActionButton:checked {
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
@@ -4815,7 +4793,7 @@ ActionButton:checked {
                        <property name="styleSheet">
                         <string notr="true">QLabel{
     color: rgb(238, 238, 236);
-	font: 16pt &quot;Bebas Kai&quot;;
+	font: 14pt &quot;Noto&quot;;
 }</string>
                        </property>
                        <property name="text">
@@ -4852,7 +4830,7 @@ ActionButton:checked {
                        <property name="styleSheet">
                         <string notr="true">QLabel{
     color: rgb(238, 238, 236);
-	font: 16pt &quot;Bebas Kai&quot;;
+	font: 14pt &quot;Noto&quot;;
 }</string>
                        </property>
                        <property name="text">
@@ -4889,7 +4867,7 @@ ActionButton:checked {
                        <property name="styleSheet">
                         <string notr="true">QLabel{
     color: rgb(238, 238, 236);
-	font: 16pt &quot;Bebas Kai&quot;;
+	font: 14pt &quot;Noto&quot;;
 }</string>
                        </property>
                        <property name="text">
@@ -4926,12 +4904,12 @@ ActionButton:checked {
                        <property name="styleSheet">
                         <string notr="true">QLabel{
     color: rgb(238, 238, 236);
-	font: 16pt &quot;Bebas Kai&quot;;
+	font: 14pt &quot;Noto&quot;;
 }</string>
                        </property>
                        <property name="text">
-                        <string>MACHINE
-COORDS</string>
+                        <string>Machine
+Coordinates</string>
                        </property>
                        <property name="alignment">
                         <set>Qt::AlignCenter</set>
@@ -4964,12 +4942,12 @@ COORDS</string>
                        <property name="styleSheet">
                         <string notr="true">QLabel{
     color: rgb(238, 238, 236);
-	font: 16pt &quot;Bebas Kai&quot;;
+	font: 14pt &quot;Noto&quot;;
 }</string>
                        </property>
                        <property name="text">
                         <string>WC
-OFFSET</string>
+Offset</string>
                        </property>
                        <property name="alignment">
                         <set>Qt::AlignCenter</set>
@@ -5002,12 +4980,12 @@ OFFSET</string>
                        <property name="styleSheet">
                         <string notr="true">QLabel{
     color: rgb(238, 238, 236);
-	font: 16pt &quot;Bebas Kai&quot;;
+	font: 14pt &quot;Noto&quot;;
 }</string>
                        </property>
                        <property name="text">
                         <string>G52/G92
-OFFSET</string>
+Offset</string>
                        </property>
                        <property name="alignment">
                         <set>Qt::AlignCenter</set>
@@ -5040,12 +5018,12 @@ OFFSET</string>
                        <property name="styleSheet">
                         <string notr="true">QLabel{
     color: rgb(238, 238, 236);
-	font: 16pt &quot;Bebas Kai&quot;;
+	font: 14pt &quot;Noto&quot;;
 }</string>
                        </property>
                        <property name="text">
-                        <string>TOOL
-OFFSET</string>
+                        <string>Tool
+Offset</string>
                        </property>
                        <property name="alignment">
                         <set>Qt::AlignCenter</set>
@@ -5110,11 +5088,11 @@ OFFSET</string>
                       </property>
                       <property name="styleSheet">
                        <string notr="true">MDIButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="text">
-                       <string>ZERO</string>
+                       <string>X=0</string>
                       </property>
                       <property name="rules" stdset="0">
                        <string>[
@@ -5164,7 +5142,7 @@ OFFSET</string>
     border-width: 1px;
     border-radius: 5px;
     color: rgb(238, 238, 236);
-	font: 18pt &quot;Bebas Kai&quot;;
+	font: 18pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="text">
@@ -5199,19 +5177,36 @@ OFFSET</string>
                        </font>
                       </property>
                       <property name="styleSheet">
-                       <string notr="true">QLineEdit{
+                       <string notr="true">StatusLabel{
     border-style: transparant;
     border-color: rgb(235, 235, 235);
     border-width: 1px;
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-    padding-right: 2px;
-    font: 17pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                      <property name="referenceType" stdset="0">
+                       <number>1</number>
+                      </property>
+                      <property name="axisNumber" stdset="0">
+                       <number>0</number>
+                      </property>
+                      <property name="inchFormat" stdset="0">
+                       <string>%9.4f</string>
+                      </property>
+                      <property name="millimeterFormat" stdset="0">
+                       <string>%10.3f</string>
+                      </property>
+                      <property name="degreeFormat" stdset="0">
+                       <string>%10.2f</string>
+                      </property>
+                      <property name="latheMode" stdset="0">
+                       <number>0</number>
                       </property>
                      </widget>
                     </item>
@@ -5231,14 +5226,14 @@ OFFSET</string>
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-	font: 17pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
                       <property name="rules" stdset="0">
-                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:position&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.4f}\&quot;.format(ch[0][0])&quot;, &quot;name&quot;: &quot;position_dro_x&quot;}]</string>
+                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:position&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.3f}\&quot;.format(ch[0][0])&quot;, &quot;name&quot;: &quot;position_dro_x&quot;}]</string>
                       </property>
                      </widget>
                     </item>
@@ -5258,14 +5253,14 @@ OFFSET</string>
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-	font: 17pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
                       <property name="rules" stdset="0">
-                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:g5x_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.4f}\&quot;.format(ch[0][0])&quot;, &quot;name&quot;: &quot;g5x_offset_dro&quot;}]</string>
+                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:g5x_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.3f}\&quot;.format(ch[0][0])&quot;, &quot;name&quot;: &quot;g5x_offset_dro&quot;}]</string>
                       </property>
                      </widget>
                     </item>
@@ -5285,14 +5280,14 @@ OFFSET</string>
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-	font: 17pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
                       <property name="rules" stdset="0">
-                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:g92_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.4f}\&quot;.format(ch[0][0])&quot;, &quot;name&quot;: &quot;g92_offset_dro&quot;}]</string>
+                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:g92_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.3f}\&quot;.format(ch[0][0])&quot;, &quot;name&quot;: &quot;g92_offset_dro&quot;}]</string>
                       </property>
                      </widget>
                     </item>
@@ -5312,14 +5307,14 @@ OFFSET</string>
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-	font: 17pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
                       <property name="rules" stdset="0">
-                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.4f}\&quot;.format(ch[0][0])&quot;, &quot;name&quot;: &quot;tool_offset_dro&quot;}]</string>
+                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.3f}\&quot;.format(ch[0][0])&quot;, &quot;name&quot;: &quot;tool_offset_dro&quot;}]</string>
                       </property>
                      </widget>
                     </item>
@@ -5358,11 +5353,11 @@ OFFSET</string>
                       </property>
                       <property name="styleSheet">
                        <string notr="true">MDIButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="text">
-                       <string>ZERO</string>
+                       <string>Z=0</string>
                       </property>
                       <property name="rules" stdset="0">
                        <string>[
@@ -5406,7 +5401,7 @@ OFFSET</string>
     border-width: 1px;
     border-radius: 5px;
     color: rgb(238, 238, 236);
-	font: 18pt &quot;Bebas Kai&quot;;
+	font: 18pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="text">
@@ -5441,15 +5436,14 @@ OFFSET</string>
                        </font>
                       </property>
                       <property name="styleSheet">
-                       <string notr="true">QLineEdit{
+                       <string notr="true">StatusLabel{
     border-style: transparant;
     border-color: rgb(235, 235, 235);
     border-width: 1px;
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-    padding-right: 2px;
-    font: 17pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="alignment">
@@ -5476,14 +5470,14 @@ OFFSET</string>
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-	font: 17pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
                       <property name="rules" stdset="0">
-                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:position&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.4f}\&quot;.format(ch[0][2])&quot;, &quot;name&quot;: &quot;pos_dro_z&quot;}]</string>
+                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:position&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.3f}\&quot;.format(ch[0][2])&quot;, &quot;name&quot;: &quot;pos_dro_z&quot;}]</string>
                       </property>
                      </widget>
                     </item>
@@ -5503,14 +5497,14 @@ OFFSET</string>
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-	font: 17pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
                       <property name="rules" stdset="0">
-                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:g5x_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.4f}\&quot;.format(ch[0][2])&quot;, &quot;name&quot;: &quot;g5x_offset_dro&quot;}]</string>
+                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:g5x_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.3f}\&quot;.format(ch[0][2])&quot;, &quot;name&quot;: &quot;g5x_offset_dro&quot;}]</string>
                       </property>
                      </widget>
                     </item>
@@ -5530,14 +5524,14 @@ OFFSET</string>
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-	font: 17pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
                       <property name="rules" stdset="0">
-                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:g92_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.4f}\&quot;.format(ch[0][2])&quot;, &quot;name&quot;: &quot;g92_offset_dro&quot;}]</string>
+                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:g92_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.3f}\&quot;.format(ch[0][2])&quot;, &quot;name&quot;: &quot;g92_offset_dro&quot;}]</string>
                       </property>
                      </widget>
                     </item>
@@ -5557,14 +5551,14 @@ OFFSET</string>
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-	font: 17pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                       </property>
                       <property name="alignment">
                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                       </property>
                       <property name="rules" stdset="0">
-                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.4f}\&quot;.format(ch[0][2])&quot;, &quot;name&quot;: &quot;tool_offset_dro&quot;}]</string>
+                       <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_offset&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.3f}\&quot;.format(ch[0][2])&quot;, &quot;name&quot;: &quot;tool_offset_dro&quot;}]</string>
                       </property>
                      </widget>
                     </item>
@@ -5638,11 +5632,11 @@ OFFSET</string>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QPushButton{
-    font: 15pt &quot;Bebas Kai&quot;;
+    font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>USE TOOL CHANGE POSITION FOR M6</string>
+                     <string>Use tool change position for M6</string>
                     </property>
                     <property name="checkable">
                      <bool>true</bool>
@@ -5676,43 +5670,12 @@ OFFSET</string>
                      <enum>Qt::NoFocus</enum>
                     </property>
                     <property name="styleSheet">
-                     <string notr="true">.SubCallButton {
-    color: white;    
-    border-color: black;
-    border-style: solid;
-    border-radius: 5px;
-    border-width: 2px;
-    background: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0 rgba(213, 218, 216, 255), stop:0.169312 rgba(82, 82, 83, 255), stop:0.328042 rgba(72, 70, 73, 255), stop:0.492063 rgba(78, 77, 79, 255), stop:0.703704 rgba(72, 70, 73, 255), stop:0.86 rgba(82, 82, 83, 255), stop:1 rgba(213, 218, 216, 255));
-}
-
-.SubCallButton {
-    font-family: &quot;Bebas Kai&quot;;
-    font-size: 15pt;
-}
-
-.SubCallButton:disabled {
-    border-color: gray;
-}
-
-.SubCallButton:hover {
-    background:  qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                     stop: 0 #A19E9E, stop: 1.0 #5C5959);
-}
-
-.SubCallButton:pressed {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-.SubCallButton:checked[option=&quot;true&quot;] {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-.SubCallButton:checked {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+                     <string notr="true">QPushButton{
+    font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="text">
-                     <string>SET G30 POSITION TOOL CHANGE POSITION</string>
+                     <string>Set G30 tool change position</string>
                     </property>
                     <property name="filename" stdset="0">
                      <string>set_g30_position.ngc</string>
@@ -5751,7 +5714,7 @@ OFFSET</string>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QLabel{
-font: 75 16pt &quot;Bebas Kai&quot;;
+font: 14pt &quot;Noto&quot;;
 color: rgb(255, 255, 255);
 padding-right: 1px;
 padding-left: 5px;
@@ -5790,7 +5753,7 @@ padding-left: 5px;
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-	font: 75 15pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="alignment">
@@ -5832,7 +5795,7 @@ padding-left: 5px;
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QLabel{
-font: 75 16pt &quot;Bebas Kai&quot;;
+font: 14pt &quot;Noto&quot;;
 color: rgb(255, 255, 255);
 padding-right: 1px;
 padding-left: 5px;
@@ -5871,7 +5834,7 @@ padding-left: 5px;
     border-radius: 5px;
     color: black;
     background: rgb(235, 235, 235);
-	font: 75 15pt &quot;Bebas Kai&quot;;
+	font: 12pt &quot;Noto&quot;;
 }</string>
                     </property>
                     <property name="alignment">

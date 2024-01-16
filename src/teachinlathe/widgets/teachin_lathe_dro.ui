@@ -168,8 +168,8 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>60</width>
-            <height>60</height>
+            <width>52</width>
+            <height>52</height>
            </size>
           </property>
           <property name="styleSheet">
@@ -244,8 +244,8 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>60</width>
-            <height>60</height>
+            <width>52</width>
+            <height>52</height>
            </size>
           </property>
           <property name="styleSheet">
@@ -276,8 +276,8 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>60</width>
-            <height>60</height>
+            <width>52</width>
+            <height>52</height>
            </size>
           </property>
           <property name="styleSheet">

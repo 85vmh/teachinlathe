@@ -24,7 +24,7 @@ def get_orient_arrow_angle(value):
 
 
 _LATHE_COLUMNS = ['T', 'XZ', 'D', 'Q', 'IJ', 'R']
-_PREFERRED_WIDTHS = [30, 100, 70, 70, 110]  # Define your custom widths here
+_PREFERRED_WIDTHS = [40, 100, 70, 70, 110]  # Define your custom widths here
 
 
 class ItemDelegate(QStyledItemDelegate):
