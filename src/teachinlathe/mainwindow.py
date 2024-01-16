@@ -41,6 +41,7 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsZIsEnabled, self.onHandwheelZEnabledChanged)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = True
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = True
+        self.isFirstGear = self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value
 
         self.teachinlathedro.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
         self.teachinlathedro.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)

@@ -127,6 +127,7 @@ class ManualLathe:
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleSwitchRevIn, instance.onSpindleSwitchRev)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleSwitchFwdIn, instance.onSpindleSwitchFwd)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleCoveredOpened, instance.onSpindleCoverOpened)
+        instance.spindleCoverOpened = instance.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleCoveredOpened).value
 
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickXMinus, instance.onJoystickXMinus)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickXPlus, instance.onJoystickXPlus)
