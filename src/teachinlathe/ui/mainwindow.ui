@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1024</width>
-    <height>768</height>
+    <height>748</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>1024</width>
-    <height>768</height>
+    <height>748</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -217,7 +217,7 @@
            <property name="geometry">
             <rect>
              <x>25</x>
-             <y>655</y>
+             <y>630</y>
              <width>966</width>
              <height>96</height>
             </rect>
@@ -357,11 +357,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
            </property>
            <property name="styleSheet">
             <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
            </property>
            <property name="text">
-            <string>E-STOP</string>
+            <string>E-Stop</string>
            </property>
            <property name="checkable">
             <bool>true</bool>
@@ -402,11 +402,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
            </property>
            <property name="styleSheet">
             <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
            </property>
            <property name="text">
-            <string>POWER</string>
+            <string>Power</string>
            </property>
            <property name="checkable">
             <bool>true</bool>
@@ -444,11 +444,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
            </property>
            <property name="styleSheet">
             <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
            </property>
            <property name="text">
-            <string>REF X</string>
+            <string>Home X</string>
            </property>
            <property name="actionName" stdset="0">
             <string>machine.home.axis:x</string>
@@ -483,11 +483,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
            </property>
            <property name="styleSheet">
             <string notr="true">QPushButton {
-   	font: 15pt &quot;Bebas Kai&quot;;
+   	font: 12pt &quot;Noto&quot;;
 }</string>
            </property>
            <property name="text">
-            <string>REF Z</string>
+            <string>Home Z</string>
            </property>
            <property name="actionName" stdset="0">
             <string>machine.home.axis:z</string>
@@ -504,7 +504,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
              <x>0</x>
              <y>0</y>
              <width>1020</width>
-             <height>764</height>
+             <height>744</height>
             </rect>
            </property>
            <property name="sizePolicy">
@@ -535,21 +535,11 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <attribute name="title">
              <string>Manual Turning</string>
             </attribute>
-            <widget class="TeachInLatheDro" name="teachinlathedro">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>821</width>
-               <height>191</height>
-              </rect>
-             </property>
-            </widget>
             <widget class="QFrame" name="frame">
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>190</y>
+               <y>225</y>
                <width>641</width>
                <height>81</height>
               </rect>
@@ -570,7 +560,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 75 40pt &quot;Bitstream Vera Sans&quot;;</string>
+               <string notr="true">font:  40pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>S</string>
@@ -633,7 +623,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <number>1</number>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="pageRpm">
                <widget class="QLabel" name="rpmUnit_10">
@@ -658,11 +648,19 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                   <x>110</x>
                   <y>40</y>
                   <width>61</width>
-                  <height>21</height>
+                  <height>26</height>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 11pt &quot;Noto&quot;;
+}</string>
                 </property>
                 <property name="text">
                  <string>0000</string>
@@ -732,7 +730,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
-                 <string>0000</string>
+                 <string>700</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -813,11 +811,19 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                   <x>345</x>
                   <y>40</y>
                   <width>61</width>
-                  <height>21</height>
+                  <height>26</height>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 11pt &quot;Noto&quot;;
+}</string>
                 </property>
                 <property name="text">
                  <string>000</string>
@@ -832,11 +838,19 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                   <x>110</x>
                   <y>40</y>
                   <width>61</width>
-                  <height>21</height>
+                  <height>26</height>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 11pt &quot;Noto&quot;;
+}</string>
                 </property>
                 <property name="text">
                  <string>0000</string>
@@ -972,16 +986,24 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="geometry">
                <rect>
                 <x>35</x>
-                <y>45</y>
+                <y>40</y>
                 <width>51</width>
-                <height>21</height>
+                <height>26</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 12pt &quot;Noto&quot;;
+}</string>
               </property>
               <property name="text">
-               <string>0%</string>
+               <string>100%</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -995,7 +1017,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>280</y>
+               <y>315</y>
                <width>641</width>
                <height>71</height>
               </rect>
@@ -1016,7 +1038,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 75 40pt &quot;Bitstream Vera Sans&quot;;</string>
+               <string notr="true">font: 40pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>F</string>
@@ -1028,11 +1050,19 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                 <x>270</x>
                 <y>40</y>
                 <width>61</width>
-                <height>21</height>
+                <height>26</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 11pt &quot;Noto&quot;;
+}</string>
               </property>
               <property name="text">
                <string>0000</string>
@@ -1151,16 +1181,24 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="geometry">
                <rect>
                 <x>35</x>
-                <y>40</y>
+                <y>35</y>
                 <width>51</width>
-                <height>21</height>
+                <height>26</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 12pt &quot;Noto&quot;;
+}</string>
               </property>
               <property name="text">
-               <string>0%</string>
+               <string>100%</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1197,6 +1235,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="styleSheet">
                <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
+              <property name="text">
+               <string>0.1</string>
+              </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
               </property>
@@ -1231,7 +1272,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>525</y>
+               <y>560</y>
                <width>641</width>
                <height>66</height>
               </rect>
@@ -1365,14 +1406,22 @@ border-radius: 4px;
              <widget class="StatusLabel" name="statuslabel_38">
               <property name="geometry">
                <rect>
-                <x>25</x>
+                <x>20</x>
                 <y>35</y>
                 <width>116</width>
-                <height>21</height>
+                <height>26</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 11pt &quot;Noto&quot;;
+}</string>
               </property>
               <property name="text">
                <string>180N/A/min</string>
@@ -1389,7 +1438,7 @@ border-radius: 4px;
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>440</y>
+               <y>475</y>
                <width>641</width>
                <height>76</height>
               </rect>
@@ -1420,70 +1469,6 @@ border-radius: 4px;
               </property>
               <property name="rules" stdset="0">
                <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:program_units?text&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;ch[0] + '/min'&quot;, &quot;name&quot;: &quot;Rapid Speed&quot;}]</string>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="pushButton_3">
-              <property name="geometry">
-               <rect>
-                <x>210</x>
-                <y>5</y>
-                <width>64</width>
-                <height>64</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>20</pointsize>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton {
-       border-radius: 32px;
-		background-color: lightblue;
-		border-style: solid;
-		border-width: 1px;
-		border-color: gray;
-}
-QPushButton:pressed {
-		background-color: blue;
-}</string>
-              </property>
-              <property name="text">
-               <string>X</string>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="pushButton_4">
-              <property name="geometry">
-               <rect>
-                <x>315</x>
-                <y>5</y>
-                <width>64</width>
-                <height>64</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>20</pointsize>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton {
-       border-radius: 32px;
-		background-color: lightblue;
-		border-style: solid;
-		border-width: 1px;
-		border-color: gray;
-}
-QPushButton:pressed {
-		background-color: blue;
-}</string>
-              </property>
-              <property name="text">
-               <string>Z</string>
               </property>
              </widget>
              <widget class="Line" name="line_9">
@@ -1599,14 +1584,22 @@ QPushButton:pressed {
              <widget class="QLabel" name="jogIncrement">
               <property name="geometry">
                <rect>
-                <x>30</x>
+                <x>20</x>
                 <y>45</y>
-                <width>111</width>
-                <height>18</height>
+                <width>116</width>
+                <height>26</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 11pt &quot;Noto&quot;;
+}</string>
               </property>
               <property name="text">
                <string>0.001 mm/div</string>
@@ -1615,12 +1608,104 @@ QPushButton:pressed {
                <set>Qt::AlignCenter</set>
               </property>
              </widget>
+             <widget class="QCheckBox" name="xMpgCheckbox">
+              <property name="geometry">
+               <rect>
+                <x>205</x>
+                <y>5</y>
+                <width>64</width>
+                <height>64</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>20</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator {
+	width: 0px;
+	height: 0px;
+}
+QCheckBox {
+	border-radius: 32px;
+	background-color: lightgray;
+	border-style: solid;
+	border-width: 1px;
+	border-color: gray;
+	color: black;
+	padding-left: 16px;
+}
+QCheckBox:checked {
+	background-color: lightblue;
+   	color: black;
+	padding-left: 16px;
+}</string>
+              </property>
+              <property name="text">
+               <string>X</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+             <widget class="QCheckBox" name="zMpgCheckbox">
+              <property name="geometry">
+               <rect>
+                <x>320</x>
+                <y>5</y>
+                <width>64</width>
+                <height>64</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>20</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QCheckBox::indicator {
+	width: 0px;
+	height: 0px;
+}
+QCheckBox {
+	border-radius: 32px;
+	background-color: lightgray;
+	border-style: solid;
+	border-width: 1px;
+	border-color: gray;
+	color: black;
+	padding-left: 16px;
+}
+QCheckBox:checked {
+	background-color: lightblue;
+   	color: black;
+	padding-left: 16px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Z</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
             </widget>
             <widget class="QFrame" name="frame_5">
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>360</y>
+               <y>395</y>
                <width>641</width>
                <height>71</height>
               </rect>
@@ -1640,8 +1725,17 @@ QPushButton:pressed {
                 <height>46</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <pointsize>40</pointsize>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="styleSheet">
-               <string notr="true">font: 75 40pt &quot;Bitstream Vera Sans&quot;;</string>
+               <string notr="true">font: 40pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>T</string>
@@ -1650,7 +1744,7 @@ QPushButton:pressed {
              <widget class="QLabel" name="label_33">
               <property name="geometry">
                <rect>
-                <x>105</x>
+                <x>175</x>
                 <y>5</y>
                 <width>66</width>
                 <height>27</height>
@@ -1666,7 +1760,7 @@ QPushButton:pressed {
              <widget class="QLabel" name="label_34">
               <property name="geometry">
                <rect>
-                <x>105</x>
+                <x>175</x>
                 <y>35</y>
                 <width>66</width>
                 <height>27</height>
@@ -1682,7 +1776,7 @@ QPushButton:pressed {
              <widget class="StatusLabel" name="tool_diameter_7">
               <property name="geometry">
                <rect>
-                <x>175</x>
+                <x>250</x>
                 <y>5</y>
                 <width>81</width>
                 <height>27</height>
@@ -1714,11 +1808,11 @@ QPushButton:pressed {
     border-radius: 5px;
     color: white;
     background: rgb(86, 86, 87);
-	font: 12pt &quot;Noto&quot;;
+	font: 11pt &quot;Noto&quot;;
 }</string>
               </property>
               <property name="text">
-               <string>0.000</string>
+               <string>0000.000</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1736,7 +1830,7 @@ QPushButton:pressed {
              <widget class="StatusLabel" name="tool_diameter_8">
               <property name="geometry">
                <rect>
-                <x>175</x>
+                <x>250</x>
                 <y>35</y>
                 <width>80</width>
                 <height>27</height>
@@ -1768,11 +1862,11 @@ QPushButton:pressed {
     border-radius: 5px;
     color: white;
     background: rgb(86, 86, 87);
-	font: 12pt &quot;Noto&quot;;
+	font: 11pt &quot;Noto&quot;;
 }</string>
               </property>
               <property name="text">
-               <string>0.000</string>
+               <string>0000.000</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1787,200 +1881,10 @@ QPushButton:pressed {
                <string>tool_offset.3</string>
               </property>
              </widget>
-             <widget class="QLabel" name="label_35">
-              <property name="geometry">
-               <rect>
-                <x>465</x>
-                <y>5</y>
-                <width>71</width>
-                <height>27</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>Fr Angle:</string>
-              </property>
-             </widget>
-             <widget class="QLabel" name="label_36">
-              <property name="geometry">
-               <rect>
-                <x>465</x>
-                <y>35</y>
-                <width>71</width>
-                <height>27</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>Bk Angle:</string>
-              </property>
-             </widget>
-             <widget class="StatusLabel" name="tool_diameter_9">
-              <property name="geometry">
-               <rect>
-                <x>540</x>
-                <y>5</y>
-                <width>61</width>
-                <height>27</height>
-               </rect>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>1</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>60</width>
-                <height>21</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>90</width>
-                <height>35</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 12pt &quot;Noto&quot;;
-}</string>
-              </property>
-              <property name="text">
-               <string>0.0</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="rules" stdset="0">
-               <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;tooltable:current_tool?I&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.1f}\&quot;.format(ch[0])&quot;, &quot;name&quot;: &quot;front_angle&quot;}]</string>
-              </property>
-              <property name="format" stdset="0">
-               <string>{:.3f}</string>
-              </property>
-              <property name="statusItem" stdset="0">
-               <string>tool_offset.3</string>
-              </property>
-             </widget>
-             <widget class="StatusLabel" name="tool_diameter_10">
-              <property name="geometry">
-               <rect>
-                <x>540</x>
-                <y>35</y>
-                <width>60</width>
-                <height>27</height>
-               </rect>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>1</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>60</width>
-                <height>21</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>90</width>
-                <height>35</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 12pt &quot;Noto&quot;;
-}</string>
-              </property>
-              <property name="text">
-               <string>0.0</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="rules" stdset="0">
-               <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;tooltable:current_tool?J&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;\&quot;{:.1f}\&quot;.format(ch[0])&quot;, &quot;name&quot;: &quot;back_angle&quot;}]</string>
-              </property>
-              <property name="format" stdset="0">
-               <string>{:.3f}</string>
-              </property>
-              <property name="statusItem" stdset="0">
-               <string>tool_offset.3</string>
-              </property>
-             </widget>
-             <widget class="QLabel" name="rpmUnit_25">
-              <property name="geometry">
-               <rect>
-                <x>605</x>
-                <y>5</y>
-                <width>36</width>
-                <height>27</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <family>Noto Sans</family>
-                <pointsize>11</pointsize>
-                <weight>50</weight>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>deg</string>
-              </property>
-             </widget>
-             <widget class="QLabel" name="rpmUnit_26">
-              <property name="geometry">
-               <rect>
-                <x>605</x>
-                <y>35</y>
-                <width>36</width>
-                <height>27</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <family>Noto Sans</family>
-                <pointsize>11</pointsize>
-                <weight>50</weight>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>deg</string>
-              </property>
-             </widget>
              <widget class="QLabel" name="label_37">
               <property name="geometry">
                <rect>
-                <x>285</x>
+                <x>415</x>
                 <y>5</y>
                 <width>76</width>
                 <height>27</height>
@@ -1996,9 +1900,9 @@ QPushButton:pressed {
              <widget class="StatusLabel" name="tool_diameter_11">
               <property name="geometry">
                <rect>
-                <x>375</x>
+                <x>540</x>
                 <y>5</y>
-                <width>60</width>
+                <width>56</width>
                 <height>27</height>
                </rect>
               </property>
@@ -2010,7 +1914,7 @@ QPushButton:pressed {
               </property>
               <property name="minimumSize">
                <size>
-                <width>60</width>
+                <width>56</width>
                 <height>21</height>
                </size>
               </property>
@@ -2028,7 +1932,7 @@ QPushButton:pressed {
     border-radius: 5px;
     color: white;
     background: rgb(86, 86, 87);
-	font: 12pt &quot;Noto&quot;;
+	font: 11pt &quot;Noto&quot;;
 }</string>
               </property>
               <property name="text">
@@ -2050,9 +1954,9 @@ QPushButton:pressed {
              <widget class="StatusLabel" name="tool_diameter_12">
               <property name="geometry">
                <rect>
-                <x>375</x>
+                <x>540</x>
                 <y>35</y>
-                <width>60</width>
+                <width>56</width>
                 <height>27</height>
                </rect>
               </property>
@@ -2064,7 +1968,7 @@ QPushButton:pressed {
               </property>
               <property name="minimumSize">
                <size>
-                <width>60</width>
+                <width>56</width>
                 <height>21</height>
                </size>
               </property>
@@ -2082,7 +1986,7 @@ QPushButton:pressed {
     border-radius: 5px;
     color: white;
     background: rgb(86, 86, 87);
-	font: 12pt &quot;Noto&quot;;
+	font: 11pt &quot;Noto&quot;;
 }</string>
               </property>
               <property name="text">
@@ -2104,7 +2008,7 @@ QPushButton:pressed {
              <widget class="QLabel" name="label_38">
               <property name="geometry">
                <rect>
-                <x>285</x>
+                <x>415</x>
                 <y>35</y>
                 <width>86</width>
                 <height>27</height>
@@ -2121,19 +2025,27 @@ QPushButton:pressed {
               <property name="geometry">
                <rect>
                 <x>35</x>
-                <y>35</y>
-                <width>31</width>
-                <height>21</height>
+                <y>30</y>
+                <width>51</width>
+                <height>26</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 12pt &quot;Noto&quot;;
+}</string>
               </property>
               <property name="text">
-               <string>0</string>
+               <string>99</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               <set>Qt::AlignCenter</set>
               </property>
               <property name="rules" stdset="0">
                <string>[{&quot;name&quot;: &quot;tool_number&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;ch[0]&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_in_spindle?text&quot;, &quot;trigger&quot;: true}]}]</string>
@@ -2151,6 +2063,16 @@ QPushButton:pressed {
              </property>
              <property name="text">
               <string>Set Z Datum</string>
+             </property>
+            </widget>
+            <widget class="TeachInLatheDro" name="teachinlathedro">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>786</width>
+               <height>201</height>
+              </rect>
              </property>
             </widget>
            </widget>
@@ -2194,7 +2116,7 @@ QPushButton:pressed {
                  <x>0</x>
                  <y>0</y>
                  <width>581</width>
-                 <height>711</height>
+                 <height>666</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -2726,7 +2648,7 @@ QHeaderView {
                  <x>580</x>
                  <y>0</y>
                  <width>436</width>
-                 <height>626</height>
+                 <height>581</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -2974,8 +2896,8 @@ color: white;</string>
               <widget class="QPushButton" name="btnLoadProgram">
                <property name="geometry">
                 <rect>
-                 <x>725</x>
-                 <y>645</y>
+                 <x>715</x>
+                 <y>600</y>
                  <width>161</width>
                  <height>46</height>
                 </rect>
@@ -3206,7 +3128,7 @@ QComboBox QAbstractItemView{
                  <x>5</x>
                  <y>5</y>
                  <width>616</width>
-                 <height>671</height>
+                 <height>616</height>
                 </rect>
                </property>
                <property name="sizePolicy">
@@ -3378,7 +3300,7 @@ QComboBox QAbstractItemView{
                  <x>620</x>
                  <y>5</y>
                  <width>391</width>
-                 <height>671</height>
+                 <height>616</height>
                 </rect>
                </property>
                <property name="currentIndex">
@@ -6004,26 +5926,6 @@ padding-left: 5px;
                 <height>709</height>
                </rect>
               </property>
-              <widget class="ActionButton" name="reset_qml">
-               <property name="geometry">
-                <rect>
-                 <x>135</x>
-                 <y>15</y>
-                 <width>111</width>
-                 <height>26</height>
-                </rect>
-               </property>
-              </widget>
-              <widget class="ToolTouchOff" name="tooltouchoff">
-               <property name="geometry">
-                <rect>
-                 <x>50</x>
-                 <y>265</y>
-                 <width>500</width>
-                 <height>300</height>
-                </rect>
-               </property>
-              </widget>
              </widget>
             </widget>
            </widget>
@@ -6156,16 +6058,6 @@ padding-left: 5px;
    <class>TeachInLatheDro</class>
    <extends>QWidget</extends>
    <header>teachinlathe.widgets.teachin_lathe_dro</header>
-  </customwidget>
-  <customwidget>
-   <class>ToolTouchOff</class>
-   <extends>QQuickWidget</extends>
-   <header>teachinlathe.widgets.lathe_tool_touch_off.tool_touch_off</header>
-  </customwidget>
-  <customwidget>
-   <class>QQuickWidget</class>
-   <extends>QWidget</extends>
-   <header location="global">QtQuickWidgets/QQuickWidget</header>
   </customwidget>
  </customwidgets>
  <resources>
@@ -6378,22 +6270,6 @@ padding-left: 5px;
     <hint type="destinationlabel">
      <x>294</x>
      <y>359</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>reset_qml</sender>
-   <signal>clicked()</signal>
-   <receiver>tooltouchoff</receiver>
-   <slot>reset_tools()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>195</x>
-     <y>32</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>304</x>
-     <y>419</y>
     </hint>
    </hints>
   </connection>

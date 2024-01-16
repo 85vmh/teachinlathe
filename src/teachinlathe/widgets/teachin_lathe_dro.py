@@ -114,22 +114,21 @@ class TeachInLatheDro(QWidget):
             self.lastZAbsValue = 0
         self.updateDro()
 
-    def xDroClicked(self):
-        print("xDroClicked")
-
     def updateDro(self):
         factor = 2.0 if self.isDiameterMode else 1.0
 
         if self.isXAbs:
             self.xPrimaryDro.setText(self._fmt % (factor * self.currentXAbsValue))
-            self.xSecondaryDro.setText("")
+            self.xSecondaryDro.hide()
         else:
             self.xPrimaryDro.setText(self._fmt % (factor * (self.currentXAbsValue - self.lastXAbsValue)))
             self.xSecondaryDro.setText(self._fmt % (factor * self.currentXAbsValue))
+            self.xSecondaryDro.show()
 
         if self.isZAbs:
             self.zPrimaryDro.setText(self._fmt % self.currentZAbsValue)
-            self.zSecondaryDro.setText("")
+            self.zSecondaryDro.hide()
         else:
             self.zPrimaryDro.setText(self._fmt % (self.currentZAbsValue - self.lastZAbsValue))
             self.zSecondaryDro.setText(self._fmt % self.currentZAbsValue)
+            self.zSecondaryDro.show()

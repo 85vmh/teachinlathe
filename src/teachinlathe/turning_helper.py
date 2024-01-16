@@ -37,15 +37,17 @@ class TurningHelper:
         z_max_limit = z_bounds[1]
 
         print("Straight turning command for: ", joystick_direction)
+        destination = ''
         match joystick_direction:
             case JoystickDirection.X_PLUS:
-                return 'G53 G1 X%f' % x_max_limit
+                destination = 'X%f' % x_max_limit
             case JoystickDirection.X_MINUS:
-                return 'G53 G1 X%f' % x_min_limit
+                destination = 'X%f' % x_min_limit
             case JoystickDirection.Z_PLUS:
-                return 'G53 G1 Z%f' % z_max_limit
+                destination = 'Z%f' % z_max_limit
             case JoystickDirection.Z_MINUS:
-                return 'G53 G1 Z%f' % z_min_limit
+                destination = 'Z%f' % z_min_limit
+        return 'G40 G53 G1 {}'.format(destination)
 
     @staticmethod
     def getTaperTurningCommand(joystick_direction, angle):
@@ -57,7 +59,7 @@ class TurningHelper:
         print("Destination point: ", destination_point)
 
         print("Taper turning command for: ", joystick_direction)
-        return f'G53 G1 X{destination_point.x:.3f} Z{destination_point.z:.3f}'
+        return f'G40 G53 G1 X{destination_point.x:.3f} Z{destination_point.z:.3f}'
 
     @staticmethod
     def get_start_point():

@@ -20,6 +20,10 @@ class TeachInLatheComponent:
     PinSpindleActualRpm = 'spindle.actual-rpm'
     PinSpindleIsFirstGear = 'spindle.is-first-gear'
     PinHandwheelsJogIncrement = 'handwheels.jog-increment'
+    PinHandwheelsXIsEnabled = 'handwheels.x-is-enabled'
+    PinHandwheelsZIsEnabled = 'handwheels.z-is-enabled'
+    PinHandwheelsXEnable = 'handwheels.x-enable'
+    PinHandwheelsZEnable = 'handwheels.z-enable'
     PinHandwheelsAngleJogEnable = 'handwheels.angle-jog-enabled'
     PinHandwheelsAngleJogValue = 'handwheels.angle-jog-value'
     PinToolChangeToolNo = 'tool-change.number'
@@ -42,6 +46,10 @@ class TeachInLatheComponent:
     @staticmethod
     def _initialize(instance):
         instance.comp.addPin(instance.PinHandwheelsJogIncrement, 'float', 'in')
+        instance.comp.addPin(instance.PinHandwheelsXIsEnabled, 'float', 'in')
+        instance.comp.addPin(instance.PinHandwheelsZIsEnabled, 'float', 'in')
+        instance.comp.addPin(instance.PinHandwheelsXEnable, 'bit', 'out')
+        instance.comp.addPin(instance.PinHandwheelsZEnable, 'bit', 'out')
         instance.comp.addPin(instance.PinHandwheelsAngleJogEnable, 'bit', 'out')
         instance.comp.addPin(instance.PinHandwheelsAngleJogValue, 'float', 'out')
         instance.comp.addPin(instance.PinJoystickXPlus, 'bit', 'in')

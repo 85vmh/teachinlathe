@@ -37,6 +37,9 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsPowerFeeding, self.onPowerFeedingChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsFirstGear, self.onSpindleFirstGearChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsXIsEnabled, self.onHandwheelXEnabledChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsZIsEnabled, self.onHandwheelZEnabledChanged)
+
         self.teachinlathedro.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
         self.teachinlathedro.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
 
@@ -45,7 +48,10 @@ class MyMainWindow(VCPMainWindow):
 
         self.lastSpindleRpm = 0
         self.isPowerFeeding = False
-        self.isFirstGear = True
+        self.isFirstGear = False
+        self.xMpgEnabled = True
+        self.zMpgEnabled = True
+
         # get the initial values
         self.current_spindle_override = STATUS.spindle[0].override.value
         self.current_feed_override = STATUS.feedrate.value
@@ -60,6 +66,8 @@ class MyMainWindow(VCPMainWindow):
         self.setZDatumBtn.clicked.connect(self.setZDatum)
         self.btnLoadProgram.clicked.connect(self.loadProgram)
         self.btnBackToPrograms.clicked.connect(self.backToPrograms)
+        self.xMpgCheckbox.stateChanged.connect(self.toggleXMpgEnable)
+        self.zMpgCheckbox.stateChanged.connect(self.toggleZMpgEnable)
 
         # set the current values
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
@@ -148,6 +156,7 @@ class MyMainWindow(VCPMainWindow):
 
     def onSpindleFirstGearChanged(self, value):
         self.isFirstGear = value
+        # close spindle dialog if open
 
     def onSpindleRpmChanged(self, value):
         self.lastSpindleRpm = abs(int(value))
@@ -180,6 +189,24 @@ class MyMainWindow(VCPMainWindow):
         self.current_feed_override = value
         self.update_actual_feed()
 
+    def onHandwheelXEnabledChanged(self, value):
+        print("onHandwheelXEnabledChanged from pin", value)
+        self.xMpgEnabled = value
+        self.xMpgCheckbox.setChecked(value)
+
+    def onHandwheelZEnabledChanged(self, value):
+        print("onHandwheelZEnabledChanged from pin", value)
+        self.zMpgEnabled = value
+        self.zMpgCheckbox.setChecked(value)
+
+    def toggleXMpgEnable(self, value):
+        print("toggleXMpgEnable to pin", value)
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = not self.xMpgEnabled
+
+    def toggleZMpgEnable(self, value):
+        print("toggleZMpgEnable to pin", value)
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = not self.zMpgEnabled
+
     def onXPrimaryDroClicked(self, value):
         print("onXPrimaryDroClicked", value)
         dialog = SmartNumPadDialog("smart_numpad.x-offset", True)
@@ -192,13 +219,16 @@ class MyMainWindow(VCPMainWindow):
         dialog.valueSelected.connect(self.setZOffset)
         dialog.exec_()
 
-    def setXOffset(self, value):
+    @staticmethod
+    def setXOffset(value):
         print("setXOffset", value)
         issue_mdi('o<touch_off_x> call [{}]'.format(value))
 
-    def setZOffset(self, value):
+    @staticmethod
+    def setZOffset(value):
         print("setZOffset", value)
         issue_mdi('o<touch_off_z> call [{}]'.format(value))
 
-    def setZDatum(self):
+    @staticmethod
+    def setZDatum():
         issue_mdi('G10 L20 P0 Z0')

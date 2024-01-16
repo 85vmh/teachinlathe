@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>817</width>
-    <height>178</height>
+    <width>782</width>
+    <height>196</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,12 +18,12 @@
     <rect>
      <x>1</x>
      <y>4</y>
-     <width>811</width>
-     <height>171</height>
+     <width>781</width>
+     <height>191</height>
     </rect>
    </property>
    <property name="frameShape">
-    <enum>QFrame::NoFrame</enum>
+    <enum>QFrame::Box</enum>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="leftMargin">
@@ -39,82 +39,296 @@
      <number>4</number>
     </property>
     <item>
-     <widget class="QFrame" name="">
+     <widget class="QFrame" name="frame">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>779</width>
+        <height>0</height>
+       </size>
+      </property>
       <property name="lineWidth">
        <number>0</number>
       </property>
       <layout class="QGridLayout" name="gridLayout">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetDefaultConstraint</enum>
+       </property>
        <property name="leftMargin">
-        <number>4</number>
+        <number>5</number>
        </property>
        <property name="topMargin">
         <number>0</number>
        </property>
        <property name="rightMargin">
-        <number>10</number>
+        <number>0</number>
        </property>
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <property name="horizontalSpacing">
-        <number>11</number>
-       </property>
-       <property name="verticalSpacing">
+       <property name="spacing">
         <number>10</number>
        </property>
-       <item row="1" column="1">
-        <widget class="QLabel" name="zSecondaryDro">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+       <item row="0" column="5">
+        <widget class="QWidget" name="widget_3" native="true">
          <property name="minimumSize">
           <size>
-           <width>150</width>
+           <width>177</width>
            <height>0</height>
           </size>
          </property>
-         <property name="styleSheet">
-          <string notr="true">font: 57 20pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>+0000.0000</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="margin">
-          <number>7</number>
-         </property>
+         <widget class="QLabel" name="xUnit">
+          <property name="geometry">
+           <rect>
+            <x>-15</x>
+            <y>60</y>
+            <width>65</width>
+            <height>36</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">font: 14pt &quot;Noto Sans&quot;;</string>
+          </property>
+          <property name="text">
+           <string>mm</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="margin">
+           <number>0</number>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="xZero">
+          <property name="geometry">
+           <rect>
+            <x>40</x>
+            <y>0</y>
+            <width>60</width>
+            <height>60</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>60</width>
+            <height>60</height>
+           </size>
+          </property>
+          <property name="layoutDirection">
+           <enum>Qt::RightToLeft</enum>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton {
+    height: 50px;
+    width: 50px;
+    font: 14pt &quot;DejaVu Sans&quot;;
+}</string>
+          </property>
+          <property name="text">
+           <string>0</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="xAbsRel">
+          <property name="geometry">
+           <rect>
+            <x>115</x>
+            <y>0</y>
+            <width>60</width>
+            <height>60</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>60</width>
+            <height>60</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton {
+    min-height: 50px;
+    min-width: 50px;
+    font: 14pt &quot;DejaVu Sans&quot;;
+}</string>
+          </property>
+          <property name="text">
+           <string>A/R</string>
+          </property>
+         </widget>
         </widget>
        </item>
-       <item row="0" column="4">
-        <widget class="QLabel" name="xUnit">
+       <item row="1" column="5">
+        <widget class="QWidget" name="widget_4" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>177</width>
+           <height>0</height>
+          </size>
+         </property>
+         <widget class="QLabel" name="zUnit">
+          <property name="geometry">
+           <rect>
+            <x>-15</x>
+            <y>55</y>
+            <width>65</width>
+            <height>36</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">font: 14pt &quot;Noto Sans&quot;;</string>
+          </property>
+          <property name="text">
+           <string>mm</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <property name="margin">
+           <number>0</number>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="zZero">
+          <property name="geometry">
+           <rect>
+            <x>40</x>
+            <y>0</y>
+            <width>60</width>
+            <height>60</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>60</width>
+            <height>60</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton {
+    min-height: 50px;
+    min-width: 50px;
+    font: 14pt &quot;DejaVu Sans&quot;;
+}</string>
+          </property>
+          <property name="text">
+           <string>0</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="zAbsRel">
+          <property name="geometry">
+           <rect>
+            <x>115</x>
+            <y>0</y>
+            <width>60</width>
+            <height>60</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>60</width>
+            <height>60</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton {
+    min-height: 50px;
+    min-width: 50px;
+    font: 14pt &quot;DejaVu Sans&quot;;
+}</string>
+          </property>
+          <property name="text">
+           <string>A/R</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QLabel" name="zPrimaryDro">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>30</width>
+           <width>343</width>
            <height>0</height>
           </size>
          </property>
          <property name="styleSheet">
-          <string notr="true">font: 20pt &quot;Noto Sans&quot;;</string>
+          <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 15px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 50pt &quot;Noto Sans Display&quot;;
+}</string>
          </property>
          <property name="text">
-          <string>xx</string>
+          <string>+0000.000</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
          <property name="margin">
           <number>0</number>
+         </property>
+         <property name="indent">
+          <number>-1</number>
          </property>
         </widget>
        </item>
@@ -143,28 +357,8 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="5">
-        <widget class="QPushButton" name="zZero">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QPushButton {
-    min-height: 50px;
-    min-width: 50px;
-    font: 14pt &quot;DejaVu Sans&quot;;
-}</string>
-         </property>
-         <property name="text">
-          <string>0</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="xSecondaryDro">
+       <item row="0" column="4">
+        <widget class="QLabel" name="xPrimaryDro">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
            <horstretch>0</horstretch>
@@ -173,26 +367,10 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>150</width>
+           <width>343</width>
            <height>0</height>
           </size>
          </property>
-         <property name="styleSheet">
-          <string notr="true">font: 57 20pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>+0000.0000</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="margin">
-          <number>7</number>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QLabel" name="xPrimaryDro">
          <property name="styleSheet">
           <string notr="true">QLabel {
     border-style: solid;
@@ -205,34 +383,69 @@
 }</string>
          </property>
          <property name="text">
-          <string>+0000.0000</string>
+          <string>+0000.000</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="0" column="5">
-        <widget class="QPushButton" name="xZero">
+       <item row="0" column="1">
+        <widget class="QWidget" name="widget" native="true">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
-         <property name="layoutDirection">
-          <enum>Qt::RightToLeft</enum>
+         <property name="minimumSize">
+          <size>
+           <width>160</width>
+           <height>0</height>
+          </size>
          </property>
-         <property name="styleSheet">
-          <string notr="true">QPushButton {
-    height: 50px;
-    width: 50px;
-    font: 14pt &quot;DejaVu Sans&quot;;
+         <widget class="QLabel" name="xSecondaryDro">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>10</y>
+            <width>133</width>
+            <height>36</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 1px;
+    border-radius: 8px;
+    color: white;
+    background: rgb(86, 186, 187);
+	font: 18pt &quot;Noto Sans Display&quot;;
 }</string>
-         </property>
-         <property name="text">
-          <string>0</string>
-         </property>
+          </property>
+          <property name="text">
+           <string>+0000.000</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="margin">
+           <number>7</number>
+          </property>
+         </widget>
         </widget>
        </item>
        <item row="1" column="0">
@@ -254,99 +467,62 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="6">
-        <widget class="QPushButton" name="xAbsRel">
+       <item row="1" column="1">
+        <widget class="QWidget" name="widget_2" native="true">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QPushButton {
-    min-height: 50px;
-    min-width: 50px;
-    font: 14pt &quot;DejaVu Sans&quot;;
-}</string>
-         </property>
-         <property name="text">
-          <string>Abs/Rel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="6">
-        <widget class="QPushButton" name="zAbsRel">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QPushButton {
-    min-height: 50px;
-    min-width: 50px;
-    font: 14pt &quot;DejaVu Sans&quot;;
-}</string>
-         </property>
-         <property name="text">
-          <string>Abs/Rel</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
-        <widget class="QLabel" name="zPrimaryDro">
-         <property name="styleSheet">
-          <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 15px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 50pt &quot;Noto Sans Display&quot;;
-}</string>
-         </property>
-         <property name="text">
-          <string>+0000.0000</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="margin">
-          <number>0</number>
-         </property>
-         <property name="indent">
-          <number>-1</number>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="4">
-        <widget class="QLabel" name="zUnit">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="minimumSize">
           <size>
-           <width>30</width>
+           <width>160</width>
            <height>0</height>
           </size>
          </property>
-         <property name="styleSheet">
-          <string notr="true">font: 20pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>zz</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="margin">
-          <number>0</number>
-         </property>
+         <widget class="QLabel" name="zSecondaryDro">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>10</y>
+            <width>133</width>
+            <height>36</height>
+           </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 1px;
+    border-radius: 8px;
+    color: white;
+    background: rgb(86, 186, 187);
+	font: 18pt &quot;Noto Sans Display&quot;;
+}</string>
+          </property>
+          <property name="text">
+           <string>+0000.000</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="margin">
+           <number>7</number>
+          </property>
+         </widget>
         </widget>
        </item>
       </layout>

@@ -5,7 +5,9 @@ from collections import deque
 from enum import Enum, auto
 
 import linuxcnc
+from qtpyvcp import SETTINGS
 from qtpyvcp.actions.machine_actions import jog
+from qtpyvcp.plugins import getPlugin
 from qtpyvcp.plugins.status import STAT
 from qtpyvcp.utilities.info import Info
 
@@ -13,7 +15,7 @@ from teachinlathe.lathe_hal_component import TeachInLatheComponent
 
 LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
-from qtpyvcp import SETTINGS
+STATUS = getPlugin('status')
 
 
 def print_with_timestamp(message):
@@ -86,6 +88,10 @@ class MessageStack:
         return repr(self.stack)
 
 
+def hasProperState():
+    return STAT.task_state == linuxcnc.STATE_ON and STATUS.allHomed()
+
+
 class ManualLathe:
     _instance = None
     latheComponent = TeachInLatheComponent()
@@ -98,6 +104,7 @@ class ManualLathe:
     feedPerRev = 0.1
     spindleLever = SpindleLever.NONE
     joystickDirection = JoystickDirection.NONE
+    spindleCoverOpened = True
     isJoystickRapid = False
     joggedAxis = JoggedAxis.NONE
     spindleMode = SpindleMode.Rpm
@@ -119,6 +126,7 @@ class ManualLathe:
         print("ManualLathe instance is created")
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleSwitchRevIn, instance.onSpindleSwitchRev)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleSwitchFwdIn, instance.onSpindleSwitchFwd)
+        instance.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleCoveredOpened, instance.onSpindleCoverOpened)
 
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickXMinus, instance.onJoystickXMinus)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickXPlus, instance.onJoystickXPlus)
@@ -161,6 +169,10 @@ class ManualLathe:
         self.spindleLever = SpindleLever.FWD if value else SpindleLever.NONE
         self.handleSpindleSwitch()
 
+    def onSpindleCoverOpened(self, value=True):
+        self.spindleCoverOpened = value
+        self.handleSpindleSwitch()
+
     def onJoystickXPlus(self, value=False):
         self.joystickDirection = JoystickDirection.X_PLUS if value else JoystickDirection.NONE
         self.handleJoystick()
@@ -182,16 +194,20 @@ class ManualLathe:
         self.handleJoystick()
 
     def handleSpindleSwitch(self):
+        if not hasProperState():
+            return  # if the machine is not on or not homed, ignore spindle switch
+
+        if self.spindleCoverOpened:
+            print("Spindle cover is opened")
+            return self.handleSpindleOff()
+
         match self.spindleLever:
             case SpindleLever.REV:
                 cmd = 'M4'
             case SpindleLever.FWD:
                 cmd = 'M3'
             case _:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
-                if self.stopFeeding():
-                    self.joystickResetRequired = True
-                return
+                return self.handleSpindleOff()
 
         if cmd is not None:
             if self.spindleMode == SpindleMode.Rpm:
@@ -209,7 +225,16 @@ class ManualLathe:
             LINUXCNC_CMD.wait_complete()
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
 
+    def handleSpindleOff(self):
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
+        if self.stopFeeding():
+            self.joystickResetRequired = True
+        return
+
     def handleJoystick(self):
+        if not hasProperState():
+            return  # if the machine is not on or not homed, ignore joystick
+
         if self.joystickDirection == JoystickDirection.NONE:
             self.handleJoystickNeutral()
             return
@@ -332,18 +357,19 @@ class ManualLathe:
                 STAT.poll()
                 print("task mode changed: ", STAT.task_mode)
 
+            actual_jog_speed = jog_speed / 60
             match self.joystickDirection:
                 case JoystickDirection.X_PLUS:
-                    jog.axis('X', 1, speed=jog_speed / 60)
+                    jog.axis('X', 1, speed=actual_jog_speed)
                     self.joggedAxis = JoggedAxis.X
                 case JoystickDirection.X_MINUS:
-                    jog.axis('X', -1, speed=jog_speed / 60)
+                    jog.axis('X', -1, speed=actual_jog_speed)
                     self.joggedAxis = JoggedAxis.X
                 case JoystickDirection.Z_PLUS:
-                    jog.axis('Z', 1, speed=jog_speed / 60)
+                    jog.axis('Z', 1, speed=actual_jog_speed)
                     self.joggedAxis = JoggedAxis.Z
                 case JoystickDirection.Z_MINUS:
-                    jog.axis('Z', -1, speed=jog_speed / 60)
+                    jog.axis('Z', -1, speed=actual_jog_speed)
                     self.joggedAxis = JoggedAxis.Z
 
     def stopJogging(self):
