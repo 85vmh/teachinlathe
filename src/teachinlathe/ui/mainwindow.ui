@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1024</width>
-    <height>743</height>
+    <height>733</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -504,7 +504,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
              <x>0</x>
              <y>0</y>
              <width>1020</width>
-             <height>726</height>
+             <height>731</height>
             </rect>
            </property>
            <property name="sizePolicy">
