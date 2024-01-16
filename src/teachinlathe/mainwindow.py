@@ -134,6 +134,8 @@ class MyMainWindow(VCPMainWindow):
         self.checkBoxJogAngle.setEnabled(not value)
         self.inputFeedAngle.setEnabled(not value and self.checkBoxFeedAngle.isChecked())
         self.inputJogAngle.setEnabled(not value and self.checkBoxJogAngle.isChecked())
+        if not value:
+            self.checkBoxFeedAngle.setChecked(False)
 
     def openNumPad(self, line_edit, spindle_related=False):
         if spindle_related:
