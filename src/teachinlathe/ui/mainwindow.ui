@@ -1274,7 +1274,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <x>5</x>
                <y>560</y>
                <width>641</width>
-               <height>66</height>
+               <height>71</height>
               </rect>
              </property>
              <property name="frameShape">
@@ -1287,9 +1287,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="geometry">
                <rect>
                 <x>200</x>
-                <y>4</y>
+                <y>5</y>
                 <width>426</width>
-                <height>56</height>
+                <height>61</height>
                </rect>
               </property>
               <property name="minimumSize">
@@ -1407,7 +1407,7 @@ border-radius: 4px;
               <property name="geometry">
                <rect>
                 <x>20</x>
-                <y>35</y>
+                <y>40</y>
                 <width>116</width>
                 <height>26</height>
                </rect>
@@ -2110,538 +2110,6 @@ QCheckBox:checked {
               <number>0</number>
              </property>
              <widget class="QWidget" name="pageFileSystem">
-              <widget class="QFrame" name="frame_34">
-               <property name="geometry">
-                <rect>
-                 <x>0</x>
-                 <y>0</y>
-                 <width>581</width>
-                 <height>681</height>
-                </rect>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                 <horstretch>1</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">.QFrame{
-    background-color: rgb(51, 57, 59);
-}</string>
-               </property>
-               <property name="frameShape">
-                <enum>QFrame::StyledPanel</enum>
-               </property>
-               <property name="frameShadow">
-                <enum>QFrame::Raised</enum>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayout_35">
-                <property name="spacing">
-                 <number>9</number>
-                </property>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_121">
-                  <property name="leftMargin">
-                   <number>5</number>
-                  </property>
-                  <property name="rightMargin">
-                   <number>5</number>
-                  </property>
-                  <item>
-                   <widget class="QPushButton" name="main_folder_up_button">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>30</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>110</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton {
-   	font: 12pt &quot;Noto&quot;;
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>Up</string>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
-                      <normaloff>:/images/folder_up.png</normaloff>:/images/folder_up.png</iconset>
-                    </property>
-                    <property name="iconSize">
-                     <size>
-                      <width>30</width>
-                      <height>17</height>
-                     </size>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="btnNcFiles">
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton {
-   	font: 12pt &quot;Noto&quot;;
-}\</string>
-                    </property>
-                    <property name="text">
-                     <string>NC Files</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="RemovableDeviceComboBox" name="removabledevicecombobox">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>1</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Bebas Kai&quot;;</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <widget class="QStackedWidget" name="stackedFileSysTop">
-                  <widget class="QWidget" name="pageUsbStick">
-                   <widget class="QPushButton" name="device_eject_usb_button">
-                    <property name="geometry">
-                     <rect>
-                      <x>425</x>
-                      <y>5</y>
-                      <width>100</width>
-                      <height>35</height>
-                     </rect>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>100</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>100</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>EJECT USB</string>
-                    </property>
-                   </widget>
-                   <widget class="RemovableDeviceComboBox" name="removabledevicecombobox_2">
-                    <property name="geometry">
-                     <rect>
-                      <x>126</x>
-                      <y>5</y>
-                      <width>76</width>
-                      <height>35</height>
-                     </rect>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                      <horstretch>1</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">font: 12pt &quot;Bebas Kai&quot;;</string>
-                    </property>
-                   </widget>
-                   <widget class="QPushButton" name="device_folder_up_button">
-                    <property name="geometry">
-                     <rect>
-                      <x>10</x>
-                      <y>5</y>
-                      <width>110</width>
-                      <height>35</height>
-                     </rect>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>110</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>110</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton {
-   	font: 14pt &quot;Bebas Kai&quot;;
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>  FOLDER UP</string>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
-                      <normaloff>:/images/folder_up.png</normaloff>:/images/folder_up.png</iconset>
-                    </property>
-                    <property name="iconSize">
-                     <size>
-                      <width>30</width>
-                      <height>17</height>
-                     </size>
-                    </property>
-                   </widget>
-                  </widget>
-                  <widget class="QWidget" name="pageLocalSystem"/>
-                 </widget>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_122">
-                  <item>
-                   <widget class="FileSystemTable" name="filesystemtable">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>494</height>
-                     </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::WheelFocus</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">FileSystemTable {
-	color: black;
-   	border: 1px;
-	border-color: rgb(120, 120, 120);
-	border-style: solid;
-	background-color: rgb(238, 238, 236);
-    font: 12pt &quot;Noto&quot;;
-}
-
-QHeaderView {
-    background-color: rgb(220, 220, 220);
-	color: black;
-    border: none;
-	border-radius:none;
-	border-style: none;
-	font: 13pt &quot;Noto&quot;;
-}</string>
-                    </property>
-                    <property name="sizeAdjustPolicy">
-                     <enum>QAbstractScrollArea::AdjustIgnored</enum>
-                    </property>
-                    <property name="selectionMode">
-                     <enum>QAbstractItemView::SingleSelection</enum>
-                    </property>
-                    <property name="textElideMode">
-                     <enum>Qt::ElideRight</enum>
-                    </property>
-                    <property name="showGrid">
-                     <bool>false</bool>
-                    </property>
-                    <property name="sortingEnabled">
-                     <bool>true</bool>
-                    </property>
-                    <property name="hiddenColumns" stdset="0">
-                     <string>2</string>
-                    </property>
-                    <property name="fixedNameColumn" stdset="0">
-                     <bool>true</bool>
-                    </property>
-                    <property name="nameColumnsWidth" stdset="0">
-                     <number>288</number>
-                    </property>
-                    <attribute name="horizontalHeaderCascadingSectionResizes">
-                     <bool>true</bool>
-                    </attribute>
-                    <attribute name="horizontalHeaderMinimumSectionSize">
-                     <number>20</number>
-                    </attribute>
-                    <attribute name="horizontalHeaderStretchLastSection">
-                     <bool>true</bool>
-                    </attribute>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_123">
-                  <property name="spacing">
-                   <number>6</number>
-                  </property>
-                  <item>
-                   <widget class="QPushButton" name="copy_to_usb_2">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>90</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>90</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="layoutDirection">
-                     <enum>Qt::LeftToRight</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton {
-   	font: 12pt &quot;Noto&quot;;
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>To Usb</string>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
-                      <normaloff>:/images/left_arrow.png</normaloff>:/images/left_arrow.png</iconset>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="main_delete_item_button">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>90</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>90</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton {
-   	font: 12pt &quot;Noto&quot;;
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>Delete</string>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
-                      <normaloff>:/images/delete.png</normaloff>:/images/delete.png</iconset>
-                    </property>
-                    <property name="iconSize">
-                     <size>
-                      <width>14</width>
-                      <height>14</height>
-                     </size>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="main_new_file_button">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>100</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>100</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton {
-   	font: 12pt &quot;Noto&quot;;
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>New File</string>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
-                      <normaloff>:/images/new_file.png</normaloff>:/images/new_file.png</iconset>
-                    </property>
-                    <property name="iconSize">
-                     <size>
-                      <width>12</width>
-                      <height>16</height>
-                     </size>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="main_new_folder_button">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>125</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>125</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton {
-   	font: 12pt &quot;Noto&quot;;
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>New Folder</string>
-                    </property>
-                    <property name="icon">
-                     <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
-                      <normaloff>:/images/new_folder.png</normaloff>:/images/new_folder.png</iconset>
-                    </property>
-                    <property name="iconSize">
-                     <size>
-                      <width>28</width>
-                      <height>15</height>
-                     </size>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="main_rename_item_button">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>90</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>90</width>
-                      <height>35</height>
-                     </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::NoFocus</enum>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">QPushButton {
-   	font: 12pt &quot;Noto&quot;;
-}</string>
-                    </property>
-                    <property name="text">
-                     <string>Rename</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
               <widget class="QFrame" name="frame_40">
                <property name="geometry">
                 <rect>
@@ -2712,8 +2180,17 @@ color: white;</string>
                 </item>
                 <item>
                  <widget class="GcodeTextEdit" name="gcodetextedit">
+                  <property name="backgroundVisible">
+                   <bool>true</bool>
+                  </property>
+                  <property name="placeholderText">
+                   <string>    Double tap a program to view it here</string>
+                  </property>
                   <property name="syntaxHighlighting" stdset="0">
                    <bool>false</bool>
+                  </property>
+                  <property name="readOnly" stdset="0">
+                   <bool>true</bool>
                   </property>
                   <property name="currentLineBackground" stdset="0">
                    <color>
@@ -2755,7 +2232,7 @@ color: white;</string>
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_129">
                   <item>
-                   <widget class="QPushButton" name="edit_gcode_button">
+                   <widget class="QPushButton" name="editGCodeBtn">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -2791,7 +2268,7 @@ color: white;</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="find_replace_button">
+                   <widget class="QPushButton" name="findReplaceGCodeBtn">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -2824,7 +2301,7 @@ color: white;</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="save_button">
+                   <widget class="QPushButton" name="saveGCodeBtn">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -2857,7 +2334,7 @@ color: white;</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="save_as_button">
+                   <widget class="QPushButton" name="saveAsGCodeBtn">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -2911,6 +2388,795 @@ color: white;</string>
                 <string>Load Program</string>
                </property>
               </widget>
+              <widget class="QTabWidget" name="filesystemTabs">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>581</width>
+                 <height>681</height>
+                </rect>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">#filesystemTabs QTabBar::tab {
+    height: 35; 
+    min-width: 140;
+    font: 13pt &quot;DejaVu Sans&quot;; 
+}</string>
+               </property>
+               <property name="currentIndex">
+                <number>1</number>
+               </property>
+               <widget class="QWidget" name="sourceTab">
+                <attribute name="title">
+                 <string>Source</string>
+                </attribute>
+                <widget class="QFrame" name="frame_35">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>576</width>
+                   <height>646</height>
+                  </rect>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>420</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>600</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">.QFrame{
+    background-color: rgb(51, 57, 59);
+}</string>
+                 </property>
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_37">
+                  <property name="spacing">
+                   <number>9</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>15</number>
+                  </property>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_124">
+                    <property name="spacing">
+                     <number>10</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>5</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>5</number>
+                    </property>
+                    <item>
+                     <widget class="QPushButton" name="sourceFolderUp">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>120</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>120</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>Folder Up</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                        <normaloff>:/images/folder_up.png</normaloff>:/images/folder_up.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>30</width>
+                        <height>17</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="RemovableDeviceComboBox" name="removableComboBox">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>1</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>300</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">font: 12pt &quot;Noto&quot;;</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="sourceEjectUsb">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>100</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>100</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>Eject USB</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_125">
+                    <item>
+                     <widget class="FileSystemTable" name="sourceFsTable">
+                      <property name="focusPolicy">
+                       <enum>Qt::WheelFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">FileSystemTable {
+	color: black;
+   	border: 1px;
+	border-color: rgb(120, 120, 120);
+	border-style: solid;
+	background-color: rgb(238, 238, 236);
+    font: 12pt &quot;Noto&quot;;
+}
+
+QHeaderView {
+    background-color: rgb(220, 220, 220);
+	color: black;
+    border: none;
+	border-radius:none;
+	border-style: none;
+	font: 13pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="selectionMode">
+                       <enum>QAbstractItemView::SingleSelection</enum>
+                      </property>
+                      <property name="textElideMode">
+                       <enum>Qt::ElideRight</enum>
+                      </property>
+                      <property name="showGrid">
+                       <bool>false</bool>
+                      </property>
+                      <property name="sortingEnabled">
+                       <bool>true</bool>
+                      </property>
+                      <property name="hiddenColumns" stdset="0">
+                       <string>2, 4,1</string>
+                      </property>
+                      <property name="fixedNameColumn" stdset="0">
+                       <bool>true</bool>
+                      </property>
+                      <property name="nameColumnsWidth" stdset="0">
+                       <number>250</number>
+                      </property>
+                      <attribute name="horizontalHeaderCascadingSectionResizes">
+                       <bool>true</bool>
+                      </attribute>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_126">
+                    <property name="spacing">
+                     <number>12</number>
+                    </property>
+                    <item>
+                     <widget class="QPushButton" name="sourceDeleteItem">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>100</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>100</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>Delete</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                        <normaloff>:/images/delete.png</normaloff>:/images/delete.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>14</width>
+                        <height>14</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="sourceRenameItem">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>83</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>Rename</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="sourceCopyItem">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>100</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>180</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="layoutDirection">
+                       <enum>Qt::RightToLeft</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>Copy to Destination</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                        <normaloff>:/images/right_arrow.png</normaloff>:/images/right_arrow.png</iconset>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+               <widget class="QWidget" name="destinationTab">
+                <attribute name="title">
+                 <string>Destination</string>
+                </attribute>
+                <widget class="QFrame" name="frame_34">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>576</width>
+                   <height>646</height>
+                  </rect>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>1</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">.QFrame{
+    background-color: rgb(51, 57, 59);
+}</string>
+                 </property>
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_35">
+                  <property name="spacing">
+                   <number>9</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>15</number>
+                  </property>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_121">
+                    <property name="spacing">
+                     <number>10</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>5</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>5</number>
+                    </property>
+                    <item>
+                     <widget class="QPushButton" name="destinationFolderUp">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>120</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>110</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>Folder Up</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                        <normaloff>:/images/folder_up.png</normaloff>:/images/folder_up.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>30</width>
+                        <height>17</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="RecentFileComboBox" name="recentFileCombo">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>1</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>300</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">font: 12pt &quot;Noto&quot;;</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="destinationLoadGcode">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>100</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>120</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>Load G-Code</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_122">
+                    <item>
+                     <widget class="FileSystemTable" name="destinationFsTable">
+                      <property name="focusPolicy">
+                       <enum>Qt::WheelFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">FileSystemTable {
+	color: black;
+   	border: 1px;
+	border-color: rgb(120, 120, 120);
+	border-style: solid;
+	background-color: rgb(238, 238, 236);
+    font: 12pt &quot;Noto&quot;;
+}
+
+QHeaderView {
+    background-color: rgb(220, 220, 220);
+	color: black;
+    border: none;
+	border-radius:none;
+	border-style: none;
+	font: 13pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="sizeAdjustPolicy">
+                       <enum>QAbstractScrollArea::AdjustIgnored</enum>
+                      </property>
+                      <property name="selectionMode">
+                       <enum>QAbstractItemView::SingleSelection</enum>
+                      </property>
+                      <property name="textElideMode">
+                       <enum>Qt::ElideRight</enum>
+                      </property>
+                      <property name="showGrid">
+                       <bool>false</bool>
+                      </property>
+                      <property name="sortingEnabled">
+                       <bool>true</bool>
+                      </property>
+                      <property name="hiddenColumns" stdset="0">
+                       <string>2</string>
+                      </property>
+                      <property name="fixedNameColumn" stdset="0">
+                       <bool>true</bool>
+                      </property>
+                      <property name="nameColumnsWidth" stdset="0">
+                       <number>310</number>
+                      </property>
+                      <attribute name="horizontalHeaderCascadingSectionResizes">
+                       <bool>true</bool>
+                      </attribute>
+                      <attribute name="horizontalHeaderMinimumSectionSize">
+                       <number>20</number>
+                      </attribute>
+                      <attribute name="horizontalHeaderStretchLastSection">
+                       <bool>true</bool>
+                      </attribute>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_123">
+                    <property name="spacing">
+                     <number>6</number>
+                    </property>
+                    <item>
+                     <widget class="QPushButton" name="destinationToSource">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>90</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>90</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>To USB</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                        <normaloff>:/images/left_arrow.png</normaloff>:/images/left_arrow.png</iconset>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="destinationDelete">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>90</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>90</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>Delete</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                        <normaloff>:/images/delete.png</normaloff>:/images/delete.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>14</width>
+                        <height>14</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="destinationNewFile">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>100</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>100</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>New File</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                        <normaloff>:/images/new_file.png</normaloff>:/images/new_file.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>12</width>
+                        <height>16</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="destinationNewFolder">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>125</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>125</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>New Folder</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                        <normaloff>:/images/new_folder.png</normaloff>:/images/new_folder.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>28</width>
+                        <height>15</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="destinationRename">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>90</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>90</width>
+                        <height>35</height>
+                       </size>
+                      </property>
+                      <property name="focusPolicy">
+                       <enum>Qt::NoFocus</enum>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                      </property>
+                      <property name="text">
+                       <string>Rename</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+              </widget>
              </widget>
              <widget class="QWidget" name="pageProgramLoaded">
               <widget class="RecentFileComboBox" name="recentfilecombobox">
@@ -2924,7 +3190,7 @@ color: white;</string>
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>142</width>
+                 <width>166</width>
                  <height>30</height>
                 </size>
                </property>
@@ -2945,7 +3211,7 @@ color: white;</string>
 	padding: 1px 23px 1px 3px;
 	min-width: 6em;
 	color: #ffffff;
-    font: 12pt &quot;Bebas Kai&quot;;
+    font: 12pt &quot;Noto&quot;;
 }
 QComboBox::drop-down {
 	subcontrol-origin: padding;
@@ -2953,7 +3219,7 @@ QComboBox::drop-down {
 	width: 20px;
  	border-top-right-radius: 3px;
 	border-bottom-right-radius: 3px;
-    font: 12pt &quot;Bebas Kai&quot;;
+    font: 12pt &quot;Noto&quot;;
 }
 QComboBox::down-arrow {
      image: url(:/images/combobox-arrow.png);
@@ -3043,44 +3309,756 @@ QComboBox QAbstractItemView{
                   <widget class="QPushButton" name="btnBackToPrograms">
                    <property name="geometry">
                     <rect>
-                     <x>10</x>
-                     <y>10</y>
-                     <width>66</width>
-                     <height>26</height>
+                     <x>5</x>
+                     <y>5</y>
+                     <width>171</width>
+                     <height>31</height>
                     </rect>
                    </property>
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                   </property>
                    <property name="text">
-                    <string>Back</string>
+                    <string>&lt;&lt; Back to Programs</string>
+                   </property>
+                  </widget>
+                  <widget class="QPushButton" name="zoomInView">
+                   <property name="geometry">
+                    <rect>
+                     <x>60</x>
+                     <y>440</y>
+                     <width>31</width>
+                     <height>31</height>
+                    </rect>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                   </property>
+                   <property name="text">
+                    <string>+</string>
+                   </property>
+                  </widget>
+                  <widget class="QPushButton" name="zoomOutView">
+                   <property name="geometry">
+                    <rect>
+                     <x>15</x>
+                     <y>440</y>
+                     <width>31</width>
+                     <height>31</height>
+                    </rect>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                   </property>
+                   <property name="text">
+                    <string>-</string>
                    </property>
                   </widget>
                  </widget>
                 </item>
                </layout>
               </widget>
-              <widget class="QPushButton" name="zoomOutView">
+              <widget class="QFrame" name="verticalFrame">
                <property name="geometry">
                 <rect>
-                 <x>45</x>
-                 <y>520</y>
-                 <width>31</width>
-                 <height>31</height>
+                 <x>0</x>
+                 <y>495</y>
+                 <width>486</width>
+                 <height>166</height>
                 </rect>
                </property>
+               <property name="styleSheet">
+                <string notr="true">.QFrame{
+    padding-left: 8px;
+    padding-right: 8px;
+    border-left-width: 1px;
+    border-right-width:1px;
+}</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_3">
+                <property name="spacing">
+                 <number>6</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QFrame" name="horizontalFrame_3">
+                  <property name="styleSheet">
+                   <string notr="true">.QFrame{
+    border-style: solid;
+    border-color: rgb(176, 179,172);
+    border-width: 1px;
+    border-radius: 4px;
+    background-color: rgb(90, 90, 90);
+    padding: -5px;
+}</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_4">
+                   <property name="spacing">
+                    <number>15</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="axisLabel">
+                     <property name="maximumSize">
+                      <size>
+                       <width>70</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">QLabel{
+    color: rgb(238, 238, 236);
+	font: 16pt &quot;Noto&quot;;
+    padding-left: 6px;
+}</string>
+                     </property>
+                     <property name="text">
+                      <string>Axis</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="StatusLabel" name="wcsStatus">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>100</width>
+                       <height>17</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>100</width>
+                       <height>17</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">QLabel{
+    color: rgb(238, 238, 236);
+	font: 16pt &quot;Noto&quot;;
+    padding-left: 6px;
+}</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                     <property name="rules" stdset="0">
+                      <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:g5x_index?text&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;ch[0]&quot;, &quot;name&quot;: &quot;WCS Header&quot;}]</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="machineLabel">
+                     <property name="styleSheet">
+                      <string notr="true">QLabel{
+    color: rgb(238, 238, 236);
+	font: 16pt &quot;Noto&quot;;
+    padding-left: 6px;
+}</string>
+                     </property>
+                     <property name="text">
+                      <string>G53</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="dtgLabel">
+                     <property name="styleSheet">
+                      <string notr="true">QLabel{
+    color: rgb(238, 238, 236);
+	font: 16pt &quot;Noto&quot;;
+    padding-left: 6px;
+}</string>
+                     </property>
+                     <property name="text">
+                      <string>DTG</string>
+                     </property>
+                     <property name="alignment">
+                      <set>Qt::AlignCenter</set>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_5">
+                  <property name="spacing">
+                   <number>15</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>5</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>5</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="label_5">
+                    <property name="maximumSize">
+                     <size>
+                      <width>70</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QLabel {
+	font: 20pt &quot;Noto&quot;;
+}</string>
+                    </property>
+                    <property name="text">
+                     <string>X</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="drolabel_11">
+                    <property name="styleSheet">
+                     <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 16pt &quot;Noto&quot;;
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>1</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>0</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.3f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="drolabel_10">
+                    <property name="styleSheet">
+                     <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 16pt &quot;Noto&quot;;
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>1</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>0</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.3f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="drolabel_9">
+                    <property name="styleSheet">
+                     <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 16pt &quot;Noto&quot;;
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>2</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>0</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.4f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_6">
+                  <property name="spacing">
+                   <number>15</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>5</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>5</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="label_6">
+                    <property name="maximumSize">
+                     <size>
+                      <width>70</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QLabel {
+	font: 20pt &quot;Noto&quot;;
+}</string>
+                    </property>
+                    <property name="text">
+                     <string>Z</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="drolabel_14">
+                    <property name="styleSheet">
+                     <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 16pt &quot;Noto&quot;;
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>0</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>2</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.4f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="drolabel_13">
+                    <property name="styleSheet">
+                     <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 16pt &quot;Noto&quot;;
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>1</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>2</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.4f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="drolabel_12">
+                    <property name="styleSheet">
+                     <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 16pt &quot;Noto&quot;;
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>2</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>2</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.4f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+              <widget class="ActionButton" name="actionbutton_50">
+               <property name="geometry">
+                <rect>
+                 <x>555</x>
+                 <y>505</y>
+                 <width>130</width>
+                 <height>42</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>130</width>
+                 <height>42</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>130</width>
+                 <height>42</height>
+                </size>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+               </property>
                <property name="text">
-                <string>-</string>
+                <string>Single Block</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>program.step</string>
                </property>
               </widget>
-              <widget class="QPushButton" name="zoomInView">
+              <widget class="ActionButton" name="actionbutton_53">
                <property name="geometry">
                 <rect>
-                 <x>90</x>
-                 <y>520</y>
-                 <width>31</width>
-                 <height>31</height>
+                 <x>700</x>
+                 <y>505</y>
+                 <width>130</width>
+                 <height>42</height>
                 </rect>
                </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>130</width>
+                 <height>42</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>130</width>
+                 <height>42</height>
+                </size>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+               </property>
                <property name="text">
-                <string>+</string>
+                <string>Block Delete</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>program.block-delete.toggle</string>
+               </property>
+              </widget>
+              <widget class="ActionButton" name="actionbutton_55">
+               <property name="geometry">
+                <rect>
+                 <x>850</x>
+                 <y>505</y>
+                 <width>130</width>
+                 <height>42</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>130</width>
+                 <height>42</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>130</width>
+                 <height>42</height>
+                </size>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+               </property>
+               <property name="text">
+                <string>M01 Break</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>program.optional-stop.toggle</string>
+               </property>
+              </widget>
+              <widget class="QWidget" name="layoutWidget">
+               <property name="geometry">
+                <rect>
+                 <x>515</x>
+                 <y>580</y>
+                 <width>191</width>
+                 <height>44</height>
+                </rect>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_153">
+                <item>
+                 <widget class="ActionButton" name="run_from_line_Btn">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>110</width>
+                    <height>42</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>125</width>
+                    <height>42</height>
+                   </size>
+                  </property>
+                  <property name="focusPolicy">
+                   <enum>Qt::NoFocus</enum>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QPushButton {
+   	font: 12pt &quot;Noto&quot;;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Run from line</string>
+                  </property>
+                  <property name="actionName" stdset="0">
+                   <string>program.run-from-line</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="VCPLineEdit" name="run_from_line_Num">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>130</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>40</width>
+                    <height>38</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>50</width>
+                    <height>38</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">VCPLineEdit {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 16pt &quot;Noto&quot;;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="placeholderText">
+                   <string>0</string>
+                  </property>
+                  <property name="rules" stdset="0">
+                   <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;tooltable:current_tool?tool_number&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;str(ch[0])&quot;, &quot;name&quot;: &quot;update tool num&quot;}, {&quot;channels&quot;: [{&quot;url&quot;: &quot;status:task_state?text&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:interp_state?text&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Enable&quot;, &quot;expression&quot;: &quot;ch[0] == 'On' and ch[1] == 'Idle'&quot;, &quot;name&quot;: &quot;enable/disable&quot;}]</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="ActionButton" name="actionbutton_51">
+               <property name="geometry">
+                <rect>
+                 <x>765</x>
+                 <y>575</y>
+                 <width>121</width>
+                 <height>52</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>52</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>52</height>
+                </size>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+   	font: 16pt &quot;Noto&quot;;
+}</string>
+               </property>
+               <property name="text">
+                <string>STOP</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>program.abort</string>
                </property>
               </widget>
              </widget>
@@ -3107,13 +4085,13 @@ QComboBox QAbstractItemView{
              </property>
              <property name="styleSheet">
               <string notr="true">#toolsInnerTabs QTabBar::tab {
-    height: 30; 
+    height: 35; 
     min-width: 100;
     font: 13pt &quot;DejaVu Sans&quot;; 
 }</string>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="innerToolsTab">
               <attribute name="title">
@@ -3186,7 +4164,7 @@ QComboBox QAbstractItemView{
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_37">
                   <item>
-                   <widget class="QPushButton" name="tool_table_delete_button">
+                   <widget class="QPushButton" name="toolsDeleteBtn">
                     <property name="enabled">
                      <bool>false</bool>
                     </property>
@@ -3259,6 +4237,9 @@ QComboBox QAbstractItemView{
                   </item>
                   <item>
                    <widget class="QPushButton" name="loadSelectedTool">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                       <horstretch>0</horstretch>
@@ -3285,652 +4266,629 @@ QComboBox QAbstractItemView{
                 </item>
                </layout>
               </widget>
-              <widget class="QTabWidget" name="toolsOperations">
+              <widget class="QGroupBox" name="groupBox_2">
                <property name="geometry">
                 <rect>
-                 <x>755</x>
-                 <y>5</y>
-                 <width>256</width>
-                 <height>641</height>
+                 <x>770</x>
+                 <y>110</y>
+                 <width>226</width>
+                 <height>246</height>
                 </rect>
                </property>
-               <property name="currentIndex">
-                <number>0</number>
+               <property name="title">
+                <string>Tip Orient</string>
                </property>
-               <widget class="QWidget" name="addTool">
-                <attribute name="title">
-                 <string>Tab 1</string>
-                </attribute>
-                <widget class="QWidget" name="formLayoutWidget_2">
-                 <property name="geometry">
-                  <rect>
-                   <x>5</x>
-                   <y>10</y>
-                   <width>126</width>
-                   <height>66</height>
-                  </rect>
-                 </property>
-                 <layout class="QFormLayout" name="formLayout_2">
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label">
-                    <property name="text">
-                     <string>T#</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QLineEdit" name="lineEdit"/>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="label_4">
-                    <property name="text">
-                     <string>Tip Radius</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QLineEdit" name="lineEdit_2"/>
-                  </item>
-                 </layout>
-                </widget>
-                <widget class="QGroupBox" name="groupBox_2">
-                 <property name="geometry">
-                  <rect>
-                   <x>5</x>
-                   <y>80</y>
-                   <width>226</width>
-                   <height>246</height>
-                  </rect>
-                 </property>
-                 <property name="title">
-                  <string>Tip Orient</string>
-                 </property>
-                 <widget class="QWidget" name="gridWidget" native="true">
-                  <property name="geometry">
-                   <rect>
-                    <x>5</x>
-                    <y>25</y>
-                    <width>216</width>
-                    <height>216</height>
-                   </rect>
+               <widget class="QWidget" name="gridWidget" native="true">
+                <property name="geometry">
+                 <rect>
+                  <x>5</x>
+                  <y>25</y>
+                  <width>216</width>
+                  <height>216</height>
+                 </rect>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_2">
+                 <item row="0" column="0">
+                  <widget class="ActionButton" name="lathe_control_point_4">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">ActionButton{
+    border: none;
+    background: none;
+}
+
+ActionButton:pressed {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked[option=&quot;true&quot;] {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resources.qrc">
+                     <normaloff>:/lathe_resources/lathe_control_point_4.png</normaloff>:/lathe_resources/lathe_control_point_4.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>65</width>
+                     <height>65</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                   <property name="rules" stdset="0">
+                    <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation ==4 else False&quot;, &quot;name&quot;: &quot;orientation_4&quot;}]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="ActionButton" name="lathe_control_point_7">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">ActionButton{
+    border: none;
+    background: none;
+}
+
+ActionButton:pressed {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked[option=&quot;true&quot;] {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resources.qrc">
+                     <normaloff>:/lathe_resources/lathe_control_point_7.png</normaloff>:/lathe_resources/lathe_control_point_7.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>65</width>
+                     <height>65</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                   <property name="rules" stdset="0">
+                    <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Enable&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 7 else False&quot;, &quot;name&quot;: &quot;orientation_7&quot;}]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="ActionButton" name="lathe_control_point_9">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">ActionButton{
+    border: none;
+    background: none;
+}
+
+ActionButton:pressed {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked[option=&quot;true&quot;] {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resources.qrc">
+                     <normaloff>:/lathe_resources/lathe_control_point_9.png</normaloff>:/lathe_resources/lathe_control_point_9.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>50</width>
+                     <height>50</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                   <property name="rules" stdset="0">
+                    <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 9 else False&quot;, &quot;name&quot;: &quot;orientation_9&quot;}]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="ActionButton" name="lathe_control_point_3">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">ActionButton{
+    border: none;
+    background: none;
+}
+
+ActionButton:pressed {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked[option=&quot;true&quot;] {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resources.qrc">
+                     <normaloff>:/lathe_resources/lathe_control_point_3.png</normaloff>:/lathe_resources/lathe_control_point_3.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>65</width>
+                     <height>65</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                   <property name="rules" stdset="0">
+                    <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 3 else False&quot;, &quot;name&quot;: &quot;orientation_3&quot;}]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="ActionButton" name="lathe_control_point_8">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">ActionButton{
+    border: none;
+    background: none;
+}
+
+ActionButton:pressed {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked[option=&quot;true&quot;] {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resources.qrc">
+                     <normaloff>:/lathe_resources/lathe_control_point_8.png</normaloff>:/lathe_resources/lathe_control_point_8.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>65</width>
+                     <height>65</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                   <property name="rules" stdset="0">
+                    <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 8 else False&quot;, &quot;name&quot;: &quot;orientation_8&quot;}]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="ActionButton" name="lathe_control_point_5">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">ActionButton{
+    border: none;
+    background: none;
+}
+
+ActionButton:pressed {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked[option=&quot;true&quot;] {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resources.qrc">
+                     <normaloff>:/lathe_resources/lathe_control_point_5.png</normaloff>:/lathe_resources/lathe_control_point_5.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>65</width>
+                     <height>65</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                   <property name="rules" stdset="0">
+                    <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 5 else False&quot;, &quot;name&quot;: &quot;orientation_5&quot;}]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="ActionButton" name="lathe_control_point_1">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">ActionButton{
+    border: none;
+    background: none;
+}
+
+ActionButton:pressed {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked[option=&quot;true&quot;] {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resources.qrc">
+                     <normaloff>:/lathe_resources/lathe_control_point_1.png</normaloff>:/lathe_resources/lathe_control_point_1.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>65</width>
+                     <height>65</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                   <property name="rules" stdset="0">
+                    <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 1 else False&quot;, &quot;name&quot;: &quot;orientation_1&quot;}]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="ActionButton" name="lathe_control_point_6">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">ActionButton{
+    border: none;
+    background: none;
+}
+
+ActionButton:pressed {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked[option=&quot;true&quot;] {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resources.qrc">
+                     <normaloff>:/lathe_resources/lathe_control_point_6.png</normaloff>:/lathe_resources/lathe_control_point_6.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>65</width>
+                     <height>65</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                   <property name="rules" stdset="0">
+                    <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 6 else False&quot;, &quot;name&quot;: &quot;orientation_6&quot;}]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="2">
+                  <widget class="ActionButton" name="lathe_control_point_2">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>70</width>
+                     <height>70</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">ActionButton{
+    border: none;
+    background: none;
+}
+
+ActionButton:pressed {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked[option=&quot;true&quot;] {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+
+ActionButton:checked {
+    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
+}
+</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="../resources/resources.qrc">
+                     <normaloff>:/lathe_resources/lathe_control_point_2.png</normaloff>:/lathe_resources/lathe_control_point_2.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>65</width>
+                     <height>65</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <property name="autoExclusive">
+                    <bool>true</bool>
+                   </property>
+                   <property name="rules" stdset="0">
+                    <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 2 else False&quot;, &quot;name&quot;: &quot;orientation_2&quot;}]</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </widget>
+              <widget class="QWidget" name="formLayoutWidget_2">
+               <property name="geometry">
+                <rect>
+                 <x>770</x>
+                 <y>40</y>
+                 <width>126</width>
+                 <height>66</height>
+                </rect>
+               </property>
+               <layout class="QFormLayout" name="formLayout_2">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label">
+                  <property name="text">
+                   <string>T#</string>
                   </property>
-                  <layout class="QGridLayout" name="gridLayout_2">
-                   <item row="0" column="0">
-                    <widget class="ActionButton" name="lathe_control_point_4">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">ActionButton{
-    border: none;
-    background: none;
-}
-
-ActionButton:pressed {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked[option=&quot;true&quot;] {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-</string>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="../resources/resources.qrc">
-                       <normaloff>:/lathe_resources/lathe_control_point_4.png</normaloff>:/lathe_resources/lathe_control_point_4.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>65</width>
-                       <height>65</height>
-                      </size>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                     <property name="autoExclusive">
-                      <bool>true</bool>
-                     </property>
-                     <property name="rules" stdset="0">
-                      <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation ==4 else False&quot;, &quot;name&quot;: &quot;orientation_4&quot;}]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="2">
-                    <widget class="ActionButton" name="lathe_control_point_7">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">ActionButton{
-    border: none;
-    background: none;
-}
-
-ActionButton:pressed {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked[option=&quot;true&quot;] {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-</string>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="../resources/resources.qrc">
-                       <normaloff>:/lathe_resources/lathe_control_point_7.png</normaloff>:/lathe_resources/lathe_control_point_7.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>65</width>
-                       <height>65</height>
-                      </size>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                     <property name="autoExclusive">
-                      <bool>true</bool>
-                     </property>
-                     <property name="rules" stdset="0">
-                      <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Enable&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 7 else False&quot;, &quot;name&quot;: &quot;orientation_7&quot;}]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="ActionButton" name="lathe_control_point_9">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">ActionButton{
-    border: none;
-    background: none;
-}
-
-ActionButton:pressed {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked[option=&quot;true&quot;] {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-</string>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="../resources/resources.qrc">
-                       <normaloff>:/lathe_resources/lathe_control_point_9.png</normaloff>:/lathe_resources/lathe_control_point_9.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>50</width>
-                       <height>50</height>
-                      </size>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                     <property name="autoExclusive">
-                      <bool>true</bool>
-                     </property>
-                     <property name="rules" stdset="0">
-                      <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 9 else False&quot;, &quot;name&quot;: &quot;orientation_9&quot;}]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="2">
-                    <widget class="ActionButton" name="lathe_control_point_3">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">ActionButton{
-    border: none;
-    background: none;
-}
-
-ActionButton:pressed {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked[option=&quot;true&quot;] {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-</string>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="../resources/resources.qrc">
-                       <normaloff>:/lathe_resources/lathe_control_point_3.png</normaloff>:/lathe_resources/lathe_control_point_3.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>65</width>
-                       <height>65</height>
-                      </size>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                     <property name="autoExclusive">
-                      <bool>true</bool>
-                     </property>
-                     <property name="rules" stdset="0">
-                      <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 3 else False&quot;, &quot;name&quot;: &quot;orientation_3&quot;}]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="1">
-                    <widget class="ActionButton" name="lathe_control_point_8">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">ActionButton{
-    border: none;
-    background: none;
-}
-
-ActionButton:pressed {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked[option=&quot;true&quot;] {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-</string>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="../resources/resources.qrc">
-                       <normaloff>:/lathe_resources/lathe_control_point_8.png</normaloff>:/lathe_resources/lathe_control_point_8.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>65</width>
-                       <height>65</height>
-                      </size>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                     <property name="autoExclusive">
-                      <bool>true</bool>
-                     </property>
-                     <property name="rules" stdset="0">
-                      <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 8 else False&quot;, &quot;name&quot;: &quot;orientation_8&quot;}]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="0">
-                    <widget class="ActionButton" name="lathe_control_point_5">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">ActionButton{
-    border: none;
-    background: none;
-}
-
-ActionButton:pressed {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked[option=&quot;true&quot;] {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-</string>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="../resources/resources.qrc">
-                       <normaloff>:/lathe_resources/lathe_control_point_5.png</normaloff>:/lathe_resources/lathe_control_point_5.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>65</width>
-                       <height>65</height>
-                      </size>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                     <property name="autoExclusive">
-                      <bool>true</bool>
-                     </property>
-                     <property name="rules" stdset="0">
-                      <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 5 else False&quot;, &quot;name&quot;: &quot;orientation_5&quot;}]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="0">
-                    <widget class="ActionButton" name="lathe_control_point_1">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">ActionButton{
-    border: none;
-    background: none;
-}
-
-ActionButton:pressed {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked[option=&quot;true&quot;] {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-</string>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="../resources/resources.qrc">
-                       <normaloff>:/lathe_resources/lathe_control_point_1.png</normaloff>:/lathe_resources/lathe_control_point_1.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>65</width>
-                       <height>65</height>
-                      </size>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                     <property name="autoExclusive">
-                      <bool>true</bool>
-                     </property>
-                     <property name="rules" stdset="0">
-                      <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 1 else False&quot;, &quot;name&quot;: &quot;orientation_1&quot;}]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="1">
-                    <widget class="ActionButton" name="lathe_control_point_6">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">ActionButton{
-    border: none;
-    background: none;
-}
-
-ActionButton:pressed {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked[option=&quot;true&quot;] {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-</string>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="../resources/resources.qrc">
-                       <normaloff>:/lathe_resources/lathe_control_point_6.png</normaloff>:/lathe_resources/lathe_control_point_6.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>65</width>
-                       <height>65</height>
-                      </size>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                     <property name="autoExclusive">
-                      <bool>true</bool>
-                     </property>
-                     <property name="rules" stdset="0">
-                      <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 6 else False&quot;, &quot;name&quot;: &quot;orientation_6&quot;}]</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="2">
-                    <widget class="ActionButton" name="lathe_control_point_2">
-                     <property name="enabled">
-                      <bool>false</bool>
-                     </property>
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>70</width>
-                       <height>70</height>
-                      </size>
-                     </property>
-                     <property name="styleSheet">
-                      <string notr="true">ActionButton{
-    border: none;
-    background: none;
-}
-
-ActionButton:pressed {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked[option=&quot;true&quot;] {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-
-ActionButton:checked {
-    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));
-}
-</string>
-                     </property>
-                     <property name="icon">
-                      <iconset resource="../resources/resources.qrc">
-                       <normaloff>:/lathe_resources/lathe_control_point_2.png</normaloff>:/lathe_resources/lathe_control_point_2.png</iconset>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>65</width>
-                       <height>65</height>
-                      </size>
-                     </property>
-                     <property name="checkable">
-                      <bool>true</bool>
-                     </property>
-                     <property name="autoExclusive">
-                      <bool>true</bool>
-                     </property>
-                     <property name="rules" stdset="0">
-                      <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_table&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;True if ch[0][ch[1]].orientation == 2 else False&quot;, &quot;name&quot;: &quot;orientation_2&quot;}]</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
                  </widget>
-                </widget>
-               </widget>
-               <widget class="QWidget" name="tab_2">
-                <attribute name="title">
-                 <string>Tab 2</string>
-                </attribute>
-               </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLineEdit" name="lineEdit"/>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_4">
+                  <property name="text">
+                   <string>Tip Radius</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLineEdit" name="lineEdit_2"/>
+                </item>
+               </layout>
               </widget>
              </widget>
              <widget class="QWidget" name="innerOffsetsTab">
@@ -5889,6 +6847,118 @@ padding-left: 5px;
                 <height>709</height>
                </rect>
               </property>
+              <widget class="QGroupBox" name="groupBox_3">
+               <property name="geometry">
+                <rect>
+                 <x>25</x>
+                 <y>570</y>
+                 <width>966</width>
+                 <height>96</height>
+                </rect>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">ActionButton {
+min-height: 30px;
+min-width: 50px;
+font: 12pt &quot;DejaVu Sans&quot;;
+}</string>
+               </property>
+               <property name="title">
+                <string>Debugging Tools</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="flat">
+                <bool>false</bool>
+               </property>
+               <widget class="QWidget" name="horizontalLayoutWidget_5">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>35</y>
+                  <width>946</width>
+                  <height>51</height>
+                 </rect>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_7">
+                 <property name="spacing">
+                  <number>10</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>4</number>
+                 </property>
+                 <item>
+                  <widget class="ActionButton" name="actionbutton_7">
+                   <property name="text">
+                    <string>Hal Show</string>
+                   </property>
+                   <property name="actionName" stdset="0">
+                    <string>tool.halshow</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="ActionButton" name="actionbutton_8">
+                   <property name="text">
+                    <string>Hal Meter</string>
+                   </property>
+                   <property name="actionName" stdset="0">
+                    <string>tool.halmeter</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="ActionButton" name="actionbutton_9">
+                   <property name="text">
+                    <string>Hal Scope</string>
+                   </property>
+                   <property name="actionName" stdset="0">
+                    <string>tool.halscope</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="ActionButton" name="actionbutton_10">
+                   <property name="text">
+                    <string>Classic Ladder</string>
+                   </property>
+                   <property name="actionName" stdset="0">
+                    <string>tool.classicladder</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="ActionButton" name="actionbutton_11">
+                   <property name="text">
+                    <string>LCNC Status</string>
+                   </property>
+                   <property name="actionName" stdset="0">
+                    <string>tool.status</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="ActionButton" name="actionbutton_12">
+                   <property name="text">
+                    <string>Calibration</string>
+                   </property>
+                   <property name="actionName" stdset="0">
+                    <string>tool.calibration</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </widget>
              </widget>
             </widget>
            </widget>
@@ -5956,6 +7026,11 @@ padding-left: 5px;
    <header>qtpyvcp.widgets.display_widgets.status_label</header>
   </customwidget>
   <customwidget>
+   <class>DROLabel</class>
+   <extends>QLabel</extends>
+   <header>qtpyvcp.widgets.display_widgets.dro_label</header>
+  </customwidget>
+  <customwidget>
    <class>StatusLED</class>
    <extends>QWidget</extends>
    <header>qtpyvcp.widgets.display_widgets.status_led</header>
@@ -5965,6 +7040,11 @@ padding-left: 5px;
    <extends>QWidget</extends>
    <header>qtpyvcp.widgets.display_widgets.vtk_backplot.vtk_backplot</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>VCPLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qtpyvcp.widgets.input_widgets.line_edit</header>
   </customwidget>
   <customwidget>
    <class>GcodeTextEdit</class>
@@ -6061,23 +7141,7 @@ padding-left: 5px;
    </hints>
   </connection>
   <connection>
-   <sender>main_folder_up_button</sender>
-   <signal>clicked()</signal>
-   <receiver>filesystemtable</receiver>
-   <slot>viewParentDirectory()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>73</x>
-     <y>39</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>294</x>
-     <y>359</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>edit_gcode_button</sender>
+   <sender>editGCodeBtn</sender>
    <signal>toggled(bool)</signal>
    <receiver>gcodetextedit</receiver>
    <slot>EditorReadWrite(bool)</slot>
@@ -6093,7 +7157,7 @@ padding-left: 5px;
    </hints>
   </connection>
   <connection>
-   <sender>find_replace_button</sender>
+   <sender>findReplaceGCodeBtn</sender>
    <signal>clicked()</signal>
    <receiver>gcodetextedit</receiver>
    <slot>findDialog()</slot>
@@ -6109,7 +7173,7 @@ padding-left: 5px;
    </hints>
   </connection>
   <connection>
-   <sender>save_button</sender>
+   <sender>saveGCodeBtn</sender>
    <signal>clicked()</signal>
    <receiver>gcodetextedit</receiver>
    <slot>saveFile()</slot>
@@ -6125,7 +7189,7 @@ padding-left: 5px;
    </hints>
   </connection>
   <connection>
-   <sender>save_as_button</sender>
+   <sender>saveAsGCodeBtn</sender>
    <signal>clicked()</signal>
    <receiver>gcodetextedit</receiver>
    <slot>saveFileAs()</slot>
@@ -6205,38 +7269,6 @@ padding-left: 5px;
    </hints>
   </connection>
   <connection>
-   <sender>btnNcFiles</sender>
-   <signal>clicked()</signal>
-   <receiver>filesystemtable</receiver>
-   <slot>viewNCFilesDirectory()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>174</x>
-     <y>38</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>294</x>
-     <y>359</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>removabledevicecombobox</sender>
-   <signal>currentPathChanged(QString)</signal>
-   <receiver>filesystemtable</receiver>
-   <slot>setRootPath(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>380</x>
-     <y>39</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>294</x>
-     <y>359</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>loadSelectedTool</sender>
    <signal>clicked()</signal>
    <receiver>lathetooltable</receiver>
@@ -6255,7 +7287,7 @@ padding-left: 5px;
   <connection>
    <sender>lathetooltable</sender>
    <signal>anythingSelected(bool)</signal>
-   <receiver>tool_table_delete_button</receiver>
+   <receiver>toolsDeleteBtn</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -6281,6 +7313,310 @@ padding-left: 5px;
     <hint type="destinationlabel">
      <x>576</x>
      <y>319</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceDeleteItem</sender>
+   <signal>clicked()</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>deleteItem()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>66</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceRenameItem</sender>
+   <signal>clicked()</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>rename()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>293</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceCopyItem</sender>
+   <signal>clicked()</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>doFileTransfer()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>520</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceFolderUp</sender>
+   <signal>clicked()</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>viewParentDirectory()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>78</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>removableComboBox</sender>
+   <signal>currentPathChanged(QString)</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>setRootPath(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>301</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>removableComboBox</sender>
+   <signal>usbPresent(bool)</signal>
+   <receiver>sourceEjectUsb</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>301</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>516</x>
+     <y>67</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>removableComboBox</sender>
+   <signal>currentDeviceEjectable(bool)</signal>
+   <receiver>sourceEjectUsb</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>301</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>516</x>
+     <y>67</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceEjectUsb</sender>
+   <signal>clicked()</signal>
+   <receiver>removableComboBox</receiver>
+   <slot>ejectDevice()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>516</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>301</x>
+     <y>67</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceFsTable</sender>
+   <signal>transferFileRequest(QString)</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>transferFile(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceFsTable</sender>
+   <signal>atDeviceRoot(bool)</signal>
+   <receiver>sourceFolderUp</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>78</x>
+     <y>67</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationFsTable</sender>
+   <signal>transferFileRequest(QString)</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>transferFile(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationFolderUp</sender>
+   <signal>clicked()</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>viewParentDirectory()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>75</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationLoadGcode</sender>
+   <signal>clicked()</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>loadSelectedFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>508</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationToSource</sender>
+   <signal>clicked()</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>doFileTransfer()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>66</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationDelete</sender>
+   <signal>clicked()</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>deleteItem()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>167</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationNewFile</sender>
+   <signal>clicked()</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>newFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>273</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationNewFolder</sender>
+   <signal>clicked()</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>newFolder()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>397</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationRename</sender>
+   <signal>clicked()</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>rename()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>515</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lathetooltable</sender>
+   <signal>anythingSelected(bool)</signal>
+   <receiver>loadSelectedTool</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>378</x>
+     <y>345</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>591</x>
+     <y>663</y>
     </hint>
    </hints>
   </connection>

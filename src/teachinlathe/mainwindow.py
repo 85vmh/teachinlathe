@@ -33,6 +33,7 @@ class MyMainWindow(VCPMainWindow):
         self.manualLathe = ManualLathe()
         self.latheComponent = TeachInLatheComponent()
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStop, self.onCycleStopPressed)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsSpindleStarted, self.onSpindleRunningChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsPowerFeeding, self.onPowerFeedingChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
@@ -101,6 +102,11 @@ class MyMainWindow(VCPMainWindow):
         self.vtk.setViewXZ2()
         self.vtk.enable_panning(True)
 
+        self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
+
+    def handleUsbPresent(self, value):
+        self.filesystemTabs.setCurrentIndex(0 if value else 1)
+
     def loadProgram(self):
         self.stackedProgramsTab.setCurrentIndex(1)
         self.vtk.clearLivePlot()
@@ -112,6 +118,11 @@ class MyMainWindow(VCPMainWindow):
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
         self.handle_spindle_mode(self.getSpindleModeIndex())
         self.spindleModeWidget.setCurrentIndex(self.getSpindleModeIndex())
+
+    def onCycleStopPressed(self, value):
+        if self.checkBoxFeedAngle.isChecked() and value:
+            print("Set taper turning off when cycle stop pressed")
+            self.checkBoxFeedAngleChanged(False)
 
     def checkBoxFeedAngleChanged(self, value):
         self.inputFeedAngle.setEnabled(value)
@@ -137,8 +148,9 @@ class MyMainWindow(VCPMainWindow):
         self.checkBoxJogAngle.setEnabled(not value)
         self.inputFeedAngle.setEnabled(not value and self.checkBoxFeedAngle.isChecked())
         self.inputJogAngle.setEnabled(not value and self.checkBoxJogAngle.isChecked())
-        if not value:
-            self.checkBoxFeedAngle.setChecked(False)
+        if self.checkBoxFeedAngle.isChecked() and not value:
+            print("Set taper turning off when stopping spindle")
+            self.checkBoxFeedAngleChanged(False)
 
     def openNumPad(self, line_edit, spindle_related=False):
         if spindle_related:
