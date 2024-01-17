@@ -122,6 +122,7 @@ class MyMainWindow(VCPMainWindow):
     def onCycleStopPressed(self, value):
         if self.checkBoxFeedAngle.isChecked() and value:
             print("Set taper turning off when cycle stop pressed")
+            self.checkBoxFeedAngle.setChecked(False)
             self.checkBoxFeedAngleChanged(False)
 
     def checkBoxFeedAngleChanged(self, value):
@@ -150,6 +151,7 @@ class MyMainWindow(VCPMainWindow):
         self.inputJogAngle.setEnabled(not value and self.checkBoxJogAngle.isChecked())
         if self.checkBoxFeedAngle.isChecked() and not value:
             print("Set taper turning off when stopping spindle")
+            self.checkBoxFeedAngle.setChecked(False)
             self.checkBoxFeedAngleChanged(False)
 
     def openNumPad(self, line_edit, spindle_related=False):

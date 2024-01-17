@@ -91,7 +91,7 @@
             </rect>
            </property>
            <property name="styleSheet">
-            <string notr="true">font: 75 72pt &quot;Bitstream Vera Sans&quot;;</string>
+            <string notr="true">font: bold 72pt &quot;Noto&quot;;</string>
            </property>
            <property name="text">
             <string>WEILER</string>
@@ -103,7 +103,7 @@
           <widget class="QWidget" name="formLayoutWidget">
            <property name="geometry">
             <rect>
-             <x>400</x>
+             <x>365</x>
              <y>235</y>
              <width>221</width>
              <height>186</height>
@@ -147,21 +147,31 @@
             </item>
             <item row="1" column="1">
              <widget class="StatusLabel" name="statuslabel_2">
+              <property name="font">
+               <font>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">color:red</string>
               </property>
               <property name="rules" stdset="0">
-               <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'NC Enabled' if ch[0] else 'NC not Enabled'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}]}]</string>
+               <string>[{&quot;name&quot;: &quot;label text&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'NC Enabled' if ch[0] else 'NC not Enabled'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}]}, {&quot;name&quot;: &quot;label color&quot;, &quot;property&quot;: &quot;Style Sheet&quot;, &quot;expression&quot;: &quot;'color:green' if ch[0] else 'color:red'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:enabled&quot;, &quot;trigger&quot;: true}]}]</string>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
              <widget class="StatusLabel" name="statuslabel">
+              <property name="font">
+               <font>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">color:green</string>
               </property>
               <property name="rules" stdset="0">
-               <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'E-Stop Button Pressed' if ch[0] == 1 else 'E-Stop Free'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}]}]</string>
+               <string>[{&quot;name&quot;: &quot;label text&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'E-Stop Button Pressed' if ch[0] == 1 else 'E-Stop Free'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}]}, {&quot;name&quot;: &quot;label color&quot;, &quot;property&quot;: &quot;Style Sheet&quot;, &quot;expression&quot;: &quot;'color:red' if ch[0] == 1 else 'color:green'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:estop&quot;, &quot;trigger&quot;: true}]}]</string>
               </property>
              </widget>
             </item>
@@ -180,11 +190,16 @@
             </item>
             <item row="2" column="1">
              <widget class="StatusLabel" name="statuslabel_3">
+              <property name="font">
+               <font>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">color:red</string>
               </property>
               <property name="rules" stdset="0">
-               <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'X axis homed' if ch[0] else 'X axis NOT homed'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.0.homed&quot;, &quot;trigger&quot;: true}]}]</string>
+               <string>[{&quot;name&quot;: &quot;label text&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'X axis homed' if ch[0] else 'X axis NOT homed'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.0.homed&quot;, &quot;trigger&quot;: true}]}, {&quot;name&quot;: &quot;label color&quot;, &quot;property&quot;: &quot;Style Sheet&quot;, &quot;expression&quot;: &quot;'color:green' if ch[0] else 'color:red'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.0.homed&quot;, &quot;trigger&quot;: true}]}]</string>
               </property>
              </widget>
             </item>
@@ -203,11 +218,16 @@
             </item>
             <item row="3" column="1">
              <widget class="StatusLabel" name="statuslabel_4">
+              <property name="font">
+               <font>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">color:red</string>
               </property>
               <property name="rules" stdset="0">
-               <string>[{&quot;name&quot;: &quot;New Rule&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'Z axis homed' if ch[0] else 'Z axis NOT homed'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.1.homed&quot;, &quot;trigger&quot;: true}]}]</string>
+               <string>[{&quot;name&quot;: &quot;label text&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'Z axis homed' if ch[0] else 'Z axis NOT homed'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.1.homed&quot;, &quot;trigger&quot;: true}]}, {&quot;name&quot;: &quot;label color&quot;, &quot;property&quot;: &quot;Style Sheet&quot;, &quot;expression&quot;: &quot;'color:green' if ch[0] else 'color:red'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:joint.1.homed&quot;, &quot;trigger&quot;: true}]}]</string>
               </property>
              </widget>
             </item>
@@ -328,9 +348,9 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="ActionButton" name="exit_button_3">
            <property name="geometry">
             <rect>
-             <x>635</x>
+             <x>615</x>
              <y>235</y>
-             <width>75</width>
+             <width>100</width>
              <height>35</height>
             </rect>
            </property>
@@ -342,13 +362,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
            </property>
            <property name="minimumSize">
             <size>
-             <width>75</width>
+             <width>100</width>
              <height>35</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>75</width>
+             <width>100</width>
              <height>35</height>
             </size>
            </property>
@@ -373,9 +393,9 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="ActionButton" name="power_button_3">
            <property name="geometry">
             <rect>
-             <x>635</x>
+             <x>615</x>
              <y>285</y>
-             <width>75</width>
+             <width>100</width>
              <height>35</height>
             </rect>
            </property>
@@ -393,7 +413,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
            </property>
            <property name="maximumSize">
             <size>
-             <width>75</width>
+             <width>100</width>
              <height>35</height>
             </size>
            </property>
@@ -418,9 +438,9 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="ActionButton" name="axisactionbutton_7">
            <property name="geometry">
             <rect>
-             <x>635</x>
+             <x>615</x>
              <y>335</y>
-             <width>75</width>
+             <width>100</width>
              <height>35</height>
             </rect>
            </property>
@@ -432,7 +452,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
            </property>
            <property name="minimumSize">
             <size>
-             <width>75</width>
+             <width>100</width>
              <height>35</height>
             </size>
            </property>
@@ -457,9 +477,9 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="ActionButton" name="axisactionbutton_8">
            <property name="geometry">
             <rect>
-             <x>635</x>
+             <x>615</x>
              <y>385</y>
-             <width>75</width>
+             <width>100</width>
              <height>35</height>
             </rect>
            </property>
@@ -471,7 +491,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
            </property>
            <property name="minimumSize">
             <size>
-             <width>75</width>
+             <width>100</width>
              <height>35</height>
             </size>
            </property>
@@ -3929,8 +3949,8 @@ QComboBox QAbstractItemView{
               <widget class="QWidget" name="layoutWidget">
                <property name="geometry">
                 <rect>
-                 <x>515</x>
-                 <y>580</y>
+                 <x>500</x>
+                 <y>555</y>
                  <width>191</width>
                  <height>44</height>
                 </rect>
@@ -4022,9 +4042,9 @@ QComboBox QAbstractItemView{
               <widget class="ActionButton" name="actionbutton_51">
                <property name="geometry">
                 <rect>
-                 <x>765</x>
-                 <y>575</y>
-                 <width>121</width>
+                 <x>650</x>
+                 <y>610</y>
+                 <width>156</width>
                  <height>52</height>
                 </rect>
                </property>
@@ -4055,10 +4075,52 @@ QComboBox QAbstractItemView{
 }</string>
                </property>
                <property name="text">
-                <string>STOP</string>
+                <string>Cycle Stop</string>
                </property>
                <property name="actionName" stdset="0">
                 <string>program.abort</string>
+               </property>
+              </widget>
+              <widget class="ActionButton" name="actionbutton_47">
+               <property name="geometry">
+                <rect>
+                 <x>840</x>
+                 <y>610</y>
+                 <width>161</width>
+                 <height>52</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>52</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>52</height>
+                </size>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+   	font: 16pt &quot;Noto&quot;;
+}</string>
+               </property>
+               <property name="text">
+                <string>Cycle Start</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>program.run</string>
                </property>
               </widget>
              </widget>
