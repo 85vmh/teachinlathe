@@ -3613,7 +3613,7 @@ QComboBox QAbstractItemView{
                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                     </property>
                     <property name="referenceType" stdset="0">
-                     <number>1</number>
+                     <number>0</number>
                     </property>
                     <property name="axisNumber" stdset="0">
                      <number>0</number>
@@ -3719,7 +3719,7 @@ QComboBox QAbstractItemView{
                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                     </property>
                     <property name="referenceType" stdset="0">
-                     <number>0</number>
+                     <number>1</number>
                     </property>
                     <property name="axisNumber" stdset="0">
                      <number>2</number>
@@ -3755,7 +3755,7 @@ QComboBox QAbstractItemView{
                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                     </property>
                     <property name="referenceType" stdset="0">
-                     <number>1</number>
+                     <number>0</number>
                     </property>
                     <property name="axisNumber" stdset="0">
                      <number>2</number>
@@ -4042,9 +4042,9 @@ QComboBox QAbstractItemView{
               <widget class="ActionButton" name="actionbutton_51">
                <property name="geometry">
                 <rect>
-                 <x>650</x>
+                 <x>500</x>
                  <y>610</y>
-                 <width>156</width>
+                 <width>96</width>
                  <height>52</height>
                 </rect>
                </property>
@@ -4075,7 +4075,7 @@ QComboBox QAbstractItemView{
 }</string>
                </property>
                <property name="text">
-                <string>Cycle Stop</string>
+                <string>Stop</string>
                </property>
                <property name="actionName" stdset="0">
                 <string>program.abort</string>
@@ -4084,9 +4084,9 @@ QComboBox QAbstractItemView{
               <widget class="ActionButton" name="actionbutton_47">
                <property name="geometry">
                 <rect>
-                 <x>840</x>
+                 <x>895</x>
                  <y>610</y>
-                 <width>161</width>
+                 <width>106</width>
                  <height>52</height>
                 </rect>
                </property>
@@ -4117,10 +4117,100 @@ QComboBox QAbstractItemView{
 }</string>
                </property>
                <property name="text">
-                <string>Cycle Start</string>
+                <string>Start</string>
                </property>
                <property name="actionName" stdset="0">
                 <string>program.run</string>
+               </property>
+              </widget>
+              <widget class="ActionButton" name="actionbutton_54">
+               <property name="geometry">
+                <rect>
+                 <x>760</x>
+                 <y>610</y>
+                 <width>101</width>
+                 <height>52</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>52</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>52</height>
+                </size>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+   	font: 16pt &quot;Noto&quot;;
+}</string>
+               </property>
+               <property name="text">
+                <string>Resume</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>program.resume</string>
+               </property>
+              </widget>
+              <widget class="ActionButton" name="actionbutton_49">
+               <property name="geometry">
+                <rect>
+                 <x>610</x>
+                 <y>615</y>
+                 <width>130</width>
+                 <height>42</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>130</width>
+                 <height>42</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>130</width>
+                 <height>42</height>
+                </size>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+   	font: 16pt &quot;Noto&quot;;
+}</string>
+               </property>
+               <property name="text">
+                <string>FeedHold</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="rules" stdset="0">
+                <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:interp_state?text&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;ch[0] == 'Paused'&quot;, &quot;name&quot;: &quot;check when paused&quot;}]</string>
+               </property>
+               <property name="actionName" stdset="0">
+                <string>program.pause</string>
                </property>
               </widget>
              </widget>
