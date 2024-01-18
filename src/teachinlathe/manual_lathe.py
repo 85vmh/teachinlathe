@@ -88,8 +88,11 @@ class MessageStack:
         return repr(self.stack)
 
 
-def hasProperState():
-    return STAT.task_state == linuxcnc.STATE_ON and STATUS.allHomed()
+def canHandleManualOperations():
+    STAT.poll()
+    return (STAT.task_state == linuxcnc.STATE_ON and
+            STATUS.allHomed() and
+            STAT.task_mode is not linuxcnc.MODE_AUTO)
 
 
 class ManualLathe:
@@ -195,7 +198,7 @@ class ManualLathe:
         self.handleJoystick()
 
     def handleSpindleSwitch(self):
-        if not hasProperState():
+        if not canHandleManualOperations():
             return  # if the machine is not on or not homed, ignore spindle switch
 
         if self.spindleCoverOpened:
@@ -233,7 +236,7 @@ class ManualLathe:
         return
 
     def handleJoystick(self):
-        if not hasProperState():
+        if not canHandleManualOperations():
             return  # if the machine is not on or not homed, ignore joystick
 
         if self.joystickDirection == JoystickDirection.NONE:

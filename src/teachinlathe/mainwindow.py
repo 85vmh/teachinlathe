@@ -1,4 +1,5 @@
 # Setup logging
+import linuxcnc
 from PyQt5.QtCore import QTimer
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
@@ -13,6 +14,8 @@ LOG = logger.getLogger('qtpyvcp.' + __name__)
 from PyQt5.QtCore import Qt
 
 STATUS = getPlugin('status')
+LINUXCNC_CMD = linuxcnc.command()
+STAT = linuxcnc.stat()
 
 from resources import resources_rc
 
@@ -49,6 +52,7 @@ class MyMainWindow(VCPMainWindow):
 
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
         STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
+        STATUS.interp_state.signal.connect(self.onInterpreterStateChanged)
 
         self.lastSpindleRpm = 0
         self.isPowerFeeding = False
@@ -103,6 +107,19 @@ class MyMainWindow(VCPMainWindow):
         self.vtk.enable_panning(True)
 
         self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
+
+    def onInterpreterStateChanged(self, state):
+        print("onInterpreterStateChanged", state)
+        if self.tabWidget.currentIndex() == 2:  # programs tab
+            print("program finished allow manual mode")
+            STAT.poll()
+            current_state = STAT.state
+            print("program finished allow manual mode, current state", current_state)
+            if state == linuxcnc.INTERP_IDLE and current_state is not linuxcnc.MODE_MANUAL:
+                LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+                LINUXCNC_CMD.wait_complete()
+                STAT.poll()
+                print("task mode changed: ", STAT.task_mode)
 
     def handleUsbPresent(self, value):
         self.filesystemTabs.setCurrentIndex(0 if value else 1)
