@@ -56,6 +56,7 @@ class MyMainWindow(VCPMainWindow):
         self.teachinlathedro.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
         self.teachinlathedro.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
 
+        #self.onSpindleOverrideChanged(STATUS.spindle[0].override.value)
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
         STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
         STATUS.interp_state.signal.connect(self.onInterpreterStateChanged)
@@ -108,6 +109,11 @@ class MyMainWindow(VCPMainWindow):
         self.vtk.enable_panning(True)
 
         self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
+
+        self.pushButtn.clicked.connect(self.onPushButtonClicked)
+
+    def onPushButtonClicked(self):
+        print("---current WCS index: ", STAT.g5x_index)
 
     def onInterpreterStateChanged(self, state):
         print("onInterpreterStateChanged", state)

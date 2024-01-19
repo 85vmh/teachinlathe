@@ -6943,6 +6943,19 @@ padding-left: 5px;
                 </rect>
                </property>
               </widget>
+              <widget class="QPushButton" name="pushButton">
+               <property name="geometry">
+                <rect>
+                 <x>370</x>
+                 <y>580</y>
+                 <width>80</width>
+                 <height>26</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>PushButton</string>
+               </property>
+              </widget>
              </widget>
             </widget>
            </widget>
