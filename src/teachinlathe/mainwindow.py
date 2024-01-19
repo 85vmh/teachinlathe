@@ -110,9 +110,10 @@ class MyMainWindow(VCPMainWindow):
 
         self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
 
-        self.pushButtn.clicked.connect(self.onPushButtonClicked)
+        self.pushButton.clicked.connect(self.onPushButtonClicked)
 
     def onPushButtonClicked(self):
+        STAT.poll()
         print("---current WCS index: ", STAT.g5x_index)
 
     def onInterpreterStateChanged(self, state):
