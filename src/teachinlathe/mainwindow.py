@@ -33,6 +33,12 @@ class MyMainWindow(VCPMainWindow):
         super(MyMainWindow, self).__init__(*args, **kwargs)
         self.setWindowFlag(Qt.FramelessWindowHint)
 
+        self.lastSpindleRpm = 0
+        self.isPowerFeeding = False
+        self.isFirstGear = False
+        self.xMpgEnabled = True
+        self.zMpgEnabled = True
+
         self.manualLathe = ManualLathe()
         self.latheComponent = TeachInLatheComponent()
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
@@ -45,7 +51,7 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsZIsEnabled, self.onHandwheelZEnabledChanged)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = True
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = True
-        self.isFirstGear = self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value
+        self.onSpindleFirstGearChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
 
         self.teachinlathedro.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
         self.teachinlathedro.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
@@ -53,12 +59,6 @@ class MyMainWindow(VCPMainWindow):
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
         STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
         STATUS.interp_state.signal.connect(self.onInterpreterStateChanged)
-
-        self.lastSpindleRpm = 0
-        self.isPowerFeeding = False
-        self.isFirstGear = False
-        self.xMpgEnabled = True
-        self.zMpgEnabled = True
 
         # get the initial values
         self.current_spindle_override = STATUS.spindle[0].override.value
@@ -97,11 +97,12 @@ class MyMainWindow(VCPMainWindow):
         self.checkBoxFeedAngle.stateChanged.connect(self.checkBoxFeedAngleChanged)
         self.checkBoxJogAngle.stateChanged.connect(self.checkBoxJogAngleChanged)
 
-        self.inputRpm.mousePressEvent = lambda _: self.openNumPad(self.inputRpm, True)
+        self.inputRpm.mousePressEvent = lambda _: self.openNumPad(self.inputRpm)
         self.inputFeed.mousePressEvent = lambda _: self.openNumPad(self.inputFeed)
         self.inputCss.mousePressEvent = lambda _: self.openNumPad(self.inputCss)
-        self.inputMaxRpm.mousePressEvent = lambda _: self.openNumPad(self.inputMaxRpm, True)
+        self.inputMaxRpm.mousePressEvent = lambda _: self.openNumPad(self.inputMaxRpm)
         self.inputFeedAngle.mousePressEvent = lambda _: self.openNumPad(self.inputFeedAngle)
+        self.inputJogAngle.mousePressEvent = lambda _: self.openNumPad(self.inputJogAngle)
 
         self.vtk.setViewXZ2()
         self.vtk.enable_panning(True)
@@ -171,17 +172,17 @@ class MyMainWindow(VCPMainWindow):
             self.checkBoxFeedAngle.setChecked(False)
             self.checkBoxFeedAngleChanged(False)
 
-    def openNumPad(self, line_edit, spindle_related=False):
-        if spindle_related:
-            suffix = '-1' if self.isFirstGear else '-2'
-        else:
-            suffix = ''
-
+    def openNumPad(self, line_edit):
         setting_name = getattr(line_edit, 'settingName', None)
-        dialog = SmartNumPadDialog(setting_name + suffix)
-        dialog.valueSelected.connect(lambda value: line_edit.setText(value))
-        line_edit.clearFocus()
+        dialog = SmartNumPadDialog(setting_name)
+        dialog.valueSelected.connect(lambda value: self.setSelectedValue(line_edit, value))
         dialog.exec_()
+
+    @staticmethod
+    def setSelectedValue(line_edit, value):
+        line_edit.setText(value)
+        line_edit.editingFinished.emit()
+        line_edit.clearFocus()
 
     def onPowerFeedingChanged(self, value):
         self.isPowerFeeding = value
@@ -191,8 +192,12 @@ class MyMainWindow(VCPMainWindow):
         self.jogIncrement.setText(format(value, '.3f') + ' mm/div')
 
     def onSpindleFirstGearChanged(self, value):
-        self.isFirstGear = value
-        # close spindle dialog if open
+        suffix = '1' if value else '2'
+        # update the settings so that the values are relevant for each type
+        self.inputRpm.settingName = 'smart_numpad.input-rpm-' + suffix
+        self.inputRpm.initialize()
+        self.inputMaxRpm.settingName = 'smart_numpad.input-css-max-rpm-' + suffix
+        self.inputMaxRpm.initialize()
 
     def onSpindleRpmChanged(self, value):
         self.lastSpindleRpm = abs(int(value))

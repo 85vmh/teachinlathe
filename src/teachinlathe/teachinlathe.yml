@@ -149,6 +149,16 @@ settings:
     min_value: 0.01
     max_value: 89.99
 
+  smart_numpad.input-jog-angle:
+    description: Enter feed angle.
+    default_value: 45
+    persistent: true
+    options: [
+      10, 15, 30, 45, 60
+    ]
+    min_value: 0.01
+    max_value: 89.99
+
   smart_numpad.x-offset:
     description: measured diameter with T2.
 

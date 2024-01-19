@@ -549,7 +549,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <enum>QTabWidget::South</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>3</number>
            </property>
            <widget class="QWidget" name="manualTurningTab">
             <attribute name="title">
@@ -756,7 +756,10 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  <set>Qt::AlignCenter</set>
                 </property>
                 <property name="settingName" stdset="0">
-                 <string>smart_numpad.input-rpm</string>
+                 <string>smart_numpad.input-rpm-2</string>
+                </property>
+                <property name="textFormat" stdset="0">
+                 <string>.0f</string>
                 </property>
                </widget>
               </widget>
@@ -977,6 +980,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                 <property name="settingName" stdset="0">
                  <string>smart_numpad.input-css-max-rpm</string>
                 </property>
+                <property name="textFormat" stdset="0">
+                 <string>.0f</string>
+                </property>
                </widget>
                <widget class="VCPSettingsLineEdit" name="inputCss">
                 <property name="geometry">
@@ -991,13 +997,16 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
-                 <string>1500</string>
+                 <string>250</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
                 </property>
                 <property name="settingName" stdset="0">
                  <string>smart_numpad.input-css</string>
+                </property>
+                <property name="textFormat" stdset="0">
+                 <string>.0f</string>
                 </property>
                </widget>
               </widget>
@@ -1264,6 +1273,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="settingName" stdset="0">
                <string>smart_numpad.input-feed</string>
               </property>
+              <property name="textFormat" stdset="0">
+               <string>.2f</string>
+              </property>
              </widget>
              <widget class="VCPSettingsLineEdit" name="inputFeedAngle">
               <property name="enabled">
@@ -1271,9 +1283,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               </property>
               <property name="geometry">
                <rect>
-                <x>540</x>
+                <x>530</x>
                 <y>20</y>
-                <width>56</width>
+                <width>66</width>
                 <height>31</height>
                </rect>
               </property>
@@ -1285,6 +1297,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               </property>
               <property name="settingName" stdset="0">
                <string>smart_numpad.input-feed-angle</string>
+              </property>
+              <property name="textFormat" stdset="0">
+               <string>.4f</string>
               </property>
              </widget>
             </widget>
@@ -1504,30 +1519,6 @@ border-radius: 4px;
                <enum>Qt::Vertical</enum>
               </property>
              </widget>
-             <widget class="QLineEdit" name="inputJogAngle">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="geometry">
-               <rect>
-                <x>540</x>
-                <y>25</y>
-                <width>56</width>
-                <height>31</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>11</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>0</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
              <widget class="QLabel" name="rpmUnit_24">
               <property name="geometry">
                <rect>
@@ -1718,6 +1709,31 @@ QCheckBox:checked {
               </property>
               <property name="checked">
                <bool>true</bool>
+              </property>
+             </widget>
+             <widget class="VCPSettingsLineEdit" name="inputJogAngle">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="geometry">
+               <rect>
+                <x>525</x>
+                <y>25</y>
+                <width>66</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>45</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+              <property name="settingName" stdset="0">
+               <string>smart_numpad.input-jog-angle</string>
+              </property>
+              <property name="textFormat" stdset="0">
+               <string>.4f</string>
               </property>
              </widget>
             </widget>
@@ -2127,7 +2143,7 @@ QCheckBox:checked {
               </size>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="pageFileSystem">
               <widget class="QFrame" name="frame_40">
@@ -2210,7 +2226,7 @@ color: white;</string>
                    <bool>false</bool>
                   </property>
                   <property name="readOnly" stdset="0">
-                   <bool>true</bool>
+                   <bool>false</bool>
                   </property>
                   <property name="currentLineBackground" stdset="0">
                    <color>
@@ -2425,7 +2441,7 @@ color: white;</string>
 }</string>
                </property>
                <property name="currentIndex">
-                <number>1</number>
+                <number>0</number>
                </property>
                <widget class="QWidget" name="sourceTab">
                 <attribute name="title">
@@ -4189,7 +4205,7 @@ QComboBox QAbstractItemView{
 }</string>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="innerToolsTab">
               <attribute name="title">
@@ -5042,6 +5058,9 @@ ActionButton:checked {
                   </property>
                   <item>
                    <widget class="OffsetTable" name="offset_table">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -6914,6 +6933,16 @@ padding-left: 5px;
                 </item>
                </layout>
               </widget>
+              <widget class="MDIEntry" name="mdientry">
+               <property name="geometry">
+                <rect>
+                 <x>165</x>
+                 <y>575</y>
+                 <width>125</width>
+                 <height>26</height>
+                </rect>
+               </property>
+              </widget>
              </widget>
             </widget>
            </widget>
@@ -7138,6 +7167,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <extends>QWidget</extends>
    <header>qtpyvcp.widgets.display_widgets.vtk_backplot.vtk_backplot</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MDIEntry</class>
+   <extends>QLineEdit</extends>
+   <header>qtpyvcp.widgets.input_widgets.mdientry_widget</header>
   </customwidget>
   <customwidget>
    <class>GcodeTextEdit</class>
