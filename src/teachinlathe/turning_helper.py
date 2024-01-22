@@ -48,13 +48,13 @@ class TurningHelper:
         destination = ''
         match joystick_direction:
             case JoystickDirection.X_PLUS:
-                destination = 'X%f' % bounds.x_max_limit - safe_limit
+                destination = 'X%f' % (bounds.x_max_limit - safe_limit)
             case JoystickDirection.X_MINUS:
                 destination = 'X%f' % (bounds.x_min_limit + safe_limit)
             case JoystickDirection.Z_PLUS:
-                destination = 'Z%f' % bounds.z_max_limit - safe_limit
+                destination = 'Z%f' % (bounds.z_max_limit - safe_limit)
             case JoystickDirection.Z_MINUS:
-                destination = 'Z%f' % bounds.z_min_limit + safe_limit
+                destination = 'Z%f' % (bounds.z_min_limit + safe_limit)
         return 'G40 G53 G1 {}'.format(destination)
 
     @staticmethod
