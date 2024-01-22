@@ -110,12 +110,6 @@ class MyMainWindow(VCPMainWindow):
 
         self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
 
-        self.pushButton.clicked.connect(self.onPushButtonClicked)
-
-    def onPushButtonClicked(self):
-        STAT.poll()
-        print("---current WCS index: ", STAT.g5x_index)
-
     def onInterpreterStateChanged(self, state):
         print("onInterpreterStateChanged", state)
         if self.tabWidget.currentIndex() == 2:  # programs tab
@@ -205,6 +199,9 @@ class MyMainWindow(VCPMainWindow):
         self.inputRpm.initialize()
         self.inputMaxRpm.settingName = 'smart_numpad.input-css-max-rpm-' + suffix
         self.inputMaxRpm.initialize()
+        # update the values in the manual_lathe.py
+        self.manualLathe.onInputRpmChanged(self.inputRpm.text())
+        self.manualLathe.onMaxSpindleRpmChanged(self.inputMaxRpm.text())
 
     def onSpindleRpmChanged(self, value):
         self.lastSpindleRpm = abs(int(value))

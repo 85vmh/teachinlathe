@@ -1,0 +1,23 @@
+lathe-chucks:
+  active-chuck-index: 0
+
+chuck_#1:
+  index: 0
+  description: Rohm 3 jaws chuck
+  diameter: 160
+  max-rpm: 3000
+  z-minus-limit: 100
+
+chuck_#2:
+  index: 1
+  description: Bison 6 jaws chuck
+  diameter: 160
+  max-rpm: 3000
+  z-minus-limit: 130
+
+chuck_#3:
+  index: 2
+  description: Zentra 4 independent jaws chuck
+  diameter: 200
+  max-rpm: 2000
+  z-minus-limit: 150

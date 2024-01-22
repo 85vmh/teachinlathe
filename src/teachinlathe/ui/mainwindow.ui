@@ -549,7 +549,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <enum>QTabWidget::South</enum>
            </property>
            <property name="currentIndex">
-            <number>3</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="manualTurningTab">
             <attribute name="title">
@@ -981,7 +981,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  <string>smart_numpad.input-css-max-rpm</string>
                 </property>
                 <property name="textFormat" stdset="0">
-                 <string>.0f</string>
+                 <string/>
                 </property>
                </widget>
                <widget class="VCPSettingsLineEdit" name="inputCss">
@@ -1032,7 +1032,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
 }</string>
               </property>
               <property name="text">
-               <string>100%</string>
+               <string>0%</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1227,7 +1227,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
 }</string>
               </property>
               <property name="text">
-               <string>100%</string>
+               <string>0%</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1848,7 +1848,7 @@ QCheckBox:checked {
 }</string>
               </property>
               <property name="text">
-               <string>0000.000</string>
+               <string>0.000</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1902,7 +1902,7 @@ QCheckBox:checked {
 }</string>
               </property>
               <property name="text">
-               <string>0000.000</string>
+               <string>0.000</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -2078,7 +2078,7 @@ QCheckBox:checked {
 }</string>
               </property>
               <property name="text">
-               <string>99</string>
+               <string>0</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -2111,10 +2111,114 @@ QCheckBox:checked {
               </rect>
              </property>
             </widget>
+            <widget class="QLabel" name="label_7">
+             <property name="geometry">
+              <rect>
+               <x>690</x>
+               <y>315</y>
+               <width>91</width>
+               <height>18</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+            <widget class="TeachInButton" name="teachInZ">
+             <property name="geometry">
+              <rect>
+               <x>795</x>
+               <y>310</y>
+               <width>111</width>
+               <height>26</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>TeachIn Z Abs</string>
+             </property>
+             <property name="referenceType" stdset="0">
+              <number>0</number>
+             </property>
+             <property name="axisNumber" stdset="0">
+              <number>2</number>
+             </property>
+             <property name="inchFormat" stdset="0">
+              <string>%9.4f</string>
+             </property>
+             <property name="millimeterFormat" stdset="0">
+              <string>%10.3f</string>
+             </property>
+             <property name="degreeFormat" stdset="0">
+              <string>%10.2f</string>
+             </property>
+             <property name="latheMode" stdset="0">
+              <number>0</number>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_8">
+             <property name="geometry">
+              <rect>
+               <x>690</x>
+               <y>280</y>
+               <width>91</width>
+               <height>18</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+            <widget class="TeachInButton" name="teachInX">
+             <property name="geometry">
+              <rect>
+               <x>795</x>
+               <y>275</y>
+               <width>111</width>
+               <height>26</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>TeachIn X</string>
+             </property>
+             <property name="referenceType" stdset="0">
+              <number>1</number>
+             </property>
+             <property name="axisNumber" stdset="0">
+              <number>0</number>
+             </property>
+             <property name="inchFormat" stdset="0">
+              <string>%9.4f</string>
+             </property>
+             <property name="millimeterFormat" stdset="0">
+              <string>%10.3f</string>
+             </property>
+             <property name="degreeFormat" stdset="0">
+              <string>%10.2f</string>
+             </property>
+             <property name="latheMode" stdset="0">
+              <number>0</number>
+             </property>
+            </widget>
+            <widget class="VCPSettingsLineEdit" name="xMinusSetting">
+             <property name="geometry">
+              <rect>
+               <x>695</x>
+               <y>400</y>
+               <width>125</width>
+               <height>26</height>
+              </rect>
+             </property>
+             <property name="settingName" stdset="0">
+              <string>virtual_limits.z-minus</string>
+             </property>
+             <property name="textFormat" stdset="0">
+              <string>.3f</string>
+             </property>
+            </widget>
            </widget>
            <widget class="QWidget" name="conversationalTab">
             <attribute name="title">
-             <string>Conversational</string>
+             <string>Quick Cycles</string>
             </attribute>
            </widget>
            <widget class="QWidget" name="programsTab">
@@ -3830,48 +3934,6 @@ QComboBox QAbstractItemView{
                 </item>
                </layout>
               </widget>
-              <widget class="ActionButton" name="actionbutton_50">
-               <property name="geometry">
-                <rect>
-                 <x>610</x>
-                 <y>495</y>
-                 <width>130</width>
-                 <height>42</height>
-                </rect>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>130</width>
-                 <height>42</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>130</width>
-                 <height>42</height>
-                </size>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton {
-   	font: 12pt &quot;Noto&quot;;
-}</string>
-               </property>
-               <property name="text">
-                <string>Single Block</string>
-               </property>
-               <property name="actionName" stdset="0">
-                <string>program.step</string>
-               </property>
-              </widget>
               <widget class="ActionButton" name="actionbutton_53">
                <property name="geometry">
                 <rect>
@@ -3965,8 +4027,8 @@ QComboBox QAbstractItemView{
               <widget class="ActionButton" name="actionbutton_51">
                <property name="geometry">
                 <rect>
-                 <x>660</x>
-                 <y>615</y>
+                 <x>875</x>
+                 <y>605</y>
                  <width>96</width>
                  <height>52</height>
                 </rect>
@@ -4002,96 +4064,6 @@ QComboBox QAbstractItemView{
                </property>
                <property name="actionName" stdset="0">
                 <string>program.abort</string>
-               </property>
-              </widget>
-              <widget class="ActionButton" name="actionbutton_54">
-               <property name="geometry">
-                <rect>
-                 <x>905</x>
-                 <y>615</y>
-                 <width>101</width>
-                 <height>52</height>
-                </rect>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>52</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>52</height>
-                </size>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton {
-   	font: 16pt &quot;Noto&quot;;
-}</string>
-               </property>
-               <property name="text">
-                <string>Resume</string>
-               </property>
-               <property name="actionName" stdset="0">
-                <string>program.resume</string>
-               </property>
-              </widget>
-              <widget class="ActionButton" name="actionbutton_49">
-               <property name="geometry">
-                <rect>
-                 <x>790</x>
-                 <y>615</y>
-                 <width>111</width>
-                 <height>52</height>
-                </rect>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>50</width>
-                 <height>42</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>130</width>
-                 <height>52</height>
-                </size>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton {
-   	font: 16pt &quot;Noto&quot;;
-}</string>
-               </property>
-               <property name="text">
-                <string>FeedHold</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-               <property name="rules" stdset="0">
-                <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:interp_state?text&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;ch[0] == 'Paused'&quot;, &quot;name&quot;: &quot;check when paused&quot;}]</string>
-               </property>
-               <property name="actionName" stdset="0">
-                <string>program.pause</string>
                </property>
               </widget>
               <widget class="StatusLabel" name="feedOverrideValue_3">
@@ -4205,7 +4177,7 @@ QComboBox QAbstractItemView{
 }</string>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="innerToolsTab">
               <attribute name="title">
@@ -6933,29 +6905,6 @@ padding-left: 5px;
                 </item>
                </layout>
               </widget>
-              <widget class="MDIEntry" name="mdientry">
-               <property name="geometry">
-                <rect>
-                 <x>165</x>
-                 <y>575</y>
-                 <width>125</width>
-                 <height>26</height>
-                </rect>
-               </property>
-              </widget>
-              <widget class="QPushButton" name="pushButton">
-               <property name="geometry">
-                <rect>
-                 <x>370</x>
-                 <y>580</y>
-                 <width>80</width>
-                 <height>26</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>PushButton</string>
-               </property>
-              </widget>
              </widget>
             </widget>
            </widget>
@@ -7182,11 +7131,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>MDIEntry</class>
-   <extends>QLineEdit</extends>
-   <header>qtpyvcp.widgets.input_widgets.mdientry_widget</header>
-  </customwidget>
-  <customwidget>
    <class>GcodeTextEdit</class>
    <extends>QPlainTextEdit</extends>
    <header>qtpyvcp.widgets.input_widgets.gcode_text_edit</header>
@@ -7225,6 +7169,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <class>DROLineEdit</class>
    <extends>QLineEdit</extends>
    <header>qtpyvcp.widgets.input_widgets.dro_line_edit</header>
+  </customwidget>
+  <customwidget>
+   <class>TeachInButton</class>
+   <extends>QPushButton</extends>
+   <header>qtpyvcp.widgets.input_widgets.teachin_button</header>
   </customwidget>
   <customwidget>
    <class>VCPStackedWidget</class>
@@ -7757,6 +7706,22 @@ font: 12pt &quot;DejaVu Sans&quot;;
     <hint type="destinationlabel">
      <x>591</x>
      <y>663</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>teachInX</sender>
+   <signal>currentValue(double)</signal>
+   <receiver>xMinusSetting</receiver>
+   <slot>setValue(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>854</x>
+     <y>291</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>761</x>
+     <y>416</y>
     </hint>
    </hints>
   </connection>

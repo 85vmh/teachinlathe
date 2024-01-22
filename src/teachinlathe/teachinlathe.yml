@@ -164,3 +164,7 @@ settings:
 
   smart_numpad.z-offset:
     description: distance to Z0 with T2.
+
+  virtual_limits.z-minus:
+    default_value: 0.0
+    persistent: true

@@ -24,29 +24,37 @@ class Axis(IntEnum):
     Z = 2
 
 
+class MachineBounds:
+    def __init__(self):
+        _x_bounds = INFO.getAxisMinMax('X')[0]
+        _z_bounds = INFO.getAxisMinMax('Z')[0]
+
+        self.x_min_limit = _x_bounds[0] * 2  # diameter mode
+        self.x_max_limit = _x_bounds[1] * 2  # diameter mode
+        self.z_min_limit = _z_bounds[0]
+        self.z_max_limit = _z_bounds[1]
+
+
 class TurningHelper:
 
     @staticmethod
     def getStraightTurningCommand(joystick_direction):
-        x_bounds = INFO.getAxisMinMax('X')[0]
-        z_bounds = INFO.getAxisMinMax('Z')[0]
-
-        x_min_limit = x_bounds[0] * 2  # diameter mode
-        x_max_limit = x_bounds[1] * 2  # diameter mode
-        z_min_limit = z_bounds[0]
-        z_max_limit = z_bounds[1]
+        bounds = MachineBounds()
+        # In some cases targeting the machine limits results in some error saying that exceeds the limit of the machine.
+        # I think that's due to some rounding errors, so add an amount of 1 micron to the limit to avoid this error.
+        safe_limit = 0.001
 
         print("Straight turning command for: ", joystick_direction)
         destination = ''
         match joystick_direction:
             case JoystickDirection.X_PLUS:
-                destination = 'X%f' % x_max_limit
+                destination = 'X%f' % bounds.x_max_limit - safe_limit
             case JoystickDirection.X_MINUS:
-                destination = 'X%f' % x_min_limit
+                destination = 'X%f' % (bounds.x_min_limit + safe_limit)
             case JoystickDirection.Z_PLUS:
-                destination = 'Z%f' % z_max_limit
+                destination = 'Z%f' % bounds.z_max_limit - safe_limit
             case JoystickDirection.Z_MINUS:
-                destination = 'Z%f' % z_min_limit
+                destination = 'Z%f' % bounds.z_min_limit + safe_limit
         return 'G40 G53 G1 {}'.format(destination)
 
     @staticmethod
@@ -68,23 +76,17 @@ class TurningHelper:
 
     @staticmethod
     def create_corner_point(joystick_direction):
-        x_bounds = INFO.getAxisMinMax('X')[0]
-        z_bounds = INFO.getAxisMinMax('Z')[0]
-
-        x_min_limit = x_bounds[0]
-        x_max_limit = x_bounds[1]
-        z_min_limit = z_bounds[0]
-        z_max_limit = z_bounds[1]
+        bounds = MachineBounds()
 
         match joystick_direction:
             case JoystickDirection.X_PLUS:
-                return CartesianPoint(x_max_limit * 2, z_min_limit)
+                return CartesianPoint(bounds.x_max_limit, bounds.z_min_limit)
             case JoystickDirection.X_MINUS:
-                return CartesianPoint(x_min_limit * 2, z_max_limit)
+                return CartesianPoint(bounds.x_min_limit, bounds.z_max_limit)
             case JoystickDirection.Z_PLUS:
-                return CartesianPoint(x_max_limit * 2, z_max_limit)
+                return CartesianPoint(bounds.x_max_limit, bounds.z_max_limit)
             case JoystickDirection.Z_MINUS:
-                return CartesianPoint(x_min_limit * 2, z_min_limit)
+                return CartesianPoint(bounds.x_min_limit, bounds.z_min_limit)
 
     @staticmethod
     def compute_destination_point(start_point, corner_point, angle):
