@@ -197,8 +197,8 @@ class MyMainWindow(VCPMainWindow):
         self.vtk.clearLivePlot()
 
     def prepareToRunSubroutine(self, subroutine):
-        print("prepareToRunSubroutine", subroutine)
-        self.subroutineToRun = subroutine
+        self.subroutineToRun = subroutine + " ["+self.inputFeed.text()+"]"
+        print("prepareToRunSubroutine", self.subroutineToRun)
 
     def backToPrograms(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM)
