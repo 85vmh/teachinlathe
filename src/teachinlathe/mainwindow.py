@@ -159,6 +159,7 @@ class MyMainWindow(VCPMainWindow):
         self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
         self.quickCycles.onLoadClicked.connect(self.prepareToRunSubroutine)
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
+        self.testMdi.clicked.connect(self.onCycleStartPressed)
 
     # def loadFixtures(self):
     #     root_dir = os.path.realpath(os.path.dirname(__file__))

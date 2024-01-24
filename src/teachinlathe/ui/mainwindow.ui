@@ -2121,6 +2121,19 @@ QCheckBox:checked {
               </rect>
              </property>
             </widget>
+            <widget class="QPushButton" name="testMdi">
+             <property name="geometry">
+              <rect>
+               <x>840</x>
+               <y>145</y>
+               <width>111</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>Test MDI</string>
+             </property>
+            </widget>
            </widget>
            <widget class="QWidget" name="conversationalTab">
             <attribute name="title">
