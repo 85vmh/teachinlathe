@@ -2091,8 +2091,8 @@ QCheckBox:checked {
             <widget class="QPushButton" name="setZDatumBtn">
              <property name="geometry">
               <rect>
-               <x>850</x>
-               <y>55</y>
+               <x>795</x>
+               <y>5</y>
                <width>101</width>
                <height>46</height>
               </rect>
@@ -2124,14 +2124,24 @@ QCheckBox:checked {
             <widget class="QPushButton" name="testMdi">
              <property name="geometry">
               <rect>
-               <x>840</x>
-               <y>145</y>
-               <width>111</width>
+               <x>495</x>
+               <y>620</y>
+               <width>131</width>
                <height>41</height>
               </rect>
              </property>
              <property name="text">
-              <string>Test MDI</string>
+              <string>Test Quick Cycle</string>
+             </property>
+            </widget>
+            <widget class="MDIEntry" name="mdientry">
+             <property name="geometry">
+              <rect>
+               <x>795</x>
+               <y>85</y>
+               <width>151</width>
+               <height>26</height>
+              </rect>
              </property>
             </widget>
            </widget>
@@ -7134,6 +7144,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <extends>QWidget</extends>
    <header>qtpyvcp.widgets.display_widgets.vtk_backplot.vtk_backplot</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MDIEntry</class>
+   <extends>QLineEdit</extends>
+   <header>qtpyvcp.widgets.input_widgets.mdientry_widget</header>
   </customwidget>
   <customwidget>
    <class>GcodeTextEdit</class>
