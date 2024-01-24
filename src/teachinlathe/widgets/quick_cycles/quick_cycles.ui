@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>354</width>
+    <height>473</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QStackedWidget" name="stackedWidget">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>47</y>
+     <width>354</width>
+     <height>426</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>2</number>
+   </property>
+   <widget class="QWidget" name="rootPage">
+    <widget class="QPushButton" name="btnTurning">
+     <property name="geometry">
+      <rect>
+       <x>15</x>
+       <y>25</y>
+       <width>91</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Turning</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnBoring">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>25</y>
+       <width>91</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Boring</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnFacing">
+     <property name="geometry">
+      <rect>
+       <x>245</x>
+       <y>25</y>
+       <width>91</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Facing</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnThreading">
+     <property name="geometry">
+      <rect>
+       <x>245</x>
+       <y>80</y>
+       <width>91</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Threading</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnRadius">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>80</y>
+       <width>91</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Radius</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnChamfer">
+     <property name="geometry">
+      <rect>
+       <x>15</x>
+       <y>80</y>
+       <width>91</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Chamfer</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="pageTurning">
+    <widget class="QWidget" name="gridLayoutWidget_2">
+     <property name="geometry">
+      <rect>
+       <x>45</x>
+       <y>35</y>
+       <width>276</width>
+       <height>261</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="horizontalSpacing">
+       <number>10</number>
+      </property>
+      <item row="2" column="2">
+       <widget class="VCPSettingsLineEdit" name="turningDoc">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-doc</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="VCPSettingsLineEdit" name="turningFilletRadius">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-fillet-radius</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="turningZEnd">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="turningXEnd">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Depth of cut</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_25">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>X End:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_26">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Z End:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="TeachInButton" name="turningTeachZ">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>TeachIn Z</string>
+        </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>2</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="TeachInButton" name="turningTeachX">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>TeachIn X</string>
+        </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>0</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_27">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Fillet radius:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="VCPSettingsLineEdit" name="turningTurnAngle">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-turn-angle</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_28">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Turning angle:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLabel" name="label_35">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>mm/radius</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="label_36">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>mm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="label_39">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>deg</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="pageBoring">
+    <widget class="QWidget" name="gridLayoutWidget_3">
+     <property name="geometry">
+      <rect>
+       <x>35</x>
+       <y>40</y>
+       <width>276</width>
+       <height>261</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="horizontalSpacing">
+       <number>10</number>
+      </property>
+      <item row="2" column="2">
+       <widget class="VCPSettingsLineEdit" name="boringDoc">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-doc</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="VCPSettingsLineEdit" name="boringFilletRadius">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-fillet-radius</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="boringZEnd">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="boringXEnd">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_15">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Depth of cut</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_29">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>X End:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_30">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Z End:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="TeachInButton" name="boringTeachZ">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>TeachIn Z</string>
+        </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>2</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="TeachInButton" name="boringTeachX">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>TeachIn X</string>
+        </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>0</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_31">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Fillet radius:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="VCPSettingsLineEdit" name="boringTurnAngle">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-turn-angle</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_32">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Turning angle:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLabel" name="label_37">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>mm/radius</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="label_38">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>mm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="label_40">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>deg</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="pageFacing"/>
+   <widget class="QWidget" name="pageChamfer"/>
+   <widget class="QWidget" name="pageRadius"/>
+  </widget>
+  <widget class="Line" name="line">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>40</y>
+     <width>356</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="title">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>10</y>
+     <width>156</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font: 14pt &quot;Noto Sans&quot;;</string>
+   </property>
+   <property name="text">
+    <string>Quick Cycles</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnBack">
+   <property name="geometry">
+    <rect>
+     <x>5</x>
+     <y>10</y>
+     <width>36</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;&lt;</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnLoad">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>10</y>
+     <width>46</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load</string>
+   </property>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>VCPSettingsLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qtpyvcp.widgets.input_widgets.setting_slider</header>
+  </customwidget>
+  <customwidget>
+   <class>TeachInButton</class>
+   <extends>QPushButton</extends>
+   <header>qtpyvcp.widgets.input_widgets.teachin_button</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../../resources/resources.qrc"/>
+  <include location="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc"/>
+ </resources>
+ <connections/>
+</ui>

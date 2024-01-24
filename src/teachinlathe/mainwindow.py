@@ -1,13 +1,19 @@
 # Setup logging
+import os
+from enum import Enum
+
 import linuxcnc
+from PyQt5 import QtCore
 from PyQt5.QtCore import QTimer
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities import logger
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
+from teachinlathe.widgets.lathe_fixtures.lathe_fixtures import LatheFixtures
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
+from teachinlathe.widgets.lathe_fixtures.lathe_fixture import LatheFixture
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
@@ -17,31 +23,74 @@ STATUS = getPlugin('status')
 LINUXCNC_CMD = linuxcnc.command()
 STAT = linuxcnc.stat()
 
-from resources import resources_rc
+from PyQt5.QtWidgets import QWidget, QHBoxLayout
+
+
+class FixtureContainer(QWidget):
+    onFixtureIndexChanged = QtCore.pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super(FixtureContainer, self).__init__(parent)
+        self.layout = QHBoxLayout(self)
+
+    def setFixtures(self, fixtures):
+        self._clear_layout()
+        total_width = 0
+
+        for fixture in fixtures:
+            widget = LatheFixture(fixture, self)
+            self.layout.addWidget(widget)
+            total_width += widget.sizeHint().width()
+            widget.onFixtureSelected.connect(self.onFixtureSelected)
+
+        self.setMinimumWidth(total_width)
+
+    def _clear_layout(self):
+        if self.layout is not None:
+            while self.layout.count():
+                item = self.layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+
+
+class MainTabs(Enum):
+    MANUAL_TURNING = 0
+    QUICK_CYCLES = 1
+    PROGRAMS = 2
+    TOOLS_OFFSETS = 3
+    MACHINE_SETTINGS = 4
+
+
+class ProgramTabs(Enum):
+    FILE_SYSTEM = 0
+    PROGRAM_LOADED = 1
 
 
 class MyMainWindow(VCPMainWindow):
     """Main window class for the VCP."""
 
     def getSpindleModeIndex(self):
-        if self.radioRpm.isChecked():
-            return 0
-        else:
-            return 1
+        return 0 if self.radioRpm.isChecked() else 1
 
     def __init__(self, *args, **kwargs):
         super(MyMainWindow, self).__init__(*args, **kwargs)
         self.setWindowFlag(Qt.FramelessWindowHint)
 
+        self.mainSelectedTab = MainTabs.MANUAL_TURNING
         self.lastSpindleRpm = 0
         self.isPowerFeeding = False
         self.isFirstGear = False
         self.xMpgEnabled = True
         self.zMpgEnabled = True
+        self.current_spindle_override = 0
+        self.current_feed_override = 0
+        self.subroutineToRun = None
 
         self.manualLathe = ManualLathe()
         self.latheComponent = TeachInLatheComponent()
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStart, self.onCycleStartPressed)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStop, self.onCycleStopPressed)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsSpindleStarted, self.onSpindleRunningChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsPowerFeeding, self.onPowerFeedingChanged)
@@ -56,14 +105,13 @@ class MyMainWindow(VCPMainWindow):
         self.teachinlathedro.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
         self.teachinlathedro.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
 
-        #self.onSpindleOverrideChanged(STATUS.spindle[0].override.value)
+        self.onSpindleOverrideChanged(STATUS.spindle[0].override.value)
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
-        STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
-        STATUS.interp_state.signal.connect(self.onInterpreterStateChanged)
 
-        # get the initial values
-        self.current_spindle_override = STATUS.spindle[0].override.value
-        self.current_feed_override = STATUS.feedrate.value
+        self.onFeedOverrideChanged(STATUS.feedrate.value)
+        STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
+
+        STATUS.interp_state.signal.connect(self.onInterpreterStateChanged)
 
         self.handle_spindle_mode(self.getSpindleModeIndex)
 
@@ -109,6 +157,23 @@ class MyMainWindow(VCPMainWindow):
         self.vtk.enable_panning(True)
 
         self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
+        self.quickCycles.onLoadClicked.connect(self.prepareToRunSubroutine)
+        self.tabWidget.currentChanged.connect(self.onMainTabChanged)
+
+    # def loadFixtures(self):
+    #     root_dir = os.path.realpath(os.path.dirname(__file__))
+    #     lathe_fixtures_path = os.path.join(root_dir, 'lathe_fixtures.json')
+    #
+    #     container = FixtureContainer()
+    #     lathe_fixtures = LatheFixtures(lathe_fixtures_path)
+    #     container.setFixtures(lathe_fixtures.getFixtures())
+    #     self.fixturesScrollArea.setWidget(container)
+    #     self.fixturesScrollArea.setWidgetResizable(True)
+    #     self.fixturesScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+    def onMainTabChanged(self, index):
+        self.mainSelectedTab = MainTabs(index)
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = self.mainSelectedTab == MainTabs.PROGRAMS
 
     def onInterpreterStateChanged(self, state):
         print("onInterpreterStateChanged", state)
@@ -127,22 +192,33 @@ class MyMainWindow(VCPMainWindow):
         self.filesystemTabs.setCurrentIndex(0 if value else 1)
 
     def loadProgram(self):
-        self.stackedProgramsTab.setCurrentIndex(1)
+        self.stackedProgramsTab.setCurrentIndex(ProgramTabs.PROGRAM_LOADED)
         self.vtk.clearLivePlot()
 
+    def prepareToRunSubroutine(self, subroutine):
+        print("prepareToRunSubroutine", subroutine)
+        self.subroutineToRun = subroutine
+
     def backToPrograms(self):
-        self.stackedProgramsTab.setCurrentIndex(0)
+        self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM)
 
     def onRadioButtonToggled(self):
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
         self.handle_spindle_mode(self.getSpindleModeIndex())
         self.spindleModeWidget.setCurrentIndex(self.getSpindleModeIndex())
 
+    def onCycleStartPressed(self):
+        if self.mainSelectedTab == MainTabs.MANUAL_TURNING:
+            if self.subroutineToRun is not None:
+                print("Run MDI command: ", self.subroutineToRun)
+                issue_mdi(self.subroutineToRun)
+
     def onCycleStopPressed(self, value):
-        if self.checkBoxFeedAngle.isChecked() and value:
-            print("Set taper turning off when cycle stop pressed")
-            self.checkBoxFeedAngle.setChecked(False)
-            self.checkBoxFeedAngleChanged(False)
+        if self.mainSelectedTab == MainTabs.MANUAL_TURNING:
+            if self.checkBoxFeedAngle.isChecked() and value:
+                print("Set taper turning off when cycle stop pressed")
+                self.checkBoxFeedAngle.setChecked(False)
+                self.checkBoxFeedAngleChanged(False)
 
     def checkBoxFeedAngleChanged(self, value):
         self.inputFeedAngle.setEnabled(value)

@@ -139,6 +139,36 @@ settings:
     min_value: 0.01
     max_value: 1.5
 
+  smart_numpad.quick-cycles-doc:
+    description: depth of cut.
+    default_value: 1.0
+    persistent: true
+    options: [
+      0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3, 3.5, 4, 4.5, 5
+    ]
+    min_value: 0.1
+    max_value: 5.0
+
+  smart_numpad.quick-cycles-fillet-radius:
+    description: fillet radius.
+    default_value: 1.0
+    persistent: true
+    options: [
+      0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3, 3.5, 4, 4.5, 5
+    ]
+    min_value: 0.1
+    max_value: 20.0
+
+  smart_numpad.quick-cycles-turn-angle:
+    description: Enter feed angle.
+    default_value: 0
+    persistent: true
+    options: [
+      0, 5, 10, 15, 20, 30, 45, 60
+    ]
+    min_value: 0.01
+    max_value: 89.99
+
   smart_numpad.input-feed-angle:
     description: Enter feed angle.
     default_value: 45

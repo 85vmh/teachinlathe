@@ -559,7 +559,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>225</y>
+               <y>200</y>
                <width>641</width>
                <height>81</height>
               </rect>
@@ -1046,7 +1046,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>315</y>
+               <y>290</y>
                <width>641</width>
                <height>71</height>
               </rect>
@@ -1307,7 +1307,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>560</y>
+               <y>535</y>
                <width>641</width>
                <height>71</height>
               </rect>
@@ -1473,7 +1473,7 @@ border-radius: 4px;
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>475</y>
+               <y>450</y>
                <width>641</width>
                <height>76</height>
               </rect>
@@ -1741,7 +1741,7 @@ QCheckBox:checked {
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>395</y>
+               <y>370</y>
                <width>641</width>
                <height>71</height>
               </rect>
@@ -2091,8 +2091,8 @@ QCheckBox:checked {
             <widget class="QPushButton" name="setZDatumBtn">
              <property name="geometry">
               <rect>
-               <x>680</x>
-               <y>540</y>
+               <x>850</x>
+               <y>55</y>
                <width>101</width>
                <height>46</height>
               </rect>
@@ -2111,108 +2111,14 @@ QCheckBox:checked {
               </rect>
              </property>
             </widget>
-            <widget class="QLabel" name="label_7">
+            <widget class="QuickCycles" name="quickCycles">
              <property name="geometry">
               <rect>
-               <x>690</x>
-               <y>315</y>
-               <width>91</width>
-               <height>18</height>
+               <x>650</x>
+               <y>200</y>
+               <width>356</width>
+               <height>476</height>
               </rect>
-             </property>
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-            <widget class="TeachInButton" name="teachInZ">
-             <property name="geometry">
-              <rect>
-               <x>795</x>
-               <y>310</y>
-               <width>111</width>
-               <height>26</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>TeachIn Z Abs</string>
-             </property>
-             <property name="referenceType" stdset="0">
-              <number>0</number>
-             </property>
-             <property name="axisNumber" stdset="0">
-              <number>2</number>
-             </property>
-             <property name="inchFormat" stdset="0">
-              <string>%9.4f</string>
-             </property>
-             <property name="millimeterFormat" stdset="0">
-              <string>%10.3f</string>
-             </property>
-             <property name="degreeFormat" stdset="0">
-              <string>%10.2f</string>
-             </property>
-             <property name="latheMode" stdset="0">
-              <number>0</number>
-             </property>
-            </widget>
-            <widget class="QLabel" name="label_8">
-             <property name="geometry">
-              <rect>
-               <x>690</x>
-               <y>280</y>
-               <width>91</width>
-               <height>18</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-            <widget class="TeachInButton" name="teachInX">
-             <property name="geometry">
-              <rect>
-               <x>795</x>
-               <y>275</y>
-               <width>111</width>
-               <height>26</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>TeachIn X</string>
-             </property>
-             <property name="referenceType" stdset="0">
-              <number>1</number>
-             </property>
-             <property name="axisNumber" stdset="0">
-              <number>0</number>
-             </property>
-             <property name="inchFormat" stdset="0">
-              <string>%9.4f</string>
-             </property>
-             <property name="millimeterFormat" stdset="0">
-              <string>%10.3f</string>
-             </property>
-             <property name="degreeFormat" stdset="0">
-              <string>%10.2f</string>
-             </property>
-             <property name="latheMode" stdset="0">
-              <number>0</number>
-             </property>
-            </widget>
-            <widget class="VCPSettingsLineEdit" name="xMinusSetting">
-             <property name="geometry">
-              <rect>
-               <x>695</x>
-               <y>400</y>
-               <width>125</width>
-               <height>26</height>
-              </rect>
-             </property>
-             <property name="settingName" stdset="0">
-              <string>virtual_limits.z-minus</string>
-             </property>
-             <property name="textFormat" stdset="0">
-              <string>.3f</string>
              </property>
             </widget>
            </widget>
@@ -2220,6 +2126,47 @@ QCheckBox:checked {
             <attribute name="title">
              <string>Quick Cycles</string>
             </attribute>
+            <widget class="QTabWidget" name="simpleCyclesTabs">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>1016</width>
+               <height>681</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">#simpleCyclesTabs QTabBar::tab {
+    height: 35; 
+	min-width: 110;
+    max-width: 120;
+    font: 13pt &quot;DejaVu Sans&quot;; 
+}</string>
+             </property>
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="tabTurning">
+              <attribute name="title">
+               <string>Turning</string>
+              </attribute>
+             </widget>
+             <widget class="QWidget" name="tabBoring">
+              <attribute name="title">
+               <string>Boring</string>
+              </attribute>
+             </widget>
+             <widget class="QWidget" name="tabFacing">
+              <attribute name="title">
+               <string>Facing</string>
+              </attribute>
+             </widget>
+             <widget class="QWidget" name="tabThreading">
+              <attribute name="title">
+               <string>Threading</string>
+              </attribute>
+             </widget>
+            </widget>
            </widget>
            <widget class="QWidget" name="programsTab">
             <attribute name="title">
@@ -2247,7 +2194,7 @@ QCheckBox:checked {
               </size>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="pageFileSystem">
               <widget class="QFrame" name="frame_40">
@@ -4177,7 +4124,7 @@ QComboBox QAbstractItemView{
 }</string>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="innerToolsTab">
               <attribute name="title">
@@ -7048,6 +6995,51 @@ font: 12pt &quot;DejaVu Sans&quot;;
                 </layout>
                </widget>
               </widget>
+              <widget class="QGroupBox" name="groupBox_4">
+               <property name="geometry">
+                <rect>
+                 <x>5</x>
+                 <y>5</y>
+                 <width>1006</width>
+                 <height>356</height>
+                </rect>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               </property>
+               <property name="title">
+                <string>Lathe Fixtures</string>
+               </property>
+               <widget class="QScrollArea" name="fixturesScrollArea">
+                <property name="geometry">
+                 <rect>
+                  <x>5</x>
+                  <y>30</y>
+                  <width>806</width>
+                  <height>321</height>
+                 </rect>
+                </property>
+                <property name="verticalScrollBarPolicy">
+                 <enum>Qt::ScrollBarAlwaysOff</enum>
+                </property>
+                <property name="horizontalScrollBarPolicy">
+                 <enum>Qt::ScrollBarAlwaysOn</enum>
+                </property>
+                <property name="widgetResizable">
+                 <bool>false</bool>
+                </property>
+                <widget class="QWidget" name="scrollAreaWidgetContents_2">
+                 <property name="geometry">
+                  <rect>
+                   <x>0</x>
+                   <y>0</y>
+                   <width>634</width>
+                   <height>305</height>
+                  </rect>
+                 </property>
+                </widget>
+               </widget>
+              </widget>
              </widget>
             </widget>
            </widget>
@@ -7171,11 +7163,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <header>qtpyvcp.widgets.input_widgets.dro_line_edit</header>
   </customwidget>
   <customwidget>
-   <class>TeachInButton</class>
-   <extends>QPushButton</extends>
-   <header>qtpyvcp.widgets.input_widgets.teachin_button</header>
-  </customwidget>
-  <customwidget>
    <class>VCPStackedWidget</class>
    <extends>QStackedWidget</extends>
    <header>qtpyvcp.widgets.containers.stack</header>
@@ -7185,6 +7172,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <class>LatheToolTable</class>
    <extends>QTableView</extends>
    <header>teachinlathe.widgets.lathe_tool_table</header>
+  </customwidget>
+  <customwidget>
+   <class>QuickCycles</class>
+   <extends>QWidget</extends>
+   <header>teachinlathe.widgets.quick_cycles.quick_cycles</header>
   </customwidget>
   <customwidget>
    <class>TeachInLatheDro</class>
@@ -7198,162 +7190,18 @@ font: 12pt &quot;DejaVu Sans&quot;;
  </resources>
  <connections>
   <connection>
-   <sender>zoomInView</sender>
+   <sender>destinationNewFile</sender>
    <signal>clicked()</signal>
-   <receiver>vtk</receiver>
-   <slot>zoomIn()</slot>
+   <receiver>destinationFsTable</receiver>
+   <slot>newFile()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>94</x>
-     <y>452</y>
+     <x>273</x>
+     <y>656</y>
     </hint>
     <hint type="destinationlabel">
-     <x>309</x>
-     <y>246</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>zoomOutView</sender>
-   <signal>clicked()</signal>
-   <receiver>vtk</receiver>
-   <slot>zoomOut()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>229</x>
-     <y>452</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>309</x>
-     <y>246</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>editGCodeBtn</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>gcodetextedit</receiver>
-   <slot>EditorReadWrite(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>655</x>
-     <y>601</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>801</x>
-     <y>314</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>findReplaceGCodeBtn</sender>
-   <signal>clicked()</signal>
-   <receiver>gcodetextedit</receiver>
-   <slot>findDialog()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>776</x>
-     <y>601</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>801</x>
-     <y>314</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>saveGCodeBtn</sender>
-   <signal>clicked()</signal>
-   <receiver>gcodetextedit</receiver>
-   <slot>saveFile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>877</x>
-     <y>601</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>801</x>
-     <y>314</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>saveAsGCodeBtn</sender>
-   <signal>clicked()</signal>
-   <receiver>gcodetextedit</receiver>
-   <slot>saveFileAs()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>958</x>
-     <y>601</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>801</x>
-     <y>314</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btnClearOffsets</sender>
-   <signal>clicked()</signal>
-   <receiver>offset_table</receiver>
-   <slot>clearOffsetTable()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>86</x>
-     <y>530</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>161</x>
-     <y>277</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>btnClearSelOffset</sender>
-   <signal>clicked()</signal>
-   <receiver>offset_table</receiver>
-   <slot>deleteSelectedOffset()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>236</x>
-     <y>530</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>161</x>
-     <y>277</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>saveOffsets</sender>
-   <signal>clicked()</signal>
-   <receiver>offset_table</receiver>
-   <slot>saveOffsetTable()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>86</x>
-     <y>584</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>161</x>
-     <y>277</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>reloadOffsets</sender>
-   <signal>clicked()</signal>
-   <receiver>offset_table</receiver>
-   <slot>loadOffsetTable()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>236</x>
-     <y>584</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>161</x>
-     <y>277</y>
+     <x>293</x>
+     <y>361</y>
     </hint>
    </hints>
   </connection>
@@ -7374,178 +7222,18 @@ font: 12pt &quot;DejaVu Sans&quot;;
    </hints>
   </connection>
   <connection>
-   <sender>lathetooltable</sender>
-   <signal>anythingSelected(bool)</signal>
-   <receiver>toolsDeleteBtn</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>318</x>
-     <y>355</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>131</x>
-     <y>683</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>checkBoxFeedAngle</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>inputFeedAngle</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>479</x>
-     <y>319</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>576</x>
-     <y>319</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sourceDeleteItem</sender>
+   <sender>btnClearSelOffset</sender>
    <signal>clicked()</signal>
-   <receiver>sourceFsTable</receiver>
-   <slot>deleteItem()</slot>
+   <receiver>offset_table</receiver>
+   <slot>deleteSelectedOffset()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>66</x>
-     <y>656</y>
+     <x>236</x>
+     <y>530</y>
     </hint>
     <hint type="destinationlabel">
-     <x>293</x>
-     <y>361</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sourceRenameItem</sender>
-   <signal>clicked()</signal>
-   <receiver>sourceFsTable</receiver>
-   <slot>rename()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>293</x>
-     <y>656</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>293</x>
-     <y>361</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sourceCopyItem</sender>
-   <signal>clicked()</signal>
-   <receiver>sourceFsTable</receiver>
-   <slot>doFileTransfer()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>520</x>
-     <y>656</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>293</x>
-     <y>361</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sourceFolderUp</sender>
-   <signal>clicked()</signal>
-   <receiver>sourceFsTable</receiver>
-   <slot>viewParentDirectory()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>78</x>
-     <y>67</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>293</x>
-     <y>361</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>removableComboBox</sender>
-   <signal>currentPathChanged(QString)</signal>
-   <receiver>sourceFsTable</receiver>
-   <slot>setRootPath(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>301</x>
-     <y>67</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>293</x>
-     <y>361</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>removableComboBox</sender>
-   <signal>usbPresent(bool)</signal>
-   <receiver>sourceEjectUsb</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>301</x>
-     <y>67</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>516</x>
-     <y>67</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>removableComboBox</sender>
-   <signal>currentDeviceEjectable(bool)</signal>
-   <receiver>sourceEjectUsb</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>301</x>
-     <y>67</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>516</x>
-     <y>67</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sourceEjectUsb</sender>
-   <signal>clicked()</signal>
-   <receiver>removableComboBox</receiver>
-   <slot>ejectDevice()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>516</x>
-     <y>67</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>301</x>
-     <y>67</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sourceFsTable</sender>
-   <signal>transferFileRequest(QString)</signal>
-   <receiver>destinationFsTable</receiver>
-   <slot>transferFile(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>293</x>
-     <y>361</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>293</x>
-     <y>361</y>
+     <x>161</x>
+     <y>277</y>
     </hint>
    </hints>
   </connection>
@@ -7562,22 +7250,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
     <hint type="destinationlabel">
      <x>78</x>
      <y>67</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>destinationFsTable</sender>
-   <signal>transferFileRequest(QString)</signal>
-   <receiver>sourceFsTable</receiver>
-   <slot>transferFile(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>293</x>
-     <y>361</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>293</x>
-     <y>361</y>
     </hint>
    </hints>
   </connection>
@@ -7614,54 +7286,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
    </hints>
   </connection>
   <connection>
-   <sender>destinationToSource</sender>
-   <signal>clicked()</signal>
-   <receiver>destinationFsTable</receiver>
-   <slot>doFileTransfer()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>66</x>
-     <y>656</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>293</x>
-     <y>361</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>destinationDelete</sender>
-   <signal>clicked()</signal>
-   <receiver>destinationFsTable</receiver>
-   <slot>deleteItem()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>167</x>
-     <y>656</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>293</x>
-     <y>361</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>destinationNewFile</sender>
-   <signal>clicked()</signal>
-   <receiver>destinationFsTable</receiver>
-   <slot>newFile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>273</x>
-     <y>656</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>293</x>
-     <y>361</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>destinationNewFolder</sender>
    <signal>clicked()</signal>
    <receiver>destinationFsTable</receiver>
@@ -7678,14 +7302,206 @@ font: 12pt &quot;DejaVu Sans&quot;;
    </hints>
   </connection>
   <connection>
-   <sender>destinationRename</sender>
+   <sender>removableComboBox</sender>
+   <signal>usbPresent(bool)</signal>
+   <receiver>sourceEjectUsb</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>301</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>516</x>
+     <y>67</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>saveGCodeBtn</sender>
    <signal>clicked()</signal>
-   <receiver>destinationFsTable</receiver>
+   <receiver>gcodetextedit</receiver>
+   <slot>saveFile()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>877</x>
+     <y>601</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>801</x>
+     <y>314</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zoomOutView</sender>
+   <signal>clicked()</signal>
+   <receiver>vtk</receiver>
+   <slot>zoomOut()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>229</x>
+     <y>452</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>309</x>
+     <y>246</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxFeedAngle</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>inputFeedAngle</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>479</x>
+     <y>319</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>576</x>
+     <y>319</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>removableComboBox</sender>
+   <signal>currentDeviceEjectable(bool)</signal>
+   <receiver>sourceEjectUsb</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>301</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>516</x>
+     <y>67</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceRenameItem</sender>
+   <signal>clicked()</signal>
+   <receiver>sourceFsTable</receiver>
    <slot>rename()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>515</x>
+     <x>293</x>
      <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lathetooltable</sender>
+   <signal>anythingSelected(bool)</signal>
+   <receiver>toolsDeleteBtn</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>318</x>
+     <y>355</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>131</x>
+     <y>683</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>saveOffsets</sender>
+   <signal>clicked()</signal>
+   <receiver>offset_table</receiver>
+   <slot>saveOffsetTable()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>86</x>
+     <y>584</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>161</x>
+     <y>277</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationToSource</sender>
+   <signal>clicked()</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>doFileTransfer()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>66</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceCopyItem</sender>
+   <signal>clicked()</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>doFileTransfer()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>520</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>saveAsGCodeBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>gcodetextedit</receiver>
+   <slot>saveFileAs()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>958</x>
+     <y>601</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>801</x>
+     <y>314</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zoomInView</sender>
+   <signal>clicked()</signal>
+   <receiver>vtk</receiver>
+   <slot>zoomIn()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>94</x>
+     <y>452</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>309</x>
+     <y>246</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationFsTable</sender>
+   <signal>transferFileRequest(QString)</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>transferFile(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>293</x>
+     <y>361</y>
     </hint>
     <hint type="destinationlabel">
      <x>293</x>
@@ -7710,18 +7526,178 @@ font: 12pt &quot;DejaVu Sans&quot;;
    </hints>
   </connection>
   <connection>
-   <sender>teachInX</sender>
-   <signal>currentValue(double)</signal>
-   <receiver>xMinusSetting</receiver>
-   <slot>setValue(double)</slot>
+   <sender>destinationDelete</sender>
+   <signal>clicked()</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>deleteItem()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>854</x>
-     <y>291</y>
+     <x>167</x>
+     <y>656</y>
     </hint>
     <hint type="destinationlabel">
-     <x>761</x>
-     <y>416</y>
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceFolderUp</sender>
+   <signal>clicked()</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>viewParentDirectory()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>78</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>editGCodeBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>gcodetextedit</receiver>
+   <slot>EditorReadWrite(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>655</x>
+     <y>601</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>801</x>
+     <y>314</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>reloadOffsets</sender>
+   <signal>clicked()</signal>
+   <receiver>offset_table</receiver>
+   <slot>loadOffsetTable()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>236</x>
+     <y>584</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>161</x>
+     <y>277</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>destinationRename</sender>
+   <signal>clicked()</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>rename()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>515</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnClearOffsets</sender>
+   <signal>clicked()</signal>
+   <receiver>offset_table</receiver>
+   <slot>clearOffsetTable()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>86</x>
+     <y>530</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>161</x>
+     <y>277</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>findReplaceGCodeBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>gcodetextedit</receiver>
+   <slot>findDialog()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>776</x>
+     <y>601</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>801</x>
+     <y>314</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceDeleteItem</sender>
+   <signal>clicked()</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>deleteItem()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>66</x>
+     <y>656</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>removableComboBox</sender>
+   <signal>currentPathChanged(QString)</signal>
+   <receiver>sourceFsTable</receiver>
+   <slot>setRootPath(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>301</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceFsTable</sender>
+   <signal>transferFileRequest(QString)</signal>
+   <receiver>destinationFsTable</receiver>
+   <slot>transferFile(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>361</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sourceEjectUsb</sender>
+   <signal>clicked()</signal>
+   <receiver>removableComboBox</receiver>
+   <slot>ejectDevice()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>516</x>
+     <y>67</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>301</x>
+     <y>67</y>
     </hint>
    </hints>
   </connection>
