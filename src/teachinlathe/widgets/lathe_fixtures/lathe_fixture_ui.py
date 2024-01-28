@@ -21,13 +21,6 @@ class Ui_Form(object):
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
-        self.teachZMinus = TeachInButton(self.frame)
-        self.teachZMinus.setGeometry(QtCore.QRect(140, 250, 39, 31))
-        self.teachZMinus.setStyleSheet("font: 12pt \"Noto Sans\";")
-        self.teachZMinus.setProperty("referenceType", 0)
-        self.teachZMinus.setProperty("axisNumber", 2)
-        self.teachZMinus.setProperty("latheMode", 0)
-        self.teachZMinus.setObjectName("teachZMinus")
         self.label_6 = QtWidgets.QLabel(self.frame)
         self.label_6.setGeometry(QtCore.QRect(10, 230, 81, 21))
         self.label_6.setStyleSheet("font: 11pt \"Noto Sans\";")
@@ -86,10 +79,6 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
-        self.teachZMinus.setText(_translate("Form", "T"))
-        self.teachZMinus.setProperty("inchFormat", _translate("Form", "%9.4f"))
-        self.teachZMinus.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
-        self.teachZMinus.setProperty("degreeFormat", _translate("Form", "%10.2f"))
         self.label_6.setText(_translate("Form", "Max RPM:"))
         self.label_9.setText(_translate("Form", "Z- Limit:"))
         self.description.setText(_translate("Form", "Rohm 3 Jaws chuck with a long long text"))
@@ -99,7 +88,6 @@ class Ui_Form(object):
         self.maxRpm.setText(_translate("Form", "2000"))
         self.units.setText(_translate("Form", "mm"))
         self.diameter.setText(_translate("Form", "000"))
-from qtpyvcp.widgets.input_widgets.teachin_button import TeachInButton
 
 
 if __name__ == "__main__":

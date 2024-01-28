@@ -31,40 +31,6 @@
    <property name="frameShadow">
     <enum>QFrame::Raised</enum>
    </property>
-   <widget class="TeachInButton" name="teachZMinus">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>250</y>
-      <width>39</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
-    </property>
-    <property name="text">
-     <string>T</string>
-    </property>
-    <property name="referenceType" stdset="0">
-     <number>0</number>
-    </property>
-    <property name="axisNumber" stdset="0">
-     <number>2</number>
-    </property>
-    <property name="inchFormat" stdset="0">
-     <string>%9.4f</string>
-    </property>
-    <property name="millimeterFormat" stdset="0">
-     <string>%10.3f</string>
-    </property>
-    <property name="degreeFormat" stdset="0">
-     <string>%10.2f</string>
-    </property>
-    <property name="latheMode" stdset="0">
-     <number>0</number>
-    </property>
-   </widget>
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
@@ -244,13 +210,6 @@
    </widget>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>TeachInButton</class>
-   <extends>QPushButton</extends>
-   <header>qtpyvcp.widgets.input_widgets.teachin_button</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

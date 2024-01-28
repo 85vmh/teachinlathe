@@ -10,6 +10,7 @@ from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities import logger
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
+from teachinlathe.machine_limits import MachineLimitsHandler
 from teachinlathe.widgets.lathe_fixtures.lathe_fixtures import LatheFixtures
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
@@ -105,9 +106,11 @@ class MyMainWindow(VCPMainWindow):
         self.teachinlathedro.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
         self.teachinlathedro.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
 
+        # spindle override, initial value and updates
         self.onSpindleOverrideChanged(STATUS.spindle[0].override.value)
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
 
+        # feed override, initial value and updates
         self.onFeedOverrideChanged(STATUS.feedrate.value)
         STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
 
@@ -115,6 +118,7 @@ class MyMainWindow(VCPMainWindow):
 
         self.handle_spindle_mode(self.getSpindleModeIndex)
 
+        # rpm is a float that fluctuates a lot, so debounce it
         self.debounce_timer = QTimer()
         self.debounce_timer.setInterval(300)
         self.debounce_timer.timeout.connect(self.onRpmDebounced)
@@ -159,7 +163,10 @@ class MyMainWindow(VCPMainWindow):
         self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
         self.quickCycles.onLoadClicked.connect(self.prepareToRunSubroutine)
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
-        self.testMdi.clicked.connect(self.onCycleStartPressed)
+        self.pushButton.clicked.connect(self.onChuckLimitSet)
+
+    def onChuckLimitSet(self):
+        MachineLimitsHandler().setChuckLimit(float(self.chuckLimit.text()))
 
     # def loadFixtures(self):
     #     root_dir = os.path.realpath(os.path.dirname(__file__))
@@ -178,7 +185,7 @@ class MyMainWindow(VCPMainWindow):
 
     def onInterpreterStateChanged(self, state):
         print("onInterpreterStateChanged", state)
-        if self.tabWidget.currentIndex() == 2:  # programs tab
+        if self.tabWidget.currentIndex() == MainTabs.PROGRAMS:  # programs tab
             print("program finished allow manual mode")
             STAT.poll()
             current_state = STAT.state
@@ -190,14 +197,14 @@ class MyMainWindow(VCPMainWindow):
                 print("task mode changed: ", STAT.task_mode)
 
     def handleUsbPresent(self, value):
-        self.filesystemTabs.setCurrentIndex(0 if value else 1)
+        self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM if value else ProgramTabs.PROGRAM_LOADED)
 
     def loadProgram(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.PROGRAM_LOADED)
         self.vtk.clearLivePlot()
 
     def prepareToRunSubroutine(self, subroutine):
-        self.subroutineToRun = subroutine + " ["+self.inputFeed.text()+"]"
+        self.subroutineToRun = subroutine + " [" + self.inputFeed.text() + "]"
         print("prepareToRunSubroutine", self.subroutineToRun)
 
     def backToPrograms(self):
@@ -301,7 +308,7 @@ class MyMainWindow(VCPMainWindow):
             calculated_feed = float(self.inputFeed.text()) * override_factor
             self.actualFeed.setText(format(calculated_feed, '.3f'))
         else:
-            self.actualFeed.setText("0.000")
+            self.actualFeed.setText("0.00")
 
     def onSpindleOverrideChanged(self, value):
         self.current_spindle_override = value

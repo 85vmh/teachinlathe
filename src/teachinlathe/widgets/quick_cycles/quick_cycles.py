@@ -1,8 +1,6 @@
 import os
 from enum import Enum
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QColor, QPalette
 from qtpy import uic
 from qtpy.QtWidgets import QWidget
 from qtpyvcp.utilities import logger
@@ -25,6 +23,9 @@ class Page(Enum):
     FACING = (3, "Facing")
     CHAMFER = (4, "Chamfer")
     RADIUS = (5, "Radius")
+    DRILLING = (6, "Drilling")
+    THREADING = (7, "Threading")
+    KEY_SLOT = (8, "Key Slot")
 
 
 class QuickCycles(QWidget):
@@ -39,22 +40,23 @@ class QuickCycles(QWidget):
         self.btnFacing.clicked.connect(lambda: self.switchPage(Page.FACING))
         self.btnChamfer.clicked.connect(lambda: self.switchPage(Page.CHAMFER))
         self.btnRadius.clicked.connect(lambda: self.switchPage(Page.RADIUS))
+        self.btnThreading.clicked.connect(lambda: self.switchPage(Page.THREADING))
+        self.btnDrilling.clicked.connect(lambda: self.switchPage(Page.DRILLING))
+        self.btnKeySlot.clicked.connect(lambda: self.switchPage(Page.KEY_SLOT))
         self.btnBack.clicked.connect(lambda: self.switchPage(Page.ROOT))
 
         self.turningDoc.mousePressEvent = lambda _: self.openNumPad(self.turningDoc)
         self.boringDoc.mousePressEvent = lambda _: self.openNumPad(self.boringDoc)
+        self.facingDoc.mousePressEvent = lambda _: self.openNumPad(self.facingDoc)
+        self.keyslotDoc.mousePressEvent = lambda _: self.openNumPad(self.keyslotDoc)
+        self.drillingFeed.mousePressEvent = lambda _: self.openNumPad(self.drillingFeed)
+        self.keyslotFeed.mousePressEvent = lambda _: self.openNumPad(self.keyslotFeed)
 
         self.turningFilletRadius.mousePressEvent = lambda _: self.openNumPad(self.turningFilletRadius)
         self.boringFilletRadius.mousePressEvent = lambda _: self.openNumPad(self.boringFilletRadius)
 
         self.turningTurnAngle.mousePressEvent = lambda _: self.openNumPad(self.turningTurnAngle)
         self.boringTurnAngle.mousePressEvent = lambda _: self.openNumPad(self.boringTurnAngle)
-
-        self.turningTeachX.onValueCaptured.connect(self.turningXEndCaptured)
-        self.boringTeachX.onValueCaptured.connect(self.boringXEndCaptured)
-
-        self.turningTeachZ.onValueCaptured.connect(self.turningZEndCaptured)
-        self.boringTeachZ.onValueCaptured.connect(self.boringZEndCaptured)
 
         self.btnLoad.clicked.connect(self.onBtnLoadClicked)
 
@@ -76,18 +78,6 @@ class QuickCycles(QWidget):
         line_edit.editingFinished.emit()
         line_edit.clearFocus()
 
-    def turningXEndCaptured(self, value):
-        self.turningXEnd.setText(str(value))
-
-    def boringXEndCaptured(self, value):
-        self.boringXEnd.setText(str(value))
-
-    def turningZEndCaptured(self, value):
-        self.turningZEnd.setText(str(value))
-
-    def boringZEndCaptured(self, value):
-        self.boringZEnd.setText(str(value))
-
     def _getSubroutineToCall(self):
         match self.stackedWidget.currentIndex():
             case Page.TURNING.index:
@@ -105,11 +95,28 @@ class QuickCycles(QWidget):
                 f_radius = self.boringFilletRadius.text()
                 return f"o<boring> call [{x_end}] [{z_end}] [{doc}] [{t_angle}] [{f_radius}]"
             case Page.FACING.index:
-                return "facing"
+                x_end = self.facingXEnd.text()
+                z_end = self.facingZEnd.text()
+                doc = self.facingDoc.text()
+                return f"o<facing> call [{x_end}] [{z_end}] [{doc}]"
             case Page.CHAMFER.index:
                 return "chamfer"
             case Page.RADIUS.index:
                 return "radius"
+            case Page.THREADING.index:
+                return "threading"
+            case Page.DRILLING.index:
+                z_end = self.drillingZEnd.text()
+                retract = self.drillingRetract.text()
+                peck_depth = self.drillingPeckDepth.text()
+                feed = self.turningTurnAngle.text()
+                return f"o<drilling> call [{z_end}] [{retract}] [{peck_depth}] [{feed}]"
+            case Page.KEY_SLOT.index:
+                x_end = self.keyslotXEnd.text()
+                z_end = self.keyslotZEnd.text()
+                doc = self.keyslotDoc.text()
+                feed = self.keyslotFeed.text()
+                return f"o<keyslot> call [{x_end}] [{z_end}] [{doc}] [{feed}]"
             case _:
                 return ""
 

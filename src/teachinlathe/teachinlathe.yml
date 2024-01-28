@@ -139,6 +139,16 @@ settings:
     min_value: 0.01
     max_value: 1.5
 
+  smart_numpad.quick_cycles_drill_feed:
+    description: drilling feed per rev.
+    default_value: 0.05
+    persistent: true
+    options: [
+      0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 1.2, 1.25, 1.5, 1.75, 2.0, 2.25
+    ]
+    min_value: 0.01
+    max_value: 3.0
+
   smart_numpad.quick-cycles-doc:
     description: depth of cut.
     default_value: 1.0
@@ -166,15 +176,25 @@ settings:
     options: [
       0, 5, 10, 15, 20, 30, 45, 60
     ]
-    min_value: 0.01
+    min_value: 0
     max_value: 89.99
+
+  smart_numpad.quick-cycles-keyslot-feed:
+    description: keyslot feed.
+    default_value: 50
+    persistent: true
+    options: [
+      25, 50, 75, 100, 125, 150, 175, 200, 225, 250
+    ]
+    min_value: 50
+    max_value: 400
 
   smart_numpad.input-feed-angle:
     description: Enter feed angle.
     default_value: 45
     persistent: true
     options: [
-      10, 15, 30, 45, 60
+      5, 10, 15, 20, 25, 30, 45, 60
     ]
     min_value: 0.01
     max_value: 89.99
