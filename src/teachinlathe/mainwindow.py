@@ -197,10 +197,10 @@ class MyMainWindow(VCPMainWindow):
                 print("task mode changed: ", STAT.task_mode)
 
     def handleUsbPresent(self, value):
-        self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM if value else ProgramTabs.PROGRAM_LOADED)
+        self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value if value else ProgramTabs.PROGRAM_LOADED.value)
 
     def loadProgram(self):
-        self.stackedProgramsTab.setCurrentIndex(ProgramTabs.PROGRAM_LOADED)
+        self.stackedProgramsTab.setCurrentIndex(ProgramTabs.PROGRAM_LOADED.value)
         self.vtk.clearLivePlot()
 
     def prepareToRunSubroutine(self, subroutine):
@@ -208,7 +208,7 @@ class MyMainWindow(VCPMainWindow):
         print("prepareToRunSubroutine", self.subroutineToRun)
 
     def backToPrograms(self):
-        self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM)
+        self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
 
     def onRadioButtonToggled(self):
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())

@@ -51,6 +51,9 @@ class QuickCycles(QWidget):
         self.keyslotDoc.mousePressEvent = lambda _: self.openNumPad(self.keyslotDoc)
         self.drillingFeed.mousePressEvent = lambda _: self.openNumPad(self.drillingFeed)
         self.keyslotFeed.mousePressEvent = lambda _: self.openNumPad(self.keyslotFeed)
+        self.threadingPitch.mousePressEvent = lambda _: self.openNumPad(self.threadingPitch)
+        self.threadingFirstPass.mousePressEvent = lambda _: self.openNumPad(self.threadingFirstPass)
+        self.threadingCompAngle.mousePressEvent = lambda _: self.openNumPad(self.threadingCompAngle)
 
         self.turningFilletRadius.mousePressEvent = lambda _: self.openNumPad(self.turningFilletRadius)
         self.boringFilletRadius.mousePressEvent = lambda _: self.openNumPad(self.boringFilletRadius)
@@ -104,7 +107,31 @@ class QuickCycles(QWidget):
             case Page.RADIUS.index:
                 return "radius"
             case Page.THREADING.index:
-                return "threading"
+                '''
+                val pitch = parameters.pitch.stripZeros()
+                val zEnd = parameters.zEnd.stripZeros()
+                val startDiameter =
+                    when {
+                        parameters.isExternal -> parameters.majorDiameter.stripZeros()
+                        else -> parameters.minorDiameter.stripZeros()
+                    }
+                val firstPassDoc = parameters.firstPassDepth.stripZeros()
+                val finalDepth = parameters.finalDepth.stripZeros()
+                val depthDegression = 1
+                val infeedAngle = 30
+                val taper = 0
+                val springPasses = 0'''
+
+
+                pitch = self.threadingPitch.text()
+                starts = self.threadingStarts.text()
+                zEnd = self.threadingZEnd.text()
+                xStart = self.threadingXStart.text()
+                xEnd = self.threadingFinalDepth.text()
+                firstPass = self.threadingFirstPass.text()
+                depthDegression = self.threadingDepthDegression.text()
+
+                return f"o<threading> call [{pitch}] [{zEnd}] [{xStart}] [{firstPass}] [{xEnd}] [{depthDegression}] [$infeedAngle] [2] [45] [$springPasses]"
             case Page.DRILLING.index:
                 z_end = self.drillingZEnd.text()
                 retract = self.drillingRetract.text()

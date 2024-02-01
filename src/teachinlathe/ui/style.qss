@@ -11,22 +11,6 @@ ActionButton[actionName="machine.power.toggle"]:checked{
     background:rgb(138, 226, 52);
 }
 
-ActionButton[actionName="program.run"]:enabled{
-    background:rgb(138, 226, 52);
-}
-
-ActionButton[actionName="program.step"]:enabled{
-    background:rgb(138, 226, 52);
-}
-
-ActionButton[actionName="program.pause"]:enabled{
-    background:rgb(252, 233, 79);
-}
-
-ActionButton[actionName="program.abort"]:enabled{
-    background: rgb(239, 41, 41);
-}
-
 QHeaderView {
     font: 12pt "Noto";
     background-color: rgb(220, 220, 220);

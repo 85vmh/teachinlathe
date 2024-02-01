@@ -683,7 +683,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
 }</string>
                 </property>
                 <property name="text">
-                 <string>0000</string>
+                 <string>0</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -1094,7 +1094,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
 }</string>
               </property>
               <property name="text">
-               <string>0000</string>
+               <string>0.0</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -3624,48 +3624,6 @@ QComboBox QAbstractItemView{
                 </item>
                </layout>
               </widget>
-              <widget class="ActionButton" name="actionbutton_50">
-               <property name="geometry">
-                <rect>
-                 <x>610</x>
-                 <y>495</y>
-                 <width>130</width>
-                 <height>42</height>
-                </rect>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>130</width>
-                 <height>42</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>130</width>
-                 <height>42</height>
-                </size>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton {
-   	font: 12pt &quot;Noto&quot;;
-}</string>
-               </property>
-               <property name="text">
-                <string>Single Block</string>
-               </property>
-               <property name="actionName" stdset="0">
-                <string>program.step</string>
-               </property>
-              </widget>
               <widget class="ActionButton" name="actionbutton_53">
                <property name="geometry">
                 <rect>
@@ -3798,96 +3756,6 @@ QComboBox QAbstractItemView{
                 <string>program.abort</string>
                </property>
               </widget>
-              <widget class="ActionButton" name="actionbutton_54">
-               <property name="geometry">
-                <rect>
-                 <x>905</x>
-                 <y>615</y>
-                 <width>101</width>
-                 <height>52</height>
-                </rect>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>52</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>52</height>
-                </size>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton {
-   	font: 16pt &quot;Noto&quot;;
-}</string>
-               </property>
-               <property name="text">
-                <string>Resume</string>
-               </property>
-               <property name="actionName" stdset="0">
-                <string>program.resume</string>
-               </property>
-              </widget>
-              <widget class="ActionButton" name="actionbutton_49">
-               <property name="geometry">
-                <rect>
-                 <x>790</x>
-                 <y>615</y>
-                 <width>111</width>
-                 <height>52</height>
-                </rect>
-               </property>
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>50</width>
-                 <height>42</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>130</width>
-                 <height>52</height>
-                </size>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton {
-   	font: 16pt &quot;Noto&quot;;
-}</string>
-               </property>
-               <property name="text">
-                <string>FeedHold</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-               <property name="rules" stdset="0">
-                <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:interp_state?text&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Checked&quot;, &quot;expression&quot;: &quot;ch[0] == 'Paused'&quot;, &quot;name&quot;: &quot;check when paused&quot;}]</string>
-               </property>
-               <property name="actionName" stdset="0">
-                <string>program.pause</string>
-               </property>
-              </widget>
               <widget class="StatusLabel" name="feedOverrideValue_3">
                <property name="geometry">
                 <rect>
@@ -3999,7 +3867,7 @@ QComboBox QAbstractItemView{
 }</string>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="innerToolsTab">
               <attribute name="title">
@@ -6641,8 +6509,8 @@ padding-left: 5px;
               <widget class="QPushButton" name="pushButton">
                <property name="geometry">
                 <rect>
-                 <x>370</x>
-                 <y>580</y>
+                 <x>300</x>
+                 <y>575</y>
                  <width>80</width>
                  <height>26</height>
                 </rect>
