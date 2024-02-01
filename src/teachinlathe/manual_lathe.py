@@ -261,29 +261,27 @@ class ManualLathe:
             print("Spindle cover is opened")
             return self.handleSpindleOff()
 
-        match self.spindleLever:
-            case SpindleLever.REV:
-                cmd = 'M4'
-            case SpindleLever.FWD:
-                cmd = 'M3'
-            case _:
-                return self.handleSpindleOff()
-
-        if cmd is not None:
-            if self.spindleMode == SpindleMode.Rpm:
-                cmd += f" G97 S{self.spindleRpm}"
+        if self.spindleMode == SpindleMode.Rpm:
+            if self.spindleLever is not SpindleLever.NONE:
+                direction = linuxcnc.SPINDLE_REVERSE if self.spindleLever == SpindleLever.REV else linuxcnc.SPINDLE_FORWARD
+                LINUXCNC_CMD.spindle(direction, int(self.spindleRpm), 0)
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
             else:
-                cmd += f" G96 S{self.spindleCss} D{self.maxSpindleRpm}"
-
-        print(cmd)
-        STAT.poll()
-        if cmd is not None and STAT.task_mode is not linuxcnc.MODE_MDI:
-            LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
-            LINUXCNC_CMD.wait_complete()
-            LINUXCNC_CMD.mdi(cmd)
-            LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
-            LINUXCNC_CMD.wait_complete()
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
+                return self.handleSpindleOff()
+        else:
+            if self.spindleLever is not SpindleLever.NONE:
+                direction = 'M4' if self.spindleLever == SpindleLever.REV else 'M3'
+                cmd = f"{direction} G96 S{self.spindleCss} D{self.maxSpindleRpm}"
+                STAT.poll()
+                if cmd is not None and STAT.task_mode is not linuxcnc.MODE_MDI:
+                    LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
+                    LINUXCNC_CMD.wait_complete()
+                    LINUXCNC_CMD.mdi(cmd)
+                    LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+                    LINUXCNC_CMD.wait_complete()
+                    self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
+            else:
+                return self.handleSpindleOff()
 
     def handleSpindleOff(self):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
@@ -335,21 +333,19 @@ class ManualLathe:
         # importing it in the beginning of the file causes circular import
         from teachinlathe.turning_helper import TurningHelper
 
-        cmd1 = f"G95 F{self.feedPerRev} "
+        cmd = f"G95 F{self.feedPerRev} "
 
         if self.isTaperTurning:
-            cmd2 = TurningHelper.getTaperTurningCommand(self.joystickDirection, self.feedTaperAngle)
+            cmd += TurningHelper.getTaperTurningCommand(self.joystickDirection, self.feedTaperAngle)
         else:
-            cmd2 = TurningHelper.getStraightTurningCommand(self.joystickDirection)
+            cmd += TurningHelper.getStraightTurningCommand(self.joystickDirection)
 
         self.joystickFunction = JoystickFunction.FEEDING
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
         LINUXCNC_CMD.wait_complete()
 
-        print_with_timestamp("execute mdi command: " + cmd1)
-        LINUXCNC_CMD.mdi(cmd1)
-        print_with_timestamp("execute mdi command: " + cmd2)
-        LINUXCNC_CMD.mdi(cmd2)
+        print_with_timestamp("execute mdi command: " + cmd)
+        LINUXCNC_CMD.mdi(cmd)
 
         # STAT.poll()
         # print("motion mode: ", STAT.motion_mode)
