@@ -335,19 +335,21 @@ class ManualLathe:
         # importing it in the beginning of the file causes circular import
         from teachinlathe.turning_helper import TurningHelper
 
-        cmd = f"G95 F{self.feedPerRev} "
+        cmd1 = f"G95 F{self.feedPerRev} "
 
         if self.isTaperTurning:
-            cmd += TurningHelper.getTaperTurningCommand(self.joystickDirection, self.feedTaperAngle)
+            cmd2 = TurningHelper.getTaperTurningCommand(self.joystickDirection, self.feedTaperAngle)
         else:
-            cmd += TurningHelper.getStraightTurningCommand(self.joystickDirection)
+            cmd2 = TurningHelper.getStraightTurningCommand(self.joystickDirection)
 
         self.joystickFunction = JoystickFunction.FEEDING
         LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
         LINUXCNC_CMD.wait_complete()
 
-        print_with_timestamp("execute mdi command: " + cmd)
-        LINUXCNC_CMD.mdi(cmd)
+        print_with_timestamp("execute mdi command: " + cmd1)
+        LINUXCNC_CMD.mdi(cmd1)
+        print_with_timestamp("execute mdi command: " + cmd2)
+        LINUXCNC_CMD.mdi(cmd2)
 
         # STAT.poll()
         # print("motion mode: ", STAT.motion_mode)

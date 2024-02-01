@@ -43,7 +43,7 @@ class TurningHelper:
                 destination = f"Z{limits.z_max_limit - safe_limit:.3f}".rstrip('0')
             case JoystickDirection.Z_MINUS:
                 destination = f"Z{limits.z_min_limit + safe_limit:.3f}".rstrip('0')
-        return 'G40 G7 G53 G1 {}'.format(destination)
+        return 'G53 G1 {}'.format(destination)
 
     @staticmethod
     def getTaperTurningCommand(joystick_direction, angle):
