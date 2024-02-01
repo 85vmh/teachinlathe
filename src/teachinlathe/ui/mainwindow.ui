@@ -2121,6 +2121,16 @@ QCheckBox:checked {
               </rect>
              </property>
             </widget>
+            <widget class="MDIEntry" name="mdientry_2">
+             <property name="geometry">
+              <rect>
+               <x>805</x>
+               <y>105</y>
+               <width>126</width>
+               <height>26</height>
+              </rect>
+             </property>
+            </widget>
            </widget>
            <widget class="QWidget" name="conversationalTab">
             <attribute name="title">
