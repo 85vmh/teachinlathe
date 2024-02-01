@@ -265,6 +265,7 @@ class ManualLathe:
             if self.spindleLever is not SpindleLever.NONE:
                 direction = linuxcnc.SPINDLE_REVERSE if self.spindleLever == SpindleLever.REV else linuxcnc.SPINDLE_FORWARD
                 LINUXCNC_CMD.spindle(direction, int(self.spindleRpm), 0)
+                LINUXCNC_CMD.spindle(linuxcnc.SPINDLE_CONSTANT)
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
             else:
                 return self.handleSpindleOff()
