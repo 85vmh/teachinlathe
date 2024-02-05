@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="rootPage">
     <widget class="QPushButton" name="btnTurning">
@@ -318,7 +318,7 @@
          <string>%10.2f</string>
         </property>
         <property name="latheMode" stdset="0">
-         <number>0</number>
+         <number>2</number>
         </property>
        </widget>
       </item>
@@ -526,6 +526,24 @@
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>0</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>2</number>
+        </property>
        </widget>
       </item>
       <item row="1" column="2">
@@ -654,6 +672,24 @@
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>0</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>2</number>
+        </property>
        </widget>
       </item>
       <item row="1" column="2">
@@ -723,6 +759,24 @@
        <widget class="TeachInLineEdit" name="radiusXStart">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>0</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>2</number>
         </property>
        </widget>
       </item>
@@ -1870,7 +1924,7 @@ QPushButton:checked {
          <string>%10.2f</string>
         </property>
         <property name="latheMode" stdset="0">
-         <number>0</number>
+         <number>1</number>
         </property>
        </widget>
       </item>
