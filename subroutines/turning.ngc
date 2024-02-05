@@ -1,11 +1,13 @@
 ;Turning
 O<turning> sub
 
-#<x_end> = #1
-#<z_end> = #2
-#<doc> = #3
-#<turn_angle> = #4
-#<fillet_radius> = #5
+#<x_start> = #1
+#<z_start> = #2
+#<x_end> = #3
+#<z_end> = #4
+#<doc> = #5
+#<turn_angle> = #6
+#<fillet_radius> = #7
 
 G8 ; Radius mode (easier maths)
 G18 ; XZ Plane
@@ -14,9 +16,7 @@ G90 ; Absolute Distance
 G91.1 ; but not for arcs
 
 #<x_end> = [#<x_end> / 2] ; because of radius mode
-
-#<x_start> = #<_x> (starting X)
-#<z_start> = #<_z> (starting Z)
+#<x_start> = [#<x_start> / 2]
 
 #20 = [#<fillet_radius> * SIN[#<turn_angle>]]
 #21 = [#<fillet_radius> * COS[#<turn_angle>]]

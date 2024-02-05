@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="rootPage">
     <widget class="QPushButton" name="btnTurning">
@@ -362,6 +362,126 @@
        </widget>
       </item>
      </layout>
+    </widget>
+    <widget class="QLabel" name="label_60">
+     <property name="geometry">
+      <rect>
+       <x>590</x>
+       <y>65</y>
+       <width>102</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+     </property>
+     <property name="text">
+      <string>X Start:</string>
+     </property>
+    </widget>
+    <widget class="TeachInLineEdit" name="turningXStart">
+     <property name="geometry">
+      <rect>
+       <x>702</x>
+       <y>65</y>
+       <width>64</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>1</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>0</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>2</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="turningTeachXStartBtn">
+     <property name="geometry">
+      <rect>
+       <x>776</x>
+       <y>65</y>
+       <width>80</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>TeachIn X</string>
+     </property>
+    </widget>
+    <widget class="TeachInLineEdit" name="turningZStart">
+     <property name="geometry">
+      <rect>
+       <x>701</x>
+       <y>115</y>
+       <width>64</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>1</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>2</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>2</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_61">
+     <property name="geometry">
+      <rect>
+       <x>589</x>
+       <y>115</y>
+       <width>102</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+     </property>
+     <property name="text">
+      <string>Z Start:</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="turningTeachZStartBtn">
+     <property name="geometry">
+      <rect>
+       <x>775</x>
+       <y>115</y>
+       <width>80</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>TeachIn Z</string>
+     </property>
     </widget>
    </widget>
    <widget class="QWidget" name="pageBoring">
@@ -2164,6 +2284,38 @@ QPushButton:checked {
     <hint type="destinationlabel">
      <x>182</x>
      <y>106</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>turningTeachXStartBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>turningXStart</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>815</x>
+     <y>122</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>733</x>
+     <y>122</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>turningTeachZStartBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>turningZStart</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>814</x>
+     <y>172</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>732</x>
+     <y>172</y>
     </hint>
    </hints>
   </connection>

@@ -87,18 +87,22 @@ class QuickCycles(QWidget):
     def _getSubroutineToCall(self):
         match self.stackedWidget.currentIndex():
             case Page.TURNING.index:
+                x_start = self.turningXStart.text()
+                z_start = self.turningZStart.text()
                 x_end = self.turningXEnd.text()
                 z_end = self.turningZEnd.text()
                 doc = self.turningDoc.text()
                 t_angle = self.turningTurnAngle.text()
                 f_radius = self.turningFilletRadius.text()
                 return (f"(Turning subroutine parameters)\n"
+                        f"; [{x_start}] - X Start\n"
+                        f"; [{z_start}] - Z Start\n"
                         f"; [{x_end}] - X End\n"
                         f"; [{z_end}] - Z End\n"
                         f"; [{doc}] - Depth of cut\n"
                         f"; [{t_angle}] - Turn Angle\n"
                         f"; [{f_radius}] - Fillet Radius\n"
-                        f"o<turning> call [{x_end}] [{z_end}] [{doc}] [{t_angle}] [{f_radius}]")
+                        f"o<turning> call [{x_start}] [{z_start}] [{x_end}] [{z_end}] [{doc}] [{t_angle}] [{f_radius}]")
             case Page.BORING.index:
                 x_end = self.boringXEnd.text()
                 z_end = self.boringZEnd.text()
