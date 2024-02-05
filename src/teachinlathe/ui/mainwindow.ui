@@ -3347,9 +3347,9 @@ QComboBox QAbstractItemView{
                  <widget class="VTKBackPlot" name="vtk">
                   <property name="backgroundColor" stdset="0">
                    <color>
-                    <red>246</red>
-                    <green>245</green>
-                    <blue>244</blue>
+                    <red>0</red>
+                    <green>0</green>
+                    <blue>0</blue>
                    </color>
                   </property>
                   <widget class="QPushButton" name="btnBackToPrograms">

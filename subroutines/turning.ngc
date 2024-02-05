@@ -18,6 +18,8 @@ G91.1 ; but not for arcs
 #<x_end> = [#<x_end> / 2] ; because of radius mode
 #<x_start> = [#<x_start> / 2]
 
+G0 X #<x_start> Z #<z_start>
+
 #20 = [#<fillet_radius> * SIN[#<turn_angle>]]
 #21 = [#<fillet_radius> * COS[#<turn_angle>]]
 #22 = [#<fillet_radius> / COS[#<turn_angle>]]
