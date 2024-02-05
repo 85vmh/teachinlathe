@@ -4,6 +4,7 @@ from PyQt5 import QtCore
 from qtpy import uic
 from qtpy.QtWidgets import QWidget
 from qtpyvcp.utilities import logger
+import tempfile
 
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
@@ -54,6 +55,8 @@ class QuickCycles(QWidget):
         self.threadingPitch.mousePressEvent = lambda _: self.openNumPad(self.threadingPitch)
         self.threadingFirstPass.mousePressEvent = lambda _: self.openNumPad(self.threadingFirstPass)
         self.threadingCompAngle.mousePressEvent = lambda _: self.openNumPad(self.threadingCompAngle)
+        self.radiusValue.mousePressEvent = lambda _: self.openNumPad(self.radiusValue)
+        self.radiusDoc.mousePressEvent = lambda _: self.openNumPad(self.radiusDoc)
 
         self.turningFilletRadius.mousePressEvent = lambda _: self.openNumPad(self.turningFilletRadius)
         self.boringFilletRadius.mousePressEvent = lambda _: self.openNumPad(self.boringFilletRadius)
@@ -89,19 +92,35 @@ class QuickCycles(QWidget):
                 doc = self.turningDoc.text()
                 t_angle = self.turningTurnAngle.text()
                 f_radius = self.turningFilletRadius.text()
-                return f"o<turning> call [{x_end}] [{z_end}] [{doc}] [{t_angle}] [{f_radius}]"
+                return (f"(Turning subroutine parameters)\n"
+                        f"; [{x_end}] - X End\n"
+                        f"; [{z_end}] - Z End\n"
+                        f"; [{doc}] - Depth of cut\n"
+                        f"; [{t_angle}] - Turn Angle\n"
+                        f"; [{f_radius}] - Fillet Radius\n"
+                        f"o<turning> call [{x_end}] [{z_end}] [{doc}] [{t_angle}] [{f_radius}]")
             case Page.BORING.index:
                 x_end = self.boringXEnd.text()
                 z_end = self.boringZEnd.text()
                 doc = self.boringDoc.text()
                 t_angle = self.boringTurnAngle.text()
                 f_radius = self.boringFilletRadius.text()
-                return f"o<boring> call [{x_end}] [{z_end}] [{doc}] [{t_angle}] [{f_radius}]"
+                return (f"; Boring subroutine call with parameters:\n"
+                        f"; [{x_end}] - X End\n"
+                        f"; [{z_end}] - Z End\n"
+                        f"; [{doc}] - Depth of cut\n"
+                        f"; [{t_angle}] - Turn Angle\n"
+                        f"; [{f_radius}] - Fillet Radius\n"
+                        f"o<boring> call [{x_end}] [{z_end}] [{doc}] [{t_angle}] [{f_radius}]")
             case Page.FACING.index:
                 x_end = self.facingXEnd.text()
                 z_end = self.facingZEnd.text()
                 doc = self.facingDoc.text()
-                return f"o<facing> call [{x_end}] [{z_end}] [{doc}]"
+                return (f"; Facing subroutine call with parameters:\n"
+                        f"; [{x_end}] - X End\n"
+                        f"; [{z_end}] - Z End\n"
+                        f"; [{doc}] - Depth of cut\n"
+                        f"o<facing> call [{x_end}] [{z_end}] [{doc}]")
             case Page.CHAMFER.index:
                 return "chamfer"
             case Page.RADIUS.index:
@@ -121,7 +140,6 @@ class QuickCycles(QWidget):
                 val infeedAngle = 30
                 val taper = 0
                 val springPasses = 0'''
-
 
                 pitch = self.threadingPitch.text()
                 starts = self.threadingStarts.text()

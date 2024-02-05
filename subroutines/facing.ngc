@@ -4,13 +4,11 @@ O<facing> sub
 #<x_end> = #1
 #<z_end> = #2
 #<doc> = #3
-#<feed> = #4
 
 G7 	; Lathe Diameter Mode
 G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
-G95 F[#<feed>] ; Feed per revolution
 
 #<x_start> = [#<_x> * 2] (starting X)
 #<z_start> = #<_z> (starting Z)

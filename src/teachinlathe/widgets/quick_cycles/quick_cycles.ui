@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>359</width>
-    <height>473</height>
+    <width>1020</width>
+    <height>680</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,13 +23,13 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>47</y>
-     <width>354</width>
-     <height>426</height>
+     <y>45</y>
+     <width>1021</width>
+     <height>631</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>7</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="rootPage">
     <widget class="QPushButton" name="btnTurning">
@@ -141,8 +141,8 @@
     <widget class="QWidget" name="gridLayoutWidget_2">
      <property name="geometry">
       <rect>
-       <x>45</x>
-       <y>35</y>
+       <x>570</x>
+       <y>205</y>
        <width>276</width>
        <height>261</height>
       </rect>
@@ -699,7 +699,196 @@
     </widget>
    </widget>
    <widget class="QWidget" name="pageChamfer"/>
-   <widget class="QWidget" name="pageRadius"/>
+   <widget class="QWidget" name="pageRadius">
+    <widget class="QWidget" name="gridLayoutWidget_7">
+     <property name="geometry">
+      <rect>
+       <x>35</x>
+       <y>35</y>
+       <width>285</width>
+       <height>224</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_8">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="horizontalSpacing">
+       <number>10</number>
+      </property>
+      <item row="1" column="2">
+       <widget class="TeachInLineEdit" name="radiusXStart">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_22">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Depth of cut:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QPushButton" name="radiusTeachXBtn">
+        <property name="text">
+         <string>TeachIn X</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" colspan="2">
+       <widget class="VCPSettingsComboBox" name="radiusLocation">
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>quick-cycles.radius-location</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="label_52">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>mm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_19">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Radius:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_58">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Location:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QPushButton" name="radiusTeachZBtn">
+        <property name="text">
+         <string>TeachIn Z</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_57">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>X Start:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="TeachInLineEdit" name="radiusZStart">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>2</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="VCPSettingsLineEdit" name="radiusDoc">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-doc</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="VCPSettingsLineEdit" name="radiusValue">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-radius</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_55">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Z Start:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <widget class="QLabel" name="label_59">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>mm/pass</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
    <widget class="QWidget" name="pageDrilling">
     <widget class="QWidget" name="gridLayoutWidget_5">
      <property name="geometry">
@@ -1736,7 +1925,7 @@ QPushButton:checked {
     <rect>
      <x>0</x>
      <y>40</y>
-     <width>356</width>
+     <width>1016</width>
      <height>16</height>
     </rect>
    </property>
@@ -1747,7 +1936,7 @@ QPushButton:checked {
   <widget class="QLabel" name="title">
    <property name="geometry">
     <rect>
-     <x>100</x>
+     <x>425</x>
      <y>10</y>
      <width>156</width>
      <height>31</height>
@@ -1766,27 +1955,27 @@ QPushButton:checked {
   <widget class="QPushButton" name="btnBack">
    <property name="geometry">
     <rect>
-     <x>5</x>
+     <x>15</x>
      <y>10</y>
-     <width>36</width>
+     <width>86</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>&lt;&lt;</string>
+    <string>&lt;&lt; Back</string>
    </property>
   </widget>
   <widget class="QPushButton" name="btnLoad">
    <property name="geometry">
     <rect>
-     <x>300</x>
+     <x>885</x>
      <y>10</y>
-     <width>46</width>
+     <width>121</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>Load</string>
+    <string>Load Program</string>
    </property>
   </widget>
  </widget>

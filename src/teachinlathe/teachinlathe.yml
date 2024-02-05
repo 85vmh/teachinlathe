@@ -241,6 +241,22 @@ settings:
       "None", "On Entry", "On Exit", "Both"
     ]
 
+  quick-cycles.radius-location:
+    value_type: str
+    default_value: "Front-External"
+    persistent: true
+    options: [
+      "Front-External", "Front-Internal", "Back-External"
+    ]
+
+  smart_numpad.quick-cycles-radius:
+    description: radius.
+    default_value: 0.5
+    persistent: true
+    options: [
+      0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.5, 4.0, 4.5, 5.0
+    ]
+
   smart_numpad.quick-cycles-turn-angle:
     description: Enter feed angle.
     default_value: 0

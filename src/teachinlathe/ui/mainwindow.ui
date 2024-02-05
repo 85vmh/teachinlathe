@@ -549,7 +549,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <enum>QTabWidget::South</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>2</number>
            </property>
            <widget class="QWidget" name="manualTurningTab">
             <attribute name="title">
@@ -2111,31 +2111,21 @@ QCheckBox:checked {
               </rect>
              </property>
             </widget>
-            <widget class="QuickCycles" name="quickCycles">
-             <property name="geometry">
-              <rect>
-               <x>655</x>
-               <y>205</y>
-               <width>356</width>
-               <height>466</height>
-              </rect>
-             </property>
-            </widget>
-            <widget class="MDIEntry" name="mdientry_2">
-             <property name="geometry">
-              <rect>
-               <x>805</x>
-               <y>105</y>
-               <width>126</width>
-               <height>26</height>
-              </rect>
-             </property>
-            </widget>
            </widget>
-           <widget class="QWidget" name="conversationalTab">
+           <widget class="QWidget" name="quickCyclesTab">
             <attribute name="title">
-             <string>Conversational</string>
+             <string>Quick Cycles</string>
             </attribute>
+            <widget class="QuickCycles" name="quickcycles">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>1020</width>
+               <height>680</height>
+              </rect>
+             </property>
+            </widget>
            </widget>
            <widget class="QWidget" name="programsTab">
             <attribute name="title">
@@ -3577,11 +3567,32 @@ QComboBox QAbstractItemView{
                   </property>
                   <item>
                    <widget class="QLabel" name="label_5">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>80</width>
+                      <height>0</height>
+                     </size>
+                    </property>
                     <property name="maximumSize">
                      <size>
-                      <width>70</width>
+                      <width>78</width>
                       <height>16777215</height>
                      </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>Noto</family>
+                      <pointsize>20</pointsize>
+                      <weight>50</weight>
+                      <italic>false</italic>
+                      <bold>false</bold>
+                     </font>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">QLabel {
@@ -3593,6 +3604,180 @@ QComboBox QAbstractItemView{
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="programXWcsDro">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>1</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>100</width>
+                      <height>35</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">DROLabel{
+    border-style: transparent;
+    border-color: rgb(235, 235, 235);
+    border-width: 1px;
+    border-radius: 5px;
+    color: black;
+    background: rgb(235, 235, 235);
+	font: 17pt;
+    padding-right: 2px;
+    font: 17pt &quot;Noto&quot;;
+}
+
+DROLabel[style=&quot;unhomed&quot;]{
+   color: red;
+}
+
+DROLabel[style=&quot;homing&quot;]{
+   color: rgb(196, 160, 0);
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>1</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>0</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.4f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>2</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="programXG53Dro">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>1</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>100</width>
+                      <height>35</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">DROLabel{
+    border-style: transparent;
+    border-color: rgb(235, 235, 235);
+    border-width: 1px;
+    border-radius: 5px;
+    color: black;
+    background: rgb(235, 235, 235);
+	font: 17pt;
+    padding-right: 2px;
+    font: 17pt &quot;Noto&quot;;
+}
+
+DROLabel[style=&quot;unhomed&quot;]{
+   color: red;
+}
+
+DROLabel[style=&quot;homing&quot;]{
+   color: rgb(196, 160, 0);
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>0</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>0</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.4f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="programXDtgDro">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>1</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>100</width>
+                      <height>35</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">DROLabel{
+    border-style: transparent;
+    border-color: rgb(235, 235, 235);
+    border-width: 1px;
+    border-radius: 5px;
+    color: black;
+    background: rgb(235, 235, 235);
+	font: 17pt;
+    padding-right: 2px;
+    font: 17pt &quot;Noto&quot;;
+}
+
+DROLabel[style=&quot;unhomed&quot;]{
+   color: red;
+}
+
+DROLabel[style=&quot;homing&quot;]{
+   color: rgb(196, 160, 0);
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>2</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>0</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.4f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
                     </property>
                    </widget>
                   </item>
@@ -3611,6 +3796,18 @@ QComboBox QAbstractItemView{
                   </property>
                   <item>
                    <widget class="QLabel" name="label_6">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>80</width>
+                      <height>0</height>
+                     </size>
+                    </property>
                     <property name="maximumSize">
                      <size>
                       <width>70</width>
@@ -3627,6 +3824,183 @@ QComboBox QAbstractItemView{
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLineEdit" name="programZWcsDro">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>1</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>100</width>
+                      <height>35</height>
+                     </size>
+                    </property>
+                    <property name="focusPolicy">
+                     <enum>Qt::ClickFocus</enum>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">DROLabel{
+    border-style: transparent;
+    border-color: rgb(235, 235, 235);
+    border-width: 1px;
+    border-radius: 5px;
+    color: black;
+    background: rgb(235, 235, 235);
+	font: 17pt;
+    padding-right: 2px;
+    font: 17pt &quot;Noto&quot;;
+}
+
+DROLabel[style=&quot;unhomed&quot;]{
+   color: red;
+}
+
+DROLabel[style=&quot;homing&quot;]{
+   color: rgb(196, 160, 0);
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>1</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>2</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.4f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="programZG53Dro">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>1</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>100</width>
+                      <height>35</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">DROLabel{
+    border-style: transparent;
+    border-color: rgb(235, 235, 235);
+    border-width: 1px;
+    border-radius: 5px;
+    color: black;
+    background: rgb(235, 235, 235);
+	font: 17pt;
+    padding-right: 2px;
+    font: 17pt &quot;Noto&quot;;
+}
+
+DROLabel[style=&quot;unhomed&quot;]{
+   color: red;
+}
+
+DROLabel[style=&quot;homing&quot;]{
+   color: rgb(196, 160, 0);
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>0</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>2</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.4f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="DROLabel" name="programZDtgDro">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>1</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>100</width>
+                      <height>35</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">DROLabel{
+    border-style: transparent;
+    border-color: rgb(235, 235, 235);
+    border-width: 1px;
+    border-radius: 5px;
+    color: black;
+    background: rgb(235, 235, 235);
+	font: 17pt;
+    padding-right: 2px;
+    font: 17pt &quot;Noto&quot;;
+}
+
+DROLabel[style=&quot;unhomed&quot;]{
+   color: red;
+}
+
+DROLabel[style=&quot;homing&quot;]{
+   color: rgb(196, 160, 0);
+}</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="referenceType" stdset="0">
+                     <number>2</number>
+                    </property>
+                    <property name="axisNumber" stdset="0">
+                     <number>2</number>
+                    </property>
+                    <property name="inchFormat" stdset="0">
+                     <string>%9.4f</string>
+                    </property>
+                    <property name="millimeterFormat" stdset="0">
+                     <string>%10.3f</string>
+                    </property>
+                    <property name="degreeFormat" stdset="0">
+                     <string>%10.2f</string>
+                    </property>
+                    <property name="latheMode" stdset="0">
+                     <number>0</number>
                     </property>
                    </widget>
                   </item>
@@ -3727,8 +4101,8 @@ QComboBox QAbstractItemView{
               <widget class="ActionButton" name="actionbutton_51">
                <property name="geometry">
                 <rect>
-                 <x>660</x>
-                 <y>615</y>
+                 <x>825</x>
+                 <y>605</y>
                  <width>96</width>
                  <height>52</height>
                 </rect>
@@ -6739,6 +7113,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <header>qtpyvcp.widgets.display_widgets.status_label</header>
   </customwidget>
   <customwidget>
+   <class>DROLabel</class>
+   <extends>QLabel</extends>
+   <header>qtpyvcp.widgets.display_widgets.dro_label</header>
+  </customwidget>
+  <customwidget>
    <class>StatusLED</class>
    <extends>QWidget</extends>
    <header>qtpyvcp.widgets.display_widgets.status_led</header>
@@ -6788,6 +7167,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <class>OffsetTable</class>
    <extends>QTableView</extends>
    <header>qtpyvcp.widgets.input_widgets.offset_table</header>
+  </customwidget>
+  <customwidget>
+   <class>DROLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qtpyvcp.widgets.input_widgets.dro_line_edit</header>
   </customwidget>
   <customwidget>
    <class>VCPStackedWidget</class>

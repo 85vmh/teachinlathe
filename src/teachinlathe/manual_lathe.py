@@ -190,6 +190,14 @@ class ManualLathe:
                 self.previousMachineLimits = self.currentMachineLimits
                 print("-----All limits applied-------")
 
+    def getProgramHeader(self):
+        spindle_cmd = f"G97 M4 S{self.spindleRpm}" if self.spindleMode == SpindleMode.Rpm else f"G96 S{self.spindleCss} D{self.maxSpindleRpm}"
+
+        return (f"(Using Spindle & Feed settings from manual mode)\n"
+                f"{spindle_cmd}\n"
+                f"G95 F{self.feedPerRev}\n"
+                )
+
     def onMachineLimitsChanged(self, machine_limits):
         print("Machine limits changed: ", machine_limits)
         self.currentMachineLimits = machine_limits
@@ -261,28 +269,28 @@ class ManualLathe:
             print("Spindle cover is opened")
             return self.handleSpindleOff()
 
-        if self.spindleMode == SpindleMode.Rpm:
-            if self.spindleLever is not SpindleLever.NONE:
-                direction = linuxcnc.SPINDLE_REVERSE if self.spindleLever == SpindleLever.REV else linuxcnc.SPINDLE_FORWARD
-                LINUXCNC_CMD.spindle(direction, int(self.spindleRpm), 0)
-                LINUXCNC_CMD.spindle(linuxcnc.SPINDLE_CONSTANT)
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
-            else:
-                return self.handleSpindleOff()
-        else:
-            if self.spindleLever is not SpindleLever.NONE:
-                direction = 'M4' if self.spindleLever == SpindleLever.REV else 'M3'
-                cmd = f"{direction} G96 S{self.spindleCss} D{self.maxSpindleRpm}"
-                STAT.poll()
-                if cmd is not None and STAT.task_mode is not linuxcnc.MODE_MDI:
-                    LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
-                    LINUXCNC_CMD.wait_complete()
-                    LINUXCNC_CMD.mdi(cmd)
-                    LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
-                    LINUXCNC_CMD.wait_complete()
+        match self.spindleMode:
+            case SpindleMode.Rpm:
+                if self.spindleLever is not SpindleLever.NONE:
+                    direction = linuxcnc.SPINDLE_REVERSE if self.spindleLever == SpindleLever.REV else linuxcnc.SPINDLE_FORWARD
+                    LINUXCNC_CMD.spindle(direction, int(self.spindleRpm), 0)
                     self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
-            else:
-                return self.handleSpindleOff()
+                else:
+                    return self.handleSpindleOff()
+            case SpindleMode.Css:
+                if self.spindleLever is not SpindleLever.NONE:
+                    direction = 'M4' if self.spindleLever == SpindleLever.REV else 'M3'
+                    cmd = f"{direction} G96 S{self.spindleCss} D{self.maxSpindleRpm}"
+                    STAT.poll()
+                    if cmd is not None and STAT.task_mode is not linuxcnc.MODE_MDI:
+                        LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
+                        LINUXCNC_CMD.wait_complete()
+                        LINUXCNC_CMD.mdi(cmd)
+                        LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+                        LINUXCNC_CMD.wait_complete()
+                        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
+                else:
+                    return self.handleSpindleOff()
 
     def handleSpindleOff(self):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False

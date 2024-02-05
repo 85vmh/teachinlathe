@@ -1,0 +1,88 @@
+;radius
+o<radius> sub
+
+;o<backup_status> call
+
+#<diameter>       = #1
+#<feed>           = #2
+#<doc>            = #3 ;depth of cut 
+#<radius_z>       = #4
+#<location>       = #5 (1: front-exterior, 2: front-interior, 3: back-exterior)  
+
+#<radius> = #8	     ;will be cut ig freater than 0
+
+
+G7  ; Lathe diameter mode
+G18 ; XZ Plane
+G21 ; Metric Units
+G90 ; Absolute Distance
+
+#<radius_x> = [#<diameter> / 2] ; because of radius mode
+
+#<starting_X> = #<_x> (starting X)
+#<starting_Z> = #<_z> (starting Z)
+
+G95 F#<feed>      ; Feed-Per-Rev Mode
+
+#<temp> = 0
+
+     O200 if [#<location> EQ 1] ; front-exterior
+          o201 while [[#<temp> + #<doc>] lt #<radius>]
+               #<temp> = [#<temp> + #<doc>]
+               G0 X[#<radius_x> - #<temp>] Z#<starting_Z>
+               G1 Z#<radius_z>
+               G3 X#<radius_x> Z[#<radius_z> - #<temp>] K[-#<temp>]
+               G1 X#<starting_X>
+               G0 Z#<starting_Z>
+          o201 endwhile
+
+               G0 X#<starting_X> Z#<starting_Z>
+               G0 X[#<radius_x> - #<radius>]
+               G1 Z#<radius_z>
+               G3 X#<radius_x> Z[#<radius_z> - #<radius>] K[-#<radius>]
+               G1 X#<starting_X>
+               G0 Z#<starting_Z>
+
+
+     O200 elseif [#<location> EQ 2] ; front-interior
+          o202 while [[#<temp> + #<doc>] lt #<radius>]
+               #<temp> = [#<temp> + #<doc>]
+               G0 x[#<radius_x> + #<temp>] z#<starting_Z>
+               G1 z#<radius_z>
+               G2 x#<radius_x> z[#<radius_z> - #<temp>] K[-#<temp>]
+               G1 x#<starting_X>
+               G0 z#<starting_Z>
+          o202endwhile
+
+          G0 x#<starting_X> z#<starting_Z>
+          G0 x[#<radius_x> + #<radius>]
+          G1 z#<radius_z>
+          G2 x#<radius_x> z[#<radius_z> - #<radius>] K[-#<radius>]
+          G1 x#<starting_X>
+          G0 z#<starting_Z>
+
+
+     O300 elseif [#<location> EQ 3] ; back-exterior
+          o301 while [[#<temp> + #<doc>] lt #<radius>]
+               #<temp> = [#<temp> + #<doc>]
+               G0 x[#<radius_x> - #<temp>] z#<starting_Z>
+               G1 z#<radius_z>
+               G2 x#<radius_x> z[#<radius_z> + #<temp>] K#<temp>
+               G1 x#<starting_X>
+               G0 z#<starting_Z>
+          o301 endwhile
+
+          G0 x#<starting_X> z#<starting_Z>
+          G0 x[#<radius_x> - #<radius_size>]
+          G1 z#<radius_z>
+          G2 x#<radius_x> z[#<radius_z> + #<radius>] K#<radius>
+          G1 x#<starting_X>
+          G0 z#<starting_Z>
+     O300 endif
+
+;o<backup_restore> call     ; restore g20/21, g90/g91, feedrate cuter-comp and other using now global _backup_var
+
+o<radius> endsub
+
+M2
+%
