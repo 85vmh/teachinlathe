@@ -3719,7 +3719,7 @@ DROLabel[style=&quot;homing&quot;]{
                      <string>%10.2f</string>
                     </property>
                     <property name="latheMode" stdset="0">
-                     <number>0</number>
+                     <number>2</number>
                     </property>
                    </widget>
                   </item>
@@ -3777,7 +3777,7 @@ DROLabel[style=&quot;homing&quot;]{
                      <string>%10.2f</string>
                     </property>
                     <property name="latheMode" stdset="0">
-                     <number>0</number>
+                     <number>2</number>
                     </property>
                    </widget>
                   </item>
@@ -3828,7 +3828,7 @@ DROLabel[style=&quot;homing&quot;]{
                    </widget>
                   </item>
                   <item>
-                   <widget class="DROLineEdit" name="programZWcsDro">
+                   <widget class="DROLabel" name="programXWcsDro_2">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                       <horstretch>1</horstretch>
@@ -3840,9 +3840,6 @@ DROLabel[style=&quot;homing&quot;]{
                       <width>100</width>
                       <height>35</height>
                      </size>
-                    </property>
-                    <property name="focusPolicy">
-                     <enum>Qt::ClickFocus</enum>
                     </property>
                     <property name="styleSheet">
                      <string notr="true">DROLabel{
@@ -3884,7 +3881,7 @@ DROLabel[style=&quot;homing&quot;]{
                      <string>%10.2f</string>
                     </property>
                     <property name="latheMode" stdset="0">
-                     <number>0</number>
+                     <number>2</number>
                     </property>
                    </widget>
                   </item>
@@ -3942,7 +3939,7 @@ DROLabel[style=&quot;homing&quot;]{
                      <string>%10.2f</string>
                     </property>
                     <property name="latheMode" stdset="0">
-                     <number>0</number>
+                     <number>2</number>
                     </property>
                    </widget>
                   </item>
@@ -4000,7 +3997,7 @@ DROLabel[style=&quot;homing&quot;]{
                      <string>%10.2f</string>
                     </property>
                     <property name="latheMode" stdset="0">
-                     <number>0</number>
+                     <number>2</number>
                     </property>
                    </widget>
                   </item>
@@ -4143,10 +4140,10 @@ DROLabel[style=&quot;homing&quot;]{
               <widget class="StatusLabel" name="feedOverrideValue_3">
                <property name="geometry">
                 <rect>
-                 <x>490</x>
-                 <y>515</y>
+                 <x>565</x>
+                 <y>550</y>
                  <width>51</width>
-                 <height>26</height>
+                 <height>31</height>
                 </rect>
                </property>
                <property name="styleSheet">
@@ -4173,8 +4170,8 @@ DROLabel[style=&quot;homing&quot;]{
               <widget class="StatusLabel" name="statuslabel_27">
                <property name="geometry">
                 <rect>
-                 <x>490</x>
-                 <y>555</y>
+                 <x>530</x>
+                 <y>500</y>
                  <width>85</width>
                  <height>38</height>
                 </rect>
@@ -4219,6 +4216,54 @@ DROLabel[style=&quot;homing&quot;]{
                </property>
                <property name="statusItem" stdset="0">
                 <string/>
+               </property>
+              </widget>
+              <widget class="QLabel" name="label_7">
+               <property name="geometry">
+                <rect>
+                 <x>490</x>
+                 <y>500</y>
+                 <width>40</width>
+                 <height>36</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>78</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Noto</family>
+                 <pointsize>20</pointsize>
+                 <weight>50</weight>
+                 <italic>false</italic>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QLabel {
+	font: 20pt &quot;Noto&quot;;
+}</string>
+               </property>
+               <property name="text">
+                <string>F</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </widget>
@@ -7167,11 +7212,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <class>OffsetTable</class>
    <extends>QTableView</extends>
    <header>qtpyvcp.widgets.input_widgets.offset_table</header>
-  </customwidget>
-  <customwidget>
-   <class>DROLineEdit</class>
-   <extends>QLineEdit</extends>
-   <header>qtpyvcp.widgets.input_widgets.dro_line_edit</header>
   </customwidget>
   <customwidget>
    <class>VCPStackedWidget</class>
