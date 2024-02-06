@@ -19,7 +19,7 @@ G97 M4 S#<rpm>
 G17 (change plane to XY, canned cycle does not work on G18)
 
 G0 X0
-G98 G73 Z#<z_end> R#<retract> Q#<increment> F#<feed>
+G98 G83 Z#<z_end> R#<retract> Q#<increment> F#<feed>
 G80 (cancel canned cycle)
 G0 Z#<z_start>
 G0 X#<x_start>
