@@ -139,7 +139,7 @@ settings:
     min_value: 0.01
     max_value: 1.5
 
-  smart_numpad.quick_cycles_drill_feed:
+  smart_numpad.quick-cycles-drill-feed:
     description: drilling feed per rev.
     default_value: 0.05
     persistent: true
@@ -148,6 +148,16 @@ settings:
     ]
     min_value: 0.01
     max_value: 3.0
+
+  smart_numpad.quick-cycles-peck-depth:
+    description: drilling peck depth.
+    default_value: 0.05
+    persistent: true
+    options: [
+      0.2, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0, 14.0, 17.0, 20.0, 25.00
+    ]
+    min_value: 0.01
+    max_value: 30.0
 
   smart_numpad.quick-cycles-doc:
     description: depth of cut.

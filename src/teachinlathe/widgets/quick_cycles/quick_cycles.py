@@ -51,6 +51,8 @@ class QuickCycles(QWidget):
         self.facingDoc.mousePressEvent = lambda _: self.openNumPad(self.facingDoc)
         self.keyslotDoc.mousePressEvent = lambda _: self.openNumPad(self.keyslotDoc)
         self.drillingFeed.mousePressEvent = lambda _: self.openNumPad(self.drillingFeed)
+        self.drillingPeckDepth.mousePressEvent = lambda _: self.openNumPad(self.drillingPeckDepth)
+        self.drillingRpm.mousePressEvent = lambda _: self.openNumPad(self.drillingRpm)
         self.keyslotFeed.mousePressEvent = lambda _: self.openNumPad(self.keyslotFeed)
         self.threadingPitch.mousePressEvent = lambda _: self.openNumPad(self.threadingPitch)
         self.threadingFirstPass.mousePressEvent = lambda _: self.openNumPad(self.threadingFirstPass)
@@ -146,10 +148,11 @@ class QuickCycles(QWidget):
                 return f"o<threading> call [{pitch}] [{zEnd}] [{xStart}] [{firstPass}] [{xEnd}] [{depthDegression}] [$infeedAngle] [2] [45] [$springPasses]"
             case Page.DRILLING.index:
                 z_end = self.drillingZEnd.text()
-                retract = self.drillingRetract.text()
+                retract = self.drillingZRetract.text()
                 peck_depth = self.drillingPeckDepth.text()
-                feed = self.turningTurnAngle.text()
-                return f"o<drilling> call [{z_end}] [{retract}] [{peck_depth}] [{feed}]"
+                rpm = self.drillingRpm.text()
+                feed = self.drillingFeed.text()
+                return f"o<drilling> call [{z_end}] [{retract}] [{peck_depth}] [{rpm}] [{feed}]"
             case Page.KEY_SLOT.index:
                 x_end = self.keyslotXEnd.text()
                 z_end = self.keyslotZEnd.text()

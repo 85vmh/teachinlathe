@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>4</number>
+    <number>6</number>
    </property>
    <widget class="QWidget" name="rootPage">
     <widget class="QPushButton" name="btnTurning">
@@ -1170,13 +1170,6 @@
       <property name="horizontalSpacing">
        <number>10</number>
       </property>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="drillingRetract">
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_17">
         <property name="styleSheet">
@@ -1203,7 +1196,7 @@
          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
         </property>
         <property name="text">
-         <string>Retract:</string>
+         <string>Z Retract</string>
         </property>
        </widget>
       </item>
@@ -1257,18 +1250,11 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="3">
-       <widget class="QLabel" name="label_49">
-        <property name="styleSheet">
-         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-        </property>
-        <property name="text">
-         <string>mm</string>
-        </property>
-       </widget>
-      </item>
       <item row="4" column="2">
        <widget class="VCPSettingsLineEdit" name="drillingFeed">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="styleSheet">
          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
         </property>
@@ -1288,6 +1274,9 @@
       </item>
       <item row="3" column="2">
        <widget class="VCPSettingsLineEdit" name="drillingRpm">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="styleSheet">
          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
         </property>
@@ -1302,13 +1291,6 @@
         </property>
         <property name="textFormat" stdset="0">
          <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="drillingPeckDepth">
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -1338,9 +1320,63 @@
        </widget>
       </item>
       <item row="0" column="3">
-       <widget class="QPushButton" name="drillingTeachZBtn">
+       <widget class="QPushButton" name="drillingTeachEndBtn">
         <property name="text">
          <string>TeachIn Z</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="TeachInLineEdit" name="drillingZRetract">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>2</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QPushButton" name="drillingTeachRetractBtn">
+        <property name="text">
+         <string>TeachIn Z</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="VCPSettingsLineEdit" name="drillingPeckDepth">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>300</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-peck-depth</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
         </property>
        </widget>
       </item>
@@ -2359,7 +2395,7 @@ QPushButton:checked {
    </hints>
   </connection>
   <connection>
-   <sender>drillingTeachZBtn</sender>
+   <sender>drillingTeachEndBtn</sender>
    <signal>clicked()</signal>
    <receiver>drillingZEnd</receiver>
    <slot>fillWithCurrentValue()</slot>
@@ -2435,6 +2471,22 @@ QPushButton:checked {
     <hint type="destinationlabel">
      <x>183</x>
      <y>183</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>drillingTeachRetractBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>drillingZRetract</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>276</x>
+     <y>152</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>182</x>
+     <y>152</y>
     </hint>
    </hints>
   </connection>

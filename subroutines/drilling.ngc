@@ -1,5 +1,3 @@
-;drilling
-
 O<drilling> sub
 
 G7  ; Diameter mode
@@ -7,22 +5,26 @@ G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
 
-#<z_end> = #1
-#<retract> = #2
-#<increment> = #3
-#<spindle_rpm> = #4
-#<feed> = #5
+#<z_end>        = #1
+#<retract>      = #2
+#<increment>    = #3
+#<rpm>          = #4
+#<feed>         = #5
+
+G97 M4 S#<rpm>
 
 #<x_start> = #<_x> (starting X)
 #<z_start> = #<_z> (starting Z)
 
-M4 S#<spindle_rpm>
+G17 (change plane to XY, canned cycle does not work on G18)
 
 G0 X0
-G98 G73 Z#<z_end> F#<feed>
+G98 G73 Z#<z_end> R#<retract> Q#<increment> F#<feed>
 G80 (cancel canned cycle)
 G0 Z#<z_start>
 G0 X#<x_start>
 
+G18 (switch back to XZ plane)
+M5
 O<drilling> endsub
 M2
