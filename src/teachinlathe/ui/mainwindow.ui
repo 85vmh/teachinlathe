@@ -2111,21 +2111,21 @@ QCheckBox:checked {
               </rect>
              </property>
             </widget>
+            <widget class="QuickCycles" name="quickcycles">
+             <property name="geometry">
+              <rect>
+               <x>655</x>
+               <y>200</y>
+               <width>356</width>
+               <height>471</height>
+              </rect>
+             </property>
+            </widget>
            </widget>
            <widget class="QWidget" name="quickCyclesTab">
             <attribute name="title">
              <string>Quick Cycles</string>
             </attribute>
-            <widget class="QuickCycles" name="quickcycles">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>1020</width>
-               <height>680</height>
-              </rect>
-             </property>
-            </widget>
            </widget>
            <widget class="QWidget" name="programsTab">
             <attribute name="title">

@@ -206,9 +206,6 @@ class MyMainWindow(VCPMainWindow):
             temp.flush()
             print(f'Temporary file created at: {temp.name}')
             loadProgram(temp.name, add_to_recents=False)
-            self.stackedProgramsTab.setCurrentIndex(ProgramTabs.PROGRAM_LOADED.value)
-            self.vtk.clearLivePlot()
-            self.tabWidget.setCurrentIndex(MainTabs.PROGRAMS.value)
 
     def backToPrograms(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
