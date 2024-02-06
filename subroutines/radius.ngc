@@ -10,10 +10,11 @@ o<radius> sub
 #<location>     = #5 (0: front-exterior, 1: front-interior, 2: back-exterior)
 
 
-G7  ; Lathe diameter mode
-G18 ; XZ Plane
-G21 ; Metric Units
-G90 ; Absolute Distance
+G7    ; Lathe diameter mode
+G18   ; XZ Plane
+G21   ; Metric Units
+G90   ; Absolute Distance
+G91.1 ; 
 
 #<x_end> = [#<x_end> / 2] ; because of radius mode
 
@@ -23,21 +24,27 @@ G90 ; Absolute Distance
 #<temp> = 0
 
      O200 if [#<location> EQ 0] ; front-exterior
+          
           o201 while [[#<temp> + #<doc>] lt #<radius>]
+               (print,---in while temp = #<temp>)
                #<temp> = [#<temp> + #<doc>]
                G0 X[#<x_end> - #<temp>] Z#<z_start>
                G1 Z#<z_end>
+               (print,---in while before g3 = #<temp>)
                G3 X#<x_end> Z[#<z_end> - #<temp>] K[-#<temp>]
                G1 X#<x_start>
                G0 Z#<z_start>
           o201 endwhile
 
-               G0 X#<x_start> Z#<z_start>
-               G0 X[#<x_end> - #<radius>]
-               G1 Z#<z_end>
-               G3 X#<x_end> Z[#<z_end> - #<radius>] K[-#<radius>]
-               G1 X#<x_start>
-               G0 Z#<z_start>
+          (print,---after while temp = #<temp>)
+
+          G0 X#<x_start> Z#<z_start>
+          G0 X[#<x_end> - #<radius>]
+          G1 Z#<z_end>
+          (print,---before last G3)
+          G3 X#<x_end> Z[#<z_end> - #<radius>] K[-#<radius>]
+          G1 X#<x_start>
+          G0 Z#<z_start>
 
 
      O200 elseif [#<location> EQ 1] ; front-interior
