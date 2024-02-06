@@ -45,7 +45,6 @@ class TeachInLatheDro(QWidget):
         self.zPrimaryDro.installEventFilter(self)
 
         self.status.program_units.notify(self.updateUnits, 'string')
-        self.status.gcodes.notify(self.updateDiameterMode)
         getattr(self.pos, 'rel').notify(self.updateValues)
         self.updateUnits()
         self.updateValues()
@@ -78,10 +77,6 @@ class TeachInLatheDro(QWidget):
         self.xUnit.setText(units)
         self.zUnit.setText(units)
 
-        self.updateDro()
-
-    def updateDiameterMode(self, gcodes):
-        self.isDiameterMode = 'G7' in gcodes
         self.updateDro()
 
     def updateValues(self, pos=None):

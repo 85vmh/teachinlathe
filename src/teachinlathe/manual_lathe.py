@@ -222,6 +222,7 @@ class ManualLathe:
 
     def onInputFeedChanged(self, value=feedPerRev):
         self.feedPerRev = value
+        print("feed per rev is: ", self.feedPerRev)
 
     def onTaperTurningChanged(self, value=False):
         self.isTaperTurning = value

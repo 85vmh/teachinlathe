@@ -91,7 +91,6 @@ class MyMainWindow(VCPMainWindow):
         self.zMpgEnabled = True
         self.current_spindle_override = 0
         self.current_feed_override = 0
-        self.subroutineToRun = None
 
         self.manualLathe = ManualLathe()
         self.latheComponent = TeachInLatheComponent()
@@ -119,6 +118,9 @@ class MyMainWindow(VCPMainWindow):
         self.onFeedOverrideChanged(STATUS.feedrate.value)
         STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
 
+        self.onTaskModeChanged(STATUS.task_mode)
+        STATUS.task_mode.signal.connect(self.onTaskModeChanged)
+
         self.handle_spindle_mode(self.getSpindleModeIndex)
 
         # rpm is a float that fluctuates a lot, so debounce it
@@ -132,14 +134,6 @@ class MyMainWindow(VCPMainWindow):
         self.btnBackToPrograms.clicked.connect(self.backToPrograms)
         self.xMpgCheckbox.stateChanged.connect(self.toggleXMpgEnable)
         self.zMpgCheckbox.stateChanged.connect(self.toggleZMpgEnable)
-
-        # set the current values
-        self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
-        self.manualLathe.onInputRpmChanged(self.inputRpm.text())
-        self.manualLathe.onInputCssChanged(self.inputCss.text())
-        self.manualLathe.onMaxSpindleRpmChanged(self.inputMaxRpm.text())
-        self.manualLathe.onInputFeedChanged(self.inputFeed.text())
-        self.manualLathe.onFeedAngleChanged(self.inputFeedAngle.text())
 
         # connect the signals
         self.radioRpm.toggled.connect(self.onRadioButtonToggled)
@@ -167,6 +161,16 @@ class MyMainWindow(VCPMainWindow):
         self.quickcycles.onLoadClicked.connect(self.prepareToRunProgram)
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
         self.pushButton.clicked.connect(self.onChuckLimitSet)
+        QTimer.singleShot(0, self.afterUIInit)
+
+    def afterUIInit(self):
+        # set the current values
+        self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
+        self.manualLathe.onInputRpmChanged(self.inputRpm.text())
+        self.manualLathe.onInputCssChanged(self.inputCss.text())
+        self.manualLathe.onMaxSpindleRpmChanged(self.inputMaxRpm.text())
+        self.manualLathe.onInputFeedChanged(self.inputFeed.text())
+        self.manualLathe.onFeedAngleChanged(self.inputFeedAngle.text())
 
     def onChuckLimitSet(self):
         MachineLimitsHandler().setChuckLimit(float(self.chuckLimit.text()))
@@ -216,10 +220,7 @@ class MyMainWindow(VCPMainWindow):
         self.spindleModeWidget.setCurrentIndex(self.getSpindleModeIndex())
 
     def onCycleStartPressed(self):
-        if self.mainSelectedTab == MainTabs.MANUAL_TURNING:
-            if self.subroutineToRun is not None:
-                print("Run MDI command: ", self.subroutineToRun)
-                issue_mdi(self.subroutineToRun)
+        pass
 
     def onCycleStopPressed(self, value):
         if self.mainSelectedTab == MainTabs.MANUAL_TURNING:
@@ -315,6 +316,17 @@ class MyMainWindow(VCPMainWindow):
     def onFeedOverrideChanged(self, value):
         self.current_feed_override = value
         self.update_actual_feed()
+
+    def onTaskModeChanged(self, taskMode):
+        print("---onTaskModeChanged: ", taskMode)
+        # if STAT.task_mode == linuxcnc.MODE_MANUAL:
+        #     print("enabled")
+        #     self.xMpgCheckbox.setEnabled(True)
+        #     self.zMpgCheckbox.setEnabled(True)
+        # else:
+        #     print("disabled")
+        #     self.xMpgCheckbox.setEnabled(False)
+        #     self.zMpgCheckbox.setEnabled(False)
 
     def onHandwheelXEnabledChanged(self, value):
         print("onHandwheelXEnabledChanged from pin", value)

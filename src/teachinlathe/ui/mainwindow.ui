@@ -1656,6 +1656,11 @@ QCheckBox:checked {
 	background-color: lightblue;
    	color: black;
 	padding-left: 16px;
+}
+QCheckBox:disabled {
+	background-color: #f0f0f0; 
+	border-color: #d3d3d3; 
+	color: #a0a0a0;
 }</string>
               </property>
               <property name="text">
@@ -1666,6 +1671,9 @@ QCheckBox:checked {
               </property>
              </widget>
              <widget class="QCheckBox" name="zMpgCheckbox">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="geometry">
                <rect>
                 <x>320</x>
@@ -1702,6 +1710,11 @@ QCheckBox:checked {
 	background-color: lightblue;
    	color: black;
 	padding-left: 16px;
+}
+QCheckBox:disabled {
+	background-color: #f0f0f0; 
+	border-color: #d3d3d3; 
+	color: #a0a0a0;
 }</string>
               </property>
               <property name="text">
