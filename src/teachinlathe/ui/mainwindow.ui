@@ -2135,9 +2135,9 @@ QCheckBox:disabled {
              </property>
             </widget>
            </widget>
-           <widget class="QWidget" name="quickCyclesTab">
+           <widget class="QWidget" name="conversationalTab">
             <attribute name="title">
-             <string>Quick Cycles</string>
+             <string>Conversational</string>
             </attribute>
            </widget>
            <widget class="QWidget" name="programsTab">

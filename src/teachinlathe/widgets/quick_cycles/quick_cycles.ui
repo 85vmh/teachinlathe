@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>5</number>
    </property>
    <widget class="QWidget" name="rootPage">
     <widget class="QPushButton" name="btnTurning">
@@ -756,7 +756,7 @@
        <number>10</number>
       </property>
       <item row="1" column="2">
-       <widget class="TeachInLineEdit" name="radiusXStart">
+       <widget class="TeachInLineEdit" name="radiusXEnd">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -853,12 +853,12 @@
          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
         </property>
         <property name="text">
-         <string>X Start:</string>
+         <string>X End:</string>
         </property>
        </widget>
       </item>
       <item row="2" column="2">
-       <widget class="TeachInLineEdit" name="radiusZStart">
+       <widget class="TeachInLineEdit" name="radiusZEnd">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -926,7 +926,7 @@
          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
         </property>
         <property name="text">
-         <string>Z Start:</string>
+         <string>Z End:</string>
         </property>
        </widget>
       </item>
@@ -2164,6 +2164,38 @@ QPushButton:checked {
     <hint type="destinationlabel">
      <x>182</x>
      <y>106</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>radiusTeachXBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>radiusXEnd</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>274</x>
+     <y>147</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>183</x>
+     <y>147</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>radiusTeachZBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>radiusZEnd</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>274</x>
+     <y>188</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>183</x>
+     <y>188</y>
     </hint>
    </hints>
   </connection>

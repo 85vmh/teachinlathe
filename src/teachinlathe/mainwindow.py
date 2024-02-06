@@ -302,7 +302,6 @@ class MyMainWindow(VCPMainWindow):
 
     def update_actual_feed(self):
         override_factor = self.current_feed_override
-        print("feed_override", override_factor)
         if self.isPowerFeeding:
             calculated_feed = float(self.inputFeed.text()) * override_factor
             self.actualFeed.setText(format(calculated_feed, '.3f'))
