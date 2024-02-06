@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>6</number>
+    <number>8</number>
    </property>
    <widget class="QWidget" name="rootPage">
     <widget class="QPushButton" name="btnTurning">
@@ -2073,6 +2073,9 @@ QPushButton:checked {
       </item>
       <item row="2" column="2">
        <widget class="VCPSettingsLineEdit" name="keyslotDoc">
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
+        </property>
         <property name="styleSheet">
          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
         </property>
@@ -2092,6 +2095,9 @@ QPushButton:checked {
       </item>
       <item row="3" column="2">
        <widget class="VCPSettingsLineEdit" name="keyslotFeed">
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
+        </property>
         <property name="styleSheet">
          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
         </property>
@@ -2148,6 +2154,9 @@ QPushButton:checked {
       </item>
       <item row="0" column="2">
        <widget class="TeachInLineEdit" name="keyslotXEnd">
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
+        </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -2180,6 +2189,9 @@ QPushButton:checked {
       </item>
       <item row="1" column="2">
        <widget class="TeachInLineEdit" name="keyslotZEnd">
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
+        </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -2487,6 +2499,38 @@ QPushButton:checked {
     <hint type="destinationlabel">
      <x>182</x>
      <y>152</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>keyslotTeachXBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>keyslotXEnd</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>260</x>
+     <y>114</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>178</x>
+     <y>114</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>keyslotTeachZBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>keyslotZEnd</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>260</x>
+     <y>157</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>178</x>
+     <y>157</y>
     </hint>
    </hints>
   </connection>

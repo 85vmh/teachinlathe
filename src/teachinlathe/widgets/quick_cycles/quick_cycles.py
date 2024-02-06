@@ -53,6 +53,7 @@ class QuickCycles(QWidget):
         self.drillingFeed.mousePressEvent = lambda _: self.openNumPad(self.drillingFeed)
         self.drillingPeckDepth.mousePressEvent = lambda _: self.openNumPad(self.drillingPeckDepth)
         self.drillingRpm.mousePressEvent = lambda _: self.openNumPad(self.drillingRpm)
+        self.keyslotDoc.mousePressEvent = lambda _: self.openNumPad(self.keyslotDoc)
         self.keyslotFeed.mousePressEvent = lambda _: self.openNumPad(self.keyslotFeed)
         self.threadingPitch.mousePressEvent = lambda _: self.openNumPad(self.threadingPitch)
         self.threadingFirstPass.mousePressEvent = lambda _: self.openNumPad(self.threadingFirstPass)

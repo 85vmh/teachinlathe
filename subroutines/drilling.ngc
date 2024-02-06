@@ -1,7 +1,7 @@
 O<drilling> sub
 
 G7  ; Diameter mode
-G18 ; XZ Plane
+G17 ; Change plane to XY, canned cycle does not work on G18)
 G21 ; Metric Units
 G90 ; Absolute Distance
 
@@ -15,8 +15,6 @@ G97 M4 S#<rpm>
 
 #<x_start> = #<_x> (starting X)
 #<z_start> = #<_z> (starting Z)
-
-G17 (change plane to XY, canned cycle does not work on G18)
 
 G0 X0
 G98 G83 Z#<z_end> R#<retract> Q#<increment> F#<feed>
