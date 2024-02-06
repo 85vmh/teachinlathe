@@ -401,6 +401,9 @@ class ManualLathe:
         if self.joystickFunction == JoystickFunction.FEEDING:
             print("stopFeeding")
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = False
+            print("set PinIsPowerFeeding to False")
+            currentValue = self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value
+            print("PinIsPowerFeeding: ", currentValue)
             self.joystickFunction = None
             return True
         return False

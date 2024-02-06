@@ -318,7 +318,15 @@ class MyMainWindow(VCPMainWindow):
         self.update_actual_feed()
 
     def onTaskModeChanged(self, taskMode):
-        print("---onTaskModeChanged: ", taskMode)
+        match taskMode:
+            case 1:
+                print("----Manual mode")
+            case 2:
+                print("----Auto mode")
+            case 3:
+                print("----MDI mode")
+
+
         # if STAT.task_mode == linuxcnc.MODE_MANUAL:
         #     print("enabled")
         #     self.xMpgCheckbox.setEnabled(True)
