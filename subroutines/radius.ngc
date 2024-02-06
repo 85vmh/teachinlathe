@@ -10,7 +10,7 @@ o<radius> sub
 #<location>     = #5 (0: front-exterior, 1: front-interior, 2: back-exterior)
 
 
-G7    ; Lathe diameter mode
+G8    ; Lathe radius mode
 G18   ; XZ Plane
 G21   ; Metric Units
 G90   ; Absolute Distance
@@ -26,22 +26,18 @@ G91.1 ;
      O200 if [#<location> EQ 0] ; front-exterior
           
           o201 while [[#<temp> + #<doc>] lt #<radius>]
-               (print,---in while temp = #<temp>)
                #<temp> = [#<temp> + #<doc>]
                G0 X[#<x_end> - #<temp>] Z#<z_start>
                G1 Z#<z_end>
-               (print,---in while before g3 = #<temp>)
                G3 X#<x_end> Z[#<z_end> - #<temp>] K[-#<temp>]
                G1 X#<x_start>
                G0 Z#<z_start>
           o201 endwhile
 
-          (print,---after while temp = #<temp>)
 
           G0 X#<x_start> Z#<z_start>
           G0 X[#<x_end> - #<radius>]
           G1 Z#<z_end>
-          (print,---before last G3)
           G3 X#<x_end> Z[#<z_end> - #<radius>] K[-#<radius>]
           G1 X#<x_start>
           G0 Z#<z_start>
@@ -85,6 +81,7 @@ G91.1 ;
 
 ;o<backup_restore> call     ; restore g20/21, g90/g91, feedrate cuter-comp and other using now global _backup_var
 
+G7
 o<radius> endsub
 
 M2
