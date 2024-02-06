@@ -291,13 +291,13 @@ settings:
 
   smart_numpad.quick-cycles-keyslot-feed:
     description: keyslot feed.
-    default_value: 50
+    default_value: 500
     persistent: true
     options: [
-      25, 50, 75, 100, 125, 150, 175, 200, 225, 250
+      50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750
     ]
     min_value: 50
-    max_value: 400
+    max_value: 1500
 
   smart_numpad.input-feed-angle:
     description: Enter feed angle.
