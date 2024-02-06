@@ -1,0 +1,82 @@
+o<chamfer> sub
+
+
+#<corner_x>        = #1
+#<corner_z>        = #2
+#<chamfer>         = #3  ;will be cut if > 0
+#<doc>             = #4  ;depth of cut
+#<location>        = #5 (0: front-exterior, 1: front-interior, 2: back-exterior)
+
+
+G8  ; Lathe radius Mode
+G18 ; XZ Plane
+G21 ; Metric Units
+G90 ; Absolute Distance
+
+
+#<corner_x> = [#<corner_x> / 2] ; because of radius mode
+
+#<x_start> = #<_x> (starting X)
+#<z_start> = #<_z> (starting Z)
+
+
+#<temp> = 0
+        O200 if [#<location> EQ 0] ; front-exterior
+             o201 while [[#<temp> + #<doc> ] lt #<chamfer> ]
+                  #<temp> = [#<temp> + #<doc> ]
+                  G0 x[#<corner_x> - #<temp>] z#<z_start>
+                  G1 z#<corner_z>
+                  G1 x#<corner_x> z[#<corner_z> - #<temp>]
+                  G1 x#<x_start>
+                  G0 z#<z_start>
+             o201 endwhile
+
+             G0 x#<x_start> z#<z_start>
+             G0 x[#<corner_x> - #<chamfer> ]
+             G1 z#<corner_z>
+             G1 x#<corner_x> z[#<corner_z> - #<chamfer> ]
+             G1 x#<x_start>
+             G0 z#<z_start>
+
+
+        O200 elseif [#<location> EQ 1] ; front-interior
+             o202 while [[#<temp> + #<doc> ] lt #<chamfer>  ]
+                  #<temp> = [#<temp> + #<doc> ]
+                  G0 x[#<corner_x> + #<temp>] z#<z_start>
+                  G1 z#<corner_z>
+                  G1 x#<corner_x> z[#<corner_z> - #<temp>]
+                  G1 x#<x_start>
+                  G0 z#<z_start>
+             o202 endwhile
+
+             G0 x#<x_start> z#<z_start>
+             G0 x[#<corner_x> + #<chamfer>  ]
+             G1 z#<corner_z>
+             G1 x#<corner_x> z[#<corner_z> - #<chamfer> ]
+             G1 x#<x_start>
+             G0 z#<z_start>
+
+
+        O200 elseif [#<location> EQ 2] ; back-exterior
+             o203 while [[#<temp> + #<doc> ] lt <chamfer>]
+                  #<temp> = [#<temp> + #<doc> ]
+                  G0 x[#<corner_x> - #<temp>] z#<z_start>
+                  G1 z#<corner_z>
+                  G1 x#<corner_x> z[#<corner_z> + #<temp>]
+                  G1 x#<x_start>
+                  G0 z#<z_start>
+             o203 endwhile
+
+             G0 x#<x_start> z#<z_start>
+             G0 x[#<corner_x> - <chamfer>]
+             G1 z#<corner_z>
+             G1 x#<corner_x> z[#<corner_z> + <chamfer> ]
+             G1 x#<x_start>
+             G0 z#<z_start>
+        O200 endif
+
+M5
+G7
+
+o<chamfer> endsub
+M2

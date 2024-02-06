@@ -1,10 +1,8 @@
-;radius
 o<radius> sub
 
-;o<backup_status> call
 
-#<x_end>        = #1
-#<z_end>        = #2
+#<corner_x>     = #1
+#<corner_z>     = #2
 #<radius>       = #3 ;will be cut if greater than 0
 #<doc>          = #4 ;depth of cut
 #<location>     = #5 (0: front-exterior, 1: front-interior, 2: back-exterior)
@@ -16,7 +14,7 @@ G21   ; Metric Units
 G90   ; Absolute Distance
 G91.1 ; 
 
-#<x_end> = [#<x_end> / 2] ; because of radius mode
+#<corner_x> = [#<corner_x> / 2] ; because of radius mode
 
 #<x_start> = #<_x> (starting X)
 #<z_start> = #<_z> (starting Z)
@@ -27,18 +25,18 @@ G91.1 ;
           
           o201 while [[#<temp> + #<doc>] lt #<radius>]
                #<temp> = [#<temp> + #<doc>]
-               G0 X[#<x_end> - #<temp>] Z#<z_start>
-               G1 Z#<z_end>
-               G3 X#<x_end> Z[#<z_end> - #<temp>] K[-#<temp>]
+               G0 X[#<corner_x> - #<temp>] Z#<z_start>
+               G1 Z#<corner_z>
+               G3 X#<corner_x> Z[#<corner_z> - #<temp>] K[-#<temp>]
                G1 X#<x_start>
                G0 Z#<z_start>
           o201 endwhile
 
 
           G0 X#<x_start> Z#<z_start>
-          G0 X[#<x_end> - #<radius>]
-          G1 Z#<z_end>
-          G3 X#<x_end> Z[#<z_end> - #<radius>] K[-#<radius>]
+          G0 X[#<corner_x> - #<radius>]
+          G1 Z#<corner_z>
+          G3 X#<corner_x> Z[#<corner_z> - #<radius>] K[-#<radius>]
           G1 X#<x_start>
           G0 Z#<z_start>
 
@@ -46,17 +44,17 @@ G91.1 ;
      O200 elseif [#<location> EQ 1] ; front-interior
           o202 while [[#<temp> + #<doc>] lt #<radius>]
                #<temp> = [#<temp> + #<doc>]
-               G0 x[#<x_end> + #<temp>] z#<z_start>
-               G1 z#<z_end>
-               G2 x#<x_end> z[#<z_end> - #<temp>] K[-#<temp>]
+               G0 x[#<corner_x> + #<temp>] z#<z_start>
+               G1 z#<corner_z>
+               G2 x#<corner_x> z[#<corner_z> - #<temp>] K[-#<temp>]
                G1 x#<x_start>
                G0 z#<z_start>
           o202endwhile
 
           G0 x#<x_start> z#<z_start>
-          G0 x[#<x_end> + #<radius>]
-          G1 z#<z_end>
-          G2 x#<x_end> z[#<z_end> - #<radius>] K[-#<radius>]
+          G0 x[#<corner_x> + #<radius>]
+          G1 z#<corner_z>
+          G2 x#<corner_x> z[#<corner_z> - #<radius>] K[-#<radius>]
           G1 x#<x_start>
           G0 z#<z_start>
 
@@ -64,25 +62,24 @@ G91.1 ;
      O300 elseif [#<location> EQ 2] ; back-exterior
           o301 while [[#<temp> + #<doc>] lt #<radius>]
                #<temp> = [#<temp> + #<doc>]
-               G0 x[#<x_end> - #<temp>] z#<z_start>
-               G1 z#<z_end>
-               G2 x#<x_end> z[#<z_end> + #<temp>] K#<temp>
+               G0 x[#<corner_x> - #<temp>] z#<z_start>
+               G1 z#<corner_z>
+               G2 x#<corner_x> z[#<corner_z> + #<temp>] K#<temp>
                G1 x#<x_start>
                G0 z#<z_start>
           o301 endwhile
 
           G0 x#<x_start> z#<z_start>
-          G0 x[#<x_end> - #<radius_size>]
-          G1 z#<z_end>
-          G2 x#<x_end> z[#<z_end> + #<radius>] K#<radius>
+          G0 x[#<corner_x> - #<radius_size>]
+          G1 z#<corner_z>
+          G2 x#<corner_x> z[#<corner_z> + #<radius>] K#<radius>
           G1 x#<x_start>
           G0 z#<z_start>
      O300 endif
 
-;o<backup_restore> call     ; restore g20/21, g90/g91, feedrate cuter-comp and other using now global _backup_var
-
+M5
 G7
-o<radius> endsub
 
+o<radius> endsub
 M2
-%
+

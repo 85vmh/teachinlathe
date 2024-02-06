@@ -106,14 +106,19 @@ class QuickCycles(QWidget):
                 doc = self.facingDoc.text()
                 return f"o<facing> call [{x_end}] [{z_end}] [{doc}]"
             case Page.CHAMFER.index:
-                return "chamfer"
+                corner_x = self.chamferCornerX.text()
+                corner_z = self.chamferCornerZ.text()
+                chamfer = self.chamferWidth.text()
+                doc = self.radiusDoc.text()
+                location = self.radiusLocation.currentIndex()
+                return f"o<chamfer> call [{corner_x}] [{corner_z}] [{chamfer}] [{doc}] [{location}]"
             case Page.RADIUS.index:
-                x_end = self.radiusXEnd.text()
-                z_end = self.radiusZEnd.text()
+                corner_x = self.radiusCornerX.text()
+                corner_z = self.radiusCornerZ.text()
                 radius = self.radiusValue.text()
                 doc = self.radiusDoc.text()
                 location = self.radiusLocation.currentIndex()
-                return f"o<radius> call [{x_end}] [{z_end}] [{radius}] [{doc}] [{location}]"
+                return f"o<radius> call [{corner_x}] [{corner_z}] [{radius}] [{doc}] [{location}]"
             case Page.THREADING.index:
                 '''
                 val pitch = parameters.pitch.stripZeros()

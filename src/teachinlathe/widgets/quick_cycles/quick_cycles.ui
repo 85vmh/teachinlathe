@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>5</number>
+    <number>4</number>
    </property>
    <widget class="QWidget" name="rootPage">
     <widget class="QPushButton" name="btnTurning">
@@ -734,7 +734,214 @@
      </layout>
     </widget>
    </widget>
-   <widget class="QWidget" name="pageChamfer"/>
+   <widget class="QWidget" name="pageChamfer">
+    <widget class="QWidget" name="gridLayoutWidget_8">
+     <property name="geometry">
+      <rect>
+       <x>35</x>
+       <y>30</y>
+       <width>285</width>
+       <height>224</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_9">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="horizontalSpacing">
+       <number>10</number>
+      </property>
+      <item row="1" column="2">
+       <widget class="TeachInLineEdit" name="chamferCornerX">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>0</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>2</number>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_23">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Depth of cut:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QPushButton" name="chamferTeachXBtn">
+        <property name="text">
+         <string>TeachIn X</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" colspan="2">
+       <widget class="VCPSettingsComboBox" name="chamferLocation">
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>quick-cycles.radius-location</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="label_60">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>mm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_24">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Width</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_61">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Location:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QPushButton" name="chamferTeachZBtn">
+        <property name="text">
+         <string>TeachIn Z</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_62">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Corner X:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="TeachInLineEdit" name="chamferCornerZ">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="referenceType" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="axisNumber" stdset="0">
+         <number>2</number>
+        </property>
+        <property name="inchFormat" stdset="0">
+         <string>%9.4f</string>
+        </property>
+        <property name="millimeterFormat" stdset="0">
+         <string>%10.3f</string>
+        </property>
+        <property name="degreeFormat" stdset="0">
+         <string>%10.2f</string>
+        </property>
+        <property name="latheMode" stdset="0">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="VCPSettingsLineEdit" name="chamferDoc">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-doc</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="VCPSettingsLineEdit" name="chamferWidth">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>0.1</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="settingName" stdset="0">
+         <string>smart_numpad.quick-cycles-chamfer</string>
+        </property>
+        <property name="textFormat" stdset="0">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_67">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>Corner Z:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <widget class="QLabel" name="label_74">
+        <property name="styleSheet">
+         <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+        </property>
+        <property name="text">
+         <string>mm/pass</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
    <widget class="QWidget" name="pageRadius">
     <widget class="QWidget" name="gridLayoutWidget_7">
      <property name="geometry">
@@ -756,7 +963,7 @@
        <number>10</number>
       </property>
       <item row="1" column="2">
-       <widget class="TeachInLineEdit" name="radiusXEnd">
+       <widget class="TeachInLineEdit" name="radiusCornerX">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -853,12 +1060,12 @@
          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
         </property>
         <property name="text">
-         <string>X End:</string>
+         <string>Corner X:</string>
         </property>
        </widget>
       </item>
       <item row="2" column="2">
-       <widget class="TeachInLineEdit" name="radiusZEnd">
+       <widget class="TeachInLineEdit" name="radiusCornerZ">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -926,7 +1133,7 @@
          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
         </property>
         <property name="text">
-         <string>Z End:</string>
+         <string>Corner Z:</string>
         </property>
        </widget>
       </item>
@@ -2170,7 +2377,7 @@ QPushButton:checked {
   <connection>
    <sender>radiusTeachXBtn</sender>
    <signal>clicked()</signal>
-   <receiver>radiusXEnd</receiver>
+   <receiver>radiusCornerX</receiver>
    <slot>fillWithCurrentValue()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -2186,7 +2393,7 @@ QPushButton:checked {
   <connection>
    <sender>radiusTeachZBtn</sender>
    <signal>clicked()</signal>
-   <receiver>radiusZEnd</receiver>
+   <receiver>radiusCornerZ</receiver>
    <slot>fillWithCurrentValue()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -2196,6 +2403,38 @@ QPushButton:checked {
     <hint type="destinationlabel">
      <x>183</x>
      <y>188</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>chamferTeachXBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>chamferCornerX</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>274</x>
+     <y>142</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>183</x>
+     <y>142</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>chamferTeachZBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>chamferCornerZ</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>274</x>
+     <y>183</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>183</x>
+     <y>183</y>
     </hint>
    </hints>
   </connection>
