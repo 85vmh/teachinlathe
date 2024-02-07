@@ -67,6 +67,9 @@ class QuickCycles(QWidget):
 
         self.turningTurnAngle.mousePressEvent = lambda _: self.openNumPad(self.turningTurnAngle)
         self.boringTurnAngle.mousePressEvent = lambda _: self.openNumPad(self.boringTurnAngle)
+        self.threadingXStart.mousePressEvent = lambda _: self.openNumPad(self.threadingXStart)
+        self.threadingXEnd.mousePressEvent = lambda _: self.openNumPad(self.threadingXEnd)
+        self.threadingZEnd.mousePressEvent = lambda _: self.openNumPad(self.threadingZEnd)
 
         self.threadingCompute.clicked.connect(self.computeThreadDepth)
         self.threadLocationGroup.buttonClicked.connect(self.handleInternalExternalThread)
