@@ -6,15 +6,16 @@ G21 ; Metric Units
 G90 ; Absolute Distance
 
 #<pitch>                = #1
-#<z_end>                = #2
-#<x_start>              = #3
-#<initial_doc>          = #4
-#<x_end>                = #5
-#<depth_degression>     = #6
-#<infeed_angle>         = #7
-#<taper_type>           = #8
-#<taper_angle>          = #9
-#<spring_passes>        = #10
+#<leads_count>          = #2
+#<z_end>                = #3
+#<x_start>              = #4
+#<initial_doc>          = #5
+#<x_end>                = #6
+#<depth_degression>     = #7
+#<infeed_angle>         = #8
+#<taper_type>           = #9
+#<taper_angle>          = #10
+#<spring_passes>        = #11
 
 
 #<drive_line>       = [#<_x> * 2] (current diameter value, <_x> always represents the radius)
@@ -33,10 +34,28 @@ G90 ; Absolute Distance
 (print, G76 P#<pitch> Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>)
 
 M4 S500
-
 G4 P1 ; Wait to reach speed
 
-G76 P#<pitch> Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
+#<lead_index> = 0
+
+#<lead_z_offset> = [#<pitch> / #<leads_count>]
+
+(if its a left hand thread, reverse the sign)
+o99 IF [#<z_start> LT #<z_end>]
+    #<lead_z_offset> = -#<lead_z_offset>
+o99 ENDIF
+
+(print, per lead offset: [#<lead_z_offset>])
+
+o100 WHILE [#<lead_index> LE [#<leads_count> - 1]]
+    (print,G0 Z[#<z_start> + [#<lead_z_offset> * #<lead_index>]])
+    G0 Z[#<z_start> + [#<lead_z_offset> * #<lead_index>]]        
+    
+    G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
+
+    #<lead_index> = [#<lead_index> + 1]    
+o100 ENDWHILE
+
 G0 Z#<z_start>
 
 M5

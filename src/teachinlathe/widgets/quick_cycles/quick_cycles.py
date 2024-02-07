@@ -165,7 +165,7 @@ class QuickCycles(QWidget):
                 taper = self.threadingTaper.currentIndex()
                 spring_passes = self.threadingSpringPasses.currentText()
 
-                return f"o<threading> call [{pitch}] [{z_end}] [{x_start}] [{first_pass}] [{x_end}] [{depth_degression}] [{infeed_angle}] [{taper}] [{45}] [{spring_passes}]"
+                return f"o<threading> call [{pitch}] [{starts}] [{z_end}] [{x_start}] [{first_pass}] [{x_end}] [{depth_degression}] [{infeed_angle}] [{taper}] [{45}] [{spring_passes}]"
             case Page.DRILLING.index:
                 z_end = self.drillingZEnd.text()
                 retract = self.drillingZRetract.text()
