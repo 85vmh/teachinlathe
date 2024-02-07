@@ -30,13 +30,13 @@ G90 ; Absolute Distance
 (print, Start diameter: [#<x_start>])
 (print, Taper Length: [#<taper_length>])
 
-(print, G76 P#<pitch> Z#<z_end> I#<thread_peak> J#<initial_doc> K#<x_end> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>)
+(print, G76 P#<pitch> Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>)
 
 M4 S500
 
 G4 P1 ; Wait to reach speed
 
-G76 P#<pitch> Z#<z_end> I#<thread_peak> J#<initial_doc> K#<x_end> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
+G76 P#<pitch> Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
 G0 Z#<z_start>
 
 M5
