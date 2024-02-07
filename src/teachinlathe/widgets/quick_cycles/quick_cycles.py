@@ -155,7 +155,7 @@ class QuickCycles(QWidget):
                 starts = self.threadingStarts.currentText()
                 z_end = self.threadingZEnd.text()
                 x_start = self.threadingXStart.text()
-                x_end = self.threadingFinalDepth.text()
+                x_end = self.threadingXEnd.text()
                 first_pass = self.threadingFirstPass.text()
                 depth_degression = self.threadingDepthDegression.currentText()
                 infeed_angle = self.threadingCompAngle.text()
