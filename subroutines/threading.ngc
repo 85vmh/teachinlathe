@@ -5,8 +5,6 @@ G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
 
-
-
 #<pitch>                = #1
 #<z_end>                = #2
 #<x_start>              = #3
@@ -22,12 +20,17 @@ G90 ; Absolute Distance
 #<drive_line>       = [#<_x> * 2] (current diameter value, <_x> always represents the radius)
 #<z_start>          = #<_z>       (starting z)
 
-#<taper_length>     = [TAN[#<taper_angle>] * #<x_end> / 2]
+#<diameter_diff>    = [ABS[#<x_start> - #<x_end>]]
+#<taper_length>     = [TAN[#<taper_angle>] * #<diameter_diff> / 2]
 #<thread_peak>      = [#<x_start> - #<drive_line>] (we need a negative value for external threads)
 
-(debug, Drive line: [#<drive_line>])
-(debug, Start diameter: [#<x_start>])
-(debug, Taper Length: [#<taper_length>])
+(print, Drive line: [#<drive_line>])
+(print, Diameter diff: [#<diameter_diff>])
+(print, Thread peak: [#<thread_peak>])
+(print, Start diameter: [#<x_start>])
+(print, Taper Length: [#<taper_length>])
+
+(print, G76 P#<pitch> Z#<z_end> I#<thread_peak> J#<initial_doc> K#<x_end> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>)
 
 G76 P#<pitch> Z#<z_end> I#<thread_peak> J#<initial_doc> K#<x_end> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
 G0 Z#<z_start>

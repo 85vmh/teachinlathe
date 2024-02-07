@@ -113,7 +113,7 @@ class QuickCycles(QWidget):
         else:
             x_end = float(x_start) + internal_height * 2
 
-        self.threadingXEnd.setText(str(x_end))
+        self.threadingXEnd.setText(str(round(x_end, 3)))
 
     def _getSubroutineToCall(self):
         match self.stackedWidget.currentIndex():
