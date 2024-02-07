@@ -200,7 +200,7 @@ class MyMainWindow(VCPMainWindow):
 
     def prepareToRunProgram(self, subroutine_text):
         print("subroutine_text: ", subroutine_text)
-        subs_without_manual_turning_settings = ["drilling", "keyslot"]
+        subs_without_manual_turning_settings = ["drilling", "keyslot", "threading"]
 
         if any(sub.lower() in subroutine_text.lower() for sub in subs_without_manual_turning_settings):
             program_header = ''
@@ -334,7 +334,7 @@ class MyMainWindow(VCPMainWindow):
                 if self.current_program is not None:
                     try:
                         print("----Program finished, deleting it: ", self.current_program)
-                        os.remove(self.current_program)
+                        # os.remove(self.current_program)
                     except Exception as e:
                         print("----Delete failed: ", e)
                     finally:
