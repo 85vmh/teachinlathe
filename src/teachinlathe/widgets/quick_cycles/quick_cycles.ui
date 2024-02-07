@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>8</number>
+    <number>7</number>
    </property>
    <widget class="QWidget" name="rootPage">
     <widget class="QPushButton" name="btnTurning">
@@ -1387,10 +1387,10 @@
     <widget class="QWidget" name="threadLocation" native="true">
      <property name="geometry">
       <rect>
-       <x>65</x>
+       <x>55</x>
        <y>10</y>
        <width>246</width>
-       <height>46</height>
+       <height>35</height>
       </rect>
      </property>
      <property name="maximumSize">
@@ -1438,11 +1438,18 @@
           <height>30</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <family>Noto Sans</family>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
         <property name="focusPolicy">
          <enum>Qt::NoFocus</enum>
         </property>
         <property name="styleSheet">
          <string notr="true">QPushButton {
+	max-height: 30px;
     margin-top: 2px;
     margin-bottom: 2px;
     color: white;
@@ -1485,6 +1492,9 @@ QPushButton:checked {
         <property name="page" stdset="0">
          <number>0</number>
         </property>
+        <attribute name="buttonGroup">
+         <string notr="true">threadLocationGroup</string>
+        </attribute>
        </widget>
       </item>
       <item>
@@ -1507,11 +1517,18 @@ QPushButton:checked {
           <height>30</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <family>Noto Sans</family>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
         <property name="focusPolicy">
          <enum>Qt::NoFocus</enum>
         </property>
         <property name="styleSheet">
          <string notr="true">QPushButton {
+	max-height: 30px;
     margin-top: 2px;
     margin-bottom: 2px;
     color: white;
@@ -1521,13 +1538,13 @@ QPushButton:checked {
     border-color: black;
     border-top-width: 2px;
     border-bottom-width: 2px;
-    border-right-width: 2px;
-    border-left-width: 1px;
+    border-right-width: 1px;
+    border-left-width: 2px;
     padding: 2px;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 4px;
-    border-bottom-left-radius: 0px;
-    border-bottom-right-radius: 4px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 0px;
 }
 
 QPushButton:pressed, QPushButton:hover {
@@ -1551,6 +1568,9 @@ QPushButton:checked {
         <property name="page" stdset="0">
          <number>2</number>
         </property>
+        <attribute name="buttonGroup">
+         <string notr="true">threadLocationGroup</string>
+        </attribute>
        </widget>
       </item>
      </layout>
@@ -1676,7 +1696,7 @@ QPushButton:checked {
       <string>Depth degression:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_63">
+    <widget class="QLabel" name="threadLabelXStart">
      <property name="geometry">
       <rect>
        <x>15</x>
@@ -1742,7 +1762,7 @@ QPushButton:checked {
       <string>TeachIn X</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_20">
+    <widget class="QLabel" name="threadLabelXEnd">
      <property name="geometry">
       <rect>
        <x>15</x>
@@ -1758,7 +1778,7 @@ QPushButton:checked {
       <string>Minor Diam.</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="threadingFinalDepth">
+    <widget class="QLineEdit" name="threadingXEnd">
      <property name="geometry">
       <rect>
        <x>120</x>
@@ -1766,6 +1786,9 @@ QPushButton:checked {
        <width>76</width>
        <height>30</height>
       </rect>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::StrongFocus</enum>
      </property>
      <property name="styleSheet">
       <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
@@ -2534,5 +2557,40 @@ QPushButton:checked {
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>threadingTeachXBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>threadingXStart</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>244</x>
+     <y>170</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>169</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>threadingTeachZBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>threadingZEnd</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>244</x>
+     <y>240</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <buttongroups>
+  <buttongroup name="threadLocationGroup"/>
+ </buttongroups>
 </ui>

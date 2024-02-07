@@ -35,6 +35,7 @@ class QuickCycles(QWidget):
     def __init__(self, parent=None):
         super(QuickCycles, self).__init__(parent)
         uic.loadUi(UI_FILE, self)
+        self.isExternalThread = True
         self.switchPage(Page.ROOT)
         self.btnTurning.clicked.connect(lambda: self.switchPage(Page.TURNING))
         self.btnBoring.clicked.connect(lambda: self.switchPage(Page.BORING))
@@ -67,6 +68,10 @@ class QuickCycles(QWidget):
         self.turningTurnAngle.mousePressEvent = lambda _: self.openNumPad(self.turningTurnAngle)
         self.boringTurnAngle.mousePressEvent = lambda _: self.openNumPad(self.boringTurnAngle)
 
+        self.threadingCompute.clicked.connect(self.computeThreadDepth)
+        self.threadLocationGroup.buttonClicked.connect(self.handleInternalExternalThread)
+        self.handleInternalExternalThread()
+
         self.btnLoad.clicked.connect(self.onBtnLoadClicked)
 
     def switchPage(self, page: Page):
@@ -86,6 +91,29 @@ class QuickCycles(QWidget):
         line_edit.setText(value)
         line_edit.editingFinished.emit()
         line_edit.clearFocus()
+
+    def handleInternalExternalThread(self):
+        if self.threadLocationGroup.checkedButton().text() == "External":
+            self.threadLabelXStart.setText("Major Diam.")
+            self.threadLabelXEnd.setText("Minor Diam.")
+            self.isExternalThread = True
+        else:
+            self.threadLabelXStart.setText("Minor Diam.")
+            self.threadLabelXEnd.setText("Major Diam.")
+            self.isExternalThread = False
+
+    def computeThreadDepth(self):
+        pitch = self.threadingPitch.text()
+        x_start = self.threadingXStart.text()
+        external_height = float(pitch) * 0.61344
+        internal_height = float(pitch) * 0.54127
+
+        if self.isExternalThread:
+            x_end = float(x_start) - external_height * 2
+        else:
+            x_end = float(x_start) + internal_height * 2
+
+        self.threadingXEnd.setText(str(x_end))
 
     def _getSubroutineToCall(self):
         match self.stackedWidget.currentIndex():
@@ -123,30 +151,18 @@ class QuickCycles(QWidget):
                 location = self.radiusLocation.currentIndex()
                 return f"o<radius> call [{corner_x}] [{corner_z}] [{radius}] [{doc}] [{location}]"
             case Page.THREADING.index:
-                '''
-                val pitch = parameters.pitch.stripZeros()
-                val zEnd = parameters.zEnd.stripZeros()
-                val startDiameter =
-                    when {
-                        parameters.isExternal -> parameters.majorDiameter.stripZeros()
-                        else -> parameters.minorDiameter.stripZeros()
-                    }
-                val firstPassDoc = parameters.firstPassDepth.stripZeros()
-                val finalDepth = parameters.finalDepth.stripZeros()
-                val depthDegression = 1
-                val infeedAngle = 30
-                val taper = 0
-                val springPasses = 0'''
-
                 pitch = self.threadingPitch.text()
-                starts = self.threadingStarts.text()
-                zEnd = self.threadingZEnd.text()
-                xStart = self.threadingXStart.text()
-                xEnd = self.threadingFinalDepth.text()
-                firstPass = self.threadingFirstPass.text()
-                depthDegression = self.threadingDepthDegression.text()
+                starts = self.threadingStarts.currentText()
+                z_end = self.threadingZEnd.text()
+                x_start = self.threadingXStart.text()
+                x_end = self.threadingFinalDepth.text()
+                first_pass = self.threadingFirstPass.text()
+                depth_degression = self.threadingDepthDegression.currentText()
+                infeed_angle = self.threadingCompAngle.text()
+                taper = self.threadingTaper.currentIndex()
+                spring_passes = self.threadingSpringPasses.currentText()
 
-                return f"o<threading> call [{pitch}] [{zEnd}] [{xStart}] [{firstPass}] [{xEnd}] [{depthDegression}] [$infeedAngle] [2] [45] [$springPasses]"
+                return f"o<threading> call [{pitch}] [{z_end}] [{x_start}] [{first_pass}] [{x_end}] [{depth_degression}] [{infeed_angle}] [{taper}] [{45}] [{spring_passes}]"
             case Page.DRILLING.index:
                 z_end = self.drillingZEnd.text()
                 retract = self.drillingZRetract.text()
