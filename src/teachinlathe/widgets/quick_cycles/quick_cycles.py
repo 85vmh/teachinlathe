@@ -182,7 +182,7 @@ class QuickCycles(QWidget):
                 infeed_angle = self.threadingCompAngle.text()
                 taper = self.threadingTaper.currentIndex()
                 spring_passes = self.threadingSpringPasses.currentText()
-                return (f"o<threading> call"
+                return (f"o<threading> call "
                         f"[{x_start}] "
                         f"[#<_z>] "
                         f"[{x_end}] "

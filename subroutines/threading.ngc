@@ -18,6 +18,7 @@ G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
 
+(The drive line will be the path on which the tool will retrach from the cut, it should be bigger than the x_start)
 #<drive_line>       = [#<_x> * 2] (current diameter value, <_x> always represents the radius)
 
 #<diameter_diff>    = [ABS[#<x_start> - #<x_end>]]
@@ -42,7 +43,6 @@ o99 ENDIF
 (print, per lead offset: [#<lead_z_offset>])
 
 o100 WHILE [#<lead_index> LE [#<leads_count> - 1]]
-    (print,G0 Z[#<z_start> + [#<lead_z_offset> * #<lead_index>]])
     G0 Z[#<z_start> + [#<lead_z_offset> * #<lead_index>]]        
     
     G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
