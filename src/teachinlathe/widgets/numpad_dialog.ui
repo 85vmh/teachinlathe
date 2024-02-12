@@ -47,7 +47,7 @@
      <string notr="true">font: 16pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="title">
-     <string>Select spindle RPM</string>
+     <string>Select a value</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -368,7 +368,7 @@ font: 14pt &quot;DejaVu Sans&quot;;
      <string notr="true">font: 16pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="text">
-     <string>Enter spindle RPM</string>
+     <string>Enter a value</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>

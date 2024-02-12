@@ -1,0 +1,63 @@
+o<knurling> sub
+
+#<x_start>      = #1
+#<z_start>      = #2
+#<z_end>        = #3
+#<doc>          = #4
+#<leads_count>  = #5
+#<knurl_angle>  = #6
+#<rpm>          = #7
+
+G8  ; Lathe Radius Mode
+G18 ; XZ Plane
+G21 ; Metric Units
+G90 ; Absolute Distance
+
+#<x_retract> = 1
+
+#<pi> = 3.142
+#<stock_radius> = [#<x_start>/2]
+#<safe_x> = [#<stock_radius> + #<x_retract>]
+
+; The surface is the circumference of the workpiece
+#<stock_circumference> = [#<pi> * #<x_start>]
+
+; Given a knurl angle, calculate Z feed given <stock_circumference>
+#<thread_pitch> = [TAN[#<knurl_angle>] * #<stock_circumference>]
+#<feed_per_min> = [#<thread_pitch> * #<rpm>]
+(print, thread pitch: #<thread_pitch>; feed per min: #<feed_per_min>)
+
+; To do a n-start thread, we need to start each thread <thread_pitch>
+; further back Z+ than the prior thread
+#<lead_z_offset> = [#<thread_pitch> / #<leads_count>]
+
+#<current_lead> = #<leads_count>
+#<lead_z_start> = [[#<leads_count> * #<lead_z_offset>] + #<z_start>]
+(print, knurl z start: #<lead_z_start>)
+
+M4 S#<rpm>
+
+G0 Z#<lead_z_start>
+G0 X[#<stock_radius> - #<doc>]
+
+O100 WHILE [#<current_lead> GT 0]
+    (print, current lead: #<current_lead>)
+    (print, start Z: #<lead_z_start>; pitch: #<thread_pitch>; feed: #<feed_per_min>)
+
+    (calculate the z start for the knurl AFTER this one)
+    #105 = #<lead_z_start>
+    #<lead_z_start> = [#<lead_z_start> - #<lead_z_offset>]
+
+    ;G33 Z#<lead_z_start> K#<thread_pitch>
+
+    G33 Z#<z_end> K#<thread_pitch>
+    G33 Z#105 K#<thread_pitch>
+    ;G0 X#<safe_x>
+    G0 Z#<lead_z_start>
+    ;G0 X[#<stock_radius> - #<doc>]
+
+    #<current_lead> = [#<current_lead> - 1]
+O100 ENDWHILE
+
+M5
+o<knurling> sub

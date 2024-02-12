@@ -1,12 +1,12 @@
 o<radius> sub
 
-
-#<corner_x>     = #1
-#<corner_z>     = #2
-#<radius>       = #3 ;will be cut if greater than 0
-#<doc>          = #4 ;depth of cut
-#<location>     = #5 (0: front-exterior, 1: front-interior, 2: back-exterior)
-
+#<x_start>      = #1 (in diameter mode)
+#<z_start>      = #2
+#<corner_x>     = #3 (in diameter mode)
+#<corner_z>     = #4
+#<radius>       = #5 (will be cut if greater than 0)
+#<doc>          = #6 (depth of cut)
+#<location>     = #7 (0: front-exterior, 1: front-interior, 2: back-exterior)
 
 G8    ; Lathe radius mode
 G18   ; XZ Plane
@@ -14,10 +14,8 @@ G21   ; Metric Units
 G90   ; Absolute Distance
 G91.1 ; 
 
+#<x_start> = [#<x_start> / 2] ; because of radius mode
 #<corner_x> = [#<corner_x> / 2] ; because of radius mode
-
-#<x_start> = #<_x> (starting X)
-#<z_start> = #<_z> (starting Z)
 
 #<temp> = 0
 
@@ -76,9 +74,5 @@ G91.1 ;
           G0 z#<z_start>
      O200 endif
 
-M5
 G7
-
 o<radius> endsub
-M2
-

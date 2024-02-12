@@ -1,17 +1,15 @@
-;Facing
 O<facing> sub
 
-#<x_end> = #1
-#<z_end> = #2
-#<doc> = #3
+#<x_start>  = #1
+#<z_start>  = #2
+#<x_end>    = #3
+#<z_end>    = #4
+#<doc>      = #5
 
 G7 	; Lathe Diameter Mode
 G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
-
-#<x_start> = [#<_x> * 2] (starting X)
-#<z_start> = #<_z> (starting Z)
 
 O200 WHILE [#<z_start> GT #<z_end> + #<doc>]
 
@@ -32,4 +30,3 @@ G0 X[#<x_start> + #<doc>]
 G0 Z#<z_end> ; For touch-off
 
 O<facing> endsub
-M2

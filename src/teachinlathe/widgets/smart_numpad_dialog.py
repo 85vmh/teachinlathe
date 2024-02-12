@@ -42,7 +42,9 @@ class SmartNumPadDialog(QtWidgets.QDialog, Ui_NumPadDialog):
                     button.setFocusPolicy(QtCore.Qt.NoFocus)
                     self.flowLayout.addWidget(button)
 
-                self.suggestedValuesBox.setTitle("Select " + self.title_prefix)
+                if self.title_prefix is not None:
+                    self.suggestedValuesBox.setTitle("Select " + self.title_prefix)
+
                 self.suggestedValuesBox.setStyleSheet("QPushButton {\n"
                                                       "min-height: 30px;\n"
                                                       "min-width: 24px;\n"
@@ -61,7 +63,9 @@ class SmartNumPadDialog(QtWidgets.QDialog, Ui_NumPadDialog):
             # self.inputField.setValidator(validator)
             self.inputField.setValidator(self.SingleDotValidator())
 
-            self.enterValueLabel.setText("Enter " + self.title_prefix)
+            if self.title_prefix is not None:
+                self.enterValueLabel.setText("Enter " + self.title_prefix)
+
             self.enterValuesWidget.setGeometry(QtCore.QRect(0, 0, 391, 420))
             self.resize(394, self.enter_values_height)
 

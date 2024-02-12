@@ -191,11 +191,13 @@ class ManualLathe:
                 print("-----All limits applied-------")
 
     def getProgramHeader(self):
-        spindle_cmd = f"G97 M4 S{self.spindleRpm}" if self.spindleMode == SpindleMode.Rpm else f"G96 S{self.spindleCss} D{self.maxSpindleRpm}"
+        spindle_cmd = f"G97 M4 S{self.spindleRpm} (Spindle RPM Mode)" \
+            if self.spindleMode == SpindleMode.Rpm \
+            else f"G96 S{self.spindleCss} D{self.maxSpindleRpm} (Spindle CSS Mode)"
 
         return (f"(Using Spindle & Feed settings from manual mode)\n"
                 f"{spindle_cmd}\n"
-                f"G95 F{self.feedPerRev}\n"
+                f"G95 F{self.feedPerRev} (Feed per rev)\n"
                 )
 
     def onMachineLimitsChanged(self, machine_limits):

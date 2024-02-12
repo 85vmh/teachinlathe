@@ -1,21 +1,19 @@
-;drilling
-
 O<keyslot> sub
+
+#<x_start>  = #1 (radius)
+#<z_start>  = #2
+#<x_end>    = #3
+#<z_end>    = #4
+#<doc>      = #5
+#<feed>     = #6
 
 G8  ; Radius mode
 G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
 
-#<x_end> = #1
-#<z_end> = #2
-#<doc> = #3
-#<feed> = #4
 
-#<x_start> = #<_x> (starting X)
-#<z_start> = #<_z> (starting Z)
-
-G94 F#<feed>
+G94 F#<feed> (feed in mm/min)
 
 o100 WHILE [#<x_start> LT #<x_end>]
     #<x_start> = [#<x_start> + #<doc>]
@@ -29,4 +27,3 @@ G7  ; back to diameter mode
 G95 ; back to mm/rev
 
 O<keyslot> endsub
-M2

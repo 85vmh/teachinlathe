@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>7</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="rootPage">
     <widget class="QPushButton" name="btnTurning">
@@ -37,8 +37,8 @@
       <rect>
        <x>15</x>
        <y>25</y>
-       <width>91</width>
-       <height>36</height>
+       <width>90</width>
+       <height>90</height>
       </rect>
      </property>
      <property name="text">
@@ -50,8 +50,8 @@
       <rect>
        <x>130</x>
        <y>25</y>
-       <width>91</width>
-       <height>36</height>
+       <width>90</width>
+       <height>90</height>
       </rect>
      </property>
      <property name="text">
@@ -63,8 +63,8 @@
       <rect>
        <x>245</x>
        <y>25</y>
-       <width>91</width>
-       <height>36</height>
+       <width>90</width>
+       <height>90</height>
       </rect>
      </property>
      <property name="text">
@@ -75,9 +75,9 @@
      <property name="geometry">
       <rect>
        <x>245</x>
-       <y>80</y>
-       <width>91</width>
-       <height>36</height>
+       <y>140</y>
+       <width>90</width>
+       <height>90</height>
       </rect>
      </property>
      <property name="text">
@@ -88,9 +88,9 @@
      <property name="geometry">
       <rect>
        <x>130</x>
-       <y>80</y>
-       <width>91</width>
-       <height>36</height>
+       <y>140</y>
+       <width>90</width>
+       <height>90</height>
       </rect>
      </property>
      <property name="text">
@@ -101,9 +101,9 @@
      <property name="geometry">
       <rect>
        <x>15</x>
-       <y>80</y>
-       <width>91</width>
-       <height>36</height>
+       <y>140</y>
+       <width>90</width>
+       <height>90</height>
       </rect>
      </property>
      <property name="text">
@@ -114,9 +114,9 @@
      <property name="geometry">
       <rect>
        <x>15</x>
-       <y>130</y>
-       <width>91</width>
-       <height>36</height>
+       <y>260</y>
+       <width>90</width>
+       <height>90</height>
       </rect>
      </property>
      <property name="text">
@@ -127,9 +127,9 @@
      <property name="geometry">
       <rect>
        <x>130</x>
-       <y>130</y>
-       <width>91</width>
-       <height>36</height>
+       <y>260</y>
+       <width>90</width>
+       <height>90</height>
       </rect>
      </property>
      <property name="text">
