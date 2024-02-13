@@ -178,8 +178,8 @@ class QuickCycles(QWidget):
             self.labelSpringPasses.setText(self.threadingSpringPasses.currentText())
             self.updateValues()
         if page == Page.THREADING_5:
-            self.currentThreadXStart.setText(str(self.last_thread_x_start))
-            self.currentThreadZStart.setText(str(self.last_thread_z_start))
+            self.currentThreadXStart.setText(str(round(self.last_thread_x_start, 3)))
+            self.currentThreadZStart.setText(str(round(self.last_thread_z_start, 3)))
             self.lastXEnd.setText(str(self.last_thread_x_end))
 
     def openNumPad(self, line_edit):
@@ -284,7 +284,7 @@ class QuickCycles(QWidget):
                 z_end = self.threadingZEnd.text()
                 x_start = self.threadingXStart.text()
                 x_end = self.newXEnd.text()
-                first_pass = float(self.last_thread_x_end) - float(x_end)
+                first_pass = abs(float(x_start) - float(self.last_thread_x_end))
                 depth_degression = self.threadingDepthDegression.currentText()
                 infeed_angle = self.threadingCompAngle.text()
                 taper = self.threadingTaper.currentIndex()
