@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>12</number>
+    <number>10</number>
    </property>
    <widget class="QWidget" name="rootPage">
     <widget class="QPushButton" name="btnTurning">
@@ -2659,6 +2659,19 @@ QPushButton:checked {
       </property>
       <property name="latheMode" stdset="0">
        <number>0</number>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton">
+      <property name="geometry">
+       <rect>
+        <x>165</x>
+        <y>70</y>
+        <width>36</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Test</string>
       </property>
      </widget>
     </widget>

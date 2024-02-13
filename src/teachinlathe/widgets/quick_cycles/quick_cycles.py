@@ -35,8 +35,8 @@ class Page(Enum):
     THREADING_1 = (8, "Threading (step 1)", "Next")
     THREADING_2 = (9, "Threading (step 2)", "Next")
     THREADING_3 = (10, "Threading (step 3)", "Load")
-    THREADING_4 = (10, "Threading (step 4)", None)
-    THREADING_5 = (10, "Threading (step 5)", "Load")
+    THREADING_4 = (11, "Threading (step 4)", None)
+    THREADING_5 = (12, "Threading (step 5)", "Load")
 
 
 class QuickCycles(QWidget):
@@ -119,6 +119,7 @@ class QuickCycles(QWidget):
         self.keyslotFeed.mousePressEvent = lambda _: self.openNumPad(self.keyslotFeed)
 
         self.btnNext.clicked.connect(self.onBtnNextClicked)
+        self.pushButton.clicked.connect(self.onForceStep4)
         self.btnMoveToPosX.clicked.connect(self.moveToPosX)
         self.btnMoveToPosZ.clicked.connect(self.moveToPosZ)
 
@@ -128,7 +129,7 @@ class QuickCycles(QWidget):
         if pos is None:
             pos = getattr(self.pos, 'rel').getValue()
 
-        self.currentXValue = pos[Axis.X]
+        self.currentXValue = pos[Axis.X] * 2
         self.currentZValue = pos[Axis.Z]
 
         self.last_thread_x_start = self.currentXValue
@@ -143,6 +144,9 @@ class QuickCycles(QWidget):
             self.labelThreadLength.setText(str(round(abs(float(self.labelZEnd.text()) - self.currentZValue), 1)))
 
     def onTaskModeChanged(self, mode):
+        print("----quick cycles Task mode changed----")
+        print(f"Mode: {mode}")
+        print(f"Current index: {self.stackedWidget.currentIndex()}")
         if (self.stackedWidget.currentIndex() in [Page.THREADING_3.index, Page.THREADING_5.index]) and mode == 1:
             print("----Threading finished----")
             self.switchPage(Page.THREADING_4)
@@ -332,6 +336,10 @@ class QuickCycles(QWidget):
                 self.switchPage(Page.THREADING_2)
             case _:
                 self.switchPage(Page.ROOT)
+
+    def onForceStep4(self):
+        print("Force step 4")
+        self.switchPage(Page.THREADING_4)
 
     def onBtnNextClicked(self):
         match self.stackedWidget.currentIndex():
