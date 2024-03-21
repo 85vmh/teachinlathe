@@ -1,24 +1,23 @@
 # Setup logging
 import os
+import tempfile
 from enum import Enum
 
 import linuxcnc
 from PyQt5 import QtCore
 from PyQt5.QtCore import QTimer
 from qtpyvcp.actions.machine_actions import issue_mdi
+from qtpyvcp.actions.program_actions import load as loadProgram
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities import logger
 from qtpyvcp.utilities.info import Info
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
-from teachinlathe.machine_limits import MachineLimitsHandler
-from teachinlathe.widgets.lathe_fixtures.lathe_fixtures import LatheFixtures
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.machine_limits import MachineLimitsHandler
 from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.widgets.lathe_fixtures.lathe_fixture import LatheFixture
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
-from qtpyvcp.actions.program_actions import load as loadProgram
-import tempfile
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
 from PyQt5.QtCore import Qt
@@ -168,6 +167,7 @@ class MyMainWindow(VCPMainWindow):
         self.quickcycles.onLoadClicked.connect(self.prepareToRunProgram)
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
         self.pushButton.clicked.connect(self.onChuckLimitSet)
+
         QTimer.singleShot(0, self.afterUIInit)
 
     def afterUIInit(self):

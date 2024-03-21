@@ -328,3 +328,10 @@ settings:
   virtual_limits.z-minus:
     default_value: 0.0
     persistent: true
+
+  rapid_speeds.percentage:
+    default_value: 50
+    persistent: true
+    options: [
+      25, 50, 75, 100
+    ]

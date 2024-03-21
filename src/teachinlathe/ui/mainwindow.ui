@@ -1318,110 +1318,6 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="frameShadow">
               <enum>QFrame::Raised</enum>
              </property>
-             <widget class="VCPSettingsSlider" name="jogSpeedSlider">
-              <property name="geometry">
-               <rect>
-                <x>200</x>
-                <y>5</y>
-                <width>426</width>
-                <height>61</height>
-               </rect>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>30</height>
-               </size>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QSlider::groove:horizontal {
-border: 1px solid #bbb;
-background: white;
-height: 15px;
-border-radius: 3px;
-}
-
-QSlider::sub-page:horizontal {
-background: qlineargradient(x1: 0, y1: 0,    x2: 0, y2: 1,
-    stop: 0 #66e, stop: 1 #bbf);
-background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 1,
-    stop: 0 #bbf, stop: 1 #55f);
-border: 1px solid #777;
-height: 15px;
-border-radius: 3px;
-}
-
-QSlider::add-page:horizontal {
-background: rgb(235, 235, 235);
-border: 1px solid #777;
-height: 15px;
-border-radius: 3px;
-}
-
-QSlider::handle:horizontal {
-background: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 255), stop:0.1 rgba(60, 60, 60, 255), stop:0.21 rgba(60, 60, 60, 255), stop:0.25 rgba(255, 255, 255, 255), stop:0.29 rgba(60, 60, 60, 255), stop:0.46 rgba(60, 60, 60, 255), stop:0.5 rgba(255, 255, 255, 255), stop:0.54 rgba(60, 60, 60, 255), stop:0.71 rgba(60, 60, 60, 255), stop:0.75 rgba(255, 255, 255, 255), stop:0.79 rgba(60, 60, 60, 255), stop:0.9 rgba(60, 60, 60, 255), stop:1 rgba(255, 255, 255, 255));
-border: 1px solid #777;
-border-color: rgba(40, 40, 40, 255);
-width: 20px;
-margin-top: -5px;
-margin-bottom: -5px;
-border-radius: 4px;
-}
-
-QSlider::handle:horizontal:hover {
-background: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 255), stop:0.1 rgba(60, 60, 60, 255), stop:0.21 rgba(60, 60, 60, 255), stop:0.25 rgba(255, 255, 255, 255), stop:0.29 rgba(60, 60, 60, 255), stop:0.46 rgba(60, 60, 60, 255), stop:0.5 rgba(255, 255, 255, 255), stop:0.54 rgba(60, 60, 60, 255), stop:0.71 rgba(60, 60, 60, 255), stop:0.75 rgba(255, 255, 255, 255), stop:0.79 rgba(60, 60, 60, 255), stop:0.9 rgba(60, 60, 60, 255), stop:1 rgba(255, 255, 255, 255));
-border: 1px solid #444;
-border-color: rgb(241, 239, 237);
-border-radius: 4px;
-}
-
-QSlider::sub-page:horizontal:disabled {
-background: #bbb;
-border-color: #999;
-}
-
-QSlider::add-page:horizontal:disabled {
-background: #eee;
-border-color: #999;
-}
-
-QSlider::handle:horizontal:disabled {
-background: #eee;
-border: 1px solid #aaa;
-border-radius: 4px;
-}</string>
-              </property>
-              <property name="minimum">
-               <number>10</number>
-              </property>
-              <property name="maximum">
-               <number>100</number>
-              </property>
-              <property name="singleStep">
-               <number>5</number>
-              </property>
-              <property name="value">
-               <number>50</number>
-              </property>
-              <property name="sliderPosition">
-               <number>50</number>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="tickPosition">
-               <enum>QSlider::NoTicks</enum>
-              </property>
-              <property name="tickInterval">
-               <number>0</number>
-              </property>
-              <property name="settingName" stdset="0">
-               <string>machine.jog.linear-speed-percentage</string>
-              </property>
-             </widget>
              <widget class="QLabel" name="label_3">
               <property name="geometry">
                <rect>
@@ -1466,6 +1362,29 @@ border-radius: 4px;
               </property>
               <property name="rules" stdset="0">
                <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;settings:machine.jog.linear-speed&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:program_units?text&quot;, &quot;trigger&quot;: false}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'{:.0f}'.format(ch[0]) + ch[1] + '/min'&quot;, &quot;name&quot;: &quot;Rapid Speed&quot;}]</string>
+              </property>
+             </widget>
+             <widget class="JogSpeedPercentageWidget" name="jogspeedpercentagewidget">
+              <property name="geometry">
+               <rect>
+                <x>207</x>
+                <y>10</y>
+                <width>421</width>
+                <height>51</height>
+               </rect>
+              </property>
+              <property name="diameter" stdset="0">
+               <number>15</number>
+              </property>
+              <property name="color" stdset="0">
+               <color>
+                <red>15</red>
+                <green>224</green>
+                <blue>42</blue>
+               </color>
+              </property>
+              <property name="layoutSpacing">
+               <number>6</number>
               </property>
              </widget>
             </widget>
@@ -1800,7 +1719,7 @@ QCheckBox:disabled {
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>X Offset:</string>
@@ -1816,7 +1735,7 @@ QCheckBox:disabled {
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Z Offset:</string>
@@ -1857,7 +1776,7 @@ QCheckBox:disabled {
     border-radius: 5px;
     color: white;
     background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
+	font: 10pt &quot;Noto&quot;;
 }</string>
               </property>
               <property name="text">
@@ -1911,7 +1830,7 @@ QCheckBox:disabled {
     border-radius: 5px;
     color: white;
     background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
+	font: 10pt &quot;Noto&quot;;
 }</string>
               </property>
               <property name="text">
@@ -1940,7 +1859,7 @@ QCheckBox:disabled {
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Tip Radius:</string>
@@ -1981,7 +1900,7 @@ QCheckBox:disabled {
     border-radius: 5px;
     color: white;
     background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
+	font: 10pt &quot;Noto&quot;;
 }</string>
               </property>
               <property name="text">
@@ -2035,7 +1954,7 @@ QCheckBox:disabled {
     border-radius: 5px;
     color: white;
     background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
+	font: 10pt &quot;Noto&quot;;
 }</string>
               </property>
               <property name="text">
@@ -2064,7 +1983,7 @@ QCheckBox:disabled {
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Orientation:</string>
@@ -2558,7 +2477,7 @@ color: white;</string>
                        <string>Folder Up</string>
                       </property>
                       <property name="icon">
-                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                       <iconset>
                         <normaloff>:/images/folder_up.png</normaloff>:/images/folder_up.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -2720,7 +2639,7 @@ QHeaderView {
                        <string>Delete</string>
                       </property>
                       <property name="icon">
-                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                       <iconset>
                         <normaloff>:/images/delete.png</normaloff>:/images/delete.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -2799,7 +2718,7 @@ QHeaderView {
                        <string>Copy to Destination</string>
                       </property>
                       <property name="icon">
-                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                       <iconset>
                         <normaloff>:/images/right_arrow.png</normaloff>:/images/right_arrow.png</iconset>
                       </property>
                      </widget>
@@ -2889,7 +2808,7 @@ QHeaderView {
                        <string>Folder Up</string>
                       </property>
                       <property name="icon">
-                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                       <iconset>
                         <normaloff>:/images/folder_up.png</normaloff>:/images/folder_up.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -3063,7 +2982,7 @@ QHeaderView {
                        <string>To USB</string>
                       </property>
                       <property name="icon">
-                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                       <iconset>
                         <normaloff>:/images/left_arrow.png</normaloff>:/images/left_arrow.png</iconset>
                       </property>
                      </widget>
@@ -3100,7 +3019,7 @@ QHeaderView {
                        <string>Delete</string>
                       </property>
                       <property name="icon">
-                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                       <iconset>
                         <normaloff>:/images/delete.png</normaloff>:/images/delete.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -3143,7 +3062,7 @@ QHeaderView {
                        <string>New File</string>
                       </property>
                       <property name="icon">
-                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                       <iconset>
                         <normaloff>:/images/new_file.png</normaloff>:/images/new_file.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -3186,7 +3105,7 @@ QHeaderView {
                        <string>New Folder</string>
                       </property>
                       <property name="icon">
-                       <iconset resource="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc">
+                       <iconset>
                         <normaloff>:/images/new_folder.png</normaloff>:/images/new_folder.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -3249,7 +3168,7 @@ QHeaderView {
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>166</width>
+                 <width>142</width>
                  <height>30</height>
                 </size>
                </property>
@@ -7202,6 +7121,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <header>qtpyvcp.widgets.input_widgets.recent_file_combobox</header>
   </customwidget>
   <customwidget>
+   <class>JogSpeedPercentageWidget</class>
+   <extends>QWidget</extends>
+   <header>qtpyvcp.widgets.input_widgets.jog_speed_percentage</header>
+  </customwidget>
+  <customwidget>
    <class>FileSystemTable</class>
    <extends>QTableView</extends>
    <header>qtpyvcp.widgets.input_widgets.file_system</header>
@@ -7214,11 +7138,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
   <customwidget>
    <class>VCPSettingsLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qtpyvcp.widgets.input_widgets.setting_slider</header>
-  </customwidget>
-  <customwidget>
-   <class>VCPSettingsSlider</class>
-   <extends>QSlider</extends>
    <header>qtpyvcp.widgets.input_widgets.setting_slider</header>
   </customwidget>
   <customwidget>
@@ -7768,5 +7687,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
  </connections>
  <buttongroups>
   <buttongroup name="spindleMode"/>
+  <buttongroup name="btnRapids"/>
  </buttongroups>
 </ui>
