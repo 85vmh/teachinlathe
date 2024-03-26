@@ -1373,8 +1373,16 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                 <height>51</height>
                </rect>
               </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
               <property name="diameter" stdset="0">
                <number>15</number>
+              </property>
+              <property name="layoutSpacing">
+               <number>6</number>
               </property>
               <property name="color" stdset="0">
                <color>
@@ -1382,9 +1390,6 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                 <green>224</green>
                 <blue>42</blue>
                </color>
-              </property>
-              <property name="layoutSpacing">
-               <number>6</number>
               </property>
              </widget>
             </widget>
@@ -7023,6 +7028,16 @@ font: 12pt &quot;DejaVu Sans&quot;;
                 </layout>
                </widget>
               </widget>
+              <widget class="LatheFixturesCards" name="latheFixtures">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>1011</width>
+                 <height>288</height>
+                </rect>
+               </property>
+              </widget>
              </widget>
             </widget>
            </widget>
@@ -7152,6 +7167,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>LatheFixturesCards</class>
+   <extends>QWidget</extends>
+   <header>teachinlathe.widgets.lathe_fixtures.lathe_fixtures_cards</header>
+  </customwidget>
+  <customwidget>
    <class>LatheToolTable</class>
    <extends>QTableView</extends>
    <header>teachinlathe.widgets.lathe_tool_table</header>
@@ -7169,7 +7189,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
  </customwidgets>
  <resources>
   <include location="../resources/resources.qrc"/>
-  <include location="../../../../../dev/probe_basic/src/probe_basic_lathe/probe_basic_lathe.qrc"/>
+  <include location="../resources/resources.qrc"/>
  </resources>
  <connections>
   <connection>
@@ -7687,6 +7707,5 @@ font: 12pt &quot;DejaVu Sans&quot;;
  </connections>
  <buttongroups>
   <buttongroup name="spindleMode"/>
-  <buttongroup name="btnRapids"/>
  </buttongroups>
 </ui>

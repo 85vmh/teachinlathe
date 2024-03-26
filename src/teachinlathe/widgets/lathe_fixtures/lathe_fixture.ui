@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>191</width>
-    <height>286</height>
+    <width>190</width>
+    <height>220</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -21,8 +27,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>191</width>
-     <height>286</height>
+     <width>190</width>
+     <height>220</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -35,60 +41,44 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>230</y>
+      <y>115</y>
       <width>81</width>
       <height>21</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+     <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="text">
      <string>Max RPM:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_9">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>255</y>
-      <width>61</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-    </property>
-    <property name="text">
-     <string>Z- Limit:</string>
     </property>
    </widget>
    <widget class="QLabel" name="description">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>155</y>
+      <y>10</y>
       <width>171</width>
-      <height>41</height>
+      <height>61</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Noto Sans</family>
-      <pointsize>11</pointsize>
+      <pointsize>12</pointsize>
       <weight>50</weight>
       <italic>false</italic>
       <bold>false</bold>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+     <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="frameShape">
      <enum>QFrame::NoFrame</enum>
     </property>
     <property name="text">
-     <string>Rohm 3 Jaws chuck with a long long text</string>
+     <string>Rohm 3 Jaws chuck with a long long text that might wrap</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -97,55 +87,17 @@
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QLabel" name="zMinusLimit">
-    <property name="geometry">
-     <rect>
-      <x>75</x>
-      <y>255</y>
-      <width>61</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-    </property>
-    <property name="text">
-     <string>000.000</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="imageView">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>5</y>
-      <width>150</width>
-      <height>150</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="text">
-     <string>No Image</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>205</y>
+      <y>90</y>
       <width>81</width>
       <height>21</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+     <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="text">
      <string>Diameter:</string>
@@ -155,13 +107,13 @@
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>230</y>
+      <y>115</y>
       <width>46</width>
       <height>21</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+     <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="text">
      <string>2000</string>
@@ -174,13 +126,13 @@
     <property name="geometry">
      <rect>
       <x>140</x>
-      <y>205</y>
+      <y>90</y>
       <width>36</width>
       <height>21</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+     <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="text">
      <string>mm</string>
@@ -193,13 +145,13 @@
     <property name="geometry">
      <rect>
       <x>100</x>
-      <y>205</y>
+      <y>90</y>
       <width>36</width>
       <height>21</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+     <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="text">
      <string>000</string>
@@ -208,8 +160,96 @@
      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
     </property>
    </widget>
+   <widget class="QGroupBox" name="groupBox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>140</y>
+      <width>171</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="title">
+     <string>Z-  G53 limit</string>
+    </property>
+    <widget class="QPushButton" name="teachZMinus">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>30</y>
+       <width>71</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>TeachIn</string>
+     </property>
+    </widget>
+    <widget class="TeachInLineEdit" name="zMinusLimit">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>71</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>000.000</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>0</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>2</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>0</number>
+     </property>
+    </widget>
+   </widget>
+   <widget class="Line" name="line">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>70</y>
+      <width>191</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TeachInLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qtpyvcp.widgets.input_widgets.teachin_line_edit</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

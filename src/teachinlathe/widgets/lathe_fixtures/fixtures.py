@@ -15,7 +15,7 @@ class Fixture:
         return f"Fixture({self.fixture_index}, '{self.description}', {self.diameter}, {self.units}, {self.max_rpm}, {self.z_minus_limit})"
 
 
-class LatheFixtures:
+class LatheFixturesRepository:
 
     def __init__(self, file_path):
         self.file_path = file_path

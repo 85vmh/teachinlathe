@@ -16,7 +16,6 @@ from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.machine_limits import MachineLimitsHandler
 from teachinlathe.manual_lathe import ManualLathe
-from teachinlathe.widgets.lathe_fixtures.lathe_fixture import LatheFixture
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
@@ -29,34 +28,6 @@ STAT = linuxcnc.stat()
 PROGRAM_PREFIX = INFO.getProgramPrefix()
 
 from PyQt5.QtWidgets import QWidget, QHBoxLayout
-
-
-class FixtureContainer(QWidget):
-    onFixtureIndexChanged = QtCore.pyqtSignal(int)
-
-    def __init__(self, parent=None):
-        super(FixtureContainer, self).__init__(parent)
-        self.layout = QHBoxLayout(self)
-
-    def setFixtures(self, fixtures):
-        self._clear_layout()
-        total_width = 0
-
-        for fixture in fixtures:
-            widget = LatheFixture(fixture, self)
-            self.layout.addWidget(widget)
-            total_width += widget.sizeHint().width()
-            widget.onFixtureSelected.connect(self.onFixtureSelected)
-
-        self.setMinimumWidth(total_width)
-
-    def _clear_layout(self):
-        if self.layout is not None:
-            while self.layout.count():
-                item = self.layout.takeAt(0)
-                widget = item.widget()
-                if widget is not None:
-                    widget.deleteLater()
 
 
 class MainTabs(Enum):
@@ -166,9 +137,13 @@ class MyMainWindow(VCPMainWindow):
         self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
         self.quickcycles.onLoadClicked.connect(self.prepareToRunProgram)
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
-        self.pushButton.clicked.connect(self.onChuckLimitSet)
 
         QTimer.singleShot(0, self.afterUIInit)
+        self.latheFixtures.onFixtureSelected.connect(self.onFixtureSelected)
+
+    def onFixtureSelected(self, fixture):
+        print("Fixture selected: ", fixture)
+        MachineLimitsHandler().setChuckLimit(fixture.z_minus_limit)
 
     def afterUIInit(self):
         # set the current values
@@ -178,20 +153,6 @@ class MyMainWindow(VCPMainWindow):
         self.manualLathe.onMaxSpindleRpmChanged(self.inputMaxRpm.text())
         self.manualLathe.onInputFeedChanged(self.inputFeed.text())
         self.manualLathe.onFeedAngleChanged(self.inputFeedAngle.text())
-
-    def onChuckLimitSet(self):
-        MachineLimitsHandler().setChuckLimit(float(self.chuckLimit.text()))
-
-    # def loadFixtures(self):
-    #     root_dir = os.path.realpath(os.path.dirname(__file__))
-    #     lathe_fixtures_path = os.path.join(root_dir, 'lathe_fixtures.json')
-    #
-    #     container = FixtureContainer()
-    #     lathe_fixtures = LatheFixtures(lathe_fixtures_path)
-    #     container.setFixtures(lathe_fixtures.getFixtures())
-    #     self.fixturesScrollArea.setWidget(container)
-    #     self.fixturesScrollArea.setWidgetResizable(True)
-    #     self.fixturesScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
     def onMainTabChanged(self, index):
         self.mainSelectedTab = MainTabs(index)

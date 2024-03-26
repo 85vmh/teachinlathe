@@ -19,5 +19,5 @@ chuck_#3:
   index: 2
   description: Zentra 4 independent jaws chuck
   diameter: 200
-  max-rpm: 2000
+  max-rpm: 1800
   z-minus-limit: 150

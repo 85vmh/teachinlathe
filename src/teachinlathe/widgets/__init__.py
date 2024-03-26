@@ -1,5 +1,6 @@
 from qtpyvcp.widgets.qtdesigner import _DesignerPlugin
 
+from .lathe_fixtures.lathe_fixtures_cards import LatheFixturesCards
 from .lathe_tool_touch_off.tool_touch_off import ToolTouchOff
 from .quick_cycles.quick_cycles import QuickCycles
 from .teachin_lathe_dro import TeachInLatheDro
@@ -23,3 +24,8 @@ class ToolTouchOff_Plugin(_DesignerPlugin):
 class QuickCycles_Plugin(_DesignerPlugin):
     def pluginClass(self):
         return QuickCycles
+
+
+class LatheFixturesCards_Plugin(_DesignerPlugin):
+    def pluginClass(self):
+        return LatheFixturesCards
