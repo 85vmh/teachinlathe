@@ -143,7 +143,7 @@ class MyMainWindow(VCPMainWindow):
 
     def onFixtureSelected(self, fixture):
         print("Fixture selected: ", fixture)
-        MachineLimitsHandler().setChuckLimit(fixture.z_minus_limit)
+        self.manualLathe.limitsHandler.setChuckLimit(fixture.z_minus_limit)
 
     def afterUIInit(self):
         # set the current values

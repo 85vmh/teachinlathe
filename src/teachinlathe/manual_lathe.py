@@ -145,6 +145,14 @@ class ManualLathe:
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickRapid, instance.onJoystickRapid)
         getattr(POSITION, 'abs').notify(instance.positionUpdated)
         instance.limitsHandler.onLimitsChanged.connect(instance.onMachineLimitsChanged)
+        instance.limitsHandler.onDefaultLimits.connect(instance.setDefaultMachineLimits)
+
+    def setDefaultMachineLimits(self, limits):
+        print("setting default limits: ", limits)
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = limits.x_min_limit
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = limits.x_max_limit
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = limits.z_min_limit
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = limits.z_max_limit
 
     def positionUpdated(self, pos):
         if self.previousMachineLimits != self.currentMachineLimits:
@@ -152,8 +160,6 @@ class ManualLathe:
                 pos = getattr(POSITION, 'abs').getValue()
             x_abs = pos[Axis.X]
             z_abs = pos[Axis.Z]
-            print("x_abs: ", x_abs)
-            print("z_abs: ", z_abs)
 
             x_min_applied = False
             x_max_applied = False

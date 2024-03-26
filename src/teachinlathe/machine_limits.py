@@ -21,6 +21,7 @@ class MachineLimits:
 
 class MachineLimitsHandler(QObject):
     _instance = None
+    onDefaultLimits = Signal(object)
     onLimitsChanged = Signal(object)
 
     def __new__(cls, *args, **kwargs):
@@ -39,8 +40,8 @@ class MachineLimitsHandler(QObject):
         _x_bounds = INFO.getAxisMinMax('X')[0]
         _z_bounds = INFO.getAxisMinMax('Z')[0]
 
-        self._default_x_min_limit = _x_bounds[0] * 2  # diameter mode
-        self._default_x_max_limit = _x_bounds[1] * 2  # diameter mode
+        self._default_x_min_limit = _x_bounds[0]
+        self._default_x_max_limit = _x_bounds[1]
         self._default_z_min_limit = _z_bounds[0]
         self._default_z_max_limit = _z_bounds[1]
 
@@ -54,7 +55,12 @@ class MachineLimitsHandler(QObject):
         self._custom_z_max_limit = None
 
         # emit the initial values
-        self.onLimitsChanged.emit(self.getMachineLimits())
+        # self.onLimitsChanged.emit(self.getMachineLimits())
+        self.onDefaultLimits.emit(
+            MachineLimits(self._default_x_min_limit,
+                          self._default_x_max_limit,
+                          self._default_z_min_limit,
+                          self._default_z_max_limit))
 
     def setCustomLimits(self, machine_limits):
         self._custom_x_min_limit = machine_limits.x_min_limit
@@ -64,7 +70,7 @@ class MachineLimitsHandler(QObject):
         self.onLimitsChanged.emit(self.getMachineLimits())
 
     def getMachineLimits(self):
-        print("Get machine limits:", self._chuck_limit)
+        print("getMachineLimits-chuck:", self._chuck_limit)
         # Apply chuck limit to default Z min limit
         computed_z_min = self._default_z_min_limit + self._chuck_limit
 
