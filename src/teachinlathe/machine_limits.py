@@ -47,6 +47,7 @@ class MachineLimitsHandler(QObject):
 
         self._chuck_limit = 0
         self._tailstock_limit = 0
+        self._pause_chuck_limit = False
 
         self._custom_limits_active = False
         self._custom_x_min_limit = None
@@ -72,7 +73,7 @@ class MachineLimitsHandler(QObject):
     def getMachineLimits(self):
         print("getMachineLimits-chuck:", self._chuck_limit)
         # Apply chuck limit to default Z min limit
-        computed_z_min = self._default_z_min_limit + self._chuck_limit
+        computed_z_min = self._default_z_min_limit + (0 if self._pause_chuck_limit else self._chuck_limit)
 
         # Apply tailstock limit to default Z max limit
         computed_z_max = self._default_z_max_limit - self._tailstock_limit
@@ -89,6 +90,10 @@ class MachineLimitsHandler(QObject):
         computed_x_max = self._custom_x_max_limit if self._custom_limits_active else self._default_x_max_limit
 
         return MachineLimits(computed_x_min, computed_x_max, computed_z_min, computed_z_max)
+
+    def pauseChuckLimit(self, value):
+        self._pause_chuck_limit = value
+        self.onLimitsChanged.emit(self.getMachineLimits())
 
     def setChuckLimit(self, value):
         self._chuck_limit = value

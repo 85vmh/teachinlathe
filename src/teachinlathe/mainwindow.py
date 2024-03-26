@@ -157,6 +157,7 @@ class MyMainWindow(VCPMainWindow):
     def onMainTabChanged(self, index):
         self.mainSelectedTab = MainTabs(index)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = self.mainSelectedTab == MainTabs.PROGRAMS
+        self.manualLathe.limitsHandler.pauseChuckLimit(self.mainSelectedTab == MainTabs.MACHINE_SETTINGS)
 
     def handleUsbPresent(self, value):
         self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value if value else ProgramTabs.PROGRAM_LOADED.value)
