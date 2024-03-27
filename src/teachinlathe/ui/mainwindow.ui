@@ -2022,8 +2022,8 @@ QCheckBox:disabled {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1011</width>
-               <height>221</height>
+               <width>1020</width>
+               <height>211</height>
               </rect>
              </property>
             </widget>

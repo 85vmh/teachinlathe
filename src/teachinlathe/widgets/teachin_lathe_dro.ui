@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1021</width>
-    <height>219</height>
+    <height>202</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,9 +17,9 @@
    <property name="geometry">
     <rect>
      <x>5</x>
-     <y>120</y>
+     <y>110</y>
      <width>60</width>
-     <height>89</height>
+     <height>81</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -44,7 +44,7 @@
      <x>5</x>
      <y>5</y>
      <width>60</width>
-     <height>101</height>
+     <height>81</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -115,7 +115,7 @@
    <property name="geometry">
     <rect>
      <x>90</x>
-     <y>120</y>
+     <y>110</y>
      <width>131</width>
      <height>36</height>
     </rect>
@@ -159,7 +159,7 @@
      <x>230</x>
      <y>10</y>
      <width>351</width>
-     <height>91</height>
+     <height>81</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -199,9 +199,9 @@
    <property name="geometry">
     <rect>
      <x>230</x>
-     <y>120</y>
+     <y>110</y>
      <width>351</width>
-     <height>91</height>
+     <height>81</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -244,9 +244,9 @@
    <property name="geometry">
     <rect>
      <x>650</x>
-     <y>120</y>
-     <width>52</width>
-     <height>52</height>
+     <y>110</y>
+     <width>50</width>
+     <height>50</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -257,8 +257,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>52</width>
-     <height>52</height>
+     <width>50</width>
+     <height>50</height>
     </size>
    </property>
    <property name="styleSheet">
@@ -343,7 +343,7 @@
    <property name="geometry">
     <rect>
      <x>590</x>
-     <y>120</y>
+     <y>110</y>
      <width>52</width>
      <height>52</height>
     </rect>
@@ -375,7 +375,7 @@
    <property name="geometry">
     <rect>
      <x>590</x>
-     <y>190</y>
+     <y>170</y>
      <width>31</width>
      <height>21</height>
     </rect>
@@ -409,7 +409,7 @@
    <property name="geometry">
     <rect>
      <x>590</x>
-     <y>80</y>
+     <y>70</y>
      <width>31</width>
      <height>21</height>
     </rect>
@@ -443,10 +443,21 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>103</y>
+     <y>92</y>
      <width>1021</width>
      <height>16</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <kerning>true</kerning>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(192, 191, 188)</string>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Plain</enum>
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
@@ -455,11 +466,16 @@
   <widget class="TeachInLineEdit" name="teachin_line_edit">
    <property name="geometry">
     <rect>
-     <x>800</x>
+     <x>850</x>
      <y>10</y>
      <width>81</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="styleSheet">
     <string notr="true"/>
@@ -492,11 +508,16 @@
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>890</x>
+     <x>940</x>
      <y>10</y>
-     <width>61</width>
+     <width>71</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="styleSheet">
     <string notr="true"/>
@@ -505,27 +526,19 @@
     <string>TeachIn</string>
    </property>
   </widget>
-  <widget class="Line" name="line_2">
-   <property name="geometry">
-    <rect>
-     <x>700</x>
-     <y>0</y>
-     <width>20</width>
-     <height>221</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Vertical</enum>
-   </property>
-  </widget>
   <widget class="QCheckBox" name="checkBox">
    <property name="geometry">
     <rect>
-     <x>720</x>
-     <y>10</y>
-     <width>81</width>
-     <height>25</height>
+     <x>760</x>
+     <y>5</y>
+     <width>91</width>
+     <height>35</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="styleSheet">
     <string notr="true"/>
@@ -537,11 +550,16 @@
   <widget class="QCheckBox" name="checkBox_2">
    <property name="geometry">
     <rect>
-     <x>720</x>
-     <y>60</y>
-     <width>81</width>
-     <height>25</height>
+     <x>760</x>
+     <y>55</y>
+     <width>91</width>
+     <height>35</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>X+ Limit:</string>
@@ -550,11 +568,16 @@
   <widget class="QPushButton" name="pushButton_2">
    <property name="geometry">
     <rect>
-     <x>890</x>
+     <x>940</x>
      <y>60</y>
-     <width>61</width>
+     <width>71</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>TeachIn</string>
@@ -563,11 +586,16 @@
   <widget class="TeachInLineEdit" name="teachin_line_edit_2">
    <property name="geometry">
     <rect>
-     <x>800</x>
+     <x>850</x>
      <y>60</y>
      <width>81</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>000.000</string>
@@ -597,11 +625,16 @@
   <widget class="QPushButton" name="pushButton_3">
    <property name="geometry">
     <rect>
-     <x>890</x>
-     <y>170</y>
-     <width>61</width>
+     <x>940</x>
+     <y>160</y>
+     <width>71</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>TeachIn</string>
@@ -610,11 +643,16 @@
   <widget class="TeachInLineEdit" name="teachin_line_edit_3">
    <property name="geometry">
     <rect>
-     <x>800</x>
-     <y>170</y>
+     <x>850</x>
+     <y>160</y>
      <width>81</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>000.000</string>
@@ -644,11 +682,16 @@
   <widget class="QCheckBox" name="checkBox_3">
    <property name="geometry">
     <rect>
-     <x>720</x>
-     <y>120</y>
-     <width>81</width>
-     <height>25</height>
+     <x>760</x>
+     <y>106</y>
+     <width>91</width>
+     <height>35</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="styleSheet">
     <string notr="true"/>
@@ -660,11 +703,16 @@
   <widget class="QPushButton" name="pushButton_4">
    <property name="geometry">
     <rect>
-     <x>890</x>
-     <y>120</y>
-     <width>61</width>
+     <x>940</x>
+     <y>110</y>
+     <width>71</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="styleSheet">
     <string notr="true"/>
@@ -676,11 +724,16 @@
   <widget class="TeachInLineEdit" name="teachin_line_edit_4">
    <property name="geometry">
     <rect>
-     <x>800</x>
-     <y>120</y>
+     <x>850</x>
+     <y>110</y>
      <width>81</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="styleSheet">
     <string notr="true"/>
@@ -713,14 +766,41 @@
   <widget class="QCheckBox" name="checkBox_4">
    <property name="geometry">
     <rect>
-     <x>720</x>
-     <y>170</y>
-     <width>81</width>
-     <height>25</height>
+     <x>760</x>
+     <y>155</y>
+     <width>91</width>
+     <height>35</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Z+ Limit:</string>
+   </property>
+  </widget>
+  <widget class="Line" name="line_2">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>200</y>
+     <width>1021</width>
+     <height>2</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(154, 153, 150)</string>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Plain</enum>
+   </property>
+   <property name="lineWidth">
+    <number>2</number>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
    </property>
   </widget>
  </widget>
