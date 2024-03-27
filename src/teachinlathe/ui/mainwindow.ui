@@ -561,7 +561,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <x>5</x>
                <y>225</y>
                <width>641</width>
-               <height>81</height>
+               <height>121</height>
               </rect>
              </property>
              <property name="frameShape">
@@ -580,7 +580,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 40pt &quot;Liberation Sans Narrow&quot;;</string>
+               <string notr="true">font: 40pt &quot;Lato&quot;;</string>
               </property>
               <property name="text">
                <string>S</string>
@@ -643,7 +643,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <number>1</number>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="pageRpm">
                <widget class="QLabel" name="rpmUnit_10">
@@ -1022,7 +1022,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>315</y>
+               <y>352</y>
                <width>641</width>
                <height>71</height>
               </rect>
@@ -1043,7 +1043,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 40pt &quot;Liberation Sans Narrow&quot;;</string>
+               <string notr="true">font: 40pt &quot;Lato&quot;;</string>
               </property>
               <property name="text">
                <string>F</string>
@@ -1271,10 +1271,13 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>560</y>
+               <y>590</y>
                <width>641</width>
                <height>71</height>
               </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
              </property>
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
@@ -1292,10 +1295,10 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 57 20pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 20pt &quot;Lato&quot;;</string>
               </property>
               <property name="text">
-               <string>Rapid speed</string>
+               <string>Max Velocity</string>
               </property>
              </widget>
              <widget class="StatusLabel" name="statuslabel_38">
@@ -1361,10 +1364,13 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>475</y>
+               <y>508</y>
                <width>641</width>
                <height>76</height>
               </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true"/>
              </property>
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
@@ -1451,17 +1457,16 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </font>
               </property>
               <property name="styleSheet">
-               <string notr="true">QCheckBox {
-        spacing: 4px; /* Adjusts the space between the checkbox and its label */
-		font: 10pt &quot;Noto Sans&quot;;
-    }
-    QCheckBox::indicator {
-        width: 18px; /* Width of the checkbox */
-        height: 18px; /* Height of the checkbox */
-    }</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Jog Angle:</string>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>18</width>
+                <height>18</height>
+               </size>
               </property>
              </widget>
              <widget class="QLabel" name="label_2">
@@ -1474,7 +1479,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 57 20pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 20pt &quot;Lato&quot;;</string>
               </property>
               <property name="text">
                <string>Handwheels</string>
@@ -1647,7 +1652,7 @@ QCheckBox:disabled {
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>395</y>
+               <y>430</y>
                <width>641</width>
                <height>71</height>
               </rect>
@@ -1669,7 +1674,7 @@ QCheckBox:disabled {
               </property>
               <property name="font">
                <font>
-                <family>Liberation Sans Narrow</family>
+                <family>Lato</family>
                 <pointsize>40</pointsize>
                 <weight>50</weight>
                 <italic>false</italic>
@@ -1677,7 +1682,7 @@ QCheckBox:disabled {
                </font>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 40pt &quot;Liberation Sans Narrow&quot;;</string>
+               <string notr="true">font: 40pt &quot;Lato&quot;;</string>
               </property>
               <property name="text">
                <string>T</string>
