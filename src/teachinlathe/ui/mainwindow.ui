@@ -596,7 +596,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>RPM</string>
@@ -618,7 +618,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>CSS</string>
@@ -643,7 +643,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <number>1</number>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>1</number>
               </property>
               <widget class="QWidget" name="pageRpm">
                <widget class="QLabel" name="rpmUnit_10">
@@ -656,7 +656,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>rev/min</string>
@@ -672,15 +672,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
-}</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>0</string>
@@ -699,7 +691,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Actual RPM:</string>
@@ -715,7 +707,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>rev/min</string>
@@ -731,7 +723,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Set RPM:</string>
@@ -747,7 +739,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>700</string>
@@ -774,7 +766,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>m/min</string>
@@ -790,7 +782,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>m/min</string>
@@ -806,7 +798,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Actual CSS:</string>
@@ -822,7 +814,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Set CSS:</string>
@@ -838,15 +830,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
-}</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>000</string>
@@ -865,15 +849,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
-}</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>0000</string>
@@ -892,7 +868,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Actual RPM:</string>
@@ -908,7 +884,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>rev/min</string>
@@ -924,7 +900,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>rev/min</string>
@@ -940,7 +916,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Max RPM:</string>
@@ -969,7 +945,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>1500</string>
@@ -994,7 +970,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
                 </property>
                 <property name="text">
                  <string>250</string>
@@ -1083,15 +1059,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
-}</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>0.0</string>
@@ -1110,7 +1078,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>mm/rev</string>
@@ -1126,7 +1094,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Actual feed:</string>
@@ -1142,7 +1110,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Set feed:</string>
@@ -1171,14 +1139,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">QCheckBox {
-        spacing: 4px; /* Adjusts the space between the checkbox and its label */
-		font: 11pt &quot;Noto Sans&quot;;
-    }
-    QCheckBox::indicator {
-        width: 18px; /* Width of the checkbox */
-        height: 18px; /* Height of the checkbox */
-    }</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>Feed Angle:</string>
@@ -1200,7 +1161,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>deg</string>
@@ -1246,7 +1207,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>mm/rev</string>
@@ -1262,7 +1223,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>0.1</string>
@@ -1288,6 +1249,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                 <width>66</width>
                 <height>31</height>
                </rect>
+              </property>
+              <property name="styleSheet">
+               <string>font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>45</string>
@@ -1455,14 +1419,14 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="font">
                <font>
                 <family>Noto Sans</family>
-                <pointsize>11</pointsize>
+                <pointsize>10</pointsize>
                 <weight>50</weight>
                 <italic>false</italic>
                 <bold>false</bold>
                </font>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
               </property>
               <property name="text">
                <string>deg</string>
@@ -1480,7 +1444,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="font">
                <font>
                 <family>Noto Sans</family>
-                <pointsize>11</pointsize>
+                <pointsize>10</pointsize>
                 <weight>50</weight>
                 <italic>false</italic>
                 <bold>false</bold>
@@ -1489,7 +1453,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="styleSheet">
                <string notr="true">QCheckBox {
         spacing: 4px; /* Adjusts the space between the checkbox and its label */
-		font: 11pt &quot;Noto Sans&quot;;
+		font: 10pt &quot;Noto Sans&quot;;
     }
     QCheckBox::indicator {
         width: 18px; /* Width of the checkbox */
@@ -1654,11 +1618,16 @@ QCheckBox:disabled {
               </property>
               <property name="geometry">
                <rect>
-                <x>525</x>
+                <x>530</x>
                 <y>25</y>
                 <width>66</width>
                 <height>31</height>
                </rect>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
               </property>
               <property name="text">
                <string>45</string>
@@ -2028,24 +1997,14 @@ QCheckBox:disabled {
             <widget class="QPushButton" name="setZDatumBtn">
              <property name="geometry">
               <rect>
-               <x>835</x>
-               <y>25</y>
+               <x>290</x>
+               <y>630</y>
                <width>101</width>
                <height>46</height>
               </rect>
              </property>
              <property name="text">
               <string>Set Z Datum</string>
-             </property>
-            </widget>
-            <widget class="TeachInLatheDro" name="teachinlathedro">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>786</width>
-               <height>201</height>
-              </rect>
              </property>
             </widget>
             <widget class="QuickCycles" name="quickcycles">
@@ -2055,6 +2014,16 @@ QCheckBox:disabled {
                <y>200</y>
                <width>356</width>
                <height>471</height>
+              </rect>
+             </property>
+            </widget>
+            <widget class="TeachInLatheDro" name="teachinlathedro">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>1011</width>
+               <height>221</height>
               </rect>
              </property>
             </widget>
