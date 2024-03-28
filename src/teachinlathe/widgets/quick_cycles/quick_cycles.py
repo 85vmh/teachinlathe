@@ -119,7 +119,6 @@ class QuickCycles(QWidget):
         self.keyslotFeed.mousePressEvent = lambda _: self.openNumPad(self.keyslotFeed)
 
         self.btnNext.clicked.connect(self.onBtnNextClicked)
-        self.pushButton.clicked.connect(self.onForceStep4)
         self.btnMoveToPosX.clicked.connect(self.moveToPosX)
         self.btnMoveToPosZ.clicked.connect(self.moveToPosZ)
 
