@@ -33,35 +33,32 @@ class MachineLimitsHandler(QObject):
     def __init__(self):
         if not self._is_initialized:
             super().__init__()  # Initialize the QObject base class
+            _x_bounds = INFO.getAxisMinMax('X')[0]
+            _z_bounds = INFO.getAxisMinMax('Z')[0]
+
             self._is_initialized = True
-            self._initialize()
+            self._chuck_limit = 0
+            self._tailstock_limit = 0
+            self._pause_chuck_limit = False
 
-    def _initialize(self):
-        _x_bounds = INFO.getAxisMinMax('X')[0]
-        _z_bounds = INFO.getAxisMinMax('Z')[0]
+            self._custom_limits_active = False
+            self._custom_x_min_limit = None
+            self._custom_x_max_limit = None
+            self._custom_z_min_limit = None
+            self._custom_z_max_limit = None
 
-        self._default_x_min_limit = _x_bounds[0]
-        self._default_x_max_limit = _x_bounds[1]
-        self._default_z_min_limit = _z_bounds[0]
-        self._default_z_max_limit = _z_bounds[1]
+            self._default_x_min_limit = _x_bounds[0]
+            self._default_x_max_limit = _x_bounds[1]
+            self._default_z_min_limit = _z_bounds[0]
+            self._default_z_max_limit = _z_bounds[1]
 
-        self._chuck_limit = 0
-        self._tailstock_limit = 0
-        self._pause_chuck_limit = False
-
-        self._custom_limits_active = False
-        self._custom_x_min_limit = None
-        self._custom_x_max_limit = None
-        self._custom_z_min_limit = None
-        self._custom_z_max_limit = None
-
-        # emit the initial values
-        # self.onLimitsChanged.emit(self.getMachineLimits())
-        self.onDefaultLimits.emit(
-            MachineLimits(self._default_x_min_limit,
-                          self._default_x_max_limit,
-                          self._default_z_min_limit,
-                          self._default_z_max_limit))
+            # emit the initial values
+            # self.onLimitsChanged.emit(self.getMachineLimits())
+            self.onDefaultLimits.emit(
+                MachineLimits(self._default_x_min_limit,
+                              self._default_x_max_limit,
+                              self._default_z_min_limit,
+                              self._default_z_max_limit))
 
     def setCustomLimits(self, machine_limits):
         self._custom_x_min_limit = machine_limits.x_min_limit

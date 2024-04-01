@@ -4,7 +4,6 @@ import tempfile
 from enum import Enum
 
 import linuxcnc
-from PyQt5 import QtCore
 from PyQt5.QtCore import QTimer
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.actions.program_actions import load as loadProgram
@@ -14,8 +13,8 @@ from qtpyvcp.utilities.info import Info
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
-from teachinlathe.machine_limits import MachineLimitsHandler
 from teachinlathe.manual_lathe import ManualLathe
+from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
@@ -26,8 +25,6 @@ STATUS = getPlugin('status')
 LINUXCNC_CMD = linuxcnc.command()
 STAT = linuxcnc.stat()
 PROGRAM_PREFIX = INFO.getProgramPrefix()
-
-from PyQt5.QtWidgets import QWidget, QHBoxLayout
 
 
 class MainTabs(Enum):
@@ -69,8 +66,10 @@ class MyMainWindow(VCPMainWindow):
         self.current_feed_override = 0
         self.current_program = None
 
+        self.fixture_repository = LatheFixturesRepository()
         self.manualLathe = ManualLathe()
         self.latheComponent = TeachInLatheComponent()
+
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStart, self.onCycleStartPressed)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStop, self.onCycleStopPressed)
@@ -139,10 +138,14 @@ class MyMainWindow(VCPMainWindow):
 
         QTimer.singleShot(0, self.afterUIInit)
         self.latheFixtures.onFixtureSelected.connect(self.onFixtureSelected)
+        initial_fixture = self.fixture_repository.getCurrentFixture()
+        if initial_fixture:
+            print("Setup initial fixture: ", initial_fixture)
+            self.onFixtureSelected(initial_fixture)
 
     def onFixtureSelected(self, fixture):
-        print("Fixture selected: ", fixture)
-        self.manualLathe.limitsHandler.setChuckLimit(fixture.z_minus_limit)
+        print("---Fixture selected: ", fixture)
+        self.teachinlathedro.limitsHandler.setChuckLimit(fixture.z_minus_limit)
 
     def afterUIInit(self):
         # set the current values
@@ -156,7 +159,7 @@ class MyMainWindow(VCPMainWindow):
     def onMainTabChanged(self, index):
         self.mainSelectedTab = MainTabs(index)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = self.mainSelectedTab == MainTabs.PROGRAMS
-        self.manualLathe.limitsHandler.pauseChuckLimit(self.mainSelectedTab == MainTabs.MACHINE_SETTINGS)
+        self.teachinlathedro.limitsHandler.pauseChuckLimit(self.mainSelectedTab == MainTabs.MACHINE_SETTINGS)
 
     def handleUsbPresent(self, value):
         self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value if value else ProgramTabs.PROGRAM_LOADED.value)

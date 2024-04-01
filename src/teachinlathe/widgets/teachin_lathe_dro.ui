@@ -472,7 +472,7 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="TeachInLineEdit" name="teachin_line_edit">
+  <widget class="TeachInLineEdit" name="droXMinus">
    <property name="geometry">
     <rect>
      <x>830</x>
@@ -514,7 +514,7 @@
     <number>2</number>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="teachXMinus">
    <property name="geometry">
     <rect>
      <x>920</x>
@@ -535,7 +535,7 @@
     <string>TeachIn</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox">
+  <widget class="QCheckBox" name="xMinusLimit">
    <property name="geometry">
     <rect>
      <x>710</x>
@@ -556,7 +556,7 @@
     <string>X- Tool Limit:</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
+  <widget class="QPushButton" name="teachXPlus">
    <property name="geometry">
     <rect>
      <x>920</x>
@@ -574,7 +574,7 @@
     <string>TeachIn</string>
    </property>
   </widget>
-  <widget class="TeachInLineEdit" name="teachin_line_edit_2">
+  <widget class="TeachInLineEdit" name="droXPlus">
    <property name="geometry">
     <rect>
      <x>830</x>
@@ -613,7 +613,7 @@
     <number>2</number>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_3">
+  <widget class="QPushButton" name="teachZPlus">
    <property name="geometry">
     <rect>
      <x>920</x>
@@ -631,7 +631,7 @@
     <string>TeachIn</string>
    </property>
   </widget>
-  <widget class="TeachInLineEdit" name="teachin_line_edit_3">
+  <widget class="TeachInLineEdit" name="droZPlus">
    <property name="geometry">
     <rect>
      <x>830</x>
@@ -652,10 +652,10 @@
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
    </property>
    <property name="referenceType" stdset="0">
-    <number>1</number>
+    <number>0</number>
    </property>
    <property name="axisNumber" stdset="0">
-    <number>0</number>
+    <number>2</number>
    </property>
    <property name="inchFormat" stdset="0">
     <string>%9.4f</string>
@@ -670,7 +670,7 @@
     <number>2</number>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_4">
+  <widget class="QPushButton" name="teachZMinus">
    <property name="geometry">
     <rect>
      <x>920</x>
@@ -691,7 +691,7 @@
     <string>TeachIn</string>
    </property>
   </widget>
-  <widget class="TeachInLineEdit" name="teachin_line_edit_4">
+  <widget class="TeachInLineEdit" name="droZMinus">
    <property name="geometry">
     <rect>
      <x>830</x>
@@ -718,7 +718,7 @@
     <number>1</number>
    </property>
    <property name="axisNumber" stdset="0">
-    <number>0</number>
+    <number>2</number>
    </property>
    <property name="inchFormat" stdset="0">
     <string>%9.4f</string>
@@ -774,7 +774,7 @@
     <string>G10 L20 P0 Z0</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox_2">
+  <widget class="QCheckBox" name="xPlusLimit">
    <property name="geometry">
     <rect>
      <x>710</x>
@@ -795,7 +795,7 @@
     <string>X+ Tool Limit:</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox_3">
+  <widget class="QCheckBox" name="zMinusLimit">
    <property name="geometry">
     <rect>
      <x>710</x>
@@ -816,7 +816,7 @@
     <string>Z- Tool Limit:</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="checkBox_4">
+  <widget class="QCheckBox" name="zPlusLimit">
    <property name="geometry">
     <rect>
      <x>710</x>
@@ -851,5 +851,70 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>teachXMinus</sender>
+   <signal>clicked()</signal>
+   <receiver>droXMinus</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>957</x>
+     <y>33</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>872</x>
+     <y>33</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>teachXPlus</sender>
+   <signal>clicked()</signal>
+   <receiver>droXPlus</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>957</x>
+     <y>73</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>872</x>
+     <y>73</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>teachZMinus</sender>
+   <signal>clicked()</signal>
+   <receiver>droZMinus</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>957</x>
+     <y>126</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>872</x>
+     <y>126</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>teachZPlus</sender>
+   <signal>clicked()</signal>
+   <receiver>droZPlus</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>957</x>
+     <y>166</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>872</x>
+     <y>166</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

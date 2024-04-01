@@ -68,13 +68,13 @@ class TurningHelper:
 
         match joystick_direction:
             case JoystickDirection.X_PLUS:
-                return CartesianPoint(limits.x_max_limit, limits.z_min_limit)
+                return CartesianPoint(limits.x_max_limit * 2, limits.z_min_limit)
             case JoystickDirection.X_MINUS:
-                return CartesianPoint(limits.x_min_limit, limits.z_max_limit)
+                return CartesianPoint(limits.x_min_limit * 2, limits.z_max_limit)
             case JoystickDirection.Z_PLUS:
-                return CartesianPoint(limits.x_max_limit, limits.z_max_limit)
+                return CartesianPoint(limits.x_max_limit * 2, limits.z_max_limit)
             case JoystickDirection.Z_MINUS:
-                return CartesianPoint(limits.x_min_limit, limits.z_min_limit)
+                return CartesianPoint(limits.x_min_limit * 2, limits.z_min_limit)
 
     @staticmethod
     def compute_destination_point(start_point, corner_point, angle):

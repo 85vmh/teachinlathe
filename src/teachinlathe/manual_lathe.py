@@ -12,8 +12,6 @@ from qtpyvcp.plugins.status import STAT
 from qtpyvcp.utilities.info import Info
 
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
-from teachinlathe.machine_limits import MachineLimitsHandler
-from qtpyvcp.widgets.base_widgets.dro_base_widget import Axis
 
 LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
@@ -102,7 +100,6 @@ class ManualLathe:
     _instance = None
     latheComponent = TeachInLatheComponent()
     messageStack = MessageStack()
-    limitsHandler = MachineLimitsHandler()
     spindleRpm = 300
     spindleCss = 200
     maxSpindleRpm = 2000
@@ -120,8 +117,6 @@ class ManualLathe:
     joystickResetRequired = None
     isTaperTurning = False
     feedTaperAngle = 0
-    previousMachineLimits = None
-    currentMachineLimits = None
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -143,58 +138,6 @@ class ManualLathe:
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickZMinus, instance.onJoystickZMinus)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickZPlus, instance.onJoystickZPlus)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickRapid, instance.onJoystickRapid)
-        getattr(POSITION, 'abs').notify(instance.positionUpdated)
-        instance.limitsHandler.onLimitsChanged.connect(instance.onMachineLimitsChanged)
-        instance.limitsHandler.onDefaultLimits.connect(instance.setDefaultMachineLimits)
-
-    def setDefaultMachineLimits(self, limits):
-        print("setting default limits: ", limits)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = limits.x_min_limit
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = limits.x_max_limit
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = limits.z_min_limit
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = limits.z_max_limit
-
-    def positionUpdated(self, pos):
-        if self.previousMachineLimits != self.currentMachineLimits:
-            if pos is None:
-                pos = getattr(POSITION, 'abs').getValue()
-            x_abs = pos[Axis.X]
-            z_abs = pos[Axis.Z]
-
-            x_min_applied = False
-            x_max_applied = False
-            z_min_applied = False
-            z_max_applied = False
-
-            self.currentMachineLimits = self.limitsHandler.getMachineLimits()
-
-            if x_abs > self.currentMachineLimits.x_min_limit:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = self.currentMachineLimits.x_min_limit
-                x_min_applied = True
-            else:
-                print("Back off from X- to activate the X- virtual limit")
-
-            if x_abs < self.currentMachineLimits.x_max_limit:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = self.currentMachineLimits.x_max_limit
-                x_max_applied = True
-            else:
-                print("Back off from X+ to activate the X+ virtual limit")
-
-            if z_abs > self.currentMachineLimits.z_min_limit:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = self.currentMachineLimits.z_min_limit
-                z_min_applied = True
-            else:
-                print("Back off from Z- to activate the Z- virtual limit")
-
-            if z_abs < self.currentMachineLimits.z_max_limit:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
-                z_max_applied = True
-            else:
-                print("Back off from Z+ to activate the Z+ virtual limit")
-
-            if x_min_applied and x_max_applied and z_min_applied and z_max_applied:
-                self.previousMachineLimits = self.currentMachineLimits
-                print("-----All limits applied-------")
 
     def getProgramHeader(self):
         spindle_cmd = f"G97 M4 S{self.spindleRpm} (Spindle RPM Mode)" \
@@ -205,10 +148,6 @@ class ManualLathe:
                 f"{spindle_cmd}\n"
                 f"G95 F{self.feedPerRev} (Feed per rev)\n"
                 )
-
-    def onMachineLimitsChanged(self, machine_limits):
-        print("Machine limits changed: ", machine_limits)
-        self.currentMachineLimits = machine_limits
 
     def onSpindleModeChanged(self, value=0):
         self.spindleMode = SpindleMode(value)
@@ -230,7 +169,6 @@ class ManualLathe:
 
     def onInputFeedChanged(self, value=feedPerRev):
         self.feedPerRev = value
-        print("feed per rev is: ", self.feedPerRev)
 
     def onTaperTurningChanged(self, value=False):
         self.isTaperTurning = value

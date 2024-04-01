@@ -637,7 +637,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QStackedWidget" name="spindleModeWidget">
               <property name="geometry">
                <rect>
-                <x>157</x>
+                <x>150</x>
                 <y>5</y>
                 <width>451</width>
                 <height>71</height>

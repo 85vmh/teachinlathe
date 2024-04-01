@@ -1,4 +1,5 @@
 import json
+import os
 
 
 class Fixture:
@@ -16,18 +17,23 @@ class Fixture:
 
 
 class LatheFixturesRepository:
+    _instance = None
 
-    def __init__(self, file_path):
-        self.file_path = file_path
-        self.data = self._load_json()
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            root_dir = os.path.realpath(os.path.dirname(__file__))
+            cls._instance._file_path = os.path.join(root_dir, 'lathe_fixtures.json')
+            cls._instance._data = cls._instance._load_json()
+        return cls._instance
 
     def _load_json(self):
-        with open(self.file_path, 'r') as file:
+        with open(self._file_path, 'r') as file:
             return json.load(file)
 
     def _save_json(self):
-        with open(self.file_path, 'w') as file:
-            json.dump(self.data, file, indent=4)
+        with open(self._file_path, 'w') as file:
+            json.dump(self._data, file, indent=4)
 
     def getFixtures(self):
         return [
@@ -40,11 +46,18 @@ class LatheFixturesRepository:
                 f.get('diameter', None),  # Use .get with default of None
                 f.get('units', None)  # Use .get with default of None
             )
-            for f in self.data['fixtures']
+            for f in self._data['fixtures']
         ]
 
     def getCurrentIndex(self):
-        return self.data['current_fixture_index']
+        return self._data['current_fixture_index']
+
+    def getCurrentFixture(self):
+        current_index = self.getCurrentIndex()
+        for fixture in self.getFixtures():
+            if fixture.fixture_index == current_index:
+                return fixture
+        return None  # Return None if no fixture found for the current index
 
     def reloadFixtures(self):
         self._load_json()
@@ -56,11 +69,11 @@ class LatheFixturesRepository:
 
     def updateCurrentFixtureIndex(self, new_index):
         print("new_index: ", new_index)
-        self.data['current_fixture_index'] = new_index
+        self._data['current_fixture_index'] = new_index
         self._save_json()
 
     def updateZMinusLimit(self, fixture_index, new_limit):
-        for fixture in self.data['fixtures']:
+        for fixture in self._data['fixtures']:
             if fixture['fixture_index'] == fixture_index:
                 fixture['z_minus_limit'] = new_limit
                 self._save_json()

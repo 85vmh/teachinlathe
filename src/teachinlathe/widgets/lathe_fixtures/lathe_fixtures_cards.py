@@ -1,11 +1,9 @@
-import os
-
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QScrollArea, QHBoxLayout, QVBoxLayout
 from qtpyvcp.utilities import logger
 
-from teachinlathe.widgets.lathe_fixtures.fixtures import LatheFixturesRepository
+from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.widgets.lathe_fixtures.lathe_fixture import LatheFixture
 
 LOG = logger.getLogger(__name__)
@@ -14,12 +12,16 @@ LOG = logger.getLogger(__name__)
 class _ScrollableFixtures(QWidget):
     onFixtureSelected = QtCore.pyqtSignal(object)
 
-    def __init__(self, lathe_fixtures_path, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.fixture_repository = LatheFixturesRepository(lathe_fixtures_path)
+        self.fixture_repository = LatheFixturesRepository()
 
         # Create a QHBoxLayout to contain QLabel items horizontally
         self.layout = QHBoxLayout(self)
+
+        if not self.fixture_repository:
+            LOG.error("No fixture_repository provided")
+            return
 
         self.loadFixtures()
 
@@ -61,16 +63,13 @@ class LatheFixturesCards(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        root_dir = os.path.realpath(os.path.dirname(__file__))
-        lathe_fixtures_path = os.path.join(root_dir, 'lathe_fixtures.json')
-
         # Create a QScrollArea
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
 
         # Create the content widget and set it as the central widget of the scroll area
 
-        content_widget = _ScrollableFixtures(lathe_fixtures_path)
+        content_widget = _ScrollableFixtures()
         scroll_area.setWidget(content_widget)
         content_widget.onFixtureSelected.connect(self.handleFixtureSelected)
 
@@ -90,4 +89,5 @@ class LatheFixturesCards(QWidget):
         main_layout.addWidget(scroll_area)
 
     def handleFixtureSelected(self, fixture):
+        print("---Selected fixture: ", fixture)
         self.onFixtureSelected.emit(fixture)
