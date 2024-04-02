@@ -2,6 +2,7 @@ import os
 
 from PyQt5 import QtCore, QtWidgets
 from qtpy import uic
+from qtpyvcp.utilities.info import Info
 from qtpy.QtWidgets import QWidget
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities import logger
@@ -12,7 +13,7 @@ from teachinlathe.machine_limits import MachineLimitsHandler
 LOG = logger.getLogger(__name__)
 
 UI_FILE = os.path.join(os.path.dirname(__file__), "teachin_lathe_dro.ui")
-
+INFO = Info()
 
 class TeachInLatheDro(QWidget):
     xPrimaryDroClicked = QtCore.pyqtSignal(float)
@@ -44,6 +45,8 @@ class TeachInLatheDro(QWidget):
         self.isZAbs = True
         self.lastZAbsValue = 0
 
+        self.tool_rel_position = [0] * 9
+
         self.xZero.clicked.connect(self.xZeroClicked)
         self.zZero.clicked.connect(self.zZeroClicked)
         self.xAbsRel.clicked.connect(self.xAbsRelClicked)
@@ -53,10 +56,20 @@ class TeachInLatheDro(QWidget):
         self.xPlusLimitToggle(False)
         self.zMinusLimitToggle(False)
         self.zPlusLimitToggle(False)
+
         self.xMinusLimit.stateChanged.connect(self.xMinusLimitToggle)
         self.xPlusLimit.stateChanged.connect(self.xPlusLimitToggle)
         self.zMinusLimit.stateChanged.connect(self.zMinusLimitToggle)
         self.zPlusLimit.stateChanged.connect(self.zPlusLimitToggle)
+
+        self.droXMinusChanged(self.droXMinus.text())
+        self.droXPlusChanged(self.droXPlus.text())
+        self.droZMinusChanged(self.droZMinus.text())
+        self.droZPlusChanged(self.droZPlus.text())
+        self.droXMinus.textChanged.connect(self.droXMinusChanged)
+        self.droXPlus.textChanged.connect(self.droXPlusChanged)
+        self.droZMinus.textChanged.connect(self.droZMinusChanged)
+        self.droZPlus.textChanged.connect(self.droZPlusChanged)
 
         self.xPrimaryDro.installEventFilter(self)
         self.zPrimaryDro.installEventFilter(self)
@@ -65,10 +78,36 @@ class TeachInLatheDro(QWidget):
         getattr(self.pos, 'rel').notify(self.updateValues)
         getattr(self.pos, 'abs').notify(self.positionUpdated)
 
+        self.status.g5x_offset.signal.connect(self._updateToolRelativePos)
+        self.status.g92_offset.signal.connect(self._updateToolRelativePos)
+        self.status.tool_offset.signal.connect(self._updateToolRelativePos)
+
         self.limitsHandler.onLimitsChanged.connect(self.onMachineLimitsChanged)
         self.limitsHandler.onDefaultLimits.connect(self.setDefaultMachineLimits)
         self.updateUnits()
         self.updateValues()
+
+    def _updateToolRelativePos(self):
+        g5x_offset = self.status.stat.g5x_offset
+        g92_offset = self.status.stat.g92_offset
+        tool_offset = self.status.stat.tool_offset
+
+        for axis in INFO.AXIS_NUMBER_LIST:
+            self.tool_rel_position[axis] = g5x_offset[axis] + tool_offset[axis] + g92_offset[axis]
+
+        print("---Tool relative position: ", self.tool_rel_position)
+
+    def droXMinusChanged(self, value):
+        self.limitsHandler.setXMinusLimit(self.tool_rel_position[0] + float(value))
+
+    def droXPlusChanged(self, value):
+        self.limitsHandler.setXPlusLimit(self.tool_rel_position[0] + float(value))
+
+    def droZMinusChanged(self, value):
+        self.limitsHandler.setZMinusLimit(self.tool_rel_position[2] + float(value))
+
+    def droZPlusChanged(self, value):
+        self.limitsHandler.setZPlusLimit(self.tool_rel_position[2] + float(value))
 
     def eventFilter(self, source, event):
         if event.type() == QtCore.QEvent.MouseButtonPress:
@@ -85,18 +124,22 @@ class TeachInLatheDro(QWidget):
     def xMinusLimitToggle(self, state):
         self.droXMinus.setEnabled(state)
         self.teachXMinus.setEnabled(state)
+        self.limitsHandler.setXMinusLimitActive(state)
 
     def xPlusLimitToggle(self, state):
         self.droXPlus.setEnabled(state)
         self.teachXPlus.setEnabled(state)
+        self.limitsHandler.setXPlusLimitActive(state)
 
     def zMinusLimitToggle(self, state):
         self.droZMinus.setEnabled(state)
         self.teachZMinus.setEnabled(state)
+        self.limitsHandler.setZMinusLimitActive(state)
 
     def zPlusLimitToggle(self, state):
         self.droZPlus.setEnabled(state)
         self.teachZPlus.setEnabled(state)
+        self.limitsHandler.setZPlusLimitActive(state)
 
     def updateUnits(self, units=None):
         if units is None:
@@ -166,7 +209,7 @@ class TeachInLatheDro(QWidget):
         self.currentMachineLimits = machine_limits
 
     def setDefaultMachineLimits(self, limits):
-        print("setting default limits: ", limits)
+        print("---setting default limits: ", limits)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = limits.x_min_limit
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = limits.x_max_limit
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = limits.z_min_limit

@@ -254,8 +254,8 @@
     <rect>
      <x>630</x>
      <y>110</y>
-     <width>50</width>
-     <height>50</height>
+     <width>52</width>
+     <height>52</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -266,8 +266,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>50</width>
-     <height>50</height>
+     <width>52</width>
+     <height>52</height>
     </size>
    </property>
    <property name="styleSheet">
@@ -321,8 +321,8 @@
     <rect>
      <x>630</x>
      <y>10</y>
-     <width>50</width>
-     <height>50</height>
+     <width>52</width>
+     <height>52</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -333,8 +333,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>50</width>
-     <height>50</height>
+     <width>52</width>
+     <height>52</height>
     </size>
    </property>
    <property name="styleSheet">
@@ -353,8 +353,8 @@
     <rect>
      <x>570</x>
      <y>110</y>
-     <width>50</width>
-     <height>50</height>
+     <width>52</width>
+     <height>52</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -365,8 +365,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>50</width>
-     <height>50</height>
+     <width>52</width>
+     <height>52</height>
     </size>
    </property>
    <property name="styleSheet">
@@ -490,7 +490,7 @@
     <string notr="true"/>
    </property>
    <property name="text">
-    <string>0000.000</string>
+    <string>0.000</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -589,7 +589,7 @@
     </font>
    </property>
    <property name="text">
-    <string>0000.000</string>
+    <string>0.000</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -646,7 +646,7 @@
     </font>
    </property>
    <property name="text">
-    <string>0000.000</string>
+    <string>0.000</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -709,7 +709,7 @@
     <string notr="true"/>
    </property>
    <property name="text">
-    <string>0000.000</string>
+    <string>0.000</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
