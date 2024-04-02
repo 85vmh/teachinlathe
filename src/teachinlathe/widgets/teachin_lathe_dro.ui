@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1021</width>
-    <height>202</height>
+    <width>1020</width>
+    <height>203</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>5</x>
-     <y>110</y>
+     <y>100</y>
      <width>60</width>
      <height>81</height>
     </rect>
@@ -124,7 +124,7 @@
    <property name="geometry">
     <rect>
      <x>70</x>
-     <y>110</y>
+     <y>100</y>
      <width>131</width>
      <height>36</height>
     </rect>
@@ -167,7 +167,7 @@
     <rect>
      <x>210</x>
      <y>10</y>
-     <width>351</width>
+     <width>305</width>
      <height>81</height>
     </rect>
    </property>
@@ -179,13 +179,13 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>330</width>
+     <width>300</width>
      <height>0</height>
     </size>
    </property>
    <property name="styleSheet">
     <string notr="true">QLabel {
-	font: 45pt &quot;Noto Sans Mono&quot;;
+	font: 40pt &quot;Noto Sans Mono&quot;;
     border-style: solid;
     border-color: rgb(10, 10, 10);
     border-width: 1.5px;
@@ -208,8 +208,8 @@
    <property name="geometry">
     <rect>
      <x>210</x>
-     <y>110</y>
-     <width>351</width>
+     <y>100</y>
+     <width>305</width>
      <height>81</height>
     </rect>
    </property>
@@ -221,13 +221,13 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>330</width>
+     <width>300</width>
      <height>0</height>
     </size>
    </property>
    <property name="styleSheet">
     <string notr="true">QLabel {
-	font: 45pt &quot;Noto Sans Mono&quot;;
+	font: 40pt &quot;Noto Sans Mono&quot;;
     border-style: solid;
     border-color: rgb(10, 10, 10);
     border-width: 1.5px;
@@ -252,8 +252,8 @@
   <widget class="QPushButton" name="zAbsRel">
    <property name="geometry">
     <rect>
-     <x>630</x>
-     <y>110</y>
+     <x>585</x>
+     <y>100</y>
      <width>52</width>
      <height>52</height>
     </rect>
@@ -284,10 +284,10 @@
   <widget class="QPushButton" name="xZero">
    <property name="geometry">
     <rect>
-     <x>570</x>
+     <x>525</x>
      <y>10</y>
-     <width>50</width>
-     <height>50</height>
+     <width>52</width>
+     <height>52</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -298,8 +298,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>50</width>
-     <height>50</height>
+     <width>52</width>
+     <height>52</height>
     </size>
    </property>
    <property name="layoutDirection">
@@ -319,7 +319,7 @@
   <widget class="QPushButton" name="xAbsRel">
    <property name="geometry">
     <rect>
-     <x>630</x>
+     <x>585</x>
      <y>10</y>
      <width>52</width>
      <height>52</height>
@@ -351,8 +351,8 @@
   <widget class="QPushButton" name="zZero">
    <property name="geometry">
     <rect>
-     <x>570</x>
-     <y>110</y>
+     <x>525</x>
+     <y>100</y>
      <width>52</width>
      <height>52</height>
     </rect>
@@ -383,8 +383,8 @@
   <widget class="QLabel" name="zUnit">
    <property name="geometry">
     <rect>
-     <x>570</x>
-     <y>170</y>
+     <x>525</x>
+     <y>160</y>
      <width>31</width>
      <height>21</height>
     </rect>
@@ -417,7 +417,7 @@
   <widget class="QLabel" name="xUnit">
    <property name="geometry">
     <rect>
-     <x>570</x>
+     <x>525</x>
      <y>70</y>
      <width>31</width>
      <height>21</height>
@@ -448,291 +448,6 @@
     <number>0</number>
    </property>
   </widget>
-  <widget class="Line" name="line">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>92</y>
-     <width>1021</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <kerning>true</kerning>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">color: rgb(200, 200, 200)</string>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Plain</enum>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-  </widget>
-  <widget class="TeachInLineEdit" name="droXMinus">
-   <property name="geometry">
-    <rect>
-     <x>830</x>
-     <y>20</y>
-     <width>85</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="text">
-    <string>0.000</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-   <property name="referenceType" stdset="0">
-    <number>1</number>
-   </property>
-   <property name="axisNumber" stdset="0">
-    <number>0</number>
-   </property>
-   <property name="inchFormat" stdset="0">
-    <string>%9.4f</string>
-   </property>
-   <property name="millimeterFormat" stdset="0">
-    <string>%10.3f</string>
-   </property>
-   <property name="degreeFormat" stdset="0">
-    <string>%10.2f</string>
-   </property>
-   <property name="latheMode" stdset="0">
-    <number>2</number>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="teachXMinus">
-   <property name="geometry">
-    <rect>
-     <x>920</x>
-     <y>20</y>
-     <width>75</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="text">
-    <string>TeachIn</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="xMinusLimit">
-   <property name="geometry">
-    <rect>
-     <x>710</x>
-     <y>15</y>
-     <width>121</width>
-     <height>35</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="text">
-    <string>X- Tool Limit:</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="teachXPlus">
-   <property name="geometry">
-    <rect>
-     <x>920</x>
-     <y>60</y>
-     <width>75</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>TeachIn</string>
-   </property>
-  </widget>
-  <widget class="TeachInLineEdit" name="droXPlus">
-   <property name="geometry">
-    <rect>
-     <x>830</x>
-     <y>60</y>
-     <width>85</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>0.000</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-   <property name="referenceType" stdset="0">
-    <number>1</number>
-   </property>
-   <property name="axisNumber" stdset="0">
-    <number>0</number>
-   </property>
-   <property name="inchFormat" stdset="0">
-    <string>%9.4f</string>
-   </property>
-   <property name="millimeterFormat" stdset="0">
-    <string>%10.3f</string>
-   </property>
-   <property name="degreeFormat" stdset="0">
-    <string>%10.2f</string>
-   </property>
-   <property name="latheMode" stdset="0">
-    <number>2</number>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="teachZPlus">
-   <property name="geometry">
-    <rect>
-     <x>920</x>
-     <y>153</y>
-     <width>75</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>TeachIn</string>
-   </property>
-  </widget>
-  <widget class="TeachInLineEdit" name="droZPlus">
-   <property name="geometry">
-    <rect>
-     <x>830</x>
-     <y>153</y>
-     <width>85</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>0.000</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-   <property name="referenceType" stdset="0">
-    <number>0</number>
-   </property>
-   <property name="axisNumber" stdset="0">
-    <number>2</number>
-   </property>
-   <property name="inchFormat" stdset="0">
-    <string>%9.4f</string>
-   </property>
-   <property name="millimeterFormat" stdset="0">
-    <string>%10.3f</string>
-   </property>
-   <property name="degreeFormat" stdset="0">
-    <string>%10.2f</string>
-   </property>
-   <property name="latheMode" stdset="0">
-    <number>2</number>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="teachZMinus">
-   <property name="geometry">
-    <rect>
-     <x>920</x>
-     <y>113</y>
-     <width>75</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="text">
-    <string>TeachIn</string>
-   </property>
-  </widget>
-  <widget class="TeachInLineEdit" name="droZMinus">
-   <property name="geometry">
-    <rect>
-     <x>830</x>
-     <y>113</y>
-     <width>85</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="text">
-    <string>0.000</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-   <property name="referenceType" stdset="0">
-    <number>1</number>
-   </property>
-   <property name="axisNumber" stdset="0">
-    <number>2</number>
-   </property>
-   <property name="inchFormat" stdset="0">
-    <string>%9.4f</string>
-   </property>
-   <property name="millimeterFormat" stdset="0">
-    <string>%10.3f</string>
-   </property>
-   <property name="degreeFormat" stdset="0">
-    <string>%10.2f</string>
-   </property>
-   <property name="latheMode" stdset="0">
-    <number>2</number>
-   </property>
-  </widget>
   <widget class="Line" name="line_2">
    <property name="geometry">
     <rect>
@@ -759,7 +474,7 @@
    <property name="geometry">
     <rect>
      <x>70</x>
-     <y>155</y>
+     <y>144</y>
      <width>131</width>
      <height>36</height>
     </rect>
@@ -770,72 +485,443 @@
    <property name="text">
     <string>Set Datum</string>
    </property>
+   <property name="rules" stdset="0">
+    <string>[{&quot;name&quot;: &quot;enable set datum&quot;, &quot;property&quot;: &quot;Enable&quot;, &quot;expression&quot;: &quot;ch[0] != 0&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:tool_in_spindle&quot;, &quot;trigger&quot;: true}]}]</string>
+   </property>
    <property name="MDICommand" stdset="0">
     <string>G10 L20 P0 Z0</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="xPlusLimit">
+  <widget class="QStackedWidget" name="stackedWidget">
    <property name="geometry">
     <rect>
-     <x>710</x>
-     <y>56</y>
-     <width>121</width>
-     <height>35</height>
+     <x>644</x>
+     <y>10</y>
+     <width>371</width>
+     <height>181</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
    <property name="styleSheet">
-    <string notr="true"/>
+    <string notr="true">QStackedWidget {
+    border-style: solid;
+    border-color: rgb(10, 10, 10);
+    border-width: 1px;
+    border-radius: 8px;
+    color: rgb(10, 10, 10);;
+    background: rgb(217, 217, 217);
+}</string>
    </property>
-   <property name="text">
-    <string>X+ Tool Limit:</string>
+   <property name="currentIndex">
+    <number>0</number>
    </property>
-  </widget>
-  <widget class="QCheckBox" name="zMinusLimit">
-   <property name="geometry">
-    <rect>
-     <x>710</x>
-     <y>109</y>
-     <width>121</width>
-     <height>35</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="text">
-    <string>Z- Tool Limit:</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="zPlusLimit">
-   <property name="geometry">
-    <rect>
-     <x>710</x>
-     <y>149</y>
-     <width>121</width>
-     <height>35</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="text">
-    <string>Z+ Tailstock:</string>
-   </property>
+   <widget class="QWidget" name="pageApplyLimits">
+    <widget class="QCheckBox" name="xMinusLimit">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>0</y>
+       <width>141</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Noto Sans Mono</family>
+       <pointsize>12</pointsize>
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 12pt &quot;Noto Sans Mono&quot;;</string>
+     </property>
+     <property name="text">
+      <string>X- (000.000)</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="xPlusLimit">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>100</y>
+       <width>81</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>X+ Tool</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="zMinusLimit">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>81</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>Z- Tool</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="zPlusLimit">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>30</y>
+       <width>111</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>Z+ Tailstock</string>
+     </property>
+    </widget>
+    <widget class="Line" name="line">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>130</y>
+       <width>341</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>144</y>
+       <width>81</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>All ON</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_2">
+     <property name="geometry">
+      <rect>
+       <x>230</x>
+       <y>144</y>
+       <width>81</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>All OFF</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>144</y>
+       <width>81</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Edit</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="zPlusLimit_2">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>70</y>
+       <width>111</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>Z+ Tool</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="pageEditLimits">
+    <widget class="QPushButton" name="teachXMinus">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>10</y>
+       <width>75</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>TeachIn</string>
+     </property>
+    </widget>
+    <widget class="TeachInLineEdit" name="droZPlus">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>143</y>
+       <width>85</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>0.000</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>0</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>2</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>2</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="teachZPlus">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>143</y>
+       <width>75</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>TeachIn</string>
+     </property>
+    </widget>
+    <widget class="TeachInLineEdit" name="droXMinus">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>10</y>
+       <width>85</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>0.000</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>1</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>0</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>2</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="teachXPlus">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>50</y>
+       <width>75</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>TeachIn</string>
+     </property>
+    </widget>
+    <widget class="TeachInLineEdit" name="droZMinus">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>103</y>
+       <width>85</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>0.000</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>1</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>2</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>2</number>
+     </property>
+    </widget>
+    <widget class="TeachInLineEdit" name="droXPlus">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>50</y>
+       <width>85</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>0.000</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>1</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>0</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>2</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="teachZMinus">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>103</y>
+       <width>75</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>TeachIn</string>
+     </property>
+    </widget>
+   </widget>
   </widget>
  </widget>
  <customwidgets>

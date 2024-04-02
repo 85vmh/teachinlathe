@@ -559,9 +559,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>210</y>
+               <y>340</y>
                <width>616</width>
-               <height>121</height>
+               <height>81</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -1041,7 +1041,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>346</y>
+               <y>430</y>
                <width>616</width>
                <height>71</height>
               </rect>
@@ -1686,7 +1686,7 @@ QCheckBox:disabled {
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>426</y>
+               <y>210</y>
                <width>616</width>
                <height>71</height>
               </rect>
