@@ -63,10 +63,7 @@ class TeachInLatheDro(QWidget):
         self.zMinusLimit.stateChanged.connect(self.zMinusLimitToggle)
         self.zPlusLimit.stateChanged.connect(self.zPlusLimitToggle)
 
-        self.droXMinusChanged(self.droXMinus.text())
-        self.droXPlusChanged(self.droXPlus.text())
-        self.droZMinusChanged(self.droZMinus.text())
-        self.droZPlusChanged(self.droZPlus.text())
+        self.applyCurrentLimits()
         self.droXMinus.textChanged.connect(self.droXMinusChanged)
         self.droXPlus.textChanged.connect(self.droXPlusChanged)
         self.droZMinus.textChanged.connect(self.droZMinusChanged)
@@ -88,6 +85,12 @@ class TeachInLatheDro(QWidget):
         self.updateUnits()
         self.updateValues()
 
+    def applyCurrentLimits(self):
+        self.droXMinusChanged(self.droXMinus.text())
+        self.droXPlusChanged(self.droXPlus.text())
+        self.droZMinusChanged(self.droZMinus.text())
+        self.droZPlusChanged(self.droZPlus.text())
+
     def _updateToolRelativePos(self):
         g5x_offset = self.status.stat.g5x_offset
         g92_offset = self.status.stat.g92_offset
@@ -97,6 +100,7 @@ class TeachInLatheDro(QWidget):
             self.tool_rel_position[axis] = g5x_offset[axis] + tool_offset[axis] + g92_offset[axis]
 
         print("---Tool relative position: ", self.tool_rel_position)
+        self.applyCurrentLimits()
 
     def droXMinusChanged(self, value):
         self.limitsHandler.setXMinusLimit(self.tool_rel_position[0] + float(value) / 2)
