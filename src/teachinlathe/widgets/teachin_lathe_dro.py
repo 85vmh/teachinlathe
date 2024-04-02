@@ -122,23 +122,23 @@ class TeachInLatheDro(QWidget):
         return super().eventFilter(source, event)
 
     def xMinusLimitToggle(self, state):
-        self.droXMinus.setEnabled(state)
-        self.teachXMinus.setEnabled(state)
+        self.droXMinus.setEnabled(not state)
+        self.teachXMinus.setEnabled(not state)
         self.limitsHandler.setXMinusLimitActive(state)
 
     def xPlusLimitToggle(self, state):
-        self.droXPlus.setEnabled(state)
-        self.teachXPlus.setEnabled(state)
+        self.droXPlus.setEnabled(not state)
+        self.teachXPlus.setEnabled(not state)
         self.limitsHandler.setXPlusLimitActive(state)
 
     def zMinusLimitToggle(self, state):
-        self.droZMinus.setEnabled(state)
-        self.teachZMinus.setEnabled(state)
+        self.droZMinus.setEnabled(not state)
+        self.teachZMinus.setEnabled(not state)
         self.limitsHandler.setZMinusLimitActive(state)
 
     def zPlusLimitToggle(self, state):
-        self.droZPlus.setEnabled(state)
-        self.teachZPlus.setEnabled(state)
+        self.droZPlus.setEnabled(not state)
+        self.teachZPlus.setEnabled(not state)
         self.limitsHandler.setZPlusLimitActive(state)
 
     def updateUnits(self, units=None):

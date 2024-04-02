@@ -92,11 +92,11 @@ class MachineLimitsHandler(QObject):
         self.onLimitsChanged.emit(self.getMachineLimits())
 
     def setXMinusLimitActive(self, value):
-        self._x_minus_limit_active = value
+        self._x_minus_limit_active = value / 2
         self.onLimitsChanged.emit(self.getMachineLimits())
 
     def setXPlusLimitActive(self, value):
-        self._x_plus_limit_active = value
+        self._x_plus_limit_active = value / 2
         self.onLimitsChanged.emit(self.getMachineLimits())
 
     def setZMinusLimitActive(self, value):
@@ -115,22 +115,18 @@ class MachineLimitsHandler(QObject):
     def setZMinusLimit(self, value):
         self._custom_z_minus_limit = value
         print("Set Z- limit: ", self._custom_z_minus_limit)
-        self.onLimitsChanged.emit(self.getMachineLimits())
 
     def setZPlusLimit(self, value):
         self._custom_z_plus_limit = value
         print("Set Z+ limit: ", self._custom_z_plus_limit)
-        self.onLimitsChanged.emit(self.getMachineLimits())
 
     def setXMinusLimit(self, value):
         self._custom_x_minus_limit = value
         print("Set X- limit: ", self._custom_x_minus_limit)
-        self.onLimitsChanged.emit(self.getMachineLimits())
 
     def setXPlusLimit(self, value):
         self._custom_x_plus_limit = value
         print("Set X+ limit: ", self._custom_x_plus_limit)
-        self.onLimitsChanged.emit(self.getMachineLimits())
 
     # Setter for tailstock_limit
     def setTailstockLimits(self, value):
