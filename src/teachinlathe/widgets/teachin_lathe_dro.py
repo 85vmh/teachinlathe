@@ -15,6 +15,7 @@ LOG = logger.getLogger(__name__)
 UI_FILE = os.path.join(os.path.dirname(__file__), "teachin_lathe_dro.ui")
 INFO = Info()
 
+
 class TeachInLatheDro(QWidget):
     xPrimaryDroClicked = QtCore.pyqtSignal(float)
     zPrimaryDroClicked = QtCore.pyqtSignal(float)
@@ -98,10 +99,10 @@ class TeachInLatheDro(QWidget):
         print("---Tool relative position: ", self.tool_rel_position)
 
     def droXMinusChanged(self, value):
-        self.limitsHandler.setXMinusLimit(self.tool_rel_position[0] + float(value))
+        self.limitsHandler.setXMinusLimit(self.tool_rel_position[0] + float(value) / 2)
 
     def droXPlusChanged(self, value):
-        self.limitsHandler.setXPlusLimit(self.tool_rel_position[0] + float(value))
+        self.limitsHandler.setXPlusLimit(self.tool_rel_position[0] + float(value) / 2)
 
     def droZMinusChanged(self, value):
         self.limitsHandler.setZMinusLimit(self.tool_rel_position[2] + float(value))
@@ -230,28 +231,32 @@ class TeachInLatheDro(QWidget):
             self.currentMachineLimits = self.limitsHandler.getMachineLimits()
 
             if x_abs > self.currentMachineLimits.x_min_limit:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = self.currentMachineLimits.x_min_limit
+                self.latheComponent.comp.getPin(
+                    TeachInLatheComponent.PinAxisLimitXMin).value = self.currentMachineLimits.x_min_limit
                 x_min_applied = True
-            else:
-                print("Back off from X- to activate the X- virtual limit")
+            # else:
+            #     print("Back off from X- to activate the X- virtual limit")
 
             if x_abs < self.currentMachineLimits.x_max_limit:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = self.currentMachineLimits.x_max_limit
+                self.latheComponent.comp.getPin(
+                    TeachInLatheComponent.PinAxisLimitXMax).value = self.currentMachineLimits.x_max_limit
                 x_max_applied = True
-            else:
-                print("Back off from X+ to activate the X+ virtual limit")
+            # else:
+            #     print("Back off from X+ to activate the X+ virtual limit")
 
             if z_abs > self.currentMachineLimits.z_min_limit:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = self.currentMachineLimits.z_min_limit
+                self.latheComponent.comp.getPin(
+                    TeachInLatheComponent.PinAxisLimitZMin).value = self.currentMachineLimits.z_min_limit
                 z_min_applied = True
-            else:
-                print("Back off from Z- to activate the Z- virtual limit")
+            # else:
+            #     print("Back off from Z- to activate the Z- virtual limit")
 
             if z_abs < self.currentMachineLimits.z_max_limit:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
+                self.latheComponent.comp.getPin(
+                    TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
                 z_max_applied = True
-            else:
-                print("Back off from Z+ to activate the Z+ virtual limit")
+            # else:
+            #     print("Back off from Z+ to activate the Z+ virtual limit")
 
             if x_min_applied and x_max_applied and z_min_applied and z_max_applied:
                 self.previousMachineLimits = self.currentMachineLimits

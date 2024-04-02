@@ -65,7 +65,6 @@ class MachineLimitsHandler(QObject):
                               self._default_z_plus_limit))
 
     def getMachineLimits(self):
-        print("getMachineLimits-chuck:", self._chuck_limit)
         # Apply chuck limit to default Z min limit
         computed_z_minus = self._default_z_minus_limit + (0 if self._chuck_limit_active else self._chuck_limit)
 
@@ -92,11 +91,11 @@ class MachineLimitsHandler(QObject):
         self.onLimitsChanged.emit(self.getMachineLimits())
 
     def setXMinusLimitActive(self, value):
-        self._x_minus_limit_active = value / 2
+        self._x_minus_limit_active = value
         self.onLimitsChanged.emit(self.getMachineLimits())
 
     def setXPlusLimitActive(self, value):
-        self._x_plus_limit_active = value / 2
+        self._x_plus_limit_active = value
         self.onLimitsChanged.emit(self.getMachineLimits())
 
     def setZMinusLimitActive(self, value):
