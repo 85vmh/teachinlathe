@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 
 from PyQt5 import QtCore, QtWidgets
 from qtpy import uic
@@ -15,10 +16,43 @@ LOG = logger.getLogger(__name__)
 UI_FILE = os.path.join(os.path.dirname(__file__), "teachin_lathe_dro.ui")
 INFO = Info()
 
+class LimitsTabs(Enum):
+    MAIN = 0
+    EDIT = 1
 
 class TeachInLatheDro(QWidget):
     xPrimaryDroClicked = QtCore.pyqtSignal(float)
     zPrimaryDroClicked = QtCore.pyqtSignal(float)
+
+    limit_enabled = """
+        border-style: solid;
+        border-color: rgb(26, 95, 180);
+        border-width: 1px;
+        border-radius: 5px;
+        color: white;
+        background: rgb(26, 95, 180);
+        font: 10pt "Noto Sans Mono";
+    """
+
+    limit_disabled = """
+        border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(154, 153, 150);
+        background: rgb(246, 245, 244);
+        font: 10pt "Noto Sans Mono";
+    """
+
+    limit_pending = """
+            border-style: solid;
+            border-color: rgb(26, 95, 180);
+            border-width: 1px;
+            border-radius: 5px;
+            color: rgb(154, 153, 150);
+            background: rgb(246, 245, 244);
+            font: 10pt "Noto Sans Mono";
+        """
 
     def __init__(self, parent=None):
         super(TeachInLatheDro, self).__init__(parent)
@@ -52,16 +86,15 @@ class TeachInLatheDro(QWidget):
         self.zZero.clicked.connect(self.zZeroClicked)
         self.xAbsRel.clicked.connect(self.xAbsRelClicked)
         self.zAbsRel.clicked.connect(self.zAbsRelClicked)
+        self.editLimits.clicked.connect(self.editLimitsClicked)
+        self.saveLimits.clicked.connect(self.saveLimitsClicked)
+        self.limitsOn.clicked.connect(self.limitsOnClicked)
+        self.limitsOff.clicked.connect(self.limitsOffClicked)
 
-        self.xMinusLimitToggle(False)
-        self.xPlusLimitToggle(False)
-        self.zMinusLimitToggle(False)
-        self.zPlusLimitToggle(False)
-
-        self.xMinusLimit.stateChanged.connect(self.xMinusLimitToggle)
-        self.xPlusLimit.stateChanged.connect(self.xPlusLimitToggle)
-        self.zMinusLimit.stateChanged.connect(self.zMinusLimitToggle)
-        self.zPlusLimit.stateChanged.connect(self.zPlusLimitToggle)
+        self.xMinusActive = False
+        self.xPlusActive = False
+        self.zMinusActive = False
+        self.zPlusActive = False
 
         self.applyCurrentLimits()
         self.droXMinus.textChanged.connect(self.droXMinusChanged)
@@ -71,6 +104,10 @@ class TeachInLatheDro(QWidget):
 
         self.xPrimaryDro.installEventFilter(self)
         self.zPrimaryDro.installEventFilter(self)
+        self.xMinusLimit.installEventFilter(self)
+        self.xPlusLimit.installEventFilter(self)
+        self.zMinusLimit.installEventFilter(self)
+        self.zPlusLimit.installEventFilter(self)
 
         self.status.program_units.notify(self.updateUnits, 'string')
         getattr(self.pos, 'rel').notify(self.updateValues)
@@ -84,6 +121,18 @@ class TeachInLatheDro(QWidget):
         self.limitsHandler.onDefaultLimits.connect(self.setDefaultMachineLimits)
         self.updateUnits()
         self.updateValues()
+
+    def editLimitsClicked(self):
+        self.limitsTabs.setCurrentIndex(LimitsTabs.EDIT.value)
+
+    def saveLimitsClicked(self):
+        self.limitsTabs.setCurrentIndex(LimitsTabs.MAIN.value)
+
+    def limitsOnClicked(self):
+        self.limitsHandler.setLimitsActive(True)
+
+    def limitsOffClicked(self):
+        self.limitsHandler.setLimitsActive(False)
 
     def applyCurrentLimits(self):
         self.droXMinusChanged(self.droXMinus.text())
@@ -103,15 +152,19 @@ class TeachInLatheDro(QWidget):
         self.applyCurrentLimits()
 
     def droXMinusChanged(self, value):
+        self.xMinusLimit.setText(str(float(value) / 2))
         self.limitsHandler.setXMinusLimit(self.tool_rel_position[0] + float(value) / 2)
 
     def droXPlusChanged(self, value):
+        self.xPlusLimit.setText(str(float(value) / 2))
         self.limitsHandler.setXPlusLimit(self.tool_rel_position[0] + float(value) / 2)
 
     def droZMinusChanged(self, value):
+        self.zMinusLimit.setText(str(float(value) / 2))
         self.limitsHandler.setZMinusLimit(self.tool_rel_position[2] + float(value))
 
     def droZPlusChanged(self, value):
+        self.zPlusLimit.setText(str(float(value) / 2))
         self.limitsHandler.setZPlusLimit(self.tool_rel_position[2] + float(value))
 
     def eventFilter(self, source, event):
@@ -123,28 +176,52 @@ class TeachInLatheDro(QWidget):
                 case self.zPrimaryDro:
                     self.zPrimaryDroClicked.emit(float(self.zPrimaryDro.text()))
                     return True
+                case self.xMinusLimit:
+                    self.xMinusLimitToggle()
+                    return True
+                case self.xPlusLimit:
+                    self.xPlusLimitToggle()
+                    return True
+                case self.zMinusLimit:
+                    self.zMinusLimitToggle()
+                    return True
+                case self.zPlusLimit:
+                    self.zPlusLimitToggle()
+                    return True
 
         return super().eventFilter(source, event)
 
-    def xMinusLimitToggle(self, state):
-        self.droXMinus.setEnabled(not state)
-        self.teachXMinus.setEnabled(not state)
-        self.limitsHandler.setXMinusLimitActive(state)
+    def xMinusLimitToggle(self):
+        self.xMinusActive = not self.xMinusActive
+        if self.xMinusActive:
+            self.xMinusLimit.setStyleSheet(self.limit_enabled)
+        else:
+            self.xMinusLimit.setStyleSheet(self.limit_disabled)
+        self.limitsHandler.setXMinusLimitActive(self.xMinusActive)
 
-    def xPlusLimitToggle(self, state):
-        self.droXPlus.setEnabled(not state)
-        self.teachXPlus.setEnabled(not state)
-        self.limitsHandler.setXPlusLimitActive(state)
+    def xPlusLimitToggle(self):
+        self.xPlusActive = not self.xPlusActive
+        if self.xPlusActive:
+            self.xPlusLimit.setStyleSheet(self.limit_enabled)
+        else:
+            self.xPlusLimit.setStyleSheet(self.limit_disabled)
+        self.limitsHandler.setXPlusLimitActive(self.xPlusActive)
 
-    def zMinusLimitToggle(self, state):
-        self.droZMinus.setEnabled(not state)
-        self.teachZMinus.setEnabled(not state)
-        self.limitsHandler.setZMinusLimitActive(state)
+    def zMinusLimitToggle(self):
+        self.zMinusActive = not self.zMinusActive
+        if self.zMinusActive:
+            self.zMinusLimit.setStyleSheet(self.limit_enabled)
+        else:
+            self.zMinusLimit.setStyleSheet(self.limit_disabled)
+        self.limitsHandler.setZMinusLimitActive(self.zMinusActive)
 
-    def zPlusLimitToggle(self, state):
-        self.droZPlus.setEnabled(not state)
-        self.teachZPlus.setEnabled(not state)
-        self.limitsHandler.setZPlusLimitActive(state)
+    def zPlusLimitToggle(self):
+        self.zPlusActive = not self.zPlusActive
+        if self.zPlusActive:
+            self.zPlusLimit.setStyleSheet(self.limit_enabled)
+        else:
+            self.zPlusLimit.setStyleSheet(self.limit_disabled)
+        self.limitsHandler.setZPlusLimitActive(self.zPlusActive)
 
     def updateUnits(self, units=None):
         if units is None:
