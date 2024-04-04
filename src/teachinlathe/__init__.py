@@ -23,7 +23,7 @@ import qtpyvcp
 
 VCP_DIR = os.path.realpath(os.path.dirname(__file__))
 VCP_CONFIG_FILE = os.path.join(VCP_DIR, 'teachinlathe.yml')
-
+IN_DESIGNER = os.getenv('DESIGNER', False)
 
 def main(opts=None):
 

@@ -1,6 +1,8 @@
 from qtpy.QtCore import Signal, QObject
 from qtpyvcp.utilities.info import Info
 
+from teachinlathe import IN_DESIGNER
+
 INFO = Info()
 
 
@@ -33,8 +35,12 @@ class MachineLimitsHandler(QObject):
     def __init__(self):
         if not self._is_initialized:
             super().__init__()  # Initialize the QObject base class
-            _x_bounds = INFO.getAxisMinMax('X')[0]
-            _z_bounds = INFO.getAxisMinMax('Z')[0]
+            if IN_DESIGNER:
+                _x_bounds = (0.0, 0.0)
+                _z_bounds = (0.0, 0.0)
+            else:
+                _x_bounds = INFO.getAxisMinMax('X')[0]
+                _z_bounds = INFO.getAxisMinMax('Z')[0]
 
             self._is_initialized = True
 
