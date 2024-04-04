@@ -156,11 +156,11 @@ class TeachInLatheDro(QWidget):
         self.applyCurrentLimits()
 
     def droXMinusChanged(self, value):
-        self.xMinusLimit.setText(self._fmt % (float(value) / 2))
+        self.xMinusLimit.setText(self._fmt % (float(value)))
         self.limitsHandler.setXMinusLimit(self.tool_rel_position[0] + float(value) / 2)
 
     def droXPlusChanged(self, value):
-        self.xPlusLimit.setText(self._fmt % (float(value) / 2))
+        self.xPlusLimit.setText(self._fmt % (float(value)))
         self.limitsHandler.setXPlusLimit(self.tool_rel_position[0] + float(value) / 2)
 
     def droZMinusChanged(self, value):
