@@ -49,6 +49,7 @@ class MachineLimitsHandler(QObject):
             self._x_plus_limit_active = False
             self._z_minus_limit_active = False
             self._z_plus_limit_active = False
+            self._tailstock_limit_active = False
 
             self._chuck_limit = 0
             self._tailstock_limit = 0
@@ -75,7 +76,7 @@ class MachineLimitsHandler(QObject):
         computed_z_minus = self._default_z_minus_limit + (0 if self._chuck_limit_active else self._chuck_limit)
 
         # Apply tailstock limit to default Z max limit
-        computed_z_plus = self._default_z_plus_limit - self._tailstock_limit
+        computed_z_plus = self._default_z_plus_limit - (0 if self._tailstock_limit_active else self._tailstock_limit)
 
         # Use custom limits if they are active and provide a tighter bound
         if self._z_minus_limit_active:
@@ -112,6 +113,10 @@ class MachineLimitsHandler(QObject):
         self._z_plus_limit_active = value
         self.onLimitsChanged.emit(self.getMachineLimits())
 
+    def setTailstockLimitActive(self, value):
+        self._tailstock_limit_active = value
+        self.onLimitsChanged.emit(self.getMachineLimits())
+
     def setChuckLimit(self, value):
         self._chuck_limit = value
         print("Set chuck limit: ", self._chuck_limit)
@@ -134,7 +139,6 @@ class MachineLimitsHandler(QObject):
         print("Set X+ limit: ", self._custom_x_plus_limit)
 
     # Setter for tailstock_limit
-    def setTailstockLimits(self, value):
+    def setTailstockLimit(self, value):
         self._tailstock_limit = value
         print("Set tailstock limit: ", self._chuck_limit)
-        self.onLimitsChanged.emit(self.getMachineLimits())

@@ -559,8 +559,8 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>340</y>
-               <width>616</width>
+               <y>345</y>
+               <width>631</width>
                <height>81</height>
               </rect>
              </property>
@@ -637,7 +637,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QStackedWidget" name="spindleModeWidget">
               <property name="geometry">
                <rect>
-                <x>150</x>
+                <x>175</x>
                 <y>5</y>
                 <width>451</width>
                 <height>71</height>
@@ -1041,8 +1041,8 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>430</y>
-               <width>616</width>
+               <y>435</y>
+               <width>631</width>
                <height>71</height>
               </rect>
              </property>
@@ -1145,7 +1145,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="Line" name="line_5">
               <property name="geometry">
                <rect>
-                <x>380</x>
+                <x>390</x>
                 <y>0</y>
                 <width>16</width>
                 <height>76</height>
@@ -1158,7 +1158,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QCheckBox" name="checkBoxFeedAngle">
               <property name="geometry">
                <rect>
-                <x>400</x>
+                <x>415</x>
                 <y>20</y>
                 <width>121</width>
                 <height>31</height>
@@ -1180,7 +1180,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="rpmUnit_23">
               <property name="geometry">
                <rect>
-                <x>570</x>
+                <x>585</x>
                 <y>20</y>
                 <width>31</width>
                 <height>31</height>
@@ -1270,7 +1270,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               </property>
               <property name="geometry">
                <rect>
-                <x>500</x>
+                <x>515</x>
                 <y>20</y>
                 <width>66</width>
                 <height>31</height>
@@ -1298,7 +1298,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <rect>
                <x>5</x>
                <y>600</y>
-               <width>616</width>
+               <width>631</width>
                <height>71</height>
               </rect>
              </property>
@@ -1366,7 +1366,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <rect>
                 <x>180</x>
                 <y>10</y>
-                <width>421</width>
+                <width>441</width>
                 <height>51</height>
                </rect>
               </property>
@@ -1394,8 +1394,8 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>510</y>
-               <width>616</width>
+               <y>515</y>
+               <width>631</width>
                <height>76</height>
               </rect>
              </property>
@@ -1437,7 +1437,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="Line" name="line_9">
               <property name="geometry">
                <rect>
-                <x>380</x>
+                <x>390</x>
                 <y>0</y>
                 <width>16</width>
                 <height>76</height>
@@ -1450,7 +1450,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="rpmUnit_24">
               <property name="geometry">
                <rect>
-                <x>570</x>
+                <x>585</x>
                 <y>25</y>
                 <width>36</width>
                 <height>31</height>
@@ -1475,7 +1475,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QCheckBox" name="checkBoxJogAngle">
               <property name="geometry">
                <rect>
-                <x>400</x>
+                <x>415</x>
                 <y>25</y>
                 <width>116</width>
                 <height>31</height>
@@ -1549,7 +1549,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QCheckBox" name="xMpgCheckbox">
               <property name="geometry">
                <rect>
-                <x>180</x>
+                <x>205</x>
                 <y>5</y>
                 <width>64</width>
                 <height>64</height>
@@ -1603,7 +1603,7 @@ QCheckBox:disabled {
               </property>
               <property name="geometry">
                <rect>
-                <x>290</x>
+                <x>310</x>
                 <y>5</y>
                 <width>64</width>
                 <height>64</height>
@@ -1657,7 +1657,7 @@ QCheckBox:disabled {
               </property>
               <property name="geometry">
                <rect>
-                <x>500</x>
+                <x>515</x>
                 <y>25</y>
                 <width>66</width>
                 <height>31</height>
@@ -1682,23 +1682,23 @@ QCheckBox:disabled {
               </property>
              </widget>
             </widget>
+            <widget class="QuickCycles" name="quickcycles">
+             <property name="geometry">
+              <rect>
+               <x>645</x>
+               <y>5</y>
+               <width>371</width>
+               <height>461</height>
+              </rect>
+             </property>
+            </widget>
             <widget class="TeachInLatheDro" name="teachinlathedro">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>661</width>
+               <width>641</width>
                <height>336</height>
-              </rect>
-             </property>
-            </widget>
-            <widget class="QuickCycles" name="quickcycles">
-             <property name="geometry">
-              <rect>
-               <x>660</x>
-               <y>210</y>
-               <width>381</width>
-               <height>461</height>
               </rect>
              </property>
             </widget>

@@ -16,9 +16,17 @@ LOG = logger.getLogger(__name__)
 UI_FILE = os.path.join(os.path.dirname(__file__), "teachin_lathe_dro.ui")
 INFO = Info()
 
+
 class LimitsTabs(Enum):
     MAIN = 0
     EDIT = 1
+
+
+class LimitsStyle(Enum):
+    ENABLED = 0
+    DISABLED = 1
+    PENDING = 2
+
 
 class TeachInLatheDro(QWidget):
     xPrimaryDroClicked = QtCore.pyqtSignal(float)
@@ -65,7 +73,7 @@ class TeachInLatheDro(QWidget):
 
         self._mm_fmt = '%10.3f'
         self._in_fmt = '%9.4f'
-        self._fmt = self._in_fmt
+        self._fmt = self._mm_fmt
         self.isDiameterMode = True
 
         self.previousMachineLimits = None
@@ -88,19 +96,19 @@ class TeachInLatheDro(QWidget):
         self.zAbsRel.clicked.connect(self.zAbsRelClicked)
         self.editLimits.clicked.connect(self.editLimitsClicked)
         self.saveLimits.clicked.connect(self.saveLimitsClicked)
-        self.limitsOn.clicked.connect(self.limitsOnClicked)
-        self.limitsOff.clicked.connect(self.limitsOffClicked)
 
         self.xMinusActive = False
         self.xPlusActive = False
         self.zMinusActive = False
         self.zPlusActive = False
+        self.tailstockActive = False
 
         self.applyCurrentLimits()
         self.droXMinus.textChanged.connect(self.droXMinusChanged)
         self.droXPlus.textChanged.connect(self.droXPlusChanged)
         self.droZMinus.textChanged.connect(self.droZMinusChanged)
         self.droZPlus.textChanged.connect(self.droZPlusChanged)
+        self.droTailstock.textChanged.connect(self.droTailstockChanged)
 
         self.xPrimaryDro.installEventFilter(self)
         self.zPrimaryDro.installEventFilter(self)
@@ -108,6 +116,7 @@ class TeachInLatheDro(QWidget):
         self.xPlusLimit.installEventFilter(self)
         self.zMinusLimit.installEventFilter(self)
         self.zPlusLimit.installEventFilter(self)
+        self.tailstockLimit.installEventFilter(self)
 
         self.status.program_units.notify(self.updateUnits, 'string')
         getattr(self.pos, 'rel').notify(self.updateValues)
@@ -128,17 +137,12 @@ class TeachInLatheDro(QWidget):
     def saveLimitsClicked(self):
         self.limitsTabs.setCurrentIndex(LimitsTabs.MAIN.value)
 
-    def limitsOnClicked(self):
-        self.limitsHandler.setLimitsActive(True)
-
-    def limitsOffClicked(self):
-        self.limitsHandler.setLimitsActive(False)
-
     def applyCurrentLimits(self):
         self.droXMinusChanged(self.droXMinus.text())
         self.droXPlusChanged(self.droXPlus.text())
         self.droZMinusChanged(self.droZMinus.text())
         self.droZPlusChanged(self.droZPlus.text())
+        self.droTailstockChanged(self.droTailstock.text())
 
     def _updateToolRelativePos(self):
         g5x_offset = self.status.stat.g5x_offset
@@ -152,20 +156,24 @@ class TeachInLatheDro(QWidget):
         self.applyCurrentLimits()
 
     def droXMinusChanged(self, value):
-        self.xMinusLimit.setText(str(float(value) / 2))
+        self.xMinusLimit.setText(self._fmt % (float(value) / 2))
         self.limitsHandler.setXMinusLimit(self.tool_rel_position[0] + float(value) / 2)
 
     def droXPlusChanged(self, value):
-        self.xPlusLimit.setText(str(float(value) / 2))
+        self.xPlusLimit.setText(self._fmt % (float(value) / 2))
         self.limitsHandler.setXPlusLimit(self.tool_rel_position[0] + float(value) / 2)
 
     def droZMinusChanged(self, value):
-        self.zMinusLimit.setText(str(float(value) / 2))
+        self.zMinusLimit.setText(self._fmt % float(value))
         self.limitsHandler.setZMinusLimit(self.tool_rel_position[2] + float(value))
 
     def droZPlusChanged(self, value):
-        self.zPlusLimit.setText(str(float(value) / 2))
+        self.zPlusLimit.setText(self._fmt % float(value))
         self.limitsHandler.setZPlusLimit(self.tool_rel_position[2] + float(value))
+
+    def droTailstockChanged(self, value):
+        self.tailstockLimit.setText(self._fmt % float(value))
+        self.limitsHandler.setTailstockLimit(float(value))
 
     def eventFilter(self, source, event):
         if event.type() == QtCore.QEvent.MouseButtonPress:
@@ -188,8 +196,18 @@ class TeachInLatheDro(QWidget):
                 case self.zPlusLimit:
                     self.zPlusLimitToggle()
                     return True
+                case self.tailstockLimit:
+                    self.tailstockLimitToggle()
+                    return True
 
         return super().eventFilter(source, event)
+
+    def setLimitStyle(self, limit, style):
+        limit.setStyleSheet({
+            LimitsStyle.ENABLED: self.limit_enabled,
+            LimitsStyle.DISABLED: self.limit_disabled,
+            LimitsStyle.PENDING: self.limit_pending
+        }[style])
 
     def xMinusLimitToggle(self):
         self.xMinusActive = not self.xMinusActive
@@ -222,6 +240,14 @@ class TeachInLatheDro(QWidget):
         else:
             self.zPlusLimit.setStyleSheet(self.limit_disabled)
         self.limitsHandler.setZPlusLimitActive(self.zPlusActive)
+
+    def tailstockLimitToggle(self):
+        self.tailstockActive = not self.tailstockActive
+        if self.tailstockActive:
+            self.tailstockLimit.setStyleSheet(self.limit_enabled)
+        else:
+            self.tailstockLimit.setStyleSheet(self.limit_disabled)
+        self.limitsHandler.setTailstockLimitActive(self.tailstockActive)
 
     def updateUnits(self, units=None):
         if units is None:
