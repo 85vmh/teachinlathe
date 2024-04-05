@@ -380,12 +380,18 @@ class TeachInLatheDro(QWidget):
                     TeachInLatheComponent.PinAxisLimitZMin).value = self.currentMachineLimits.z_min_limit
                 z_minus_pin_written = True
 
-            if z_abs <= self.currentMachineLimits.z_max_limit and self.zPlusLimitStatus == LimitStatus.PENDING:
-                self.latheComponent.comp.getPin(
-                    TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
-                z_plus_pin_written = True
-                self.zPlusLimitStatus = LimitStatus.ENABLED
-            elif self.zPlusLimitStatus == LimitStatus.DISABLED:
+            if z_abs <= self.currentMachineLimits.z_max_limit:
+                if self.zPlusLimitStatus == LimitStatus.PENDING:
+                    self.zPlusLimitStatus = LimitStatus.ENABLED
+                    self.latheComponent.comp.getPin(
+                        TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
+                    z_plus_pin_written = True
+                if self.tailstockLimitStatus == LimitStatus.PENDING:
+                    self.tailstockLimitStatus = LimitStatus.ENABLED
+                    self.latheComponent.comp.getPin(
+                        TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
+                    z_plus_pin_written = True
+            elif self.zPlusLimitStatus == LimitStatus.DISABLED or self.tailstockLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(
                     TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
                 z_plus_pin_written = True
