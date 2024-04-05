@@ -345,27 +345,50 @@ class TeachInLatheDro(QWidget):
             x_abs = pos[Axis.X]
             z_abs = pos[Axis.Z]
 
-            self.currentMachineLimits = self.limitsHandler.getComputedMachineLimits()
+            x_minus_pin_written = False
+            x_plus_pin_written = False
+            z_minus_pin_written = False
+            z_plus_pin_written = False
 
-            if x_abs > self.currentMachineLimits.x_min_limit and self.xMinusLimitStatus == LimitStatus.PENDING:
+            if x_abs >= self.currentMachineLimits.x_min_limit and self.xMinusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(
                     TeachInLatheComponent.PinAxisLimitXMin).value = self.currentMachineLimits.x_min_limit
+                x_minus_pin_written = True
                 self.xMinusLimitStatus = LimitStatus.ENABLED
+            elif self.xMinusLimitStatus == LimitStatus.DISABLED:
+                self.latheComponent.comp.getPin(
+                    TeachInLatheComponent.PinAxisLimitXMin).value = self.currentMachineLimits.x_min_limit
+                x_minus_pin_written = True
 
-            if x_abs < self.currentMachineLimits.x_max_limit and self.xPlusLimitStatus == LimitStatus.PENDING:
+            if x_abs <= self.currentMachineLimits.x_max_limit and self.xPlusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(
                     TeachInLatheComponent.PinAxisLimitXMax).value = self.currentMachineLimits.x_max_limit
+                x_plus_pin_written = True
                 self.xPlusLimitStatus = LimitStatus.ENABLED
+            elif self.xPlusLimitStatus == LimitStatus.DISABLED:
+                self.latheComponent.comp.getPin(
+                    TeachInLatheComponent.PinAxisLimitXMax).value = self.currentMachineLimits.x_max_limit
+                x_plus_pin_written = True
 
-            if z_abs > self.currentMachineLimits.z_min_limit and self.zMinusLimitStatus == LimitStatus.PENDING:
+            if z_abs >= self.currentMachineLimits.z_min_limit and self.zMinusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(
                     TeachInLatheComponent.PinAxisLimitZMin).value = self.currentMachineLimits.z_min_limit
+                z_minus_pin_written = True
                 self.zMinusLimitStatus = LimitStatus.ENABLED
+            elif self.zMinusLimitStatus == LimitStatus.DISABLED:
+                self.latheComponent.comp.getPin(
+                    TeachInLatheComponent.PinAxisLimitZMin).value = self.currentMachineLimits.z_min_limit
+                z_minus_pin_written = True
 
-            if z_abs < self.currentMachineLimits.z_max_limit and self.zPlusLimitStatus == LimitStatus.PENDING:
+            if z_abs <= self.currentMachineLimits.z_max_limit and self.zPlusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(
                     TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
+                z_plus_pin_written = True
                 self.zPlusLimitStatus = LimitStatus.ENABLED
+            elif self.zPlusLimitStatus == LimitStatus.DISABLED:
+                self.latheComponent.comp.getPin(
+                    TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
+                z_plus_pin_written = True
 
             self.setLimitStyle(self.xMinusLimit, self.xMinusLimitStatus)
             self.setLimitStyle(self.xPlusLimit, self.xPlusLimitStatus)
@@ -373,9 +396,6 @@ class TeachInLatheDro(QWidget):
             self.setLimitStyle(self.zPlusLimit, self.zPlusLimitStatus)
             self.setLimitStyle(self.tailstockLimit, self.tailstockLimitStatus)
 
-            if (self.xMinusLimitStatus is not LimitStatus.DISABLED and
-                    self.xPlusLimitStatus is not LimitStatus.DISABLED
-                    and self.zMinusLimitStatus is not LimitStatus.DISABLED
-                    and self.zPlusLimitStatus is not LimitStatus.DISABLED):
+            if x_minus_pin_written and x_plus_pin_written and z_minus_pin_written and z_plus_pin_written:
                 self.previousMachineLimits = self.currentMachineLimits
                 print("-----All limits applied-------")
