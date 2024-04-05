@@ -145,7 +145,7 @@ class MyMainWindow(VCPMainWindow):
 
     def onFixtureSelected(self, fixture):
         print("---Fixture selected: ", fixture)
-        self.teachinlathedro.limitsHandler.setChuckLimit(fixture.z_minus_limit)
+        self.teachinlathedro.setChuckLimit(fixture.z_minus_limit)
 
     def afterUIInit(self):
         # set the current values

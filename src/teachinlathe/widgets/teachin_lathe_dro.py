@@ -22,7 +22,7 @@ class LimitsTabs(Enum):
     EDIT = 1
 
 
-class LimitsStyle(Enum):
+class LimitStatus(Enum):
     ENABLED = 0
     DISABLED = 1
     PENDING = 2
@@ -54,10 +54,10 @@ class TeachInLatheDro(QWidget):
 
     limit_pending = """
             border-style: solid;
-            border-color: rgb(26, 95, 180);
-            border-width: 1px;
+            border-color: rgb(26, 95, 181);
+            border-width: 2px;
             border-radius: 5px;
-            color: rgb(154, 153, 150);
+            color: rgb(26, 95, 181);
             background: rgb(246, 245, 244);
             font: 10pt "Noto Sans Mono";
         """
@@ -97,11 +97,11 @@ class TeachInLatheDro(QWidget):
         self.editLimits.clicked.connect(self.editLimitsClicked)
         self.saveLimits.clicked.connect(self.saveLimitsClicked)
 
-        self.xMinusActive = False
-        self.xPlusActive = False
-        self.zMinusActive = False
-        self.zPlusActive = False
-        self.tailstockActive = False
+        self.xMinusLimitStatus = LimitStatus.DISABLED
+        self.xPlusLimitStatus = LimitStatus.DISABLED
+        self.zMinusLimitStatus = LimitStatus.DISABLED
+        self.zPlusLimitStatus = LimitStatus.DISABLED
+        self.tailstockLimitStatus = LimitStatus.DISABLED
 
         self.applyCurrentLimits()
         self.droXMinus.textChanged.connect(self.droXMinusChanged)
@@ -155,6 +155,10 @@ class TeachInLatheDro(QWidget):
         print("---Tool relative position: ", self.tool_rel_position)
         self.applyCurrentLimits()
 
+    def setChuckLimit(self, value):
+        self.chuckLimit.setText(self._fmt % float(value))
+        self.limitsHandler.setChuckLimit(float(value))
+
     def droXMinusChanged(self, value):
         self.xMinusLimit.setText(self._fmt % (float(value)))
         self.limitsHandler.setXMinusLimit(self.tool_rel_position[0] + float(value) / 2)
@@ -203,51 +207,57 @@ class TeachInLatheDro(QWidget):
         return super().eventFilter(source, event)
 
     def setLimitStyle(self, limit, style):
-        limit.setStyleSheet({
-            LimitsStyle.ENABLED: self.limit_enabled,
-            LimitsStyle.DISABLED: self.limit_disabled,
-            LimitsStyle.PENDING: self.limit_pending
-        }[style])
+        match style:
+            case LimitStatus.ENABLED:
+                limit.setStyleSheet(self.limit_enabled)
+            case LimitStatus.DISABLED:
+                limit.setStyleSheet(self.limit_disabled)
+            case LimitStatus.PENDING:
+                limit.setStyleSheet(self.limit_pending)
 
     def xMinusLimitToggle(self):
-        self.xMinusActive = not self.xMinusActive
-        if self.xMinusActive:
-            self.xMinusLimit.setStyleSheet(self.limit_enabled)
-        else:
-            self.xMinusLimit.setStyleSheet(self.limit_disabled)
-        self.limitsHandler.setXMinusLimitActive(self.xMinusActive)
+        match self.xMinusLimitStatus:
+            case LimitStatus.ENABLED | LimitStatus.PENDING:
+                self.xMinusLimitStatus = LimitStatus.DISABLED
+            case LimitStatus.DISABLED:
+                self.xMinusLimitStatus = LimitStatus.PENDING
+        self.setLimitStyle(self.xMinusLimit, self.xMinusLimitStatus)
+        self.limitsHandler.setXMinusLimitActive(self.xMinusLimitStatus is not LimitStatus.DISABLED)
 
     def xPlusLimitToggle(self):
-        self.xPlusActive = not self.xPlusActive
-        if self.xPlusActive:
-            self.xPlusLimit.setStyleSheet(self.limit_enabled)
-        else:
-            self.xPlusLimit.setStyleSheet(self.limit_disabled)
-        self.limitsHandler.setXPlusLimitActive(self.xPlusActive)
+        match self.xPlusLimitStatus:
+            case LimitStatus.ENABLED | LimitStatus.PENDING:
+                self.xPlusLimitStatus = LimitStatus.DISABLED
+            case LimitStatus.DISABLED:
+                self.xPlusLimitStatus = LimitStatus.PENDING
+        self.setLimitStyle(self.xPlusLimit, self.xPlusLimitStatus)
+        self.limitsHandler.setXPlusLimitActive(self.xPlusLimitStatus is not LimitStatus.DISABLED)
 
     def zMinusLimitToggle(self):
-        self.zMinusActive = not self.zMinusActive
-        if self.zMinusActive:
-            self.zMinusLimit.setStyleSheet(self.limit_enabled)
-        else:
-            self.zMinusLimit.setStyleSheet(self.limit_disabled)
-        self.limitsHandler.setZMinusLimitActive(self.zMinusActive)
+        match self.zMinusLimitStatus:
+            case LimitStatus.ENABLED | LimitStatus.PENDING:
+                self.zMinusLimitStatus = LimitStatus.DISABLED
+            case LimitStatus.DISABLED:
+                self.zMinusLimitStatus = LimitStatus.PENDING
+        self.setLimitStyle(self.zMinusLimit, self.zMinusLimitStatus)
+        self.limitsHandler.setZMinusLimitActive(self.zMinusLimitStatus is not LimitStatus.DISABLED)
 
     def zPlusLimitToggle(self):
-        self.zPlusActive = not self.zPlusActive
-        if self.zPlusActive:
-            self.zPlusLimit.setStyleSheet(self.limit_enabled)
-        else:
-            self.zPlusLimit.setStyleSheet(self.limit_disabled)
-        self.limitsHandler.setZPlusLimitActive(self.zPlusActive)
+        match self.zPlusLimitStatus:
+            case LimitStatus.ENABLED | LimitStatus.PENDING:
+                self.zPlusLimitStatus = LimitStatus.DISABLED
+            case LimitStatus.DISABLED:
+                self.zPlusLimitStatus = LimitStatus.PENDING
+        self.setLimitStyle(self.zPlusLimit, self.zPlusLimitStatus)
+        self.limitsHandler.setZPlusLimitActive(self.zPlusLimitStatus is not LimitStatus.DISABLED)
 
     def tailstockLimitToggle(self):
-        self.tailstockActive = not self.tailstockActive
-        if self.tailstockActive:
-            self.tailstockLimit.setStyleSheet(self.limit_enabled)
-        else:
-            self.tailstockLimit.setStyleSheet(self.limit_disabled)
-        self.limitsHandler.setTailstockLimitActive(self.tailstockActive)
+        match self.tailstockLimitStatus:
+            case LimitStatus.ENABLED | LimitStatus.PENDING:
+                self.tailstockLimitStatus = LimitStatus.DISABLED
+            case LimitStatus.DISABLED:
+                self.tailstockLimitStatus = LimitStatus.PENDING
+        self.limitsHandler.setTailstockLimitActive(self.tailstockLimitStatus is not LimitStatus.DISABLED)
 
     def updateUnits(self, units=None):
         if units is None:
@@ -330,41 +340,36 @@ class TeachInLatheDro(QWidget):
             x_abs = pos[Axis.X]
             z_abs = pos[Axis.Z]
 
-            x_min_applied = False
-            x_max_applied = False
-            z_min_applied = False
-            z_max_applied = False
-
             self.currentMachineLimits = self.limitsHandler.getMachineLimits()
 
-            if x_abs > self.currentMachineLimits.x_min_limit:
+            if x_abs > self.currentMachineLimits.x_min_limit and self.xMinusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(
                     TeachInLatheComponent.PinAxisLimitXMin).value = self.currentMachineLimits.x_min_limit
-                x_min_applied = True
-            # else:
-            #     print("Back off from X- to activate the X- virtual limit")
+                self.xMinusLimitStatus = LimitStatus.ENABLED
 
-            if x_abs < self.currentMachineLimits.x_max_limit:
+            if x_abs < self.currentMachineLimits.x_max_limit and self.xPlusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(
                     TeachInLatheComponent.PinAxisLimitXMax).value = self.currentMachineLimits.x_max_limit
-                x_max_applied = True
-            # else:
-            #     print("Back off from X+ to activate the X+ virtual limit")
+                self.xPlusLimitStatus = LimitStatus.ENABLED
 
-            if z_abs > self.currentMachineLimits.z_min_limit:
+            if z_abs > self.currentMachineLimits.z_min_limit and self.zMinusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(
                     TeachInLatheComponent.PinAxisLimitZMin).value = self.currentMachineLimits.z_min_limit
-                z_min_applied = True
-            # else:
-            #     print("Back off from Z- to activate the Z- virtual limit")
+                self.zMinusLimitStatus = LimitStatus.ENABLED
 
-            if z_abs < self.currentMachineLimits.z_max_limit:
+            if z_abs < self.currentMachineLimits.z_max_limit and self.zPlusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(
                     TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
-                z_max_applied = True
-            # else:
-            #     print("Back off from Z+ to activate the Z+ virtual limit")
+                self.zPlusLimitStatus = LimitStatus.ENABLED
 
-            if x_min_applied and x_max_applied and z_min_applied and z_max_applied:
+            self.setLimitStyle(self.xMinusLimit, self.xMinusLimitStatus)
+            self.setLimitStyle(self.xPlusLimit, self.xPlusLimitStatus)
+            self.setLimitStyle(self.zMinusLimit, self.zMinusLimitStatus)
+            self.setLimitStyle(self.zPlusLimit, self.zPlusLimitStatus)
+
+            if (self.xMinusLimitStatus is not LimitStatus.DISABLED and
+                    self.xPlusLimitStatus is not LimitStatus.DISABLED
+                    and self.zMinusLimitStatus is not LimitStatus.DISABLED
+                    and self.zPlusLimitStatus is not LimitStatus.DISABLED):
                 self.previousMachineLimits = self.currentMachineLimits
                 print("-----All limits applied-------")
