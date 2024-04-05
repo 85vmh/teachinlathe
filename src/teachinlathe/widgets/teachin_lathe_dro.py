@@ -65,8 +65,12 @@ class TeachInLatheDro(QWidget):
     def __init__(self, parent=None):
         super(TeachInLatheDro, self).__init__(parent)
         uic.loadUi(UI_FILE, self)
+        print("-----TeachInLatheDro.__init__")
         self.limitsHandler = MachineLimitsHandler()
+        print("limits handler created")
         self.latheComponent = TeachInLatheComponent()
+
+        self.setDefaultMachineLimits(self.limitsHandler.getDefaultMachineLimits())
 
         self.status = getPlugin('status')
         self.pos = getPlugin('position')
@@ -127,9 +131,15 @@ class TeachInLatheDro(QWidget):
         self.status.tool_offset.signal.connect(self._updateToolRelativePos)
 
         self.limitsHandler.onLimitsChanged.connect(self.onMachineLimitsChanged)
-        self.limitsHandler.onDefaultLimits.connect(self.setDefaultMachineLimits)
         self.updateUnits()
         self.updateValues()
+
+    def setDefaultMachineLimits(self, limits):
+        print("---Setting default limits: ", limits)
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = limits.x_min_limit
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = limits.x_max_limit
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = limits.z_min_limit
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = limits.z_max_limit
 
     def editLimitsClicked(self):
         self.limitsTabs.setCurrentIndex(LimitsTabs.EDIT.value)
@@ -325,13 +335,6 @@ class TeachInLatheDro(QWidget):
     def onMachineLimitsChanged(self, machine_limits):
         print("Machine limits changed: ", machine_limits)
         self.currentMachineLimits = machine_limits
-
-    def setDefaultMachineLimits(self, limits):
-        print("---setting default limits: ", limits)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = limits.x_min_limit
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = limits.x_max_limit
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = limits.z_min_limit
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = limits.z_max_limit
 
     def positionUpdated(self, pos):
         if self.previousMachineLimits != self.currentMachineLimits:

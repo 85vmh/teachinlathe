@@ -23,7 +23,6 @@ class MachineLimits:
 
 class MachineLimitsHandler(QObject):
     _instance = None
-    onDefaultLimits = Signal(object)
     onLimitsChanged = Signal(object)
 
     def __new__(cls, *args, **kwargs):
@@ -63,13 +62,11 @@ class MachineLimitsHandler(QObject):
             self._default_z_minus_limit = _z_bounds[0]
             self._default_z_plus_limit = _z_bounds[1]
 
-            # emit the initial values
-            # self.onLimitsChanged.emit(self.getMachineLimits())
-            self.onDefaultLimits.emit(
-                MachineLimits(self._default_x_minus_limit,
-                              self._default_x_plus_limit,
-                              self._default_z_minus_limit,
-                              self._default_z_plus_limit))
+    def getDefaultMachineLimits(self):
+        return MachineLimits(self._default_x_minus_limit,
+                             self._default_x_plus_limit,
+                             self._default_z_minus_limit,
+                             self._default_z_plus_limit)
 
     def getMachineLimits(self):
         # Apply chuck limit to default Z min limit
