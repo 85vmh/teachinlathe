@@ -68,21 +68,14 @@ class MachineLimitsHandler(QObject):
                              self._default_z_minus_limit,
                              self._default_z_plus_limit)
 
-    def getMachineLimits(self):
-        # Apply chuck limit to default Z min limit
-        computed_z_minus = self._default_z_minus_limit + (0 if self._chuck_limit_active else self._chuck_limit)
+    def getComputedMachineLimits(self):
+        computed_chuck_limit = self._chuck_limit if self._chuck_limit_active else self._default_z_minus_limit
+        computed_z_minus_limit = self._custom_z_minus_limit if self._z_minus_limit_active else self._default_z_minus_limit
+        computed_z_minus = max(computed_chuck_limit, computed_z_minus_limit)
 
-        # Apply tailstock limit to default Z max limit
-        computed_z_plus = self._default_z_plus_limit - (0 if self._tailstock_limit_active else self._tailstock_limit)
-
-        # Use custom limits if they are active and provide a tighter bound
-        if self._z_minus_limit_active:
-            if self._custom_z_minus_limit is not None:
-                computed_z_minus = max(computed_z_minus, self._custom_z_minus_limit)
-
-        if self._z_plus_limit_active:
-            if self._custom_z_plus_limit is not None:
-                computed_z_plus = min(computed_z_plus, self._custom_z_plus_limit)
+        computed_tailstock_limit = self._tailstock_limit if self._tailstock_limit_active else self._default_z_plus_limit
+        computed_z_plus_limit = self._custom_z_plus_limit if self._z_plus_limit_active else self._default_z_plus_limit
+        computed_z_plus = min(computed_tailstock_limit, computed_z_plus_limit)
 
         # For X axis, use custom limits if active; otherwise, use default limits
         computed_x_minus = self._custom_x_minus_limit if self._x_minus_limit_active else self._default_x_minus_limit
@@ -91,33 +84,39 @@ class MachineLimitsHandler(QObject):
         return MachineLimits(computed_x_minus, computed_x_plus, computed_z_minus, computed_z_plus)
 
     def setChuckLimitsActive(self, value):
+        print("Set chuck limit active: ", value)
         self._chuck_limit_active = value
-        self.onLimitsChanged.emit(self.getMachineLimits())
+        self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setXMinusLimitActive(self, value):
+        print("Set X- limit active: ", value)
         self._x_minus_limit_active = value
-        self.onLimitsChanged.emit(self.getMachineLimits())
+        self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setXPlusLimitActive(self, value):
+        print("Set X+ limit active: ", value)
         self._x_plus_limit_active = value
-        self.onLimitsChanged.emit(self.getMachineLimits())
+        self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setZMinusLimitActive(self, value):
+        print("Set Z- limit active: ", value)
         self._z_minus_limit_active = value
-        self.onLimitsChanged.emit(self.getMachineLimits())
+        self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setZPlusLimitActive(self, value):
+        print("Set Z+ limit active: ", value)
         self._z_plus_limit_active = value
-        self.onLimitsChanged.emit(self.getMachineLimits())
+        self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setTailstockLimitActive(self, value):
+        print("Set tailstock limit active: ", value)
         self._tailstock_limit_active = value
-        self.onLimitsChanged.emit(self.getMachineLimits())
+        self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setChuckLimit(self, value):
         self._chuck_limit = value
         print("Set chuck limit: ", self._chuck_limit)
-        self.onLimitsChanged.emit(self.getMachineLimits())
+        self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setZMinusLimit(self, value):
         self._custom_z_minus_limit = value

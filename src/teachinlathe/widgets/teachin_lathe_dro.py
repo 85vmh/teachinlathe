@@ -124,7 +124,7 @@ class TeachInLatheDro(QWidget):
 
         self.status.program_units.notify(self.updateUnits, 'string')
         getattr(self.pos, 'rel').notify(self.updateValues)
-        getattr(self.pos, 'abs').notify(self.positionUpdated)
+        getattr(self.pos, 'abs').notify(self.onAbsPositionUpdated)
 
         self.status.g5x_offset.signal.connect(self._updateToolRelativePos)
         self.status.g92_offset.signal.connect(self._updateToolRelativePos)
@@ -267,6 +267,7 @@ class TeachInLatheDro(QWidget):
                 self.tailstockLimitStatus = LimitStatus.DISABLED
             case LimitStatus.DISABLED:
                 self.tailstockLimitStatus = LimitStatus.PENDING
+        self.setLimitStyle(self.tailstockLimit, self.tailstockLimitStatus)
         self.limitsHandler.setTailstockLimitActive(self.tailstockLimitStatus is not LimitStatus.DISABLED)
 
     def updateUnits(self, units=None):
@@ -333,17 +334,18 @@ class TeachInLatheDro(QWidget):
             self.zSecondaryDro.show()
 
     def onMachineLimitsChanged(self, machine_limits):
-        print("Machine limits changed: ", machine_limits)
+        print("---Machine limits changed: ", machine_limits)
         self.currentMachineLimits = machine_limits
+        self.onAbsPositionUpdated()
 
-    def positionUpdated(self, pos):
+    def onAbsPositionUpdated(self, pos=None):
         if self.previousMachineLimits != self.currentMachineLimits:
             if pos is None:
                 pos = getattr(self.pos, 'abs').getValue()
             x_abs = pos[Axis.X]
             z_abs = pos[Axis.Z]
 
-            self.currentMachineLimits = self.limitsHandler.getMachineLimits()
+            self.currentMachineLimits = self.limitsHandler.getComputedMachineLimits()
 
             if x_abs > self.currentMachineLimits.x_min_limit and self.xMinusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(
@@ -369,6 +371,7 @@ class TeachInLatheDro(QWidget):
             self.setLimitStyle(self.xPlusLimit, self.xPlusLimitStatus)
             self.setLimitStyle(self.zMinusLimit, self.zMinusLimitStatus)
             self.setLimitStyle(self.zPlusLimit, self.zPlusLimitStatus)
+            self.setLimitStyle(self.tailstockLimit, self.tailstockLimitStatus)
 
             if (self.xMinusLimitStatus is not LimitStatus.DISABLED and
                     self.xPlusLimitStatus is not LimitStatus.DISABLED

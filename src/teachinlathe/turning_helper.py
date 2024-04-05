@@ -27,7 +27,7 @@ class TurningHelper:
 
     @staticmethod
     def getStraightTurningCommand(joystick_direction):
-        limits = MachineLimitsHandler().getMachineLimits()
+        limits = MachineLimitsHandler().getComputedMachineLimits()
         # In some cases targeting the machine limits results in some error saying that exceeds the limit of the machine.
         # I think that's due to some rounding errors, so add an amount of 1 micron to the limit to avoid this error.
         safe_limit = 0.001
@@ -64,7 +64,7 @@ class TurningHelper:
 
     @staticmethod
     def create_corner_point(joystick_direction):
-        limits = MachineLimitsHandler().getMachineLimits()
+        limits = MachineLimitsHandler().getComputedMachineLimits()
 
         match joystick_direction:
             case JoystickDirection.X_PLUS:
