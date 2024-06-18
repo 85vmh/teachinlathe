@@ -1,6 +1,17 @@
+import random
+import string
+
 from qtpyvcp import hal
 
 from teachinlathe import IN_DESIGNER
+
+
+def generate_random_string(chars_length):
+    # Define the characters to use: uppercase, lowercase, and digits
+    characters = string.ascii_letters + string.digits
+    # Generate a random string of the specified length
+    random_string = ''.join(random.choice(characters) for _ in range(chars_length))
+    return random_string
 
 
 class TeachInLatheComponent:
@@ -54,34 +65,36 @@ class TeachInLatheComponent:
 
     def _initialize(self):
         if IN_DESIGNER:
-            self.comp = hal.component('Designer')
+            random_suffix = generate_random_string(5)
+            self.comp = hal.component('Designer' + random_suffix)
         else:
             self.comp = hal.component('TeachInLathe')
-            self.comp.addPin(self.PinHandwheelsJogIncrement, 'float', 'in')
-            self.comp.addPin(self.PinHandwheelsXIsEnabled, 'float', 'in')
-            self.comp.addPin(self.PinHandwheelsZIsEnabled, 'float', 'in')
-            self.comp.addPin(self.PinHandwheelsXEnable, 'bit', 'out')
-            self.comp.addPin(self.PinHandwheelsZEnable, 'bit', 'out')
-            self.comp.addPin(self.PinHandwheelsAngleJogEnable, 'bit', 'out')
-            self.comp.addPin(self.PinHandwheelsAngleJogValue, 'float', 'out')
-            self.comp.addPin(self.PinJoystickXPlus, 'bit', 'in')
-            self.comp.addPin(self.PinJoystickXMinus, 'bit', 'in')
-            self.comp.addPin(self.PinJoystickZPlus, 'bit', 'in')
-            self.comp.addPin(self.PinJoystickZMinus, 'bit', 'in')
-            self.comp.addPin(self.PinJoystickRapid, 'bit', 'in')
-            self.comp.addPin(self.PinSpindleCoveredOpened, 'bit', 'in')
-            self.comp.addPin(self.PinSpindleSwitchRevIn, 'bit', 'in')
-            self.comp.addPin(self.PinSpindleSwitchFwdIn, 'bit', 'in')
-            self.comp.addPin(self.PinSpindleActualRpm, 'float', 'in')
-            self.comp.addPin(self.PinSpindleIsFirstGear, 'bit', 'in')
-            self.comp.addPin(self.PinButtonCycleStart, 'bit', 'in')
-            self.comp.addPin(self.PinButtonCycleStop, 'bit', 'in')
-            self.comp.addPin(self.PinAxisLimitXMin, 'float', 'in')
-            self.comp.addPin(self.PinAxisLimitXMax, 'float', 'in')
-            self.comp.addPin(self.PinAxisLimitZMin, 'float', 'in')
-            self.comp.addPin(self.PinAxisLimitZMax, 'float', 'in')
-            self.comp.addPin(self.PinIsPowerFeeding, 'bit', 'out')
-            self.comp.addPin(self.PinIsSpindleStarted, 'bit', 'out')
-            self.comp.addPin(self.PinIsReadyToRunProgram, 'bit', 'out')
-            self.comp.ready()
+
+        self.comp.addPin(self.PinHandwheelsJogIncrement, 'float', 'in')
+        self.comp.addPin(self.PinHandwheelsXIsEnabled, 'float', 'in')
+        self.comp.addPin(self.PinHandwheelsZIsEnabled, 'float', 'in')
+        self.comp.addPin(self.PinHandwheelsXEnable, 'bit', 'out')
+        self.comp.addPin(self.PinHandwheelsZEnable, 'bit', 'out')
+        self.comp.addPin(self.PinHandwheelsAngleJogEnable, 'bit', 'out')
+        self.comp.addPin(self.PinHandwheelsAngleJogValue, 'float', 'out')
+        self.comp.addPin(self.PinJoystickXPlus, 'bit', 'in')
+        self.comp.addPin(self.PinJoystickXMinus, 'bit', 'in')
+        self.comp.addPin(self.PinJoystickZPlus, 'bit', 'in')
+        self.comp.addPin(self.PinJoystickZMinus, 'bit', 'in')
+        self.comp.addPin(self.PinJoystickRapid, 'bit', 'in')
+        self.comp.addPin(self.PinSpindleCoveredOpened, 'bit', 'in')
+        self.comp.addPin(self.PinSpindleSwitchRevIn, 'bit', 'in')
+        self.comp.addPin(self.PinSpindleSwitchFwdIn, 'bit', 'in')
+        self.comp.addPin(self.PinSpindleActualRpm, 'float', 'in')
+        self.comp.addPin(self.PinSpindleIsFirstGear, 'bit', 'in')
+        self.comp.addPin(self.PinButtonCycleStart, 'bit', 'in')
+        self.comp.addPin(self.PinButtonCycleStop, 'bit', 'in')
+        self.comp.addPin(self.PinAxisLimitXMin, 'float', 'in')
+        self.comp.addPin(self.PinAxisLimitXMax, 'float', 'in')
+        self.comp.addPin(self.PinAxisLimitZMin, 'float', 'in')
+        self.comp.addPin(self.PinAxisLimitZMax, 'float', 'in')
+        self.comp.addPin(self.PinIsPowerFeeding, 'bit', 'out')
+        self.comp.addPin(self.PinIsSpindleStarted, 'bit', 'out')
+        self.comp.addPin(self.PinIsReadyToRunProgram, 'bit', 'out')
+        self.comp.ready()
         print("HalComponent instance is created")

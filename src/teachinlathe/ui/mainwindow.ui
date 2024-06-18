@@ -657,7 +657,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <number>1</number>
               </property>
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="pageRpm">
                <widget class="QLabel" name="rpmUnit_10">
@@ -1159,9 +1159,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="geometry">
                <rect>
                 <x>410</x>
-                <y>20</y>
+                <y>5</y>
                 <width>121</width>
-                <height>31</height>
+                <height>61</height>
                </rect>
               </property>
               <property name="styleSheet">

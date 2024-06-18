@@ -36,9 +36,9 @@ class TurningHelper:
         destination = ''
         match joystick_direction:
             case JoystickDirection.X_PLUS:
-                destination = f"X{limits.x_max_limit - safe_limit:.3f}".rstrip('0')
+                destination = f"X{limits.x_max_limit * 2 - safe_limit:.3f}".rstrip('0')
             case JoystickDirection.X_MINUS:
-                destination = f"X{limits.x_min_limit + safe_limit:.3f}".rstrip('0')
+                destination = f"X{limits.x_min_limit * 2 + safe_limit:.3f}".rstrip('0')
             case JoystickDirection.Z_PLUS:
                 destination = f"Z{limits.z_max_limit - safe_limit:.3f}".rstrip('0')
             case JoystickDirection.Z_MINUS:
