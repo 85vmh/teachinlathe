@@ -71,8 +71,8 @@ class TeachInLatheComponent:
             self.comp = hal.component('TeachInLathe')
 
         self.comp.addPin(self.PinHandwheelsJogIncrement, 'float', 'in')
-        self.comp.addPin(self.PinHandwheelsXIsEnabled, 'float', 'in')
-        self.comp.addPin(self.PinHandwheelsZIsEnabled, 'float', 'in')
+        self.comp.addPin(self.PinHandwheelsXIsEnabled, 'bit', 'in')
+        self.comp.addPin(self.PinHandwheelsZIsEnabled, 'bit', 'in')
         self.comp.addPin(self.PinHandwheelsXEnable, 'bit', 'out')
         self.comp.addPin(self.PinHandwheelsZEnable, 'bit', 'out')
         self.comp.addPin(self.PinHandwheelsAngleJogEnable, 'bit', 'out')
