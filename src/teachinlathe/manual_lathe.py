@@ -142,7 +142,7 @@ class ManualLathe:
     def getProgramHeader(self):
         spindle_cmd = f"G97 M4 S{self.spindleRpm} (Spindle RPM Mode)" \
             if self.spindleMode == SpindleMode.Rpm \
-            else f"G96 S{self.spindleCss} D{self.maxSpindleRpm} (Spindle CSS Mode)"
+            else f"G96 M4 S{self.spindleCss} D{self.maxSpindleRpm} (Spindle CSS Mode)"
 
         return (f"(Using Spindle & Feed settings from manual mode)\n"
                 f"{spindle_cmd}\n"
@@ -221,6 +221,7 @@ class ManualLathe:
                 if self.spindleLever is not SpindleLever.NONE:
                     direction = linuxcnc.SPINDLE_REVERSE if self.spindleLever == SpindleLever.REV else linuxcnc.SPINDLE_FORWARD
                     LINUXCNC_CMD.spindle(direction, int(self.spindleRpm), 0)
+                    print("Spindle started in RPM mode")
                     self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
                 else:
                     return self.handleSpindleOff()
@@ -235,6 +236,8 @@ class ManualLathe:
                         LINUXCNC_CMD.mdi(cmd)
                         LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
                         LINUXCNC_CMD.wait_complete()
+                        print("Spindle started in CSS mode")
+                        print("MDI command executed: ", cmd)
                         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
                 else:
                     return self.handleSpindleOff()
