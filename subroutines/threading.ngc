@@ -33,18 +33,21 @@ G90 ; Absolute Distance
 
 #<lead_index> = 0
 
-#<lead_z_offset> = [#<pitch> / #<leads_count>]
+#<lead_z_offset> = #<pitch>
 
 (if its a left hand thread, reverse the sign)
 o99 IF [#<z_start> LT #<z_end>]
     #<lead_z_offset> = -#<lead_z_offset>
 o99 ENDIF
 
-(print, per lead offset: [#<lead_z_offset>])
+(print, Z offset per lead: [#<lead_z_offset>])
 
 o100 WHILE [#<lead_index> LE [#<leads_count> - 1]]
-    G0 Z[#<z_start> + [#<lead_z_offset> * #<lead_index>]]        
-    
+    #<z_pos> = [#<z_start> + [#<lead_z_offset> * #<lead_index>]]
+
+    (print, Cutting lead #[#<lead_index> + 1] at Z position: [#<z_pos>])
+
+    G0 Z[#<z_pos>]
     G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
 
     #<lead_index> = [#<lead_index> + 1]    
