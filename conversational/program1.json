@@ -1,0 +1,145 @@
+{
+    "id": "prog_001",
+    "header" : {
+        "name": "Program Ax Cu Umeri",
+        "last_edit" : "23-01-2025",
+        "datum" : 1,
+        "units" : "mm",
+        "workpiece": {
+            "material": "Aluminiu 7075",
+            "external_diameter": 50.0,
+            "internal_diameter": 0,
+            "stickout_length": 120.0
+        }
+    },
+    "operations": [
+        {
+            "order" : 1,
+            "type": "setTool",
+            "tool_no": 1,
+            "tool_orientation": 2,
+            "back_angle" : 95,
+            "front_angle" : 80,
+            "toolchange_details": {
+                "x_pos" : 200,
+                "z_pos" : 200,
+                "coordinate_type" : "machine",
+                "move_sequence" : "z_first",
+                "stop_spindle" : true
+            }
+        },
+        {
+            "order": 2,
+            "type": "facing",
+            "css_value": 200,
+            "max_speed" : 2000,
+            "feed_rate": 0.2,
+            "doc" : 1.5,
+            "retract" : 1,
+            "x_start" : 55,
+            "z_start" : 3,
+            "x_end" : -1,
+            "z_end" : 0, 
+            "z_end_becomes_new_z0" : true
+        },
+        {
+            "order": 3, 
+            "type": "define_profile",
+            "profileId" : 1,
+            "profile_primitives": [
+                {
+                    "type" : "line",
+                    "x_end" : 50, 
+                    "z_end" : -10    
+                },
+                {
+                    "type" : "arc",
+                    "x_end" : 52, 
+                    "z_end" : -12    
+                },
+                {
+                    "type" : "line",
+                    "x_end" : 52, 
+                    "z_end" : -20    
+                }
+            ]
+        },
+        {
+            "order" : 4,
+            "type": "setTool",
+            "tool_no": 2,
+            "tool_orientation": 2,
+            "back_angle" : 95,
+            "front_angle" : 80,
+            "toolchange_details": {
+                "x_pos" : 200,
+                "z_pos" : 200,
+                "coordinate_type" : "machine",
+                "move_sequence" : "simultaneous",
+                "stop_spindle" : true
+            }
+        },
+        {
+            "order": 5,
+            "type": "profiling",
+            "css_value": 200,
+            "max_speed" : 2000,
+            "feed_rate": 0.2,
+            "profileId" : 1,
+            "strategy" : "rough",
+            "x_start" : 55,
+            "z_start" : 3,
+            "doc" : 1.5, 
+            "retract" : 1,
+            "stock_to_leave" : {
+                "x" : 0.5,
+                "z" : 0.2
+            }
+        },
+        {
+            "order": 6,
+            "type": "profiling",
+            "css_value": 200,
+            "max_speed" : 2000,
+            "feed_rate": 0.2,
+            "profileId" : 1,
+            "strategy" : "finish",
+            "x_start" : 55,
+            "z_start" : 3,
+            "doc" : 1.5, 
+            "retract" : 1,
+            "spring_passes" : 1
+        },
+        {
+            "order" : 7,
+            "type": "setTool",
+            "tool_no": 3,
+            "tool_orientation": 6,
+            "back_angle" : 95,
+            "front_angle" : 80,
+            "toolchange_details": {
+                "x_pos" : 200,
+                "z_pos" : 200,
+                "coordinate_type" : "machine",
+                "move_sequence" : "simultaneous",
+                "stop_spindle" : true
+            }
+        },
+        {
+            "order": 8,
+            "type": "odThread",
+            "spindle_rpm": 500,
+            "thread_type" : "metric",
+            "pitch" : 1.5,
+            "major_diameter" : 20, 
+            "minor_diameter" : 18.64,
+            "z_start" : 3,
+            "z_end" : -15,
+            "initial_doc" : 0.2, 
+            "retract" : 1,
+            "spring_passes" : 1
+        }
+    ]
+}
+
+  
