@@ -7,11 +7,16 @@ from .lathe_tool_table import LatheToolTable
 from .lathe_tool_touch_off.tool_touch_off import ToolTouchOff
 from .quick_cycles.quick_cycles import QuickCycles
 from .teachin_lathe_dro import TeachInLatheDro
+from ..TestQml import AxisPlotWidget
 
 
 class TeachInLatheDro_Plugin(_DesignerPlugin):
     def pluginClass(self):
         return TeachInLatheDro
+
+class AxisPlotWidget_Plugin(_DesignerPlugin):
+    def pluginClass(self):
+        return AxisPlotWidget
 
 
 class LatheToolTable_Plugin(_DesignerPlugin):

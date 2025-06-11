@@ -523,7 +523,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1606</width>
+             <width>1546</width>
              <height>1041</height>
             </rect>
            </property>
@@ -1554,8 +1554,8 @@ QCheckBox:disabled {
             <widget class="TeachInLatheDro" name="teachinlathedro">
              <property name="geometry">
               <rect>
-               <x>0</x>
-               <y>0</y>
+               <x>110</x>
+               <y>15</y>
                <width>756</width>
                <height>166</height>
               </rect>
@@ -1606,6 +1606,16 @@ QCheckBox:disabled {
              </property>
              <property name="alignment">
               <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+            <widget class="AxisPlotWidget" name="axisplotwidget">
+             <property name="geometry">
+              <rect>
+               <x>5</x>
+               <y>195</y>
+               <width>1520</width>
+               <height>580</height>
+              </rect>
              </property>
             </widget>
            </widget>
@@ -6605,10 +6615,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_6">
            <property name="geometry">
             <rect>
-             <x>1620</x>
-             <y>820</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1565</x>
+             <y>780</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6618,10 +6628,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_7">
            <property name="geometry">
             <rect>
-             <x>1695</x>
-             <y>820</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1655</x>
+             <y>780</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6631,10 +6641,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_8">
            <property name="geometry">
             <rect>
-             <x>1845</x>
-             <y>820</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1835</x>
+             <y>780</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6644,10 +6654,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_9">
            <property name="geometry">
             <rect>
-             <x>1770</x>
-             <y>820</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1745</x>
+             <y>780</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6657,10 +6667,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_10">
            <property name="geometry">
             <rect>
-             <x>1770</x>
-             <y>970</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1745</x>
+             <y>960</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6670,10 +6680,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_11">
            <property name="geometry">
             <rect>
-             <x>1695</x>
-             <y>970</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1655</x>
+             <y>960</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6683,10 +6693,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_12">
            <property name="geometry">
             <rect>
-             <x>1845</x>
-             <y>970</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1835</x>
+             <y>960</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6696,10 +6706,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_13">
            <property name="geometry">
             <rect>
-             <x>1620</x>
-             <y>970</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1565</x>
+             <y>960</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6709,10 +6719,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_14">
            <property name="geometry">
             <rect>
-             <x>1770</x>
-             <y>895</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1745</x>
+             <y>870</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6722,10 +6732,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_15">
            <property name="geometry">
             <rect>
-             <x>1695</x>
-             <y>895</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1655</x>
+             <y>870</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6735,10 +6745,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_16">
            <property name="geometry">
             <rect>
-             <x>1845</x>
-             <y>895</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1835</x>
+             <y>870</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6748,10 +6758,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_17">
            <property name="geometry">
             <rect>
-             <x>1620</x>
-             <y>895</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1565</x>
+             <y>870</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6761,10 +6771,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_18">
            <property name="geometry">
             <rect>
-             <x>1770</x>
-             <y>745</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1745</x>
+             <y>690</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6774,10 +6784,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_19">
            <property name="geometry">
             <rect>
-             <x>1695</x>
-             <y>745</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1655</x>
+             <y>690</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6787,10 +6797,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_20">
            <property name="geometry">
             <rect>
-             <x>1845</x>
-             <y>745</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1835</x>
+             <y>690</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6800,10 +6810,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_21">
            <property name="geometry">
             <rect>
-             <x>1620</x>
-             <y>745</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1565</x>
+             <y>690</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6813,10 +6823,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_22">
            <property name="geometry">
             <rect>
-             <x>1770</x>
-             <y>670</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1745</x>
+             <y>600</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6826,10 +6836,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_23">
            <property name="geometry">
             <rect>
-             <x>1695</x>
-             <y>670</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1655</x>
+             <y>600</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6839,10 +6849,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_24">
            <property name="geometry">
             <rect>
-             <x>1845</x>
-             <y>670</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1835</x>
+             <y>600</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6852,10 +6862,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_25">
            <property name="geometry">
             <rect>
-             <x>1620</x>
-             <y>670</y>
-             <width>60</width>
-             <height>60</height>
+             <x>1565</x>
+             <y>600</y>
+             <width>70</width>
+             <height>70</height>
             </rect>
            </property>
            <property name="text">
@@ -6985,6 +6995,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <extends>QStackedWidget</extends>
    <header>qtpyvcp.widgets.containers.stack</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>AxisPlotWidget</class>
+   <extends>QWidget</extends>
+   <header>teachinlathe.TestQml</header>
   </customwidget>
   <customwidget>
    <class>Conversational</class>

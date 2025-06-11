@@ -6,7 +6,13 @@ import matplotlib.patches as patches
 
 class AxisPlotWidget(FigureCanvas):
     def __init__(self, parent=None):
-        self.fig, self.ax = plt.subplots(figsize=(7,3), dpi=100)
+        width_px = 1500
+        height_px = 580
+        dpi = 100
+        fig_width_inch = width_px / dpi
+        fig_height_inch = height_px / dpi
+
+        self.fig, self.ax = plt.subplots(figsize=(fig_width_inch, fig_height_inch), dpi=dpi)
         super().__init__(self.fig)
         self.setParent(parent)
         self.draw_plot()
@@ -50,8 +56,10 @@ class AxisPlotWidget(FigureCanvas):
 
         ax.set_facecolor('white')
 
-        ax.set_xlim(-90, plot_width_px + 90)
-        ax.set_ylim(-80, plot_height_px + 80)
+        outside_padding_x = 100
+        outside_padding_y = 80
+        ax.set_xlim(-outside_padding_x, plot_width_px + outside_padding_x)
+        ax.set_ylim(-outside_padding_y, plot_height_px + outside_padding_y)
 
         # Green border box (chart perimeter + labels)
         ax.plot([-outside_padding, plot_width_px + outside_padding], [plot_height_px + outside_padding, plot_height_px + outside_padding], color=green_color, linewidth=1)
