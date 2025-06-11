@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
+from PyQt5.QtGui import QColor, QPalette
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -19,6 +20,7 @@ class AxisPlotWidget(FigureCanvas):
 
     def draw_plot(self):
         ax = self.ax
+        self.fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Elimină marginile
         ax.clear()
 
         plot_width_mm = 700
@@ -205,14 +207,27 @@ class AxisPlotWidget(FigureCanvas):
         ax.axis('off')
         self.draw()
 
+
 if __name__ == "__main__":
     import sys
-    from PyQt5.QtWidgets import QApplication
+    from PyQt5.QtWidgets import QApplication, QMainWindow
 
     app = QApplication(sys.argv)
+
+    # Creează fereastra principală
     win = QMainWindow()
+    win.resize(1500, 580)
+    win.setWindowTitle("AxisPlot Widget with Pink Background")
+
+    # Setează un background roz pentru fereastră
+    pal = win.palette()
+    pal.setColor(QPalette.Window, QColor(255, 192, 203))  # Pink
+    win.setPalette(pal)
+    win.setAutoFillBackground(True)
+
+    # Adaugă widgetul AxisPlotWidget
     widget = AxisPlotWidget()
     win.setCentralWidget(widget)
-    win.resize(900, 500)
+
     win.show()
     sys.exit(app.exec_())
