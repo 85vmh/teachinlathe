@@ -1,5 +1,5 @@
 {
-    "current_fixture_index": 1,
+    "current_fixture_index": 0,
     "fixtures": [
         {
             "fixture_index": 0,
@@ -23,7 +23,7 @@
             "diameter": 160,
             "units": "mm",
             "max_rpm": 3000,
-            "z_minus_limit": 130.0
+            "z_minus_limit": 189.25
         },
         {
             "fixture_index": 3,
