@@ -120,20 +120,20 @@ class MyMainWindow(VCPMainWindow):
         self.inputFeed.textChanged.connect(self.manualLathe.onInputFeedChanged)
         self.inputFeedAngle.textChanged.connect(self.manualLathe.onFeedAngleChanged)
         self.checkBoxFeedAngle.stateChanged.connect(self.checkBoxFeedAngleChanged)
-        self.checkBoxJogAngle.stateChanged.connect(self.checkBoxJogAngleChanged)
+        # self.checkBoxJogAngle.stateChanged.connect(self.checkBoxJogAngleChanged)
 
         self.inputRpm.mousePressEvent = lambda _: self.openNumPad(self.inputRpm)
         self.inputFeed.mousePressEvent = lambda _: self.openNumPad(self.inputFeed)
         self.inputCss.mousePressEvent = lambda _: self.openNumPad(self.inputCss)
         self.inputMaxRpm.mousePressEvent = lambda _: self.openNumPad(self.inputMaxRpm)
         self.inputFeedAngle.mousePressEvent = lambda _: self.openNumPad(self.inputFeedAngle)
-        self.inputJogAngle.mousePressEvent = lambda _: self.openNumPad(self.inputJogAngle)
+        # self.inputJogAngle.mousePressEvent = lambda _: self.openNumPad(self.inputJogAngle)
 
         self.vtk.setViewXZ2()
         self.vtk.enable_panning(True)
 
         self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
-        self.quickcycles.onLoadClicked.connect(self.prepareToRunProgram)
+        # self.quickcycles.onLoadClicked.connect(self.prepareToRunProgram)
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
 
         QTimer.singleShot(0, self.afterUIInit)
@@ -145,7 +145,7 @@ class MyMainWindow(VCPMainWindow):
 
     def onFixtureSelected(self, fixture):
         print("---Fixture selected: ", fixture)
-        self.teachinlathedro.setChuckLimit(fixture.z_minus_limit)
+        # self.teachinlathedro.setChuckLimit(fixture.z_minus_limit)
 
     def afterUIInit(self):
         # set the current values
@@ -216,10 +216,10 @@ class MyMainWindow(VCPMainWindow):
         if input_text.isdigit():
             self.manualLathe.onFeedAngleChanged(input_text)
 
-    def checkBoxJogAngleChanged(self, value):
-        self.inputJogAngle.setEnabled(value)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsAngleJogEnable).value = value
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsAngleJogValue).value = float(self.inputJogAngle.text())
+    # def checkBoxJogAngleChanged(self, value):
+    #     self.inputJogAngle.setEnabled(value)
+    #     self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsAngleJogEnable).value = value
+    #     self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsAngleJogValue).value = float(self.inputJogAngle.text())
 
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)

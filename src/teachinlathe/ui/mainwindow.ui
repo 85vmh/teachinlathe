@@ -523,8 +523,8 @@ font: 12pt &quot;DejaVu Sans&quot;;
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1020</width>
-             <height>733</height>
+             <width>1606</width>
+             <height>1041</height>
             </rect>
            </property>
            <property name="sizePolicy">
@@ -546,7 +546,7 @@ height: 50px; min-width: 204px;
 font: 14pt &quot;DejaVu Sans&quot;; }</string>
            </property>
            <property name="tabPosition">
-            <enum>QTabWidget::South</enum>
+            <enum>QTabWidget::North</enum>
            </property>
            <property name="currentIndex">
             <number>0</number>
@@ -558,8 +558,8 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <widget class="QFrame" name="spindleFrame">
              <property name="geometry">
               <rect>
-               <x>5</x>
-               <y>345</y>
+               <x>520</x>
+               <y>830</y>
                <width>631</width>
                <height>81</height>
               </rect>
@@ -1040,8 +1040,8 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <widget class="QFrame" name="feedFrame">
              <property name="geometry">
               <rect>
-               <x>5</x>
-               <y>435</y>
+               <x>520</x>
+               <y>915</y>
                <width>631</width>
                <height>71</height>
               </rect>
@@ -1296,10 +1296,10 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <widget class="QFrame" name="maxVelocityFrame">
              <property name="geometry">
               <rect>
-               <x>5</x>
-               <y>600</y>
-               <width>631</width>
-               <height>71</height>
+               <x>225</x>
+               <y>830</y>
+               <width>286</width>
+               <height>156</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -1315,27 +1315,39 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="frameShadow">
               <enum>QFrame::Raised</enum>
              </property>
-             <widget class="QLabel" name="label_3">
+             <widget class="JogSpeedPercentageWidget" name="jogspeedpercentagewidget">
               <property name="geometry">
                <rect>
-                <x>5</x>
-                <y>0</y>
-                <width>156</width>
-                <height>36</height>
+                <x>10</x>
+                <y>30</y>
+                <width>266</width>
+                <height>51</height>
                </rect>
               </property>
-              <property name="styleSheet">
-               <string notr="true">font: 20pt &quot;Lato&quot;;</string>
+              <property name="font">
+               <font>
+                <pointsize>10</pointsize>
+               </font>
               </property>
-              <property name="text">
-               <string>Max Velocity</string>
+              <property name="diameter" stdset="0">
+               <number>15</number>
+              </property>
+              <property name="layoutSpacing">
+               <number>6</number>
+              </property>
+              <property name="color" stdset="0">
+               <color>
+                <red>15</red>
+                <green>224</green>
+                <blue>42</blue>
+               </color>
               </property>
              </widget>
              <widget class="StatusLabel" name="statuslabel_38">
               <property name="geometry">
                <rect>
-                <x>20</x>
-                <y>40</y>
+                <x>90</x>
+                <y>90</y>
                 <width>116</width>
                 <height>26</height>
                </rect>
@@ -1361,42 +1373,14 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;settings:machine.jog.linear-speed&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:program_units?text&quot;, &quot;trigger&quot;: false}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'{:.0f}'.format(ch[0]) + ch[1] + '/min'&quot;, &quot;name&quot;: &quot;Rapid Speed&quot;}]</string>
               </property>
              </widget>
-             <widget class="JogSpeedPercentageWidget" name="jogspeedpercentagewidget">
-              <property name="geometry">
-               <rect>
-                <x>180</x>
-                <y>10</y>
-                <width>441</width>
-                <height>51</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
-              </property>
-              <property name="diameter" stdset="0">
-               <number>15</number>
-              </property>
-              <property name="layoutSpacing">
-               <number>6</number>
-              </property>
-              <property name="color" stdset="0">
-               <color>
-                <red>15</red>
-                <green>224</green>
-                <blue>42</blue>
-               </color>
-              </property>
-             </widget>
             </widget>
             <widget class="QFrame" name="handwheelsFrame">
              <property name="geometry">
               <rect>
-               <x>5</x>
-               <y>515</y>
-               <width>631</width>
-               <height>76</height>
+               <x>45</x>
+               <y>830</y>
+               <width>166</width>
+               <height>156</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -1434,123 +1418,11 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:program_units?text&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;ch[0] + '/min'&quot;, &quot;name&quot;: &quot;Rapid Speed&quot;}]</string>
               </property>
              </widget>
-             <widget class="Line" name="line_9">
-              <property name="geometry">
-               <rect>
-                <x>390</x>
-                <y>0</y>
-                <width>16</width>
-                <height>76</height>
-               </rect>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-             </widget>
-             <widget class="QLabel" name="rpmUnit_24">
-              <property name="geometry">
-               <rect>
-                <x>580</x>
-                <y>25</y>
-                <width>36</width>
-                <height>31</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <family>Noto Sans</family>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>deg</string>
-              </property>
-             </widget>
-             <widget class="QCheckBox" name="checkBoxJogAngle">
-              <property name="geometry">
-               <rect>
-                <x>410</x>
-                <y>25</y>
-                <width>116</width>
-                <height>31</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <family>Noto Sans</family>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>Jog Angle:</string>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>18</width>
-                <height>18</height>
-               </size>
-              </property>
-             </widget>
-             <widget class="QLabel" name="label_2">
-              <property name="geometry">
-               <rect>
-                <x>5</x>
-                <y>5</y>
-                <width>156</width>
-                <height>36</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 20pt &quot;Lato&quot;;</string>
-              </property>
-              <property name="text">
-               <string>Handwheels</string>
-              </property>
-             </widget>
-             <widget class="QLabel" name="jogIncrement">
-              <property name="geometry">
-               <rect>
-                <x>20</x>
-                <y>45</y>
-                <width>116</width>
-                <height>26</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
-}</string>
-              </property>
-              <property name="text">
-               <string>0.001 mm/div</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
              <widget class="QCheckBox" name="xMpgCheckbox">
               <property name="geometry">
                <rect>
-                <x>205</x>
-                <y>5</y>
+                <x>10</x>
+                <y>10</y>
                 <width>64</width>
                 <height>64</height>
                </rect>
@@ -1603,8 +1475,8 @@ QCheckBox:disabled {
               </property>
               <property name="geometry">
                <rect>
-                <x>310</x>
-                <y>5</y>
+                <x>85</x>
+                <y>80</y>
                 <width>64</width>
                 <height>64</height>
                </rect>
@@ -1651,55 +1523,89 @@ QCheckBox:disabled {
                <bool>true</bool>
               </property>
              </widget>
-             <widget class="VCPSettingsLineEdit" name="inputJogAngle">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
+             <widget class="QLabel" name="jogIncrement">
               <property name="geometry">
                <rect>
-                <x>510</x>
-                <y>25</y>
-                <width>66</width>
-                <height>31</height>
+                <x>90</x>
+                <y>30</y>
+                <width>61</width>
+                <height>26</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 11pt &quot;Noto&quot;;
+}</string>
               </property>
               <property name="text">
-               <string>45</string>
+               <string>0.001</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
               </property>
-              <property name="settingName" stdset="0">
-               <string>smart_numpad.input-jog-angle</string>
-              </property>
-              <property name="textFormat" stdset="0">
-               <string>.4f</string>
-              </property>
              </widget>
-            </widget>
-            <widget class="QuickCycles" name="quickcycles">
-             <property name="geometry">
-              <rect>
-               <x>645</x>
-               <y>5</y>
-               <width>371</width>
-               <height>461</height>
-              </rect>
-             </property>
             </widget>
             <widget class="TeachInLatheDro" name="teachinlathedro">
              <property name="geometry">
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>641</width>
-               <height>336</height>
+               <width>756</width>
+               <height>166</height>
               </rect>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_2">
+             <property name="geometry">
+              <rect>
+               <x>50</x>
+               <y>795</y>
+               <width>156</width>
+               <height>36</height>
+              </rect>
+             </property>
+             <property name="font">
+              <font>
+               <family>Lato</family>
+               <pointsize>15</pointsize>
+               <weight>50</weight>
+               <italic>false</italic>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 15pt &quot;Lato&quot;;</string>
+             </property>
+             <property name="text">
+              <string>Manual Feed</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_3">
+             <property name="geometry">
+              <rect>
+               <x>290</x>
+               <y>795</y>
+               <width>156</width>
+               <height>36</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 15pt &quot;Lato&quot;;</string>
+             </property>
+             <property name="text">
+              <string>Max Velocity</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
              </property>
             </widget>
            </widget>
@@ -6699,10 +6605,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_6">
            <property name="geometry">
             <rect>
-             <x>1525</x>
-             <y>705</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1620</x>
+             <y>820</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6712,10 +6618,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_7">
            <property name="geometry">
             <rect>
-             <x>1625</x>
-             <y>705</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1695</x>
+             <y>820</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6725,10 +6631,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_8">
            <property name="geometry">
             <rect>
-             <x>1825</x>
-             <y>705</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1845</x>
+             <y>820</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6738,10 +6644,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_9">
            <property name="geometry">
             <rect>
-             <x>1725</x>
-             <y>705</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1770</x>
+             <y>820</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6751,10 +6657,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_10">
            <property name="geometry">
             <rect>
-             <x>1725</x>
-             <y>905</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1770</x>
+             <y>970</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6764,10 +6670,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_11">
            <property name="geometry">
             <rect>
-             <x>1625</x>
-             <y>905</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1695</x>
+             <y>970</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6777,10 +6683,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_12">
            <property name="geometry">
             <rect>
-             <x>1825</x>
-             <y>905</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1845</x>
+             <y>970</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6790,10 +6696,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_13">
            <property name="geometry">
             <rect>
-             <x>1525</x>
-             <y>905</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1620</x>
+             <y>970</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6803,10 +6709,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_14">
            <property name="geometry">
             <rect>
-             <x>1725</x>
-             <y>805</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1770</x>
+             <y>895</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6816,10 +6722,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_15">
            <property name="geometry">
             <rect>
-             <x>1625</x>
-             <y>805</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1695</x>
+             <y>895</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6829,10 +6735,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_16">
            <property name="geometry">
             <rect>
-             <x>1825</x>
-             <y>805</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1845</x>
+             <y>895</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6842,10 +6748,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_17">
            <property name="geometry">
             <rect>
-             <x>1525</x>
-             <y>805</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1620</x>
+             <y>895</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6855,10 +6761,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_18">
            <property name="geometry">
             <rect>
-             <x>1725</x>
-             <y>605</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1770</x>
+             <y>745</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6868,10 +6774,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_19">
            <property name="geometry">
             <rect>
-             <x>1625</x>
-             <y>605</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1695</x>
+             <y>745</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6881,10 +6787,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_20">
            <property name="geometry">
             <rect>
-             <x>1825</x>
-             <y>605</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1845</x>
+             <y>745</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6894,10 +6800,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_21">
            <property name="geometry">
             <rect>
-             <x>1525</x>
-             <y>605</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1620</x>
+             <y>745</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6907,10 +6813,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_22">
            <property name="geometry">
             <rect>
-             <x>1725</x>
-             <y>505</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1770</x>
+             <y>670</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6920,10 +6826,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_23">
            <property name="geometry">
             <rect>
-             <x>1625</x>
-             <y>505</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1695</x>
+             <y>670</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6933,10 +6839,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_24">
            <property name="geometry">
             <rect>
-             <x>1825</x>
-             <y>505</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1845</x>
+             <y>670</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -6946,10 +6852,10 @@ font: 12pt &quot;DejaVu Sans&quot;;
           <widget class="QPushButton" name="pushButton_25">
            <property name="geometry">
             <rect>
-             <x>1525</x>
-             <y>505</y>
-             <width>80</width>
-             <height>80</height>
+             <x>1620</x>
+             <y>670</y>
+             <width>60</width>
+             <height>60</height>
             </rect>
            </property>
            <property name="text">
@@ -7094,11 +7000,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <class>LatheToolTable</class>
    <extends>QTableView</extends>
    <header>teachinlathe.widgets.lathe_tool_table</header>
-  </customwidget>
-  <customwidget>
-   <class>QuickCycles</class>
-   <extends>QWidget</extends>
-   <header>teachinlathe.widgets.quick_cycles.quick_cycles</header>
   </customwidget>
   <customwidget>
    <class>TeachInLatheDro</class>
