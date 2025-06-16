@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1505</width>
-    <height>700</height>
+    <width>1500</width>
+    <height>750</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -678,8 +678,8 @@ Datum</string>
   <widget class="StatusLabel" name="tool_diameter_12">
    <property name="geometry">
     <rect>
-     <x>1389</x>
-     <y>270</y>
+     <x>1385</x>
+     <y>175</y>
      <width>56</width>
      <height>27</height>
     </rect>
@@ -732,8 +732,8 @@ Datum</string>
   <widget class="QLabel" name="label_37">
    <property name="geometry">
     <rect>
-     <x>1313</x>
-     <y>238</y>
+     <x>1309</x>
+     <y>143</y>
      <width>76</width>
      <height>27</height>
     </rect>
@@ -748,8 +748,8 @@ Datum</string>
   <widget class="StatusLabel" name="tool_diameter_11">
    <property name="geometry">
     <rect>
-     <x>1389</x>
-     <y>237</y>
+     <x>1385</x>
+     <y>142</y>
      <width>56</width>
      <height>27</height>
     </rect>
@@ -802,8 +802,8 @@ Datum</string>
   <widget class="QLabel" name="label_38">
    <property name="geometry">
     <rect>
-     <x>1305</x>
-     <y>270</y>
+     <x>1301</x>
+     <y>175</y>
      <width>81</width>
      <height>26</height>
     </rect>
@@ -821,8 +821,11 @@ Datum</string>
      <x>5</x>
      <y>220</y>
      <width>1221</width>
-     <height>476</height>
+     <height>526</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
    </property>
    <property name="title">
     <string/>
@@ -831,9 +834,9 @@ Datum</string>
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>220</y>
+      <y>295</y>
       <width>191</width>
-      <height>136</height>
+      <height>56</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -849,7 +852,7 @@ Datum</string>
      <property name="geometry">
       <rect>
        <x>115</x>
-       <y>40</y>
+       <y>10</y>
        <width>66</width>
        <height>36</height>
       </rect>
@@ -871,7 +874,7 @@ Datum</string>
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>40</y>
+       <y>10</y>
        <width>96</width>
        <height>36</height>
       </rect>
@@ -902,80 +905,23 @@ Datum</string>
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
-    </widget>
-    <widget class="QLabel" name="label_11">
-     <property name="geometry">
-      <rect>
-       <x>45</x>
-       <y>5</y>
-       <width>111</width>
-       <height>19</height>
-      </rect>
+     <property name="referenceType" stdset="0">
+      <number>1</number>
      </property>
-     <property name="styleSheet">
-      <string notr="true">QLabel {
-	font: 75 14pt &quot;Noto Mono&quot;;
-}</string>
+     <property name="axisNumber" stdset="0">
+      <number>2</number>
      </property>
-     <property name="text">
-      <string>Limit Z-</string>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
      </property>
-    </widget>
-    <widget class="Line" name="zLine_4">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>20</y>
-       <width>191</width>
-       <height>20</height>
-      </rect>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
      </property>
-     <property name="frameShadow">
-      <enum>QFrame::Plain</enum>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-    <widget class="Line" name="zLine_5">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>75</y>
-       <width>191</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Plain</enum>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="enableLimitZMinus">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>90</y>
-       <width>151</width>
-       <height>36</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Cantarell Light</family>
-       <pointsize>12</pointsize>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true"/>
-     </property>
-     <property name="text">
-      <string>Enable Limit</string>
+     <property name="latheMode" stdset="0">
+      <number>0</number>
      </property>
     </widget>
    </widget>
@@ -983,9 +929,9 @@ Datum</string>
     <property name="geometry">
      <rect>
       <x>1015</x>
-      <y>220</y>
+      <y>295</y>
       <width>191</width>
-      <height>136</height>
+      <height>56</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -1001,7 +947,7 @@ Datum</string>
      <property name="geometry">
       <rect>
        <x>115</x>
-       <y>40</y>
+       <y>10</y>
        <width>66</width>
        <height>36</height>
       </rect>
@@ -1023,7 +969,223 @@ Datum</string>
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>40</y>
+       <y>10</y>
+       <width>96</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Noto Sans Mono</family>
+       <pointsize>12</pointsize>
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(154, 153, 150);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+     </property>
+     <property name="text">
+      <string>1000.234</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>1</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>2</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>0</number>
+     </property>
+    </widget>
+   </widget>
+   <widget class="Line" name="zLine">
+    <property name="geometry">
+     <rect>
+      <x>205</x>
+      <y>310</y>
+      <width>806</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>495</x>
+      <y>295</y>
+      <width>196</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+	font: 75 16pt &quot;Noto Mono&quot;;
+    border-style: solid;
+    border-color: rgb(10, 10, 10);
+    border-width: 1px;
+    border-radius: 2px;
+    color: rgb(10, 10, 10);;
+    background: rgb(230, 230, 230);
+}</string>
+    </property>
+    <property name="text">
+     <string>Tool Limits</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>45</y>
+      <width>236</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+	font: 75 16pt &quot;Noto Mono&quot;;
+    border-style: solid;
+    border-color: rgb(10, 10, 10);
+    border-width: 1px;
+    border-radius: 2px;
+    color: rgb(10, 10, 10);;
+    background: rgb(230, 230, 230);
+}</string>
+    </property>
+    <property name="text">
+     <string>Machine Limits</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="Line" name="zLine_2">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>60</y>
+      <width>816</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="xLine">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>235</y>
+      <width>46</width>
+      <height>186</height>
+     </rect>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="zLine_3">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>155</y>
+      <width>1221</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(154, 153, 150);</string>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QWidget" name="boxXPlusLimit" native="true">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>420</y>
+      <width>191</width>
+      <height>56</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QWidget #boxXPlusLimit{
+    border-style: solid;
+    border-color: rgb(10, 10, 10);
+    border-width: 1px;
+    border-radius: 8px;
+    color: rgb(10, 10, 10);
+}</string>
+    </property>
+    <widget class="QPushButton" name="teachZPlus_4">
+     <property name="geometry">
+      <rect>
+       <x>115</x>
+       <y>10</y>
+       <width>66</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Cantarell Light</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>TeachIn</string>
+     </property>
+    </widget>
+    <widget class="TeachInDroLabel" name="droLabelZPlus_4">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
        <width>96</width>
        <height>36</height>
       </rect>
@@ -1073,65 +1235,31 @@ Datum</string>
       <number>0</number>
      </property>
     </widget>
-    <widget class="QLabel" name="label_13">
-     <property name="geometry">
-      <rect>
-       <x>45</x>
-       <y>5</y>
-       <width>111</width>
-       <height>19</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QLabel {
-	font: 75 14pt &quot;Noto Mono&quot;;
+   </widget>
+   <widget class="QWidget" name="boxXMinusLimit" native="true">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>180</y>
+      <width>191</width>
+      <height>56</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QWidget #boxXMinusLimit{
+    border-style: solid;
+    border-color: rgb(10, 10, 10);
+    border-width: 1px;
+    border-radius: 8px;
+    color: rgb(10, 10, 10);
 }</string>
-     </property>
-     <property name="text">
-      <string>Limit Z+</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-    <widget class="Line" name="zLine_8">
+    </property>
+    <widget class="QPushButton" name="teachZPlus_5">
      <property name="geometry">
       <rect>
-       <x>0</x>
-       <y>20</y>
-       <width>191</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Plain</enum>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-    <widget class="Line" name="zLine_9">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>75</y>
-       <width>191</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Plain</enum>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="enableLimitZPlus">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>90</y>
-       <width>151</width>
+       <x>115</x>
+       <y>10</y>
+       <width>66</width>
        <height>36</height>
       </rect>
      </property>
@@ -1145,129 +1273,488 @@ Datum</string>
       <string notr="true"/>
      </property>
      <property name="text">
-      <string>Enable Limit</string>
+      <string>TeachIn</string>
+     </property>
+    </widget>
+    <widget class="TeachInDroLabel" name="droLabelZPlus_5">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>96</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Noto Sans Mono</family>
+       <pointsize>12</pointsize>
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(154, 153, 150);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+     </property>
+     <property name="text">
+      <string>1000.234</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>1</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>0</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>0</number>
      </property>
     </widget>
    </widget>
-   <widget class="Line" name="zLine">
+   <widget class="QWidget" name="boxTailstockLimit" native="true">
     <property name="geometry">
      <rect>
-      <x>205</x>
-      <y>280</y>
-      <width>806</width>
-      <height>20</height>
+      <x>1015</x>
+      <y>45</y>
+      <width>191</width>
+      <height>56</height>
      </rect>
     </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
+    <property name="styleSheet">
+     <string notr="true">QWidget #boxTailstockLimit{
+    border-style: solid;
+    border-color: rgb(10, 10, 10);
+    border-width: 1px;
+    border-radius: 8px;
+    color: rgb(10, 10, 10);
+}</string>
     </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
+    <widget class="QPushButton" name="teachZPlus_3">
+     <property name="geometry">
+      <rect>
+       <x>115</x>
+       <y>10</y>
+       <width>66</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Cantarell Light</family>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>TeachIn</string>
+     </property>
+    </widget>
+    <widget class="TeachInDroLabel" name="droLabelZPlus_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>96</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Noto Sans Mono</family>
+       <pointsize>12</pointsize>
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(154, 153, 150);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+     </property>
+     <property name="text">
+      <string>1000.234</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>1</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>0</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>0</number>
+     </property>
+    </widget>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="label_16">
     <property name="geometry">
      <rect>
-      <x>530</x>
-      <y>270</y>
-      <width>126</width>
+      <x>385</x>
+      <y>440</y>
+      <width>111</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+	font: 75 14pt &quot;Noto Mono&quot;;
+}</string>
+    </property>
+    <property name="text">
+     <string>Limit X+</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="enableLimitZMinus">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>360</y>
+      <width>120</width>
       <height>36</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Cantarell Light</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string>Enable Limit</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>270</y>
+      <width>111</width>
+      <height>19</height>
+     </rect>
+    </property>
     <property name="styleSheet">
      <string notr="true">QLabel {
-	font: 75 12pt &quot;DejaVu Sans&quot;;
-    border-style: solid;
-    border-color: rgb(10, 10, 10);
-    border-width: 1px;
-    border-radius: 2px;
-    color: rgb(10, 10, 10);;
-    background: rgb(230, 230, 230);
+	font: 75 14pt &quot;Noto Mono&quot;;
 }</string>
     </property>
     <property name="text">
-     <string>Tool Limits</string>
+     <string>Limit Z-</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_6">
+   <widget class="QPushButton" name="enableLimitZPlus">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>50</y>
-      <width>131</width>
-      <height>41</height>
+      <x>1050</x>
+      <y>360</y>
+      <width>120</width>
+      <height>36</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Cantarell Light</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string>Enable Limit</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_13">
+    <property name="geometry">
+     <rect>
+      <x>1060</x>
+      <y>270</y>
+      <width>111</width>
+      <height>19</height>
      </rect>
     </property>
     <property name="styleSheet">
      <string notr="true">QLabel {
-	font: 75 12pt &quot;DejaVu Sans&quot;;
-    border-style: solid;
-    border-color: rgb(10, 10, 10);
-    border-width: 1px;
-    border-radius: 2px;
-    color: rgb(10, 10, 10);;
-    background: rgb(230, 230, 230);
+	font: 75 14pt &quot;Noto Mono&quot;;
 }</string>
     </property>
     <property name="text">
-     <string>Machine Limits</string>
+     <string>Limit Z+</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="Line" name="zLine_2">
+   <widget class="QPushButton" name="enableLimitZPlus_3">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>60</y>
-      <width>236</width>
-      <height>20</height>
+      <x>1035</x>
+      <y>110</y>
+      <width>151</width>
+      <height>36</height>
      </rect>
     </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
+    <property name="font">
+     <font>
+      <family>Cantarell Light</family>
+      <pointsize>12</pointsize>
+     </font>
     </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string>Enable Limit</string>
     </property>
    </widget>
-   <widget class="Line" name="xLine">
+   <widget class="QLabel" name="label_15">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>220</y>
-      <width>46</width>
-      <height>141</height>
+      <x>1010</x>
+      <y>20</y>
+      <width>191</width>
+      <height>19</height>
      </rect>
     </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+	font: 75 14pt &quot;Noto Mono&quot;;
+}</string>
     </property>
-    <property name="orientation">
-     <enum>Qt::Vertical</enum>
+    <property name="text">
+     <string>Tailstock Limit</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="Line" name="zLine_3">
+   <widget class="QPushButton" name="enableLimitZPlus_4">
     <property name="geometry">
      <rect>
-      <x>0</x>
+      <x>700</x>
+      <y>430</y>
+      <width>120</width>
+      <height>36</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Cantarell Light</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string>Enable Limit</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_17">
+    <property name="geometry">
+     <rect>
+      <x>385</x>
+      <y>200</y>
+      <width>111</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+	font: 75 14pt &quot;Noto Mono&quot;;
+}</string>
+    </property>
+    <property name="text">
+     <string>Limit X-</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="enableLimitZPlus_5">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>190</y>
+      <width>120</width>
+      <height>36</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Cantarell Light</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
+    </property>
+    <property name="text">
+     <string>Enable Limit</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_18">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>15</y>
+      <width>156</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+	font: 75 14pt &quot;Noto Mono&quot;;
+}</string>
+    </property>
+    <property name="text">
+     <string>Chuck Limit</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QWidget" name="boxChuckLimit" native="true">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>40</y>
+      <width>126</width>
+      <height>56</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QWidget #boxChuckLimit{
+    border-style: solid;
+    border-color: rgb(10, 10, 10);
+    border-width: 1px;
+    border-radius: 8px;
+    color: rgb(10, 10, 10);
+}</string>
+    </property>
+    <widget class="TeachInDroLabel" name="droLabelZPlus_6">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>106</width>
+       <height>36</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Noto Sans Mono</family>
+       <pointsize>12</pointsize>
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(154, 153, 150);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+     </property>
+     <property name="text">
+      <string>1000.234</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="referenceType" stdset="0">
+      <number>1</number>
+     </property>
+     <property name="axisNumber" stdset="0">
+      <number>0</number>
+     </property>
+     <property name="inchFormat" stdset="0">
+      <string>%9.4f</string>
+     </property>
+     <property name="millimeterFormat" stdset="0">
+      <string>%10.3f</string>
+     </property>
+     <property name="degreeFormat" stdset="0">
+      <string>%10.2f</string>
+     </property>
+     <property name="latheMode" stdset="0">
+      <number>0</number>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="changeChuck">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
       <y>105</y>
-      <width>871</width>
-      <height>16</height>
+      <width>121</width>
+      <height>36</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Cantarell Light</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(154, 153, 150);</string>
+     <string notr="true"/>
     </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
+    <property name="text">
+     <string>Change Chuck</string>
     </property>
    </widget>
    <zorder>boxZMinusLimit</zorder>
@@ -1278,6 +1765,22 @@ Datum</string>
    <zorder>xLine</zorder>
    <zorder>zLine_3</zorder>
    <zorder>label</zorder>
+   <zorder>boxXPlusLimit</zorder>
+   <zorder>boxXMinusLimit</zorder>
+   <zorder>boxTailstockLimit</zorder>
+   <zorder>label_16</zorder>
+   <zorder>enableLimitZMinus</zorder>
+   <zorder>label_11</zorder>
+   <zorder>enableLimitZPlus</zorder>
+   <zorder>label_13</zorder>
+   <zorder>enableLimitZPlus_3</zorder>
+   <zorder>label_15</zorder>
+   <zorder>enableLimitZPlus_4</zorder>
+   <zorder>label_17</zorder>
+   <zorder>enableLimitZPlus_5</zorder>
+   <zorder>label_18</zorder>
+   <zorder>boxChuckLimit</zorder>
+   <zorder>changeChuck</zorder>
   </widget>
   <widget class="DROLabel" name="drolabel">
    <property name="geometry">
@@ -1401,7 +1904,7 @@ Datum</string>
     <string notr="true">font: 18pt &quot;Cantarell&quot;;</string>
    </property>
    <property name="text">
-    <string>Work Coordinates #1</string>
+    <string>Tool Coordinates #1</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -1445,346 +1948,6 @@ Datum</string>
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QWidget" name="boxZPlusLimit_2" native="true">
-   <property name="geometry">
-    <rect>
-     <x>1260</x>
-     <y>320</y>
-     <width>191</width>
-     <height>136</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QWidget #boxZPlusLimit{
-    border-style: solid;
-    border-color: rgb(10, 10, 10);
-    border-width: 1px;
-    border-radius: 8px;
-    color: rgb(10, 10, 10);
-}</string>
-   </property>
-   <widget class="QPushButton" name="teachZPlus_3">
-    <property name="geometry">
-     <rect>
-      <x>115</x>
-      <y>40</y>
-      <width>66</width>
-      <height>36</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Cantarell Light</family>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true"/>
-    </property>
-    <property name="text">
-     <string>TeachIn</string>
-    </property>
-   </widget>
-   <widget class="TeachInDroLabel" name="droLabelZPlus_3">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>40</y>
-      <width>96</width>
-      <height>36</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Noto Sans Mono</family>
-      <pointsize>12</pointsize>
-      <weight>50</weight>
-      <italic>false</italic>
-      <bold>false</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QLabel {
-		border-style: solid;
-        border-color: rgb(119, 118, 123);
-        border-width: 1px;
-        border-radius: 5px;
-        color: rgb(154, 153, 150);
-        background: rgb(246, 245, 244);
-        font: 12pt &quot;Noto Sans Mono&quot;;
-}</string>
-    </property>
-    <property name="text">
-     <string>1000.234</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="referenceType" stdset="0">
-     <number>1</number>
-    </property>
-    <property name="axisNumber" stdset="0">
-     <number>0</number>
-    </property>
-    <property name="inchFormat" stdset="0">
-     <string>%9.4f</string>
-    </property>
-    <property name="millimeterFormat" stdset="0">
-     <string>%10.3f</string>
-    </property>
-    <property name="degreeFormat" stdset="0">
-     <string>%10.2f</string>
-    </property>
-    <property name="latheMode" stdset="0">
-     <number>0</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_15">
-    <property name="geometry">
-     <rect>
-      <x>45</x>
-      <y>5</y>
-      <width>111</width>
-      <height>19</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QLabel {
-	font: 75 14pt &quot;Noto Mono&quot;;
-}</string>
-    </property>
-    <property name="text">
-     <string>Limit Z+</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="Line" name="zLine_12">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>20</y>
-      <width>191</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="Line" name="zLine_13">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>75</y>
-      <width>191</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="enableLimitZPlus_3">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>90</y>
-      <width>151</width>
-      <height>36</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Cantarell Light</family>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true"/>
-    </property>
-    <property name="text">
-     <string>Enable Limit</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QWidget" name="boxZPlusLimit_3" native="true">
-   <property name="geometry">
-    <rect>
-     <x>1280</x>
-     <y>515</y>
-     <width>191</width>
-     <height>136</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QWidget #boxZPlusLimit{
-    border-style: solid;
-    border-color: rgb(10, 10, 10);
-    border-width: 1px;
-    border-radius: 8px;
-    color: rgb(10, 10, 10);
-}</string>
-   </property>
-   <widget class="QPushButton" name="teachZPlus_4">
-    <property name="geometry">
-     <rect>
-      <x>115</x>
-      <y>40</y>
-      <width>66</width>
-      <height>36</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Cantarell Light</family>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true"/>
-    </property>
-    <property name="text">
-     <string>TeachIn</string>
-    </property>
-   </widget>
-   <widget class="TeachInDroLabel" name="droLabelZPlus_4">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>40</y>
-      <width>96</width>
-      <height>36</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Noto Sans Mono</family>
-      <pointsize>12</pointsize>
-      <weight>50</weight>
-      <italic>false</italic>
-      <bold>false</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QLabel {
-		border-style: solid;
-        border-color: rgb(119, 118, 123);
-        border-width: 1px;
-        border-radius: 5px;
-        color: rgb(154, 153, 150);
-        background: rgb(246, 245, 244);
-        font: 12pt &quot;Noto Sans Mono&quot;;
-}</string>
-    </property>
-    <property name="text">
-     <string>1000.234</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="referenceType" stdset="0">
-     <number>1</number>
-    </property>
-    <property name="axisNumber" stdset="0">
-     <number>0</number>
-    </property>
-    <property name="inchFormat" stdset="0">
-     <string>%9.4f</string>
-    </property>
-    <property name="millimeterFormat" stdset="0">
-     <string>%10.3f</string>
-    </property>
-    <property name="degreeFormat" stdset="0">
-     <string>%10.2f</string>
-    </property>
-    <property name="latheMode" stdset="0">
-     <number>0</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_16">
-    <property name="geometry">
-     <rect>
-      <x>45</x>
-      <y>5</y>
-      <width>111</width>
-      <height>19</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QLabel {
-	font: 75 14pt &quot;Noto Mono&quot;;
-}</string>
-    </property>
-    <property name="text">
-     <string>Limit Z+</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="Line" name="zLine_14">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>20</y>
-      <width>191</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="Line" name="zLine_15">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>75</y>
-      <width>191</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Plain</enum>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="enableLimitZPlus_4">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>90</y>
-      <width>151</width>
-      <height>36</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Cantarell Light</family>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true"/>
-    </property>
-    <property name="text">
-     <string>Enable Limit</string>
-    </property>
-   </widget>
-  </widget>
   <zorder>groupBox</zorder>
   <zorder>zLabel</zorder>
   <zorder>xLabel</zorder>
@@ -1815,8 +1978,6 @@ Datum</string>
   <zorder>label_8</zorder>
   <zorder>label_9</zorder>
   <zorder>label_10</zorder>
-  <zorder>boxZPlusLimit_2</zorder>
-  <zorder>boxZPlusLimit_3</zorder>
  </widget>
  <customwidgets>
   <customwidget>

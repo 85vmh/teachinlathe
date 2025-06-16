@@ -559,7 +559,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>725</y>
+               <y>810</y>
                <width>631</width>
                <height>81</height>
               </rect>
@@ -1040,8 +1040,8 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <widget class="QFrame" name="feedFrame">
              <property name="geometry">
               <rect>
-               <x>5</x>
-               <y>815</y>
+               <x>1255</x>
+               <y>900</y>
                <width>631</width>
                <height>71</height>
               </rect>
@@ -1298,7 +1298,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <rect>
                <x>650</x>
                <y>895</y>
-               <width>631</width>
+               <width>591</width>
                <height>76</height>
               </rect>
              </property>
@@ -1366,7 +1366,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <rect>
                 <x>180</x>
                 <y>10</y>
-                <width>441</width>
+                <width>401</width>
                 <height>51</height>
                </rect>
               </property>
@@ -1697,8 +1697,8 @@ QCheckBox:disabled {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1526</width>
-               <height>701</height>
+               <width>1500</width>
+               <height>750</height>
               </rect>
              </property>
             </widget>
