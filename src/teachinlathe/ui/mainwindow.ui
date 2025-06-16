@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1920</width>
+    <width>1922</width>
     <height>1045</height>
    </rect>
   </property>
@@ -559,7 +559,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>610</y>
+               <y>725</y>
                <width>631</width>
                <height>81</height>
               </rect>
@@ -1041,7 +1041,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>700</y>
+               <y>815</y>
                <width>631</width>
                <height>71</height>
               </rect>
@@ -1685,7 +1685,7 @@ QCheckBox:disabled {
             <widget class="QuickCycles" name="quickcycles">
              <property name="geometry">
               <rect>
-               <x>1125</x>
+               <x>1535</x>
                <y>5</y>
                <width>371</width>
                <height>461</height>
@@ -1697,8 +1697,8 @@ QCheckBox:disabled {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1081</width>
-               <height>571</height>
+               <width>1526</width>
+               <height>701</height>
               </rect>
              </property>
             </widget>
