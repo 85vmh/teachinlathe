@@ -386,46 +386,64 @@ class TeachInLatheDro(QWidget):
             z_plus_pin_written = False
             tailstock_pin_written = False
 
-            if x_abs > self.currentMachineLimits.x_min_limit and self.xMinusLimitStatus in (LimitStatus.PENDING,LimitStatus.REACHED):
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = self.currentMachineLimits.x_min_limit
+            x_min_limit = self.currentMachineLimits.x_min_limit
+            x_max_limit = self.currentMachineLimits.x_max_limit
+            z_min_limit = self.currentMachineLimits.z_min_limit
+            z_max_limit = self.currentMachineLimits.z_max_limit
+
+            # --- X MINUS ---
+            if x_abs > x_min_limit and self.xMinusLimitStatus in (LimitStatus.PENDING, LimitStatus.REACHED):
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = x_min_limit
                 x_minus_pin_written = True
                 self.xMinusLimitStatus = LimitStatus.ENABLED
-            elif round(x_abs, 3) == round(self.currentMachineLimits.x_min_limit, 3):
+            elif round(x_abs, 2) == round(x_min_limit, 2):
                 self.xMinusLimitStatus = LimitStatus.REACHED
             elif self.xMinusLimitStatus == LimitStatus.DISABLED:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = self.currentMachineLimits.x_min_limit
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = x_min_limit
                 x_minus_pin_written = True
 
-            if x_abs <= self.currentMachineLimits.x_max_limit and self.xPlusLimitStatus == LimitStatus.PENDING:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = self.currentMachineLimits.x_max_limit
+            # --- X PLUS ---
+            if x_abs < x_max_limit and self.xPlusLimitStatus in (LimitStatus.PENDING, LimitStatus.REACHED):
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = x_max_limit
                 x_plus_pin_written = True
                 self.xPlusLimitStatus = LimitStatus.ENABLED
+            elif round(x_abs, 2) == round(x_max_limit, 2):
+                self.xPlusLimitStatus = LimitStatus.REACHED
             elif self.xPlusLimitStatus == LimitStatus.DISABLED:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = self.currentMachineLimits.x_max_limit
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = x_max_limit
                 x_plus_pin_written = True
 
-            if z_abs >= self.currentMachineLimits.z_min_limit and self.zMinusLimitStatus == LimitStatus.PENDING:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = self.currentMachineLimits.z_min_limit
+            # --- Z MINUS ---
+            if z_abs > z_min_limit and self.zMinusLimitStatus in (LimitStatus.PENDING, LimitStatus.REACHED):
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
                 z_minus_pin_written = True
                 self.zMinusLimitStatus = LimitStatus.ENABLED
+            elif round(z_abs, 2) == round(z_min_limit, 2):
+                self.zMinusLimitStatus = LimitStatus.REACHED
             elif self.zMinusLimitStatus == LimitStatus.DISABLED:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = self.currentMachineLimits.z_min_limit
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
                 z_minus_pin_written = True
 
-            if z_abs <= self.currentMachineLimits.z_max_limit and self.zPlusLimitStatus == LimitStatus.PENDING:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
+            # --- Z PLUS ---
+            if z_abs < z_max_limit and self.zPlusLimitStatus in (LimitStatus.PENDING, LimitStatus.REACHED):
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
                 z_plus_pin_written = True
                 self.zPlusLimitStatus = LimitStatus.ENABLED
+            elif round(z_abs, 2) == round(z_max_limit, 2):
+                self.zPlusLimitStatus = LimitStatus.REACHED
             elif self.zPlusLimitStatus == LimitStatus.DISABLED:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
                 z_plus_pin_written = True
 
-            if z_abs <= self.currentMachineLimits.z_max_limit and self.tailstockLimitStatus == LimitStatus.PENDING:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
+            # --- TAILSTOCK Z MAX LIMIT ---
+            if z_abs < z_max_limit and self.tailstockLimitStatus in (LimitStatus.PENDING, LimitStatus.REACHED):
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
                 tailstock_pin_written = True
                 self.tailstockLimitStatus = LimitStatus.ENABLED
+            elif round(z_abs, 2) == round(z_max_limit, 2):
+                self.tailstockLimitStatus = LimitStatus.REACHED
             elif self.tailstockLimitStatus == LimitStatus.DISABLED:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
                 tailstock_pin_written = True
 
             self.setStyleForLimitStatus(self.boxXMinusLimit, self.labelXMinusLimit, self.xMinusToggle, self.xMinusLimitStatus)
