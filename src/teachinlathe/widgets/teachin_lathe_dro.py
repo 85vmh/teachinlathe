@@ -248,7 +248,6 @@ class TeachInLatheDro(QWidget):
             case LimitStatus.REACHED:
                 self.set_box_border_color(box, ON_LIMIT_COLOR, 3)
                 self.set_label_color(title_label, ON_LIMIT_COLOR)
-                toggle_button.setText("Disable Limit")
 
     def xMinusLimitToggle(self):
         match self.xMinusLimitStatus:
@@ -390,13 +389,14 @@ class TeachInLatheDro(QWidget):
             x_max_limit = self.currentMachineLimits.x_max_limit
             z_min_limit = self.currentMachineLimits.z_min_limit
             z_max_limit = self.currentMachineLimits.z_max_limit
+            limit_reached_tolerance = 0.01
 
             # --- X MINUS ---
             if x_abs > x_min_limit and self.xMinusLimitStatus in (LimitStatus.PENDING, LimitStatus.REACHED):
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = x_min_limit
                 x_minus_pin_written = True
                 self.xMinusLimitStatus = LimitStatus.ENABLED
-            elif round(x_abs, 2) == round(x_min_limit, 2):
+            elif abs(x_abs - x_min_limit) < limit_reached_tolerance:
                 self.xMinusLimitStatus = LimitStatus.REACHED
             elif self.xMinusLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = x_min_limit
@@ -407,7 +407,7 @@ class TeachInLatheDro(QWidget):
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = x_max_limit
                 x_plus_pin_written = True
                 self.xPlusLimitStatus = LimitStatus.ENABLED
-            elif round(x_abs, 2) == round(x_max_limit, 2):
+            elif abs(x_abs - x_max_limit) < limit_reached_tolerance:
                 self.xPlusLimitStatus = LimitStatus.REACHED
             elif self.xPlusLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = x_max_limit
@@ -418,7 +418,7 @@ class TeachInLatheDro(QWidget):
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
                 z_minus_pin_written = True
                 self.zMinusLimitStatus = LimitStatus.ENABLED
-            elif round(z_abs, 2) == round(z_min_limit, 2):
+            elif abs(z_abs - z_min_limit) < limit_reached_tolerance:
                 self.zMinusLimitStatus = LimitStatus.REACHED
             elif self.zMinusLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
@@ -429,7 +429,7 @@ class TeachInLatheDro(QWidget):
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
                 z_plus_pin_written = True
                 self.zPlusLimitStatus = LimitStatus.ENABLED
-            elif round(z_abs, 2) == round(z_max_limit, 2):
+            elif abs(z_abs - z_max_limit) < limit_reached_tolerance:
                 self.zPlusLimitStatus = LimitStatus.REACHED
             elif self.zPlusLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
@@ -440,7 +440,7 @@ class TeachInLatheDro(QWidget):
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
                 tailstock_pin_written = True
                 self.tailstockLimitStatus = LimitStatus.ENABLED
-            elif round(z_abs, 2) == round(z_max_limit, 2):
+            elif abs(z_abs - z_max_limit) < limit_reached_tolerance:
                 self.tailstockLimitStatus = LimitStatus.REACHED
             elif self.tailstockLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
