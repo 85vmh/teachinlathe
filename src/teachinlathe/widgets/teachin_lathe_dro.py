@@ -396,7 +396,7 @@ class TeachInLatheDro(QWidget):
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = x_min_limit
                 x_minus_pin_written = True
                 self.xMinusLimitStatus = LimitStatus.ENABLED
-            elif self.xMinusLimitStatus not in (LimitStatus.DISABLED, LimitStatus.PENDING) and abs(x_abs - x_min_limit) < limit_reached_tolerance:
+            elif abs(x_abs - x_min_limit) < limit_reached_tolerance:
                 self.xMinusLimitStatus = LimitStatus.REACHED
             elif self.xMinusLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = x_min_limit
@@ -414,21 +414,18 @@ class TeachInLatheDro(QWidget):
                 x_plus_pin_written = True
 
             # --- Z MINUS ---
-            if self.zMinusLimitStatus in (LimitStatus.PENDING, LimitStatus.ENABLED):
-                if abs(z_abs - z_min_limit) < limit_reached_tolerance:
-                    self.zMinusLimitStatus = LimitStatus.REACHED
-                elif z_abs > z_min_limit:
-                    self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
-                    z_minus_pin_written = True
-                    self.zMinusLimitStatus = LimitStatus.ENABLED
-
-            elif self.zMinusLimitStatus == LimitStatus.REACHED:
-                if abs(z_abs - z_min_limit) >= limit_reached_tolerance and z_abs > z_min_limit:
-                    self.zMinusLimitStatus = LimitStatus.ENABLED
-
+            if z_abs >= z_min_limit and self.zMinusLimitStatus == LimitStatus.PENDING:
+                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
+                z_minus_pin_written = True
+                self.zMinusLimitStatus = LimitStatus.ENABLED
             elif self.zMinusLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
                 z_minus_pin_written = True
+            elif self.zMinusLimitStatus in (LimitStatus.ENABLED, LimitStatus.REACHED):
+                if abs(z_abs - z_min_limit) < limit_reached_tolerance:
+                    self.zMinusLimitStatus = LimitStatus.REACHED
+                else:
+                    self.zMinusLimitStatus = LimitStatus.ENABLED
 
             # --- Z PLUS ---
             if z_abs < z_max_limit and self.zPlusLimitStatus in (LimitStatus.PENDING, LimitStatus.REACHED):
