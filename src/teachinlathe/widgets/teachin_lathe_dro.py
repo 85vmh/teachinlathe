@@ -414,12 +414,18 @@ class TeachInLatheDro(QWidget):
                 x_plus_pin_written = True
 
             # --- Z MINUS ---
-            if z_abs > z_min_limit and self.zMinusLimitStatus == LimitStatus.PENDING:
-                self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
-                z_minus_pin_written = True
-                self.zMinusLimitStatus = LimitStatus.ENABLED
-            elif self.zMinusLimitStatus not in (LimitStatus.DISABLED, LimitStatus.PENDING) and abs(z_abs - z_min_limit) < limit_reached_tolerance:
-                self.zMinusLimitStatus = LimitStatus.REACHED
+            if self.zMinusLimitStatus in (LimitStatus.PENDING, LimitStatus.ENABLED):
+                if abs(z_abs - z_min_limit) < limit_reached_tolerance:
+                    self.zMinusLimitStatus = LimitStatus.REACHED
+                elif z_abs > z_min_limit:
+                    self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
+                    z_minus_pin_written = True
+                    self.zMinusLimitStatus = LimitStatus.ENABLED
+
+            elif self.zMinusLimitStatus == LimitStatus.REACHED:
+                if abs(z_abs - z_min_limit) >= limit_reached_tolerance and z_abs > z_min_limit:
+                    self.zMinusLimitStatus = LimitStatus.ENABLED
+
             elif self.zMinusLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
                 z_minus_pin_written = True
