@@ -448,11 +448,6 @@ class TeachInLatheDro(QWidget):
                 else:
                     self.zPlusLimitStatus = LimitStatus.ENABLED
 
-            if abs(z_abs - z_min_limit) < limit_reached_tolerance:
-                self.chuckLimitStatus = LimitStatus.REACHED
-            else:
-                self.chuckLimitStatus = LimitStatus.ENABLED
-
             # --- TAILSTOCK Z MAX LIMIT ---
             if z_abs <= z_max_limit and self.tailstockLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
@@ -471,7 +466,7 @@ class TeachInLatheDro(QWidget):
             self.setStyleForLimitStatus(self.boxXPlusLimit, self.labelXPlusLimit, self.xPlusToggle, self.xPlusLimitStatus)
             self.setStyleForLimitStatus(self.boxZMinusLimit, self.labelZMinusLimit, self.zMinusToggle, self.zMinusLimitStatus)
             self.setStyleForLimitStatus(self.boxZPlusLimit, self.labelZPlusLimit, self.zPlusToggle, self.zPlusLimitStatus)
-            self.setStyleForLimitStatus(self.boxChuckLimit, self.labelChuckLimit, self.changeChuck, self.chuckLimitStatus)
+            # self.setStyleForLimitStatus(self.boxChuckLimit, self.labelChuckLimit, self.changeChuck, self.chuckLimitStatus)
             self.setStyleForLimitStatus(self.boxTailstockLimit, self.labelTailstockLimit, self.tailstockToggle, self.tailstockLimitStatus)
 
             if x_minus_pin_written and x_plus_pin_written and z_minus_pin_written and z_plus_pin_written and tailstock_pin_written:
