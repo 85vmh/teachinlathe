@@ -404,17 +404,23 @@ class TeachInLatheDro(QWidget):
                 z_minus_pin_written = True
 
             if z_abs <= self.currentMachineLimits.z_max_limit:
+                print("z_abs <= currentMachineLimits.z_max_limit: ", z_abs, self.currentMachineLimits.z_max_limit)
                 if self.zPlusLimitStatus == LimitStatus.PENDING:
+                    print("zPlusLimitStatus is PENDING")
                     self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
                     z_plus_pin_written = True
                     self.zPlusLimitStatus = LimitStatus.ENABLED
                 if self.tailstockLimitStatus == LimitStatus.PENDING:
+                    print("tailstockLimitStatus is PENDING")
                     self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
                     z_plus_pin_written = True
                     self.tailstockLimitStatus = LimitStatus.ENABLED
             elif self.zPlusLimitStatus == LimitStatus.DISABLED or self.tailstockLimitStatus == LimitStatus.DISABLED:
+                print("zPlusLimitStatus or tailstockLimitStatus is DISABLED")
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = self.currentMachineLimits.z_max_limit
                 z_plus_pin_written = True
+            else:
+                print("no changes needed ", z_abs, self.currentMachineLimits.z_max_limit)
 
             self.setStyleForLimitStatus(self.boxXMinusLimit, self.labelXMinusLimit, self.xMinusToggle, self.xMinusLimitStatus)
             self.setStyleForLimitStatus(self.boxXPlusLimit, self.labelXPlusLimit, self.xPlusToggle, self.xPlusLimitStatus)
