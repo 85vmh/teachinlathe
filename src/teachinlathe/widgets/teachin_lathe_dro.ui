@@ -1008,7 +1008,7 @@ Datum</string>
       <string>TeachIn</string>
      </property>
     </widget>
-    <widget class="TeachInDroLabel" name="droTailstock">
+    <widget class="TeachInDroLabel" name="droLabelTailstock">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -1063,7 +1063,7 @@ Datum</string>
      </property>
     </widget>
    </widget>
-   <widget class="QLabel" name="label_16">
+   <widget class="QLabel" name="labelXPlusLimit">
     <property name="geometry">
      <rect>
       <x>460</x>
@@ -1084,7 +1084,10 @@ Datum</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="enableZMinus">
+   <widget class="QPushButton" name="zMinusToggle">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>205</x>
@@ -1105,8 +1108,11 @@ Datum</string>
     <property name="text">
      <string>Enable Limit</string>
     </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
    </widget>
-   <widget class="QLabel" name="label_11">
+   <widget class="QLabel" name="labelZMinusLimit">
     <property name="geometry">
      <rect>
       <x>210</x>
@@ -1127,7 +1133,10 @@ Datum</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="enableZPlus">
+   <widget class="QPushButton" name="zPlusToggle">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>940</x>
@@ -1148,8 +1157,11 @@ Datum</string>
     <property name="text">
      <string>Enable Limit</string>
     </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
    </widget>
-   <widget class="QLabel" name="label_13">
+   <widget class="QLabel" name="labelZPlusLimit">
     <property name="geometry">
      <rect>
       <x>945</x>
@@ -1170,7 +1182,10 @@ Datum</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="enableTailstock">
+   <widget class="QPushButton" name="tailstockToggle">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>1135</x>
@@ -1191,8 +1206,17 @@ Datum</string>
     <property name="text">
      <string>Enable Limit</string>
     </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
+    </property>
+    <property name="default">
+     <bool>false</bool>
+    </property>
    </widget>
-   <widget class="QLabel" name="label_15">
+   <widget class="QLabel" name="labelTailstockLimit">
     <property name="geometry">
      <rect>
       <x>1095</x>
@@ -1213,7 +1237,10 @@ Datum</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="enableXPlus">
+   <widget class="QPushButton" name="xPlusToggle">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>755</x>
@@ -1234,8 +1261,11 @@ Datum</string>
     <property name="text">
      <string>Enable Limit</string>
     </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
    </widget>
-   <widget class="QLabel" name="label_17">
+   <widget class="QLabel" name="labelXMinusLimit">
     <property name="geometry">
      <rect>
       <x>460</x>
@@ -1256,7 +1286,10 @@ Datum</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="enableXMinus">
+   <widget class="QPushButton" name="xMinusToggle">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>755</x>
@@ -1276,6 +1309,9 @@ Datum</string>
     </property>
     <property name="text">
      <string>Enable Limit</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QLabel" name="label_18">
@@ -1317,7 +1353,7 @@ Datum</string>
     color: rgb(10, 10, 10);
 }</string>
     </property>
-    <widget class="TeachInDroLabel" name="droLabelZPlus_6">
+    <widget class="TeachInDroLabel" name="droChuckLimit">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -1403,16 +1439,16 @@ Datum</string>
    <zorder>boxXPlusLimit</zorder>
    <zorder>boxXMinusLimit</zorder>
    <zorder>boxTailstockLimit</zorder>
-   <zorder>label_16</zorder>
-   <zorder>enableZMinus</zorder>
-   <zorder>label_11</zorder>
-   <zorder>enableZPlus</zorder>
-   <zorder>label_13</zorder>
-   <zorder>enableTailstock</zorder>
-   <zorder>label_15</zorder>
-   <zorder>enableXPlus</zorder>
-   <zorder>label_17</zorder>
-   <zorder>enableXMinus</zorder>
+   <zorder>labelXPlusLimit</zorder>
+   <zorder>zMinusToggle</zorder>
+   <zorder>labelZMinusLimit</zorder>
+   <zorder>zPlusToggle</zorder>
+   <zorder>labelZPlusLimit</zorder>
+   <zorder>tailstockToggle</zorder>
+   <zorder>labelTailstockLimit</zorder>
+   <zorder>xPlusToggle</zorder>
+   <zorder>labelXMinusLimit</zorder>
+   <zorder>xMinusToggle</zorder>
    <zorder>label_18</zorder>
    <zorder>boxChuckLimit</zorder>
    <zorder>changeChuck</zorder>
@@ -1659,7 +1695,7 @@ Datum</string>
   <connection>
    <sender>teachTailstock</sender>
    <signal>clicked()</signal>
-   <receiver>droTailstock</receiver>
+   <receiver>droLabelTailstock</receiver>
    <slot>fillWithCurrentValue()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -1701,6 +1737,86 @@ Datum</string>
     <hint type="destinationlabel">
      <x>617</x>
      <y>657</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zMinusToggle</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>teachZMinus</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>269</x>
+     <y>577</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>322</x>
+     <y>522</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>zPlusToggle</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>teachZPlus</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1004</x>
+     <y>577</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1052</x>
+     <y>522</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>xPlusToggle</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>teachXPlus</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>819</x>
+     <y>657</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>707</x>
+     <y>657</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>xMinusToggle</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>teachXMinus</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>819</x>
+     <y>397</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>707</x>
+     <y>397</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tailstockToggle</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>teachTailstock</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1199</x>
+     <y>347</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1252</x>
+     <y>292</y>
     </hint>
    </hints>
   </connection>

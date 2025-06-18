@@ -325,6 +325,21 @@ settings:
   smart_numpad.z-offset:
     description: distance to Z0 with T2.
 
+  smart_numpad.z-minus-limit:
+    description: tool limit on Z-
+
+  smart_numpad.z-plus-limit:
+    description: tool limit on Z+
+
+  smart_numpad.x-minus-limit:
+    description: tool limit on X-
+
+  smart_numpad.x-plus-limit:
+    description: tool limit on X+
+
+  smart_numpad.tailstock-limit:
+    description: tailstock limit.
+
   virtual_limits.z-minus:
     default_value: 0.0
     persistent: true
