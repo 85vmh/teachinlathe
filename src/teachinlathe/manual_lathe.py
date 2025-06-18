@@ -153,12 +153,15 @@ class ManualLathe:
         self.spindleMode = SpindleMode(value)
 
     def onInputRpmChanged(self, value=spindleRpm):
+        print("onInputRpmChanged: ", value)
         self.spindleRpm = value
 
     def onInputCssChanged(self, value=spindleCss):
+        print("onInputCssChanged: ", value)
         self.spindleCss = value
 
     def onMaxSpindleRpmChanged(self, value=maxSpindleRpm):
+        print("onMaxSpindleRpmChanged: ", value)
         self.maxSpindleRpm = value
 
     def onStopAtActiveChanged(self, value=stopAtActive):
@@ -168,6 +171,7 @@ class ManualLathe:
         self.stopAtAngle = value
 
     def onInputFeedChanged(self, value=feedPerRev):
+        print("onInputFeedChanged: ", value)
         self.feedPerRev = value
 
     def onTaperTurningChanged(self, value=False):

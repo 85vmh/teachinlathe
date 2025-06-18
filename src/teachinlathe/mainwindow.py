@@ -5,6 +5,7 @@ from enum import Enum
 
 import linuxcnc
 from PyQt5.QtCore import QTimer
+from PyQt5.uic.properties import QtCore
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.actions.program_actions import load as loadProgram
 from qtpyvcp.plugins import getPlugin
@@ -50,7 +51,7 @@ class MyMainWindow(VCPMainWindow):
     """Main window class for the VCP."""
 
     def getSpindleModeIndex(self):
-        return 0 if self.radioRpm.isChecked() else 1
+        return 0 if self.tabSpindleMode.currentIndex() else 1
 
     def __init__(self, *args, **kwargs):
         super(MyMainWindow, self).__init__(*args, **kwargs)
@@ -110,24 +111,18 @@ class MyMainWindow(VCPMainWindow):
         self.xMpgCheckbox.stateChanged.connect(self.toggleXMpgEnable)
         self.zMpgCheckbox.stateChanged.connect(self.toggleZMpgEnable)
 
-        # connect the signals
-        self.radioRpm.toggled.connect(self.onRadioButtonToggled)
-        self.radioCss.toggled.connect(self.onRadioButtonToggled)
+        self.inputFeed.settingName = 'smart_numpad.input-feed'
+        self.inputFeed.initialize()
 
-        self.inputRpm.textChanged.connect(self.manualLathe.onInputRpmChanged)
-        self.inputCss.textChanged.connect(self.manualLathe.onInputCssChanged)
-        self.inputMaxRpm.textChanged.connect(self.manualLathe.onMaxSpindleRpmChanged)
-        self.inputFeed.textChanged.connect(self.manualLathe.onInputFeedChanged)
-        self.inputFeedAngle.textChanged.connect(self.manualLathe.onFeedAngleChanged)
+        self.inputCss.settingName = 'smart_numpad.input-css'
+        self.inputCss.initialize()
+
         self.checkBoxFeedAngle.stateChanged.connect(self.checkBoxFeedAngleChanged)
-        self.checkBoxJogAngle.stateChanged.connect(self.checkBoxJogAngleChanged)
-
-        self.inputRpm.mousePressEvent = lambda _: self.openNumPad(self.inputRpm)
-        self.inputFeed.mousePressEvent = lambda _: self.openNumPad(self.inputFeed)
-        self.inputCss.mousePressEvent = lambda _: self.openNumPad(self.inputCss)
-        self.inputMaxRpm.mousePressEvent = lambda _: self.openNumPad(self.inputMaxRpm)
+        self.inputRpm.mousePressEvent = lambda _: self.openNumPad(self.inputRpm, self.manualLathe.onInputRpmChanged)
+        self.inputFeed.mousePressEvent = lambda _: self.openNumPad(self.inputFeed, self.manualLathe.onInputFeedChanged)
+        self.inputCss.mousePressEvent = lambda _: self.openNumPad(self.inputCss, self.manualLathe.onInputCssChanged)
+        self.inputMaxRpm.mousePressEvent = lambda _: self.openNumPad(self.inputMaxRpm, self.manualLathe.onMaxSpindleRpmChanged)
         self.inputFeedAngle.mousePressEvent = lambda _: self.openNumPad(self.inputFeedAngle)
-        self.inputJogAngle.mousePressEvent = lambda _: self.openNumPad(self.inputJogAngle)
 
         self.vtk.setViewXZ2()
         self.vtk.enable_panning(True)
@@ -135,6 +130,7 @@ class MyMainWindow(VCPMainWindow):
         self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
         self.quickcycles.onLoadClicked.connect(self.prepareToRunProgram)
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
+        self.tabSpindleMode.currentChanged.connect(self.onSpindleModeChanged)
 
         QTimer.singleShot(0, self.afterUIInit)
         self.latheFixtures.onFixtureSelected.connect(self.onFixtureSelected)
@@ -194,10 +190,9 @@ class MyMainWindow(VCPMainWindow):
     def backToPrograms(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
 
-    def onRadioButtonToggled(self):
+    def onSpindleModeChanged(self):
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
         self.handle_spindle_mode(self.getSpindleModeIndex())
-        self.spindleModeWidget.setCurrentIndex(self.getSpindleModeIndex())
 
     def onCycleStartPressed(self):
         pass
@@ -216,11 +211,6 @@ class MyMainWindow(VCPMainWindow):
         if input_text.isdigit():
             self.manualLathe.onFeedAngleChanged(input_text)
 
-    def checkBoxJogAngleChanged(self, value):
-        self.inputJogAngle.setEnabled(value)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsAngleJogEnable).value = value
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsAngleJogValue).value = float(self.inputJogAngle.text())
-
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)
         self.radioRpm.setEnabled(not value)
@@ -230,23 +220,26 @@ class MyMainWindow(VCPMainWindow):
         self.inputMaxRpm.setEnabled(not value)
         self.checkBoxJogAngle.setEnabled(not value)
         self.inputFeedAngle.setEnabled(not value and self.checkBoxFeedAngle.isChecked())
-        self.inputJogAngle.setEnabled(not value and self.checkBoxJogAngle.isChecked())
         if self.checkBoxFeedAngle.isChecked() and not value:
             print("Set taper turning off when stopping spindle")
             self.checkBoxFeedAngle.setChecked(False)
             self.checkBoxFeedAngleChanged(False)
 
-    def openNumPad(self, line_edit):
-        setting_name = getattr(line_edit, 'settingName', None)
+    def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
+        setting_name = getattr(fake_edit_text, 'settingName', None)
         dialog = SmartNumPadDialog(setting_name)
-        dialog.valueSelected.connect(lambda value: self.setSelectedValue(line_edit, value))
+
+        def handle_value(value):
+            self.setSelectedValue(fake_edit_text, value)
+            if on_value_selected_callback:
+                on_value_selected_callback(value)
+
+        dialog.valueSelected.connect(handle_value)
         dialog.exec_()
 
     @staticmethod
-    def setSelectedValue(line_edit, value):
-        line_edit.setText(value)
-        line_edit.editingFinished.emit()
-        line_edit.clearFocus()
+    def setSelectedValue(fake_edit_text, value):
+        fake_edit_text.setText(value)
 
     def onPowerFeedingChanged(self, value):
         self.isPowerFeeding = value

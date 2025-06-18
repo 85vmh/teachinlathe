@@ -559,9 +559,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>810</y>
-               <width>631</width>
-               <height>81</height>
+               <y>770</y>
+               <width>296</width>
+               <height>211</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -577,293 +577,158 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="frameShadow">
               <enum>QFrame::Raised</enum>
              </property>
-             <widget class="QLabel" name="label_12">
+             <widget class="QTabWidget" name="tabSpindleMode">
               <property name="geometry">
                <rect>
                 <x>5</x>
-                <y>20</y>
-                <width>36</width>
-                <height>46</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 40pt &quot;Lato&quot;;</string>
-              </property>
-              <property name="text">
-               <string>S</string>
-              </property>
-             </widget>
-             <widget class="QRadioButton" name="radioRpm">
-              <property name="geometry">
-               <rect>
-                <x>95</x>
-                <y>10</y>
-                <width>61</width>
-                <height>24</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>RPM</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-              <attribute name="buttonGroup">
-               <string notr="true">spindleMode</string>
-              </attribute>
-             </widget>
-             <widget class="QRadioButton" name="radioCss">
-              <property name="geometry">
-               <rect>
-                <x>95</x>
-                <y>50</y>
-                <width>61</width>
-                <height>24</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>CSS</string>
-              </property>
-              <attribute name="buttonGroup">
-               <string notr="true">spindleMode</string>
-              </attribute>
-             </widget>
-             <widget class="QStackedWidget" name="spindleModeWidget">
-              <property name="geometry">
-               <rect>
-                <x>160</x>
                 <y>5</y>
-                <width>466</width>
-                <height>71</height>
+                <width>286</width>
+                <height>201</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">QStackedWidget#spindleModeWidget {
-    background-color: rgb(200, 200, 200);
-    border: 1px solid rgb(80, 80, 80);
-    border-radius: 6px;
+               <string notr="true">QTabWidget#tabSpindleMode QTabBar::tab {
+    height: 40px;
+    min-width: 120px;
+    font: 14pt &quot;Noto Sans&quot;;
 }</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::Box</enum>
-              </property>
-              <property name="lineWidth">
-               <number>1</number>
               </property>
               <property name="currentIndex">
                <number>0</number>
               </property>
-              <widget class="QWidget" name="pageRpm">
+              <widget class="QWidget" name="tab">
+               <attribute name="title">
+                <string>RPM</string>
+               </attribute>
                <widget class="QLabel" name="rpmUnit_10">
                 <property name="geometry">
                  <rect>
-                  <x>160</x>
-                  <y>40</y>
-                  <width>61</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>rev/min</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="actualRpm">
-                <property name="geometry">
-                 <rect>
-                  <x>95</x>
-                  <y>40</y>
-                  <width>61</width>
-                  <height>26</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>0</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-               <widget class="QLabel" name="label_16">
-                <property name="geometry">
-                 <rect>
-                  <x>15</x>
-                  <y>40</y>
-                  <width>91</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Actual RPM:</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="rpmUnit_7">
-                <property name="geometry">
-                 <rect>
-                  <x>160</x>
-                  <y>10</y>
-                  <width>61</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>rev/min</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="label_15">
-                <property name="geometry">
-                 <rect>
-                  <x>15</x>
-                  <y>10</y>
-                  <width>81</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Set RPM:</string>
-                </property>
-               </widget>
-               <widget class="VCPSettingsLineEdit" name="inputRpm">
-                <property name="geometry">
-                 <rect>
-                  <x>95</x>
-                  <y>5</y>
+                  <x>210</x>
+                  <y>50</y>
                   <width>61</width>
                   <height>31</height>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
                 </property>
                 <property name="text">
-                 <string>700</string>
+                 <string>rev/min</string>
+                </property>
+               </widget>
+               <widget class="QLabel" name="rpmUnit_7">
+                <property name="geometry">
+                 <rect>
+                  <x>210</x>
+                  <y>15</y>
+                  <width>61</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>rev/min</string>
+                </property>
+               </widget>
+               <widget class="QLabel" name="label_16">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>50</y>
+                  <width>91</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Actual RPM:</string>
+                </property>
+               </widget>
+               <widget class="QLabel" name="label_15">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>15</y>
+                  <width>81</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Set RPM:</string>
+                </property>
+               </widget>
+               <widget class="TeachInDroLabel" name="inputRpm">
+                <property name="geometry">
+                 <rect>
+                  <x>125</x>
+                  <y>15</y>
+                  <width>66</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="font">
+                 <font>
+                  <family>Noto Sans Mono</family>
+                  <pointsize>12</pointsize>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(20, 20, 20);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+                </property>
+                <property name="text">
+                 <string>1000</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
                 </property>
-                <property name="settingName" stdset="0">
-                 <string>smart_numpad.input-rpm-2</string>
+                <property name="referenceType" stdset="0">
+                 <number>1</number>
                 </property>
-                <property name="textFormat" stdset="0">
-                 <string>.0f</string>
+                <property name="axisNumber" stdset="0">
+                 <number>2</number>
+                </property>
+                <property name="inchFormat" stdset="0">
+                 <string>%9.4f</string>
+                </property>
+                <property name="millimeterFormat" stdset="0">
+                 <string>%10.3f</string>
+                </property>
+                <property name="degreeFormat" stdset="0">
+                 <string>%10.2f</string>
+                </property>
+                <property name="latheMode" stdset="0">
+                 <number>0</number>
                 </property>
                </widget>
-              </widget>
-              <widget class="QWidget" name="pageCss">
-               <widget class="QLabel" name="rpmUnit_11">
+               <widget class="QLabel" name="actualRpm">
                 <property name="geometry">
                  <rect>
-                  <x>405</x>
-                  <y>40</y>
-                  <width>61</width>
-                  <height>21</height>
+                  <x>125</x>
+                  <y>50</y>
+                  <width>66</width>
+                  <height>31</height>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>m/min</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="rpmUnit_14">
-                <property name="geometry">
-                 <rect>
-                  <x>405</x>
-                  <y>10</y>
-                  <width>61</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>m/min</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="label_17">
-                <property name="geometry">
-                 <rect>
-                  <x>250</x>
-                  <y>40</y>
-                  <width>81</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Actual CSS:</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="label_19">
-                <property name="geometry">
-                 <rect>
-                  <x>250</x>
-                  <y>10</y>
-                  <width>81</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Set CSS:</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="actualCss">
-                <property name="geometry">
-                 <rect>
-                  <x>340</x>
-                  <y>40</y>
-                  <width>61</width>
-                  <height>26</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>000</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-               <widget class="QLabel" name="actualRpmCss">
-                <property name="geometry">
-                 <rect>
-                  <x>95</x>
-                  <y>40</y>
-                  <width>61</width>
-                  <height>26</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 12pt &quot;Noto Sans Mono&quot;;</string>
                 </property>
                 <property name="text">
                  <string>0000</string>
@@ -872,17 +737,140 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                  <set>Qt::AlignCenter</set>
                 </property>
                </widget>
-               <widget class="QLabel" name="label_20">
+              </widget>
+              <widget class="QWidget" name="tab_2">
+               <attribute name="title">
+                <string>CSS</string>
+               </attribute>
+               <widget class="QLabel" name="actualCss">
                 <property name="geometry">
                  <rect>
-                  <x>15</x>
-                  <y>40</y>
-                  <width>91</width>
-                  <height>21</height>
+                  <x>125</x>
+                  <y>120</y>
+                  <width>66</width>
+                  <height>31</height>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 12pt &quot;Noto Sans Mono&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>000</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+               <widget class="QLabel" name="rpmUnit_11">
+                <property name="geometry">
+                 <rect>
+                  <x>210</x>
+                  <y>120</y>
+                  <width>56</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>m/min</string>
+                </property>
+               </widget>
+               <widget class="QLabel" name="actualRpmCss">
+                <property name="geometry">
+                 <rect>
+                  <x>125</x>
+                  <y>50</y>
+                  <width>66</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 12pt &quot;Noto Sans Mono&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>0000</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+               <widget class="QLabel" name="label_19">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>90</y>
+                  <width>81</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Set CSS:</string>
+                </property>
+               </widget>
+               <widget class="QLabel" name="rpmUnit_12">
+                <property name="geometry">
+                 <rect>
+                  <x>210</x>
+                  <y>15</y>
+                  <width>66</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>rev/min</string>
+                </property>
+               </widget>
+               <widget class="QLabel" name="rpmUnit_14">
+                <property name="geometry">
+                 <rect>
+                  <x>210</x>
+                  <y>90</y>
+                  <width>56</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>m/min</string>
+                </property>
+               </widget>
+               <widget class="QLabel" name="label_18">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>15</y>
+                  <width>81</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Max RPM:</string>
+                </property>
+               </widget>
+               <widget class="QLabel" name="label_20">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>50</y>
+                  <width>101</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
                 </property>
                 <property name="text">
                  <string>Actual RPM:</string>
@@ -891,159 +879,153 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <widget class="QLabel" name="rpmUnit_15">
                 <property name="geometry">
                  <rect>
-                  <x>160</x>
-                  <y>40</y>
-                  <width>61</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>rev/min</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="rpmUnit_12">
-                <property name="geometry">
-                 <rect>
-                  <x>160</x>
-                  <y>10</y>
-                  <width>61</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>rev/min</string>
-                </property>
-               </widget>
-               <widget class="QLabel" name="label_18">
-                <property name="geometry">
-                 <rect>
-                  <x>15</x>
-                  <y>10</y>
-                  <width>81</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>Max RPM:</string>
-                </property>
-               </widget>
-               <widget class="Line" name="line_3">
-                <property name="geometry">
-                 <rect>
-                  <x>235</x>
-                  <y>5</y>
-                  <width>3</width>
-                  <height>61</height>
-                 </rect>
-                </property>
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-               </widget>
-               <widget class="VCPSettingsLineEdit" name="inputMaxRpm">
-                <property name="geometry">
-                 <rect>
-                  <x>95</x>
-                  <y>5</y>
+                  <x>210</x>
+                  <y>50</y>
                   <width>61</width>
                   <height>31</height>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
                 </property>
                 <property name="text">
-                 <string>1500</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-                <property name="settingName" stdset="0">
-                 <string>smart_numpad.input-css-max-rpm</string>
-                </property>
-                <property name="textFormat" stdset="0">
-                 <string/>
+                 <string>rev/min</string>
                 </property>
                </widget>
-               <widget class="VCPSettingsLineEdit" name="inputCss">
+               <widget class="QLabel" name="label_17">
                 <property name="geometry">
                  <rect>
-                  <x>340</x>
-                  <y>5</y>
-                  <width>61</width>
+                  <x>10</x>
+                  <y>120</y>
+                  <width>96</width>
                   <height>31</height>
                  </rect>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+                 <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
                 </property>
                 <property name="text">
-                 <string>250</string>
+                 <string>Actual CSS:</string>
+                </property>
+               </widget>
+               <widget class="TeachInDroLabel" name="inputMaxRpm">
+                <property name="geometry">
+                 <rect>
+                  <x>125</x>
+                  <y>15</y>
+                  <width>66</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="font">
+                 <font>
+                  <family>Noto Sans Mono</family>
+                  <pointsize>12</pointsize>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(20, 20, 20);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+                </property>
+                <property name="text">
+                 <string>1000</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
                 </property>
-                <property name="settingName" stdset="0">
-                 <string>smart_numpad.input-css</string>
+                <property name="referenceType" stdset="0">
+                 <number>1</number>
                 </property>
-                <property name="textFormat" stdset="0">
-                 <string>.0f</string>
+                <property name="axisNumber" stdset="0">
+                 <number>2</number>
+                </property>
+                <property name="inchFormat" stdset="0">
+                 <string>%9.4f</string>
+                </property>
+                <property name="millimeterFormat" stdset="0">
+                 <string>%10.3f</string>
+                </property>
+                <property name="degreeFormat" stdset="0">
+                 <string>%10.2f</string>
+                </property>
+                <property name="latheMode" stdset="0">
+                 <number>0</number>
+                </property>
+               </widget>
+               <widget class="TeachInDroLabel" name="inputCss">
+                <property name="geometry">
+                 <rect>
+                  <x>125</x>
+                  <y>90</y>
+                  <width>66</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="font">
+                 <font>
+                  <family>Noto Sans Mono</family>
+                  <pointsize>12</pointsize>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(20, 20, 20);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+                </property>
+                <property name="text">
+                 <string>1000</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+                <property name="referenceType" stdset="0">
+                 <number>1</number>
+                </property>
+                <property name="axisNumber" stdset="0">
+                 <number>2</number>
+                </property>
+                <property name="inchFormat" stdset="0">
+                 <string>%9.4f</string>
+                </property>
+                <property name="millimeterFormat" stdset="0">
+                 <string>%10.3f</string>
+                </property>
+                <property name="degreeFormat" stdset="0">
+                 <string>%10.2f</string>
+                </property>
+                <property name="latheMode" stdset="0">
+                 <number>0</number>
                 </property>
                </widget>
               </widget>
              </widget>
-             <widget class="StatusLabel" name="statuslabel_6">
-              <property name="geometry">
-               <rect>
-                <x>35</x>
-                <y>40</y>
-                <width>51</width>
-                <height>26</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 12pt &quot;Noto&quot;;
-}</string>
-              </property>
-              <property name="text">
-               <string>0%</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="rules" stdset="0">
-               <string>[{&quot;name&quot;: &quot;spindle_override&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;str(int(ch[0] * 100)) + '%'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:spindle.0.override&quot;, &quot;trigger&quot;: true}]}]</string>
-              </property>
-             </widget>
-             <zorder>label_12</zorder>
-             <zorder>radioRpm</zorder>
-             <zorder>radioCss</zorder>
-             <zorder>statuslabel_6</zorder>
-             <zorder>spindleModeWidget</zorder>
             </widget>
             <widget class="QFrame" name="feedFrame">
              <property name="geometry">
               <rect>
-               <x>1255</x>
-               <y>900</y>
+               <x>520</x>
+               <y>770</y>
                <width>631</width>
-               <height>71</height>
+               <height>211</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -1059,33 +1041,17 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="frameShadow">
               <enum>QFrame::Raised</enum>
              </property>
-             <widget class="QLabel" name="label_29">
-              <property name="geometry">
-               <rect>
-                <x>5</x>
-                <y>15</y>
-                <width>36</width>
-                <height>46</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 40pt &quot;Lato&quot;;</string>
-              </property>
-              <property name="text">
-               <string>F</string>
-              </property>
-             </widget>
              <widget class="QLabel" name="actualFeed">
               <property name="geometry">
                <rect>
-                <x>255</x>
-                <y>40</y>
-                <width>61</width>
-                <height>26</height>
+                <x>485</x>
+                <y>50</y>
+                <width>66</width>
+                <height>31</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 12pt &quot;Noto Sans Mono&quot;;</string>
               </property>
               <property name="text">
                <string>0.0</string>
@@ -1097,14 +1063,14 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="actualFeedType">
               <property name="geometry">
                <rect>
-                <x>320</x>
-                <y>40</y>
+                <x>560</x>
+                <y>50</y>
                 <width>61</width>
-                <height>21</height>
+                <height>31</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
               </property>
               <property name="text">
                <string>mm/rev</string>
@@ -1113,14 +1079,14 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="label_31">
               <property name="geometry">
                <rect>
-                <x>175</x>
-                <y>40</y>
+                <x>370</x>
+                <y>50</y>
                 <width>91</width>
-                <height>21</height>
+                <height>31</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
               </property>
               <property name="text">
                <string>Actual feed:</string>
@@ -1129,37 +1095,24 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="label_32">
               <property name="geometry">
                <rect>
-                <x>175</x>
-                <y>10</y>
+                <x>370</x>
+                <y>15</y>
                 <width>76</width>
-                <height>21</height>
+                <height>31</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
               </property>
               <property name="text">
                <string>Set feed:</string>
-              </property>
-             </widget>
-             <widget class="Line" name="line_5">
-              <property name="geometry">
-               <rect>
-                <x>390</x>
-                <y>0</y>
-                <width>16</width>
-                <height>76</height>
-               </rect>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
               </property>
              </widget>
              <widget class="QCheckBox" name="checkBoxFeedAngle">
               <property name="geometry">
                <rect>
                 <x>410</x>
-                <y>5</y>
+                <y>140</y>
                 <width>121</width>
                 <height>61</height>
                </rect>
@@ -1181,7 +1134,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="geometry">
                <rect>
                 <x>580</x>
-                <y>20</y>
+                <y>155</y>
                 <width>31</width>
                 <height>31</height>
                </rect>
@@ -1193,75 +1146,20 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <string>deg</string>
               </property>
              </widget>
-             <widget class="StatusLabel" name="feedOverrideValue">
-              <property name="geometry">
-               <rect>
-                <x>35</x>
-                <y>35</y>
-                <width>51</width>
-                <height>26</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 12pt &quot;Noto&quot;;
-}</string>
-              </property>
-              <property name="text">
-               <string>0%</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="rules" stdset="0">
-               <string>[{&quot;name&quot;: &quot;feed_override&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;str(int(ch[0]*100)) + '%'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:feedrate&quot;, &quot;trigger&quot;: true}]}]</string>
-              </property>
-             </widget>
              <widget class="QLabel" name="actualFeedType_2">
               <property name="geometry">
                <rect>
-                <x>320</x>
-                <y>10</y>
-                <width>61</width>
-                <height>21</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>mm/rev</string>
-              </property>
-             </widget>
-             <widget class="VCPSettingsLineEdit" name="inputFeed">
-              <property name="geometry">
-               <rect>
-                <x>255</x>
-                <y>5</y>
+                <x>560</x>
+                <y>15</y>
                 <width>61</width>
                 <height>31</height>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
+               <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
               </property>
               <property name="text">
-               <string>0.1</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="settingName" stdset="0">
-               <string>smart_numpad.input-feed</string>
-              </property>
-              <property name="textFormat" stdset="0">
-               <string>.2f</string>
+               <string>mm/rev</string>
               </property>
              </widget>
              <widget class="VCPSettingsLineEdit" name="inputFeedAngle">
@@ -1271,7 +1169,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <property name="geometry">
                <rect>
                 <x>510</x>
-                <y>20</y>
+                <y>155</y>
                 <width>66</width>
                 <height>31</height>
                </rect>
@@ -1292,12 +1190,66 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <string>.4f</string>
               </property>
              </widget>
+             <widget class="TeachInDroLabel" name="inputFeed">
+              <property name="geometry">
+               <rect>
+                <x>485</x>
+                <y>15</y>
+                <width>66</width>
+                <height>31</height>
+               </rect>
+              </property>
+              <property name="font">
+               <font>
+                <family>Noto Sans Mono</family>
+                <pointsize>12</pointsize>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(20, 20, 20);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+              </property>
+              <property name="text">
+               <string>1000</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+              <property name="referenceType" stdset="0">
+               <number>1</number>
+              </property>
+              <property name="axisNumber" stdset="0">
+               <number>2</number>
+              </property>
+              <property name="inchFormat" stdset="0">
+               <string>%9.4f</string>
+              </property>
+              <property name="millimeterFormat" stdset="0">
+               <string>%10.3f</string>
+              </property>
+              <property name="degreeFormat" stdset="0">
+               <string>%10.2f</string>
+              </property>
+              <property name="latheMode" stdset="0">
+               <number>0</number>
+              </property>
+             </widget>
             </widget>
             <widget class="QFrame" name="maxVelocityFrame">
              <property name="geometry">
               <rect>
-               <x>650</x>
-               <y>895</y>
+               <x>1290</x>
+               <y>760</y>
                <width>591</width>
                <height>76</height>
               </rect>
@@ -1393,10 +1345,10 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <widget class="QFrame" name="handwheelsFrame">
              <property name="geometry">
               <rect>
-               <x>5</x>
-               <y>895</y>
-               <width>631</width>
-               <height>76</height>
+               <x>310</x>
+               <y>770</y>
+               <width>201</width>
+               <height>211</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -1434,130 +1386,18 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:program_units?text&quot;, &quot;trigger&quot;: true}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;ch[0] + '/min'&quot;, &quot;name&quot;: &quot;Rapid Speed&quot;}]</string>
               </property>
              </widget>
-             <widget class="Line" name="line_9">
-              <property name="geometry">
-               <rect>
-                <x>390</x>
-                <y>0</y>
-                <width>16</width>
-                <height>76</height>
-               </rect>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-             </widget>
-             <widget class="QLabel" name="rpmUnit_24">
-              <property name="geometry">
-               <rect>
-                <x>580</x>
-                <y>25</y>
-                <width>36</width>
-                <height>31</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <family>Noto Sans</family>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>deg</string>
-              </property>
-             </widget>
-             <widget class="QCheckBox" name="checkBoxJogAngle">
-              <property name="geometry">
-               <rect>
-                <x>410</x>
-                <y>25</y>
-                <width>116</width>
-                <height>31</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <family>Noto Sans</family>
-                <pointsize>10</pointsize>
-                <weight>50</weight>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 10pt &quot;Noto Sans&quot;;</string>
-              </property>
-              <property name="text">
-               <string>Jog Angle:</string>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>18</width>
-                <height>18</height>
-               </size>
-              </property>
-             </widget>
-             <widget class="QLabel" name="label_2">
-              <property name="geometry">
-               <rect>
-                <x>5</x>
-                <y>5</y>
-                <width>156</width>
-                <height>36</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 20pt &quot;Lato&quot;;</string>
-              </property>
-              <property name="text">
-               <string>Handwheels</string>
-              </property>
-             </widget>
-             <widget class="QLabel" name="jogIncrement">
-              <property name="geometry">
-               <rect>
-                <x>20</x>
-                <y>45</y>
-                <width>116</width>
-                <height>26</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
-}</string>
-              </property>
-              <property name="text">
-               <string>0.001 mm/div</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
              <widget class="QCheckBox" name="xMpgCheckbox">
               <property name="geometry">
                <rect>
-                <x>205</x>
-                <y>5</y>
-                <width>64</width>
-                <height>64</height>
+                <x>10</x>
+                <y>35</y>
+                <width>80</width>
+                <height>80</height>
                </rect>
               </property>
               <property name="font">
                <font>
-                <pointsize>20</pointsize>
+                <pointsize>32</pointsize>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
@@ -1571,18 +1411,18 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
 	height: 0px;
 }
 QCheckBox {
-	border-radius: 32px;
+	border-radius: 40px;
 	background-color: lightgray;
 	border-style: solid;
 	border-width: 1px;
 	border-color: gray;
 	color: black;
-	padding-left: 16px;
+	padding-left: 20px;
 }
 QCheckBox:checked {
 	background-color: lightblue;
    	color: black;
-	padding-left: 16px;
+	padding-left: 20px;
 }
 QCheckBox:disabled {
 	background-color: #f0f0f0; 
@@ -1603,15 +1443,15 @@ QCheckBox:disabled {
               </property>
               <property name="geometry">
                <rect>
-                <x>310</x>
-                <y>5</y>
-                <width>64</width>
-                <height>64</height>
+                <x>110</x>
+                <y>120</y>
+                <width>80</width>
+                <height>80</height>
                </rect>
               </property>
               <property name="font">
                <font>
-                <pointsize>20</pointsize>
+                <pointsize>32</pointsize>
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
@@ -1625,18 +1465,18 @@ QCheckBox:disabled {
 	height: 0px;
 }
 QCheckBox {
-	border-radius: 32px;
+	border-radius: 40px;
 	background-color: lightgray;
 	border-style: solid;
 	border-width: 1px;
 	border-color: gray;
 	color: black;
-	padding-left: 16px;
+	padding-left: 20px;
 }
 QCheckBox:checked {
 	background-color: lightblue;
    	color: black;
-	padding-left: 16px;
+	padding-left: 20px;
 }
 QCheckBox:disabled {
 	background-color: #f0f0f0; 
@@ -1651,34 +1491,31 @@ QCheckBox:disabled {
                <bool>true</bool>
               </property>
              </widget>
-             <widget class="VCPSettingsLineEdit" name="inputJogAngle">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
+             <widget class="QLabel" name="jogIncrement">
               <property name="geometry">
                <rect>
-                <x>510</x>
-                <y>25</y>
-                <width>66</width>
+                <x>110</x>
+                <y>45</y>
+                <width>71</width>
                 <height>31</height>
                </rect>
               </property>
-              <property name="font">
-               <font>
-                <pointsize>10</pointsize>
-               </font>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+    border-style: solid;
+    border-color: rgb(96, 96, 97);
+    border-width: 2px;
+    border-radius: 5px;
+    color: white;
+    background: rgb(86, 86, 87);
+	font: 11pt &quot;Noto&quot;;
+}</string>
               </property>
               <property name="text">
-               <string>45</string>
+               <string>0.001</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
-              </property>
-              <property name="settingName" stdset="0">
-               <string>smart_numpad.input-jog-angle</string>
-              </property>
-              <property name="textFormat" stdset="0">
-               <string>.4f</string>
               </property>
              </widget>
             </widget>
@@ -2044,6 +1881,107 @@ QCheckBox:disabled {
              </property>
              <property name="statusItem" stdset="0">
               <string>tool_offset.3</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_8">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>735</y>
+               <width>106</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 18pt &quot;Cantarell&quot;;</string>
+             </property>
+             <property name="text">
+              <string>Spindle</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+            <widget class="StatusLabel" name="statuslabel_6">
+             <property name="geometry">
+              <rect>
+               <x>220</x>
+               <y>740</y>
+               <width>71</width>
+               <height>26</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 18pt &quot;Cantarell&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0%</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="rules" stdset="0">
+              <string>[{&quot;name&quot;: &quot;spindle_override&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;str(int(ch[0] * 100)) + '%'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:spindle.0.override&quot;, &quot;trigger&quot;: true}]}]</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_9">
+             <property name="geometry">
+              <rect>
+               <x>325</x>
+               <y>735</y>
+               <width>171</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 18pt &quot;Cantarell&quot;;</string>
+             </property>
+             <property name="text">
+              <string>Manual Feed</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_10">
+             <property name="geometry">
+              <rect>
+               <x>630</x>
+               <y>735</y>
+               <width>131</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 18pt &quot;Cantarell&quot;;</string>
+             </property>
+             <property name="text">
+              <string>Auto Feed</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+            <widget class="StatusLabel" name="feedOverrideValue">
+             <property name="geometry">
+              <rect>
+               <x>805</x>
+               <y>740</y>
+               <width>76</width>
+               <height>26</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 18pt &quot;Cantarell&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0%</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="rules" stdset="0">
+              <string>[{&quot;name&quot;: &quot;feed_override&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;str(int(ch[0]*100)) + '%'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:feedrate&quot;, &quot;trigger&quot;: true}]}]</string>
              </property>
             </widget>
            </widget>
@@ -7159,6 +7097,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <header>qtpyvcp.widgets.input_widgets.offset_table</header>
   </customwidget>
   <customwidget>
+   <class>TeachInDroLabel</class>
+   <extends>QLabel</extends>
+   <header>qtpyvcp.widgets.input_widgets.teachin_dro_label</header>
+  </customwidget>
+  <customwidget>
    <class>VCPStackedWidget</class>
    <extends>QStackedWidget</extends>
    <header>qtpyvcp.widgets.containers.stack</header>
@@ -7708,7 +7651,4 @@ font: 12pt &quot;DejaVu Sans&quot;;
    </hints>
   </connection>
  </connections>
- <buttongroups>
-  <buttongroup name="spindleMode"/>
- </buttongroups>
 </ui>
