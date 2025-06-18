@@ -389,29 +389,35 @@ class TeachInLatheDro(QWidget):
             x_max_limit = self.currentMachineLimits.x_max_limit
             z_min_limit = self.currentMachineLimits.z_min_limit
             z_max_limit = self.currentMachineLimits.z_max_limit
-            limit_reached_tolerance = 0.01
+            limit_reached_tolerance = 0.005
 
             # --- X MINUS ---
-            if x_abs > x_min_limit and self.xMinusLimitStatus == LimitStatus.PENDING:
+            if x_abs >= x_min_limit and self.xMinusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = x_min_limit
                 x_minus_pin_written = True
                 self.xMinusLimitStatus = LimitStatus.ENABLED
-            elif abs(x_abs - x_min_limit) < limit_reached_tolerance:
-                self.xMinusLimitStatus = LimitStatus.REACHED
             elif self.xMinusLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = x_min_limit
                 x_minus_pin_written = True
+            elif self.xMinusLimitStatus in (LimitStatus.ENABLED, LimitStatus.REACHED):
+                if abs(x_abs - x_min_limit) < limit_reached_tolerance:
+                    self.xMinusLimitStatus = LimitStatus.REACHED
+                else:
+                    self.xMinusLimitStatus = LimitStatus.ENABLED
 
             # --- X PLUS ---
-            if x_abs < x_max_limit and self.xPlusLimitStatus in (LimitStatus.PENDING, LimitStatus.REACHED):
+            if x_abs <= x_max_limit and self.xPlusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = x_max_limit
                 x_plus_pin_written = True
                 self.xPlusLimitStatus = LimitStatus.ENABLED
-            elif abs(x_abs - x_max_limit) < limit_reached_tolerance:
-                self.xPlusLimitStatus = LimitStatus.REACHED
             elif self.xPlusLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = x_max_limit
                 x_plus_pin_written = True
+            elif self.xPlusLimitStatus in (LimitStatus.ENABLED, LimitStatus.REACHED):
+                if abs(x_abs - x_max_limit) < limit_reached_tolerance:
+                    self.xPlusLimitStatus = LimitStatus.REACHED
+                else:
+                    self.xPlusLimitStatus = LimitStatus.ENABLED
 
             # --- Z MINUS ---
             if z_abs >= z_min_limit and self.zMinusLimitStatus == LimitStatus.PENDING:
@@ -428,26 +434,32 @@ class TeachInLatheDro(QWidget):
                     self.zMinusLimitStatus = LimitStatus.ENABLED
 
             # --- Z PLUS ---
-            if z_abs < z_max_limit and self.zPlusLimitStatus in (LimitStatus.PENDING, LimitStatus.REACHED):
+            if z_abs <= z_max_limit and self.zPlusLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
                 z_plus_pin_written = True
                 self.zPlusLimitStatus = LimitStatus.ENABLED
-            elif abs(z_abs - z_max_limit) < limit_reached_tolerance:
-                self.zPlusLimitStatus = LimitStatus.REACHED
             elif self.zPlusLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
                 z_plus_pin_written = True
+            elif self.zPlusLimitStatus in (LimitStatus.ENABLED, LimitStatus.REACHED):
+                if abs(z_abs - z_max_limit) < limit_reached_tolerance:
+                    self.zPlusLimitStatus = LimitStatus.REACHED
+                else:
+                    self.zPlusLimitStatus = LimitStatus.ENABLED
 
             # --- TAILSTOCK Z MAX LIMIT ---
-            if z_abs < z_max_limit and self.tailstockLimitStatus in (LimitStatus.PENDING, LimitStatus.REACHED):
+            if z_abs <= z_max_limit and self.tailstockLimitStatus == LimitStatus.PENDING:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
                 tailstock_pin_written = True
                 self.tailstockLimitStatus = LimitStatus.ENABLED
-            elif abs(z_abs - z_max_limit) < limit_reached_tolerance:
-                self.tailstockLimitStatus = LimitStatus.REACHED
             elif self.tailstockLimitStatus == LimitStatus.DISABLED:
                 self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
                 tailstock_pin_written = True
+            elif self.tailstockLimitStatus in (LimitStatus.ENABLED, LimitStatus.REACHED):
+                if abs(z_abs - z_max_limit) < limit_reached_tolerance:
+                    self.tailstockLimitStatus = LimitStatus.REACHED
+                else:
+                    self.tailstockLimitStatus = LimitStatus.ENABLED
 
             self.setStyleForLimitStatus(self.boxXMinusLimit, self.labelXMinusLimit, self.xMinusToggle, self.xMinusLimitStatus)
             self.setStyleForLimitStatus(self.boxXPlusLimit, self.labelXPlusLimit, self.xPlusToggle, self.xPlusLimitStatus)
