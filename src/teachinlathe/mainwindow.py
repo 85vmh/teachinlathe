@@ -114,15 +114,18 @@ class MyMainWindow(VCPMainWindow):
         self.inputFeed.settingName = 'smart_numpad.input-feed'
         self.inputFeed.initialize()
 
+        self.inputFeedAngle.settingName = 'smart_numpad.input-feed-angle'
+        self.inputFeedAngle.initialize()
+
         self.inputCss.settingName = 'smart_numpad.input-css'
         self.inputCss.initialize()
 
-        self.checkBoxFeedAngle.stateChanged.connect(self.checkBoxFeedAngleChanged)
+        self.latheJoystick.angleFeedToggled.connect(self.angleFeedToggled)
         self.inputRpm.mousePressEvent = lambda _: self.openNumPad(self.inputRpm, self.manualLathe.onInputRpmChanged)
         self.inputFeed.mousePressEvent = lambda _: self.openNumPad(self.inputFeed, self.manualLathe.onInputFeedChanged)
         self.inputCss.mousePressEvent = lambda _: self.openNumPad(self.inputCss, self.manualLathe.onInputCssChanged)
         self.inputMaxRpm.mousePressEvent = lambda _: self.openNumPad(self.inputMaxRpm, self.manualLathe.onMaxSpindleRpmChanged)
-        self.inputFeedAngle.mousePressEvent = lambda _: self.openNumPad(self.inputFeedAngle)
+        self.inputFeedAngle.mousePressEvent = lambda _: self.openNumPad(self.inputFeedAngle, self.manualLathe.onFeedAngleChanged)
 
         self.vtk.setViewXZ2()
         self.vtk.enable_panning(True)
@@ -202,10 +205,11 @@ class MyMainWindow(VCPMainWindow):
             if self.checkBoxFeedAngle.isChecked() and value:
                 print("Set taper turning off when cycle stop pressed")
                 self.checkBoxFeedAngle.setChecked(False)
-                self.checkBoxFeedAngleChanged(False)
+                self.angleFeedToggled(False)
 
-    def checkBoxFeedAngleChanged(self, value):
-        self.inputFeedAngle.setEnabled(value)
+    def angleFeedToggled(self, value):
+        # self.inputFeedAngle.setEnabled(value)
+        print("angleFeedActive", value)
         self.manualLathe.onTaperTurningChanged(value)
         input_text = self.inputFeedAngle.text()
         if input_text.isdigit():
@@ -223,7 +227,7 @@ class MyMainWindow(VCPMainWindow):
         if self.checkBoxFeedAngle.isChecked() and not value:
             print("Set taper turning off when stopping spindle")
             self.checkBoxFeedAngle.setChecked(False)
-            self.checkBoxFeedAngleChanged(False)
+            self.angleFeedToggled(False)
 
     def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
         setting_name = getattr(fake_edit_text, 'settingName', None)
@@ -246,7 +250,7 @@ class MyMainWindow(VCPMainWindow):
         self.update_actual_feed()
 
     def onJogIncrementChanged(self, value):
-        self.jogIncrement.setText(format(value, '.3f') + ' mm/div')
+        self.jogIncrement.setText(format(value, '.3f'))
 
     def onSpindleFirstGearChanged(self, value):
         suffix = '1' if value else '2'

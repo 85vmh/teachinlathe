@@ -5,6 +5,8 @@ from enum import Enum
 import sys
 import math
 
+from PyQt5.uic.properties import QtCore
+
 
 class JoystickState(Enum):
     NEUTRAL = 0
@@ -18,12 +20,12 @@ ACTIVE_COLOR = QColor(0, 150, 0)  # Bright green
 
 
 class LatheJoystickWidget(QWidget):
-    WIDTH = 220
-    HEIGHT = 200
+    WIDTH = 250
+    HEIGHT = 230
     RING_RADII = [34, 28, 22]
     JOYSTICK_RADIUS = 18
     ARROW_START_RADIUS = RING_RADII[0]
-    ARROW_TOTAL_LENGTH = 60
+    ARROW_TOTAL_LENGTH = 70
     ARROW_HEAD_SIZE = 6
     LINE_THICKNESS = 1.2
     LABEL_WIDTH = 40
@@ -31,10 +33,13 @@ class LatheJoystickWidget(QWidget):
     LABEL_DISTANCE_FROM_TIP = 23
     LABEL_RADIUS = 5
 
+    angleFeedToggled = QtCore.pyqtSignal(bool)
+
     def __init__(self, parent=None):
         super(LatheJoystickWidget, self).__init__(parent)
         self.setFixedSize(self.WIDTH, self.HEIGHT)
 
+        self.allowsTouchInteraction = True
         self.joystickState = JoystickState.NEUTRAL
         self.currentRotation = 0
         self.rotationTarget = 0
@@ -43,14 +48,24 @@ class LatheJoystickWidget(QWidget):
         self.animTimer = QTimer()
         self.animTimer.timeout.connect(self.animateRotation)
 
+    def setTouchEnabled(self, enabled: bool):
+        self.allowsTouchInteraction = enabled
+
+    def resetAngle(self):
+        self.currentRotation = 0
+        self.rotationTarget = 0
+        self.angleFeedToggled.emit(False)
+        self.animTimer.start(16)
+
     def setJoystickState(self, state: JoystickState):
         self.joystickState = state
         self.update()
 
     def mousePressEvent(self, event):
-        if not self.rotation_active:
+        if self.allowsTouchInteraction and not self.rotation_active:
             self.rotation_active = True
             self.rotationTarget = 0 if self.currentRotation > 0 else 45
+            self.angleFeedToggled.emit(self.rotationTarget == 45)
             self.animTimer.start(16)
 
     def animateRotation(self):
