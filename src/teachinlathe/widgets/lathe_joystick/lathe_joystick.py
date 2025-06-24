@@ -57,6 +57,9 @@ class LatheJoystickWidget(QWidget):
         self.angleFeedToggled.emit(False)
         self.animTimer.start(16)
 
+    def isRotated(self):
+        return self.currentRotation != 0
+
     def setJoystickState(self, state: JoystickState):
         self.joystickState = state
         self.update()

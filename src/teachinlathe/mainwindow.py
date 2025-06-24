@@ -224,7 +224,7 @@ class MyMainWindow(VCPMainWindow):
         # self.inputMaxRpm.setEnabled(not value)
         # self.checkBoxJogAngle.setEnabled(not value)
         # self.inputFeedAngle.setEnabled(not value and self.checkBoxFeedAngle.isChecked())
-        if self.checkBoxFeedAngle.isChecked() and not value:
+        if self.latheJoystick.isRotated() and not value:
             print("Set taper turning off when stopping spindle")
             self.latheJoystick.resetAngle()
             self.angleFeedToggled(False)
