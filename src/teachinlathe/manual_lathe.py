@@ -12,6 +12,7 @@ from qtpyvcp.plugins.status import STAT
 from qtpyvcp.utilities.info import Info
 
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.widgets.lathe_joystick.lathe_joystick import JoystickState
 
 LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
@@ -117,6 +118,7 @@ class ManualLathe:
     joystickResetRequired = None
     isTaperTurning = False
     feedTaperAngle = 0
+    joystickWidget = None
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -138,6 +140,9 @@ class ManualLathe:
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickZMinus, instance.onJoystickZMinus)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickZPlus, instance.onJoystickZPlus)
         instance.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickRapid, instance.onJoystickRapid)
+
+    def setJoystickWidget(self, joystickWidget):
+        self.joystickWidget = joystickWidget
 
     def getProgramHeader(self):
         spindle_cmd = f"G97 M4 S{self.spindleRpm} (Spindle RPM Mode)" \
@@ -255,6 +260,19 @@ class ManualLathe:
     def handleJoystick(self):
         if not canHandleManualOperations():
             return  # if the machine is not on or not homed, ignore joystick
+
+        if self.joystickWidget is not None:
+            match self.joystickDirection:
+                case JoystickDirection.NONE:
+                    self.joystickWidget.setJoystickState(JoystickState.NEUTRAL)
+                case JoystickDirection.X_PLUS:
+                    self.joystickWidget.setJoystickState(JoystickState.FEEDING_X_POS)
+                case JoystickDirection.X_MINUS:
+                    self.joystickWidget.setJoystickState(JoystickState.FEEDING_X_NEG)
+                case JoystickDirection.Z_PLUS:
+                    self.joystickWidget.setJoystickState(JoystickState.FEEDING_Z_POS)
+                case JoystickDirection.Z_MINUS:
+                    self.joystickWidget.setJoystickState(JoystickState.FEEDING_Z_NEG)
 
         if self.joystickDirection == JoystickDirection.NONE:
             self.handleJoystickNeutral()

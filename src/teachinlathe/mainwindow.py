@@ -5,7 +5,6 @@ from enum import Enum
 
 import linuxcnc
 from PyQt5.QtCore import QTimer
-from PyQt5.uic.properties import QtCore
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.actions.program_actions import load as loadProgram
 from qtpyvcp.plugins import getPlugin
@@ -51,7 +50,7 @@ class MyMainWindow(VCPMainWindow):
     """Main window class for the VCP."""
 
     def getSpindleModeIndex(self):
-        return 0 if self.tabSpindleMode.currentIndex() else 1
+        return self.tabSpindleMode.currentIndex()
 
     def __init__(self, *args, **kwargs):
         super(MyMainWindow, self).__init__(*args, **kwargs)
@@ -69,6 +68,8 @@ class MyMainWindow(VCPMainWindow):
 
         self.fixture_repository = LatheFixturesRepository()
         self.manualLathe = ManualLathe()
+        self.manualLathe.setJoystickWidget(self.latheJoystick)
+
         self.latheComponent = TeachInLatheComponent()
 
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
@@ -217,8 +218,8 @@ class MyMainWindow(VCPMainWindow):
 
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)
-        self.tabSpindleMode.setEnabled(not value)
-
+        # TODO: disable input when spindle is running
+        # self.tabSpindleMode.setEnabled(not value)
         # self.inputRpm.setEnabled(not value)
         # self.inputCss.setEnabled(not value)
         # self.inputMaxRpm.setEnabled(not value)
@@ -281,7 +282,7 @@ class MyMainWindow(VCPMainWindow):
         override_factor = self.current_feed_override
         if self.isPowerFeeding:
             calculated_feed = float(self.inputFeed.text()) * override_factor
-            self.actualFeed.setText(format(calculated_feed, '.3f'))
+            self.actualFeed.setText(format(calculated_feed, '.2f'))
         else:
             self.actualFeed.setText("0.00")
 

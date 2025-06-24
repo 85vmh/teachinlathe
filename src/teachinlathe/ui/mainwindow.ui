@@ -1063,7 +1063,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <string notr="true">font: 12pt &quot;Noto Sans Mono&quot;;</string>
               </property>
               <property name="text">
-               <string>0.0</string>
+               <string>0.00</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1179,7 +1179,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
 }</string>
               </property>
               <property name="text">
-               <string>1000</string>
+               <string>0.10</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -1203,7 +1203,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <number>0</number>
               </property>
              </widget>
-             <widget class="LatheJoystickWidget" name="latheJoystick">
+             <widget class="LatheJoystickWidget" name="latheJoystick" native="true">
               <property name="geometry">
                <rect>
                 <x>5</x>
@@ -1587,7 +1587,7 @@ QCheckBox:disabled {
               </property>
              </widget>
             </widget>
-            <widget class="QuickCycles" name="quickcycles">
+            <widget class="QuickCycles" name="quickcycles" native="true">
              <property name="geometry">
               <rect>
                <x>1535</x>
@@ -1597,7 +1597,7 @@ QCheckBox:disabled {
               </rect>
              </property>
             </widget>
-            <widget class="TeachInLatheDro" name="teachinlathedro">
+            <widget class="TeachInLatheDro" name="teachinlathedro" native="true">
              <property name="geometry">
               <rect>
                <x>0</x>
@@ -2057,7 +2057,7 @@ QCheckBox:disabled {
             <attribute name="title">
              <string>Conversational</string>
             </attribute>
-            <widget class="Conversational" name="conversational">
+            <widget class="Conversational" name="conversational" native="true">
              <property name="geometry">
               <rect>
                <x>5</x>
@@ -7032,7 +7032,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                 </layout>
                </widget>
               </widget>
-              <widget class="LatheFixturesCards" name="latheFixtures">
+              <widget class="LatheFixturesCards" name="latheFixtures" native="true">
                <property name="geometry">
                 <rect>
                  <x>0</x>

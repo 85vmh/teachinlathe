@@ -5,7 +5,9 @@ from enum import Enum
 import sys
 import math
 
-from PyQt5.uic.properties import QtCore
+from PyQt5 import QtCore
+
+from teachinlathe import IN_DESIGNER
 
 
 class JoystickState(Enum):
@@ -54,7 +56,8 @@ class LatheJoystickWidget(QWidget):
     def resetAngle(self):
         self.currentRotation = 0
         self.rotationTarget = 0
-        self.angleFeedToggled.emit(False)
+        if not IN_DESIGNER:
+            self.angleFeedToggled.emit(False)
         self.animTimer.start(16)
 
     def isRotated(self):
@@ -68,7 +71,8 @@ class LatheJoystickWidget(QWidget):
         if self.allowsTouchInteraction and not self.rotation_active:
             self.rotation_active = True
             self.rotationTarget = 0 if self.currentRotation > 0 else 45
-            self.angleFeedToggled.emit(self.rotationTarget == 45)
+            if not IN_DESIGNER:
+                self.angleFeedToggled.emit(self.rotationTarget == 45)
             self.animTimer.start(16)
 
     def animateRotation(self):
