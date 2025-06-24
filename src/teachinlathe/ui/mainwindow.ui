@@ -1024,7 +1024,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <rect>
                <x>520</x>
                <y>770</y>
-               <width>631</width>
+               <width>516</width>
                <height>211</height>
               </rect>
              </property>
@@ -1044,7 +1044,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="actualFeed">
               <property name="geometry">
                <rect>
-                <x>485</x>
+                <x>365</x>
                 <y>50</y>
                 <width>66</width>
                 <height>31</height>
@@ -1063,7 +1063,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="actualFeedType">
               <property name="geometry">
                <rect>
-                <x>560</x>
+                <x>440</x>
                 <y>50</y>
                 <width>61</width>
                 <height>31</height>
@@ -1079,7 +1079,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="label_31">
               <property name="geometry">
                <rect>
-                <x>370</x>
+                <x>250</x>
                 <y>50</y>
                 <width>91</width>
                 <height>31</height>
@@ -1095,7 +1095,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="label_32">
               <property name="geometry">
                <rect>
-                <x>370</x>
+                <x>250</x>
                 <y>15</y>
                 <width>76</width>
                 <height>31</height>
@@ -1111,7 +1111,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QCheckBox" name="checkBoxFeedAngle">
               <property name="geometry">
                <rect>
-                <x>410</x>
+                <x>260</x>
                 <y>140</y>
                 <width>121</width>
                 <height>61</height>
@@ -1133,7 +1133,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="rpmUnit_23">
               <property name="geometry">
                <rect>
-                <x>580</x>
+                <x>430</x>
                 <y>155</y>
                 <width>31</width>
                 <height>31</height>
@@ -1149,7 +1149,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="QLabel" name="actualFeedType_2">
               <property name="geometry">
                <rect>
-                <x>560</x>
+                <x>440</x>
                 <y>15</y>
                 <width>61</width>
                 <height>31</height>
@@ -1168,7 +1168,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               </property>
               <property name="geometry">
                <rect>
-                <x>510</x>
+                <x>360</x>
                 <y>155</y>
                 <width>66</width>
                 <height>31</height>
@@ -1193,7 +1193,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <widget class="TeachInDroLabel" name="inputFeed">
               <property name="geometry">
                <rect>
-                <x>485</x>
+                <x>365</x>
                 <y>15</y>
                 <width>66</width>
                 <height>31</height>
@@ -1242,6 +1242,29 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               </property>
               <property name="latheMode" stdset="0">
                <number>0</number>
+              </property>
+             </widget>
+             <widget class="LatheJoystickWidget" name="lathejoystickwidget">
+              <property name="geometry">
+               <rect>
+                <x>5</x>
+                <y>5</y>
+                <width>220</width>
+                <height>200</height>
+               </rect>
+              </property>
+             </widget>
+             <widget class="Line" name="line">
+              <property name="geometry">
+               <rect>
+                <x>225</x>
+                <y>5</y>
+                <width>16</width>
+                <height>201</height>
+               </rect>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
               </property>
              </widget>
             </widget>
@@ -7116,6 +7139,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <class>LatheFixturesCards</class>
    <extends>QWidget</extends>
    <header>teachinlathe.widgets.lathe_fixtures.lathe_fixtures_cards</header>
+  </customwidget>
+  <customwidget>
+   <class>LatheJoystickWidget</class>
+   <extends>QWidget</extends>
+   <header>teachinlathe.widgets.lathe_joystick.lathe_joystick</header>
   </customwidget>
   <customwidget>
    <class>LatheToolTable</class>
