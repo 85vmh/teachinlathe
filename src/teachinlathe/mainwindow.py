@@ -217,16 +217,16 @@ class MyMainWindow(VCPMainWindow):
 
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)
-        self.radioRpm.setEnabled(not value)
-        self.radioCss.setEnabled(not value)
-        self.inputRpm.setEnabled(not value)
-        self.inputCss.setEnabled(not value)
-        self.inputMaxRpm.setEnabled(not value)
-        self.checkBoxJogAngle.setEnabled(not value)
-        self.inputFeedAngle.setEnabled(not value and self.checkBoxFeedAngle.isChecked())
+        self.tabSpindleMode.setEnabled(not value)
+
+        # self.inputRpm.setEnabled(not value)
+        # self.inputCss.setEnabled(not value)
+        # self.inputMaxRpm.setEnabled(not value)
+        # self.checkBoxJogAngle.setEnabled(not value)
+        # self.inputFeedAngle.setEnabled(not value and self.checkBoxFeedAngle.isChecked())
         if self.checkBoxFeedAngle.isChecked() and not value:
             print("Set taper turning off when stopping spindle")
-            self.checkBoxFeedAngle.setChecked(False)
+            self.latheJoystick.resetAngle()
             self.angleFeedToggled(False)
 
     def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
