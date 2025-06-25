@@ -1203,7 +1203,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                <number>0</number>
               </property>
              </widget>
-             <widget class="LatheJoystickWidget" name="latheJoystick" native="true">
+             <widget class="LatheJoystickWidget" name="latheJoystick">
               <property name="geometry">
                <rect>
                 <x>5</x>
@@ -1345,15 +1345,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 11pt &quot;Noto&quot;;
-}</string>
+               <string notr="true">font: 12pt &quot;Noto Sans Mono&quot;;</string>
               </property>
               <property name="text">
                <string>180N/A/min</string>
@@ -1553,15 +1545,7 @@ QCheckBox:disabled {
                </rect>
               </property>
               <property name="styleSheet">
-               <string notr="true">QLabel {
-    border-style: solid;
-    border-color: rgb(96, 96, 97);
-    border-width: 2px;
-    border-radius: 5px;
-    color: white;
-    background: rgb(86, 86, 87);
-	font: 12pt &quot;Noto Sans Mono&quot;;
-}</string>
+               <string notr="true">font: 12pt &quot;Noto Sans Mono&quot;;</string>
               </property>
               <property name="text">
                <string>0.001</string>
@@ -1587,7 +1571,7 @@ QCheckBox:disabled {
               </property>
              </widget>
             </widget>
-            <widget class="QuickCycles" name="quickcycles" native="true">
+            <widget class="QuickCycles" name="quickcycles">
              <property name="geometry">
               <rect>
                <x>1535</x>
@@ -1597,7 +1581,7 @@ QCheckBox:disabled {
               </rect>
              </property>
             </widget>
-            <widget class="TeachInLatheDro" name="teachinlathedro" native="true">
+            <widget class="TeachInLatheDro" name="teachinlathedro">
              <property name="geometry">
               <rect>
                <x>0</x>
@@ -1954,7 +1938,7 @@ QCheckBox:disabled {
             <widget class="QLabel" name="label_8">
              <property name="geometry">
               <rect>
-               <x>10</x>
+               <x>70</x>
                <y>705</y>
                <width>106</width>
                <height>31</height>
@@ -1973,10 +1957,10 @@ QCheckBox:disabled {
             <widget class="StatusLabel" name="statuslabel_6">
              <property name="geometry">
               <rect>
-               <x>220</x>
-               <y>710</y>
+               <x>185</x>
+               <y>705</y>
                <width>71</width>
-               <height>26</height>
+               <height>31</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -1986,7 +1970,7 @@ QCheckBox:disabled {
               <string>0%</string>
              </property>
              <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
              </property>
              <property name="rules" stdset="0">
               <string>[{&quot;name&quot;: &quot;spindle_override&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;str(int(ch[0] * 100)) + '%'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:spindle.0.override&quot;, &quot;trigger&quot;: true}]}]</string>
@@ -1995,9 +1979,9 @@ QCheckBox:disabled {
             <widget class="QLabel" name="label_9">
              <property name="geometry">
               <rect>
-               <x>325</x>
+               <x>340</x>
                <y>705</y>
-               <width>171</width>
+               <width>156</width>
                <height>31</height>
               </rect>
              </property>
@@ -2014,7 +1998,7 @@ QCheckBox:disabled {
             <widget class="QLabel" name="label_10">
              <property name="geometry">
               <rect>
-               <x>555</x>
+               <x>675</x>
                <y>705</y>
                <width>131</width>
                <height>31</height>
@@ -2033,10 +2017,10 @@ QCheckBox:disabled {
             <widget class="StatusLabel" name="feedOverrideValue">
              <property name="geometry">
               <rect>
-               <x>715</x>
-               <y>710</y>
+               <x>820</x>
+               <y>705</y>
                <width>76</width>
-               <height>26</height>
+               <height>31</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -2046,7 +2030,7 @@ QCheckBox:disabled {
               <string>0%</string>
              </property>
              <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
              </property>
              <property name="rules" stdset="0">
               <string>[{&quot;name&quot;: &quot;feed_override&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;str(int(ch[0]*100)) + '%'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:feedrate&quot;, &quot;trigger&quot;: true}]}]</string>
@@ -2057,7 +2041,7 @@ QCheckBox:disabled {
             <attribute name="title">
              <string>Conversational</string>
             </attribute>
-            <widget class="Conversational" name="conversational" native="true">
+            <widget class="Conversational" name="conversational">
              <property name="geometry">
               <rect>
                <x>5</x>
@@ -7032,7 +7016,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                 </layout>
                </widget>
               </widget>
-              <widget class="LatheFixturesCards" name="latheFixtures" native="true">
+              <widget class="LatheFixturesCards" name="latheFixtures">
                <property name="geometry">
                 <rect>
                  <x>0</x>
