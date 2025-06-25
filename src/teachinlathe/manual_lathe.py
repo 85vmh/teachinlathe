@@ -276,9 +276,11 @@ class ManualLathe:
 
         if self.joystickDirection == JoystickDirection.NONE:
             self.handleJoystickNeutral()
+            self.joystickWidget.setRapid(False)
             return
         elif self.joystickDirection is not JoystickDirection.NONE and self.isJoystickRapid:
             print("Joystick not none, rapid on")
+            self.joystickWidget.setRapid(True)
             self.startJogging()
             self.joystickResetRequired = True
         elif self.joystickFunction == JoystickFunction.JOGGING:

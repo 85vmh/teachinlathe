@@ -69,6 +69,7 @@ class LatheJoystickWidget(QWidget):
 
     def setJoystickState(self, state: JoystickState):
         self.joystickState = state
+        self.setTouchEnabled(state == JoystickState.NEUTRAL)
         self.update()
 
     def mousePressEvent(self, event):

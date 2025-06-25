@@ -15,6 +15,7 @@ from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.fixtures import LatheFixturesRepository
+from teachinlathe.widgets.FrameAnimator import FrameAnimator
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
@@ -69,6 +70,7 @@ class MyMainWindow(VCPMainWindow):
         self.fixture_repository = LatheFixturesRepository()
         self.manualLathe = ManualLathe()
         self.manualLathe.setJoystickWidget(self.latheJoystick)
+        self.feedAnimator = FrameAnimator(self.feedFrame)
 
         self.latheComponent = TeachInLatheComponent()
 
@@ -210,6 +212,12 @@ class MyMainWindow(VCPMainWindow):
 
     def angleFeedToggled(self, value):
         # self.inputFeedAngle.setEnabled(value)
+
+        if value:
+            self.feedAnimator.startAnimation()
+        else:
+            self.feedAnimator.stopAnimation()
+
         print("angleFeedActive", value)
         self.manualLathe.onTaperTurningChanged(value)
         input_text = self.inputFeedAngle.text()
