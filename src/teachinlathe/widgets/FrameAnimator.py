@@ -20,7 +20,7 @@ class FrameAnimator(QObject):
         # Glow effect
         self.shadow = QGraphicsDropShadowEffect()
         self.shadow.setOffset(0, 0)
-        self.shadow.setBlurRadius(40)
+        self.shadow.setBlurRadius(50)
         self.shadow.setColor(QColor(0, 0, 0, 0))  # Start transparent
         self.frame.setGraphicsEffect(self.shadow)
 
