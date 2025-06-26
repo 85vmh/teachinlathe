@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>391</width>
-    <height>753</height>
+    <width>500</width>
+    <height>850</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,8 +21,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>391</width>
-     <height>311</height>
+     <width>501</width>
+     <height>351</height>
     </rect>
    </property>
    <widget class="QGroupBox" name="suggestedValuesBox">
@@ -30,8 +30,8 @@
      <rect>
       <x>5</x>
       <y>5</y>
-      <width>381</width>
-      <height>246</height>
+      <width>491</width>
+      <height>286</height>
      </rect>
     </property>
     <property name="font">
@@ -47,7 +47,7 @@
      <string notr="true">font: 16pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="title">
-     <string>Select a value</string>
+     <string/>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -60,15 +60,15 @@
     <property name="geometry">
      <rect>
       <x>120</x>
-      <y>265</y>
-      <width>141</width>
-      <height>36</height>
+      <y>300</y>
+      <width>266</width>
+      <height>46</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Noto Sans</family>
-      <pointsize>11</pointsize>
+      <pointsize>14</pointsize>
      </font>
     </property>
     <property name="text">
@@ -80,18 +80,18 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>314</y>
-     <width>391</width>
-     <height>431</height>
+     <y>359</y>
+     <width>501</width>
+     <height>486</height>
     </rect>
    </property>
    <widget class="QGroupBox" name="numpadGroupBox">
     <property name="geometry">
      <rect>
       <x>5</x>
-      <y>125</y>
-      <width>381</width>
-      <height>301</height>
+      <y>80</y>
+      <width>491</width>
+      <height>406</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -102,8 +102,20 @@ font: 14pt &quot;DejaVu Sans&quot;;
 }</string>
     </property>
     <layout class="QGridLayout" name="gridLayout">
+     <property name="leftMargin">
+      <number>10</number>
+     </property>
+     <property name="topMargin">
+      <number>5</number>
+     </property>
+     <property name="rightMargin">
+      <number>10</number>
+     </property>
+     <property name="bottomMargin">
+      <number>5</number>
+     </property>
      <property name="spacing">
-      <number>8</number>
+      <number>20</number>
      </property>
      <item row="2" column="2">
       <widget class="QPushButton" name="pushButton_13">
@@ -138,16 +150,6 @@ font: 14pt &quot;DejaVu Sans&quot;;
        </property>
        <property name="text">
         <string>Edit</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="4">
-      <widget class="QPushButton" name="clearBtn">
-       <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
-       </property>
-       <property name="text">
-        <string>Clear</string>
        </property>
       </widget>
      </item>
@@ -288,16 +290,6 @@ font: 14pt &quot;DejaVu Sans&quot;;
        </attribute>
       </widget>
      </item>
-     <item row="0" column="4">
-      <widget class="QPushButton" name="backBtn">
-       <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
-       </property>
-       <property name="text">
-        <string>&lt;-</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="3">
       <widget class="QPushButton" name="pushButton_9">
        <property name="focusPolicy">
@@ -352,38 +344,13 @@ font: 14pt &quot;DejaVu Sans&quot;;
      </item>
     </layout>
    </widget>
-   <widget class="QLabel" name="enterValueLabel">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>5</y>
-      <width>371</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="focusPolicy">
-     <enum>Qt::WheelFocus</enum>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font: 16pt &quot;Noto Sans&quot;;</string>
-    </property>
-    <property name="text">
-     <string>Enter a value</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-    <property name="wordWrap">
-     <bool>true</bool>
-    </property>
-   </widget>
    <widget class="QLineEdit" name="inputField">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>70</y>
-      <width>356</width>
-      <height>51</height>
+      <x>15</x>
+      <y>15</y>
+      <width>296</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -402,12 +369,56 @@ font: 14pt &quot;DejaVu Sans&quot;;
      <string>0.0</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="backBtn">
+    <property name="geometry">
+     <rect>
+      <x>335</x>
+      <y>15</y>
+      <width>60</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::NoFocus</enum>
+    </property>
+    <property name="text">
+     <string>&lt;-</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="clearBtn">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>15</y>
+      <width>60</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::NoFocus</enum>
+    </property>
+    <property name="text">
+     <string>Clear</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="numbersGroup"/>
   <buttongroup name="operationsGroup"/>
+  <buttongroup name="numbersGroup"/>
  </buttongroups>
 </ui>

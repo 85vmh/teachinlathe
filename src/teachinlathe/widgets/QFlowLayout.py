@@ -47,39 +47,29 @@ class QFlowLayout(QLayout):
         left, top, right, bottom = self.getContentsMargins()
         effectiveRect = rect.adjusted(+left, +top, -right, -bottom)
 
-        # Initial vertical space before the first row
-        initialVSpacing = 5  # Adjust the value as needed for your layout
+        max_per_row = 4
+        vSpacing = 20
+        y = effectiveRect.y() + 5  # top padding
 
-        x = effectiveRect.x()
-        y = effectiveRect.y() + initialVSpacing  # Start with the initial vertical spacing
-        lineHeight = 0
+        item_width = 80
+        item_height = 50
 
-        # Horizontal and vertical spacing between buttons and rows
-        hSpacing = 15  # Horizontal spacing between buttons
-        vSpacing = 12  # Vertical spacing between rows of buttons
+        total_spacing = effectiveRect.width() - (max_per_row * item_width)
+        if total_spacing < 0:
+            total_spacing = 0
+        space_between = total_spacing // (max_per_row + 1)
 
-        # Calculate the width of all buttons and the spacing in one row
-        totalButtonWidth = sum(item.sizeHint().width() for item in self.itemList[:4])
-        totalSpacingWidth = (3 * hSpacing)  # There are always 3 gaps between 4 buttons
+        i = 0
+        while i < len(self.itemList):
+            row_items = self.itemList[i:i + max_per_row]
 
-        # Start position for the first button
-        x += (effectiveRect.width() - (totalButtonWidth + totalSpacingWidth)) // 2
+            x = effectiveRect.x() + space_between
 
-        for i, item in enumerate(self.itemList):
-            wid = item.widget()
-            itemWidthWithSpacing = item.sizeHint().width()
+            for col in range(max_per_row):
+                if col < len(row_items):
+                    item = row_items[col]
+                    item.setGeometry(QRect(QPoint(x, y), QSize(item_width, item_height)))
+                x += item_width + space_between
 
-            # Place the item
-            item.setGeometry(QRect(QPoint(x, y), item.sizeHint()))
-
-            # Update x to the next item's position, with horizontal spacing
-            x += itemWidthWithSpacing + hSpacing
-
-            # Update lineHeight for the tallest item in the row
-            lineHeight = max(lineHeight, item.sizeHint().height())
-
-            # If we have placed 4 items or this is the last item, reset x and increment y
-            if (i + 1) % 4 == 0 or (i + 1) == len(self.itemList):
-                x = effectiveRect.x() + (effectiveRect.width() - (totalButtonWidth + totalSpacingWidth)) // 2
-                y += lineHeight + vSpacing
-                lineHeight = 0
+            y += item_height + vSpacing
+            i += max_per_row

@@ -1,6 +1,6 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from qtpyvcp import SETTINGS
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QValidator
+from qtpyvcp import SETTINGS
 
 from teachinlathe.widgets.QFlowLayout import QFlowLayout
 from teachinlathe.widgets.numpad_dialog_ui import Ui_NumPadDialog
@@ -9,11 +9,13 @@ from teachinlathe.widgets.numpad_dialog_ui import Ui_NumPadDialog
 class SmartNumPadDialog(QtWidgets.QDialog, Ui_NumPadDialog):
     valueSelected = QtCore.pyqtSignal(str)
 
+    WINDOW_WIDTH = 500
+    SELECT_VALUES_HEIGHT = 355
+    ENTER_VALUES_HEIGHT = 500
+
     def __init__(self, settings_key, enter_values=False, parent=None):
         super(SmartNumPadDialog, self).__init__(parent)
         self.setupUi(self)
-        self.select_values_height = 311
-        self.enter_values_height = 440
         self.enter_values_mode = enter_values
 
         self._setting = SETTINGS.get(settings_key)
@@ -43,15 +45,15 @@ class SmartNumPadDialog(QtWidgets.QDialog, Ui_NumPadDialog):
                     self.flowLayout.addWidget(button)
 
                 if self.title_prefix is not None:
-                    self.suggestedValuesBox.setTitle("Select " + self.title_prefix)
+                    self.setWindowTitle("Select " + self.title_prefix)
 
                 self.suggestedValuesBox.setStyleSheet("QPushButton {\n"
-                                                      "min-height: 30px;\n"
-                                                      "min-width: 24px;\n"
-                                                      "font: 11pt \"DejaVu Sans\";\n"
+                                                      "height: 50px;\n"
+                                                      "width: 80px;\n"
+                                                      "font: 14pt \"DejaVu Sans\";\n"
                                                       "}")
                 self.suggestedValuesBox.setLayout(self.flowLayout)
-                self.resize(394, self.select_values_height)
+                self.resize(self.WINDOW_WIDTH, self.SELECT_VALUES_HEIGHT)
         else:
             self.selectValuesWidget.hide()
             self.enterValuesWidget.show()
@@ -64,15 +66,16 @@ class SmartNumPadDialog(QtWidgets.QDialog, Ui_NumPadDialog):
             self.inputField.setValidator(self.SingleDotValidator())
 
             if self.title_prefix is not None:
-                self.enterValueLabel.setText("Enter " + self.title_prefix)
+                self.setWindowTitle("Enter " + self.title_prefix)
 
-            self.enterValuesWidget.setGeometry(QtCore.QRect(0, 0, 391, 420))
-            self.resize(394, self.enter_values_height)
+            self.enterValuesWidget.setGeometry(QtCore.QRect(0, 0, self.WINDOW_WIDTH - 3, self.ENTER_VALUES_HEIGHT - 20))
+            self.resize(self.WINDOW_WIDTH, self.ENTER_VALUES_HEIGHT)
 
             self.numbersGroup.buttonClicked.connect(self.numberKeys)
             self.backBtn.clicked.connect(self.backKey)
             self.clearBtn.clicked.connect(self.clearKey)
             self.inputBtn.clicked.connect(self.inputKey)
+            self.plusMinusBtn.clicked.connect(self.togglePlusMinus)
 
     def numberKeys(self, button):
         text = self.inputField.text()  # copy the label text to the variable
@@ -92,6 +95,14 @@ class SmartNumPadDialog(QtWidgets.QDialog, Ui_NumPadDialog):
     def inputKey(self):
         self.valueSelected.emit(self.inputField.text())
         self.close()
+
+    def togglePlusMinus(self):
+        text = self.inputField.text()
+        if text.startswith('-'):
+            text = text[1:]
+        else:
+            text = '-' + text
+        self.inputField.setText(text)
 
     def quickValueSelected(self):
         selected_value = self.sender().text()  # Get text of the clicked button
