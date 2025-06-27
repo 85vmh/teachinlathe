@@ -133,7 +133,7 @@ class MyMainWindow(VCPMainWindow):
         self.vtk.setViewXZ2()
         self.vtk.enable_panning(True)
 
-        self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
+        # self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
         self.quickcycles.onLoadClicked.connect(self.prepareToRunProgram)
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
         self.tabSpindleMode.currentChanged.connect(self.onSpindleModeChanged)
@@ -163,8 +163,8 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = self.mainSelectedTab == MainTabs.PROGRAMS
         self.teachinlathedro.limitsHandler.setChuckLimitsActive(self.mainSelectedTab != MainTabs.MACHINE_SETTINGS)
 
-    def handleUsbPresent(self, value):
-        self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value if value else ProgramTabs.PROGRAM_LOADED.value)
+    # def handleUsbPresent(self, value):
+    #     self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value if value else ProgramTabs.PROGRAM_LOADED.value)
 
     def loadProgram(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.PROGRAM_LOADED.value)
