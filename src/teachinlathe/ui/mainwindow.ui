@@ -1297,13 +1297,13 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               </property>
              </widget>
             </widget>
-            <widget class="QFrame" name="maxVelocityFrame">
+            <widget class="QFrame" name="joystickJogSpeed">
              <property name="geometry">
               <rect>
                <x>1095</x>
-               <y>905</y>
-               <width>591</width>
-               <height>76</height>
+               <y>740</y>
+               <width>161</width>
+               <height>241</height>
               </rect>
              </property>
              <property name="styleSheet">
@@ -1319,51 +1319,13 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="frameShadow">
               <enum>QFrame::Raised</enum>
              </property>
-             <widget class="QLabel" name="label_3">
-              <property name="geometry">
-               <rect>
-                <x>5</x>
-                <y>0</y>
-                <width>156</width>
-                <height>36</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 20pt &quot;Lato&quot;;</string>
-              </property>
-              <property name="text">
-               <string>Max Velocity</string>
-              </property>
-             </widget>
-             <widget class="StatusLabel" name="statuslabel_38">
-              <property name="geometry">
-               <rect>
-                <x>20</x>
-                <y>40</y>
-                <width>116</width>
-                <height>26</height>
-               </rect>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">font: 12pt &quot;Noto Sans Mono&quot;;</string>
-              </property>
-              <property name="text">
-               <string>180N/A/min</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="rules" stdset="0">
-               <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;settings:machine.jog.linear-speed&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:program_units?text&quot;, &quot;trigger&quot;: false}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'{:.0f}'.format(ch[0]) + ch[1] + '/min'&quot;, &quot;name&quot;: &quot;Rapid Speed&quot;}]</string>
-              </property>
-             </widget>
              <widget class="JogSpeedPercentageWidget" name="jogspeedpercentagewidget">
               <property name="geometry">
                <rect>
-                <x>180</x>
-                <y>10</y>
-                <width>401</width>
-                <height>51</height>
+                <x>10</x>
+                <y>15</y>
+                <width>136</width>
+                <height>216</height>
                </rect>
               </property>
               <property name="font">
@@ -1373,6 +1335,9 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               </property>
               <property name="diameter" stdset="0">
                <number>15</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
               </property>
               <property name="layoutSpacing">
                <number>6</number>
@@ -2034,6 +1999,44 @@ QCheckBox:disabled {
              </property>
              <property name="rules" stdset="0">
               <string>[{&quot;name&quot;: &quot;feed_override&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;str(int(ch[0]*100)) + '%'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:feedrate&quot;, &quot;trigger&quot;: true}]}]</string>
+             </property>
+            </widget>
+            <widget class="QLabel" name="label_3">
+             <property name="geometry">
+              <rect>
+               <x>1100</x>
+               <y>705</y>
+               <width>266</width>
+               <height>36</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 18pt &quot;Cantarell&quot;;</string>
+             </property>
+             <property name="text">
+              <string>Jog Speed</string>
+             </property>
+            </widget>
+            <widget class="StatusLabel" name="statuslabel_38">
+             <property name="geometry">
+              <rect>
+               <x>1280</x>
+               <y>775</y>
+               <width>116</width>
+               <height>26</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 12pt &quot;Noto Sans Mono&quot;;</string>
+             </property>
+             <property name="text">
+              <string>0N/A/min</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <property name="rules" stdset="0">
+              <string>[{&quot;channels&quot;: [{&quot;url&quot;: &quot;status:velocity&quot;, &quot;trigger&quot;: true}, {&quot;url&quot;: &quot;status:program_units?text&quot;, &quot;trigger&quot;: false}], &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;'{:.0f}'.format(ch[0]) + ch[1] + '/min'&quot;, &quot;name&quot;: &quot;Rapid Speed&quot;}]</string>
              </property>
             </widget>
            </widget>
