@@ -205,9 +205,8 @@ class MyMainWindow(VCPMainWindow):
 
     def onCycleStopPressed(self, value):
         if self.mainSelectedTab == MainTabs.MANUAL_TURNING:
-            if self.checkBoxFeedAngle.isChecked() and value:
+            if self.latheJoystick.isRotated() and value:
                 print("Set taper turning off when cycle stop pressed")
-                self.checkBoxFeedAngle.setChecked(False)
                 self.angleFeedToggled(False)
 
     def angleFeedToggled(self, value):
