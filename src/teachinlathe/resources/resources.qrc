@@ -1,6 +1,5 @@
 <RCC>
-    <qresource prefix="/lathe_resources">
-        <file>joystick_center.png</file>
+    <qresource prefix="/">
         <file>lathe_control_point_9.png</file>
         <file>lathe_control_point_8.png</file>
         <file>lathe_control_point_7.png</file>
