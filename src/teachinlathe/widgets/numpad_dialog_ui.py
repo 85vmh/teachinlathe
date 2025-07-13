@@ -147,13 +147,6 @@ class Ui_NumPadDialog(object):
         self.pushButton_8.setObjectName("pushButton_8")
         self.numbersGroup.addButton(self.pushButton_8)
         self.gridLayout.addWidget(self.pushButton_8, 1, 2, 1, 1)
-        self.inputField = QtWidgets.QLineEdit(self.enterValuesWidget)
-        self.inputField.setGeometry(QtCore.QRect(15, 15, 296, 61))
-        self.inputField.setStyleSheet("font: 16pt \"Noto Sans\";")
-        self.inputField.setText("")
-        self.inputField.setCursorPosition(0)
-        self.inputField.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.inputField.setObjectName("inputField")
         self.backBtn = QtWidgets.QPushButton(self.enterValuesWidget)
         self.backBtn.setGeometry(QtCore.QRect(335, 15, 60, 60))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
@@ -172,6 +165,20 @@ class Ui_NumPadDialog(object):
         self.clearBtn.setSizePolicy(sizePolicy)
         self.clearBtn.setFocusPolicy(QtCore.Qt.NoFocus)
         self.clearBtn.setObjectName("clearBtn")
+        self.inputField = QtWidgets.QLabel(self.enterValuesWidget)
+        self.inputField.setGeometry(QtCore.QRect(10, 15, 301, 60))
+        self.inputField.setStyleSheet("QLabel {\n"
+"        border-style: solid;\n"
+"        border-color: rgb(119, 118, 123);\n"
+"        border-width: 1px;\n"
+"        border-radius: 5px;\n"
+"        color: rgb(20, 20, 20);\n"
+"        background: rgb(246, 245, 244);\n"
+"        font: 18pt \"Noto Sans Mono\";\n"
+"}")
+        self.inputField.setText("")
+        self.inputField.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.inputField.setObjectName("inputField")
 
         self.retranslateUi(NumPadDialog)
         QtCore.QMetaObject.connectSlotsByName(NumPadDialog)
@@ -197,6 +204,5 @@ class Ui_NumPadDialog(object):
         self.pushButton_16.setText(_translate("NumPadDialog", "."))
         self.pushButton.setText(_translate("NumPadDialog", "7"))
         self.pushButton_8.setText(_translate("NumPadDialog", "6"))
-        self.inputField.setPlaceholderText(_translate("NumPadDialog", "0.0"))
         self.backBtn.setText(_translate("NumPadDialog", "<-"))
         self.clearBtn.setText(_translate("NumPadDialog", "Clear"))

@@ -20,3 +20,30 @@ class HeaderDetailWidget(QWidget, Ui_HeaderDetailForm):
         self.lineEdit_2.setText(str(self.header.workpiece.external_diameter))
         self.lineEdit_3.setText(str(self.header.workpiece.internal_diameter))
         self.lineEdit_4.setText(str(self.header.workpiece.stickout_length))
+
+    def update_model(self):
+        """Update the header model with the values from the UI fields."""
+        self.header.name = self.lineEdit.text()
+
+        try:
+            self.header.datum = int(self.lineEdit_5.text())
+        except ValueError:
+            self.header.datum = 0  # sau poți emite un warning/log
+
+        self.header.units = "mm" if self.radioButton.isChecked() else "in"
+
+        try:
+            self.header.workpiece.external_diameter = float(self.lineEdit_2.text())
+        except ValueError:
+            self.header.workpiece.external_diameter = 0.0
+
+        try:
+            self.header.workpiece.internal_diameter = float(self.lineEdit_3.text())
+        except ValueError:
+            self.header.workpiece.internal_diameter = 0.0
+
+        try:
+            self.header.workpiece.stickout_length = float(self.lineEdit_4.text())
+        except ValueError:
+            self.header.workpiece.stickout_length = 0.0
+

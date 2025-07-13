@@ -60,11 +60,6 @@ class SmartNumPadDialog(QtWidgets.QDialog, Ui_NumPadDialog):
 
             self.plusMinusBtn.setText(u"\u00B1")
 
-            # validator = QtGui.QDoubleValidator()
-            # validator.setRange(-9999.999, 9999.999, 3)
-            # self.inputField.setValidator(validator)
-            self.inputField.setValidator(self.SingleDotValidator())
-
             if self.title_prefix is not None:
                 self.setWindowTitle("Enter " + self.title_prefix)
 
@@ -113,8 +108,3 @@ class SmartNumPadDialog(QtWidgets.QDialog, Ui_NumPadDialog):
         # Override resize event to prevent resizing
         pass
 
-    class SingleDotValidator(QValidator):
-        def validate(self, string, pos):
-            if string.count('.') > 1:
-                return (QValidator.Invalid, string, pos)
-            return (QValidator.Acceptable, string, pos)

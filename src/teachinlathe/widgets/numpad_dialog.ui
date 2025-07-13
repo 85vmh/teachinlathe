@@ -344,31 +344,6 @@ font: 14pt &quot;DejaVu Sans&quot;;
      </item>
     </layout>
    </widget>
-   <widget class="QLineEdit" name="inputField">
-    <property name="geometry">
-     <rect>
-      <x>15</x>
-      <y>15</y>
-      <width>296</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font: 16pt &quot;Noto Sans&quot;;</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="cursorPosition">
-     <number>0</number>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-    <property name="placeholderText">
-     <string>0.0</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="backBtn">
     <property name="geometry">
      <rect>
@@ -411,6 +386,33 @@ font: 14pt &quot;DejaVu Sans&quot;;
     </property>
     <property name="text">
      <string>Clear</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="inputField">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>15</y>
+      <width>301</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(20, 20, 20);
+        background: rgb(246, 245, 244);
+        font: 18pt &quot;Noto Sans Mono&quot;;
+}</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
     </property>
    </widget>
   </widget>

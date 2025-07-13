@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1001</width>
-    <height>674</height>
+    <width>1884</width>
+    <height>928</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -27,8 +27,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>996</width>
-     <height>671</height>
+     <width>1881</width>
+     <height>926</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -47,9 +47,9 @@
    <widget class="QPushButton" name="btnNext">
     <property name="geometry">
      <rect>
-      <x>910</x>
+      <x>1730</x>
       <y>10</y>
-      <width>66</width>
+      <width>136</width>
       <height>31</height>
      </rect>
     </property>
@@ -75,8 +75,8 @@
      <rect>
       <x>3</x>
       <y>55</y>
-      <width>986</width>
-      <height>611</height>
+      <width>1871</width>
+      <height>866</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -86,14 +86,14 @@
      <widget class="QPushButton" name="btnTurning">
       <property name="geometry">
        <rect>
-        <x>769</x>
-        <y>490</y>
+        <x>1530</x>
+        <y>715</y>
         <width>171</width>
         <height>61</height>
        </rect>
       </property>
       <property name="text">
-       <string>Turning</string>
+       <string>Create New</string>
       </property>
      </widget>
      <widget class="QListWidget" name="listWidget_programs">
@@ -101,8 +101,8 @@
        <rect>
         <x>5</x>
         <y>5</y>
-        <width>976</width>
-        <height>466</height>
+        <width>1861</width>
+        <height>691</height>
        </rect>
       </property>
       <property name="selectionMode">
@@ -111,26 +111,13 @@
      </widget>
     </widget>
     <widget class="QWidget" name="pageDetails">
-     <widget class="QPushButton" name="pushButton">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>435</y>
-        <width>87</width>
-        <height>27</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>PushButton</string>
-      </property>
-     </widget>
      <widget class="Line" name="line_2">
       <property name="geometry">
        <rect>
-        <x>310</x>
-        <y>0</y>
-        <width>10</width>
-        <height>606</height>
+        <x>400</x>
+        <y>5</y>
+        <width>16</width>
+        <height>846</height>
        </rect>
       </property>
       <property name="orientation">
@@ -140,27 +127,174 @@
      <widget class="QListWidget" name="listWidget_steps">
       <property name="geometry">
        <rect>
-        <x>5</x>
-        <y>5</y>
-        <width>301</width>
-        <height>391</height>
+        <x>10</x>
+        <y>10</y>
+        <width>386</width>
+        <height>601</height>
        </rect>
       </property>
      </widget>
      <widget class="QStackedWidget" name="stepDetails">
       <property name="geometry">
        <rect>
-        <x>315</x>
-        <y>5</y>
-        <width>666</width>
+        <x>440</x>
+        <y>15</y>
+        <width>1326</width>
         <height>596</height>
        </rect>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="pageHeader"/>
       <widget class="QWidget" name="pageSetTool"/>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_7">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>640</y>
+        <width>386</width>
+        <height>221</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Add Operation</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <widget class="QWidget" name="gridLayoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>5</x>
+         <y>25</y>
+         <width>376</width>
+         <height>191</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <property name="leftMargin">
+         <number>5</number>
+        </property>
+        <property name="topMargin">
+         <number>5</number>
+        </property>
+        <property name="rightMargin">
+         <number>5</number>
+        </property>
+        <property name="bottomMargin">
+         <number>5</number>
+        </property>
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="facingBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Facing</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QPushButton" name="defineProfileBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Define Profile</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="threadingBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Threading</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="turnProfileBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Turn Profile</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QPushButton" name="setToolBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Set Tool</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="drillingBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Drilling</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QPushButton" name="tappingBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Tapping</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="partingBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Parting</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </widget>
     <widget class="QWidget" name="pageBoring">
@@ -2947,9 +3081,9 @@ QPushButton:checked {
    <widget class="QLabel" name="title">
     <property name="geometry">
      <rect>
-      <x>395</x>
+      <x>645</x>
       <y>5</y>
-      <width>196</width>
+      <width>591</width>
       <height>31</height>
      </rect>
     </property>
@@ -2966,7 +3100,7 @@ QPushButton:checked {
      <string notr="true">font: 14pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="text">
-     <string>Quick Cycles</string>
+     <string>Title</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -2977,7 +3111,7 @@ QPushButton:checked {
      <rect>
       <x>0</x>
       <y>39</y>
-      <width>986</width>
+      <width>1861</width>
       <height>16</height>
      </rect>
     </property>

@@ -2032,24 +2032,11 @@ QCheckBox:disabled {
             <widget class="MDIEntry" name="mdientry">
              <property name="geometry">
               <rect>
-               <x>1475</x>
-               <y>550</y>
+               <x>1590</x>
+               <y>575</y>
                <width>211</width>
                <height>51</height>
               </rect>
-             </property>
-            </widget>
-            <widget class="QPushButton" name="pushButton">
-             <property name="geometry">
-              <rect>
-               <x>1715</x>
-               <y>545</y>
-               <width>156</width>
-               <height>61</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>Run MDI</string>
              </property>
             </widget>
            </widget>
