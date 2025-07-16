@@ -25,7 +25,7 @@ class ProgramDetailsWidget(QObject):
         # Add header as first item
         header_item = QListWidgetItem()
         header_item.setSizeHint(QSize(300, 60))
-        header_widget = QLabel(f"📌 {self.program.header.name}")
+        header_widget = QLabel("Program Header")
         header_widget.setMargin(10)
         header_widget.setStyleSheet("font-family: Cantarell; font-size: 18px;")
         self.list_widget.addItem(header_item)

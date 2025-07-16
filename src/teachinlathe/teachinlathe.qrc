@@ -1,0 +1,36 @@
+<RCC>
+  <qresource prefix="/">
+    <file>images/rough_finish_turn.png</file>
+    <file>images/rough_finish_face.png</file>
+    <file>images/rough_finish_chamfer.png</file>
+    <file>images/rough_finish_radius.png</file>
+    <file>images/rough_finish_bore.png</file>
+    <file>images/rough_finish_groove.png</file>
+    <file>images/rough_finish_profile.png</file>
+    <file>images/rough_finish_parting.png</file>
+    <file>images/thread_doc.png</file>
+    <file>images/thread_pitch_tap.png</file>
+    <file>images/thread_int_doc.png</file>
+    <file>images/turning.png</file>
+    <file>images/tapping.png</file>
+    <file>images/tapping1.png</file>
+    <file>images/boring.png</file>
+    <file>images/facing.png</file>
+    <file>images/chamfer.png</file>
+    <file>images/radius.png</file>
+    <file>images/threading_ext.png</file>
+    <file>images/threading_int.png</file>
+    <file>images/parting.png</file>
+    <file>images/grooving.png</file>
+    <file>images/drilling.png</file>
+    <file>images/lathe_control_point_1.png</file>
+    <file>images/lathe_control_point_2.png</file>
+    <file>images/lathe_control_point_3.png</file>
+    <file>images/lathe_control_point_4.png</file>
+    <file>images/lathe_control_point_5.png</file>
+    <file>images/lathe_control_point_6.png</file>
+    <file>images/lathe_control_point_7.png</file>
+    <file>images/lathe_control_point_8.png</file>
+    <file>images/lathe_control_point_9.png</file>
+  </qresource>
+</RCC>

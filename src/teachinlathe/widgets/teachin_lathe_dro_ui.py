@@ -14,9 +14,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1020, 203)
+        Form.resize(1310, 703)
         self.zLabel = QtWidgets.QLabel(Form)
-        self.zLabel.setGeometry(QtCore.QRect(5, 90, 60, 81))
+        self.zLabel.setGeometry(QtCore.QRect(5, 140, 60, 81))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -33,7 +33,7 @@ class Ui_Form(object):
         self.zLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.zLabel.setObjectName("zLabel")
         self.xLabel = QtWidgets.QLabel(Form)
-        self.xLabel.setGeometry(QtCore.QRect(5, 5, 60, 81))
+        self.xLabel.setGeometry(QtCore.QRect(5, 50, 60, 81))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -44,7 +44,7 @@ class Ui_Form(object):
         self.xLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.xLabel.setObjectName("xLabel")
         self.xSecondaryDro = QtWidgets.QLabel(Form)
-        self.xSecondaryDro.setGeometry(QtCore.QRect(70, 10, 131, 34))
+        self.xSecondaryDro.setGeometry(QtCore.QRect(476, 55, 131, 34))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -63,7 +63,7 @@ class Ui_Form(object):
         self.xSecondaryDro.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.xSecondaryDro.setObjectName("xSecondaryDro")
         self.zSecondaryDro = QtWidgets.QLabel(Form)
-        self.zSecondaryDro.setGeometry(QtCore.QRect(70, 90, 131, 34))
+        self.zSecondaryDro.setGeometry(QtCore.QRect(476, 145, 131, 34))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -82,7 +82,7 @@ class Ui_Form(object):
         self.zSecondaryDro.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.zSecondaryDro.setObjectName("zSecondaryDro")
         self.xPrimaryDro = QtWidgets.QLabel(Form)
-        self.xPrimaryDro.setGeometry(QtCore.QRect(210, 10, 305, 71))
+        self.xPrimaryDro.setGeometry(QtCore.QRect(610, 55, 316, 71))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -102,7 +102,7 @@ class Ui_Form(object):
         self.xPrimaryDro.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.xPrimaryDro.setObjectName("xPrimaryDro")
         self.zPrimaryDro = QtWidgets.QLabel(Form)
-        self.zPrimaryDro.setGeometry(QtCore.QRect(210, 90, 305, 71))
+        self.zPrimaryDro.setGeometry(QtCore.QRect(610, 145, 316, 71))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -122,7 +122,7 @@ class Ui_Form(object):
         self.zPrimaryDro.setIndent(-1)
         self.zPrimaryDro.setObjectName("zPrimaryDro")
         self.zAbsRel = QtWidgets.QPushButton(Form)
-        self.zAbsRel.setGeometry(QtCore.QRect(580, 90, 40, 40))
+        self.zAbsRel.setGeometry(QtCore.QRect(1230, 145, 71, 71))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -130,13 +130,13 @@ class Ui_Form(object):
         self.zAbsRel.setSizePolicy(sizePolicy)
         self.zAbsRel.setMinimumSize(QtCore.QSize(0, 0))
         self.zAbsRel.setStyleSheet("QPushButton {\n"
-"    height: 40px;\n"
-"    width: 40px;\n"
+"    height: 60px;\n"
+"    width: 60px;\n"
 "    font: 14pt \"DejaVu Sans\";\n"
 "}")
         self.zAbsRel.setObjectName("zAbsRel")
         self.xZero = QtWidgets.QPushButton(Form)
-        self.xZero.setGeometry(QtCore.QRect(530, 10, 40, 40))
+        self.xZero.setGeometry(QtCore.QRect(1135, 55, 71, 71))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -145,13 +145,13 @@ class Ui_Form(object):
         self.xZero.setMinimumSize(QtCore.QSize(40, 40))
         self.xZero.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.xZero.setStyleSheet("QPushButton {\n"
-"    height: 40px;\n"
-"    width: 40px;\n"
+"    height: 60px;\n"
+"    width: 60px;\n"
 "    font: 14pt \"DejaVu Sans\";\n"
 "}")
         self.xZero.setObjectName("xZero")
         self.xAbsRel = QtWidgets.QPushButton(Form)
-        self.xAbsRel.setGeometry(QtCore.QRect(580, 10, 40, 40))
+        self.xAbsRel.setGeometry(QtCore.QRect(1230, 55, 71, 71))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -159,13 +159,13 @@ class Ui_Form(object):
         self.xAbsRel.setSizePolicy(sizePolicy)
         self.xAbsRel.setMinimumSize(QtCore.QSize(0, 0))
         self.xAbsRel.setStyleSheet("QPushButton {\n"
-"    height: 40px;\n"
-"    width: 40px;\n"
+"    height: 60px;\n"
+"    width: 60px;\n"
 "    font: 14pt \"DejaVu Sans\";\n"
 "}")
         self.xAbsRel.setObjectName("xAbsRel")
         self.zZero = QtWidgets.QPushButton(Form)
-        self.zZero.setGeometry(QtCore.QRect(530, 90, 40, 40))
+        self.zZero.setGeometry(QtCore.QRect(1135, 145, 71, 71))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -173,13 +173,13 @@ class Ui_Form(object):
         self.zZero.setSizePolicy(sizePolicy)
         self.zZero.setMinimumSize(QtCore.QSize(0, 0))
         self.zZero.setStyleSheet("QPushButton {\n"
-"    height: 40px;\n"
-"    width: 40px;\n"
+"    height: 60px;\n"
+"    width: 60px;\n"
 "    font: 14pt \"DejaVu Sans\";\n"
 "}")
         self.zZero.setObjectName("zZero")
         self.zUnit = QtWidgets.QLabel(Form)
-        self.zUnit.setGeometry(QtCore.QRect(525, 140, 31, 21))
+        self.zUnit.setGeometry(QtCore.QRect(930, 170, 31, 21))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -190,7 +190,7 @@ class Ui_Form(object):
         self.zUnit.setAlignment(QtCore.Qt.AlignCenter)
         self.zUnit.setObjectName("zUnit")
         self.xUnit = QtWidgets.QLabel(Form)
-        self.xUnit.setGeometry(QtCore.QRect(525, 60, 31, 21))
+        self.xUnit.setGeometry(QtCore.QRect(930, 80, 31, 21))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -200,162 +200,503 @@ class Ui_Form(object):
         self.xUnit.setStyleSheet("font: 18pt \"Liberation Mono\";")
         self.xUnit.setAlignment(QtCore.Qt.AlignCenter)
         self.xUnit.setObjectName("xUnit")
-        self.line_2 = QtWidgets.QFrame(Form)
-        self.line_2.setGeometry(QtCore.QRect(0, 200, 1021, 2))
-        self.line_2.setStyleSheet("color: rgb(154, 153, 150)")
-        self.line_2.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.line_2.setLineWidth(2)
-        self.line_2.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line_2.setObjectName("line_2")
         self.mdibutton = MDIButton(Form)
-        self.mdibutton.setGeometry(QtCore.QRect(70, 130, 131, 31))
+        self.mdibutton.setGeometry(QtCore.QRect(1040, 145, 71, 71))
         self.mdibutton.setStyleSheet("")
         self.mdibutton.setObjectName("mdibutton")
-        self.stackedWidget = QtWidgets.QStackedWidget(Form)
-        self.stackedWidget.setGeometry(QtCore.QRect(644, 10, 371, 181))
-        self.stackedWidget.setStyleSheet("QStackedWidget {\n"
+        self.groupBox = QtWidgets.QGroupBox(Form)
+        self.groupBox.setGeometry(QtCore.QRect(5, 220, 1300, 476))
+        self.groupBox.setStyleSheet("")
+        self.groupBox.setTitle("")
+        self.groupBox.setObjectName("groupBox")
+        self.boxZMinusLimit = QtWidgets.QWidget(self.groupBox)
+        self.boxZMinusLimit.setGeometry(QtCore.QRect(170, 275, 191, 56))
+        self.boxZMinusLimit.setStyleSheet("QWidget #boxZMinusLimit{\n"
 "    border-style: solid;\n"
 "    border-color: rgb(10, 10, 10);\n"
 "    border-width: 1px;\n"
 "    border-radius: 8px;\n"
-"    color: rgb(10, 10, 10);;\n"
-"    background: rgb(217, 217, 217);\n"
+"    color: rgb(10, 10, 10);\n"
 "}")
-        self.stackedWidget.setObjectName("stackedWidget")
-        self.pageApplyLimits = QtWidgets.QWidget()
-        self.pageApplyLimits.setObjectName("pageApplyLimits")
-        self.xMinusLimit = QtWidgets.QCheckBox(self.pageApplyLimits)
-        self.xMinusLimit.setGeometry(QtCore.QRect(100, 0, 141, 35))
+        self.boxZMinusLimit.setObjectName("boxZMinusLimit")
+        self.teachZMinus = QtWidgets.QPushButton(self.boxZMinusLimit)
+        self.teachZMinus.setGeometry(QtCore.QRect(115, 10, 66, 36))
+        font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
+        font.setPointSize(12)
+        self.teachZMinus.setFont(font)
+        self.teachZMinus.setStyleSheet("")
+        self.teachZMinus.setObjectName("teachZMinus")
+        self.droLabelZMinus = TeachInDroLabel(self.boxZMinusLimit)
+        self.droLabelZMinus.setGeometry(QtCore.QRect(10, 10, 95, 36))
         font = QtGui.QFont()
         font.setFamily("Noto Sans Mono")
         font.setPointSize(12)
         font.setBold(False)
         font.setItalic(False)
         font.setWeight(50)
-        self.xMinusLimit.setFont(font)
-        self.xMinusLimit.setStyleSheet("font: 12pt \"Noto Sans Mono\";")
-        self.xMinusLimit.setObjectName("xMinusLimit")
-        self.xPlusLimit = QtWidgets.QCheckBox(self.pageApplyLimits)
-        self.xPlusLimit.setGeometry(QtCore.QRect(100, 100, 81, 35))
+        self.droLabelZMinus.setFont(font)
+        self.droLabelZMinus.setStyleSheet("QLabel {\n"
+"        border-style: solid;\n"
+"        border-color: rgb(119, 118, 123);\n"
+"        border-width: 1px;\n"
+"        border-radius: 5px;\n"
+"        color: rgb(154, 153, 150);\n"
+"        background: rgb(246, 245, 244);\n"
+"        font: 12pt \"Noto Sans Mono\";\n"
+"}")
+        self.droLabelZMinus.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.droLabelZMinus.setProperty("referenceType", 1)
+        self.droLabelZMinus.setProperty("axisNumber", 2)
+        self.droLabelZMinus.setProperty("latheMode", 0)
+        self.droLabelZMinus.setObjectName("droLabelZMinus")
+        self.boxZPlusLimit = QtWidgets.QWidget(self.groupBox)
+        self.boxZPlusLimit.setGeometry(QtCore.QRect(900, 275, 191, 56))
+        self.boxZPlusLimit.setStyleSheet("QWidget #boxZPlusLimit{\n"
+"    border-style: solid;\n"
+"    border-color: rgb(10, 10, 10);\n"
+"    border-width: 1px;\n"
+"    border-radius: 8px;\n"
+"    color: rgb(10, 10, 10);\n"
+"}")
+        self.boxZPlusLimit.setObjectName("boxZPlusLimit")
+        self.teachZPlus = QtWidgets.QPushButton(self.boxZPlusLimit)
+        self.teachZPlus.setGeometry(QtCore.QRect(115, 10, 66, 36))
         font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
         font.setPointSize(12)
-        self.xPlusLimit.setFont(font)
-        self.xPlusLimit.setStyleSheet("")
-        self.xPlusLimit.setObjectName("xPlusLimit")
-        self.zMinusLimit = QtWidgets.QCheckBox(self.pageApplyLimits)
-        self.zMinusLimit.setGeometry(QtCore.QRect(10, 30, 81, 35))
+        self.teachZPlus.setFont(font)
+        self.teachZPlus.setStyleSheet("")
+        self.teachZPlus.setObjectName("teachZPlus")
+        self.droLabelZPlus = TeachInDroLabel(self.boxZPlusLimit)
+        self.droLabelZPlus.setGeometry(QtCore.QRect(10, 10, 95, 36))
         font = QtGui.QFont()
+        font.setFamily("Noto Sans Mono")
         font.setPointSize(12)
-        self.zMinusLimit.setFont(font)
-        self.zMinusLimit.setStyleSheet("")
-        self.zMinusLimit.setObjectName("zMinusLimit")
-        self.zPlusLimit = QtWidgets.QCheckBox(self.pageApplyLimits)
-        self.zPlusLimit.setGeometry(QtCore.QRect(210, 30, 111, 35))
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.droLabelZPlus.setFont(font)
+        self.droLabelZPlus.setStyleSheet("QLabel {\n"
+"        border-style: solid;\n"
+"        border-color: rgb(119, 118, 123);\n"
+"        border-width: 1px;\n"
+"        border-radius: 5px;\n"
+"        color: rgb(154, 153, 150);\n"
+"        background: rgb(246, 245, 244);\n"
+"        font: 12pt \"Noto Sans Mono\";\n"
+"}")
+        self.droLabelZPlus.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.droLabelZPlus.setProperty("referenceType", 1)
+        self.droLabelZPlus.setProperty("axisNumber", 2)
+        self.droLabelZPlus.setProperty("latheMode", 0)
+        self.droLabelZPlus.setObjectName("droLabelZPlus")
+        self.zLine = QtWidgets.QFrame(self.groupBox)
+        self.zLine.setGeometry(QtCore.QRect(360, 295, 541, 20))
+        self.zLine.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.zLine.setFrameShape(QtWidgets.QFrame.HLine)
+        self.zLine.setObjectName("zLine")
+        self.tool_limits_label = QtWidgets.QLabel(self.groupBox)
+        self.tool_limits_label.setGeometry(QtCore.QRect(560, 280, 171, 51))
+        self.tool_limits_label.setStyleSheet("QLabel {\n"
+"    font: 75 16pt \"Noto Mono\";\n"
+"    border-style: solid;\n"
+"    border-color: rgb(10, 10, 10);\n"
+"    border-width: 1px;\n"
+"    border-radius: 2px;\n"
+"    color: rgb(10, 10, 10);;\n"
+"    background: rgb(230, 230, 230);\n"
+"}")
+        self.tool_limits_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.tool_limits_label.setObjectName("tool_limits_label")
+        self.label_6 = QtWidgets.QLabel(self.groupBox)
+        self.label_6.setGeometry(QtCore.QRect(545, 45, 206, 51))
+        self.label_6.setStyleSheet("QLabel {\n"
+"    font: 75 16pt \"Noto Mono\";\n"
+"    border-style: solid;\n"
+"    border-color: rgb(10, 10, 10);\n"
+"    border-width: 1px;\n"
+"    border-radius: 2px;\n"
+"    color: rgb(10, 10, 10);;\n"
+"    background: rgb(230, 230, 230);\n"
+"}")
+        self.label_6.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_6.setObjectName("label_6")
+        self.zLine_2 = QtWidgets.QFrame(self.groupBox)
+        self.zLine_2.setGeometry(QtCore.QRect(140, 60, 961, 20))
+        self.zLine_2.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.zLine_2.setFrameShape(QtWidgets.QFrame.HLine)
+        self.zLine_2.setObjectName("zLine_2")
+        self.xLine = QtWidgets.QFrame(self.groupBox)
+        self.xLine.setGeometry(QtCore.QRect(625, 205, 46, 206))
+        self.xLine.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.xLine.setFrameShape(QtWidgets.QFrame.VLine)
+        self.xLine.setObjectName("xLine")
+        self.boxXPlusLimit = QtWidgets.QWidget(self.groupBox)
+        self.boxXPlusLimit.setGeometry(QtCore.QRect(555, 410, 191, 56))
+        self.boxXPlusLimit.setStyleSheet("QWidget #boxXPlusLimit{\n"
+"    border-style: solid;\n"
+"    border-color: rgb(10, 10, 10);\n"
+"    border-width: 1px;\n"
+"    border-radius: 8px;\n"
+"    color: rgb(10, 10, 10);\n"
+"}")
+        self.boxXPlusLimit.setObjectName("boxXPlusLimit")
+        self.teachXPlus = QtWidgets.QPushButton(self.boxXPlusLimit)
+        self.teachXPlus.setGeometry(QtCore.QRect(115, 10, 66, 36))
         font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
         font.setPointSize(12)
-        self.zPlusLimit.setFont(font)
-        self.zPlusLimit.setStyleSheet("")
-        self.zPlusLimit.setObjectName("zPlusLimit")
-        self.line = QtWidgets.QFrame(self.pageApplyLimits)
-        self.line.setGeometry(QtCore.QRect(0, 130, 341, 16))
-        self.line.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.line.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line.setObjectName("line")
-        self.pushButton = QtWidgets.QPushButton(self.pageApplyLimits)
-        self.pushButton.setGeometry(QtCore.QRect(120, 144, 81, 30))
-        self.pushButton.setObjectName("pushButton")
-        self.pushButton_2 = QtWidgets.QPushButton(self.pageApplyLimits)
-        self.pushButton_2.setGeometry(QtCore.QRect(230, 144, 81, 30))
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.pushButton_3 = QtWidgets.QPushButton(self.pageApplyLimits)
-        self.pushButton_3.setGeometry(QtCore.QRect(10, 144, 81, 30))
-        self.pushButton_3.setObjectName("pushButton_3")
-        self.zPlusLimit_2 = QtWidgets.QCheckBox(self.pageApplyLimits)
-        self.zPlusLimit_2.setGeometry(QtCore.QRect(210, 70, 111, 35))
+        self.teachXPlus.setFont(font)
+        self.teachXPlus.setStyleSheet("")
+        self.teachXPlus.setObjectName("teachXPlus")
+        self.droLabelXPlus = TeachInDroLabel(self.boxXPlusLimit)
+        self.droLabelXPlus.setGeometry(QtCore.QRect(10, 10, 95, 36))
         font = QtGui.QFont()
+        font.setFamily("Noto Sans Mono")
         font.setPointSize(12)
-        self.zPlusLimit_2.setFont(font)
-        self.zPlusLimit_2.setStyleSheet("")
-        self.zPlusLimit_2.setObjectName("zPlusLimit_2")
-        self.stackedWidget.addWidget(self.pageApplyLimits)
-        self.pageEditLimits = QtWidgets.QWidget()
-        self.pageEditLimits.setObjectName("pageEditLimits")
-        self.teachXMinus = QtWidgets.QPushButton(self.pageEditLimits)
-        self.teachXMinus.setGeometry(QtCore.QRect(220, 10, 75, 27))
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.droLabelXPlus.setFont(font)
+        self.droLabelXPlus.setStyleSheet("QLabel {\n"
+"        border-style: solid;\n"
+"        border-color: rgb(119, 118, 123);\n"
+"        border-width: 1px;\n"
+"        border-radius: 5px;\n"
+"        color: rgb(154, 153, 150);\n"
+"        background: rgb(246, 245, 244);\n"
+"        font: 12pt \"Noto Sans Mono\";\n"
+"}")
+        self.droLabelXPlus.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.droLabelXPlus.setProperty("referenceType", 1)
+        self.droLabelXPlus.setProperty("axisNumber", 0)
+        self.droLabelXPlus.setProperty("latheMode", 0)
+        self.droLabelXPlus.setObjectName("droLabelXPlus")
+        self.boxXMinusLimit = QtWidgets.QWidget(self.groupBox)
+        self.boxXMinusLimit.setGeometry(QtCore.QRect(555, 150, 191, 56))
+        self.boxXMinusLimit.setStyleSheet("QWidget #boxXMinusLimit{\n"
+"    border-style: solid;\n"
+"    border-color: rgb(10, 10, 10);\n"
+"    border-width: 1px;\n"
+"    border-radius: 8px;\n"
+"    color: rgb(10, 10, 10);\n"
+"}")
+        self.boxXMinusLimit.setObjectName("boxXMinusLimit")
+        self.teachXMinus = QtWidgets.QPushButton(self.boxXMinusLimit)
+        self.teachXMinus.setGeometry(QtCore.QRect(115, 10, 66, 36))
         font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
         font.setPointSize(12)
         self.teachXMinus.setFont(font)
         self.teachXMinus.setStyleSheet("")
         self.teachXMinus.setObjectName("teachXMinus")
-        self.droZPlus = TeachInLineEdit(self.pageEditLimits)
-        self.droZPlus.setGeometry(QtCore.QRect(130, 143, 85, 27))
+        self.droLabelXMinus = TeachInDroLabel(self.boxXMinusLimit)
+        self.droLabelXMinus.setGeometry(QtCore.QRect(10, 10, 95, 36))
         font = QtGui.QFont()
+        font.setFamily("Noto Sans Mono")
         font.setPointSize(12)
-        self.droZPlus.setFont(font)
-        self.droZPlus.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.droZPlus.setProperty("referenceType", 0)
-        self.droZPlus.setProperty("axisNumber", 2)
-        self.droZPlus.setProperty("latheMode", 2)
-        self.droZPlus.setObjectName("droZPlus")
-        self.teachZPlus = QtWidgets.QPushButton(self.pageEditLimits)
-        self.teachZPlus.setGeometry(QtCore.QRect(220, 143, 75, 27))
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.droLabelXMinus.setFont(font)
+        self.droLabelXMinus.setStyleSheet("QLabel {\n"
+"        border-style: solid;\n"
+"        border-color: rgb(119, 118, 123);\n"
+"        border-width: 1px;\n"
+"        border-radius: 5px;\n"
+"        color: rgb(154, 153, 150);\n"
+"        background: rgb(246, 245, 244);\n"
+"        font: 12pt \"Noto Sans Mono\";\n"
+"}")
+        self.droLabelXMinus.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.droLabelXMinus.setProperty("referenceType", 1)
+        self.droLabelXMinus.setProperty("axisNumber", 0)
+        self.droLabelXMinus.setProperty("latheMode", 0)
+        self.droLabelXMinus.setObjectName("droLabelXMinus")
+        self.boxTailstockLimit = QtWidgets.QWidget(self.groupBox)
+        self.boxTailstockLimit.setGeometry(QtCore.QRect(1100, 45, 191, 56))
+        self.boxTailstockLimit.setStyleSheet("QWidget #boxTailstockLimit{\n"
+"    border-style: solid;\n"
+"    border-color: rgb(10, 10, 10);\n"
+"    border-width: 1px;\n"
+"    border-radius: 8px;\n"
+"    color: rgb(10, 10, 10);\n"
+"}")
+        self.boxTailstockLimit.setObjectName("boxTailstockLimit")
+        self.teachTailstock = QtWidgets.QPushButton(self.boxTailstockLimit)
+        self.teachTailstock.setGeometry(QtCore.QRect(115, 10, 66, 36))
         font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
         font.setPointSize(12)
-        self.teachZPlus.setFont(font)
-        self.teachZPlus.setObjectName("teachZPlus")
-        self.droXMinus = TeachInLineEdit(self.pageEditLimits)
-        self.droXMinus.setGeometry(QtCore.QRect(130, 10, 85, 27))
+        self.teachTailstock.setFont(font)
+        self.teachTailstock.setStyleSheet("")
+        self.teachTailstock.setObjectName("teachTailstock")
+        self.droLabelTailstock = TeachInDroLabel(self.boxTailstockLimit)
+        self.droLabelTailstock.setGeometry(QtCore.QRect(10, 10, 95, 36))
         font = QtGui.QFont()
+        font.setFamily("Noto Sans Mono")
         font.setPointSize(12)
-        self.droXMinus.setFont(font)
-        self.droXMinus.setStyleSheet("")
-        self.droXMinus.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.droXMinus.setProperty("referenceType", 1)
-        self.droXMinus.setProperty("axisNumber", 0)
-        self.droXMinus.setProperty("latheMode", 2)
-        self.droXMinus.setObjectName("droXMinus")
-        self.teachXPlus = QtWidgets.QPushButton(self.pageEditLimits)
-        self.teachXPlus.setGeometry(QtCore.QRect(220, 50, 75, 27))
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.droLabelTailstock.setFont(font)
+        self.droLabelTailstock.setStyleSheet("QLabel {\n"
+"        border-style: solid;\n"
+"        border-color: rgb(119, 118, 123);\n"
+"        border-width: 1px;\n"
+"        border-radius: 5px;\n"
+"        color: rgb(154, 153, 150);\n"
+"        background: rgb(246, 245, 244);\n"
+"        font: 12pt \"Noto Sans Mono\";\n"
+"}")
+        self.droLabelTailstock.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.droLabelTailstock.setProperty("referenceType", 0)
+        self.droLabelTailstock.setProperty("axisNumber", 2)
+        self.droLabelTailstock.setProperty("latheMode", 0)
+        self.droLabelTailstock.setObjectName("droLabelTailstock")
+        self.labelXPlusLimit = QtWidgets.QLabel(self.groupBox)
+        self.labelXPlusLimit.setGeometry(QtCore.QRect(460, 430, 90, 19))
+        self.labelXPlusLimit.setStyleSheet("QLabel {\n"
+"    font: 75 14pt \"Noto Mono\";\n"
+"}")
+        self.labelXPlusLimit.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelXPlusLimit.setObjectName("labelXPlusLimit")
+        self.zMinusToggle = QtWidgets.QPushButton(self.groupBox)
+        self.zMinusToggle.setEnabled(False)
+        self.zMinusToggle.setGeometry(QtCore.QRect(205, 340, 120, 45))
         font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
         font.setPointSize(12)
-        self.teachXPlus.setFont(font)
-        self.teachXPlus.setObjectName("teachXPlus")
-        self.droZMinus = TeachInLineEdit(self.pageEditLimits)
-        self.droZMinus.setGeometry(QtCore.QRect(130, 103, 85, 27))
+        self.zMinusToggle.setFont(font)
+        self.zMinusToggle.setStyleSheet("")
+        self.zMinusToggle.setCheckable(True)
+        self.zMinusToggle.setObjectName("zMinusToggle")
+        self.labelZMinusLimit = QtWidgets.QLabel(self.groupBox)
+        self.labelZMinusLimit.setGeometry(QtCore.QRect(210, 250, 111, 19))
+        self.labelZMinusLimit.setStyleSheet("QLabel {\n"
+"    font: 75 14pt \"Noto Mono\";\n"
+"}")
+        self.labelZMinusLimit.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelZMinusLimit.setObjectName("labelZMinusLimit")
+        self.zPlusToggle = QtWidgets.QPushButton(self.groupBox)
+        self.zPlusToggle.setEnabled(False)
+        self.zPlusToggle.setGeometry(QtCore.QRect(935, 340, 120, 45))
         font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
         font.setPointSize(12)
-        self.droZMinus.setFont(font)
-        self.droZMinus.setStyleSheet("")
-        self.droZMinus.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.droZMinus.setProperty("referenceType", 1)
-        self.droZMinus.setProperty("axisNumber", 2)
-        self.droZMinus.setProperty("latheMode", 2)
-        self.droZMinus.setObjectName("droZMinus")
-        self.droXPlus = TeachInLineEdit(self.pageEditLimits)
-        self.droXPlus.setGeometry(QtCore.QRect(130, 50, 85, 27))
+        self.zPlusToggle.setFont(font)
+        self.zPlusToggle.setStyleSheet("")
+        self.zPlusToggle.setCheckable(True)
+        self.zPlusToggle.setObjectName("zPlusToggle")
+        self.labelZPlusLimit = QtWidgets.QLabel(self.groupBox)
+        self.labelZPlusLimit.setGeometry(QtCore.QRect(945, 250, 111, 19))
+        self.labelZPlusLimit.setStyleSheet("QLabel {\n"
+"    font: 75 14pt \"Noto Mono\";\n"
+"}")
+        self.labelZPlusLimit.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelZPlusLimit.setObjectName("labelZPlusLimit")
+        self.tailstockToggle = QtWidgets.QPushButton(self.groupBox)
+        self.tailstockToggle.setEnabled(False)
+        self.tailstockToggle.setGeometry(QtCore.QRect(1135, 110, 120, 45))
         font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
         font.setPointSize(12)
-        self.droXPlus.setFont(font)
-        self.droXPlus.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.droXPlus.setProperty("referenceType", 1)
-        self.droXPlus.setProperty("axisNumber", 0)
-        self.droXPlus.setProperty("latheMode", 2)
-        self.droXPlus.setObjectName("droXPlus")
-        self.teachZMinus = QtWidgets.QPushButton(self.pageEditLimits)
-        self.teachZMinus.setGeometry(QtCore.QRect(220, 103, 75, 27))
+        self.tailstockToggle.setFont(font)
+        self.tailstockToggle.setStyleSheet("")
+        self.tailstockToggle.setCheckable(True)
+        self.tailstockToggle.setChecked(False)
+        self.tailstockToggle.setDefault(False)
+        self.tailstockToggle.setObjectName("tailstockToggle")
+        self.labelTailstockLimit = QtWidgets.QLabel(self.groupBox)
+        self.labelTailstockLimit.setGeometry(QtCore.QRect(1100, 20, 186, 19))
+        self.labelTailstockLimit.setStyleSheet("QLabel {\n"
+"    font: 75 14pt \"Noto Mono\";\n"
+"}")
+        self.labelTailstockLimit.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelTailstockLimit.setObjectName("labelTailstockLimit")
+        self.xPlusToggle = QtWidgets.QPushButton(self.groupBox)
+        self.xPlusToggle.setEnabled(False)
+        self.xPlusToggle.setGeometry(QtCore.QRect(755, 415, 120, 45))
         font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
         font.setPointSize(12)
-        self.teachZMinus.setFont(font)
-        self.teachZMinus.setStyleSheet("")
-        self.teachZMinus.setObjectName("teachZMinus")
-        self.stackedWidget.addWidget(self.pageEditLimits)
+        self.xPlusToggle.setFont(font)
+        self.xPlusToggle.setStyleSheet("")
+        self.xPlusToggle.setCheckable(True)
+        self.xPlusToggle.setObjectName("xPlusToggle")
+        self.labelXMinusLimit = QtWidgets.QLabel(self.groupBox)
+        self.labelXMinusLimit.setGeometry(QtCore.QRect(460, 170, 90, 19))
+        self.labelXMinusLimit.setStyleSheet("QLabel {\n"
+"    font: 75 14pt \"Noto Mono\";\n"
+"}")
+        self.labelXMinusLimit.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelXMinusLimit.setObjectName("labelXMinusLimit")
+        self.xMinusToggle = QtWidgets.QPushButton(self.groupBox)
+        self.xMinusToggle.setEnabled(False)
+        self.xMinusToggle.setGeometry(QtCore.QRect(755, 155, 120, 45))
+        font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
+        font.setPointSize(12)
+        self.xMinusToggle.setFont(font)
+        self.xMinusToggle.setStyleSheet("")
+        self.xMinusToggle.setCheckable(True)
+        self.xMinusToggle.setObjectName("xMinusToggle")
+        self.labelChuckLimit = QtWidgets.QLabel(self.groupBox)
+        self.labelChuckLimit.setGeometry(QtCore.QRect(15, 20, 131, 19))
+        self.labelChuckLimit.setStyleSheet("QLabel {\n"
+"    font: 75 14pt \"Noto Mono\";\n"
+"}")
+        self.labelChuckLimit.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelChuckLimit.setObjectName("labelChuckLimit")
+        self.boxChuckLimit = QtWidgets.QWidget(self.groupBox)
+        self.boxChuckLimit.setGeometry(QtCore.QRect(15, 45, 126, 56))
+        self.boxChuckLimit.setStyleSheet("QWidget #boxChuckLimit{\n"
+"    border-style: solid;\n"
+"    border-color: rgb(10, 10, 10);\n"
+"    border-width: 1px;\n"
+"    border-radius: 8px;\n"
+"    color: rgb(10, 10, 10);\n"
+"}")
+        self.boxChuckLimit.setObjectName("boxChuckLimit")
+        self.droChuckLimit = TeachInDroLabel(self.boxChuckLimit)
+        self.droChuckLimit.setGeometry(QtCore.QRect(10, 10, 106, 36))
+        font = QtGui.QFont()
+        font.setFamily("Noto Sans Mono")
+        font.setPointSize(12)
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.droChuckLimit.setFont(font)
+        self.droChuckLimit.setStyleSheet("QLabel {\n"
+"        border-style: solid;\n"
+"        border-color: rgb(119, 118, 123);\n"
+"        border-width: 1px;\n"
+"        border-radius: 5px;\n"
+"        color: rgb(154, 153, 150);\n"
+"        background: rgb(246, 245, 244);\n"
+"        font: 12pt \"Noto Sans Mono\";\n"
+"}")
+        self.droChuckLimit.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.droChuckLimit.setProperty("referenceType", 1)
+        self.droChuckLimit.setProperty("axisNumber", 0)
+        self.droChuckLimit.setProperty("latheMode", 0)
+        self.droChuckLimit.setObjectName("droChuckLimit")
+        self.changeChuck = QtWidgets.QPushButton(self.groupBox)
+        self.changeChuck.setGeometry(QtCore.QRect(20, 110, 120, 45))
+        font = QtGui.QFont()
+        font.setFamily("Cantarell Light")
+        font.setPointSize(12)
+        self.changeChuck.setFont(font)
+        self.changeChuck.setStyleSheet("")
+        self.changeChuck.setObjectName("changeChuck")
+        self.boxChuckLimit.raise_()
+        self.boxZMinusLimit.raise_()
+        self.boxZPlusLimit.raise_()
+        self.zLine.raise_()
+        self.zLine_2.raise_()
+        self.xLine.raise_()
+        self.tool_limits_label.raise_()
+        self.boxXPlusLimit.raise_()
+        self.boxXMinusLimit.raise_()
+        self.boxTailstockLimit.raise_()
+        self.labelXPlusLimit.raise_()
+        self.zMinusToggle.raise_()
+        self.labelZMinusLimit.raise_()
+        self.zPlusToggle.raise_()
+        self.labelZPlusLimit.raise_()
+        self.tailstockToggle.raise_()
+        self.labelTailstockLimit.raise_()
+        self.xPlusToggle.raise_()
+        self.labelXMinusLimit.raise_()
+        self.xMinusToggle.raise_()
+        self.labelChuckLimit.raise_()
+        self.changeChuck.raise_()
+        self.label_6.raise_()
+        self.drolabel = DROLabel(Form)
+        self.drolabel.setGeometry(QtCore.QRect(85, 55, 311, 71))
+        self.drolabel.setStyleSheet("QLabel {\n"
+"    font: 40pt \"Noto Sans Mono\";\n"
+"    border-style: solid;\n"
+"    border-color: rgb(200, 200, 200);\n"
+"    border-width: 1.5px;\n"
+"    border-radius: 8px;\n"
+"    color: rgb(150, 150, 150);;\n"
+"    background: rgb(230, 230, 230);\n"
+"}")
+        self.drolabel.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.drolabel.setProperty("referenceType", 0)
+        self.drolabel.setProperty("axisNumber", 0)
+        self.drolabel.setProperty("latheMode", 1)
+        self.drolabel.setObjectName("drolabel")
+        self.drolabel_2 = DROLabel(Form)
+        self.drolabel_2.setGeometry(QtCore.QRect(85, 145, 311, 71))
+        self.drolabel_2.setStyleSheet("QLabel {\n"
+"    font: 40pt \"Noto Sans Mono\";\n"
+"    border-style: solid;\n"
+"    border-color: rgb(200, 200, 200);\n"
+"    border-width: 1.5px;\n"
+"    border-radius: 8px;\n"
+"    color: rgb(150, 150, 150);;\n"
+"    background: rgb(230, 230, 230);\n"
+"}")
+        self.drolabel_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.drolabel_2.setProperty("referenceType", 0)
+        self.drolabel_2.setProperty("axisNumber", 2)
+        self.drolabel_2.setProperty("latheMode", 0)
+        self.drolabel_2.setObjectName("drolabel_2")
+        self.label_4 = QtWidgets.QLabel(Form)
+        self.label_4.setGeometry(QtCore.QRect(85, 10, 311, 31))
+        self.label_4.setStyleSheet("font: 18pt \"Cantarell\";")
+        self.label_4.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_4.setObjectName("label_4")
+        self.label_8 = QtWidgets.QLabel(Form)
+        self.label_8.setGeometry(QtCore.QRect(610, 10, 311, 31))
+        self.label_8.setStyleSheet("font: 18pt \"Cantarell\";")
+        self.label_8.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_8.setObjectName("label_8")
+        self.label_9 = QtWidgets.QLabel(Form)
+        self.label_9.setGeometry(QtCore.QRect(5, 10, 66, 31))
+        self.label_9.setStyleSheet("font: 18pt \"Cantarell\";")
+        self.label_9.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_9.setObjectName("label_9")
+        self.label_10 = QtWidgets.QLabel(Form)
+        self.label_10.setGeometry(QtCore.QRect(1045, 5, 246, 31))
+        self.label_10.setStyleSheet("font: 18pt \"Cantarell\";")
+        self.label_10.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_10.setObjectName("label_10")
+        self.groupBox.raise_()
+        self.zLabel.raise_()
+        self.xLabel.raise_()
+        self.xSecondaryDro.raise_()
+        self.zSecondaryDro.raise_()
+        self.xPrimaryDro.raise_()
+        self.zPrimaryDro.raise_()
+        self.zAbsRel.raise_()
+        self.xZero.raise_()
+        self.xAbsRel.raise_()
+        self.zZero.raise_()
+        self.zUnit.raise_()
+        self.xUnit.raise_()
+        self.mdibutton.raise_()
+        self.drolabel.raise_()
+        self.drolabel_2.raise_()
+        self.label_4.raise_()
+        self.label_8.raise_()
+        self.label_9.raise_()
+        self.label_10.raise_()
 
         self.retranslateUi(Form)
-        self.stackedWidget.setCurrentIndex(0)
-        self.teachXMinus.clicked.connect(self.droXMinus.fillWithCurrentValue) # type: ignore
-        self.teachXPlus.clicked.connect(self.droXPlus.fillWithCurrentValue) # type: ignore
-        self.teachZMinus.clicked.connect(self.droZMinus.fillWithCurrentValue) # type: ignore
-        self.teachZPlus.clicked.connect(self.droZPlus.fillWithCurrentValue) # type: ignore
+        self.teachZMinus.clicked.connect(self.droLabelZMinus.fillWithCurrentValue) # type: ignore
+        self.teachZPlus.clicked.connect(self.droLabelZPlus.fillWithCurrentValue) # type: ignore
+        self.teachTailstock.clicked.connect(self.droLabelTailstock.fillWithCurrentValue) # type: ignore
+        self.teachXMinus.clicked.connect(self.droLabelXMinus.fillWithCurrentValue) # type: ignore
+        self.teachXPlus.clicked.connect(self.droLabelXPlus.fillWithCurrentValue) # type: ignore
+        self.zMinusToggle.toggled['bool'].connect(self.teachZMinus.setDisabled) # type: ignore
+        self.zPlusToggle.toggled['bool'].connect(self.teachZPlus.setDisabled) # type: ignore
+        self.xPlusToggle.toggled['bool'].connect(self.teachXPlus.setDisabled) # type: ignore
+        self.xMinusToggle.toggled['bool'].connect(self.teachXMinus.setDisabled) # type: ignore
+        self.tailstockToggle.toggled['bool'].connect(self.teachTailstock.setDisabled) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -373,36 +714,65 @@ class Ui_Form(object):
         self.zZero.setText(_translate("Form", "0"))
         self.zUnit.setText(_translate("Form", "mm"))
         self.xUnit.setText(_translate("Form", "mm"))
-        self.mdibutton.setText(_translate("Form", "Set Datum"))
+        self.mdibutton.setText(_translate("Form", "Set\n"
+"Datum"))
         self.mdibutton.setProperty("rules", _translate("Form", "[{\"name\": \"enable set datum\", \"property\": \"Enable\", \"expression\": \"ch[0] != 0\", \"channels\": [{\"url\": \"status:tool_in_spindle\", \"trigger\": true}]}]"))
         self.mdibutton.setProperty("MDICommand", _translate("Form", "G10 L20 P0 Z0"))
-        self.xMinusLimit.setText(_translate("Form", "X- (000.000)"))
-        self.xPlusLimit.setText(_translate("Form", "X+ Tool"))
-        self.zMinusLimit.setText(_translate("Form", "Z- Tool"))
-        self.zPlusLimit.setText(_translate("Form", "Z+ Tailstock"))
-        self.pushButton.setText(_translate("Form", "All ON"))
-        self.pushButton_2.setText(_translate("Form", "All OFF"))
-        self.pushButton_3.setText(_translate("Form", "Edit"))
-        self.zPlusLimit_2.setText(_translate("Form", "Z+ Tool"))
-        self.teachXMinus.setText(_translate("Form", "TeachIn"))
-        self.droZPlus.setText(_translate("Form", "0.000"))
-        self.droZPlus.setProperty("inchFormat", _translate("Form", "%9.4f"))
-        self.droZPlus.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
-        self.droZPlus.setProperty("degreeFormat", _translate("Form", "%10.2f"))
-        self.teachZPlus.setText(_translate("Form", "TeachIn"))
-        self.droXMinus.setText(_translate("Form", "0.000"))
-        self.droXMinus.setProperty("inchFormat", _translate("Form", "%9.4f"))
-        self.droXMinus.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
-        self.droXMinus.setProperty("degreeFormat", _translate("Form", "%10.2f"))
-        self.teachXPlus.setText(_translate("Form", "TeachIn"))
-        self.droZMinus.setText(_translate("Form", "0.000"))
-        self.droZMinus.setProperty("inchFormat", _translate("Form", "%9.4f"))
-        self.droZMinus.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
-        self.droZMinus.setProperty("degreeFormat", _translate("Form", "%10.2f"))
-        self.droXPlus.setText(_translate("Form", "0.000"))
-        self.droXPlus.setProperty("inchFormat", _translate("Form", "%9.4f"))
-        self.droXPlus.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
-        self.droXPlus.setProperty("degreeFormat", _translate("Form", "%10.2f"))
         self.teachZMinus.setText(_translate("Form", "TeachIn"))
+        self.droLabelZMinus.setText(_translate("Form", "1000.234"))
+        self.droLabelZMinus.setProperty("inchFormat", _translate("Form", "%9.4f"))
+        self.droLabelZMinus.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
+        self.droLabelZMinus.setProperty("degreeFormat", _translate("Form", "%10.2f"))
+        self.teachZPlus.setText(_translate("Form", "TeachIn"))
+        self.droLabelZPlus.setText(_translate("Form", "1000.234"))
+        self.droLabelZPlus.setProperty("inchFormat", _translate("Form", "%9.4f"))
+        self.droLabelZPlus.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
+        self.droLabelZPlus.setProperty("degreeFormat", _translate("Form", "%10.2f"))
+        self.tool_limits_label.setText(_translate("Form", "Tool Limits"))
+        self.label_6.setText(_translate("Form", "Machine Limits"))
+        self.teachXPlus.setText(_translate("Form", "TeachIn"))
+        self.droLabelXPlus.setText(_translate("Form", "1000.234"))
+        self.droLabelXPlus.setProperty("inchFormat", _translate("Form", "%9.4f"))
+        self.droLabelXPlus.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
+        self.droLabelXPlus.setProperty("degreeFormat", _translate("Form", "%10.2f"))
+        self.teachXMinus.setText(_translate("Form", "TeachIn"))
+        self.droLabelXMinus.setText(_translate("Form", "1000.234"))
+        self.droLabelXMinus.setProperty("inchFormat", _translate("Form", "%9.4f"))
+        self.droLabelXMinus.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
+        self.droLabelXMinus.setProperty("degreeFormat", _translate("Form", "%10.2f"))
+        self.teachTailstock.setText(_translate("Form", "TeachIn"))
+        self.droLabelTailstock.setText(_translate("Form", "1000.234"))
+        self.droLabelTailstock.setProperty("inchFormat", _translate("Form", "%9.4f"))
+        self.droLabelTailstock.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
+        self.droLabelTailstock.setProperty("degreeFormat", _translate("Form", "%10.2f"))
+        self.labelXPlusLimit.setText(_translate("Form", "Limit X+"))
+        self.zMinusToggle.setText(_translate("Form", "Enable Limit"))
+        self.labelZMinusLimit.setText(_translate("Form", "Limit Z-"))
+        self.zPlusToggle.setText(_translate("Form", "Enable Limit"))
+        self.labelZPlusLimit.setText(_translate("Form", "Limit Z+"))
+        self.tailstockToggle.setText(_translate("Form", "Enable Limit"))
+        self.labelTailstockLimit.setText(_translate("Form", "Tailstock Limit"))
+        self.xPlusToggle.setText(_translate("Form", "Enable Limit"))
+        self.labelXMinusLimit.setText(_translate("Form", "Limit X-"))
+        self.xMinusToggle.setText(_translate("Form", "Enable Limit"))
+        self.labelChuckLimit.setText(_translate("Form", "Chuck Limit"))
+        self.droChuckLimit.setText(_translate("Form", "1000.234"))
+        self.droChuckLimit.setProperty("inchFormat", _translate("Form", "%9.4f"))
+        self.droChuckLimit.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
+        self.droChuckLimit.setProperty("degreeFormat", _translate("Form", "%10.2f"))
+        self.changeChuck.setText(_translate("Form", "Change Chuck"))
+        self.drolabel.setText(_translate("Form", "     0.000"))
+        self.drolabel.setProperty("inchFormat", _translate("Form", "%9.4f"))
+        self.drolabel.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
+        self.drolabel.setProperty("degreeFormat", _translate("Form", "%10.2f"))
+        self.drolabel_2.setText(_translate("Form", "     0.000"))
+        self.drolabel_2.setProperty("inchFormat", _translate("Form", "%9.4f"))
+        self.drolabel_2.setProperty("millimeterFormat", _translate("Form", "%10.3f"))
+        self.drolabel_2.setProperty("degreeFormat", _translate("Form", "%10.2f"))
+        self.label_4.setText(_translate("Form", "Machine Coordinates"))
+        self.label_8.setText(_translate("Form", "Tool Coordinates #1"))
+        self.label_9.setText(_translate("Form", "Axis"))
+        self.label_10.setText(_translate("Form", "Actions"))
 from qtpyvcp.widgets.button_widgets.mdi_button import MDIButton
-from qtpyvcp.widgets.input_widgets.teachin_line_edit import TeachInLineEdit
+from qtpyvcp.widgets.display_widgets.dro_label import DROLabel
+from qtpyvcp.widgets.input_widgets.teachin_dro_label import TeachInDroLabel
