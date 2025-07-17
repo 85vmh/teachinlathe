@@ -15,7 +15,7 @@
     "operations": [
         {
             "order": 1,
-            "type": "setTool",
+            "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
             "tool_no": 1,
@@ -72,7 +72,7 @@
         },
         {
             "order": 4,
-            "type": "setTool",
+            "type": "changeTool",
             "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 2,
@@ -126,7 +126,7 @@
         },
         {
             "order": 7,
-            "type": "setTool",
+            "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
             "tool_no": 3,

@@ -549,7 +549,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <enum>QTabWidget::South</enum>
            </property>
            <property name="currentIndex">
-            <number>3</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="manualTurningTab">
             <attribute name="title">
@@ -6381,8 +6381,8 @@ ActionButton:checked {
 </string>
                  </property>
                  <property name="icon">
-                  <iconset>
-                   <normaloff>:/lathe_control_point_9.png</normaloff>:/lathe_control_point_9.png</iconset>
+                  <iconset resource="../teachinlathe.qrc">
+                   <normaloff>:/images/lathe_control_point_9.png</normaloff>:/images/lathe_control_point_9.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
@@ -6444,8 +6444,8 @@ ActionButton:checked {
 </string>
                  </property>
                  <property name="icon">
-                  <iconset>
-                   <normaloff>../../../../../../../../.designer/resources/lathe_control_point_3.png</normaloff>../../../../../../../../.designer/resources/lathe_control_point_3.png</iconset>
+                  <iconset resource="../teachinlathe.qrc">
+                   <normaloff>:/images/lathe_control_point_3.png</normaloff>:/images/lathe_control_point_3.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
@@ -6507,8 +6507,8 @@ ActionButton:checked {
 </string>
                  </property>
                  <property name="icon">
-                  <iconset>
-                   <normaloff>../../../../../../../../.designer/resources/lathe_control_point_8.png</normaloff>../../../../../../../../.designer/resources/lathe_control_point_8.png</iconset>
+                  <iconset resource="../teachinlathe.qrc">
+                   <normaloff>:/images/lathe_control_point_8.png</normaloff>:/images/lathe_control_point_8.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
@@ -6570,8 +6570,8 @@ ActionButton:checked {
 </string>
                  </property>
                  <property name="icon">
-                  <iconset>
-                   <normaloff>../../../../../../../../.designer/resources/lathe_control_point_5.png</normaloff>../../../../../../../../.designer/resources/lathe_control_point_5.png</iconset>
+                  <iconset resource="../teachinlathe.qrc">
+                   <normaloff>:/images/lathe_control_point_5.png</normaloff>:/images/lathe_control_point_5.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
@@ -6696,8 +6696,8 @@ ActionButton:checked {
 </string>
                  </property>
                  <property name="icon">
-                  <iconset>
-                   <normaloff>../../../../../../../../.designer/resources/lathe_control_point_6.png</normaloff>../../../../../../../../.designer/resources/lathe_control_point_6.png</iconset>
+                  <iconset resource="../teachinlathe.qrc">
+                   <normaloff>:/images/lathe_control_point_6.png</normaloff>:/images/lathe_control_point_6.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
@@ -6759,8 +6759,8 @@ ActionButton:checked {
 </string>
                  </property>
                  <property name="icon">
-                  <iconset>
-                   <normaloff>../../../../../../../../.designer/resources/lathe_control_point_2.png</normaloff>../../../../../../../../.designer/resources/lathe_control_point_2.png</iconset>
+                  <iconset resource="../teachinlathe.qrc">
+                   <normaloff>:/images/lathe_control_point_2.png</normaloff>:/images/lathe_control_point_2.png</iconset>
                  </property>
                  <property name="iconSize">
                   <size>
@@ -6813,22 +6813,6 @@ ActionButton:checked {
                </widget>
               </item>
              </layout>
-            </widget>
-            <widget class="QLabel" name="label_2">
-             <property name="geometry">
-              <rect>
-               <x>1285</x>
-               <y>610</y>
-               <width>576</width>
-               <height>366</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="pixmap">
-              <pixmap resource="../teachinlathe.qrc">:/images/boring.png</pixmap>
-             </property>
             </widget>
            </widget>
            <widget class="QWidget" name="settingsTab">
@@ -7146,7 +7130,8 @@ font: 12pt &quot;DejaVu Sans&quot;;
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../resources/resources.qrc"/>
+  <include location="../teachinlathe.qrc"/>
+  <include location="../teachinlathe.qrc"/>
   <include location="../teachinlathe.qrc"/>
  </resources>
  <connections>

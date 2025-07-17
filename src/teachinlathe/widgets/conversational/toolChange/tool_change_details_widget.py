@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import QWidget
-from teachinlathe.conversational.data_types import SetTool
-from teachinlathe.widgets.conversational.tool_change_detail import Ui_ToolChangeDetailForm
+from teachinlathe.conversational.data_types import ChangeTool
+from teachinlathe.widgets.conversational.toolChange.tool_change_details import Ui_ToolChangeDetailForm
 
 
-class SetToolDetailsWidget(QWidget, Ui_ToolChangeDetailForm):
-    def __init__(self, set_tool_data: SetTool, parent=None):
+class ChangeToolDetailsWidget(QWidget, Ui_ToolChangeDetailForm):
+    def __init__(self, set_tool_data: ChangeTool, parent=None):
         super().__init__(parent)
         self.setupUi(self)
 

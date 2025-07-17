@@ -7,7 +7,7 @@ checkbox_style = "QCheckBox::indicator { width: 30px; height: 30px; }"
 
 class ProgramDetailsWidget(QObject):
     item_selected = pyqtSignal(object)  # Emit the object when an item is clicked
-    program_modified = pyqtSignal(Program)  # Emit entire program when modified
+    program_operation_changed = pyqtSignal(Program)  # Emit entire program when modified
 
     def __init__(self, program: Program, list_widget: QListWidget):
         super().__init__()  # Call QObject constructor
@@ -104,11 +104,11 @@ class ProgramDetailsWidget(QObject):
         operation.generate_gcode = checked
         name_label.setEnabled(checked)
         optional_checkbox.setEnabled(checked)
-        self.program_modified.emit(self.program)
+        self.program_operation_changed.emit(self.program)
 
     def on_optional_toggled(self, operation, checked):
         operation.is_optional_block = checked
-        self.program_modified.emit(self.program)
+        self.program_operation_changed.emit(self.program)
 
     def on_item_clicked(self, item):
         """Emit the stored object when an item is clicked."""

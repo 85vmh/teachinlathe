@@ -114,7 +114,7 @@
      <widget class="Line" name="line_2">
       <property name="geometry">
        <rect>
-        <x>400</x>
+        <x>520</x>
         <y>5</y>
         <width>16</width>
         <height>846</height>
@@ -129,19 +129,22 @@
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>386</width>
-        <height>601</height>
+        <width>500</width>
+        <height>620</height>
        </rect>
       </property>
      </widget>
      <widget class="QStackedWidget" name="stepDetails">
       <property name="geometry">
        <rect>
-        <x>440</x>
+        <x>540</x>
         <y>15</y>
-        <width>1326</width>
-        <height>596</height>
+        <width>1320</width>
+        <height>840</height>
        </rect>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
       </property>
       <property name="currentIndex">
        <number>0</number>
@@ -154,7 +157,7 @@
        <rect>
         <x>10</x>
         <y>640</y>
-        <width>386</width>
+        <width>500</width>
         <height>221</height>
        </rect>
       </property>
@@ -169,7 +172,7 @@
         <rect>
          <x>5</x>
          <y>25</y>
-         <width>376</width>
+         <width>486</width>
          <height>191</height>
         </rect>
        </property>
@@ -282,6 +285,19 @@
         </item>
         <item row="2" column="1">
          <widget class="QPushButton" name="partingBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Grooving</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QPushButton" name="partingBtn_2">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -3147,8 +3163,8 @@ QPushButton:checked {
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../resources/resources.qrc"/>
-  <include location="../../resources/resources.qrc"/>
+  <include location="../../teachinlathe.qrc"/>
+  <include location="../../teachinlathe.qrc"/>
  </resources>
  <connections>
   <connection>

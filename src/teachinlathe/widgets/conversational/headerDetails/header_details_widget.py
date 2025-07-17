@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import QWidget
 from teachinlathe.conversational.data_types import Header
-from teachinlathe.widgets.conversational.header_detail import Ui_HeaderDetailForm
+from teachinlathe.widgets.conversational.headerDetails.header_details import Ui_Form
 
 
-class HeaderDetailWidget(QWidget, Ui_HeaderDetailForm):
+class HeaderDetailWidget(QWidget, Ui_Form):
     def __init__(self, header: Header, parent=None):
         super().__init__(parent)
         self.setupUi(self)

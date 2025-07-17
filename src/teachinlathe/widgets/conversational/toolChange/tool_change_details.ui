@@ -292,6 +292,19 @@
     </property>
    </widget>
   </widget>
+  <widget class="QPushButton" name="validateAndSave">
+   <property name="geometry">
+    <rect>
+     <x>275</x>
+     <y>525</y>
+     <width>186</width>
+     <height>46</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Validate &amp;&amp; Save</string>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>

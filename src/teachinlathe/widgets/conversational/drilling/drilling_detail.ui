@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>656</width>
-    <height>594</height>
+    <width>790</width>
+    <height>624</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -282,7 +282,7 @@
     <property name="geometry">
      <rect>
       <x>545</x>
-      <y>65</y>
+      <y>45</y>
       <width>70</width>
       <height>26</height>
      </rect>
@@ -298,7 +298,7 @@
     <property name="geometry">
      <rect>
       <x>360</x>
-      <y>65</y>
+      <y>45</y>
       <width>89</width>
       <height>26</height>
      </rect>
@@ -314,7 +314,7 @@
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>65</y>
+      <y>45</y>
       <width>76</width>
       <height>26</height>
      </rect>
@@ -338,6 +338,79 @@
      <string/>
     </property>
    </widget>
+   <widget class="QLabel" name="label_18">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>85</y>
+      <width>89</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+    </property>
+    <property name="text">
+     <string>Dwell time:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_49">
+    <property name="geometry">
+     <rect>
+      <x>545</x>
+      <y>85</y>
+      <width>70</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+    </property>
+    <property name="text">
+     <string>seconds</string>
+    </property>
+   </widget>
+   <widget class="VCPSettingsLineEdit" name="dwellTime">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>85</y>
+      <width>76</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::NoFocus</enum>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+    </property>
+    <property name="text">
+     <string>1</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+    <property name="settingName" stdset="0">
+     <string>smart_numpad.quick-cycles-peck-depth</string>
+    </property>
+    <property name="textFormat" stdset="0">
+     <string/>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="validateAndSave">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>415</y>
+     <width>186</width>
+     <height>46</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Validate &amp;&amp; Save</string>
+   </property>
   </widget>
  </widget>
  <customwidgets>
@@ -352,6 +425,8 @@
    <header>qtpyvcp.widgets.input_widgets.teachin_line_edit</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../../teachinlathe.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -5,6 +5,7 @@ from enum import Enum
 
 import linuxcnc
 from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QPushButton
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.actions.program_actions import load as loadProgram
 from qtpyvcp.plugins import getPlugin
@@ -16,7 +17,9 @@ from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.widgets.FrameAnimator import FrameAnimator
+from teachinlathe.widgets.conversational.EmbeddedKotlinWidget import EmbeddedKotlinWidget
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
+import teachinlathe_rc
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
 from PyQt5.QtCore import Qt
@@ -34,6 +37,7 @@ class MainTabs(Enum):
     PROGRAMS = 2
     TOOLS_OFFSETS = 3
     MACHINE_SETTINGS = 4
+    CONV_KOTLIN = 5
 
 
 class ProgramTabs(Enum):
@@ -345,6 +349,17 @@ class MyMainWindow(VCPMainWindow):
     def toggleZMpgEnable(self, value):
         print("toggleZMpgEnable to pin", value)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = value
+
+        kotlin_widget = EmbeddedKotlinWidget(
+            binary_path="/home/cnc/Work/HelloKotlin/build/compose/binaries/main/app/HelloKotlin/bin/HelloKotlin",
+            window_title="HelloKotlin"
+        )
+
+        # test_button = QPushButton("Test Button")
+        # test_button.setMinimumSize(400, 200)
+
+        self.tabWidget.addTab(kotlin_widget, "Conversational (Kotlin)")
+
 
     def onXPrimaryDroClicked(self, value):
         print("onXPrimaryDroClicked", value)

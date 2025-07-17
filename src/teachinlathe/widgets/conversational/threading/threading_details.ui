@@ -525,7 +525,7 @@ QPushButton:checked {
     <rect>
      <x>390</x>
      <y>300</y>
-     <width>126</width>
+     <width>136</width>
      <height>30</height>
     </rect>
    </property>
@@ -663,7 +663,7 @@ QPushButton:checked {
     <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
    </property>
    <property name="text">
-    <string>0.1</string>
+    <string>30</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -689,6 +689,19 @@ QPushButton:checked {
    </property>
    <property name="text">
     <string>Spring passes:</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="validateAndSave">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>495</y>
+     <width>186</width>
+     <height>46</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Validate &amp;&amp; Save</string>
    </property>
   </widget>
  </widget>

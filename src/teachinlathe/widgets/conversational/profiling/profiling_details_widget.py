@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget
 from teachinlathe.conversational.data_types import Profiling, Strategy
-from teachinlathe.widgets.conversational.profiling_detail import Ui_ProfilingDetailForm
+from teachinlathe.widgets.conversational.profiling.profiling_details import Ui_ProfilingDetailForm
 
 
 class ProfilingDetailsWidget(QWidget, Ui_ProfilingDetailForm):

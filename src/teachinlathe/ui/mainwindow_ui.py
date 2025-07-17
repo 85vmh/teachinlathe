@@ -2618,7 +2618,7 @@ class Ui_MainWindow(object):
 "}\n"
 "")
         icon8 = QtGui.QIcon()
-        icon8.addPixmap(QtGui.QPixmap(":/lathe_control_point_9.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon8.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_9.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.lathe_control_point_9.setIcon(icon8)
         self.lathe_control_point_9.setIconSize(QtCore.QSize(50, 50))
         self.lathe_control_point_9.setCheckable(True)
@@ -2652,7 +2652,7 @@ class Ui_MainWindow(object):
 "}\n"
 "")
         icon9 = QtGui.QIcon()
-        icon9.addPixmap(QtGui.QPixmap("/home/cnc/Work/teachinlathe/src/teachinlathe/ui/../../../../../../../../.designer/resources/lathe_control_point_3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon9.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.lathe_control_point_3.setIcon(icon9)
         self.lathe_control_point_3.setIconSize(QtCore.QSize(65, 65))
         self.lathe_control_point_3.setCheckable(True)
@@ -2686,7 +2686,7 @@ class Ui_MainWindow(object):
 "}\n"
 "")
         icon10 = QtGui.QIcon()
-        icon10.addPixmap(QtGui.QPixmap("/home/cnc/Work/teachinlathe/src/teachinlathe/ui/../../../../../../../../.designer/resources/lathe_control_point_8.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon10.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_8.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.lathe_control_point_8.setIcon(icon10)
         self.lathe_control_point_8.setIconSize(QtCore.QSize(65, 65))
         self.lathe_control_point_8.setCheckable(True)
@@ -2720,7 +2720,7 @@ class Ui_MainWindow(object):
 "}\n"
 "")
         icon11 = QtGui.QIcon()
-        icon11.addPixmap(QtGui.QPixmap("/home/cnc/Work/teachinlathe/src/teachinlathe/ui/../../../../../../../../.designer/resources/lathe_control_point_5.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon11.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_5.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.lathe_control_point_5.setIcon(icon11)
         self.lathe_control_point_5.setIconSize(QtCore.QSize(65, 65))
         self.lathe_control_point_5.setCheckable(True)
@@ -2788,7 +2788,7 @@ class Ui_MainWindow(object):
 "}\n"
 "")
         icon13 = QtGui.QIcon()
-        icon13.addPixmap(QtGui.QPixmap("/home/cnc/Work/teachinlathe/src/teachinlathe/ui/../../../../../../../../.designer/resources/lathe_control_point_6.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon13.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_6.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.lathe_control_point_6.setIcon(icon13)
         self.lathe_control_point_6.setIconSize(QtCore.QSize(65, 65))
         self.lathe_control_point_6.setCheckable(True)
@@ -2822,7 +2822,7 @@ class Ui_MainWindow(object):
 "}\n"
 "")
         icon14 = QtGui.QIcon()
-        icon14.addPixmap(QtGui.QPixmap("/home/cnc/Work/teachinlathe/src/teachinlathe/ui/../../../../../../../../.designer/resources/lathe_control_point_2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon14.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.lathe_control_point_2.setIcon(icon14)
         self.lathe_control_point_2.setIconSize(QtCore.QSize(65, 65))
         self.lathe_control_point_2.setCheckable(True)
@@ -2847,11 +2847,6 @@ class Ui_MainWindow(object):
         self.label = QtWidgets.QLabel(self.formLayoutWidget_2)
         self.label.setObjectName("label")
         self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
-        self.label_2 = QtWidgets.QLabel(self.toolsTab)
-        self.label_2.setGeometry(QtCore.QRect(1285, 610, 576, 366))
-        self.label_2.setText("")
-        self.label_2.setPixmap(QtGui.QPixmap(":/images/boring.png"))
-        self.label_2.setObjectName("label_2")
         self.tabWidget.addTab(self.toolsTab, "")
         self.settingsTab = QtWidgets.QWidget()
         self.settingsTab.setObjectName("settingsTab")
@@ -3286,5 +3281,4 @@ from teachinlathe.widgets.lathe_joystick.lathe_joystick import LatheJoystickWidg
 from teachinlathe.widgets.lathe_tool_table import LatheToolTable
 from teachinlathe.widgets.quick_cycles.quick_cycles import QuickCycles
 from teachinlathe.widgets.teachin_lathe_dro import TeachInLatheDro
-import resources_rc
 import teachinlathe_rc

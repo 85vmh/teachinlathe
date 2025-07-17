@@ -87,7 +87,7 @@ class ToolChangeDetails:
 
 
 @dataclass
-class SetTool(Operation):
+class ChangeTool(Operation):
     tool_no: int
     tool_orientation: int
     back_angle: int
@@ -95,8 +95,8 @@ class SetTool(Operation):
     toolchange_details: ToolChangeDetails
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "SetTool":
-        return SetTool(
+    def from_dict(data: Dict[str, Any]) -> "ChangeTool":
+        return ChangeTool(
             order=data["order"],
             type=data["type"],
             generate_gcode=data["generate_gcode"],
@@ -325,7 +325,7 @@ class Program:
 
 
 operation_types: dict[str, Type[Operation]] = {
-    "setTool": SetTool,
+    "changeTool": ChangeTool,
     "facing": Facing,
     "define_profile": DefineProfile,
     "profiling": Profiling,
@@ -335,7 +335,7 @@ operation_types: dict[str, Type[Operation]] = {
 }
 
 display_names: dict[str, str] = {
-    "setTool": "Set Tool",
+    "changeTool": "Tool Change",
     "facing": "Facing",
     "define_profile": "Define Profile",
     "profiling": "Profiling",

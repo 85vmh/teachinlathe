@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/cnc/Work/teachinlathe/src/teachinlathe/widgets/conversational/drilling_detail.ui'
+# Form implementation generated from reading ui file 'drilling_detail.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(656, 594)
+        Form.resize(790, 624)
         self.groupBox = QtWidgets.QGroupBox(Form)
         self.groupBox.setGeometry(QtCore.QRect(15, 20, 626, 91))
         self.groupBox.setObjectName("groupBox")
@@ -80,20 +80,38 @@ class Ui_Form(object):
         self.drillingZRetract.setProperty("latheMode", 0)
         self.drillingZRetract.setObjectName("drillingZRetract")
         self.label_46 = QtWidgets.QLabel(self.groupBox_2)
-        self.label_46.setGeometry(QtCore.QRect(545, 65, 70, 26))
+        self.label_46.setGeometry(QtCore.QRect(545, 45, 70, 26))
         self.label_46.setStyleSheet("font: 11pt \"Noto Sans\";")
         self.label_46.setObjectName("label_46")
         self.label_17 = QtWidgets.QLabel(self.groupBox_2)
-        self.label_17.setGeometry(QtCore.QRect(360, 65, 89, 26))
+        self.label_17.setGeometry(QtCore.QRect(360, 45, 89, 26))
         self.label_17.setStyleSheet("font: 11pt \"Noto Sans\";")
         self.label_17.setObjectName("label_17")
         self.drillingPeckDepth = VCPSettingsLineEdit(self.groupBox_2)
-        self.drillingPeckDepth.setGeometry(QtCore.QRect(460, 65, 76, 26))
+        self.drillingPeckDepth.setGeometry(QtCore.QRect(460, 45, 76, 26))
         self.drillingPeckDepth.setFocusPolicy(QtCore.Qt.NoFocus)
         self.drillingPeckDepth.setStyleSheet("font: 11pt \"Noto Sans\";")
         self.drillingPeckDepth.setAlignment(QtCore.Qt.AlignCenter)
         self.drillingPeckDepth.setProperty("textFormat", "")
         self.drillingPeckDepth.setObjectName("drillingPeckDepth")
+        self.label_18 = QtWidgets.QLabel(self.groupBox_2)
+        self.label_18.setGeometry(QtCore.QRect(360, 85, 89, 26))
+        self.label_18.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_18.setObjectName("label_18")
+        self.label_49 = QtWidgets.QLabel(self.groupBox_2)
+        self.label_49.setGeometry(QtCore.QRect(545, 85, 70, 26))
+        self.label_49.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.label_49.setObjectName("label_49")
+        self.dwellTime = VCPSettingsLineEdit(self.groupBox_2)
+        self.dwellTime.setGeometry(QtCore.QRect(460, 85, 76, 26))
+        self.dwellTime.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.dwellTime.setStyleSheet("font: 11pt \"Noto Sans\";")
+        self.dwellTime.setAlignment(QtCore.Qt.AlignCenter)
+        self.dwellTime.setProperty("textFormat", "")
+        self.dwellTime.setObjectName("dwellTime")
+        self.validateAndSave = QtWidgets.QPushButton(Form)
+        self.validateAndSave.setGeometry(QtCore.QRect(260, 415, 186, 46))
+        self.validateAndSave.setObjectName("validateAndSave")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -125,5 +143,11 @@ class Ui_Form(object):
         self.label_17.setText(_translate("Form", "Peck depth:"))
         self.drillingPeckDepth.setText(_translate("Form", "300"))
         self.drillingPeckDepth.setProperty("settingName", _translate("Form", "smart_numpad.quick-cycles-peck-depth"))
+        self.label_18.setText(_translate("Form", "Dwell time:"))
+        self.label_49.setText(_translate("Form", "seconds"))
+        self.dwellTime.setText(_translate("Form", "1"))
+        self.dwellTime.setProperty("settingName", _translate("Form", "smart_numpad.quick-cycles-peck-depth"))
+        self.validateAndSave.setText(_translate("Form", "Validate && Save"))
 from qtpyvcp.widgets.input_widgets.setting_slider import VCPSettingsLineEdit
 from qtpyvcp.widgets.input_widgets.teachin_line_edit import TeachInLineEdit
+import teachinlathe_rc

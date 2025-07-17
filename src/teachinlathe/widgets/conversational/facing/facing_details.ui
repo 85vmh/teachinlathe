@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>660</width>
-    <height>590</height>
+    <width>692</width>
+    <height>653</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -511,7 +511,7 @@
      <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
     </property>
     <property name="text">
-     <string>mm/radius</string>
+     <string>mm/pass</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_19">
@@ -535,7 +535,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>395</y>
+     <y>405</y>
      <width>621</width>
      <height>116</height>
     </rect>
@@ -571,6 +571,19 @@
     </property>
    </widget>
   </widget>
+  <widget class="QPushButton" name="saveButton">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>560</y>
+     <width>191</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save Changes</string>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
@@ -579,6 +592,8 @@
    <header>qtpyvcp.widgets.input_widgets.teachin_line_edit</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../../../teachinlathe.qrc"/>
+ </resources>
  <connections/>
 </ui>

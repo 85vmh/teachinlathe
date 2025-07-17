@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/cnc/Work/teachinlathe/src/teachinlathe/widgets/conversational/header_detail.ui'
+# Form implementation generated from reading ui file 'header_details.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #

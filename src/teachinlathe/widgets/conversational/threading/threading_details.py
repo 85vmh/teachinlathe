@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/cnc/Work/teachinlathe/src/teachinlathe/widgets/conversational/threading_detail.ui'
+# Form implementation generated from reading ui file 'threading_details.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -200,7 +200,7 @@ class Ui_Form(object):
         self.label_73.setStyleSheet("font: 11pt \"Noto Sans\";")
         self.label_73.setObjectName("label_73")
         self.label_69 = QtWidgets.QLabel(Form)
-        self.label_69.setGeometry(QtCore.QRect(390, 300, 126, 30))
+        self.label_69.setGeometry(QtCore.QRect(390, 300, 136, 30))
         self.label_69.setStyleSheet("font: 11pt \"Noto Sans\";")
         self.label_69.setObjectName("label_69")
         self.label_72 = QtWidgets.QLabel(Form)
@@ -242,6 +242,9 @@ class Ui_Form(object):
         self.label_66.setGeometry(QtCore.QRect(390, 355, 106, 30))
         self.label_66.setStyleSheet("font: 11pt \"Noto Sans\";")
         self.label_66.setObjectName("label_66")
+        self.validateAndSave = QtWidgets.QPushButton(Form)
+        self.validateAndSave.setGeometry(QtCore.QRect(270, 495, 186, 46))
+        self.validateAndSave.setObjectName("validateAndSave")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -280,8 +283,9 @@ class Ui_Form(object):
         self.threadingTaper.setProperty("settingName", _translate("Form", "quick-cycles.threading-taper"))
         self.threadingDepthDegression.setProperty("settingName", _translate("Form", "quick-cycles.threading-depth-degression"))
         self.threadingSpringPasses.setProperty("settingName", _translate("Form", "quick-cycles.threading-spring-passes"))
-        self.threadingCompAngle.setText(_translate("Form", "0.1"))
+        self.threadingCompAngle.setText(_translate("Form", "30"))
         self.threadingCompAngle.setProperty("settingName", _translate("Form", "smart_numpad.quick-cycles-threading-compound-angle"))
         self.label_66.setText(_translate("Form", "Spring passes:"))
+        self.validateAndSave.setText(_translate("Form", "Validate && Save"))
 from qtpyvcp.widgets.input_widgets.setting_slider import VCPSettingsComboBox, VCPSettingsLineEdit
 from qtpyvcp.widgets.input_widgets.teachin_line_edit import TeachInLineEdit
