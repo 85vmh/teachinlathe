@@ -5,6 +5,7 @@ from enum import Enum
 
 import linuxcnc
 from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QPushButton
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.actions.program_actions import load as loadProgram
@@ -17,7 +18,6 @@ from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.widgets.FrameAnimator import FrameAnimator
-from teachinlathe.widgets.conversational.EmbeddedKotlinWidget import EmbeddedKotlinWidget
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 import teachinlathe_rc
 
@@ -26,6 +26,7 @@ from PyQt5.QtCore import Qt
 
 INFO = Info()
 STATUS = getPlugin('status')
+TOOLTABLE = getPlugin('tooltable')
 LINUXCNC_CMD = linuxcnc.command()
 STAT = linuxcnc.stat()
 PROGRAM_PREFIX = INFO.getProgramPrefix()
@@ -105,6 +106,9 @@ class MyMainWindow(VCPMainWindow):
         self.onTaskModeChanged(STATUS.task_mode)
         STATUS.task_mode.signal.connect(self.onTaskModeChanged)
 
+        TOOLTABLE.current_tool.signal.connect(self.onCurrentToolChanged)
+        self.latheToolTable.toolEditClicked.connect(self.onToolEditClicked)
+
         self.handle_spindle_mode(self.getSpindleModeIndex)
 
         # rpm is a float that fluctuates a lot, so debounce it
@@ -142,12 +146,37 @@ class MyMainWindow(VCPMainWindow):
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
         self.tabSpindleMode.currentChanged.connect(self.onSpindleModeChanged)
 
+        self.addEditToolWidget.onSaved.connect(self.onToolAddEditSaved)
+        self.addEditToolWidget.onCanceled.connect(self.onToolAddEditCanceled)
+
         QTimer.singleShot(0, self.afterUIInit)
         self.latheFixtures.onFixtureSelected.connect(self.onFixtureSelected)
         initial_fixture = self.fixture_repository.getCurrentFixture()
         if initial_fixture:
             print("Setup initial fixture: ", initial_fixture)
             self.onFixtureSelected(initial_fixture)
+
+    def onToolAddEditSaved(self):
+        print("onToolAddEditSaved")
+        self.innerToolsAndOffsets.setCurrentIndex(0)  # Switch to the offsets tab
+        self.latheToolTable.finishEditingTool()
+
+    def onToolAddEditCanceled(self):
+        print("onToolAddEditCanceled")
+        self.innerToolsAndOffsets.setCurrentIndex(0)  # Switch to the offsets tab
+        self.latheToolTable.finishEditingTool()
+
+    def onToolEditClicked(self, tool_data, tool_model, tool_no):
+        print("onToolEditClicked:", tool_no)
+        self.innerToolsAndOffsets.setCurrentIndex(1)  # Switch to the tool add/edit tab
+        self.addEditToolWidget.setEditToolData(tool_data, tool_model, tool_no)
+
+    def onCurrentToolChanged(self, current_tool):
+        print("--------Current tool changed to: ", current_tool)
+        tool_orientation = current_tool.get('Q', 1)
+        pixmap = QPixmap(":/images/lathe_control_point_{}.png".format(tool_orientation))
+        self.toolOrientation.setPixmap(pixmap)
+        self.toolOrientation.show()
 
     def onFixtureSelected(self, fixture):
         print("---Fixture selected: ", fixture)
@@ -349,17 +378,6 @@ class MyMainWindow(VCPMainWindow):
     def toggleZMpgEnable(self, value):
         print("toggleZMpgEnable to pin", value)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = value
-
-        kotlin_widget = EmbeddedKotlinWidget(
-            binary_path="/home/cnc/Work/HelloKotlin/build/compose/binaries/main/app/HelloKotlin/bin/HelloKotlin",
-            window_title="HelloKotlin"
-        )
-
-        # test_button = QPushButton("Test Button")
-        # test_button.setMinimumSize(400, 200)
-
-        self.tabWidget.addTab(kotlin_widget, "Conversational (Kotlin)")
-
 
     def onXPrimaryDroClicked(self, value):
         print("onXPrimaryDroClicked", value)

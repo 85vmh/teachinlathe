@@ -38,7 +38,7 @@
             "css_value": 200,
             "max_speed": 2000,
             "feed_rate": 0.2,
-            "doc": 232.0,
+            "doc": 80.0,
             "retract": 1.0,
             "x_start": 30.0,
             "z_start": 3.0,

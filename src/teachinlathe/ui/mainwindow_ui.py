@@ -14,14 +14,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1922, 1045)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        MainWindow.resize(1920, 1045)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
         MainWindow.setMinimumSize(QtCore.QSize(1024, 720))
-        MainWindow.setMaximumSize(QtCore.QSize(2000, 1500))
+        MainWindow.setMaximumSize(QtCore.QSize(1920, 1500))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -207,7 +207,7 @@ class Ui_MainWindow(object):
         self.pageReady.setObjectName("pageReady")
         self.tabWidget = QtWidgets.QTabWidget(self.pageReady)
         self.tabWidget.setEnabled(True)
-        self.tabWidget.setGeometry(QtCore.QRect(0, 0, 1916, 1041))
+        self.tabWidget.setGeometry(QtCore.QRect(0, 0, 1926, 1041))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -492,13 +492,19 @@ class Ui_MainWindow(object):
         self.jogSpeedFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.jogSpeedFrame.setObjectName("jogSpeedFrame")
         self.jogspeedpercentagewidget = JogSpeedPercentageWidget(self.jogSpeedFrame)
-        self.jogspeedpercentagewidget.setGeometry(QtCore.QRect(10, 15, 80, 186))
+        self.jogspeedpercentagewidget.setGeometry(QtCore.QRect(10, 10, 80, 186))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.jogspeedpercentagewidget.sizePolicy().hasHeightForWidth())
+        self.jogspeedpercentagewidget.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
-        font.setPointSize(10)
+        font.setPointSize(12)
         self.jogspeedpercentagewidget.setFont(font)
-        self.jogspeedpercentagewidget.setProperty("diameter", 20)
+        self.jogspeedpercentagewidget.setProperty("diameter", 15)
+        self.jogspeedpercentagewidget.setAlignment(QtCore.Qt.AlignCenter)
         self.jogspeedpercentagewidget.setOrientation(QtCore.Qt.Vertical)
-        self.jogspeedpercentagewidget.setLayoutSpacing(12)
+        self.jogspeedpercentagewidget.setLayoutSpacing(6)
         self.jogspeedpercentagewidget.setProperty("color", QtGui.QColor(15, 224, 42))
         self.jogspeedpercentagewidget.setObjectName("jogspeedpercentagewidget")
         self.handwheelsFrame = QtWidgets.QFrame(self.manualTurningTab)
@@ -584,14 +590,18 @@ class Ui_MainWindow(object):
         self.zMpgCheckbox.setChecked(True)
         self.zMpgCheckbox.setObjectName("zMpgCheckbox")
         self.jogIncrement = QtWidgets.QLabel(self.handwheelsFrame)
-        self.jogIncrement.setGeometry(QtCore.QRect(125, 10, 76, 36))
+        self.jogIncrement.setGeometry(QtCore.QRect(110, 10, 56, 36))
         self.jogIncrement.setStyleSheet("font: 12pt \"Noto Sans Mono\";")
-        self.jogIncrement.setAlignment(QtCore.Qt.AlignCenter)
+        self.jogIncrement.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.jogIncrement.setObjectName("jogIncrement")
         self.label_21 = QtWidgets.QLabel(self.handwheelsFrame)
-        self.label_21.setGeometry(QtCore.QRect(25, 10, 91, 36))
+        self.label_21.setGeometry(QtCore.QRect(15, 10, 91, 36))
         self.label_21.setStyleSheet("font: 13pt \"Cantarell\";")
         self.label_21.setObjectName("label_21")
+        self.actualFeedType_4 = QtWidgets.QLabel(self.handwheelsFrame)
+        self.actualFeedType_4.setGeometry(QtCore.QRect(170, 10, 36, 36))
+        self.actualFeedType_4.setStyleSheet("font: 13pt \"Cantarell\";")
+        self.actualFeedType_4.setObjectName("actualFeedType_4")
         self.quickcycles = QuickCycles(self.manualTurningTab)
         self.quickcycles.setGeometry(QtCore.QRect(1535, 5, 371, 461))
         self.quickcycles.setObjectName("quickcycles")
@@ -638,119 +648,109 @@ class Ui_MainWindow(object):
         self.currentToolFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.currentToolFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.currentToolFrame.setObjectName("currentToolFrame")
-        self.tool_diameter_12 = StatusLabel(self.currentToolFrame)
-        self.tool_diameter_12.setGeometry(QtCore.QRect(120, 155, 56, 27))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(1)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tool_diameter_12.sizePolicy().hasHeightForWidth())
-        self.tool_diameter_12.setSizePolicy(sizePolicy)
-        self.tool_diameter_12.setMinimumSize(QtCore.QSize(56, 21))
-        self.tool_diameter_12.setMaximumSize(QtCore.QSize(90, 35))
-        self.tool_diameter_12.setStyleSheet("QLabel {\n"
-"    border-style: solid;\n"
-"    border-color: rgb(96, 96, 97);\n"
-"    border-width: 2px;\n"
-"    border-radius: 5px;\n"
-"    color: white;\n"
-"    background: rgb(86, 86, 87);\n"
-"    font: 10pt \"Noto\";\n"
-"}")
-        self.tool_diameter_12.setAlignment(QtCore.Qt.AlignCenter)
-        self.tool_diameter_12.setObjectName("tool_diameter_12")
-        self.label_33 = QtWidgets.QLabel(self.currentToolFrame)
-        self.label_33.setGeometry(QtCore.QRect(34, 55, 61, 27))
-        self.label_33.setStyleSheet("font: 10pt \"Noto Sans\";")
-        self.label_33.setObjectName("label_33")
-        self.label_34 = QtWidgets.QLabel(self.currentToolFrame)
-        self.label_34.setGeometry(QtCore.QRect(33, 85, 61, 27))
-        self.label_34.setStyleSheet("font: 10pt \"Noto Sans\";")
-        self.label_34.setObjectName("label_34")
-        self.label_38 = QtWidgets.QLabel(self.currentToolFrame)
-        self.label_38.setGeometry(QtCore.QRect(36, 155, 81, 26))
-        self.label_38.setStyleSheet("font: 10pt \"Noto Sans\";")
-        self.label_38.setObjectName("label_38")
-        self.tool_diameter_11 = StatusLabel(self.currentToolFrame)
-        self.tool_diameter_11.setGeometry(QtCore.QRect(120, 122, 56, 27))
+        self.currentTool = VCPStackedWidget(self.currentToolFrame)
+        self.currentTool.setGeometry(QtCore.QRect(5, 5, 201, 231))
+        self.currentTool.setObjectName("currentTool")
+        self.pageNoTool = QtWidgets.QWidget()
+        self.pageNoTool.setObjectName("pageNoTool")
+        self.label_2 = QtWidgets.QLabel(self.pageNoTool)
+        self.label_2.setGeometry(QtCore.QRect(10, 55, 181, 46))
+        self.label_2.setStyleSheet("font: 16pt \"Cantarell\";")
+        self.label_2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_2.setObjectName("label_2")
+        self.pushButton = QtWidgets.QPushButton(self.pageNoTool)
+        self.pushButton.setGeometry(QtCore.QRect(35, 120, 131, 46))
+        self.pushButton.setObjectName("pushButton")
+        self.currentTool.addWidget(self.pageNoTool)
+        self.pageLoadedTool = QtWidgets.QWidget()
+        self.pageLoadedTool.setObjectName("pageLoadedTool")
+        self.currentToolNo = StatusLabel(self.pageLoadedTool)
+        self.currentToolNo.setGeometry(QtCore.QRect(25, 20, 76, 60))
+        font = QtGui.QFont()
+        font.setFamily("Cantarell")
+        font.setPointSize(30)
+        font.setBold(False)
+        font.setItalic(False)
+        font.setWeight(50)
+        self.currentToolNo.setFont(font)
+        self.currentToolNo.setStyleSheet("font: 30pt \"Cantarell\";")
+        self.currentToolNo.setAlignment(QtCore.Qt.AlignCenter)
+        self.currentToolNo.setObjectName("currentToolNo")
+        self.tool_diameter_11 = StatusLabel(self.pageLoadedTool)
+        self.tool_diameter_11.setGeometry(QtCore.QRect(100, 112, 50, 35))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tool_diameter_11.sizePolicy().hasHeightForWidth())
         self.tool_diameter_11.setSizePolicy(sizePolicy)
-        self.tool_diameter_11.setMinimumSize(QtCore.QSize(56, 21))
+        self.tool_diameter_11.setMinimumSize(QtCore.QSize(50, 21))
         self.tool_diameter_11.setMaximumSize(QtCore.QSize(90, 35))
-        self.tool_diameter_11.setStyleSheet("QLabel {\n"
-"    border-style: solid;\n"
-"    border-color: rgb(96, 96, 97);\n"
-"    border-width: 2px;\n"
-"    border-radius: 5px;\n"
-"    color: white;\n"
-"    background: rgb(86, 86, 87);\n"
-"    font: 10pt \"Noto\";\n"
-"}")
+        self.tool_diameter_11.setStyleSheet("font: 12pt \"Noto Sans Mono\";")
         self.tool_diameter_11.setAlignment(QtCore.Qt.AlignCenter)
         self.tool_diameter_11.setObjectName("tool_diameter_11")
-        self.tool_diameter_7 = StatusLabel(self.currentToolFrame)
-        self.tool_diameter_7.setGeometry(QtCore.QRect(99, 55, 80, 27))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(1)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tool_diameter_7.sizePolicy().hasHeightForWidth())
-        self.tool_diameter_7.setSizePolicy(sizePolicy)
-        self.tool_diameter_7.setMinimumSize(QtCore.QSize(60, 21))
-        self.tool_diameter_7.setMaximumSize(QtCore.QSize(90, 35))
-        self.tool_diameter_7.setStyleSheet("QLabel {\n"
-"    border-style: solid;\n"
-"    border-color: rgb(96, 96, 97);\n"
-"    border-width: 2px;\n"
-"    border-radius: 5px;\n"
-"    color: white;\n"
-"    background: rgb(86, 86, 87);\n"
-"    font: 10pt \"Noto\";\n"
-"}")
-        self.tool_diameter_7.setAlignment(QtCore.Qt.AlignCenter)
-        self.tool_diameter_7.setObjectName("tool_diameter_7")
-        self.label_37 = QtWidgets.QLabel(self.currentToolFrame)
-        self.label_37.setGeometry(QtCore.QRect(44, 123, 76, 27))
-        self.label_37.setStyleSheet("font: 10pt \"Noto Sans\";")
+        self.label_37 = QtWidgets.QLabel(self.pageLoadedTool)
+        self.label_37.setGeometry(QtCore.QRect(10, 110, 86, 36))
+        self.label_37.setStyleSheet("font: 13pt \"Cantarell\";")
         self.label_37.setObjectName("label_37")
-        self.tool_diameter_8 = StatusLabel(self.currentToolFrame)
-        self.tool_diameter_8.setGeometry(QtCore.QRect(99, 85, 80, 27))
+        self.tool_diameter_8 = StatusLabel(self.pageLoadedTool)
+        self.tool_diameter_8.setGeometry(QtCore.QRect(85, 195, 101, 27))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tool_diameter_8.sizePolicy().hasHeightForWidth())
         self.tool_diameter_8.setSizePolicy(sizePolicy)
         self.tool_diameter_8.setMinimumSize(QtCore.QSize(70, 21))
-        self.tool_diameter_8.setMaximumSize(QtCore.QSize(90, 35))
-        self.tool_diameter_8.setStyleSheet("QLabel {\n"
-"    border-style: solid;\n"
-"    border-color: rgb(96, 96, 97);\n"
-"    border-width: 2px;\n"
-"    border-radius: 5px;\n"
-"    color: white;\n"
-"    background: rgb(86, 86, 87);\n"
-"    font: 10pt \"Noto\";\n"
-"}")
-        self.tool_diameter_8.setAlignment(QtCore.Qt.AlignCenter)
+        self.tool_diameter_8.setMaximumSize(QtCore.QSize(120, 35))
+        self.tool_diameter_8.setStyleSheet("font: 12pt \"Noto Sans Mono\";")
+        self.tool_diameter_8.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.tool_diameter_8.setObjectName("tool_diameter_8")
+        self.label_33 = QtWidgets.QLabel(self.pageLoadedTool)
+        self.label_33.setGeometry(QtCore.QRect(10, 165, 71, 27))
+        self.label_33.setStyleSheet("font: 13pt \"Cantarell\";")
+        self.label_33.setObjectName("label_33")
+        self.label_34 = QtWidgets.QLabel(self.pageLoadedTool)
+        self.label_34.setGeometry(QtCore.QRect(10, 195, 71, 27))
+        self.label_34.setStyleSheet("font: 13pt \"Cantarell\";")
+        self.label_34.setObjectName("label_34")
+        self.tool_diameter_7 = StatusLabel(self.pageLoadedTool)
+        self.tool_diameter_7.setGeometry(QtCore.QRect(85, 165, 101, 27))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(1)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tool_diameter_7.sizePolicy().hasHeightForWidth())
+        self.tool_diameter_7.setSizePolicy(sizePolicy)
+        self.tool_diameter_7.setMinimumSize(QtCore.QSize(60, 21))
+        self.tool_diameter_7.setMaximumSize(QtCore.QSize(120, 35))
+        self.tool_diameter_7.setStyleSheet("font: 12pt \"Noto Sans Mono\";")
+        self.tool_diameter_7.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.tool_diameter_7.setObjectName("tool_diameter_7")
+        self.toolOrientation = QtWidgets.QLabel(self.pageLoadedTool)
+        self.toolOrientation.setGeometry(QtCore.QRect(115, 20, 60, 60))
+        self.toolOrientation.setText("")
+        self.toolOrientation.setPixmap(QtGui.QPixmap(":/images/lathe_control_point_2.png"))
+        self.toolOrientation.setScaledContents(True)
+        self.toolOrientation.setAlignment(QtCore.Qt.AlignCenter)
+        self.toolOrientation.setObjectName("toolOrientation")
+        self.actualFeedType_3 = QtWidgets.QLabel(self.pageLoadedTool)
+        self.actualFeedType_3.setGeometry(QtCore.QRect(155, 110, 36, 36))
+        self.actualFeedType_3.setStyleSheet("font: 13pt \"Cantarell\";")
+        self.actualFeedType_3.setObjectName("actualFeedType_3")
+        self.line_2 = QtWidgets.QFrame(self.pageLoadedTool)
+        self.line_2.setGeometry(QtCore.QRect(0, 95, 201, 16))
+        self.line_2.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line_2.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_2.setObjectName("line_2")
+        self.line_3 = QtWidgets.QFrame(self.pageLoadedTool)
+        self.line_3.setGeometry(QtCore.QRect(0, 145, 201, 16))
+        self.line_3.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line_3.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_3.setObjectName("line_3")
+        self.currentTool.addWidget(self.pageLoadedTool)
         self.label_11 = QtWidgets.QLabel(self.manualTurningTab)
-        self.label_11.setGeometry(QtCore.QRect(1230, 705, 156, 36))
+        self.label_11.setGeometry(QtCore.QRect(1235, 705, 196, 36))
         self.label_11.setStyleSheet("font: 18pt \"Cantarell\";")
         self.label_11.setAlignment(QtCore.Qt.AlignCenter)
         self.label_11.setObjectName("label_11")
-        self.feedOverrideValue_2 = StatusLabel(self.manualTurningTab)
-        self.feedOverrideValue_2.setGeometry(QtCore.QRect(1385, 705, 41, 36))
-        font = QtGui.QFont()
-        font.setFamily("Cantarell")
-        font.setPointSize(18)
-        font.setBold(False)
-        font.setItalic(False)
-        font.setWeight(9)
-        self.feedOverrideValue_2.setFont(font)
-        self.feedOverrideValue_2.setStyleSheet("font: 75 18pt \"Cantarell\";")
-        self.feedOverrideValue_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.feedOverrideValue_2.setObjectName("feedOverrideValue_2")
         self.mdientry = MDIEntry(self.manualTurningTab)
         self.mdientry.setGeometry(QtCore.QRect(1590, 575, 211, 51))
         self.mdientry.setObjectName("mdientry")
@@ -1692,36 +1692,67 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.programsTab, "")
         self.toolsTab = QtWidgets.QWidget()
         self.toolsTab.setObjectName("toolsTab")
-        self.frame_16 = QtWidgets.QFrame(self.toolsTab)
-        self.frame_16.setGeometry(QtCore.QRect(1200, 45, 700, 560))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        self.frame_13 = QtWidgets.QFrame(self.toolsTab)
+        self.frame_13.setEnabled(True)
+        self.frame_13.setGeometry(QtCore.QRect(0, 5, 1201, 966))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.frame_16.sizePolicy().hasHeightForWidth())
-        self.frame_16.setSizePolicy(sizePolicy)
-        self.frame_16.setMinimumSize(QtCore.QSize(700, 560))
-        self.frame_16.setMaximumSize(QtCore.QSize(700, 560))
-        self.frame_16.setStyleSheet(".QFrame{\n"
+        sizePolicy.setHeightForWidth(self.frame_13.sizePolicy().hasHeightForWidth())
+        self.frame_13.setSizePolicy(sizePolicy)
+        self.frame_13.setStyleSheet(".QFrame{\n"
 "    background-color: rgb(51, 57, 59);\n"
 "}")
-        self.frame_16.setObjectName("frame_16")
-        self.verticalLayout_39 = QtWidgets.QVBoxLayout(self.frame_16)
-        self.verticalLayout_39.setContentsMargins(-1, 5, -1, 20)
-        self.verticalLayout_39.setSpacing(15)
-        self.verticalLayout_39.setObjectName("verticalLayout_39")
-        self.gridLayout_13 = QtWidgets.QGridLayout()
-        self.gridLayout_13.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
-        self.gridLayout_13.setContentsMargins(-1, 5, -1, -1)
-        self.gridLayout_13.setHorizontalSpacing(31)
-        self.gridLayout_13.setVerticalSpacing(12)
-        self.gridLayout_13.setObjectName("gridLayout_13")
-        self.machine_column_header_5 = QtWidgets.QLabel(self.frame_16)
+        self.frame_13.setObjectName("frame_13")
+        self.verticalLayout_20 = QtWidgets.QVBoxLayout(self.frame_13)
+        self.verticalLayout_20.setContentsMargins(-1, 9, -1, -1)
+        self.verticalLayout_20.setObjectName("verticalLayout_20")
+        self.horizontalLayout_38 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_38.setContentsMargins(5, 5, 5, -1)
+        self.horizontalLayout_38.setObjectName("horizontalLayout_38")
+        self.latheToolTable = LatheToolTable(self.frame_13)
+        self.latheToolTable.setStyleSheet("QTableView::item {\n"
+"    padding-top: 10px;  /* Increase as needed */\n"
+"    padding-bottom: 10px;  /* Increase as needed */\n"
+"}")
+        self.latheToolTable.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.latheToolTable.setProperty("currentToolColor", QtGui.QColor(46, 194, 126))
+        self.latheToolTable.setProperty("currentToolBackground", QtGui.QColor(152, 106, 68))
+        self.latheToolTable.setObjectName("latheToolTable")
+        self.horizontalLayout_38.addWidget(self.latheToolTable)
+        self.verticalLayout_20.addLayout(self.horizontalLayout_38)
+        self.horizontalLayout_37 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_37.setObjectName("horizontalLayout_37")
+        self.toolAddBtn = QtWidgets.QPushButton(self.frame_13)
+        self.toolAddBtn.setEnabled(True)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.toolAddBtn.sizePolicy().hasHeightForWidth())
+        self.toolAddBtn.setSizePolicy(sizePolicy)
+        self.toolAddBtn.setMinimumSize(QtCore.QSize(120, 40))
+        self.toolAddBtn.setMaximumSize(QtCore.QSize(200, 60))
+        self.toolAddBtn.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.toolAddBtn.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.toolAddBtn.setObjectName("toolAddBtn")
+        self.horizontalLayout_37.addWidget(self.toolAddBtn)
+        self.verticalLayout_20.addLayout(self.horizontalLayout_37)
+        self.innerToolsAndOffsets = QtWidgets.QStackedWidget(self.toolsTab)
+        self.innerToolsAndOffsets.setGeometry(QtCore.QRect(1210, 5, 696, 971))
+        self.innerToolsAndOffsets.setFrameShape(QtWidgets.QFrame.Box)
+        self.innerToolsAndOffsets.setObjectName("innerToolsAndOffsets")
+        self.workOffsets = QtWidgets.QWidget()
+        self.workOffsets.setObjectName("workOffsets")
+        self.machine_column_header_5 = QtWidgets.QLabel(self.workOffsets)
+        self.machine_column_header_5.setGeometry(QtCore.QRect(190, 10, 451, 55))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.machine_column_header_5.sizePolicy().hasHeightForWidth())
         self.machine_column_header_5.setSizePolicy(sizePolicy)
-        self.machine_column_header_5.setMinimumSize(QtCore.QSize(675, 55))
+        self.machine_column_header_5.setMinimumSize(QtCore.QSize(300, 55))
         self.machine_column_header_5.setMaximumSize(QtCore.QSize(16777215, 55))
         self.machine_column_header_5.setStyleSheet("QLabel{\n"
 "    border-style: solid;\n"
@@ -1734,607 +1765,15 @@ class Ui_MainWindow(object):
 "}")
         self.machine_column_header_5.setAlignment(QtCore.Qt.AlignCenter)
         self.machine_column_header_5.setObjectName("machine_column_header_5")
-        self.gridLayout_13.addWidget(self.machine_column_header_5, 0, 0, 1, 5)
-        self.actionbutton_g54_3 = ActionButton(self.frame_16)
-        self.actionbutton_g54_3.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.actionbutton_g54_3.sizePolicy().hasHeightForWidth())
-        self.actionbutton_g54_3.setSizePolicy(sizePolicy)
-        self.actionbutton_g54_3.setMinimumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g54_3.setMaximumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g54_3.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.actionbutton_g54_3.setStyleSheet("QPushButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.actionbutton_g54_3.setAutoExclusive(True)
-        self.actionbutton_g54_3.setObjectName("actionbutton_g54_3")
-        self.gridLayout_13.addWidget(self.actionbutton_g54_3, 1, 0, 1, 1)
-        self.actionbutton_g55_3 = ActionButton(self.frame_16)
-        self.actionbutton_g55_3.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.actionbutton_g55_3.sizePolicy().hasHeightForWidth())
-        self.actionbutton_g55_3.setSizePolicy(sizePolicy)
-        self.actionbutton_g55_3.setMinimumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g55_3.setMaximumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g55_3.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.actionbutton_g55_3.setStyleSheet("QPushButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.actionbutton_g55_3.setAutoExclusive(True)
-        self.actionbutton_g55_3.setObjectName("actionbutton_g55_3")
-        self.gridLayout_13.addWidget(self.actionbutton_g55_3, 1, 1, 1, 1)
-        self.actionbutton_g56_3 = ActionButton(self.frame_16)
-        self.actionbutton_g56_3.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.actionbutton_g56_3.sizePolicy().hasHeightForWidth())
-        self.actionbutton_g56_3.setSizePolicy(sizePolicy)
-        self.actionbutton_g56_3.setMinimumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g56_3.setMaximumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g56_3.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.actionbutton_g56_3.setStyleSheet("QPushButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.actionbutton_g56_3.setAutoExclusive(True)
-        self.actionbutton_g56_3.setObjectName("actionbutton_g56_3")
-        self.gridLayout_13.addWidget(self.actionbutton_g56_3, 1, 2, 1, 1)
-        self.actionbutton_g57_3 = ActionButton(self.frame_16)
-        self.actionbutton_g57_3.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.actionbutton_g57_3.sizePolicy().hasHeightForWidth())
-        self.actionbutton_g57_3.setSizePolicy(sizePolicy)
-        self.actionbutton_g57_3.setMinimumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g57_3.setMaximumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g57_3.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.actionbutton_g57_3.setStyleSheet("QPushButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.actionbutton_g57_3.setAutoExclusive(True)
-        self.actionbutton_g57_3.setObjectName("actionbutton_g57_3")
-        self.gridLayout_13.addWidget(self.actionbutton_g57_3, 1, 3, 1, 1)
-        self.actionbutton_g58_3 = ActionButton(self.frame_16)
-        self.actionbutton_g58_3.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.actionbutton_g58_3.sizePolicy().hasHeightForWidth())
-        self.actionbutton_g58_3.setSizePolicy(sizePolicy)
-        self.actionbutton_g58_3.setMinimumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g58_3.setMaximumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g58_3.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.actionbutton_g58_3.setStyleSheet("QPushButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.actionbutton_g58_3.setAutoExclusive(True)
-        self.actionbutton_g58_3.setObjectName("actionbutton_g58_3")
-        self.gridLayout_13.addWidget(self.actionbutton_g58_3, 1, 4, 1, 1)
-        self.actionbutton_g59_8 = ActionButton(self.frame_16)
-        self.actionbutton_g59_8.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.actionbutton_g59_8.sizePolicy().hasHeightForWidth())
-        self.actionbutton_g59_8.setSizePolicy(sizePolicy)
-        self.actionbutton_g59_8.setMinimumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g59_8.setMaximumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g59_8.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.actionbutton_g59_8.setStyleSheet("QPushButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.actionbutton_g59_8.setAutoExclusive(True)
-        self.actionbutton_g59_8.setObjectName("actionbutton_g59_8")
-        self.gridLayout_13.addWidget(self.actionbutton_g59_8, 2, 1, 1, 1)
-        self.actionbutton_g59_9 = ActionButton(self.frame_16)
-        self.actionbutton_g59_9.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.actionbutton_g59_9.sizePolicy().hasHeightForWidth())
-        self.actionbutton_g59_9.setSizePolicy(sizePolicy)
-        self.actionbutton_g59_9.setMinimumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g59_9.setMaximumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g59_9.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.actionbutton_g59_9.setStyleSheet("QPushButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.actionbutton_g59_9.setAutoExclusive(True)
-        self.actionbutton_g59_9.setObjectName("actionbutton_g59_9")
-        self.gridLayout_13.addWidget(self.actionbutton_g59_9, 2, 2, 1, 1)
-        self.actionbutton_g59_10 = ActionButton(self.frame_16)
-        self.actionbutton_g59_10.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.actionbutton_g59_10.sizePolicy().hasHeightForWidth())
-        self.actionbutton_g59_10.setSizePolicy(sizePolicy)
-        self.actionbutton_g59_10.setMinimumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g59_10.setMaximumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g59_10.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.actionbutton_g59_10.setStyleSheet("QPushButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.actionbutton_g59_10.setAutoExclusive(True)
-        self.actionbutton_g59_10.setObjectName("actionbutton_g59_10")
-        self.gridLayout_13.addWidget(self.actionbutton_g59_10, 2, 3, 1, 1)
-        self.actionbutton_g59_11 = ActionButton(self.frame_16)
-        self.actionbutton_g59_11.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.actionbutton_g59_11.sizePolicy().hasHeightForWidth())
-        self.actionbutton_g59_11.setSizePolicy(sizePolicy)
-        self.actionbutton_g59_11.setMinimumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g59_11.setMaximumSize(QtCore.QSize(110, 38))
-        self.actionbutton_g59_11.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.actionbutton_g59_11.setStyleSheet("QPushButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.actionbutton_g59_11.setAutoExclusive(True)
-        self.actionbutton_g59_11.setObjectName("actionbutton_g59_11")
-        self.gridLayout_13.addWidget(self.actionbutton_g59_11, 2, 4, 1, 1)
-        self.verticalLayout_39.addLayout(self.gridLayout_13)
-        self.frame_37 = QtWidgets.QFrame(self.frame_16)
-        self.frame_37.setMaximumSize(QtCore.QSize(16777215, 80))
-        self.frame_37.setStyleSheet("QFrame{\n"
-"    border: none;\n"
-"}")
-        self.frame_37.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_37.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_37.setObjectName("frame_37")
-        self.verticalLayout_39.addWidget(self.frame_37)
-        self.frame_47 = QtWidgets.QFrame(self.frame_16)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.frame_47.sizePolicy().hasHeightForWidth())
-        self.frame_47.setSizePolicy(sizePolicy)
-        self.frame_47.setMaximumSize(QtCore.QSize(16777215, 70))
-        self.frame_47.setStyleSheet(".QFrame{\n"
-"    border-style: solid;\n"
-"    border-color: rgb(176, 179,172);\n"
-"    border-width: 2px;\n"
-"    border-radius: 6px;\n"
-"    background-color: rgb(90, 90, 90);\n"
-"    padding: -5px;\n"
-"}")
-        self.frame_47.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_47.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_47.setObjectName("frame_47")
-        self.verticalLayout_42 = QtWidgets.QVBoxLayout(self.frame_47)
-        self.verticalLayout_42.setContentsMargins(10, -1, 11, -1)
-        self.verticalLayout_42.setSpacing(5)
-        self.verticalLayout_42.setObjectName("verticalLayout_42")
-        self.horizontalLayout_13 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_13.setContentsMargins(0, -1, 0, -1)
-        self.horizontalLayout_13.setSpacing(13)
-        self.horizontalLayout_13.setObjectName("horizontalLayout_13")
-        self.axis_column_header_16 = QtWidgets.QLabel(self.frame_47)
+        self.frame_46 = QtWidgets.QFrame(self.workOffsets)
+        self.frame_46.setGeometry(QtCore.QRect(10, 75, 311, 521))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.axis_column_header_16.sizePolicy().hasHeightForWidth())
-        self.axis_column_header_16.setSizePolicy(sizePolicy)
-        self.axis_column_header_16.setMinimumSize(QtCore.QSize(55, 50))
-        self.axis_column_header_16.setMaximumSize(QtCore.QSize(55, 50))
-        self.axis_column_header_16.setStyleSheet("QLabel{\n"
-"    color: rgb(238, 238, 236);\n"
-"    font: 14pt \"Noto\";\n"
-"}")
-        self.axis_column_header_16.setAlignment(QtCore.Qt.AlignCenter)
-        self.axis_column_header_16.setWordWrap(True)
-        self.axis_column_header_16.setObjectName("axis_column_header_16")
-        self.horizontalLayout_13.addWidget(self.axis_column_header_16)
-        self.axis_column_header_17 = QtWidgets.QLabel(self.frame_47)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.axis_column_header_17.sizePolicy().hasHeightForWidth())
-        self.axis_column_header_17.setSizePolicy(sizePolicy)
-        self.axis_column_header_17.setMinimumSize(QtCore.QSize(45, 50))
-        self.axis_column_header_17.setMaximumSize(QtCore.QSize(45, 50))
-        self.axis_column_header_17.setStyleSheet("QLabel{\n"
-"    color: rgb(238, 238, 236);\n"
-"    font: 14pt \"Noto\";\n"
-"}")
-        self.axis_column_header_17.setAlignment(QtCore.Qt.AlignCenter)
-        self.axis_column_header_17.setWordWrap(True)
-        self.axis_column_header_17.setObjectName("axis_column_header_17")
-        self.horizontalLayout_13.addWidget(self.axis_column_header_17)
-        self.machine_column_header_14 = QtWidgets.QLabel(self.frame_47)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.machine_column_header_14.sizePolicy().hasHeightForWidth())
-        self.machine_column_header_14.setSizePolicy(sizePolicy)
-        self.machine_column_header_14.setMinimumSize(QtCore.QSize(88, 50))
-        self.machine_column_header_14.setMaximumSize(QtCore.QSize(16777215, 50))
-        self.machine_column_header_14.setStyleSheet("QLabel{\n"
-"    color: rgb(238, 238, 236);\n"
-"    font: 14pt \"Noto\";\n"
-"}")
-        self.machine_column_header_14.setAlignment(QtCore.Qt.AlignCenter)
-        self.machine_column_header_14.setWordWrap(True)
-        self.machine_column_header_14.setObjectName("machine_column_header_14")
-        self.horizontalLayout_13.addWidget(self.machine_column_header_14)
-        self.machine_column_header_15 = QtWidgets.QLabel(self.frame_47)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.machine_column_header_15.sizePolicy().hasHeightForWidth())
-        self.machine_column_header_15.setSizePolicy(sizePolicy)
-        self.machine_column_header_15.setMinimumSize(QtCore.QSize(85, 50))
-        self.machine_column_header_15.setMaximumSize(QtCore.QSize(16777215, 50))
-        self.machine_column_header_15.setStyleSheet("QLabel{\n"
-"    color: rgb(238, 238, 236);\n"
-"    font: 14pt \"Noto\";\n"
-"}")
-        self.machine_column_header_15.setAlignment(QtCore.Qt.AlignCenter)
-        self.machine_column_header_15.setWordWrap(True)
-        self.machine_column_header_15.setObjectName("machine_column_header_15")
-        self.horizontalLayout_13.addWidget(self.machine_column_header_15)
-        self.machine_column_header_16 = QtWidgets.QLabel(self.frame_47)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.machine_column_header_16.sizePolicy().hasHeightForWidth())
-        self.machine_column_header_16.setSizePolicy(sizePolicy)
-        self.machine_column_header_16.setMinimumSize(QtCore.QSize(60, 50))
-        self.machine_column_header_16.setMaximumSize(QtCore.QSize(16777215, 50))
-        self.machine_column_header_16.setStyleSheet("QLabel{\n"
-"    color: rgb(238, 238, 236);\n"
-"    font: 14pt \"Noto\";\n"
-"}")
-        self.machine_column_header_16.setAlignment(QtCore.Qt.AlignCenter)
-        self.machine_column_header_16.setWordWrap(True)
-        self.machine_column_header_16.setObjectName("machine_column_header_16")
-        self.horizontalLayout_13.addWidget(self.machine_column_header_16)
-        self.ref_coilumn_header_9 = QtWidgets.QLabel(self.frame_47)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.ref_coilumn_header_9.sizePolicy().hasHeightForWidth())
-        self.ref_coilumn_header_9.setSizePolicy(sizePolicy)
-        self.ref_coilumn_header_9.setMinimumSize(QtCore.QSize(65, 50))
-        self.ref_coilumn_header_9.setMaximumSize(QtCore.QSize(16777215, 50))
-        self.ref_coilumn_header_9.setStyleSheet("QLabel{\n"
-"    color: rgb(238, 238, 236);\n"
-"    font: 14pt \"Noto\";\n"
-"}")
-        self.ref_coilumn_header_9.setAlignment(QtCore.Qt.AlignCenter)
-        self.ref_coilumn_header_9.setWordWrap(True)
-        self.ref_coilumn_header_9.setObjectName("ref_coilumn_header_9")
-        self.horizontalLayout_13.addWidget(self.ref_coilumn_header_9)
-        self.machine_column_header_17 = QtWidgets.QLabel(self.frame_47)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.machine_column_header_17.sizePolicy().hasHeightForWidth())
-        self.machine_column_header_17.setSizePolicy(sizePolicy)
-        self.machine_column_header_17.setMinimumSize(QtCore.QSize(65, 50))
-        self.machine_column_header_17.setMaximumSize(QtCore.QSize(16777215, 50))
-        self.machine_column_header_17.setStyleSheet("QLabel{\n"
-"    color: rgb(238, 238, 236);\n"
-"    font: 14pt \"Noto\";\n"
-"}")
-        self.machine_column_header_17.setAlignment(QtCore.Qt.AlignCenter)
-        self.machine_column_header_17.setWordWrap(True)
-        self.machine_column_header_17.setObjectName("machine_column_header_17")
-        self.horizontalLayout_13.addWidget(self.machine_column_header_17)
-        self.verticalLayout_42.addLayout(self.horizontalLayout_13)
-        self.verticalLayout_39.addWidget(self.frame_47)
-        self.dro_container_offsets_page = QtWidgets.QVBoxLayout()
-        self.dro_container_offsets_page.setContentsMargins(6, 0, 6, 5)
-        self.dro_container_offsets_page.setSpacing(15)
-        self.dro_container_offsets_page.setObjectName("dro_container_offsets_page")
-        self.x_axis_dro_layout_offset_page = QtWidgets.QHBoxLayout()
-        self.x_axis_dro_layout_offset_page.setContentsMargins(-1, 1, -1, 1)
-        self.x_axis_dro_layout_offset_page.setSpacing(12)
-        self.x_axis_dro_layout_offset_page.setObjectName("x_axis_dro_layout_offset_page")
-        self.zero_x_button_3 = MDIButton(self.frame_16)
-        self.zero_x_button_3.setEnabled(False)
-        self.zero_x_button_3.setMinimumSize(QtCore.QSize(55, 38))
-        self.zero_x_button_3.setMaximumSize(QtCore.QSize(55, 38))
-        self.zero_x_button_3.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.zero_x_button_3.setStyleSheet("MDIButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.zero_x_button_3.setObjectName("zero_x_button_3")
-        self.x_axis_dro_layout_offset_page.addWidget(self.zero_x_button_3)
-        self.x_axis_column_header = QtWidgets.QLabel(self.frame_16)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.x_axis_column_header.sizePolicy().hasHeightForWidth())
-        self.x_axis_column_header.setSizePolicy(sizePolicy)
-        self.x_axis_column_header.setMinimumSize(QtCore.QSize(45, 35))
-        self.x_axis_column_header.setMaximumSize(QtCore.QSize(45, 35))
-        self.x_axis_column_header.setStyleSheet("QLabel{\n"
-"    border-style: solid;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: rgb(238, 238, 236);\n"
-"    font: 18pt \"Noto\";\n"
-"}")
-        self.x_axis_column_header.setAlignment(QtCore.Qt.AlignCenter)
-        self.x_axis_column_header.setObjectName("x_axis_column_header")
-        self.x_axis_dro_layout_offset_page.addWidget(self.x_axis_column_header)
-        self.dro_machine_coords_x = StatusLabel(self.frame_16)
-        self.dro_machine_coords_x.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.dro_machine_coords_x.setStyleSheet("StatusLabel{\n"
-"    border-style: transparant;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: black;\n"
-"    background: rgb(235, 235, 235);\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.dro_machine_coords_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.dro_machine_coords_x.setObjectName("dro_machine_coords_x")
-        self.x_axis_dro_layout_offset_page.addWidget(self.dro_machine_coords_x)
-        self.dro_wcOoffset_x = StatusLabel(self.frame_16)
-        self.dro_wcOoffset_x.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.dro_wcOoffset_x.setStyleSheet("StatusLabel{\n"
-"    border-style: transparant;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: black;\n"
-"    background: rgb(235, 235, 235);\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.dro_wcOoffset_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.dro_wcOoffset_x.setObjectName("dro_wcOoffset_x")
-        self.x_axis_dro_layout_offset_page.addWidget(self.dro_wcOoffset_x)
-        self.dro_g52_g92_offsets_x = StatusLabel(self.frame_16)
-        self.dro_g52_g92_offsets_x.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.dro_g52_g92_offsets_x.setStyleSheet("StatusLabel{\n"
-"    border-style: transparant;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: black;\n"
-"    background: rgb(235, 235, 235);\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.dro_g52_g92_offsets_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.dro_g52_g92_offsets_x.setObjectName("dro_g52_g92_offsets_x")
-        self.x_axis_dro_layout_offset_page.addWidget(self.dro_g52_g92_offsets_x)
-        self.dro_tool_offset_x = StatusLabel(self.frame_16)
-        self.dro_tool_offset_x.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.dro_tool_offset_x.setStyleSheet("StatusLabel{\n"
-"    border-style: transparant;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: black;\n"
-"    background: rgb(235, 235, 235);\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.dro_tool_offset_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.dro_tool_offset_x.setObjectName("dro_tool_offset_x")
-        self.x_axis_dro_layout_offset_page.addWidget(self.dro_tool_offset_x)
-        self.dro_container_offsets_page.addLayout(self.x_axis_dro_layout_offset_page)
-        self.z_axis_dro_layout_4 = QtWidgets.QHBoxLayout()
-        self.z_axis_dro_layout_4.setContentsMargins(-1, 1, -1, 1)
-        self.z_axis_dro_layout_4.setSpacing(12)
-        self.z_axis_dro_layout_4.setObjectName("z_axis_dro_layout_4")
-        self.zero_z_button_3 = MDIButton(self.frame_16)
-        self.zero_z_button_3.setEnabled(False)
-        self.zero_z_button_3.setMinimumSize(QtCore.QSize(55, 38))
-        self.zero_z_button_3.setMaximumSize(QtCore.QSize(55, 38))
-        self.zero_z_button_3.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.zero_z_button_3.setStyleSheet("MDIButton {\n"
-"       font: 12pt \"Noto\";\n"
-"}")
-        self.zero_z_button_3.setObjectName("zero_z_button_3")
-        self.z_axis_dro_layout_4.addWidget(self.zero_z_button_3)
-        self.axis_column_header_20 = QtWidgets.QLabel(self.frame_16)
-        self.axis_column_header_20.setMinimumSize(QtCore.QSize(45, 35))
-        self.axis_column_header_20.setMaximumSize(QtCore.QSize(45, 35))
-        self.axis_column_header_20.setStyleSheet("QLabel{\n"
-"    border-style: solid;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: rgb(238, 238, 236);\n"
-"    font: 18pt \"Noto\";\n"
-"}")
-        self.axis_column_header_20.setAlignment(QtCore.Qt.AlignCenter)
-        self.axis_column_header_20.setObjectName("axis_column_header_20")
-        self.z_axis_dro_layout_4.addWidget(self.axis_column_header_20)
-        self.statuslabel_90 = StatusLabel(self.frame_16)
-        self.statuslabel_90.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.statuslabel_90.setStyleSheet("StatusLabel{\n"
-"    border-style: transparant;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: black;\n"
-"    background: rgb(235, 235, 235);\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.statuslabel_90.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.statuslabel_90.setObjectName("statuslabel_90")
-        self.z_axis_dro_layout_4.addWidget(self.statuslabel_90)
-        self.statuslabel_91 = StatusLabel(self.frame_16)
-        self.statuslabel_91.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.statuslabel_91.setStyleSheet("StatusLabel{\n"
-"    border-style: transparant;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: black;\n"
-"    background: rgb(235, 235, 235);\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.statuslabel_91.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.statuslabel_91.setObjectName("statuslabel_91")
-        self.z_axis_dro_layout_4.addWidget(self.statuslabel_91)
-        self.statuslabel_92 = StatusLabel(self.frame_16)
-        self.statuslabel_92.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.statuslabel_92.setStyleSheet("StatusLabel{\n"
-"    border-style: transparant;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: black;\n"
-"    background: rgb(235, 235, 235);\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.statuslabel_92.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.statuslabel_92.setObjectName("statuslabel_92")
-        self.z_axis_dro_layout_4.addWidget(self.statuslabel_92)
-        self.statuslabel_96 = StatusLabel(self.frame_16)
-        self.statuslabel_96.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.statuslabel_96.setStyleSheet("StatusLabel{\n"
-"    border-style: transparant;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: black;\n"
-"    background: rgb(235, 235, 235);\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.statuslabel_96.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.statuslabel_96.setObjectName("statuslabel_96")
-        self.z_axis_dro_layout_4.addWidget(self.statuslabel_96)
-        self.dro_container_offsets_page.addLayout(self.z_axis_dro_layout_4)
-        self.verticalLayout_39.addLayout(self.dro_container_offsets_page)
-        self.frame_38 = QtWidgets.QFrame(self.frame_16)
-        self.frame_38.setMaximumSize(QtCore.QSize(16777215, 80))
-        self.frame_38.setStyleSheet("QFrame{\n"
-"    border: none;\n"
-"}")
-        self.frame_38.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_38.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_38.setObjectName("frame_38")
-        self.verticalLayout_39.addWidget(self.frame_38)
-        self.horizontalLayout_22 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_22.setContentsMargins(5, 2, 5, 2)
-        self.horizontalLayout_22.setSpacing(10)
-        self.horizontalLayout_22.setObjectName("horizontalLayout_22")
-        self.use_tcp = QtWidgets.QPushButton(self.frame_16)
-        self.use_tcp.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(5)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.use_tcp.sizePolicy().hasHeightForWidth())
-        self.use_tcp.setSizePolicy(sizePolicy)
-        self.use_tcp.setMinimumSize(QtCore.QSize(0, 40))
-        self.use_tcp.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.use_tcp.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.use_tcp.setStyleSheet("QPushButton{\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.use_tcp.setCheckable(True)
-        self.use_tcp.setObjectName("use_tcp")
-        self.horizontalLayout_22.addWidget(self.use_tcp)
-        self.set_g30_position = SubCallButton(self.frame_16)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(7)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.set_g30_position.sizePolicy().hasHeightForWidth())
-        self.set_g30_position.setSizePolicy(sizePolicy)
-        self.set_g30_position.setMinimumSize(QtCore.QSize(280, 40))
-        self.set_g30_position.setMaximumSize(QtCore.QSize(16777215, 40))
-        self.set_g30_position.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.set_g30_position.setStyleSheet("QPushButton{\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.set_g30_position.setObjectName("set_g30_position")
-        self.horizontalLayout_22.addWidget(self.set_g30_position)
-        self.verticalLayout_39.addLayout(self.horizontalLayout_22)
-        self.horizontalLayout_27 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_27.setContentsMargins(-1, -1, 8, -1)
-        self.horizontalLayout_27.setSpacing(2)
-        self.horizontalLayout_27.setObjectName("horizontalLayout_27")
-        self.label_55 = QtWidgets.QLabel(self.frame_16)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_55.sizePolicy().hasHeightForWidth())
-        self.label_55.setSizePolicy(sizePolicy)
-        self.label_55.setMinimumSize(QtCore.QSize(20, 33))
-        self.label_55.setMaximumSize(QtCore.QSize(20, 33))
-        self.label_55.setStyleSheet("QLabel{\n"
-"font: 14pt \"Noto\";\n"
-"color: rgb(255, 255, 255);\n"
-"padding-right: 1px;\n"
-"padding-left: 5px;\n"
-"}")
-        self.label_55.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_55.setObjectName("label_55")
-        self.horizontalLayout_27.addWidget(self.label_55)
-        self.x_tool_change_position = VCPSettingsLineEdit(self.frame_16)
-        self.x_tool_change_position.setMinimumSize(QtCore.QSize(75, 33))
-        self.x_tool_change_position.setMaximumSize(QtCore.QSize(16777215, 33))
-        self.x_tool_change_position.setFocusPolicy(QtCore.Qt.ClickFocus)
-        self.x_tool_change_position.setStyleSheet("VCPSettingsLineEdit {\n"
-"    border-style: transparent;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: black;\n"
-"    background: rgb(235, 235, 235);\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.x_tool_change_position.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.x_tool_change_position.setProperty("textFormat", "")
-        self.x_tool_change_position.setObjectName("x_tool_change_position")
-        self.horizontalLayout_27.addWidget(self.x_tool_change_position)
-        self.label_58 = QtWidgets.QLabel(self.frame_16)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_58.sizePolicy().hasHeightForWidth())
-        self.label_58.setSizePolicy(sizePolicy)
-        self.label_58.setMinimumSize(QtCore.QSize(23, 33))
-        self.label_58.setMaximumSize(QtCore.QSize(23, 33))
-        self.label_58.setStyleSheet("QLabel{\n"
-"font: 14pt \"Noto\";\n"
-"color: rgb(255, 255, 255);\n"
-"padding-right: 1px;\n"
-"padding-left: 5px;\n"
-"}")
-        self.label_58.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_58.setObjectName("label_58")
-        self.horizontalLayout_27.addWidget(self.label_58)
-        self.z_tool_change_position = VCPSettingsLineEdit(self.frame_16)
-        self.z_tool_change_position.setMinimumSize(QtCore.QSize(75, 33))
-        self.z_tool_change_position.setMaximumSize(QtCore.QSize(16777215, 33))
-        self.z_tool_change_position.setFocusPolicy(QtCore.Qt.ClickFocus)
-        self.z_tool_change_position.setStyleSheet("VCPSettingsLineEdit {\n"
-"    border-style: transparent;\n"
-"    border-color: rgb(235, 235, 235);\n"
-"    border-width: 1px;\n"
-"    border-radius: 5px;\n"
-"    color: black;\n"
-"    background: rgb(235, 235, 235);\n"
-"    font: 12pt \"Noto\";\n"
-"}")
-        self.z_tool_change_position.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.z_tool_change_position.setProperty("textFormat", "")
-        self.z_tool_change_position.setObjectName("z_tool_change_position")
-        self.horizontalLayout_27.addWidget(self.z_tool_change_position)
-        self.verticalLayout_39.addLayout(self.horizontalLayout_27)
-        self.frame_46 = QtWidgets.QFrame(self.toolsTab)
-        self.frame_46.setGeometry(QtCore.QRect(880, 45, 311, 561))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.frame_46.sizePolicy().hasHeightForWidth())
         self.frame_46.setSizePolicy(sizePolicy)
         self.frame_46.setMinimumSize(QtCore.QSize(0, 500))
-        self.frame_46.setMaximumSize(QtCore.QSize(350, 700))
+        self.frame_46.setMaximumSize(QtCore.QSize(700, 700))
         self.frame_46.setStyleSheet(".QFrame{\n"
 "    background-color: rgb(51, 57, 59);\n"
 "}")
@@ -2440,413 +1879,327 @@ class Ui_MainWindow(object):
         self.reloadOffsets.setObjectName("reloadOffsets")
         self.horizontalLayout_137.addWidget(self.reloadOffsets)
         self.verticalLayout_50.addLayout(self.horizontalLayout_137)
-        self.frame_13 = QtWidgets.QFrame(self.toolsTab)
-        self.frame_13.setEnabled(True)
-        self.frame_13.setGeometry(QtCore.QRect(5, 45, 841, 936))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.frame_13.sizePolicy().hasHeightForWidth())
-        self.frame_13.setSizePolicy(sizePolicy)
-        self.frame_13.setStyleSheet(".QFrame{\n"
-"    background-color: rgb(51, 57, 59);\n"
-"}")
-        self.frame_13.setObjectName("frame_13")
-        self.verticalLayout_20 = QtWidgets.QVBoxLayout(self.frame_13)
-        self.verticalLayout_20.setContentsMargins(-1, 9, -1, -1)
-        self.verticalLayout_20.setObjectName("verticalLayout_20")
-        self.horizontalLayout_38 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_38.setContentsMargins(5, 5, 5, -1)
-        self.horizontalLayout_38.setObjectName("horizontalLayout_38")
-        self.lathetooltable = LatheToolTable(self.frame_13)
-        self.lathetooltable.setStyleSheet("QTableView::item {\n"
-"    padding-top: 10px;  /* Increase as needed */\n"
-"    padding-bottom: 10px;  /* Increase as needed */\n"
-"}")
-        self.lathetooltable.setProperty("currentToolColor", QtGui.QColor(46, 194, 126))
-        self.lathetooltable.setProperty("currentToolBackground", QtGui.QColor(152, 106, 68))
-        self.lathetooltable.setObjectName("lathetooltable")
-        self.horizontalLayout_38.addWidget(self.lathetooltable)
-        self.verticalLayout_20.addLayout(self.horizontalLayout_38)
-        self.horizontalLayout_37 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_37.setObjectName("horizontalLayout_37")
-        self.toolsDeleteBtn = QtWidgets.QPushButton(self.frame_13)
-        self.toolsDeleteBtn.setEnabled(False)
+        self.verticalLayoutWidget = QtWidgets.QWidget(self.workOffsets)
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(335, 80, 131, 521))
+        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
+        self.verticalLayout_4.setContentsMargins(10, 0, 10, 0)
+        self.verticalLayout_4.setSpacing(0)
+        self.verticalLayout_4.setObjectName("verticalLayout_4")
+        self.actionbutton_g54_3 = ActionButton(self.verticalLayoutWidget)
+        self.actionbutton_g54_3.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.toolsDeleteBtn.sizePolicy().hasHeightForWidth())
-        self.toolsDeleteBtn.setSizePolicy(sizePolicy)
-        self.toolsDeleteBtn.setMinimumSize(QtCore.QSize(120, 33))
-        self.toolsDeleteBtn.setMaximumSize(QtCore.QSize(120, 33))
-        self.toolsDeleteBtn.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.toolsDeleteBtn.setStyleSheet("QPushButton {\n"
+        sizePolicy.setHeightForWidth(self.actionbutton_g54_3.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g54_3.setSizePolicy(sizePolicy)
+        self.actionbutton_g54_3.setMinimumSize(QtCore.QSize(80, 45))
+        self.actionbutton_g54_3.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g54_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g54_3.setStyleSheet("QPushButton {\n"
 "       font: 12pt \"Noto\";\n"
 "}")
-        self.toolsDeleteBtn.setObjectName("toolsDeleteBtn")
-        self.horizontalLayout_37.addWidget(self.toolsDeleteBtn)
-        self.tool_table_reload_button = QtWidgets.QPushButton(self.frame_13)
-        self.tool_table_reload_button.setEnabled(True)
+        self.actionbutton_g54_3.setAutoExclusive(True)
+        self.actionbutton_g54_3.setObjectName("actionbutton_g54_3")
+        self.verticalLayout_4.addWidget(self.actionbutton_g54_3)
+        self.actionbutton_g55_3 = ActionButton(self.verticalLayoutWidget)
+        self.actionbutton_g55_3.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.tool_table_reload_button.sizePolicy().hasHeightForWidth())
-        self.tool_table_reload_button.setSizePolicy(sizePolicy)
-        self.tool_table_reload_button.setMinimumSize(QtCore.QSize(140, 33))
-        self.tool_table_reload_button.setMaximumSize(QtCore.QSize(140, 33))
-        self.tool_table_reload_button.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.tool_table_reload_button.setStyleSheet("QPushButton {\n"
+        sizePolicy.setHeightForWidth(self.actionbutton_g55_3.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g55_3.setSizePolicy(sizePolicy)
+        self.actionbutton_g55_3.setMinimumSize(QtCore.QSize(80, 45))
+        self.actionbutton_g55_3.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g55_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g55_3.setStyleSheet("QPushButton {\n"
 "       font: 12pt \"Noto\";\n"
 "}")
-        self.tool_table_reload_button.setObjectName("tool_table_reload_button")
-        self.horizontalLayout_37.addWidget(self.tool_table_reload_button)
-        self.loadSelectedTool = QtWidgets.QPushButton(self.frame_13)
-        self.loadSelectedTool.setEnabled(False)
+        self.actionbutton_g55_3.setAutoExclusive(True)
+        self.actionbutton_g55_3.setObjectName("actionbutton_g55_3")
+        self.verticalLayout_4.addWidget(self.actionbutton_g55_3)
+        self.actionbutton_g56_3 = ActionButton(self.verticalLayoutWidget)
+        self.actionbutton_g56_3.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.loadSelectedTool.sizePolicy().hasHeightForWidth())
-        self.loadSelectedTool.setSizePolicy(sizePolicy)
-        self.loadSelectedTool.setMinimumSize(QtCore.QSize(140, 0))
-        self.loadSelectedTool.setStyleSheet("QPushButton {\n"
+        sizePolicy.setHeightForWidth(self.actionbutton_g56_3.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g56_3.setSizePolicy(sizePolicy)
+        self.actionbutton_g56_3.setMinimumSize(QtCore.QSize(80, 45))
+        self.actionbutton_g56_3.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g56_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g56_3.setStyleSheet("QPushButton {\n"
 "       font: 12pt \"Noto\";\n"
 "}")
-        self.loadSelectedTool.setObjectName("loadSelectedTool")
-        self.horizontalLayout_37.addWidget(self.loadSelectedTool)
-        self.verticalLayout_20.addLayout(self.horizontalLayout_37)
-        self.groupBox_2 = QtWidgets.QGroupBox(self.toolsTab)
-        self.groupBox_2.setGeometry(QtCore.QRect(880, 645, 226, 246))
-        self.groupBox_2.setObjectName("groupBox_2")
-        self.gridWidget = QtWidgets.QWidget(self.groupBox_2)
-        self.gridWidget.setGeometry(QtCore.QRect(5, 25, 216, 216))
-        self.gridWidget.setObjectName("gridWidget")
-        self.gridLayout_2 = QtWidgets.QGridLayout(self.gridWidget)
-        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout_2.setObjectName("gridLayout_2")
-        self.lathe_control_point_4 = ActionButton(self.gridWidget)
-        self.lathe_control_point_4.setEnabled(False)
+        self.actionbutton_g56_3.setAutoExclusive(True)
+        self.actionbutton_g56_3.setObjectName("actionbutton_g56_3")
+        self.verticalLayout_4.addWidget(self.actionbutton_g56_3)
+        self.actionbutton_g57_3 = ActionButton(self.verticalLayoutWidget)
+        self.actionbutton_g57_3.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lathe_control_point_4.sizePolicy().hasHeightForWidth())
-        self.lathe_control_point_4.setSizePolicy(sizePolicy)
-        self.lathe_control_point_4.setMinimumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_4.setMaximumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_4.setStyleSheet("ActionButton{\n"
-"    border: none;\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"ActionButton:pressed {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked[option=\"true\"] {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"")
-        icon6 = QtGui.QIcon()
-        icon6.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_4.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.lathe_control_point_4.setIcon(icon6)
-        self.lathe_control_point_4.setIconSize(QtCore.QSize(65, 65))
-        self.lathe_control_point_4.setCheckable(True)
-        self.lathe_control_point_4.setAutoExclusive(True)
-        self.lathe_control_point_4.setObjectName("lathe_control_point_4")
-        self.gridLayout_2.addWidget(self.lathe_control_point_4, 0, 0, 1, 1)
-        self.lathe_control_point_7 = ActionButton(self.gridWidget)
-        self.lathe_control_point_7.setEnabled(False)
+        sizePolicy.setHeightForWidth(self.actionbutton_g57_3.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g57_3.setSizePolicy(sizePolicy)
+        self.actionbutton_g57_3.setMinimumSize(QtCore.QSize(80, 45))
+        self.actionbutton_g57_3.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g57_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g57_3.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.actionbutton_g57_3.setAutoExclusive(True)
+        self.actionbutton_g57_3.setObjectName("actionbutton_g57_3")
+        self.verticalLayout_4.addWidget(self.actionbutton_g57_3)
+        self.actionbutton_g58_3 = ActionButton(self.verticalLayoutWidget)
+        self.actionbutton_g58_3.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lathe_control_point_7.sizePolicy().hasHeightForWidth())
-        self.lathe_control_point_7.setSizePolicy(sizePolicy)
-        self.lathe_control_point_7.setMinimumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_7.setMaximumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_7.setStyleSheet("ActionButton{\n"
-"    border: none;\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"ActionButton:pressed {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked[option=\"true\"] {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"")
-        icon7 = QtGui.QIcon()
-        icon7.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_7.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.lathe_control_point_7.setIcon(icon7)
-        self.lathe_control_point_7.setIconSize(QtCore.QSize(65, 65))
-        self.lathe_control_point_7.setCheckable(True)
-        self.lathe_control_point_7.setAutoExclusive(True)
-        self.lathe_control_point_7.setObjectName("lathe_control_point_7")
-        self.gridLayout_2.addWidget(self.lathe_control_point_7, 1, 2, 1, 1)
-        self.lathe_control_point_9 = ActionButton(self.gridWidget)
-        self.lathe_control_point_9.setEnabled(False)
+        sizePolicy.setHeightForWidth(self.actionbutton_g58_3.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g58_3.setSizePolicy(sizePolicy)
+        self.actionbutton_g58_3.setMinimumSize(QtCore.QSize(80, 45))
+        self.actionbutton_g58_3.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g58_3.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g58_3.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.actionbutton_g58_3.setAutoExclusive(True)
+        self.actionbutton_g58_3.setObjectName("actionbutton_g58_3")
+        self.verticalLayout_4.addWidget(self.actionbutton_g58_3)
+        self.actionbutton_g59_8 = ActionButton(self.verticalLayoutWidget)
+        self.actionbutton_g59_8.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lathe_control_point_9.sizePolicy().hasHeightForWidth())
-        self.lathe_control_point_9.setSizePolicy(sizePolicy)
-        self.lathe_control_point_9.setMinimumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_9.setMaximumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_9.setStyleSheet("ActionButton{\n"
-"    border: none;\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"ActionButton:pressed {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked[option=\"true\"] {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"")
-        icon8 = QtGui.QIcon()
-        icon8.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_9.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.lathe_control_point_9.setIcon(icon8)
-        self.lathe_control_point_9.setIconSize(QtCore.QSize(50, 50))
-        self.lathe_control_point_9.setCheckable(True)
-        self.lathe_control_point_9.setAutoExclusive(True)
-        self.lathe_control_point_9.setObjectName("lathe_control_point_9")
-        self.gridLayout_2.addWidget(self.lathe_control_point_9, 1, 1, 1, 1)
-        self.lathe_control_point_3 = ActionButton(self.gridWidget)
-        self.lathe_control_point_3.setEnabled(False)
+        sizePolicy.setHeightForWidth(self.actionbutton_g59_8.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g59_8.setSizePolicy(sizePolicy)
+        self.actionbutton_g59_8.setMinimumSize(QtCore.QSize(80, 45))
+        self.actionbutton_g59_8.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_8.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g59_8.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.actionbutton_g59_8.setAutoExclusive(True)
+        self.actionbutton_g59_8.setObjectName("actionbutton_g59_8")
+        self.verticalLayout_4.addWidget(self.actionbutton_g59_8)
+        self.actionbutton_g59_9 = ActionButton(self.verticalLayoutWidget)
+        self.actionbutton_g59_9.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lathe_control_point_3.sizePolicy().hasHeightForWidth())
-        self.lathe_control_point_3.setSizePolicy(sizePolicy)
-        self.lathe_control_point_3.setMinimumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_3.setMaximumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_3.setStyleSheet("ActionButton{\n"
-"    border: none;\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"ActionButton:pressed {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked[option=\"true\"] {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"")
-        icon9 = QtGui.QIcon()
-        icon9.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.lathe_control_point_3.setIcon(icon9)
-        self.lathe_control_point_3.setIconSize(QtCore.QSize(65, 65))
-        self.lathe_control_point_3.setCheckable(True)
-        self.lathe_control_point_3.setAutoExclusive(True)
-        self.lathe_control_point_3.setObjectName("lathe_control_point_3")
-        self.gridLayout_2.addWidget(self.lathe_control_point_3, 0, 2, 1, 1)
-        self.lathe_control_point_8 = ActionButton(self.gridWidget)
-        self.lathe_control_point_8.setEnabled(False)
+        sizePolicy.setHeightForWidth(self.actionbutton_g59_9.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g59_9.setSizePolicy(sizePolicy)
+        self.actionbutton_g59_9.setMinimumSize(QtCore.QSize(80, 45))
+        self.actionbutton_g59_9.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_9.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g59_9.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.actionbutton_g59_9.setAutoExclusive(True)
+        self.actionbutton_g59_9.setObjectName("actionbutton_g59_9")
+        self.verticalLayout_4.addWidget(self.actionbutton_g59_9)
+        self.actionbutton_g59_10 = ActionButton(self.verticalLayoutWidget)
+        self.actionbutton_g59_10.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lathe_control_point_8.sizePolicy().hasHeightForWidth())
-        self.lathe_control_point_8.setSizePolicy(sizePolicy)
-        self.lathe_control_point_8.setMinimumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_8.setMaximumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_8.setStyleSheet("ActionButton{\n"
-"    border: none;\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"ActionButton:pressed {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked[option=\"true\"] {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"")
-        icon10 = QtGui.QIcon()
-        icon10.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_8.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.lathe_control_point_8.setIcon(icon10)
-        self.lathe_control_point_8.setIconSize(QtCore.QSize(65, 65))
-        self.lathe_control_point_8.setCheckable(True)
-        self.lathe_control_point_8.setAutoExclusive(True)
-        self.lathe_control_point_8.setObjectName("lathe_control_point_8")
-        self.gridLayout_2.addWidget(self.lathe_control_point_8, 0, 1, 1, 1)
-        self.lathe_control_point_5 = ActionButton(self.gridWidget)
-        self.lathe_control_point_5.setEnabled(False)
+        sizePolicy.setHeightForWidth(self.actionbutton_g59_10.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g59_10.setSizePolicy(sizePolicy)
+        self.actionbutton_g59_10.setMinimumSize(QtCore.QSize(80, 45))
+        self.actionbutton_g59_10.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_10.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g59_10.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.actionbutton_g59_10.setAutoExclusive(True)
+        self.actionbutton_g59_10.setObjectName("actionbutton_g59_10")
+        self.verticalLayout_4.addWidget(self.actionbutton_g59_10)
+        self.actionbutton_g59_11 = ActionButton(self.verticalLayoutWidget)
+        self.actionbutton_g59_11.setEnabled(False)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lathe_control_point_5.sizePolicy().hasHeightForWidth())
-        self.lathe_control_point_5.setSizePolicy(sizePolicy)
-        self.lathe_control_point_5.setMinimumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_5.setMaximumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_5.setStyleSheet("ActionButton{\n"
-"    border: none;\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"ActionButton:pressed {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked[option=\"true\"] {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"")
-        icon11 = QtGui.QIcon()
-        icon11.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_5.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.lathe_control_point_5.setIcon(icon11)
-        self.lathe_control_point_5.setIconSize(QtCore.QSize(65, 65))
-        self.lathe_control_point_5.setCheckable(True)
-        self.lathe_control_point_5.setAutoExclusive(True)
-        self.lathe_control_point_5.setObjectName("lathe_control_point_5")
-        self.gridLayout_2.addWidget(self.lathe_control_point_5, 1, 0, 1, 1)
-        self.lathe_control_point_1 = ActionButton(self.gridWidget)
-        self.lathe_control_point_1.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHeightForWidth(self.actionbutton_g59_11.sizePolicy().hasHeightForWidth())
+        self.actionbutton_g59_11.setSizePolicy(sizePolicy)
+        self.actionbutton_g59_11.setMinimumSize(QtCore.QSize(80, 45))
+        self.actionbutton_g59_11.setMaximumSize(QtCore.QSize(110, 38))
+        self.actionbutton_g59_11.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.actionbutton_g59_11.setStyleSheet("QPushButton {\n"
+"       font: 12pt \"Noto\";\n"
+"}")
+        self.actionbutton_g59_11.setAutoExclusive(True)
+        self.actionbutton_g59_11.setObjectName("actionbutton_g59_11")
+        self.verticalLayout_4.addWidget(self.actionbutton_g59_11)
+        self.gridLayoutWidget = QtWidgets.QWidget(self.workOffsets)
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(200, 610, 451, 326))
+        self.gridLayoutWidget.setObjectName("gridLayoutWidget")
+        self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
+        self.gridLayout.setContentsMargins(10, 0, 10, 10)
+        self.gridLayout.setSpacing(20)
+        self.gridLayout.setObjectName("gridLayout")
+        self.label_28 = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.label_28.setObjectName("label_28")
+        self.gridLayout.addWidget(self.label_28, 6, 0, 1, 1)
+        self.dro_machine_coords_x = StatusLabel(self.gridLayoutWidget)
+        self.dro_machine_coords_x.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.dro_machine_coords_x.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.dro_machine_coords_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.dro_machine_coords_x.setObjectName("dro_machine_coords_x")
+        self.gridLayout.addWidget(self.dro_machine_coords_x, 2, 1, 1, 1)
+        self.dro_tool_offset_x = StatusLabel(self.gridLayoutWidget)
+        self.dro_tool_offset_x.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.dro_tool_offset_x.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.dro_tool_offset_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.dro_tool_offset_x.setObjectName("dro_tool_offset_x")
+        self.gridLayout.addWidget(self.dro_tool_offset_x, 5, 1, 1, 1)
+        self.label_22 = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.label_22.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_22.setObjectName("label_22")
+        self.gridLayout.addWidget(self.label_22, 1, 1, 1, 1)
+        self.label_26 = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.label_26.setObjectName("label_26")
+        self.gridLayout.addWidget(self.label_26, 4, 0, 1, 1)
+        self.dro_g52_g92_offsets_x = StatusLabel(self.gridLayoutWidget)
+        self.dro_g52_g92_offsets_x.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.dro_g52_g92_offsets_x.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.dro_g52_g92_offsets_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.dro_g52_g92_offsets_x.setObjectName("dro_g52_g92_offsets_x")
+        self.gridLayout.addWidget(self.dro_g52_g92_offsets_x, 4, 1, 1, 1)
+        self.label_25 = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.label_25.setObjectName("label_25")
+        self.gridLayout.addWidget(self.label_25, 3, 0, 1, 1)
+        self.statuslabel_91 = StatusLabel(self.gridLayoutWidget)
+        self.statuslabel_91.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.statuslabel_91.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.statuslabel_91.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.statuslabel_91.setObjectName("statuslabel_91")
+        self.gridLayout.addWidget(self.statuslabel_91, 3, 2, 1, 1)
+        self.label_7 = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.label_7.setObjectName("label_7")
+        self.gridLayout.addWidget(self.label_7, 1, 0, 1, 1)
+        self.label_24 = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.label_24.setObjectName("label_24")
+        self.gridLayout.addWidget(self.label_24, 2, 0, 1, 1)
+        self.statuslabel_92 = StatusLabel(self.gridLayoutWidget)
+        self.statuslabel_92.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.statuslabel_92.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.statuslabel_92.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.statuslabel_92.setObjectName("statuslabel_92")
+        self.gridLayout.addWidget(self.statuslabel_92, 4, 2, 1, 1)
+        self.statuslabel_96 = StatusLabel(self.gridLayoutWidget)
+        self.statuslabel_96.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.statuslabel_96.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.statuslabel_96.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.statuslabel_96.setObjectName("statuslabel_96")
+        self.gridLayout.addWidget(self.statuslabel_96, 5, 2, 1, 1)
+        self.label_27 = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.label_27.setObjectName("label_27")
+        self.gridLayout.addWidget(self.label_27, 5, 0, 1, 1)
+        self.label_23 = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.label_23.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_23.setObjectName("label_23")
+        self.gridLayout.addWidget(self.label_23, 1, 2, 1, 1)
+        self.statuslabel_90 = StatusLabel(self.gridLayoutWidget)
+        self.statuslabel_90.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.statuslabel_90.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.statuslabel_90.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.statuslabel_90.setObjectName("statuslabel_90")
+        self.gridLayout.addWidget(self.statuslabel_90, 2, 2, 1, 1)
+        self.dro_wcOoffset_x = StatusLabel(self.gridLayoutWidget)
+        self.dro_wcOoffset_x.setMaximumSize(QtCore.QSize(16777215, 40))
+        self.dro_wcOoffset_x.setStyleSheet("StatusLabel{\n"
+"    border-style: transparant;\n"
+"    border-color: rgb(235, 235, 235);\n"
+"    border-width: 1px;\n"
+"    border-radius: 5px;\n"
+"    color: black;\n"
+"    background: rgb(235, 235, 235);\n"
+"    font: 12pt \"Noto\";\n"
+"}")
+        self.dro_wcOoffset_x.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.dro_wcOoffset_x.setObjectName("dro_wcOoffset_x")
+        self.gridLayout.addWidget(self.dro_wcOoffset_x, 3, 1, 1, 1)
+        self.zero_x_axis = MDIButton(self.gridLayoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lathe_control_point_1.sizePolicy().hasHeightForWidth())
-        self.lathe_control_point_1.setSizePolicy(sizePolicy)
-        self.lathe_control_point_1.setMinimumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_1.setMaximumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_1.setStyleSheet("ActionButton{\n"
-"    border: none;\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"ActionButton:pressed {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked[option=\"true\"] {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"")
-        icon12 = QtGui.QIcon()
-        icon12.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.lathe_control_point_1.setIcon(icon12)
-        self.lathe_control_point_1.setIconSize(QtCore.QSize(65, 65))
-        self.lathe_control_point_1.setCheckable(True)
-        self.lathe_control_point_1.setAutoExclusive(True)
-        self.lathe_control_point_1.setObjectName("lathe_control_point_1")
-        self.gridLayout_2.addWidget(self.lathe_control_point_1, 2, 0, 1, 1)
-        self.lathe_control_point_6 = ActionButton(self.gridWidget)
-        self.lathe_control_point_6.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHeightForWidth(self.zero_x_axis.sizePolicy().hasHeightForWidth())
+        self.zero_x_axis.setSizePolicy(sizePolicy)
+        self.zero_x_axis.setMinimumSize(QtCore.QSize(0, 40))
+        self.zero_x_axis.setObjectName("zero_x_axis")
+        self.gridLayout.addWidget(self.zero_x_axis, 6, 1, 1, 1)
+        self.zero_z_axis = MDIButton(self.gridLayoutWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lathe_control_point_6.sizePolicy().hasHeightForWidth())
-        self.lathe_control_point_6.setSizePolicy(sizePolicy)
-        self.lathe_control_point_6.setMinimumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_6.setMaximumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_6.setStyleSheet("ActionButton{\n"
-"    border: none;\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"ActionButton:pressed {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked[option=\"true\"] {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"")
-        icon13 = QtGui.QIcon()
-        icon13.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_6.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.lathe_control_point_6.setIcon(icon13)
-        self.lathe_control_point_6.setIconSize(QtCore.QSize(65, 65))
-        self.lathe_control_point_6.setCheckable(True)
-        self.lathe_control_point_6.setAutoExclusive(True)
-        self.lathe_control_point_6.setObjectName("lathe_control_point_6")
-        self.gridLayout_2.addWidget(self.lathe_control_point_6, 2, 1, 1, 1)
-        self.lathe_control_point_2 = ActionButton(self.gridWidget)
-        self.lathe_control_point_2.setEnabled(False)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lathe_control_point_2.sizePolicy().hasHeightForWidth())
-        self.lathe_control_point_2.setSizePolicy(sizePolicy)
-        self.lathe_control_point_2.setMinimumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_2.setMaximumSize(QtCore.QSize(70, 70))
-        self.lathe_control_point_2.setStyleSheet("ActionButton{\n"
-"    border: none;\n"
-"    background: none;\n"
-"}\n"
-"\n"
-"ActionButton:pressed {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked[option=\"true\"] {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"\n"
-"ActionButton:checked {\n"
-"    background:  qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(85, 85, 238, 255), stop:0.544974 rgba(90, 91, 239, 255), stop:1 rgba(126, 135, 243, 255));\n"
-"}\n"
-"")
-        icon14 = QtGui.QIcon()
-        icon14.addPixmap(QtGui.QPixmap(":/images/lathe_control_point_2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.lathe_control_point_2.setIcon(icon14)
-        self.lathe_control_point_2.setIconSize(QtCore.QSize(65, 65))
-        self.lathe_control_point_2.setCheckable(True)
-        self.lathe_control_point_2.setAutoExclusive(True)
-        self.lathe_control_point_2.setObjectName("lathe_control_point_2")
-        self.gridLayout_2.addWidget(self.lathe_control_point_2, 2, 2, 1, 1)
-        self.formLayoutWidget_2 = QtWidgets.QWidget(self.toolsTab)
-        self.formLayoutWidget_2.setGeometry(QtCore.QRect(1125, 670, 126, 87))
-        self.formLayoutWidget_2.setObjectName("formLayoutWidget_2")
-        self.formLayout_2 = QtWidgets.QFormLayout(self.formLayoutWidget_2)
-        self.formLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.formLayout_2.setObjectName("formLayout_2")
-        self.lineEdit = QtWidgets.QLineEdit(self.formLayoutWidget_2)
-        self.lineEdit.setObjectName("lineEdit")
-        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.lineEdit)
-        self.label_4 = QtWidgets.QLabel(self.formLayoutWidget_2)
-        self.label_4.setObjectName("label_4")
-        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_4)
-        self.lineEdit_2 = QtWidgets.QLineEdit(self.formLayoutWidget_2)
-        self.lineEdit_2.setObjectName("lineEdit_2")
-        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.lineEdit_2)
-        self.label = QtWidgets.QLabel(self.formLayoutWidget_2)
-        self.label.setObjectName("label")
-        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
+        sizePolicy.setHeightForWidth(self.zero_z_axis.sizePolicy().hasHeightForWidth())
+        self.zero_z_axis.setSizePolicy(sizePolicy)
+        self.zero_z_axis.setMinimumSize(QtCore.QSize(0, 40))
+        self.zero_z_axis.setObjectName("zero_z_axis")
+        self.gridLayout.addWidget(self.zero_z_axis, 6, 2, 1, 1)
+        self.innerToolsAndOffsets.addWidget(self.workOffsets)
+        self.addEditTool = QtWidgets.QWidget()
+        self.addEditTool.setObjectName("addEditTool")
+        self.addEditToolWidget = AddEditToolWidget(self.addEditTool)
+        self.addEditToolWidget.setGeometry(QtCore.QRect(5, 5, 681, 956))
+        self.addEditToolWidget.setObjectName("addEditToolWidget")
+        self.innerToolsAndOffsets.addWidget(self.addEditTool)
         self.tabWidget.addTab(self.toolsTab, "")
         self.settingsTab = QtWidgets.QWidget()
         self.settingsTab.setObjectName("settingsTab")
@@ -2919,11 +2272,12 @@ class Ui_MainWindow(object):
         self.stackedWidget.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(3)
         self.tabSpindleMode.setCurrentIndex(0)
+        self.currentTool.setCurrentIndex(1)
         self.stackedProgramsTab.setCurrentIndex(1)
+        self.innerToolsAndOffsets.setCurrentIndex(1)
         self.sourceEjectUsb.clicked.connect(self.removableComboBox.ejectDevice) # type: ignore
         self.zoomOutView.clicked.connect(self.vtk.zoomOut) # type: ignore
         self.destinationFolderUp.clicked.connect(self.destinationFsTable.viewParentDirectory) # type: ignore
-        self.loadSelectedTool.clicked.connect(self.lathetooltable.loadSelectedToolWithM61) # type: ignore
         self.btnClearSelOffset.clicked.connect(self.offset_table.deleteSelectedOffset) # type: ignore
         self.sourceCopyItem.clicked.connect(self.sourceFsTable.doFileTransfer) # type: ignore
         self.destinationNewFolder.clicked.connect(self.destinationFsTable.newFolder) # type: ignore
@@ -2938,8 +2292,6 @@ class Ui_MainWindow(object):
         self.removableComboBox.usbPresent['bool'].connect(self.sourceEjectUsb.setEnabled) # type: ignore
         self.sourceFolderUp.clicked.connect(self.sourceFsTable.viewParentDirectory) # type: ignore
         self.destinationFsTable.transferFileRequest['QString'].connect(self.sourceFsTable.transferFile) # type: ignore
-        self.lathetooltable.anythingSelected['bool'].connect(self.toolsDeleteBtn.setEnabled) # type: ignore
-        self.lathetooltable.anythingSelected['bool'].connect(self.loadSelectedTool.setEnabled) # type: ignore
         self.zoomInView.clicked.connect(self.vtk.zoomIn) # type: ignore
         self.destinationDelete.clicked.connect(self.destinationFsTable.deleteItem) # type: ignore
         self.sourceDeleteItem.clicked.connect(self.sourceFsTable.deleteItem) # type: ignore
@@ -3011,7 +2363,7 @@ class Ui_MainWindow(object):
         self.inputMaxRpm.setProperty("inchFormat", _translate("MainWindow", "%9.4f"))
         self.inputMaxRpm.setProperty("millimeterFormat", _translate("MainWindow", "%10.3f"))
         self.inputMaxRpm.setProperty("degreeFormat", _translate("MainWindow", "%10.2f"))
-        self.inputCss.setText(_translate("MainWindow", "1000"))
+        self.inputCss.setText(_translate("MainWindow", "100"))
         self.inputCss.setProperty("inchFormat", _translate("MainWindow", "%9.4f"))
         self.inputCss.setProperty("millimeterFormat", _translate("MainWindow", "%10.3f"))
         self.inputCss.setProperty("degreeFormat", _translate("MainWindow", "%10.2f"))
@@ -3037,6 +2389,7 @@ class Ui_MainWindow(object):
         self.zMpgCheckbox.setText(_translate("MainWindow", "Z"))
         self.jogIncrement.setText(_translate("MainWindow", "0.001"))
         self.label_21.setText(_translate("MainWindow", "Increment:"))
+        self.actualFeedType_4.setText(_translate("MainWindow", "mm"))
         self.label_8.setText(_translate("MainWindow", "Spindle"))
         self.statuslabel_6.setText(_translate("MainWindow", "0%"))
         self.statuslabel_6.setProperty("rules", _translate("MainWindow", "[{\"name\": \"spindle_override\", \"property\": \"Text\", \"expression\": \"str(int(ch[0] * 100)) + \'%\'\", \"channels\": [{\"url\": \"status:spindle.0.override\", \"trigger\": true}]}]"))
@@ -3045,29 +2398,28 @@ class Ui_MainWindow(object):
         self.feedOverrideValue.setText(_translate("MainWindow", "0%"))
         self.feedOverrideValue.setProperty("rules", _translate("MainWindow", "[{\"name\": \"feed_override\", \"property\": \"Text\", \"expression\": \"str(int(ch[0]*100)) + \'%\'\", \"channels\": [{\"url\": \"status:feedrate\", \"trigger\": true}]}]"))
         self.label_3.setText(_translate("MainWindow", "Jog Speed"))
-        self.tool_diameter_12.setText(_translate("MainWindow", "1"))
-        self.tool_diameter_12.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?q\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"str(ch[0])\", \"name\": \"orientation\"}]"))
-        self.tool_diameter_12.setProperty("format", _translate("MainWindow", "{:.3f}"))
-        self.tool_diameter_12.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
-        self.label_33.setText(_translate("MainWindow", "X Offset:"))
-        self.label_34.setText(_translate("MainWindow", "Z Offset:"))
-        self.label_38.setText(_translate("MainWindow", "Orientation:"))
+        self.currentTool.setProperty("rules", _translate("MainWindow", "[{\"name\": \"CurrentPage\", \"property\": \"currentIndex\", \"expression\": \"0 if int(ch[0]) == 0 else 1\", \"channels\": [{\"url\": \"status:tool_in_spindle?text\", \"trigger\": true}]}]"))
+        self.label_2.setText(_translate("MainWindow", "No Tool Loaded"))
+        self.pushButton.setText(_translate("MainWindow", "Load a Tool"))
+        self.currentToolNo.setText(_translate("MainWindow", "T0"))
+        self.currentToolNo.setProperty("rules", _translate("MainWindow", "[{\"name\": \"tool_number\", \"property\": \"Text\", \"expression\": \"\'T\' + ch[0]\", \"channels\": [{\"url\": \"status:tool_in_spindle?text\", \"trigger\": true}]}]"))
         self.tool_diameter_11.setText(_translate("MainWindow", "0.0"))
         self.tool_diameter_11.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?diameter\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.1f}\\\".format(ch[0])\", \"name\": \"tool_diameter\"}]"))
         self.tool_diameter_11.setProperty("format", _translate("MainWindow", "{:.3f}"))
         self.tool_diameter_11.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
-        self.tool_diameter_7.setText(_translate("MainWindow", "0.000"))
-        self.tool_diameter_7.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?x\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0])\", \"name\": \"x_offset\"}]"))
-        self.tool_diameter_7.setProperty("format", _translate("MainWindow", "{:.3f}"))
-        self.tool_diameter_7.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
         self.label_37.setText(_translate("MainWindow", "Tip Radius:"))
         self.tool_diameter_8.setText(_translate("MainWindow", "0.000"))
         self.tool_diameter_8.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?z\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0])\", \"name\": \"z_offset\"}]"))
         self.tool_diameter_8.setProperty("format", _translate("MainWindow", "{:.3f}"))
         self.tool_diameter_8.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
-        self.label_11.setText(_translate("MainWindow", "Current Tool:"))
-        self.feedOverrideValue_2.setText(_translate("MainWindow", "T0"))
-        self.feedOverrideValue_2.setProperty("rules", _translate("MainWindow", "[{\"name\": \"tool_number\", \"property\": \"Text\", \"expression\": \"\'T\' + ch[0]\", \"channels\": [{\"url\": \"status:tool_in_spindle?text\", \"trigger\": true}]}]"))
+        self.label_33.setText(_translate("MainWindow", "X Offset:"))
+        self.label_34.setText(_translate("MainWindow", "Z Offset:"))
+        self.tool_diameter_7.setText(_translate("MainWindow", "0.000"))
+        self.tool_diameter_7.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"tooltable:current_tool?x\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0])\", \"name\": \"x_offset\"}]"))
+        self.tool_diameter_7.setProperty("format", _translate("MainWindow", "{:.3f}"))
+        self.tool_diameter_7.setProperty("statusItem", _translate("MainWindow", "tool_offset.3"))
+        self.actualFeedType_3.setText(_translate("MainWindow", "mm"))
+        self.label_11.setText(_translate("MainWindow", "Current Tool"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.manualTurningTab), _translate("MainWindow", "Manual Turning"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.conversationalTab), _translate("MainWindow", "Conversational"))
         self.gcodeeditor_label.setText(_translate("MainWindow", "G-Code File Editor"))
@@ -3133,7 +2485,13 @@ class Ui_MainWindow(object):
         self.actionbutton_54.setProperty("actionName", _translate("MainWindow", "program.step"))
         self.btnBackToPrograms.setText(_translate("MainWindow", "<< Back to Programs"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.programsTab), _translate("MainWindow", "Programs"))
+        self.toolAddBtn.setText(_translate("MainWindow", "Add new Tool"))
         self.machine_column_header_5.setText(_translate("MainWindow", "Work Coordinate Offsets"))
+        self.offset_table.setProperty("displayColumns", _translate("MainWindow", "XZ"))
+        self.btnClearOffsets.setText(_translate("MainWindow", "Clear All"))
+        self.btnClearSelOffset.setText(_translate("MainWindow", "Clear Selected"))
+        self.saveOffsets.setText(_translate("MainWindow", "Save Table"))
+        self.reloadOffsets.setText(_translate("MainWindow", "Reload Table"))
         self.actionbutton_g54_3.setText(_translate("MainWindow", "G54"))
         self.actionbutton_g54_3.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G54"))
         self.actionbutton_g55_3.setText(_translate("MainWindow", "G55"))
@@ -3152,91 +2510,28 @@ class Ui_MainWindow(object):
         self.actionbutton_g59_10.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G59.2"))
         self.actionbutton_g59_11.setText(_translate("MainWindow", "G59.3"))
         self.actionbutton_g59_11.setProperty("actionName", _translate("MainWindow", "machine.set-work-coord:G59.3"))
-        self.axis_column_header_16.setText(_translate("MainWindow", "SET TO ZERO"))
-        self.axis_column_header_17.setText(_translate("MainWindow", "AXIS"))
-        self.machine_column_header_14.setText(_translate("MainWindow", "WC CURRENT POSITION"))
-        self.machine_column_header_15.setText(_translate("MainWindow", "Machine\n"
-"Coordinates"))
-        self.machine_column_header_16.setText(_translate("MainWindow", "WC\n"
-"Offset"))
-        self.ref_coilumn_header_9.setText(_translate("MainWindow", "G52/G92\n"
-"Offset"))
-        self.machine_column_header_17.setText(_translate("MainWindow", "Tool\n"
-"Offset"))
-        self.zero_x_button_3.setText(_translate("MainWindow", "X=0"))
-        self.zero_x_button_3.setProperty("rules", _translate("MainWindow", "[\n"
-"    {\n"
-"        \"channels\": [\n"
-"            {\n"
-"                \"url\": \"status:g5x_index\",\n"
-"                \"trigger\": true,\n"
-"                \"type\": \"int\"\n"
-"            }\n"
-"        ],\n"
-"        \"expression\": \"\",\n"
-"        \"name\": \"G5x Index\",\n"
-"        \"property\": \"None\"\n"
-"    }\n"
-"]"))
-        self.zero_x_button_3.setProperty("MDICommand", _translate("MainWindow", "G10 L20 P{ch[0]} X0.0"))
-        self.x_axis_column_header.setText(_translate("MainWindow", "X"))
+        self.label_28.setText(_translate("MainWindow", "Actions"))
         self.dro_machine_coords_x.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:position\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][0])\", \"name\": \"position_dro_x\"}]"))
-        self.dro_wcOoffset_x.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:g5x_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][0])\", \"name\": \"g5x_offset_dro\"}]"))
-        self.dro_g52_g92_offsets_x.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:g92_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][0])\", \"name\": \"g92_offset_dro\"}]"))
         self.dro_tool_offset_x.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][0])\", \"name\": \"tool_offset_dro\"}]"))
-        self.zero_z_button_3.setText(_translate("MainWindow", "Z=0"))
-        self.zero_z_button_3.setProperty("rules", _translate("MainWindow", "[\n"
-"    {\n"
-"        \"channels\": [\n"
-"            {\n"
-"                \"url\": \"status:g5x_index\",\n"
-"                \"trigger\": true,\n"
-"                \"type\": \"int\"\n"
-"            }\n"
-"        ],\n"
-"        \"expression\": \"\",\n"
-"        \"name\": \"G5x Index\",\n"
-"        \"property\": \"None\"\n"
-"    }\n"
-"]"))
-        self.zero_z_button_3.setProperty("MDICommand", _translate("MainWindow", "G10 L20 P{ch[0]} Z0.0"))
-        self.axis_column_header_20.setText(_translate("MainWindow", "Z"))
-        self.statuslabel_90.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:position\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][2])\", \"name\": \"pos_dro_z\"}]"))
+        self.label_22.setText(_translate("MainWindow", "X"))
+        self.label_26.setText(_translate("MainWindow", "G52/G92 Offset"))
+        self.dro_g52_g92_offsets_x.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:g92_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][0])\", \"name\": \"g92_offset_dro\"}]"))
+        self.label_25.setText(_translate("MainWindow", "WC Offset"))
         self.statuslabel_91.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:g5x_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][2])\", \"name\": \"g5x_offset_dro\"}]"))
+        self.label_7.setText(_translate("MainWindow", "Axis"))
+        self.label_24.setText(_translate("MainWindow", "Current Position"))
         self.statuslabel_92.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:g92_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][2])\", \"name\": \"g92_offset_dro\"}]"))
         self.statuslabel_96.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][2])\", \"name\": \"tool_offset_dro\"}]"))
-        self.use_tcp.setText(_translate("MainWindow", "Use tool change position for M6"))
-        self.use_tcp.setProperty("checkedAction", _translate("MainWindow", "1"))
-        self.set_g30_position.setText(_translate("MainWindow", "Set G30 tool change position"))
-        self.set_g30_position.setProperty("filename", _translate("MainWindow", "set_g30_position.ngc"))
-        self.label_55.setText(_translate("MainWindow", "X"))
-        self.x_tool_change_position.setPlaceholderText(_translate("MainWindow", "0.0000"))
-        self.x_tool_change_position.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:aout\", \"trigger\": true}], \"property\": \"Value\", \"expression\": \"ch[0][44]\", \"name\": \"x_axis_g30_set_position\"}]"))
-        self.x_tool_change_position.setProperty("settingName", _translate("MainWindow", "tool-change-position.x-tool-change-position"))
-        self.label_58.setText(_translate("MainWindow", "Z"))
-        self.z_tool_change_position.setPlaceholderText(_translate("MainWindow", "0.0000"))
-        self.z_tool_change_position.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:aout\", \"trigger\": true}], \"property\": \"Value\", \"expression\": \"ch[0][46]\", \"name\": \"z_axis_g30_set_position\"}]"))
-        self.z_tool_change_position.setProperty("settingName", _translate("MainWindow", "tool-change-position.z-tool-change-position"))
-        self.offset_table.setProperty("displayColumns", _translate("MainWindow", "XZ"))
-        self.btnClearOffsets.setText(_translate("MainWindow", "Clear All"))
-        self.btnClearSelOffset.setText(_translate("MainWindow", "Clear Selected"))
-        self.saveOffsets.setText(_translate("MainWindow", "Save Table"))
-        self.reloadOffsets.setText(_translate("MainWindow", "Reload Table"))
-        self.toolsDeleteBtn.setText(_translate("MainWindow", "Delete"))
-        self.tool_table_reload_button.setText(_translate("MainWindow", "Reload Table"))
-        self.loadSelectedTool.setText(_translate("MainWindow", "Load selected "))
-        self.groupBox_2.setTitle(_translate("MainWindow", "Tip Orient"))
-        self.lathe_control_point_4.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation ==4 else False\", \"name\": \"orientation_4\"}]"))
-        self.lathe_control_point_7.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Enable\", \"expression\": \"True if ch[0][ch[1]].orientation == 7 else False\", \"name\": \"orientation_7\"}]"))
-        self.lathe_control_point_9.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 9 else False\", \"name\": \"orientation_9\"}]"))
-        self.lathe_control_point_3.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 3 else False\", \"name\": \"orientation_3\"}]"))
-        self.lathe_control_point_8.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 8 else False\", \"name\": \"orientation_8\"}]"))
-        self.lathe_control_point_5.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 5 else False\", \"name\": \"orientation_5\"}]"))
-        self.lathe_control_point_1.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 1 else False\", \"name\": \"orientation_1\"}]"))
-        self.lathe_control_point_6.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 6 else False\", \"name\": \"orientation_6\"}]"))
-        self.lathe_control_point_2.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:tool_table\", \"trigger\": true}, {\"url\": \"status:tool_in_spindle\", \"trigger\": true}], \"property\": \"Checked\", \"expression\": \"True if ch[0][ch[1]].orientation == 2 else False\", \"name\": \"orientation_2\"}]"))
-        self.label_4.setText(_translate("MainWindow", "Tip Radius"))
-        self.label.setText(_translate("MainWindow", "T#"))
+        self.label_27.setText(_translate("MainWindow", "Tool Offset"))
+        self.label_23.setText(_translate("MainWindow", "Z"))
+        self.statuslabel_90.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:position\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][2])\", \"name\": \"pos_dro_z\"}]"))
+        self.dro_wcOoffset_x.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:g5x_offset\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"\\\"{:.3f}\\\".format(ch[0][0])\", \"name\": \"g5x_offset_dro\"}]"))
+        self.zero_x_axis.setText(_translate("MainWindow", "Set X = 0.000"))
+        self.zero_x_axis.setProperty("rules", _translate("MainWindow", "[{\"name\": \"New Rule\", \"property\": \"None\", \"expression\": \"\", \"channels\": [{\"url\": \"status:g5x_index\", \"trigger\": true}]}]"))
+        self.zero_x_axis.setProperty("MDICommand", _translate("MainWindow", "G10 L20 P{ch[0]} X0.0"))
+        self.zero_z_axis.setText(_translate("MainWindow", "Set Z = 0.000"))
+        self.zero_z_axis.setProperty("rules", _translate("MainWindow", "[{\"name\": \"New Rule\", \"property\": \"None\", \"expression\": \"\", \"channels\": [{\"url\": \"status:g5x_index\", \"trigger\": true}]}]"))
+        self.zero_z_axis.setProperty("MDICommand", _translate("MainWindow", "G10 L20 P{ch[0]} Z0.0"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.toolsTab), _translate("MainWindow", "Tools && Offsets"))
         self.groupBox_3.setTitle(_translate("MainWindow", "Debugging Tools"))
         self.actionbutton_7.setText(_translate("MainWindow", "Hal Show"))
@@ -3261,7 +2556,6 @@ class Ui_MainWindow(object):
         self.actionFullscreen.setShortcut(_translate("MainWindow", "F11"))
 from qtpyvcp.widgets.button_widgets.action_button import ActionButton
 from qtpyvcp.widgets.button_widgets.mdi_button import MDIButton
-from qtpyvcp.widgets.button_widgets.subcall_button import SubCallButton
 from qtpyvcp.widgets.containers.stack import VCPStackedWidget
 from qtpyvcp.widgets.display_widgets.dro_label import DROLabel
 from qtpyvcp.widgets.display_widgets.status_label import StatusLabel
@@ -3273,8 +2567,8 @@ from qtpyvcp.widgets.input_widgets.jog_speed_percentage import JogSpeedPercentag
 from qtpyvcp.widgets.input_widgets.mdientry_widget import MDIEntry
 from qtpyvcp.widgets.input_widgets.offset_table import OffsetTable
 from qtpyvcp.widgets.input_widgets.recent_file_combobox import RecentFileComboBox
-from qtpyvcp.widgets.input_widgets.setting_slider import VCPSettingsLineEdit
 from qtpyvcp.widgets.input_widgets.teachin_dro_label import TeachInDroLabel
+from teachinlathe.widgets.add_edit_tool.add_edit_tool import AddEditToolWidget
 from teachinlathe.widgets.conversational.conversational import Conversational
 from teachinlathe.widgets.lathe_fixtures.lathe_fixtures_cards import LatheFixturesCards
 from teachinlathe.widgets.lathe_joystick.lathe_joystick import LatheJoystickWidget

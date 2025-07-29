@@ -1389,10 +1389,10 @@ Datum</string>
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
      <property name="referenceType" stdset="0">
-      <number>1</number>
+      <number>0</number>
      </property>
      <property name="axisNumber" stdset="0">
-      <number>0</number>
+      <number>2</number>
      </property>
      <property name="inchFormat" stdset="0">
       <string>%9.4f</string>

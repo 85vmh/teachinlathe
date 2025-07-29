@@ -1,6 +1,9 @@
+from PyQt5.QtCore import QRectF, QTimer
+from PyQt5.QtGui import QPalette
+from PyQt5.QtWidgets import QStyle, QStyledItemDelegate, QWidget, QHBoxLayout, QPushButton, QStyleOptionViewItem
 from qtpy.QtCore import Qt, Slot, Signal, Property, QModelIndex, QSortFilterProxyModel
 from qtpy.QtGui import QStandardItemModel, QColor, QBrush, QPen
-from qtpy.QtWidgets import QTableView, QStyledItemDelegate, QMessageBox
+from qtpy.QtWidgets import QTableView, QMessageBox
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities.logger import getLogger
@@ -9,7 +12,6 @@ LOG = getLogger(__name__)
 
 
 def get_orient_arrow_angle(value):
-    # Define the mapping of value to angle here
     mapping = {
         1: 315,
         2: 225,
@@ -23,116 +25,206 @@ def get_orient_arrow_angle(value):
     return mapping.get(value, 0)
 
 
-_LATHE_COLUMNS = ['T', 'XZ', 'D', 'Q', 'IJ', 'R']
-_PREFERRED_WIDTHS = [40, 100, 70, 70, 110]  # Define your custom widths here
+_LATHE_COLUMNS = ['T', 'XZ', 'D', 'Q', 'IJ', 'R', 'ACTIONS']
+_PREFERRED_WIDTHS = [40, 120, 100, 80, 130, 350]
+
+
+class ActionButtonsEditor(QWidget):
+    editClicked = Signal(int)
+    deleteClicked = Signal(int)
+    loadClicked = Signal(int)
+    unloadClicked = Signal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(10, 0, 10, 0)  # left and right margins for spacing before/after buttons
+        layout.setSpacing(20)  # more spacing between buttons
+
+        self.edit_btn = QPushButton("Edit")
+        self.delete_btn = QPushButton("Delete")
+        self.load_btn = QPushButton("Load")
+
+        for btn in (self.edit_btn, self.delete_btn, self.load_btn):
+            btn.setFixedHeight(40)
+            layout.addWidget(btn)
+
+        self.edit_btn.clicked.connect(self.on_edit)
+        self.delete_btn.clicked.connect(self.on_delete)
+        self.load_btn.clicked.connect(self.on_load_unload)
+
+        self._tool_no = None
+
+    def setToolNumber(self, tool_no, current_tool, edited_tool=None):
+        self._tool_no = tool_no
+        is_current_tool = (tool_no == current_tool)
+        is_edited_tool = (tool_no == edited_tool)
+
+        self.edit_btn.setEnabled(not is_current_tool and not is_edited_tool)
+        self.delete_btn.setEnabled(not is_current_tool and not is_edited_tool)
+        self.load_btn.setEnabled(not is_edited_tool)
+        self.load_btn.setText("Unload" if is_current_tool else "Load")
+
+    def on_edit(self):
+        if self._tool_no is not None:
+            self.editClicked.emit(self._tool_no)
+
+    def on_delete(self):
+        if self._tool_no is not None:
+            self.deleteClicked.emit(self._tool_no)
+
+    def on_load_unload(self):
+        if self._tool_no is not None:
+            if self.load_btn.text() == "Unload":
+                # If the button says "Unload", emit unload signal
+                self.unloadClicked.emit(self._tool_no)
+            else:
+                self.loadClicked.emit(self._tool_no)
 
 
 class ItemDelegate(QStyledItemDelegate):
-
     def __init__(self, columns):
         super(ItemDelegate, self).__init__()
-
         self._columns = _LATHE_COLUMNS
         self._padding = ' ' * 2
+
+    def createEditor(self, parent, option, index):
+        col = self._columns[index.column()]
+        if col == 'ACTIONS':
+            editor = ActionButtonsEditor(parent)
+            view = parent.parent()  # QTableView
+            model_index = index.model().mapToSource(index)
+            row = model_index.row()
+            tool_no = view.tool_model.toolDataFromRow(row)['T']
+            current_tool = view.tool_model.stat.tool_in_spindle
+            editor.setToolNumber(tool_no, current_tool, view.tool_model.edited_tool_no)
+
+            editor.editClicked.connect(view._onEditTool)
+            editor.deleteClicked.connect(view._onDeleteTool)
+            editor.loadClicked.connect(view._onLoadTool)
+            editor.unloadClicked.connect(view._onUnloadTool)
+
+            return editor
+        return super().createEditor(parent, option, index)
+
+    def setEditorData(self, editor, index):
+        pass
+
+    def setModelData(self, editor, model, index):
+        pass
+
+    def updateEditorGeometry(self, editor, option, index):
+        editor.setGeometry(option.rect)
 
     def displayText(self, value, locale):
         return f"{self._padding}{value}"
 
     def paint(self, painter, option, index):
+        model_index = index.model().mapToSource(index)
+        tool_no = index.model().sourceModel().toolDataFromRow(model_index.row())['T']
+
+        if hasattr(index.model().sourceModel(), 'edited_tool_no') and tool_no == index.model().sourceModel().edited_tool_no:
+            painter.save()
+            pen = QPen(QColor("#C9A635"), 2)
+            painter.setPen(pen)
+            painter.drawRect(option.rect.adjusted(1, 1, -1, -1))
+            painter.restore()
+
         painter.save()
 
-        # Get the data for the current cell
         data = index.model().data(index, Qt.DisplayRole)
         col = self._columns[index.column()]
 
+        if col == 'ACTIONS':
+            painter.restore()
+            return
+
         bg_color = index.model().data(index, Qt.BackgroundRole)
         if bg_color is not None:
-            painter.fillRect(option.rect, bg_color)  # Fill the cell with the background color
+            painter.fillRect(option.rect, bg_color)
 
-        text_color = index.model().data(index, Qt.TextColorRole)
-        if text_color is not None:
-            painter.setPen(QPen(text_color.color()))
+        if option.state & QStyle.State_Selected:
+            color = option.palette.color(QPalette.Active, QPalette.HighlightedText)
+        else:
+            brush = index.model().data(index, Qt.TextColorRole)
+            if isinstance(brush, QBrush):
+                color = brush.color()
+            elif isinstance(brush, QColor):
+                color = brush
+            else:
+                color = Qt.black
 
-        if col in ['XZ', 'IJ']:  # Combined Offsets column
+        if col in ['XZ', 'IJ']:
             x_val, z_val = data.split('\n')
             x_label, x_value = x_val.split(': ')
             z_label, z_value = z_val.split(': ')
 
-            # Calculate positions
             rect = option.rect
             left_margin = 5
             right_margin = 5
 
-            # QFontMetrics for text width calculation
             font_metrics = painter.fontMetrics()
             label_width = max(font_metrics.width(x_label + ': '), font_metrics.width(z_label + ': '))
-
-            # Adjust middle position based on label width
-            middle_margin = 10  # Adjust this margin as needed
+            middle_margin = 10
             middle = left_margin + label_width + middle_margin
 
-            # Draw labels (X and Z) aligned to the left
             painter.drawText(rect.adjusted(left_margin, 0, -rect.width() + middle, 0), Qt.AlignVCenter | Qt.AlignLeft, f"{x_label}:\n{z_label}:")
-
-            # Draw values aligned to the right
             painter.drawText(rect.adjusted(middle, 0, -right_margin, 0), Qt.AlignVCenter | Qt.AlignRight, f"{x_value}\n{z_value}")
 
-        elif col == 'Q':  # Assuming 'Q' is the Orient column
+        elif col == 'Q':
             arrow_length = 15
-            space_between = 5  # Adjust this value for more or less space
+            space_between = 5
+            self.draw_arrow(painter, option, data, arrow_length, color)
 
-            # Draw the arrow
-            self.draw_arrow(painter, option, data, arrow_length)
-
-            # Draw the text (value) next to the arrow
             painter.save()
             text = str(data)
-
-            # Calculate the position to start the text
-            # Add some additional space between the arrow and the text
             arrow_end_x = option.rect.center().x() + min(option.rect.width(), option.rect.height()) // 4 + space_between
             painter.drawText(arrow_end_x, option.rect.y(), option.rect.width(), option.rect.height(), Qt.AlignVCenter | Qt.AlignLeft, text)
-
             painter.restore()
 
         else:
-            # Default rendering for other columns
             super().paint(painter, option, index)
 
         painter.restore()
 
     @staticmethod
-    def draw_arrow(painter, option, value, arrow_length):
-        # This method will draw a rotated arrow with the specified color
+    def draw_arrow(painter, option, value, arrow_length, color):
         painter.save()
         rect = option.rect
 
-        # Translate and rotate the painter
-        painter.translate(rect.center())
-        painter.rotate(get_orient_arrow_angle(value))
-        painter.translate(-rect.center())
+        if value == 9:
+            radius = arrow_length // 2
+            center = rect.center()
+            circle_rect = QRectF(
+                center.x() - radius,
+                center.y() - radius,
+                radius * 2,
+                radius * 2
+            )
 
-        # Calculate the start and end points for the line
-        # Use the specified arrowLength instead of calculating from the cell size
-        start_x = rect.center().x() - arrow_length // 2
-        end_x = rect.center().x() + arrow_length // 2
-        center_y = rect.center().y()
+            brush = QBrush(color)
+            painter.setBrush(brush)
+            painter.setPen(Qt.NoPen)
+            painter.drawEllipse(circle_rect)
+        else:
+            painter.translate(rect.center())
+            painter.rotate(get_orient_arrow_angle(value))
+            painter.translate(-rect.center())
 
-        # Create a pen with the specified color and set it for the painter
-        pen = QPen()
-        pen.setWidth(2)
-        painter.setPen(pen)
+            start_x = rect.center().x() - arrow_length // 2
+            end_x = rect.center().x() + arrow_length // 2
+            center_y = rect.center().y()
 
-        # Draw the line part of the arrow
-        painter.drawLine(start_x, center_y, end_x, center_y)
+            pen = QPen(color)
+            pen.setWidth(2)
+            painter.setPen(pen)
 
-        # Draw the 'V' part of the arrow at the end
-        arrow_head_size = arrow_length // 4
-        painter.drawLine(end_x, center_y, end_x - arrow_head_size, center_y - arrow_head_size)
-        painter.drawLine(end_x, center_y, end_x - arrow_head_size, center_y + arrow_head_size)
+            painter.drawLine(start_x, center_y, end_x, center_y)
+            arrow_head_size = arrow_length // 4
+            painter.drawLine(end_x, center_y, end_x - arrow_head_size, center_y - arrow_head_size)
+            painter.drawLine(end_x, center_y, end_x - arrow_head_size, center_y + arrow_head_size)
 
         painter.restore()
-
 
 class ToolModel(QStandardItemModel):
     def __init__(self, parent=None):
@@ -141,6 +233,7 @@ class ToolModel(QStandardItemModel):
         self.status = getPlugin('status')
         self.stat = self.status.stat
         self.tt = getPlugin('tooltable')
+        self.edited_tool_no = None
 
         self.current_tool_color = QColor(Qt.darkGreen)
         self.current_tool_bg = None
@@ -184,6 +277,10 @@ class ToolModel(QStandardItemModel):
                 return 'Radius'
             elif col == 'IJ':  # Combined Tip Angle column
                 return 'Tip Angle'
+            elif col == 'R': # Remark column
+                return 'Description'
+            elif col == 'ACTIONS':
+                return 'Actions'
             return self._column_labels.get(col, col)
         return super().headerData(section, orientation, role)
 
@@ -226,11 +323,7 @@ class ToolModel(QStandardItemModel):
                 return Qt.AlignVCenter | Qt.AlignRight
 
         elif role == Qt.TextColorRole:
-            tool_no = sorted(self._tool_table)[index.row() + 1]
-            if self.stat.tool_in_spindle == tool_no:
-                return QBrush(self.current_tool_color)
-            else:
-                return QStandardItemModel.data(self, index, role)
+            return QStandardItemModel.data(self, index, role)
 
         elif role == Qt.BackgroundRole and self.current_tool_bg is not None:
             tool_no = sorted(self._tool_table)[index.row() + 1]
@@ -276,8 +369,12 @@ class ToolModel(QStandardItemModel):
         tnum = sorted(self._tool_table)[row + 1]
         return self._tool_table[tnum]
 
+    def toolDataFromTool(self, tnum):
+        """Returns dictionary of tool data"""
+        return self._tool_table[tnum]
+
     def saveToolTable(self):
-        self.tt.saveToolTable(self._tool_table, self._columns)
+        self.tt.saveToolTable(self._tool_table, self._column_labels)
         return True
 
     def clearToolTable(self):
@@ -289,14 +386,13 @@ class ToolModel(QStandardItemModel):
 
     def loadToolTable(self):
         # the tooltable plugin will emit the tool_table_changed signal
-        # so we don't need to do any more here
+        # so we don't need to do anymore here
         self.tt.loadToolTable()
         return True
 
 
 class LatheToolTable(QTableView):
-    toolSelected = Signal(int)
-    anythingSelected = Signal(bool)
+    toolEditClicked = Signal(dict, object, int)  # toolData, toolModel, toolNo
 
     def __init__(self, parent=None):
         super(LatheToolTable, self).__init__(parent)
@@ -308,6 +404,7 @@ class LatheToolTable(QTableView):
 
         self.item_delegate = ItemDelegate(columns=self.tool_model._columns)
         self.setItemDelegate(self.item_delegate)
+        self.item_delegate.commitData.connect(self.commitData)
 
         self.proxy_model = QSortFilterProxyModel()
         self.proxy_model.setFilterKeyColumn(0)
@@ -315,9 +412,13 @@ class LatheToolTable(QTableView):
 
         self.setModel(self.proxy_model)
 
+        QTimer.singleShot(0, self.openEditorsForActionColumn)
+        self.model().modelReset.connect(lambda: QTimer.singleShot(0, self.openEditorsForActionColumn))
+        self.model().layoutChanged.connect(lambda: QTimer.singleShot(0, self.openEditorsForActionColumn))
+
         # Properties
         self._columns = self.tool_model._columns
-        self._confirm_actions = False
+        self._confirm_actions = True
         self._current_tool_color = QColor('sage')
         self._current_tool_bg = None
 
@@ -334,9 +435,39 @@ class LatheToolTable(QTableView):
             for i, width in enumerate(_PREFERRED_WIDTHS):
                 self.setColumnWidth(i, width)
 
-        self.clicked.connect(self.onClick)
-        self.selectionModel().currentRowChanged.connect(self.onSelectionChanged)
-        self.anythingSelected.emit(False)
+
+    def _onEditTool(self, tool_no):
+        print(f"[Edit Tool] {tool_no}")
+        self.tool_model.edited_tool_no = tool_no
+        for row in range(self.tool_model.rowCount()):
+            index = self.model().index(row, _LATHE_COLUMNS.index('ACTIONS'))
+            self.closePersistentEditor(index)
+            self.openPersistentEditor(index)
+
+        self.tool_model.refreshModel()
+        self.toolEditClicked.emit(self.tool_model.toolDataFromTool(tool_no), self.tool_model, tool_no)
+
+    def finishEditingTool(self):
+        """Called when editing a tool is finished."""
+        self.tool_model.edited_tool_no = None
+        self.tool_model.refreshModel()
+        self.openEditorsForActionColumn()
+
+    def _onDeleteTool(self, tool_no):
+        self.deleteToolByNumber(tool_no)
+
+    def _onLoadTool(self, tool_no):
+        print(f"[Load Tool] {tool_no}")
+        self.loadToolWIthM61(tool_no)
+
+    def _onUnloadTool(self, tool_no):
+        print(f"[Unload Tool] {tool_no}")
+        self.loadToolWIthM61(0)
+
+    def openEditorsForActionColumn(self):
+        for row in range(self.model().rowCount()):
+            index = self.model().index(row, _LATHE_COLUMNS.index('ACTIONS'))
+            self.openPersistentEditor(index)
 
     @Slot()
     def saveToolTable(self):
@@ -380,6 +511,25 @@ class LatheToolTable(QTableView):
 
         self.tool_model.removeTool(current_row)
 
+    def deleteToolByNumber(self, tool_no):
+        """Delete tool by its number (not by selection)."""
+        tool_table = self.tool_model._tool_table
+        sorted_tools = sorted(tool_table)
+
+        for row, tnum in enumerate(sorted_tools[1:]):  # Ignorăm tool 0
+            if tnum == tool_no:
+                if not self.confirmAction(f'Are you sure you want to delete T{tool_no} ?'
+                                          f'\n"{tool_table[tool_no].get("R", "")}"'):
+                    return False
+
+                print("found row to delete: ", row)
+                self.tool_model.removeTool(row)
+                self.tool_model.saveToolTable()
+                self.tool_model.loadToolTable()
+                return True
+            print("tool not found: ", tool_no)
+        return False
+
     @Slot()
     def selectPrevious(self):
         """Select the previous item in the view."""
@@ -418,8 +568,12 @@ class LatheToolTable(QTableView):
     @Slot()
     def loadSelectedToolWithM61(self):
         selected_tool = self._get_selected_tool()
-        if selected_tool is not None:
-            issue_mdi("M61 Q%s G43" % selected_tool)
+        self.loadToolWIthM61(selected_tool)
+
+    @staticmethod
+    def loadToolWIthM61(tool_no):
+        if tool_no is not None:
+            issue_mdi("M61 Q%s G43" % tool_no)
         else:
             LOG.warning("No tool selected to load with M61.")
 
@@ -436,35 +590,21 @@ class LatheToolTable(QTableView):
     def selectedRowIndex(self):
         return self.selectionModel().currentIndex().row()
 
-    def onClick(self, index):
-        tool_no = self.tool_model.toolDataFromRow(index.row())['T']
-        self.toolSelected.emit(tool_no)
-
-    def onSelectionChanged(self, current: QModelIndex, previous: QModelIndex):
-        """Slot that gets called when the selection changes."""
-        if current.isValid():
-            row = current.row()
-            tool_number = self.tool_model.toolDataFromRow(row)['T']
-            print("selection changed to: ", tool_number)
-            self.anythingSelected.emit(True)
-        else:
-            print("selection cleared")
-            self.anythingSelected.emit(False)
-
     def confirmAction(self, message):
         if not self._confirm_actions:
             return True
 
-        box = QMessageBox.question(self,
-                                   'Confirm Action',
-                                   message,
-                                   QMessageBox.Yes,
-                                   QMessageBox.No)
+        parent = self if isinstance(self, QWidget) else None
 
-        if box == QMessageBox.Yes:
-            return True
-        else:
-            return False
+        box = QMessageBox.question(
+            parent,
+            'Confirm Action',
+            message,
+            QMessageBox.Yes,
+            QMessageBox.No
+        )
+
+        return box == QMessageBox.Yes
 
     @Property(bool)
     def confirmActions(self):

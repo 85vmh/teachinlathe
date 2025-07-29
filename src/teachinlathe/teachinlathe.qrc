@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/">
+    <file>images/lathe_tool_graphic.png</file>
     <file>images/rough_finish_turn.png</file>
     <file>images/rough_finish_face.png</file>
     <file>images/rough_finish_chamfer.png</file>

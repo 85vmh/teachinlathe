@@ -578,8 +578,8 @@ class Ui_Form(object):
 "        font: 12pt \"Noto Sans Mono\";\n"
 "}")
         self.droChuckLimit.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.droChuckLimit.setProperty("referenceType", 1)
-        self.droChuckLimit.setProperty("axisNumber", 0)
+        self.droChuckLimit.setProperty("referenceType", 0)
+        self.droChuckLimit.setProperty("axisNumber", 2)
         self.droChuckLimit.setProperty("latheMode", 0)
         self.droChuckLimit.setObjectName("droChuckLimit")
         self.changeChuck = QtWidgets.QPushButton(self.groupBox)

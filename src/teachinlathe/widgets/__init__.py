@@ -1,5 +1,6 @@
 from qtpyvcp.widgets.qtdesigner import _DesignerPlugin
 
+from .add_edit_tool.add_edit_tool import AddEditToolWidget
 from .conversational.conversational import Conversational
 from .conversational.program_item_widget import ProgramItemWidget
 from .lathe_fixtures.lathe_fixtures_cards import LatheFixturesCards
@@ -41,3 +42,7 @@ class Conversational_Plugin(_DesignerPlugin):
 class LatheJoystickWidget_Plugin(_DesignerPlugin):
     def pluginClass(self):
         return LatheJoystickWidget
+
+class AddEditToolWidget_Plugin(_DesignerPlugin):
+    def pluginClass(self):
+        return AddEditToolWidget
