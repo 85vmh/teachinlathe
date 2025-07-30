@@ -108,6 +108,7 @@ class MyMainWindow(VCPMainWindow):
 
         TOOLTABLE.current_tool.signal.connect(self.onCurrentToolChanged)
         self.latheToolTable.toolEditClicked.connect(self.onToolEditClicked)
+        self.latheToolTable.toolAddClicked.connect(self.onToolAddClicked)
 
         self.handle_spindle_mode(self.getSpindleModeIndex)
 
@@ -170,6 +171,11 @@ class MyMainWindow(VCPMainWindow):
         print("onToolEditClicked:", tool_no)
         self.innerToolsAndOffsets.setCurrentIndex(1)  # Switch to the tool add/edit tab
         self.addEditToolWidget.setEditToolData(tool_data, tool_model, tool_no)
+
+    def onToolAddClicked(self, tool_data, tool_model):
+        print("onToolAddClicked")
+        self.innerToolsAndOffsets.setCurrentIndex(1)
+        self.addEditToolWidget.setAddToolData(tool_data, tool_model)
 
     def onCurrentToolChanged(self, current_tool):
         print("--------Current tool changed to: ", current_tool)

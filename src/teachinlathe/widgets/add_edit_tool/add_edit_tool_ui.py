@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/cnc/Work/teachinlathe/src/teachinlathe/widgets/add_edit_tool/add_edit_tool.ui'
+# Form implementation generated from reading ui file 'add_edit_tool.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -21,19 +21,6 @@ class Ui_Form(object):
         self.cancelButton = QtWidgets.QPushButton(Form)
         self.cancelButton.setGeometry(QtCore.QRect(10, 880, 111, 40))
         self.cancelButton.setObjectName("cancelButton")
-        self.toolNoInput = QtWidgets.QLabel(Form)
-        self.toolNoInput.setGeometry(QtCore.QRect(145, 95, 61, 36))
-        self.toolNoInput.setStyleSheet("QLabel {\n"
-"        border-style: solid;\n"
-"        border-color: rgb(119, 118, 123);\n"
-"        border-width: 1px;\n"
-"        border-radius: 5px;\n"
-"        color: rgb(154, 153, 150);\n"
-"        background: rgb(246, 245, 244);\n"
-"        font: 12pt \"Noto Sans Mono\";\n"
-"}")
-        self.toolNoInput.setAlignment(QtCore.Qt.AlignCenter)
-        self.toolNoInput.setObjectName("toolNoInput")
         self.label_16 = QtWidgets.QLabel(Form)
         self.label_16.setGeometry(QtCore.QRect(10, 95, 111, 36))
         self.label_16.setStyleSheet("font: 13pt \"Cantarell\";")
@@ -42,19 +29,6 @@ class Ui_Form(object):
         self.label_17.setGeometry(QtCore.QRect(10, 150, 111, 36))
         self.label_17.setStyleSheet("font: 13pt \"Cantarell\";")
         self.label_17.setObjectName("label_17")
-        self.tipRadiusInput = QtWidgets.QLabel(Form)
-        self.tipRadiusInput.setGeometry(QtCore.QRect(145, 150, 61, 36))
-        self.tipRadiusInput.setStyleSheet("QLabel {\n"
-"        border-style: solid;\n"
-"        border-color: rgb(119, 118, 123);\n"
-"        border-width: 1px;\n"
-"        border-radius: 5px;\n"
-"        color: rgb(154, 153, 150);\n"
-"        background: rgb(246, 245, 244);\n"
-"        font: 12pt \"Noto Sans Mono\";\n"
-"}")
-        self.tipRadiusInput.setAlignment(QtCore.Qt.AlignCenter)
-        self.tipRadiusInput.setObjectName("tipRadiusInput")
         self.actualFeedType_3 = QtWidgets.QLabel(Form)
         self.actualFeedType_3.setGeometry(QtCore.QRect(225, 150, 36, 36))
         self.actualFeedType_3.setStyleSheet("font: 13pt \"Cantarell\";")
@@ -341,6 +315,30 @@ class Ui_Form(object):
         self.label.setPixmap(QtGui.QPixmap(":/images/lathe_tool_graphic.png"))
         self.label.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.label.setObjectName("label")
+        self.toolNoInput = TouchFakeLineEdit(Form)
+        self.toolNoInput.setGeometry(QtCore.QRect(145, 95, 61, 36))
+        self.toolNoInput.setStyleSheet("QLabel {\n"
+"        border-style: solid;\n"
+"        border-color: rgb(119, 118, 123);\n"
+"        border-width: 1px;\n"
+"        border-radius: 5px;\n"
+"        color: rgb(154, 153, 150);\n"
+"        background: rgb(246, 245, 244);\n"
+"        font: 12pt \"Noto Sans Mono\";\n"
+"}")
+        self.toolNoInput.setObjectName("toolNoInput")
+        self.tipRadiusInput = TouchFakeLineEdit(Form)
+        self.tipRadiusInput.setGeometry(QtCore.QRect(145, 150, 61, 36))
+        self.tipRadiusInput.setStyleSheet("QLabel {\n"
+"        border-style: solid;\n"
+"        border-color: rgb(119, 118, 123);\n"
+"        border-width: 1px;\n"
+"        border-radius: 5px;\n"
+"        color: rgb(154, 153, 150);\n"
+"        background: rgb(246, 245, 244);\n"
+"        font: 12pt \"Noto Sans Mono\";\n"
+"}")
+        self.tipRadiusInput.setObjectName("tipRadiusInput")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -350,10 +348,8 @@ class Ui_Form(object):
         Form.setWindowTitle(_translate("Form", "Form"))
         self.saveButton.setText(_translate("Form", "Save"))
         self.cancelButton.setText(_translate("Form", "Cancel"))
-        self.toolNoInput.setText(_translate("Form", "T#"))
         self.label_16.setText(_translate("Form", "Tool Number:"))
         self.label_17.setText(_translate("Form", "Tip Radius:"))
-        self.tipRadiusInput.setText(_translate("Form", "0.1"))
         self.actualFeedType_3.setText(_translate("Form", "mm"))
         self.groupBox_2.setTitle(_translate("Form", "Tip Orientatation"))
         self.label_18.setText(_translate("Form", "Back angle:"))
@@ -364,4 +360,5 @@ class Ui_Form(object):
         self.frontAngleInput.setText(_translate("Form", "0"))
         self.label_20.setText(_translate("Form", "Description:"))
         self.titleLabel.setText(_translate("Form", "Add new Tool"))
+from qtpyvcp.widgets.input_widgets.touch_fake_line_edit import TouchFakeLineEdit
 import teachinlathe_rc

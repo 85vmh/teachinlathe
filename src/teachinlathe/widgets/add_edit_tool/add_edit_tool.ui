@@ -39,33 +39,6 @@
     <string>Cancel</string>
    </property>
   </widget>
-  <widget class="QLabel" name="toolNoInput">
-   <property name="geometry">
-    <rect>
-     <x>145</x>
-     <y>95</y>
-     <width>61</width>
-     <height>36</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QLabel {
-		border-style: solid;
-        border-color: rgb(119, 118, 123);
-        border-width: 1px;
-        border-radius: 5px;
-        color: rgb(154, 153, 150);
-        background: rgb(246, 245, 244);
-        font: 12pt &quot;Noto Sans Mono&quot;;
-}</string>
-   </property>
-   <property name="text">
-    <string>T#</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_16">
    <property name="geometry">
     <rect>
@@ -96,33 +69,6 @@
    </property>
    <property name="text">
     <string>Tip Radius:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="tipRadiusInput">
-   <property name="geometry">
-    <rect>
-     <x>145</x>
-     <y>150</y>
-     <width>61</width>
-     <height>36</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QLabel {
-		border-style: solid;
-        border-color: rgb(119, 118, 123);
-        border-width: 1px;
-        border-radius: 5px;
-        color: rgb(154, 153, 150);
-        background: rgb(246, 245, 244);
-        font: 12pt &quot;Noto Sans Mono&quot;;
-}</string>
-   </property>
-   <property name="text">
-    <string>0.1</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
    </property>
   </widget>
   <widget class="QLabel" name="actualFeedType_3">
@@ -647,7 +593,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>205</y>
+     <y>255</y>
      <width>111</width>
      <height>36</height>
     </rect>
@@ -657,33 +603,6 @@
    </property>
    <property name="text">
     <string>Back angle:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="backAngleInput">
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>205</y>
-     <width>76</width>
-     <height>36</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QLabel {
-		border-style: solid;
-        border-color: rgb(119, 118, 123);
-        border-width: 1px;
-        border-radius: 5px;
-        color: rgb(154, 153, 150);
-        background: rgb(246, 245, 244);
-        font: 12pt &quot;Noto Sans Mono&quot;;
-}</string>
-   </property>
-   <property name="text">
-    <string>0</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
    </property>
   </widget>
   <widget class="QLabel" name="actualFeedType_4">
@@ -706,7 +625,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>255</y>
+     <y>205</y>
      <width>111</width>
      <height>36</height>
     </rect>
@@ -732,33 +651,6 @@
    </property>
    <property name="text">
     <string>deg</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="frontAngleInput">
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>255</y>
-     <width>76</width>
-     <height>36</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QLabel {
-		border-style: solid;
-        border-color: rgb(119, 118, 123);
-        border-width: 1px;
-        border-radius: 5px;
-        color: rgb(154, 153, 150);
-        background: rgb(246, 245, 244);
-        font: 12pt &quot;Noto Sans Mono&quot;;
-}</string>
-   </property>
-   <property name="text">
-    <string>0</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
    </property>
   </widget>
   <widget class="QLabel" name="label_20">
@@ -838,8 +730,124 @@
     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
    </property>
   </widget>
+  <widget class="TouchFakeLineEdit" name="toolNoInput">
+   <property name="geometry">
+    <rect>
+     <x>145</x>
+     <y>95</y>
+     <width>61</width>
+     <height>36</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(154, 153, 150);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="TouchFakeLineEdit" name="tipRadiusInput">
+   <property name="geometry">
+    <rect>
+     <x>145</x>
+     <y>150</y>
+     <width>61</width>
+     <height>36</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(154, 153, 150);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>0.1</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="TouchFakeLineEdit" name="backAngleInput">
+   <property name="geometry">
+    <rect>
+     <x>135</x>
+     <y>255</y>
+     <width>71</width>
+     <height>36</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(154, 153, 150);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>0</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="TouchFakeLineEdit" name="frontAngleInput">
+   <property name="geometry">
+    <rect>
+     <x>135</x>
+     <y>205</y>
+     <width>71</width>
+     <height>36</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {
+		border-style: solid;
+        border-color: rgb(119, 118, 123);
+        border-width: 1px;
+        border-radius: 5px;
+        color: rgb(154, 153, 150);
+        background: rgb(246, 245, 244);
+        font: 12pt &quot;Noto Sans Mono&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>0</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TouchFakeLineEdit</class>
+   <extends>QLabel</extends>
+   <header>qtpyvcp.widgets.input_widgets.touch_fake_line_edit</header>
+  </customwidget>
+ </customwidgets>
  <resources>
+  <include location="../../teachinlathe.qrc"/>
   <include location="../../teachinlathe.qrc"/>
   <include location="../../../../../../teachinlathe.qrc"/>
  </resources>

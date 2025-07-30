@@ -393,6 +393,7 @@ class ToolModel(QStandardItemModel):
 
 class LatheToolTable(QTableView):
     toolEditClicked = Signal(dict, object, int)  # toolData, toolModel, toolNo
+    toolAddClicked = Signal(dict, object)  # toolData, toolModel
 
     def __init__(self, parent=None):
         super(LatheToolTable, self).__init__(parent)
@@ -556,6 +557,7 @@ class LatheToolTable(QTableView):
         """Appends a new item to the model"""
         self.tool_model.addTool()
         self.selectRow(self.tool_model.rowCount() - 1)
+        self.toolAddClicked.emit(self.tool_model.toolDataFromRow(self.selectedRowIndex()), self.tool_model)
 
     @Slot()
     def loadSelectedToolWithM6(self):
