@@ -18,7 +18,7 @@ LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
 STATUS = getPlugin('status')
 POSITION = getPlugin('position')
-FEED_DELAY = 0.3 # seconds
+FEED_DELAY = 1 # seconds
 
 
 def print_with_timestamp(message):
@@ -372,7 +372,7 @@ class ManualLathe:
 
     def stopFeeding(self):
         if self.startFeedingTimer is not None:
-            print("Feed Delay Timer was on, canceling")
+            print("Feed delay timer was on, canceling timer")
             self.startFeedingTimer.cancel()
 
         if self.joystickFunction == JoystickFunction.FEEDING:
