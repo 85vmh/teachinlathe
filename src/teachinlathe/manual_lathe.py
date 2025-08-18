@@ -18,7 +18,7 @@ LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
 STATUS = getPlugin('status')
 POSITION = getPlugin('position')
-FEED_DELAY = 1 # seconds
+FEED_DELAY = 0.3 # seconds
 
 
 def print_with_timestamp(message):
