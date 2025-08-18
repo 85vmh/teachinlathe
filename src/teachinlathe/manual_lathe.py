@@ -18,6 +18,7 @@ LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
 STATUS = getPlugin('status')
 POSITION = getPlugin('position')
+FEED_DELAY = 0.3 # seconds
 
 
 def print_with_timestamp(message):
@@ -306,7 +307,7 @@ class ManualLathe:
         if self.startFeedingTimer is not None:
             self.startFeedingTimer.cancel()
 
-        self.startFeedingTimer = threading.Timer(0.3, self.startFeeding)  # Delay for 300ms
+        self.startFeedingTimer = threading.Timer(FEED_DELAY, self.startFeeding)  # Delay the start feed
         self.startFeedingTimer.start()
 
     def startFeeding(self):
@@ -383,7 +384,7 @@ class ManualLathe:
 
     def startJogging(self):
         if self.stopFeeding():
-            time.sleep(0.2)  # Wait 100ms for the feed to stop before we start jogging
+            time.sleep(0.2)  # Wait 200ms for the feed to stop before we start jogging
 
         if self.joystickDirection is not None:
             jog_speed = float(SETTINGS.get('machine.jog.linear-speed').getValue())
