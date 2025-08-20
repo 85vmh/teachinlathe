@@ -542,7 +542,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
            </property>
            <property name="styleSheet">
             <string notr="true">QTabBar::tab {
-height: 50px; min-width: 204px;
+height: 60px; min-width: 204px;
 font: 14pt &quot;DejaVu Sans&quot;; }</string>
            </property>
            <property name="tabPosition">
@@ -559,7 +559,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>5</x>
-               <y>740</y>
+               <y>735</y>
                <width>296</width>
                <height>241</height>
               </rect>
@@ -1032,7 +1032,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>535</x>
-               <y>740</y>
+               <y>735</y>
                <width>551</width>
                <height>241</height>
               </rect>
@@ -1301,7 +1301,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>1095</x>
-               <y>740</y>
+               <y>735</y>
                <width>121</width>
                <height>241</height>
               </rect>
@@ -1364,7 +1364,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
              <property name="geometry">
               <rect>
                <x>310</x>
-               <y>740</y>
+               <y>735</y>
                <width>216</width>
                <height>241</height>
               </rect>
@@ -1564,7 +1564,7 @@ QCheckBox:disabled {
             <widget class="QuickCycles" name="quickcycles">
              <property name="geometry">
               <rect>
-               <x>1535</x>
+               <x>1445</x>
                <y>5</y>
                <width>371</width>
                <height>461</height>
@@ -1705,7 +1705,7 @@ QCheckBox:disabled {
              <property name="geometry">
               <rect>
                <x>1225</x>
-               <y>740</y>
+               <y>735</y>
                <width>211</width>
                <height>241</height>
               </rect>
@@ -2079,21 +2079,24 @@ QCheckBox:disabled {
             <widget class="MDIEntry" name="mdientry">
              <property name="geometry">
               <rect>
-               <x>1575</x>
-               <y>865</y>
-               <width>211</width>
-               <height>51</height>
+               <x>1550</x>
+               <y>515</y>
+               <width>206</width>
+               <height>46</height>
               </rect>
              </property>
             </widget>
             <widget class="QGroupBox" name="groupBox_2">
              <property name="geometry">
               <rect>
-               <x>1330</x>
-               <y>535</y>
+               <x>1410</x>
+               <y>575</y>
                <width>346</width>
                <height>81</height>
               </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
              </property>
              <property name="title">
               <string>Current Machine Mode</string>
@@ -2275,6 +2278,22 @@ QCheckBox:disabled {
                </item>
               </layout>
              </widget>
+            </widget>
+            <widget class="QLabel" name="label">
+             <property name="geometry">
+              <rect>
+               <x>1410</x>
+               <y>525</y>
+               <width>126</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">font: 13pt &quot;Cantarell&quot;;</string>
+             </property>
+             <property name="text">
+              <string>MDI Command</string>
+             </property>
             </widget>
            </widget>
            <widget class="QWidget" name="conversationalTab">
