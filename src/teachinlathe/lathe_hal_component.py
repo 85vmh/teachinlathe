@@ -33,8 +33,7 @@ class TeachInLatheComponent:
     PinSpindleActualRpm = 'spindle.actual-rpm'
     PinSpindleIsFirstGear = 'spindle.is-first-gear'
     PinHandwheelsJogIncrement = 'handwheels.jog-increment'
-    PinHandwheelsXIsEnabled = 'handwheels.x-is-enabled'
-    PinHandwheelsZIsEnabled = 'handwheels.z-is-enabled'
+    PinHandwheelsAllowed = 'handwheels.allowed'
     PinHandwheelsXEnable = 'handwheels.x-enable'
     PinHandwheelsZEnable = 'handwheels.z-enable'
     PinHandwheelsAngleJogEnable = 'handwheels.angle-jog-enabled'
@@ -71,8 +70,7 @@ class TeachInLatheComponent:
             self.comp = hal.component('TeachInLathe')
 
         self.comp.addPin(self.PinHandwheelsJogIncrement, 'float', 'in')
-        self.comp.addPin(self.PinHandwheelsXIsEnabled, 'bit', 'in')
-        self.comp.addPin(self.PinHandwheelsZIsEnabled, 'bit', 'in')
+        self.comp.addPin(self.PinHandwheelsAllowed, 'bit', 'in')
         self.comp.addPin(self.PinHandwheelsXEnable, 'bit', 'out')
         self.comp.addPin(self.PinHandwheelsZEnable, 'bit', 'out')
         self.comp.addPin(self.PinHandwheelsAngleJogEnable, 'bit', 'out')
