@@ -23,6 +23,7 @@ class ConversationalQml(QQuickWidget):
         root_path = os.path.join(self.base_dir, "Root.qml")
 
         self.statusChanged.connect(self.onStatusChanged)
+        self.model = ProgramListModel(programs_list)
         self.setSource(QUrl.fromLocalFile(root_path))
 
     def onStatusChanged(self, status):
@@ -32,12 +33,11 @@ class ConversationalQml(QQuickWidget):
                 print("Failed to load Root.qml")
                 return
 
-            model = ProgramListModel(programs_list)
-            print("----Model count:", model.rowCount())
-            self.engine().rootContext().setContextProperty("programsModel", model)
+            print("----Model count:", self.model.rowCount())
+            self.engine().rootContext().setContextProperty("programsModel", self.model)
 
             main_url = QUrl.fromLocalFile(os.path.join(self.base_dir, "MainScreen.qml")).toString()
-            self.root.loadScreen(main_url, {"programsModel": model})
+            self.root.loadScreen(main_url, {"programsModel": self.model})
 
             loader = self.root.findChild(QObject, "loader")
             if loader is None:

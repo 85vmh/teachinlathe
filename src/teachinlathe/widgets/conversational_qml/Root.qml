@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 
 Item {
     id: root
+    objectName: "root"
     anchors.fill: parent
 
     // URLs for screens
@@ -54,26 +55,29 @@ Item {
 
         Loader {
             id: loader
+            objectName: "loader"
             Layout.fillWidth: true
             Layout.fillHeight: true
             source: root.currentSource === "" ? mainScreenUrl : root.currentSource
+
+            onLoaded: {
+            if (root.pendingParams && item) {
+                for (var k in root.pendingParams) {
+                    try { item[k] = root.pendingParams[k]; } catch(e) { console.warn(e); }
+                }
+            }
+        }
         }
     }
 
     // Backstack for navigation (simplified)
     property var history: []
 
-    function loadScreen(url, params) {
-        if (currentSource !== "") {
-            history.push(currentSource)
-        }
-        currentSource = url
-        loader.setSource(url)
+    property var pendingParams: null
 
-        // Set context properties on the loader item after it's loaded
-        loader.item && params && Object.keys(params).forEach(function(key) {
-            loader.item[key] = params[key]
-        })
+    function loadScreen(url, params) {
+        pendingParams = params || {};
+        loader.setSource(url);
     }
 
     function goBack() {
