@@ -1,91 +1,71 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
 
 Item {
     id: root
     objectName: "root"
     anchors.fill: parent
 
-    // URLs for screens
-    readonly property url mainScreenUrl: "MainScreen.qml"
-    readonly property url childScreenUrl: "ChildScreen.qml"
-
-    // Track current screen URL
-    property url currentSource: ""
-
-    signal backRequested()
-
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 0
-
-        // Header cu titlu și back button
-        Rectangle {
-            id: header
-            color: "#673ab7"
-            height: 50
-            Layout.fillWidth: true
-            Layout.preferredHeight: 50
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 10
-
-                Button {
-                    visible: root.currentSource !== "" && root.currentSource !== mainScreenUrl
-                    text: "\u25C0 Back"
-                    onClicked: root.backRequested()
-                    background: Rectangle { color: "transparent" }
-                    font.pixelSize: 16
-                    Layout.preferredWidth: 80
-                }
-
-                Label {
-                    text: currentSource === "" || currentSource === mainScreenUrl ? "Conversational" : "Edit Program"
-                    color: "white"
-                    font.pixelSize: 20
-                    font.bold: true
-                    verticalAlignment: Label.AlignVCenter
-                    Layout.fillWidth: true
-                }
-            }
-        }
-
-        Loader {
-            id: loader
-            objectName: "loader"
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            source: root.currentSource === "" ? mainScreenUrl : root.currentSource
-
-            onLoaded: {
-            if (root.pendingParams && item) {
-                for (var k in root.pendingParams) {
-                    try { item[k] = root.pendingParams[k]; } catch(e) { console.warn(e); }
-                }
-            }
-        }
-        }
-    }
-
-    // Backstack for navigation (simplified)
+    // Navigation state (stack of { url, params })
     property var history: []
+    property string currentSource: ""
+    property var _currentParams: ({})     // last applied params for currentSource
+    property var _pendingParams: null     // params to apply after Loader creates its item
 
-    property var pendingParams: null
+    function canGoBack() { return history.length > 0 }
 
+    // Push a new screen (store the current screen state in history)
     function loadScreen(url, params) {
-        pendingParams = params || {};
-        loader.setSource(url);
+        if (currentSource !== "" && loader.item) {
+            history.push({ url: currentSource, params: _currentParams })
+        }
+        currentSource = url
+        _currentParams = params || {}
+        _pendingParams = _currentParams
+        loader.setSource(url) // Qt5-safe; we apply params in onLoaded
     }
 
+    // Pop last screen and restore its params
     function goBack() {
-        if (history.length > 0) {
-            currentSource = history.pop()
-            loader.setSource(currentSource)
+        if (!canGoBack())
+            return
+        var state = history.pop()
+        currentSource = state.url
+        _currentParams = state.params || {}
+        _pendingParams = _currentParams
+        loader.setSource(state.url)
+    }
+
+    Loader {
+        id: loader
+        objectName: "loader"
+        anchors.fill: parent
+
+        onLoaded: {
+            if (!item)
+                return
+
+            // 1) Apply captured params (from loadScreen/goBack)
+            if (root._pendingParams) {
+                for (var k in root._pendingParams) {
+                    try { item[k] = root._pendingParams[k] } catch (e) { console.warn(e) }
+                }
+            }
+
+            // 2) Auto-inject global programsModel if screen exposes it but it's missing
+            try {
+                if (item.hasOwnProperty("programsModel") && !item.programsModel && typeof programsModel !== "undefined") {
+                    item.programsModel = programsModel
+                    // keep it in current params for future pushes
+                    root._currentParams.programsModel = programsModel
+                }
+            } catch (e) { console.warn(e) }
+
+            // 3) Back visibility based on history (if the screen supports it)
+            if (item.hasOwnProperty("showBack")) {
+                item.showBack = root.canGoBack()
+                root._currentParams.showBack = item.showBack
+            }
         }
     }
-
-    onBackRequested: goBack()
 }

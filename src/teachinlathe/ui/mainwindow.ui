@@ -2044,10 +2044,10 @@ QCheckBox:disabled {
             <widget class="ConversationalQml" name="conversationalqml">
              <property name="geometry">
               <rect>
-               <x>40</x>
-               <y>35</y>
-               <width>1081</width>
-               <height>806</height>
+               <x>5</x>
+               <y>5</y>
+               <width>1896</width>
+               <height>976</height>
               </rect>
              </property>
             </widget>

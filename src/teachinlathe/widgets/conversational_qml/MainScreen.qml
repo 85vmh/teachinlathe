@@ -1,159 +1,258 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import QtQuick.Controls.Material 2.15
 
 Item {
-    id: mainScreen
-
-    // Column widths constants
-    readonly property int colWidthIndex: 30
-    readonly property int colWidthProgramName: 300
-    readonly property int colWidthCreationDate: 150
-    readonly property int colWidthLastEditDate: 150
-    readonly property int colWidthActions: 150
-
-    // Style colors - defined here
-    readonly property color colorBackgroundEven: "#ffffff"  // white
-    readonly property color colorBackgroundOdd: "#e6e6e6"   // light gray
-    readonly property color colorColumnSeparator: "#c0c0c0"
-    readonly property color colorTextPrimary: "#212121"
-    readonly property color colorTextSecondary: "#555555"
-    readonly property color colorAccent: "#673ab7"  // deep purple
-
-    readonly property int fontSizeHeader: 18
-    readonly property int fontSizeRow: 14
-    readonly property int rowHeight: 60
-
-    signal editProgramRequested(var program)
-    signal addNewProgramRequested()
-    signal deleteProgramRequested(var program)
-
-    width: parent ? parent.width : 600
-    height: parent ? parent.height : 400
-
-    property string title: "Program List"
+    id: main
+    objectName: "mainScreen"
 
     property var programsModel
+    property bool showBack: false
+    signal backRequested()
+    signal addNewProgramRequested()
+    signal editProgramRequested(var program)
+
+    anchors.fill: parent
+
+    // Column width constants
+    readonly property int colIndexW: 30
+    readonly property int colNameW: 300
+    readonly property int colCreatedW: 200
+    readonly property int colLastEditW: 200
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
-        spacing: 12
+        spacing: 8
 
-        // Header row with column separators
         RowLayout {
-            spacing: 0
             Layout.fillWidth: true
-            height: mainScreen.rowHeight
+            spacing: 8
 
-            // # column
-            Rectangle {
-                width: mainScreen.colWidthIndex
-                height: parent.height
-                color: "transparent"
-                Label {
-                    anchors.centerIn: parent
-                    text: "#"
-                    font.bold: true
-                    font.pixelSize: mainScreen.fontSizeHeader
-                    color: mainScreen.colorTextPrimary
-                }
+            Button {
+                text: "Back"
+                visible: main.showBack
+                onClicked: main.backRequested()
             }
-            Rectangle { width: 1; height: parent.height; color: mainScreen.colorColumnSeparator }
 
-            // Program Name
-            Rectangle {
-                width: mainScreen.colWidthProgramName
-                height: parent.height
-                color: "transparent"
-                Label {
-                    anchors.centerIn: parent
-                    text: "Program Name"
-                    font.bold: true
-                    font.pixelSize: mainScreen.fontSizeHeader
-                    color: mainScreen.colorTextPrimary
-                }
+            Label {
+                text: "Programs"
+                font.pixelSize: 22
+                font.bold: true
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
             }
-            Rectangle { width: 1; height: parent.height; color: mainScreen.colorColumnSeparator }
 
-            // Creation Date
-            Rectangle {
-                width: mainScreen.colWidthCreationDate
-                height: parent.height
-                color: "transparent"
-                Label {
-                    anchors.centerIn: parent
-                    text: "Created"
-                    font.bold: true
-                    font.pixelSize: mainScreen.fontSizeHeader
-                    color: mainScreen.colorTextPrimary
-                }
-            }
-            Rectangle { width: 1; height: parent.height; color: mainScreen.colorColumnSeparator }
-
-            // Last Edit Date
-            Rectangle {
-                width: mainScreen.colWidthLastEditDate
-                height: parent.height
-                color: "transparent"
-                Label {
-                    anchors.centerIn: parent
-                    text: "Last Edited"
-                    font.bold: true
-                    font.pixelSize: mainScreen.fontSizeHeader
-                    color: mainScreen.colorTextPrimary
-                }
-            }
-            Rectangle { width: 1; height: parent.height; color: mainScreen.colorColumnSeparator }
-
-            // Actions
-            Rectangle {
-                width: mainScreen.colWidthActions
-                height: parent.height
-                color: "transparent"
-                Label {
-                    anchors.centerIn: parent
-                    text: "Actions"
-                    font.bold: true
-                    font.pixelSize: mainScreen.fontSizeHeader
-                    color: mainScreen.colorTextPrimary
-                }
+            Button {
+                text: "Add"
+                onClicked: main.addNewProgramRequested()
             }
         }
 
-        // List of programs
-        ListView {
-            id: listView
+        Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            model: programsModel
-            delegate: Rectangle {
-                height: 40
-                width: listView.width
-                color: index % 2 === 0 ? "#ffffff" : "#e6e6e6"
+            color: "#f5f5f5"
+            radius: 6
+            border.color: "#ccc"
+            border.width: 1
 
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 4
+
+                // HEADER (fixed 40px)
                 RowLayout {
-                    anchors.fill: parent
-                    spacing: 10
-                    Label { text: (index + 1).toString(); width: 30 }
-                    Label { text: programName; width: 200 }
-                    Label { text: creationDate; width: 120 }
-                    Label { text: lastEditDate; width: 120 }
+                    Layout.fillWidth: true
+                    Layout.minimumHeight: 40
+                    Layout.preferredHeight: 40
+                    Layout.maximumHeight: 40
+                    spacing: 0
+
+                    Label {
+                        text: "#"
+                        Layout.minimumWidth: main.colIndexW
+                        Layout.preferredWidth: main.colIndexW
+                        Layout.maximumWidth: main.colIndexW
+                        leftPadding: 8
+                        font.bold: true
+                        verticalAlignment: Text.AlignVCenter
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+
+                    Label {
+                        text: "Name"
+                        Layout.minimumWidth: main.colNameW
+                        Layout.preferredWidth: main.colNameW
+                        Layout.maximumWidth: main.colNameW
+                        leftPadding: 8
+                        font.bold: true
+                        elide: Text.ElideRight
+                        verticalAlignment: Text.AlignVCenter
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+
+                    Label {
+                        text: "Created"
+                        Layout.minimumWidth: main.colCreatedW
+                        Layout.preferredWidth: main.colCreatedW
+                        Layout.maximumWidth: main.colCreatedW
+                        leftPadding: 8
+                        font.bold: true
+                        verticalAlignment: Text.AlignVCenter
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+
+                    Label {
+                        text: "Last Edit"
+                        Layout.minimumWidth: main.colLastEditW
+                        Layout.preferredWidth: main.colLastEditW
+                        Layout.maximumWidth: main.colLastEditW
+                        leftPadding: 8
+                        font.bold: true
+                        verticalAlignment: Text.AlignVCenter
+                        Layout.alignment: Qt.AlignVCenter
+                        height: parent.height
+                    }
+
+                    Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+
+                    Label {
+                        text: "Actions"
+                        Layout.fillWidth: true
+                        leftPadding: 8
+                        font.bold: true
+                        verticalAlignment: Text.AlignVCenter
+                        Layout.alignment: Qt.AlignVCenter
+                        height: parent.height
+                    }
+                }
+
+                // LIST
+                ListView {
+                    id: list
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    model: main.programsModel || programsModel
+
+                    delegate: Rectangle {
+                        width: ListView.view ? ListView.view.width : 400
+                        height: 60
+                        radius: 0
+
+                        // alternating background (unchanged on selection)
+                        color: (index % 2 === 0 ? "#f0f0f0" : "#e5e5e5")
+
+                        // only a 1px light-blue border when selected
+                        border.width: ListView.isCurrentItem ? 1 : 0
+                        border.color: "#8ec5ff"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            spacing: 0
+
+                            // # column
+                            Label {
+                                text: (index + 1) + "."
+                                Layout.minimumWidth: main.colIndexW
+                                Layout.preferredWidth: main.colIndexW
+                                Layout.maximumWidth: main.colIndexW
+                                leftPadding: 8
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.alignment: Qt.AlignVCenter
+                                height: parent.height
+                            }
+
+                            Rectangle { Layout.preferredWidth: 1; height: parent.height; color: "#cccccc" }
+
+                            // Name column
+                            Label {
+                                text: programName
+                                Layout.minimumWidth: main.colNameW
+                                Layout.preferredWidth: main.colNameW
+                                Layout.maximumWidth: main.colNameW
+                                leftPadding: 8
+                                elide: Text.ElideRight
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.alignment: Qt.AlignVCenter
+                                height: parent.height
+                            }
+
+                            Rectangle { Layout.preferredWidth: 1; height: parent.height; color: "#cccccc" }
+
+                            // Created column
+                            Label {
+                                text: creationDate
+                                Layout.minimumWidth: main.colCreatedW
+                                Layout.preferredWidth: main.colCreatedW
+                                Layout.maximumWidth: main.colCreatedW
+                                leftPadding: 8
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.alignment: Qt.AlignVCenter
+                                height: parent.height
+                            }
+
+                            Rectangle { Layout.preferredWidth: 1; height: parent.height; color: "#cccccc" }
+
+                            // Last Edit column
+                            Label {
+                                text: lastEditDate
+                                Layout.minimumWidth: main.colLastEditW
+                                Layout.preferredWidth: main.colLastEditW
+                                Layout.maximumWidth: main.colLastEditW
+                                leftPadding: 8
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.alignment: Qt.AlignVCenter
+                                height: parent.height
+                            }
+
+                            Rectangle { Layout.preferredWidth: 1; height: parent.height; color: "#cccccc" }
+
+                            // Actions column (takes remaining space)
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+
+                                Row {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 8
+                                    spacing: 8
+
+                                    Button {
+                                        id: editButton
+                                        text: "Edit"
+                                        implicitHeight: 40
+                                        implicitWidth: 84
+                                        onClicked: {
+                                            var prog = (typeof model !== "undefined" && model.program !== undefined)
+                                                       ? model.program
+                                                       : {
+                                                           programName: programName,
+                                                           creationDate: creationDate,
+                                                           lastEditDate: lastEditDate,
+                                                           operations: []
+                                                         }
+                                            main.editProgramRequested(prog)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        TapHandler { onTapped: list.currentIndex = index }
+                    }
                 }
             }
         }
-    }
-
-    // Floating Action Button (FAB) to add new program
-    Button {
-        id: fabAdd
-        anchors.margins: 24
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        icon.name: "add"
-        Material.accent: mainScreen.colorAccent
-        font.pixelSize: mainScreen.fontSizeHeader
-        onClicked: mainScreen.addNewProgramRequested()
     }
 }
