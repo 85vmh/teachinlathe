@@ -1,8 +1,8 @@
 import json
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Any, Optional
-from typing import Type
+from typing import List, Dict, Any, Optional, Type
+
 
 @dataclass
 class Workpiece:
@@ -51,16 +51,23 @@ class Header:
 class Operation:
     order: int
     type: str
+    generate_gcode: bool
+    is_optional_block: bool
 
     @classmethod
     def from_dict(cls, data: dict) -> "Operation":
-        """ Factory method to create the correct subclass instance from dict """
         op_type = data.get("type")
         if op_type not in operation_types:
             raise ValueError(f"Unknown operation type: {op_type}")
+        return operation_types[op_type].from_dict(data)
 
-        # Instantiate the correct subclass based on type
-        return operation_types[op_type](**data)
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "order": self.order,
+            "type": self.type,
+            "generate_gcode": self.generate_gcode,
+            "is_optional_block": self.is_optional_block
+        }
 
 
 @dataclass
@@ -73,14 +80,14 @@ class ToolChangeDetails:
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "ToolChangeDetails":
-        return ToolChangeDetails(**data)  # ✅ Convertim dict direct în obiect
+        return ToolChangeDetails(**data)
 
     def to_dict(self) -> Dict[str, Any]:
-        return self.__dict__  # ✅ Convertim obiect în dict
+        return self.__dict__
 
 
 @dataclass
-class SetTool(Operation):
+class ChangeTool(Operation):
     tool_no: int
     tool_orientation: int
     back_angle: int
@@ -88,29 +95,29 @@ class SetTool(Operation):
     toolchange_details: ToolChangeDetails
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "SetTool":
-        return SetTool(
+    def from_dict(data: Dict[str, Any]) -> "ChangeTool":
+        return ChangeTool(
             order=data["order"],
             type=data["type"],
+            generate_gcode=data["generate_gcode"],
+            is_optional_block=data["is_optional_block"],
             tool_no=data["tool_no"],
             tool_orientation=data["tool_orientation"],
             back_angle=data["back_angle"],
             front_angle=data["front_angle"],
-            toolchange_details=ToolChangeDetails.from_dict(data["toolchange_details"])  # 🔹 Convertim corect aici
+            toolchange_details=ToolChangeDetails.from_dict(data["toolchange_details"])
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "order": self.order,
-            "type": self.type,
+        base = super().to_dict()
+        base.update({
             "tool_no": self.tool_no,
             "tool_orientation": self.tool_orientation,
             "back_angle": self.back_angle,
             "front_angle": self.front_angle,
-            "toolchange_details": self.toolchange_details.to_dict()  # 🔹 Convertim corect înapoi în dict
-        }
-
-
+            "toolchange_details": self.toolchange_details.to_dict()
+        })
+        return base
 
 
 @dataclass
@@ -126,11 +133,43 @@ class Facing(Operation):
     z_end: float
     z_end_becomes_new_z0: bool
 
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Facing":
+        return Facing(**data)
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        base.update({
+            "css_value": self.css_value,
+            "max_speed": self.max_speed,
+            "feed_rate": self.feed_rate,
+            "doc": self.doc,
+            "retract": self.retract,
+            "x_start": self.x_start,
+            "z_start": self.z_start,
+            "x_end": self.x_end,
+            "z_end": self.z_end,
+            "z_end_becomes_new_z0": self.z_end_becomes_new_z0
+        })
+        return base
+
 
 @dataclass
 class DefineProfile(Operation):
     profileId: int
     profile_primitives: List[Dict[str, Any]]
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "DefineProfile":
+        return DefineProfile(**data)
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        base.update({
+            "profileId": self.profileId,
+            "profile_primitives": self.profile_primitives
+        })
+        return base
 
 
 class Strategy(Enum):
@@ -149,44 +188,34 @@ class Profiling(Operation):
     z_start: float
     doc: float
     retract: float
-    stock_to_leave: Optional[Dict[str, float]] = field(default=None)  # Nullable for Finishing
-    spring_passes: Optional[int] = field(default=None)  # Nullable for Roughing
+    stock_to_leave: Optional[Dict[str, float]] = field(default=None)
+    spring_passes: Optional[int] = field(default=None)
 
     @classmethod
     def from_dict(cls, data: dict) -> "Profiling":
-        """Convert dict to Profiling object, handling nullable fields."""
         return cls(
-            css_value=data["css_value"],
-            max_speed=data["max_speed"],
-            feed_rate=data["feed_rate"],
-            profileId=data["profileId"],
-            strategy=Strategy[data["strategy"]],  # Ensure enum parsing
-            x_start=data["x_start"],
-            z_start=data["z_start"],
-            doc=data["doc"],
-            retract=data["retract"],
-            stock_to_leave=data.get("stock_to_leave"),  # Handles missing field
-            spring_passes=data.get("spring_passes")  # Handles missing field
+            **{
+                **data,
+                "strategy": Strategy[data["strategy"].upper()]
+            }
         )
 
-    def to_dict(self) -> Dict[str, any]:
-        """Convert Profiling object to dictionary, excluding None values."""
-        data = {
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        base.update({
             "css_value": self.css_value,
             "max_speed": self.max_speed,
             "feed_rate": self.feed_rate,
             "profileId": self.profileId,
-            "strategy": self.strategy.name,  # Convert enum to string
+            "strategy": self.strategy.value,
             "x_start": self.x_start,
             "z_start": self.z_start,
             "doc": self.doc,
             "retract": self.retract,
-        }
-        if self.stock_to_leave is not None:
-            data["stock_to_leave"] = self.stock_to_leave
-        if self.spring_passes is not None:
-            data["spring_passes"] = self.spring_passes
-        return data
+            "stock_to_leave": self.stock_to_leave,
+            "spring_passes": self.spring_passes
+        })
+        return base
 
 
 @dataclass
@@ -202,12 +231,77 @@ class OdThread(Operation):
     retract: float
     spring_passes: int
 
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "OdThread":
+        return OdThread(**data)
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        base.update({
+            "spindle_rpm": self.spindle_rpm,
+            "thread_type": self.thread_type,
+            "pitch": self.pitch,
+            "major_diameter": self.major_diameter,
+            "minor_diameter": self.minor_diameter,
+            "z_start": self.z_start,
+            "z_end": self.z_end,
+            "initial_doc": self.initial_doc,
+            "retract": self.retract,
+            "spring_passes": self.spring_passes
+        })
+        return base
+
+
+@dataclass
+class Drilling(Operation):
+    spindle_rpm: int
+    feed_rate: float
+    z_start: float
+    z_end: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Drilling":
+        return Drilling(**data)
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        base.update({
+            "spindle_rpm": self.spindle_rpm,
+            "feed_rate": self.feed_rate,
+            "z_start": self.z_start,
+            "z_end": self.z_end
+        })
+        return base
+
+
+@dataclass
+class Tapping(Operation):
+    spindle_rpm: int
+    pitch: float
+    z_start: float
+    z_end: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Tapping":
+        return Tapping(**data)
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        base.update({
+            "spindle_rpm": self.spindle_rpm,
+            "pitch": self.pitch,
+            "z_start": self.z_start,
+            "z_end": self.z_end
+        })
+        return base
+
 
 @dataclass
 class Program:
     id: str
     header: Header
     operations: List[Operation]
+    filename: Optional[str] = field(default=None, repr=False, compare=False)
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Program":
@@ -216,7 +310,11 @@ class Program:
         return Program(id=data["id"], header=header, operations=operations)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"id": self.id, "header": self.header.to_dict(), "operations": [op.to_dict() for op in self.operations]}
+        return {
+            "id": self.id,
+            "header": self.header.to_dict(),
+            "operations": [op.to_dict() for op in self.operations]
+        }
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), indent=4)
@@ -226,10 +324,22 @@ class Program:
         return Program.from_dict(json.loads(json_str))
 
 
-operation_types: dict[str, Type["Operation"]] = {
-    "setTool": SetTool,
+operation_types: dict[str, Type[Operation]] = {
+    "changeTool": ChangeTool,
     "facing": Facing,
     "define_profile": DefineProfile,
     "profiling": Profiling,
-    "odThread": OdThread
+    "odThread": OdThread,
+    "drilling": Drilling,
+    "tapping": Tapping
+}
+
+display_names: dict[str, str] = {
+    "changeTool": "Tool Change",
+    "facing": "Facing",
+    "define_profile": "Define Profile",
+    "profiling": "Profiling",
+    "odThread": "OD Thread",
+    "drilling": "Drilling",
+    "tapping": "Tapping"
 }

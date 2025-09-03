@@ -143,9 +143,9 @@ class QuickCycles(QWidget):
             self.labelThreadLength.setText(str(round(abs(float(self.labelZEnd.text()) - self.currentZValue), 1)))
 
     def onTaskModeChanged(self, mode):
-        print("----quick cycles Task mode changed----")
-        print(f"Mode: {mode}")
-        print(f"Current index: {self.stackedWidget.currentIndex()}")
+        # print("----quick cycles Task mode changed----")
+        # print(f"Task Mode: {mode}")
+        # print(f"Current index: {self.stackedWidget.currentIndex()}")
         if (self.stackedWidget.currentIndex() in [Page.THREADING_3.index, Page.THREADING_5.index]) and mode == 1:
             print("----Threading finished----")
             self.switchPage(Page.THREADING_4)

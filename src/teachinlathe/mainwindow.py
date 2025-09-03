@@ -4,7 +4,9 @@ import tempfile
 from enum import Enum
 
 import linuxcnc
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QSignalBlocker
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QPushButton
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.actions.program_actions import load as loadProgram
 from qtpyvcp.plugins import getPlugin
@@ -17,12 +19,14 @@ from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.widgets.FrameAnimator import FrameAnimator
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
+import teachinlathe_rc
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
 from PyQt5.QtCore import Qt
 
 INFO = Info()
 STATUS = getPlugin('status')
+TOOLTABLE = getPlugin('tooltable')
 LINUXCNC_CMD = linuxcnc.command()
 STAT = linuxcnc.stat()
 PROGRAM_PREFIX = INFO.getProgramPrefix()
@@ -34,6 +38,7 @@ class MainTabs(Enum):
     PROGRAMS = 2
     TOOLS_OFFSETS = 3
     MACHINE_SETTINGS = 4
+    CONV_KOTLIN = 5
 
 
 class ProgramTabs(Enum):
@@ -61,8 +66,8 @@ class MyMainWindow(VCPMainWindow):
         self.lastSpindleRpm = 0
         self.isPowerFeeding = False
         self.isFirstGear = False
-        self.xMpgEnabled = True
-        self.zMpgEnabled = True
+        self.xMpgLastValue = True
+        self.zMpgLastValue = True
         self.current_spindle_override = 0
         self.current_feed_override = 0
         self.current_program = None
@@ -81,8 +86,7 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsPowerFeeding, self.onPowerFeedingChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsFirstGear, self.onSpindleFirstGearChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsXIsEnabled, self.onHandwheelXEnabledChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsZIsEnabled, self.onHandwheelZEnabledChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsAllowed, self.onHandwheelAllowedChanged)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = True
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = True
         self.onSpindleFirstGearChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
@@ -101,6 +105,10 @@ class MyMainWindow(VCPMainWindow):
         self.onTaskModeChanged(STATUS.task_mode)
         STATUS.task_mode.signal.connect(self.onTaskModeChanged)
 
+        TOOLTABLE.current_tool.signal.connect(self.onCurrentToolChanged)
+        self.latheToolTable.toolEditClicked.connect(self.onToolEditClicked)
+        self.latheToolTable.toolAddClicked.connect(self.onToolAddClicked)
+
         self.handle_spindle_mode(self.getSpindleModeIndex)
 
         # rpm is a float that fluctuates a lot, so debounce it
@@ -111,8 +119,9 @@ class MyMainWindow(VCPMainWindow):
 
         self.btnLoadProgram.clicked.connect(self.loadProgram)
         self.btnBackToPrograms.clicked.connect(self.backToPrograms)
-        self.xMpgCheckbox.stateChanged.connect(self.toggleXMpgEnable)
-        self.zMpgCheckbox.stateChanged.connect(self.toggleZMpgEnable)
+
+        self.xMpgCheckbox.clicked.connect(self.toggleXMpgEnable)
+        self.zMpgCheckbox.clicked.connect(self.toggleZMpgEnable)
 
         self.inputFeed.settingName = 'smart_numpad.input-feed'
         self.inputFeed.initialize()
@@ -138,12 +147,42 @@ class MyMainWindow(VCPMainWindow):
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
         self.tabSpindleMode.currentChanged.connect(self.onSpindleModeChanged)
 
+        self.addEditToolWidget.onSaved.connect(self.onToolAddEditSaved)
+        self.addEditToolWidget.onCanceled.connect(self.onToolAddEditCanceled)
+
         QTimer.singleShot(0, self.afterUIInit)
         self.latheFixtures.onFixtureSelected.connect(self.onFixtureSelected)
         initial_fixture = self.fixture_repository.getCurrentFixture()
         if initial_fixture:
             print("Setup initial fixture: ", initial_fixture)
             self.onFixtureSelected(initial_fixture)
+
+    def onToolAddEditSaved(self):
+        print("onToolAddEditSaved")
+        self.innerToolsAndOffsets.setCurrentIndex(0)  # Switch to the offsets tab
+        self.latheToolTable.finishEditingTool()
+
+    def onToolAddEditCanceled(self):
+        print("onToolAddEditCanceled")
+        self.innerToolsAndOffsets.setCurrentIndex(0)  # Switch to the offsets tab
+        self.latheToolTable.finishEditingTool()
+
+    def onToolEditClicked(self, tool_data, tool_model, tool_no):
+        print("onToolEditClicked:", tool_no)
+        self.innerToolsAndOffsets.setCurrentIndex(1)  # Switch to the tool add/edit tab
+        self.addEditToolWidget.setEditToolData(tool_data, tool_model, tool_no)
+
+    def onToolAddClicked(self, tool_data, tool_model):
+        print("onToolAddClicked")
+        self.innerToolsAndOffsets.setCurrentIndex(1)
+        self.addEditToolWidget.setAddToolData(tool_data, tool_model)
+
+    def onCurrentToolChanged(self, current_tool):
+        print("--------Current tool changed to: ", current_tool)
+        tool_orientation = current_tool.get('Q', 1)
+        pixmap = QPixmap(":/images/lathe_control_point_{}.png".format(tool_orientation))
+        self.toolOrientation.setPixmap(pixmap)
+        self.toolOrientation.show()
 
     def onFixtureSelected(self, fixture):
         print("---Fixture selected: ", fixture)
@@ -205,9 +244,8 @@ class MyMainWindow(VCPMainWindow):
 
     def onCycleStopPressed(self, value):
         if self.mainSelectedTab == MainTabs.MANUAL_TURNING:
-            if self.checkBoxFeedAngle.isChecked() and value:
+            if self.latheJoystick.isRotated() and value:
                 print("Set taper turning off when cycle stop pressed")
-                self.checkBoxFeedAngle.setChecked(False)
                 self.angleFeedToggled(False)
 
     def angleFeedToggled(self, value):
@@ -320,32 +358,28 @@ class MyMainWindow(VCPMainWindow):
             case 3:
                 print("----MDI mode")
 
-        # if STAT.task_mode == linuxcnc.MODE_MANUAL:
-        #     print("enabled")
-        #     self.xMpgCheckbox.setEnabled(True)
-        #     self.zMpgCheckbox.setEnabled(True)
-        # else:
-        #     print("disabled")
-        #     self.xMpgCheckbox.setEnabled(False)
-        #     self.zMpgCheckbox.setEnabled(False)
+    def onHandwheelAllowedChanged(self, allowed: bool):
+        print(f"Handwheel allowed changed to: {allowed}")
+        self.xMpgCheckbox.setEnabled(allowed)
+        self.zMpgCheckbox.setEnabled(allowed)
+        if allowed:
+            # Restore last known values
+            self.xMpgCheckbox.setChecked(self.xMpgLastValue)
+            self.zMpgCheckbox.setChecked(self.zMpgLastValue)
+        else:
+            # Force disable when not allowed
+            self.xMpgCheckbox.setChecked(False)
+            self.zMpgCheckbox.setChecked(False)
 
-    def onHandwheelXEnabledChanged(self, value):
-        print("onHandwheelXEnabledChanged from pin", value)
-        self.xMpgEnabled = value
-        self.xMpgCheckbox.setChecked(value)
+    def toggleXMpgEnable(self):
+        self.xMpgLastValue = self.xMpgCheckbox.isChecked()
+        print("toggle PinHandwheelsAppXEnable to:", self.xMpgLastValue)
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = self.xMpgLastValue
 
-    def onHandwheelZEnabledChanged(self, value):
-        print("onHandwheelZEnabledChanged from pin", value)
-        self.zMpgEnabled = value
-        self.zMpgCheckbox.setChecked(value)
-
-    def toggleXMpgEnable(self, value):
-        print("toggleXMpgEnable to pin", value)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = value
-
-    def toggleZMpgEnable(self, value):
-        print("toggleZMpgEnable to pin", value)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = value
+    def toggleZMpgEnable(self):
+        self.zMpgLastValue = self.xMpgCheckbox.isChecked()
+        print("toggle PinHandwheelsAppZEnable to:", self.zMpgLastValue)
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = self.zMpgLastValue
 
     def onXPrimaryDroClicked(self, value):
         print("onXPrimaryDroClicked", value)

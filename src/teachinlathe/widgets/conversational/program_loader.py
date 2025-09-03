@@ -25,6 +25,7 @@ def load_programs_from_folder(folder_path: str) -> List[Program]:
                 with open(file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     program = Program.from_dict(data)
+                    program.filename = filename
                     programs.append(program)
             except (json.JSONDecodeError, KeyError) as e:
                 print(f"Error loading {filename}: {e}")

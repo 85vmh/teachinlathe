@@ -18,6 +18,7 @@ LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
 STATUS = getPlugin('status')
 POSITION = getPlugin('position')
+FEED_DELAY = 0.3 # seconds
 
 
 def print_with_timestamp(message):
@@ -306,7 +307,7 @@ class ManualLathe:
         if self.startFeedingTimer is not None:
             self.startFeedingTimer.cancel()
 
-        self.startFeedingTimer = threading.Timer(0.3, self.startFeeding)  # Delay for 300ms
+        self.startFeedingTimer = threading.Timer(FEED_DELAY, self.startFeeding)  # Delay the start feed
         self.startFeedingTimer.start()
 
     def startFeeding(self):
@@ -346,8 +347,11 @@ class ManualLathe:
         #         print_with_timestamp("unhandled motion type is: " + STAT.motion_type)
 
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
+        currentValue = self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value
+        print("PinIsPowerFeeding: ", currentValue)
 
     def handleJoystickNeutral(self):
+        print("\n\n\n\n")
         print("handleJoystickNeutral")
         if self.startFeedingTimer is not None:
             self.startFeedingTimer.cancel()
@@ -368,13 +372,12 @@ class ManualLathe:
 
     def stopFeeding(self):
         if self.startFeedingTimer is not None:
-            print("timer was on, canceling")
+            print("Feed delay timer was on, canceling timer")
             self.startFeedingTimer.cancel()
 
         if self.joystickFunction == JoystickFunction.FEEDING:
-            print("stopFeeding")
+            print("Feeding was on, Stop Feeding")
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = False
-            print("set PinIsPowerFeeding to False")
             currentValue = self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value
             print("PinIsPowerFeeding: ", currentValue)
             self.joystickFunction = None
@@ -383,7 +386,7 @@ class ManualLathe:
 
     def startJogging(self):
         if self.stopFeeding():
-            time.sleep(0.2)  # Wait 100ms for the feed to stop before we start jogging
+            time.sleep(0.2)  # Wait 200ms for the feed to stop before we start jogging
 
         if self.joystickDirection is not None:
             jog_speed = float(SETTINGS.get('machine.jog.linear-speed').getValue())

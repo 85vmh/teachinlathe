@@ -14,7 +14,7 @@
             "diameter": 160,
             "units": "mm",
             "max_rpm": 3000,
-            "z_minus_limit": 100.0
+            "z_minus_limit": 0.0
         },
         {
             "fixture_index": 2,
@@ -23,7 +23,7 @@
             "diameter": 160,
             "units": "mm",
             "max_rpm": 3000,
-            "z_minus_limit": 130.0
+            "z_minus_limit": 0.0
         },
         {
             "fixture_index": 3,
