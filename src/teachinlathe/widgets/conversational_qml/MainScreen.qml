@@ -10,7 +10,7 @@ Item {
     property bool showBack: false
     signal backRequested()
     signal addNewProgramRequested()
-    signal editProgramRequested(var program)
+    signal editProgramRequested(var arg)   // will pass the row index (int)
 
     anchors.fill: parent
 
@@ -120,7 +120,6 @@ Item {
                         font.bold: true
                         verticalAlignment: Text.AlignVCenter
                         Layout.alignment: Qt.AlignVCenter
-                        height: parent.height
                     }
 
                     Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
@@ -132,7 +131,6 @@ Item {
                         font.bold: true
                         verticalAlignment: Text.AlignVCenter
                         Layout.alignment: Qt.AlignVCenter
-                        height: parent.height
                     }
                 }
 
@@ -160,7 +158,6 @@ Item {
                             anchors.fill: parent
                             spacing: 0
 
-                            // # column
                             Label {
                                 text: (index + 1) + "."
                                 Layout.minimumWidth: main.colIndexW
@@ -169,12 +166,10 @@ Item {
                                 leftPadding: 8
                                 verticalAlignment: Text.AlignVCenter
                                 Layout.alignment: Qt.AlignVCenter
-                                height: parent.height
                             }
 
-                            Rectangle { Layout.preferredWidth: 1; height: parent.height; color: "#cccccc" }
+                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
 
-                            // Name column
                             Label {
                                 text: programName
                                 Layout.minimumWidth: main.colNameW
@@ -184,26 +179,22 @@ Item {
                                 elide: Text.ElideRight
                                 verticalAlignment: Text.AlignVCenter
                                 Layout.alignment: Qt.AlignVCenter
-                                height: parent.height
                             }
 
-                            Rectangle { Layout.preferredWidth: 1; height: parent.height; color: "#cccccc" }
+                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
 
-                            // Created column
                             Label {
-                                text: lastEditDate
+                                text: ""  // created date if you have it in the model
                                 Layout.minimumWidth: main.colCreatedW
                                 Layout.preferredWidth: main.colCreatedW
                                 Layout.maximumWidth: main.colCreatedW
                                 leftPadding: 8
                                 verticalAlignment: Text.AlignVCenter
                                 Layout.alignment: Qt.AlignVCenter
-                                height: parent.height
                             }
 
-                            Rectangle { Layout.preferredWidth: 1; height: parent.height; color: "#cccccc" }
+                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
 
-                            // Last Edit column
                             Label {
                                 text: lastEditDate
                                 Layout.minimumWidth: main.colLastEditW
@@ -212,12 +203,10 @@ Item {
                                 leftPadding: 8
                                 verticalAlignment: Text.AlignVCenter
                                 Layout.alignment: Qt.AlignVCenter
-                                height: parent.height
                             }
 
-                            Rectangle { Layout.preferredWidth: 1; height: parent.height; color: "#cccccc" }
+                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
 
-                            // Actions column (takes remaining space)
                             Item {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
@@ -229,21 +218,10 @@ Item {
                                     spacing: 8
 
                                     Button {
-                                        id: editButton
                                         text: "Edit"
                                         implicitHeight: 40
                                         implicitWidth: 84
-                                        onClicked: {
-                                            var prog = (typeof model !== "undefined" && model.program !== undefined)
-                                                       ? model.program
-                                                       : {
-                                                           programName: programName,
-                                                           lastEditDate: lastEditDate,
-                                                           lastEditDate: lastEditDate,
-                                                           operations: []
-                                                         }
-                                            main.editProgramRequested(prog)
-                                        }
+                                        onClicked: main.editProgramRequested(index)   // <— pass row index
                                     }
                                 }
                             }
