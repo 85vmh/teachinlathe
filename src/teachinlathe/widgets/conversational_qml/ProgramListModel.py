@@ -3,8 +3,7 @@ from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant
 
 class ProgramListModel(QAbstractListModel):
     ProgramNameRole = Qt.UserRole + 1
-    CreationDateRole = Qt.UserRole + 2
-    LastEditDateRole = Qt.UserRole + 3
+    LastEditDateRole = Qt.UserRole + 2
 
     def __init__(self, programs=None):
         super().__init__()
@@ -23,16 +22,13 @@ class ProgramListModel(QAbstractListModel):
             return QVariant()
         program = self._programs[index.row()]
         if role == self.ProgramNameRole:
-            return program.programName
-        if role == self.CreationDateRole:
-            return program.creationDate
+            return program.header.name
         if role == self.LastEditDateRole:
-            return program.lastEditDate
+            return program.header.last_edit
         return QVariant()
 
     def roleNames(self):
         return {
             self.ProgramNameRole: b'programName',
-            self.CreationDateRole: b'creationDate',
             self.LastEditDateRole: b'lastEditDate',
         }

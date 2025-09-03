@@ -38,7 +38,6 @@ class MainTabs(Enum):
     PROGRAMS = 2
     TOOLS_OFFSETS = 3
     MACHINE_SETTINGS = 4
-    CONV_KOTLIN = 5
 
 
 class ProgramTabs(Enum):

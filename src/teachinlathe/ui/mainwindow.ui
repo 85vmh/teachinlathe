@@ -549,7 +549,7 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
             <enum>QTabWidget::South</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="manualTurningTab">
             <attribute name="title">
@@ -2300,13 +2300,13 @@ QCheckBox:disabled {
             <attribute name="title">
              <string>Conversational</string>
             </attribute>
-            <widget class="Conversational" name="conversational">
+            <widget class="ConversationalQml" name="conversationalqml">
              <property name="geometry">
               <rect>
-               <x>5</x>
-               <y>5</y>
-               <width>1901</width>
-               <height>981</height>
+               <x>10</x>
+               <y>10</y>
+               <width>1896</width>
+               <height>951</height>
               </rect>
              </property>
             </widget>
@@ -6072,9 +6072,9 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <header>teachinlathe.widgets.add_edit_tool.add_edit_tool</header>
   </customwidget>
   <customwidget>
-   <class>Conversational</class>
-   <extends>QWidget</extends>
-   <header>teachinlathe.widgets.conversational.conversational</header>
+   <class>ConversationalQml</class>
+   <extends>QQuickWidget</extends>
+   <header>teachinlathe.widgets.conversational_qml.ConversationalQml</header>
   </customwidget>
   <customwidget>
    <class>LatheFixturesCards</class>
@@ -6100,6 +6100,11 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <class>TeachInLatheDro</class>
    <extends>QWidget</extends>
    <header>teachinlathe.widgets.teachin_lathe_dro</header>
+  </customwidget>
+  <customwidget>
+   <class>QQuickWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">QtQuickWidgets/QQuickWidget</header>
   </customwidget>
  </customwidgets>
  <resources>

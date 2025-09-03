@@ -191,7 +191,7 @@ Item {
 
                             // Created column
                             Label {
-                                text: creationDate
+                                text: lastEditDate
                                 Layout.minimumWidth: main.colCreatedW
                                 Layout.preferredWidth: main.colCreatedW
                                 Layout.maximumWidth: main.colCreatedW
@@ -238,7 +238,7 @@ Item {
                                                        ? model.program
                                                        : {
                                                            programName: programName,
-                                                           creationDate: creationDate,
+                                                           lastEditDate: lastEditDate,
                                                            lastEditDate: lastEditDate,
                                                            operations: []
                                                          }

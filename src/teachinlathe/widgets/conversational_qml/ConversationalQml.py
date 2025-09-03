@@ -3,27 +3,21 @@ from PyQt5.QtCore import QUrl, QObject
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 
-from teachinlathe.widgets.conversational_qml.Program import Program
+from teachinlathe.widgets.conversational.program_loader import load_programs_from_folder
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
-
-programs_list = [
-    Program("Drill Hole", "2025-05-01", "2025-05-10"),
-    Program("Lathe Turn", "2025-04-20", "2025-05-08"),
-    Program("Lathe Groove", "2025-04-20", "2025-05-08"),
-    Program("Lathe Parting", "2025-04-20", "2025-05-08"),
-    Program("Piesa Bogdan", "2025-04-20", "2025-05-08"),
-    Program("Cut Groove", "2025-03-15", "2025-04-12"),
-]
 
 class ConversationalQml(QQuickWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        self.folder_path = "/home/cnc/Work/teachinlathe/conversational"
+        self.current_program = None
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        programs = load_programs_from_folder(self.folder_path)
 
         # Put the model in QML context before loading Root.qml
-        self.model = ProgramListModel(programs_list)
+        self.model = ProgramListModel(programs)
         self.engine().rootContext().setContextProperty("programsModel", self.model)
 
         root_path = os.path.join(self.base_dir, "Root.qml")
