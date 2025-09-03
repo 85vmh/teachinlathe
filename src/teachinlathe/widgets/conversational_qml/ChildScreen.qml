@@ -22,8 +22,11 @@ Item {
     signal detailsRequested(int index)                 // ask Python for full op dict
     signal updateToolChange(int index, var payload)    // send edited ToolChange back to Python
     signal updateFacing(int index, var payload)
+    signal updateProfiling(int index, var payload)
+
     signal teachXRequested(int index)
     signal teachZRequested(int index)
+    signal openNumPadRequested(var field)
 
     width: parent ? parent.width : 1000
     height: parent ? parent.height : 700
@@ -49,6 +52,8 @@ Item {
             detailsLoader.source = "ToolChangeDetailsView.qml"
         } else if (data.type === "facing") {
             detailsLoader.source = "FacingDetailsView.qml"
+        } else if (data.type === "profiling") {
+            detailsLoader.source = "ProfilingDetailsView.qml"
         } else {
             detailsLoader.source = ""   // TODO: set other operation detail QMLs here
         }
@@ -313,6 +318,19 @@ Item {
                                 }
                             })
                         }
+
+                        if (item.openNumPadRequested)
+                            item.openNumPadRequested.connect(function(field) { operationEditor.openNumPadRequested(field) })
+
+                        if (item.saveRequested) {
+                            item.saveRequested.connect(function(updated) {
+                                if (!updated || !updated.payload) return
+                                if (updated.payload.type === "profiling" && operationEditor.updateProfiling)
+                                    operationEditor.updateProfiling(updated.index, updated.payload)
+                            })
+                        }
+                        if (item.openNumPadRequested)
+                            item.openNumPadRequested.connect(function(field){ operationEditor.openNumPadRequested(field) })
 
                         // Optional teach hooks (present on ToolChangeDetailsView)
                         if (item.teachXRequested)

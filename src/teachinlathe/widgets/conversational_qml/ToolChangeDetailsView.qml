@@ -2,21 +2,23 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import "."  // for NumpadField.qml
 
 Item {
     id: root
     anchors.fill: parent
 
     // Public API: the details pane must implement these
-    // QML will call applyData(index, opDict) to populate, and we emit saveRequested(updated)
+    // Parent will call applyData(index, opDict) to populate, and we emit saveRequested(updated)
     property int opIndex: -1
     property var opData: null
 
     signal saveRequested(var updated)          // { index: int, payload: dict }
     signal teachXRequested(int index)          // optional; hook in Python if you want
     signal teachZRequested(int index)
+    signal openNumPadRequested(var field)      // bubble NumpadField taps up to ChildScreen
 
-    // Internal convenience bindings (safe defaults)
+    // Internal state (safe defaults)
     property int toolNo:          (opData && opData.tool_no !== undefined) ? opData.tool_no : 0
     property int toolOrient:      (opData && opData.tool_orientation !== undefined) ? opData.tool_orientation : 1
     property int backAngle:       (opData && opData.back_angle !== undefined) ? opData.back_angle : 0
@@ -32,7 +34,6 @@ Item {
     function applyData(index, data) {
         opIndex = index
         opData = data || {}
-        // propagate to editable properties
         toolNo      = (opData.tool_no !== undefined) ? opData.tool_no : 0
         toolOrient  = (opData.tool_orientation !== undefined) ? opData.tool_orientation : 1
         backAngle   = (opData.back_angle !== undefined) ? opData.back_angle : 0
@@ -43,6 +44,10 @@ Item {
         moveSeq     = (opData.toolchange_details && opData.toolchange_details.move_sequence) ? opData.toolchange_details.move_sequence : "xz"
         stopSpindle = (opData.toolchange_details && opData.toolchange_details.stop_spindle !== undefined) ? opData.toolchange_details.stop_spindle : false
     }
+
+    // Validators
+    IntValidator    { id: intVal }
+    DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
 
     ColumnLayout {
         anchors.fill: parent
@@ -58,53 +63,64 @@ Item {
                 anchors.margins: 10
                 spacing: 8
 
+                // Row: Tool No (numpad) + read-only tool info (orientation/angles)
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
+
                     Label { text: "Tool No"; width: 100; verticalAlignment: Text.AlignVCenter }
-                    TextField {
-                        id: tfToolNo
+
+                    // Editable via custom numpad
+                    NumpadField {
+                        id: nfToolNo
                         Layout.preferredWidth: 120
-                        inputMethodHints: Qt.ImhDigitsOnly
-                        text: String(root.toolNo)
-                        onTextChanged: {
-                            var n = parseInt(text); if (!isNaN(n)) root.toolNo = n
-                        }
+                        settingName: "toolchange_tool_no"
+                        validatorObject: intVal
+                        value: root.toolNo
+                        // optional formatting (plain int as string)
+                        formatter: function(v){ return (v===null||v===undefined) ? "" : String(Math.floor(Number(v))) }
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: root.toolNo = value
                     }
 
-                    Label { text: "Orientation"; width: 100; verticalAlignment: Text.AlignVCenter }
-                    ComboBox {
-                        id: cbOrientation
-                        Layout.preferredWidth: 140
-                        model: [1,2,3,4,5,6,7,8]
-                        // simple mapping (1-based orientations)
-                        Component.onCompleted: {
-                            var idx = model.indexOf(root.toolOrient)
-                            currentIndex = idx >= 0 ? idx : 0
-                        }
-                        onCurrentIndexChanged: root.toolOrient = model[currentIndex]
+                    // Read-only info about the selected tool (no editing here)
+                    Item { width: 20 } // spacer
+                    Label {
+                        text: "Orientation:"
+                        width: 90
+                        horizontalAlignment: Text.AlignRight
+                        verticalAlignment: Text.AlignVCenter
                     }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-                    Label { text: "Back Angle"; width: 100; verticalAlignment: Text.AlignVCenter }
-                    SpinBox {
-                        id: sbBack
-                        Layout.preferredWidth: 120
-                        from: 0; to: 180; stepSize: 1
-                        value: root.backAngle
-                        onValueChanged: root.backAngle = value
+                    Label {
+                        text: String(root.toolOrient)
+                        width: 40
+                        verticalAlignment: Text.AlignVCenter
                     }
 
-                    Label { text: "Front Angle"; width: 100; verticalAlignment: Text.AlignVCenter }
-                    SpinBox {
-                        id: sbFront
-                        Layout.preferredWidth: 120
-                        from: 0; to: 180; stepSize: 1
-                        value: root.frontAngle
-                        onValueChanged: root.frontAngle = value
+                    Item { width: 16 }
+                    Label {
+                        text: "Back angle:"
+                        width: 90
+                        horizontalAlignment: Text.AlignRight
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    Label {
+                        text: String(root.backAngle)
+                        width: 40
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Item { width: 16 }
+                    Label {
+                        text: "Front angle:"
+                        width: 90
+                        horizontalAlignment: Text.AlignRight
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    Label {
+                        text: String(root.frontAngle)
+                        width: 40
+                        verticalAlignment: Text.AlignVCenter
                     }
                 }
             }
@@ -122,30 +138,35 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
+
+                    // X position (numpad) + Teach X
                     Label { text: "X pos"; width: 100; verticalAlignment: Text.AlignVCenter }
-                    TextField {
-                        id: tfX
+                    NumpadField {
+                        id: nfX
                         Layout.preferredWidth: 140
-                        text: String(root.xPos)
-                        validator: DoubleValidator { }
-                        onEditingFinished: {
-                            var v = parseFloat(text); if (!isNaN(v)) root.xPos = v
-                        }
+                        settingName: "toolchange_x_pos"
+                        validatorObject: dblVal
+                        value: root.xPos
+                        formatter: function(v){ return (v===null||v===undefined) ? "" : Number(v).toFixed(3) }
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: root.xPos = value
                     }
                     Button {
                         text: "Teach X"
                         onClicked: root.teachXRequested(root.opIndex)
                     }
 
+                    // Z position (numpad) + Teach Z
                     Label { text: "Z pos"; width: 100; verticalAlignment: Text.AlignVCenter }
-                    TextField {
-                        id: tfZ
+                    NumpadField {
+                        id: nfZ
                         Layout.preferredWidth: 140
-                        text: String(root.zPos)
-                        validator: DoubleValidator { }
-                        onEditingFinished: {
-                            var v = parseFloat(text); if (!isNaN(v)) root.zPos = v
-                        }
+                        settingName: "toolchange_z_pos"
+                        validatorObject: dblVal
+                        value: root.zPos
+                        formatter: function(v){ return (v===null||v===undefined) ? "" : Number(v).toFixed(3) }
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: root.zPos = value
                     }
                     Button {
                         text: "Teach Z"
@@ -168,7 +189,7 @@ Item {
                     }
                 }
 
-                // Move sequence radios (pick strings that your Python expects)
+                // Move sequence radios (strings must match what Python expects)
                 RowLayout {
                     Layout.fillWidth: true; spacing: 16
                     Label { text: "Move Sequence"; width: 150; verticalAlignment: Text.AlignVCenter }
@@ -220,9 +241,9 @@ Item {
                         generate_gcode: (root.opData && root.opData.generate_gcode !== undefined) ? root.opData.generate_gcode : true,
                         is_optional_block: (root.opData && root.opData.is_optional_block !== undefined) ? root.opData.is_optional_block : false,
                         tool_no:          root.toolNo,
-                        tool_orientation: root.toolOrient,
-                        back_angle:       root.backAngle,
-                        front_angle:      root.frontAngle,
+                        tool_orientation: root.toolOrient,   // read-only here, still part of payload
+                        back_angle:       root.backAngle,    // read-only here, still part of payload
+                        front_angle:      root.frontAngle,   // read-only here, still part of payload
                         toolchange_details: {
                             x_pos: root.xPos,
                             z_pos: root.zPos,

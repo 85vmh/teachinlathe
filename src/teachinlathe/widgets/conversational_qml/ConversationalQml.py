@@ -1,10 +1,13 @@
 import os
-from PyQt5.QtCore import QUrl, QObject
+from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 
+from teachinlathe.conversational.data_types import Profiling, Strategy
 from teachinlathe.widgets.conversational.program_loader import load_programs_from_folder
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
+from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
+
 
 # If you can import your datatypes module, do it and reuse .to_dict()
 # from teachinlathe.widgets.conversational.datatypes import Program as DProgram
@@ -84,10 +87,81 @@ class ConversationalQml(QQuickWidget):
                 item.teachZRequested.connect(self.onTeachZ)
             if hasattr(item, "updateFacing"):
                 item.updateFacing.connect(self.onUpdateFacing)
-
+            if hasattr(item, "updateProfiling"):
+                item.updateProfiling.connect(self.onUpdateProfiling)
+            if hasattr(item, "openNumPadRequested"):
+                item.openNumPadRequested.connect(self.onOpenNumPadRequested)
             print("Screen signals connected.")
         except Exception as e:
             print("Failed to hook screen item signals:", e)
+
+    def onOpenNumPadRequested(self, field):
+        """Called from QML when a NumpadField was tapped."""
+        try:
+            self.openNumPad(field)
+        except Exception as e:
+            print("openNumPad failed:", e)
+
+    def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
+        """Open SmartNumPadDialog and write the chosen value back into the QML field."""
+        # Robust read of 'settingName' from a QML Item
+        setting_name = None
+        try:
+            # QML items expose properties via .property(...)
+            setting_name = fake_edit_text.property("settingName")
+        except Exception:
+            pass
+        if setting_name is None:
+            # fallback for Python widgets or plain objects
+            setting_name = getattr(fake_edit_text, 'settingName', None)
+
+        dialog = SmartNumPadDialog(setting_name)
+
+        def handle_value(value):
+            self.setSelectedValue(fake_edit_text, value)
+            if on_value_selected_callback:
+                on_value_selected_callback(value)
+
+        try:
+            dialog.valueSelected.connect(handle_value)
+            dialog.exec_()
+        except Exception as e:
+            print("SmartNumPadDialog error:", e)
+
+    def setSelectedValue(self, field, value):
+        """Write a value back into a QML field.
+        Prefers a 'commit(value)' method (like NumpadField), else tries 'value', else 'text'."""
+        # 1) Try to call a 'commit' function (best: runs validation/formatting in QML)
+        try:
+            # In PyQt, QML methods are accessible as attributes if exported; try direct call first
+            if hasattr(field, 'commit'):
+                field.commit(value)  # type: ignore
+                return
+        except Exception:
+            pass
+
+        try:
+            # Fallback using meta-object invoke (works if 'commit' is not exposed as Python attr)
+            # Note: some PyQt builds don't need Q_ARG; many accept plain positional args.
+            QMetaObject.invokeMethod(field, 'commit', Qt.QueuedConnection, value)
+            return
+        except Exception:
+            pass
+
+        # 2) Try to set the 'value' property (our NumpadField keeps text bound to value)
+        try:
+            if field.property("value") is not None:
+                field.setProperty("value", value)
+                return
+        except Exception:
+            pass
+
+        # 3) Last resort: set 'text'
+        try:
+            field.setProperty("text", str(value))
+            return
+        except Exception as e:
+            print("setSelectedValue fallback failed:", e)
 
     def addNewProgram(self):
         print("add new program clicked")
@@ -281,6 +355,54 @@ class ConversationalQml(QQuickWidget):
                 except Exception:
                     pass
         print(f"[save] Facing updated at index {index}")
+
+    def onUpdateProfiling(self, index: int, payload: dict):
+        op = self._get_current_op(index)
+        if op is None:
+            return
+        # accept either instance check or type field
+        if not isinstance(op, Profiling) and getattr(op, "type", "") != "profiling":
+            return
+
+        # ints / floats / strings
+        simple_fields = (
+            "order", "generate_gcode", "is_optional_block",
+            "css_value", "max_speed", "feed_rate", "profileId",
+            "x_start", "z_start", "doc", "retract"
+        )
+        for attr in simple_fields:
+            if attr in payload and hasattr(op, attr):
+                try:
+                    setattr(op, attr, payload[attr])
+                except Exception:
+                    pass
+
+        # strategy as enum
+        if "strategy" in payload:
+            try:
+                op.strategy = Strategy[payload["strategy"].upper()]
+            except Exception:
+                pass
+
+        # stock_to_leave: None or {x: float, z: float}
+        if "stock_to_leave" in payload:
+            stl = payload["stock_to_leave"]
+            if stl is None:
+                op.stock_to_leave = None
+            else:
+                try:
+                    x = float(stl.get("x", 0.0))
+                    z = float(stl.get("z", 0.0))
+                    op.stock_to_leave = {"x": x, "z": z}
+                except Exception:
+                    pass
+
+        # spring_passes: None or int
+        if "spring_passes" in payload:
+            sp = payload["spring_passes"]
+            op.spring_passes = None if (sp is None) else int(sp)
+
+        print(f"[save] Profiling updated at index {index}: profileId={getattr(op, 'profileId', None)}, strategy={getattr(op, 'strategy', None)}")
 
     # Optional: handle teach buttons
     def onTeachX(self, index: int):
