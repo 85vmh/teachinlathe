@@ -218,11 +218,36 @@ class Profiling(Operation):
         return base
 
 
+class ThreadLocation(Enum):
+    OD = "OD"
+    ID = "ID"
+
+def _coerce_thread_location(val):
+    # întoarce mereu ThreadLocation
+    if isinstance(val, ThreadLocation):
+        return val
+    if isinstance(val, str):
+        try:
+            # acceptă "OD"/"ID"
+            return ThreadLocation[val]
+        except Exception:
+            try:
+                # sau value-style
+                return ThreadLocation(val)
+            except Exception:
+                return ThreadLocation.OD
+    return ThreadLocation.OD
+
+
+
+
 @dataclass
-class OdThread(Operation):
+class Threading(Operation):
+    location: ThreadLocation
     spindle_rpm: int
     thread_type: str
     pitch: float
+    starts: int
     major_diameter: float
     minor_diameter: float
     z_start: float
@@ -232,15 +257,20 @@ class OdThread(Operation):
     spring_passes: int
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "OdThread":
-        return OdThread(**data)
+    def from_dict(data: Dict[str, Any]) -> "Threading":
+        d = dict(data)
+        d["location"] = _coerce_thread_location(d.get("location", "OD"))
+        return Threading(**d)
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
+        loc = self.location.value if isinstance(self.location, ThreadLocation) else str(self.location)
         base.update({
+            "location": loc,
             "spindle_rpm": self.spindle_rpm,
             "thread_type": self.thread_type,
             "pitch": self.pitch,
+            "starts": self.starts,
             "major_diameter": self.major_diameter,
             "minor_diameter": self.minor_diameter,
             "z_start": self.z_start,
@@ -295,6 +325,32 @@ class Tapping(Operation):
         })
         return base
 
+@dataclass
+class Parting(Operation):
+    css_value: int
+    max_speed: int
+    feed_rate: float
+    peck_depth: float
+    x_start: float
+    x_end: float
+    z_pos: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Parting":
+        return Parting(**data)
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        base.update({
+            "css_value": self.css_value,
+            "max_speed": self.max_speed,
+            "feed_rate": self.feed_rate,
+            "peck_depth": self.peck_depth,
+            "x_start": self.x_start,
+            "x_end": self.x_end,
+            "z_pos": self.z_pos
+        })
+        return base
 
 @dataclass
 class Program:
@@ -329,9 +385,10 @@ operation_types: dict[str, Type[Operation]] = {
     "facing": Facing,
     "define_profile": DefineProfile,
     "profiling": Profiling,
-    "odThread": OdThread,
+    "threading": Threading,
     "drilling": Drilling,
-    "tapping": Tapping
+    "tapping": Tapping,
+    "parting": Parting
 }
 
 display_names: dict[str, str] = {
@@ -339,7 +396,8 @@ display_names: dict[str, str] = {
     "facing": "Facing",
     "define_profile": "Define Profile",
     "profiling": "Profiling",
-    "odThread": "OD Thread",
+    "threading": "Threading",
     "drilling": "Drilling",
-    "tapping": "Tapping"
+    "tapping": "Tapping",
+    "parting": "Parting",
 }

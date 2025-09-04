@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "New program name",
-        "last_edit": "2025-09-04 13:45:01",
+        "last_edit": "2025-09-04 16:47:48",
         "datum": 1,
         "units": "in",
         "workpiece": {
@@ -25,8 +25,8 @@
             "toolchange_details": {
                 "x_pos": 230.0,
                 "z_pos": 200.0,
-                "coordinate_type": "machine",
-                "move_sequence": "x_first",
+                "coordinate_type": "relative",
+                "move_sequence": "xz",
                 "stop_spindle": false
             }
         },
@@ -35,7 +35,7 @@
             "type": "facing",
             "generate_gcode": true,
             "is_optional_block": true,
-            "css_value": 200,
+            "css_value": 100,
             "max_speed": 2000,
             "feed_rate": 0.2,
             "doc": 80.0,
@@ -134,8 +134,8 @@
             "back_angle": 95,
             "front_angle": 80,
             "toolchange_details": {
-                "x_pos": 200,
-                "z_pos": 200,
+                "x_pos": 52.0,
+                "z_pos": 200.0,
                 "coordinate_type": "machine",
                 "move_sequence": "simultaneous",
                 "stop_spindle": true
@@ -143,18 +143,20 @@
         },
         {
             "order": 8,
-            "type": "odThread",
+            "type": "threading",
             "generate_gcode": true,
             "is_optional_block": false,
-            "spindle_rpm": 500,
+            "location": "OD",
+            "spindle_rpm": 300,
             "thread_type": "metric",
-            "pitch": 1.5,
-            "major_diameter": 20,
-            "minor_diameter": 18.64,
-            "z_start": 3,
-            "z_end": -15,
-            "initial_doc": 0.2,
-            "retract": 1,
+            "pitch": 1.0,
+            "starts": 1,
+            "major_diameter": 0.0,
+            "minor_diameter": 0.0,
+            "z_start": 0.0,
+            "z_end": 0.0,
+            "initial_doc": 0.1,
+            "retract": 0.2,
             "spring_passes": 1
         },
         {
@@ -181,8 +183,8 @@
             "is_optional_block": false,
             "spindle_rpm": 500,
             "feed_rate": 0.02,
-            "z_start": 3,
-            "z_end": -15
+            "z_start": 3.0,
+            "z_end": -15.0
         },
         {
             "order": 11,
@@ -191,8 +193,21 @@
             "is_optional_block": false,
             "spindle_rpm": 500,
             "pitch": 1.5,
-            "z_start": 3,
-            "z_end": -15
+            "z_start": 3.0,
+            "z_end": -15.0
+        },
+        {
+            "order": 12,
+            "type": "parting",
+            "generate_gcode": true,
+            "is_optional_block": false,
+            "css_value": 100,
+            "max_speed": 100,
+            "feed_rate": 0.2,
+            "peck_depth": 2.0,
+            "x_start": 10.0,
+            "x_end": 0.0,
+            "z_pos": -15.0
         }
     ]
 }

@@ -21,6 +21,11 @@ Item {
     signal updateToolChange(int index, var payload)
     signal updateFacing(int index, var payload)
     signal updateProfiling(int index, var payload)
+    signal updateDrilling(int index, var payload)
+    signal updateThreading(int index, var payload)
+    signal updateParting(int index, var payload)
+    signal updateTapping(int index, var payload)
+
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
@@ -43,7 +48,11 @@ Item {
         if (data.type === "changeTool")      detailsLoader.source = "ToolChangeDetailsView.qml"
         else if (data.type === "facing")     detailsLoader.source = "FacingDetailsView.qml"
         else if (data.type === "profiling")  detailsLoader.source = "ProfilingDetailsView.qml"
-        else                                  detailsLoader.source = ""
+        else if (data.type === "drilling")  detailsLoader.source = "DrillingDetailsView.qml"
+        else if (data.type === "threading") detailsLoader.source = "ThreadingDetailsView.qml"
+        else if (data.type === "parting")  detailsLoader.source = "PartingDetailsView.qml"
+        else if (data.type === "tapping")    detailsLoader.source = "TappingDetailsView.qml"
+        else detailsLoader.source = ""
         Qt.callLater(function() {
             if (detailsLoader.item && detailsLoader.item.applyData) {
                 detailsLoader.item.applyData(index, data)
@@ -310,6 +319,14 @@ Item {
                             operationEditor.updateFacing(updated.index, updated.payload)
                         else if (t === "profiling" && operationEditor.updateProfiling)
                             operationEditor.updateProfiling(updated.index, updated.payload)
+                        else if (t === "drilling" && operationEditor.updateDrilling)
+                            operationEditor.updateDrilling(updated.index, updated.payload)
+                        else if (t === "threading")
+                            operationEditor.updateThreading(updated.index, updated.payload)
+                        else if (t === "parting")
+                            operationEditor.updateParting(updated.index, updated.payload)
+                        else if (t === "tapping")
+                            operationEditor.updateTapping(updated.index, updated.payload)
                         else if (operationEditor.updateOperation)
                             operationEditor.updateOperation(updated.index, updated.payload)
                     }

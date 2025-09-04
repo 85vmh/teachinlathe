@@ -1,16 +1,14 @@
+import json
+import os
+
 from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
-# from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog  # adjust import
-import json, os
 
-from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
+from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
-
-# If you can import your datatypes module, do it and reuse .to_dict()
-# from teachinlathe.widgets.conversational.datatypes import Program as DProgram
 
 class ConversationalQml(QQuickWidget):
     def __init__(self, parent=None):
@@ -79,14 +77,6 @@ class ConversationalQml(QQuickWidget):
     def _get_current_program(self):
         # make sure you set self.current_program when you open ChildScreen
         return getattr(self, "current_program", None)
-
-    def _get_current_op(self, index):
-        prog = self._get_current_program()
-        if not prog or not hasattr(prog, "operations"):
-            return None
-        if index < 0 or index >= len(prog.operations):
-            return None
-        return prog.operations[index]
 
     # ADD this helper in class ConversationalQml
     def _sanitize_filename(self, name: str) -> str:
@@ -198,6 +188,14 @@ class ConversationalQml(QQuickWidget):
                 item.updateFacing.connect(self.onUpdateFacing)
             if hasattr(item, "updateProfiling"):
                 item.updateProfiling.connect(self.onUpdateProfiling)
+            if hasattr(item, "updateDrilling"):
+                item.updateDrilling.connect(self.onUpdateDrilling)
+            if hasattr(item, "updateThreading"):
+                item.updateThreading.connect(self.onUpdateThreading)
+            if hasattr(item, "updateParting"):
+                item.updateParting.connect(self.onUpdateParting)
+            if hasattr(item, "updateTapping"):
+                item.updateTapping.connect(self.onUpdateTapping)
             if hasattr(item, "openNumPadRequested"):
                 item.openNumPadRequested.connect(self.onOpenNumPadRequested)
             if hasattr(item, "generateGcodeRequested"):
@@ -217,9 +215,6 @@ class ConversationalQml(QQuickWidget):
             print(f"[gcode] Generated: {path}")
         except Exception as e:
             print("[gcode] Generation failed:", e)
-
-    import os
-    from datetime import datetime
 
     def generate_gcode_for_program(self, program):
         """Very basic placeholder: writes a .ngc next to the JSON.
@@ -346,14 +341,14 @@ class ConversationalQml(QQuickWidget):
             return "Define Profile"
         if t == "profiling":
             return "Cut Profile"
-        if t == "odThread":
-            return f"OD Thread (P: {pitch})" if pitch is not None else "OD Thread"
-        if t == "idThread":
-            return f"ID Thread (P: {pitch})" if pitch is not None else "ID Thread"
+        if t == "threading":
+            return f"Threading (P: {pitch})" if pitch is not None else "Threading"
         if t == "drilling":
             return "Drilling"
         if t == "tapping":
             return "Tapping"
+        if t == "parting":
+            return "Parting"
         # fallback
         return t or "Unknown"
 
@@ -377,6 +372,14 @@ class ConversationalQml(QQuickWidget):
             pass
         self._save_current_program()
 
+    # def _get_current_op(self, index):
+    #     prog = self._get_current_program()
+    #     if not prog or not hasattr(prog, "operations"):
+    #         return None
+    #     if index < 0 or index >= len(prog.operations):
+    #         return None
+    #     return prog.operations[index]
+
     def _get_current_op(self, index):
         if self.current_program is None:
             return None
@@ -384,43 +387,6 @@ class ConversationalQml(QQuickWidget):
         if not (0 <= index < len(ops)):
             return None
         return ops[index]
-
-    # def onDetailsRequested(self, screen_item, index: int):
-    #     """Build a full dict for the selected operation and push it into ChildScreen."""
-    #     op = self._get_current_op(index)
-    #     if op is None:
-    #         return
-    #     # Prefer dataclass .to_dict() for exact schema
-    #     if hasattr(op, "to_dict"):
-    #         data = op.to_dict()
-    #     else:
-    #         # fallback: minimal
-    #         data = {
-    #             "order": getattr(op, "order", 0),
-    #             "type": getattr(op, "type", ""),
-    #             "generate_gcode": bool(getattr(op, "generate_gcode", False)),
-    #             "is_optional_block": bool(getattr(op, "is_optional_block", False)),
-    #         }
-    #         # hydrate nested if available
-    #         tcd = getattr(op, "toolchange_details", None)
-    #         if tcd:
-    #             data["toolchange_details"] = {
-    #                 "x_pos": getattr(tcd, "x_pos", 0.0),
-    #                 "z_pos": getattr(tcd, "z_pos", 0.0),
-    #                 "coordinate_type": getattr(tcd, "coordinate_type", "absolute"),
-    #                 "move_sequence": getattr(tcd, "move_sequence", "xz"),
-    #                 "stop_spindle": bool(getattr(tcd, "stop_spindle", False)),
-    #             }
-    #         # top-level tool props
-    #         for k in ("tool_no", "tool_orientation", "back_angle", "front_angle"):
-    #             if hasattr(op, k):
-    #                 data[k] = getattr(op, k)
-    #
-    #     # Call the QML method to load + apply data
-    #     try:
-    #         screen_item.receiveDetailsData(index, data)
-    #     except Exception as e:
-    #         print("receiveDetailsData failed:", e)
 
     def onUpdateToolChange(self, index: int, payload):
         payload = self._to_py(payload)
@@ -493,6 +459,86 @@ class ConversationalQml(QQuickWidget):
             sp = payload["spring_passes"]
             op.spring_passes = None if (sp is None) else int(sp)
         self._save_current_program()
+
+    def onUpdateDrilling(self, index: int, payload):
+        """Drilling autosave."""
+        try:
+            payload = self._to_py(payload)
+            op = self._get_current_op(index)
+            if op is None or getattr(op, "type", "") != "drilling":
+                return
+            for attr in ("order", "generate_gcode", "is_optional_block",
+                         "spindle_rpm", "feed_rate", "z_start", "z_end"):
+                if attr in payload and hasattr(op, attr):
+                    setattr(op, attr, payload[attr])
+            self._save_current_program()
+        except Exception as e:
+            print("[drilling] update error:", e)
+
+    def onUpdateParting(self, index: int, payload):
+        """Parting autosave."""
+        try:
+            payload = self._to_py(payload)
+            op = self._get_current_op(index)
+            if op is None or getattr(op, "type", "") != "parting":
+                return
+            for attr in ("order", "generate_gcode", "is_optional_block",
+                         "css_value", "max_speed", "feed_rate",
+                         "peck_depth", "x_start", "x_end", "z_pos"):
+                if attr in payload and hasattr(op, attr):
+                    setattr(op, attr, payload[attr])
+            self._save_current_program()
+        except Exception as e:
+            print("[parting] update error:", e)
+
+    def onUpdateTapping(self, index: int, payload):
+        """Tapping autosave."""
+        try:
+            payload = self._to_py(payload)
+            op = self._get_current_op(index)
+            if op is None or getattr(op, "type", "") != "tapping":
+                return
+            for attr in ("order", "generate_gcode", "is_optional_block",
+                         "spindle_rpm", "pitch", "z_start", "z_end"):
+                if attr in payload and hasattr(op, attr):
+                    setattr(op, attr, payload[attr])
+            self._save_current_program()
+        except Exception as e:
+            print("[tapping] update error:", e)
+
+    def onUpdateThreading(self, index: int, payload):
+        """Threading autosave (odată cu noile câmpuri)."""
+        try:
+            payload = self._to_py(payload)
+            op = self._get_current_op(index)
+            if op is None or getattr(op, "type", "") != "threading":
+                return
+
+            # câmpuri simple
+            for attr in ("order", "generate_gcode", "is_optional_block",
+                         "spindle_rpm", "thread_type", "pitch", "starts",
+                         "major_diameter", "minor_diameter",
+                         "z_start", "z_end", "initial_doc", "retract", "spring_passes"):
+                if attr in payload and hasattr(op, attr):
+                    setattr(op, attr, payload[attr])
+
+            # location (enum)
+            if "location" in payload:
+                loc = payload["location"]
+                if isinstance(loc, str):
+                    try:
+                        op.location = ThreadLocation[loc]  # "OD"/"ID"
+                    except Exception:
+                        try:
+                            op.location = ThreadLocation(loc)
+                        except Exception:
+                            op.location = ThreadLocation.OD
+                elif isinstance(loc, ThreadLocation):
+                    op.location = loc
+
+            self._save_current_program()
+        except Exception as e:
+            print("[threading] update error:", e)
 
     # Optional: handle teach buttons
     def onTeachX(self, index: int):

@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Program Vasi",
-        "last_edit": "23-01-2025",
+        "last_edit": "2025-09-04 14:02:42",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -73,7 +73,7 @@
         {
             "order": 4,
             "type": "changeTool",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "tool_no": 2,
             "tool_orientation": 2,
@@ -90,7 +90,7 @@
         {
             "order": 5,
             "type": "profiling",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "css_value": 200,
             "max_speed": 2000,
@@ -143,12 +143,14 @@
         },
         {
             "order": 8,
-            "type": "odThread",
+            "type": "threading",
             "generate_gcode": true,
             "is_optional_block": false,
+            "location" : "od",
             "spindle_rpm": 500,
             "thread_type": "metric",
             "pitch": 1.5,
+            "starts" : 1,
             "major_diameter": 20,
             "minor_diameter": 18.64,
             "z_start": 3,
