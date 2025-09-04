@@ -1,6 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import "."   // to import local components like Divider.qml
+
 
 Item {
     id: operationEditor
@@ -13,6 +15,8 @@ Item {
     // Navigation
     property bool showBack: true
     signal backRequested()
+    signal generateGcodeRequested()
+
 
     // List-level toggles (autosave in Python)
     signal toggleGenerateGcode(int index, bool checked)
@@ -35,10 +39,10 @@ Item {
                                : "Creating New Program"
 
     // Column widths
-    readonly property int colOpNumW: 30
-    readonly property int colGenW:   120
+    readonly property int colOpNumW: 50
+    readonly property int colGenW:   80
     readonly property int colTypeW:  240
-    readonly property int colOptW:   120
+    readonly property int colOptW:   80
 
     // Called by Python with full op dict; decides which details view to load
     function receiveDetailsData(index, data) {
@@ -67,21 +71,37 @@ Item {
         anchors.margins: 12
         spacing: 8
 
-        // Top bar
-        RowLayout {
+        // Top bar (Back left, centered title, Generate GCode button right)
+        Item {
             Layout.fillWidth: true
-            spacing: 8
+            height: 48
 
+            // Left: Back
             Button {
                 text: "Back"
                 visible: operationEditor.showBack
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
                 onClicked: operationEditor.backRequested()
             }
+
+            // Center: Title (always visually centered)
             Label {
                 text: operationEditor.titleText
                 font.pixelSize: 22
                 font.bold: true
-                Layout.fillWidth: true
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            // Right: Generate GCode (for the whole current program)
+            Button {
+                text: "Build G-Code Program"
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                enabled: operationEditor.operationsModel
+                         && operationEditor.operationsModel.length > 0
+                onClicked: operationEditor.generateGcodeRequested()
             }
         }
 
@@ -114,7 +134,7 @@ Item {
                         spacing: 0
 
                         Label {
-                            text: "Op #"
+                            text: "Order"
                             Layout.minimumWidth: operationEditor.colOpNumW
                             Layout.preferredWidth: operationEditor.colOpNumW
                             Layout.maximumWidth: operationEditor.colOpNumW
@@ -123,22 +143,34 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                             Layout.alignment: Qt.AlignVCenter
                         }
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                        Divider { }
 
                         Label {
-                            text: "Generate GCode"
+                            text: "Generate\nGCode"
                             Layout.minimumWidth: operationEditor.colGenW
                             Layout.preferredWidth: operationEditor.colGenW
                             Layout.maximumWidth: operationEditor.colGenW
-                            leftPadding: 8
-                            font.bold: true
+
+                            // center text in the cell, even on multiple lines
+                            horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+
+                            // let it wrap if needed
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 2
+
+                            // no offset that would pull it left
+                            leftPadding: 0
+                            rightPadding: 0
+                            font.bold: true
+
+                            // keeps the Label itself centered on the row’s height
                             Layout.alignment: Qt.AlignVCenter
                         }
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                        Divider { }
 
                         Label {
-                            text: "OperationType"
+                            text: "Operation Type"
                             Layout.minimumWidth: operationEditor.colTypeW
                             Layout.preferredWidth: operationEditor.colTypeW
                             Layout.maximumWidth: operationEditor.colTypeW
@@ -148,16 +180,27 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                             elide: Text.ElideRight
                         }
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                        Divider { }
 
                         Label {
-                            text: "OptionalBlock"
+                            text: "Optional\nBlock"
                             Layout.minimumWidth: operationEditor.colOptW
                             Layout.preferredWidth: operationEditor.colOptW
                             Layout.maximumWidth: operationEditor.colOptW
-                            leftPadding: 8
-                            font.bold: true
+                             // center text in the cell, even on multiple lines
+                            horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+
+                            // let it wrap if needed
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 2
+
+                            // no offset that would pull it left
+                            leftPadding: 0
+                            rightPadding: 0
+                            font.bold: true
+
+                            // keeps the Label itself centered on the row’s height
                             Layout.alignment: Qt.AlignVCenter
                         }
 
@@ -193,14 +236,21 @@ Item {
 
                                 Label {
                                     text: (op && op.order !== undefined) ? op.order : (index + 1)
-                                    Layout.minimumWidth: operationEditor.colOpNumW
+
+                                    Layout.minimumWidth:  operationEditor.colOpNumW
                                     Layout.preferredWidth: operationEditor.colOpNumW
-                                    Layout.maximumWidth: operationEditor.colOpNumW
-                                    leftPadding: 8
-                                    verticalAlignment: Text.AlignVCenter
-                                    Layout.alignment: Qt.AlignVCenter
+                                    Layout.maximumWidth:  operationEditor.colOpNumW
+                                    Layout.alignment: Qt.AlignVCenter   // keep vertical centering of the control
+                                    // Layout.fillHeight: true           // optional
+
+                                    // center text inside the cell
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment:   Text.AlignVCenter
+                                    leftPadding: 0
+                                    rightPadding: 0
                                 }
-                                Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+
+                                Divider { }
 
                                 Item {
                                     Layout.minimumWidth: operationEditor.colGenW
@@ -218,7 +268,7 @@ Item {
                                         }
                                     }
                                 }
-                                Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                                Divider { }
 
                                 Label {
                                     text: (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
@@ -230,7 +280,7 @@ Item {
                                     verticalAlignment: Text.AlignVCenter
                                     Layout.alignment: Qt.AlignVCenter
                                 }
-                                Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                                Divider { }
 
                                 Item {
                                     Layout.minimumWidth: operationEditor.colOptW
@@ -273,10 +323,13 @@ Item {
                 }
 
                 Connections {
+                    id: detailsCon
                     target: detailsLoader.item
+                    ignoreUnknownSignals: true   // ignore signals that some detail views don't define
+                    enabled: !!target            // safety: only active when a component is loaded
 
                     // Any change in details view calls saveRequested(updated) → autosave
-                    onSaveRequested: function(updated) {
+                    function onSaveRequested(updated) {
                         if (!updated || !updated.payload) return
                         var t = updated.payload.type || ""
                         if (t === "changeTool" && operationEditor.updateToolChange)
@@ -290,11 +343,11 @@ Item {
                     }
 
                     // ToolChange extras
-                    onTeachXRequested: function(i) { operationEditor.teachXRequested(i) }
-                    onTeachZRequested: function(i) { operationEditor.teachZRequested(i) }
+                    function onTeachXRequested(i) { operationEditor.teachXRequested(i) }
+                    function onTeachZRequested(i) { operationEditor.teachZRequested(i) }
 
                     // Numpad
-                    onOpenNumPadRequested: function(field) { operationEditor.openNumPadRequested(field) }
+                    function onOpenNumPadRequested(field) { operationEditor.openNumPadRequested(field) }
                 }
             }
         }
