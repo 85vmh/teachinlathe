@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "New program name",
-        "last_edit": "2025-09-04 12:27:19",
+        "last_edit": "2025-09-04 13:45:01",
         "datum": 1,
         "units": "in",
         "workpiece": {
@@ -23,7 +23,7 @@
             "back_angle": 95,
             "front_angle": 80,
             "toolchange_details": {
-                "x_pos": 111.0,
+                "x_pos": 230.0,
                 "z_pos": 200.0,
                 "coordinate_type": "machine",
                 "move_sequence": "x_first",
@@ -97,10 +97,10 @@
             "feed_rate": 0.2,
             "profileId": 1,
             "strategy": "rough",
-            "x_start": 55,
-            "z_start": 3,
+            "x_start": 55.0,
+            "z_start": 3.0,
             "doc": 1.5,
-            "retract": 1,
+            "retract": 1.0,
             "stock_to_leave": {
                 "x": 0.5,
                 "z": 0.2
