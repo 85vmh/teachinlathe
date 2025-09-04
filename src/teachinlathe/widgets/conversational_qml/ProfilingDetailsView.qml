@@ -1,27 +1,24 @@
-// ProfilingDetailsView.qml
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "." // for NumpadField.qml
+import "." // NumpadField.qml
 
 Item {
     id: root
     anchors.fill: parent
 
-    // Contract with parent (ChildScreen)
     property int opIndex: -1
     property var opData: null
-    signal saveRequested(var updated)          // { index, payload }
+    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
-    signal teachXRequested(int index)          // optional if you add Teach buttons later
-    signal teachZRequested(int index)
 
-    // State mirrors Profiling dataclass
+    property bool _loading: false
+
     property int   css_value: 0
     property int   max_speed: 0
     property real  feed_rate: 0.0
     property int   profileId: 0
-    property string strategy: "rough"          // "rough" | "finish"
+    property string strategy: "rough"
     property real  x_start: 0.0
     property real  z_start: 0.0
     property real  doc: 0.0
@@ -33,6 +30,7 @@ Item {
     property int   spring_passes: 0
 
     function applyData(index, data) {
+        _loading = true
         opIndex = index
         opData = data || {}
 
@@ -54,9 +52,31 @@ Item {
         var sp = (opData.spring_passes !== undefined) ? opData.spring_passes : null
         useSpringPasses = (sp !== null && sp !== undefined)
         spring_passes = useSpringPasses ? +sp : 0
+        _loading = false
     }
 
-    // Validators
+    function emitSave() {
+        if (_loading) return
+        var payload = {
+            order: (opData && opData.order !== undefined) ? opData.order : 0,
+            type: "profiling",
+            generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
+            is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
+            css_value: css_value,
+            max_speed: max_speed,
+            feed_rate: feed_rate,
+            profileId: profileId,
+            strategy: strategy,
+            x_start: x_start,
+            z_start: z_start,
+            doc: doc,
+            retract: retract,
+            stock_to_leave: hasStockToLeave ? { x: stockLeaveX, z: stockLeaveZ } : null,
+            spring_passes: useSpringPasses ? spring_passes : null
+        }
+        saveRequested({ index: opIndex, payload: payload })
+    }
+
     IntValidator    { id: intVal }
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
 
@@ -71,11 +91,9 @@ Item {
             font.bold: true
         }
 
-        // Cutting parameters
         GroupBox {
             title: "Cutting Parameters"
             Layout.fillWidth: true
-
             GridLayout {
                 columns: 4
                 columnSpacing: 12
@@ -89,9 +107,8 @@ Item {
                     settingName: "profiling_css"
                     validatorObject: intVal
                     value: root.css_value
-                    formatter: function(v){ return (v==null)?"":String(v) }
                     onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: root.css_value = value
+                    onValueCommitted: { root.css_value = value; root.emitSave() }
                 }
 
                 Label { text: "Max RPM"; Layout.alignment: Qt.AlignVCenter }
@@ -101,7 +118,7 @@ Item {
                     validatorObject: intVal
                     value: root.max_speed
                     onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: root.max_speed = value
+                    onValueCommitted: { root.max_speed = value; root.emitSave() }
                 }
 
                 Label { text: "Feed (mm/rev)"; Layout.alignment: Qt.AlignVCenter }
@@ -112,7 +129,7 @@ Item {
                     value: root.feed_rate
                     formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                     onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: root.feed_rate = value
+                    onValueCommitted: { root.feed_rate = value; root.emitSave() }
                 }
 
                 Label { text: "DOC (mm)"; Layout.alignment: Qt.AlignVCenter }
@@ -123,7 +140,7 @@ Item {
                     value: root.doc
                     formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                     onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: root.doc = value
+                    onValueCommitted: { root.doc = value; root.emitSave() }
                 }
 
                 Label { text: "Retract (mm)"; Layout.alignment: Qt.AlignVCenter }
@@ -134,16 +151,14 @@ Item {
                     value: root.retract
                     formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                     onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: root.retract = value
+                    onValueCommitted: { root.retract = value; root.emitSave() }
                 }
             }
         }
 
-        // Geometry
         GroupBox {
             title: "Profiling Geometry"
             Layout.fillWidth: true
-
             GridLayout {
                 columns: 4
                 columnSpacing: 12
@@ -159,7 +174,7 @@ Item {
                     value: root.x_start
                     formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                     onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: root.x_start = value
+                    onValueCommitted: { root.x_start = value; root.emitSave() }
                 }
 
                 Label { text: "Z start"; Layout.alignment: Qt.AlignVCenter }
@@ -170,16 +185,14 @@ Item {
                     value: root.z_start
                     formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                     onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: root.z_start = value
+                    onValueCommitted: { root.z_start = value; root.emitSave() }
                 }
             }
         }
 
-        // Profile + strategy
         GroupBox {
             title: "Profile Settings"
             Layout.fillWidth: true
-
             GridLayout {
                 columns: 4
                 columnSpacing: 12
@@ -195,7 +208,7 @@ Item {
                     value: root.profileId
                     formatter: function(v){ return (v==null)?"":String(v) }
                     onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: root.profileId = value
+                    onValueCommitted: { root.profileId = value; root.emitSave() }
                 }
 
                 Label { text: "Strategy"; Layout.alignment: Qt.AlignVCenter }
@@ -212,31 +225,30 @@ Item {
                         currentIndex = idx >= 0 ? idx : 0
                     }
                     onCurrentIndexChanged: {
-                        if (currentIndex >= 0) root.strategy = model[currentIndex].value
+                        if (currentIndex >= 0 && !root._loading) {
+                            root.strategy = model[currentIndex].value
+                            root.emitSave()
+                        }
                     }
                 }
             }
         }
 
-        // Stock to leave + spring passes
         GroupBox {
             title: "Finishing Options"
             Layout.fillWidth: true
-
             ColumnLayout {
                 anchors.margins: 10
                 spacing: 8
                 anchors.fill: parent
 
-                // Stock to leave
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 12
                     CheckBox {
-                        id: cbStock
                         text: "Enable stock to leave"
                         checked: root.hasStockToLeave
-                        onToggled: root.hasStockToLeave = checked
+                        onToggled: { root.hasStockToLeave = checked; root.emitSave() }
                     }
 
                     Label { text: "X (mm)"; verticalAlignment: Text.AlignVCenter }
@@ -248,7 +260,7 @@ Item {
                         value: root.stockLeaveX
                         formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                         onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: root.stockLeaveX = value
+                        onValueCommitted: { root.stockLeaveX = value; root.emitSave() }
                     }
 
                     Label { text: "Z (mm)"; verticalAlignment: Text.AlignVCenter }
@@ -260,19 +272,17 @@ Item {
                         value: root.stockLeaveZ
                         formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                         onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: root.stockLeaveZ = value
+                        onValueCommitted: { root.stockLeaveZ = value; root.emitSave() }
                     }
                 }
 
-                // Spring passes
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 12
                     CheckBox {
-                        id: cbSpring
                         text: "Use spring passes"
                         checked: root.useSpringPasses
-                        onToggled: root.useSpringPasses = checked
+                        onToggled: { root.useSpringPasses = checked; root.emitSave() }
                     }
 
                     Label { text: "Count"; verticalAlignment: Text.AlignVCenter }
@@ -284,43 +294,8 @@ Item {
                         value: root.spring_passes
                         formatter: function(v){ return (v==null)?"":String(v) }
                         onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: root.spring_passes = value
+                        onValueCommitted: { root.spring_passes = value; root.emitSave() }
                     }
-                }
-            }
-        }
-
-        // Actions
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 12
-            Item { Layout.fillWidth: true }
-            Button {
-                text: "Reset"
-                onClicked: { if (root.opData) root.applyData(root.opIndex, root.opData) }
-            }
-            Button {
-                text: "Save"
-                onClicked: {
-                    var payload = {
-                        order: (root.opData && root.opData.order !== undefined) ? root.opData.order : 0,
-                        type: "profiling",
-                        generate_gcode: (root.opData && root.opData.generate_gcode !== undefined) ? root.opData.generate_gcode : true,
-                        is_optional_block: (root.opData && root.opData.is_optional_block !== undefined) ? root.opData.is_optional_block : false,
-
-                        css_value: root.css_value,
-                        max_speed: root.max_speed,
-                        feed_rate: root.feed_rate,
-                        profileId: root.profileId,
-                        strategy: root.strategy,
-                        x_start: root.x_start,
-                        z_start: root.z_start,
-                        doc: root.doc,
-                        retract: root.retract,
-                        stock_to_leave: root.hasStockToLeave ? { x: root.stockLeaveX, z: root.stockLeaveZ } : null,
-                        spring_passes: root.useSpringPasses ? root.spring_passes : null
-                    }
-                    root.saveRequested({ index: root.opIndex, payload: payload })
                 }
             }
         }

@@ -1,10 +1,10 @@
-import os
 from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
+# from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog  # adjust import
+import json, os
 
-from teachinlathe.conversational.data_types import Profiling, Strategy
-from teachinlathe.widgets.conversational.program_loader import load_programs_from_folder
+from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
@@ -63,6 +63,115 @@ class ConversationalQml(QQuickWidget):
         if item:
             self._hook_screen_item(item)
 
+    def _to_py(self, obj):
+        """Convert QJSValue / nested JS structures to Python dict/list."""
+        try:
+            if hasattr(obj, 'toVariant'):
+                obj = obj.toVariant()
+        except Exception:
+            pass
+        if isinstance(obj, dict):
+            return {k: self._to_py(v) for k, v in obj.items()}
+        if isinstance(obj, (list, tuple)):
+            return [self._to_py(x) for x in obj]
+        return obj
+
+    def _get_current_program(self):
+        # make sure you set self.current_program when you open ChildScreen
+        return getattr(self, "current_program", None)
+
+    def _get_current_op(self, index):
+        prog = self._get_current_program()
+        if not prog or not hasattr(prog, "operations"):
+            return None
+        if index < 0 or index >= len(prog.operations):
+            return None
+        return prog.operations[index]
+
+    # ADD this helper in class ConversationalQml
+    def _sanitize_filename(self, name: str) -> str:
+        # very simple sanitizer: keep alnum, space, dash, underscore, dot
+        safe = "".join(c for c in name if c.isalnum() or c in (" ", "-", "_", "."))
+        safe = safe.strip().replace(" ", "_")
+        return safe or "program"
+
+    def _resolve_save_path(self, prog) -> str:
+        # 1) Prefer path provided by loader
+        filename = getattr(prog, "filename", None)
+        if filename and isinstance(filename, str) and filename.strip():
+            return filename
+
+        # 2) Fallback to folder_path + header.name/id + .json
+        base_dir = getattr(self, "folder_path", os.getcwd())
+        base_name = None
+        # try header.name
+        try:
+            base_name = prog.header.name
+        except Exception:
+            pass
+        if not base_name:
+            # try id
+            try:
+                base_name = prog.id
+            except Exception:
+                base_name = "program"
+
+        base_name = self._sanitize_filename(str(base_name))
+        if not base_name.lower().endswith(".json"):
+            base_name += ".json"
+
+        return os.path.join(base_dir, base_name)
+
+    # REPLACE your _save_current_program with this version
+    def _save_current_program(self):
+        """Serialize and write current program to its JSON file (in the original folder if possible)."""
+        prog = self._get_current_program()
+        if not prog:
+            return
+
+        # update last_edit in memory before serialization (optional but useful for UI)
+        try:
+            from datetime import datetime
+            if hasattr(prog, "header") and hasattr(prog.header, "last_edit"):
+                prog.header.last_edit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        except Exception:
+            pass
+
+        # collect data
+        data = prog.to_dict() if hasattr(prog, "to_dict") else None
+        if not data:
+            print("Program serialization missing (to_dict).")
+            return
+
+        # resolve path
+        filename = self._resolve_save_path(prog)
+        try:
+            # ensure parent directory exists
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            with open(filename, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
+            # cache the filename on the object if it wasn't set
+            try:
+                if not getattr(prog, "filename", None):
+                    prog.filename = filename
+            except Exception:
+                pass
+            print(f"[autosave] Program written to: {filename}")
+        except Exception as e:
+            print("Failed to save program:", e)
+
+        # notify the list model that last_edit changed (refresh row)
+        try:
+            row = getattr(self, "current_program_index", None)
+            if row is not None:
+                top = self.model.index(row)
+                bottom = self.model.index(row)
+                # Only last-edit role for minimal refresh
+                from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel as _PLM
+                self.model.dataChanged.emit(top, bottom, [_PLM.LastEditDateRole])
+        except Exception as e:
+            print("Failed to emit dataChanged:", e)
+
     def _hook_screen_item(self, item):
         """Connect expected QML signals from the loaded screen."""
         try:
@@ -95,81 +204,26 @@ class ConversationalQml(QQuickWidget):
         except Exception as e:
             print("Failed to hook screen item signals:", e)
 
-    def onOpenNumPadRequested(self, field):
-        """Called from QML when a NumpadField was tapped."""
-        try:
-            self.openNumPad(field)
-        except Exception as e:
-            print("openNumPad failed:", e)
-
-    def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
-        """Open SmartNumPadDialog and write the chosen value back into the QML field."""
-        # Robust read of 'settingName' from a QML Item
-        setting_name = None
-        try:
-            # QML items expose properties via .property(...)
-            setting_name = fake_edit_text.property("settingName")
-        except Exception:
-            pass
-        if setting_name is None:
-            # fallback for Python widgets or plain objects
-            setting_name = getattr(fake_edit_text, 'settingName', None)
-
-        dialog = SmartNumPadDialog(setting_name)
-
-        def handle_value(value):
-            self.setSelectedValue(fake_edit_text, value)
-            if on_value_selected_callback:
-                on_value_selected_callback(value)
-
-        try:
-            dialog.valueSelected.connect(handle_value)
-            dialog.exec_()
-        except Exception as e:
-            print("SmartNumPadDialog error:", e)
-
-    def setSelectedValue(self, field, value):
-        """Write a value back into a QML field.
-        Prefers a 'commit(value)' method (like NumpadField), else tries 'value', else 'text'."""
-        # 1) Try to call a 'commit' function (best: runs validation/formatting in QML)
-        try:
-            # In PyQt, QML methods are accessible as attributes if exported; try direct call first
-            if hasattr(field, 'commit'):
-                field.commit(value)  # type: ignore
-                return
-        except Exception:
-            pass
-
-        try:
-            # Fallback using meta-object invoke (works if 'commit' is not exposed as Python attr)
-            # Note: some PyQt builds don't need Q_ARG; many accept plain positional args.
-            QMetaObject.invokeMethod(field, 'commit', Qt.QueuedConnection, value)
+    def onDetailsRequested(self, screen_item, index: int):
+        op = self._get_current_op(index)
+        if op is None:
             return
-        except Exception:
-            pass
-
-        # 2) Try to set the 'value' property (our NumpadField keeps text bound to value)
-        try:
-            if field.property("value") is not None:
-                field.setProperty("value", value)
-                return
-        except Exception:
-            pass
-
-        # 3) Last resort: set 'text'
-        try:
-            field.setProperty("text", str(value))
+        data = op.to_dict() if hasattr(op, "to_dict") else None
+        if not data:
             return
+        try:
+            screen_item.receiveDetailsData(index, data)
         except Exception as e:
-            print("setSelectedValue fallback failed:", e)
+            print("receiveDetailsData failed:", e)
 
     def addNewProgram(self):
         print("add new program clicked")
 
     def openChildScreen(self, arg=None):
-        """arg is expected to be the row index; fallback supported."""
         program = None
+        row_index = None
         if isinstance(arg, int):
+            row_index = arg
             if hasattr(self.model, "get"):
                 program = self.model.get(arg)
             elif hasattr(self.model, "program_at"):
@@ -181,6 +235,7 @@ class ConversationalQml(QQuickWidget):
             return
 
         self.current_program = program
+        self.current_program_index = row_index
 
         selected_program = {
             "id": program.id,
@@ -241,33 +296,25 @@ class ConversationalQml(QQuickWidget):
         # fallback
         return t or "Unknown"
 
-    def onToggleGenerateGcode(self, index, checked):
-        """Update Python model when 'Generate GCode' is toggled in QML."""
-        if self.current_program is None:
-            return
-        if not (0 <= index < len(self.current_program.operations)):
+    def onToggleGenerateGcode(self, index: int, checked: bool):
+        op = self._get_current_op(index)
+        if not op:
             return
         try:
-            op = self.current_program.operations[index]
-            if hasattr(op, "generate_gcode"):
-                op.generate_gcode = bool(checked)
-                print(f"[toggle] op#{index} generate_gcode -> {checked}")
-        except Exception as e:
-            print("Failed to update generate_gcode:", e)
+            setattr(op, "generate_gcode", bool(checked))
+        except Exception:
+            pass
+        self._save_current_program()
 
-    def onToggleOptionalBlock(self, index, checked):
-        """Update Python model when 'OptionalBlock' is toggled in QML."""
-        if self.current_program is None:
-            return
-        if not (0 <= index < len(self.current_program.operations)):
+    def onToggleOptionalBlock(self, index: int, checked: bool):
+        op = self._get_current_op(index)
+        if not op:
             return
         try:
-            op = self.current_program.operations[index]
-            if hasattr(op, "is_optional_block"):
-                op.is_optional_block = bool(checked)
-                print(f"[toggle] op#{index} is_optional_block -> {checked}")
-        except Exception as e:
-            print("Failed to update is_optional_block:", e)
+            setattr(op, "is_optional_block", bool(checked))
+        except Exception:
+            pass
+        self._save_current_program()
 
     def _get_current_op(self, index):
         if self.current_program is None:
@@ -277,75 +324,71 @@ class ConversationalQml(QQuickWidget):
             return None
         return ops[index]
 
-    def onDetailsRequested(self, screen_item, index: int):
-        """Build a full dict for the selected operation and push it into ChildScreen."""
+    # def onDetailsRequested(self, screen_item, index: int):
+    #     """Build a full dict for the selected operation and push it into ChildScreen."""
+    #     op = self._get_current_op(index)
+    #     if op is None:
+    #         return
+    #     # Prefer dataclass .to_dict() for exact schema
+    #     if hasattr(op, "to_dict"):
+    #         data = op.to_dict()
+    #     else:
+    #         # fallback: minimal
+    #         data = {
+    #             "order": getattr(op, "order", 0),
+    #             "type": getattr(op, "type", ""),
+    #             "generate_gcode": bool(getattr(op, "generate_gcode", False)),
+    #             "is_optional_block": bool(getattr(op, "is_optional_block", False)),
+    #         }
+    #         # hydrate nested if available
+    #         tcd = getattr(op, "toolchange_details", None)
+    #         if tcd:
+    #             data["toolchange_details"] = {
+    #                 "x_pos": getattr(tcd, "x_pos", 0.0),
+    #                 "z_pos": getattr(tcd, "z_pos", 0.0),
+    #                 "coordinate_type": getattr(tcd, "coordinate_type", "absolute"),
+    #                 "move_sequence": getattr(tcd, "move_sequence", "xz"),
+    #                 "stop_spindle": bool(getattr(tcd, "stop_spindle", False)),
+    #             }
+    #         # top-level tool props
+    #         for k in ("tool_no", "tool_orientation", "back_angle", "front_angle"):
+    #             if hasattr(op, k):
+    #                 data[k] = getattr(op, k)
+    #
+    #     # Call the QML method to load + apply data
+    #     try:
+    #         screen_item.receiveDetailsData(index, data)
+    #     except Exception as e:
+    #         print("receiveDetailsData failed:", e)
+
+    def onUpdateToolChange(self, index: int, payload):
+        payload = self._to_py(payload)
         op = self._get_current_op(index)
         if op is None:
             return
-        # Prefer dataclass .to_dict() for exact schema
-        if hasattr(op, "to_dict"):
-            data = op.to_dict()
-        else:
-            # fallback: minimal
-            data = {
-                "order": getattr(op, "order", 0),
-                "type": getattr(op, "type", ""),
-                "generate_gcode": bool(getattr(op, "generate_gcode", False)),
-                "is_optional_block": bool(getattr(op, "is_optional_block", False)),
-            }
-            # hydrate nested if available
-            tcd = getattr(op, "toolchange_details", None)
-            if tcd:
-                data["toolchange_details"] = {
-                    "x_pos": getattr(tcd, "x_pos", 0.0),
-                    "z_pos": getattr(tcd, "z_pos", 0.0),
-                    "coordinate_type": getattr(tcd, "coordinate_type", "absolute"),
-                    "move_sequence": getattr(tcd, "move_sequence", "xz"),
-                    "stop_spindle": bool(getattr(tcd, "stop_spindle", False)),
-                }
-            # top-level tool props
-            for k in ("tool_no", "tool_orientation", "back_angle", "front_angle"):
-                if hasattr(op, k):
-                    data[k] = getattr(op, k)
-
-        # Call the QML method to load + apply data
-        try:
-            screen_item.receiveDetailsData(index, data)
-        except Exception as e:
-            print("receiveDetailsData failed:", e)
-
-    def onUpdateToolChange(self, index: int, payload: dict):
-        """Write the edited values back to the ChangeTool dataclass."""
-        op = self._get_current_op(index)
-        if op is None:
-            return
-        # Top-level fields
-        for attr in ("order", "generate_gcode", "is_optional_block", "tool_no", "tool_orientation", "back_angle", "front_angle"):
+        for attr in ("order", "generate_gcode", "is_optional_block",
+                     "tool_no", "tool_orientation", "back_angle", "front_angle"):
             if attr in payload and hasattr(op, attr):
                 try:
                     setattr(op, attr, payload[attr])
                 except Exception:
                     pass
-        # Nested toolchange_details
+        d = payload.get("toolchange_details")
         tcd = getattr(op, "toolchange_details", None)
-        if tcd and isinstance(payload.get("toolchange_details"), dict):
-            d = payload["toolchange_details"]
+        if tcd and isinstance(d, dict):
             for attr in ("x_pos", "z_pos", "coordinate_type", "move_sequence", "stop_spindle"):
                 if attr in d and hasattr(tcd, attr):
                     try:
                         setattr(tcd, attr, d[attr])
                     except Exception:
                         pass
-        print(f"[save] ToolChange updated at index {index}: T{getattr(op, 'tool_no', '?')}")
+        self._save_current_program()
 
-    def onUpdateFacing(self, index: int, payload: dict):
+    def onUpdateFacing(self, index: int, payload):
+        payload = self._to_py(payload)
         op = self._get_current_op(index)
-        if op is None:
+        if op is None or getattr(op, "type", "") != "facing":
             return
-        # only if it's actually a Facing
-        if getattr(op, "type", "") != "facing":
-            return
-        # copy fields if present
         for attr in ("order", "generate_gcode", "is_optional_block",
                      "css_value", "max_speed", "feed_rate", "doc", "retract",
                      "x_start", "z_start", "x_end", "z_end", "z_end_becomes_new_z0"):
@@ -354,55 +397,41 @@ class ConversationalQml(QQuickWidget):
                     setattr(op, attr, payload[attr])
                 except Exception:
                     pass
-        print(f"[save] Facing updated at index {index}")
+        self._save_current_program()
 
-    def onUpdateProfiling(self, index: int, payload: dict):
+    def onUpdateProfiling(self, index: int, payload):
+        payload = self._to_py(payload)
         op = self._get_current_op(index)
-        if op is None:
+        if op is None or getattr(op, "type", "") != "profiling":
             return
-        # accept either instance check or type field
-        if not isinstance(op, Profiling) and getattr(op, "type", "") != "profiling":
-            return
-
-        # ints / floats / strings
-        simple_fields = (
-            "order", "generate_gcode", "is_optional_block",
-            "css_value", "max_speed", "feed_rate", "profileId",
-            "x_start", "z_start", "doc", "retract"
-        )
-        for attr in simple_fields:
+        for attr in ("order", "generate_gcode", "is_optional_block",
+                     "css_value", "max_speed", "feed_rate", "profileId",
+                     "x_start", "z_start", "doc", "retract"):
             if attr in payload and hasattr(op, attr):
                 try:
                     setattr(op, attr, payload[attr])
                 except Exception:
                     pass
-
-        # strategy as enum
         if "strategy" in payload:
             try:
+                from teachinlathe.widgets.conversational_qml.data_types import Strategy  # adjust import
                 op.strategy = Strategy[payload["strategy"].upper()]
             except Exception:
                 pass
-
-        # stock_to_leave: None or {x: float, z: float}
         if "stock_to_leave" in payload:
             stl = payload["stock_to_leave"]
             if stl is None:
                 op.stock_to_leave = None
-            else:
+            elif isinstance(stl, dict):
                 try:
-                    x = float(stl.get("x", 0.0))
-                    z = float(stl.get("z", 0.0))
-                    op.stock_to_leave = {"x": x, "z": z}
+                    op.stock_to_leave = {"x": float(stl.get("x", 0.0)),
+                                         "z": float(stl.get("z", 0.0))}
                 except Exception:
                     pass
-
-        # spring_passes: None or int
         if "spring_passes" in payload:
             sp = payload["spring_passes"]
             op.spring_passes = None if (sp is None) else int(sp)
-
-        print(f"[save] Profiling updated at index {index}: profileId={getattr(op, 'profileId', None)}, strategy={getattr(op, 'strategy', None)}")
+        self._save_current_program()
 
     # Optional: handle teach buttons
     def onTeachX(self, index: int):
@@ -417,6 +446,75 @@ class ConversationalQml(QQuickWidget):
     def onTeachZ(self, index: int):
         # Similar to onTeachX for Z
         pass
+
+    def onOpenNumPadRequested(self, field):
+        """Called from QML when a NumpadField was tapped."""
+        try:
+            self.openNumPad(field)
+        except Exception as e:
+            print("openNumPad failed:", e)
+
+    def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
+        """Open SmartNumPadDialog and write the chosen value back into the QML field."""
+        # robust read of 'settingName' from QML Item
+        setting_name = None
+        try:
+            setting_name = fake_edit_text.property("settingName")
+        except Exception:
+            pass
+        if setting_name is None:
+            setting_name = getattr(fake_edit_text, 'settingName', None)
+
+        # try to set numpadActive guard to avoid double-open
+        try:
+            fake_edit_text.setProperty("numpadActive", True)
+        except Exception:
+            pass
+
+        dialog = SmartNumPadDialog(setting_name)
+
+        def handle_value(value):
+            self.setSelectedValue(fake_edit_text, value)
+            if on_value_selected_callback:
+                on_value_selected_callback(value)
+
+        try:
+            dialog.valueSelected.connect(handle_value)
+            dialog.exec_()
+        finally:
+            try:
+                fake_edit_text.setProperty("numpadActive", False)
+            except Exception:
+                pass
+
+    def setSelectedValue(self, field, value):
+        """Write a value back into a QML field.
+        Prefers a 'commit(value)' method (like NumpadField), else tries 'value', else 'text'."""
+        # 1) Try direct attribute call
+        try:
+            if hasattr(field, 'commit'):
+                field.commit(value)  # QML method exposed
+                return
+        except Exception:
+            pass
+        # 2) Try meta-object invoke
+        try:
+            QMetaObject.invokeMethod(field, 'commit', Qt.QueuedConnection, value)
+            return
+        except Exception:
+            pass
+        # 3) Try to set 'value' property
+        try:
+            if field.property("value") is not None:
+                field.setProperty("value", value)
+                return
+        except Exception:
+            pass
+        # 4) Fallback: set 'text'
+        try:
+            field.setProperty("text", str(value))
+        except Exception as e:
+            print("setSelectedValue fallback failed:", e)
 
     def goBack(self):
         print("back button clicked")
