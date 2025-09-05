@@ -198,12 +198,24 @@ class ConversationalQml(QQuickWidget):
                 item.openNumPadRequested.connect(self.onOpenNumPadRequested)
             if hasattr(item, "generateGcodeRequested"):
                 item.generateGcodeRequested.connect(self.onGenerateGcodeRequested)
-            # NEW: header autosave
             if hasattr(item, "updateHeader"):
                 item.updateHeader.connect(self.onUpdateHeader)
+            if hasattr(item, "addOperationRequested"):
+                item.addOperationRequested.connect(self.onAddOperationRequested)
+            if hasattr(item, "reorderModeToggled"):
+                item.reorderModeToggled.connect(self.onReorderModeToggled)
+
             print("Screen signals connected.")
         except Exception as e:
             print("Failed to hook screen item signals:", e)
+
+    def onAddOperationRequested(self):
+        print("[operations] Add New requested")
+        # TODO: open your 'add operation' flow
+
+    def onReorderModeToggled(self, on):
+        print(f"[operations] Reorder mode: {'ON' if on else 'OFF'}")
+        # TODO: enable drag-reorder in the ListView when you implement it
 
     def onGenerateGcodeRequested(self):
         """Called from ChildScreen when user clicks 'Generate GCode' on the top bar."""

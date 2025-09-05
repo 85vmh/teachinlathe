@@ -7,19 +7,20 @@ Item {
     id: operationEditor
     objectName: "childScreen"
 
+    // Context from Python
     property var selectedProgram: null
     property var operationsModel: []
 
-    // selection state for the header row (no op selected)
-    property bool headerSelected: false
-
+    // Navigation
     property bool showBack: true
     signal backRequested()
     signal generateGcodeRequested()
 
+    // Row-level toggles
     signal toggleGenerateGcode(int index, bool checked)
     signal toggleOptionalBlock(int index, bool checked)
 
+    // Details bridge
     signal detailsRequested(int index)
     signal updateToolChange(int index, var payload)
     signal updateFacing(int index, var payload)
@@ -29,12 +30,15 @@ Item {
     signal updateParting(int index, var payload)
     signal updateTapping(int index, var payload)
 
-    // NEW: autosave for header
-    signal updateHeader(var payload)
-
+    // Numpad / teach
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
+
+    // Operations toolbar
+    signal addOperationRequested()
+    signal reorderModeToggled(bool on)
+    property bool reorderMode: false
 
     width: parent ? parent.width : 1200
     height: parent ? parent.height : 800
@@ -46,34 +50,31 @@ Item {
     // Fixed widths for non-flex columns; Operation Type will fill remaining
     readonly property int colOpNumW: 50
     readonly property int colGenW:   80
-    readonly property int colTypeW:  240   // minimum; the cell fills rest
+    readonly property int colTypeW:  200   // used as minimum only
     readonly property int colOptW:   80
 
     function receiveDetailsData(index, data) {
-        // Special case: program header selection (-1)
         if (index === -1) {
             detailsLoader.source = "HeaderDetailsView.qml"
-            Qt.callLater(function() {
-                if (detailsLoader.item) {
-                    if (detailsLoader.item.applyProgram)
-                        detailsLoader.item.applyProgram(data)      // data = full program dict
-                    else if (detailsLoader.item.applyData)
-                        detailsLoader.item.applyData(index, data)  // fallback
-                }
-            })
-            return
+        } else if (!data || !data.type) {
+            detailsLoader.source = ""
+        } else if (data.type === "changeTool") {
+            detailsLoader.source = "ToolChangeDetailsView.qml"
+        } else if (data.type === "facing") {
+            detailsLoader.source = "FacingDetailsView.qml"
+        } else if (data.type === "profiling")  {
+            detailsLoader.source = "ProfilingDetailsView.qml"
+        } else if (data.type === "drilling")   {
+            detailsLoader.source = "DrillingDetailsView.qml"
+        } else if (data.type === "threading")  {
+            detailsLoader.source = "ThreadingDetailsView.qml"
+        } else if (data.type === "parting")    {
+            detailsLoader.source = "PartingDetailsView.qml"
+        } else if (data.type === "tapping")    {
+            detailsLoader.source = "TappingDetailsView.qml"
+        } else {
+            detailsLoader.source = ""
         }
-
-        if (!data || !data.type) { detailsLoader.source = ""; return }
-        if (data.type === "changeTool")      detailsLoader.source = "ToolChangeDetailsView.qml"
-        else if (data.type === "facing")     detailsLoader.source = "FacingDetailsView.qml"
-        else if (data.type === "profiling")  detailsLoader.source = "ProfilingDetailsView.qml"
-        else if (data.type === "drilling")   detailsLoader.source = "DrillingDetailsView.qml"
-        else if (data.type === "threading")  detailsLoader.source = "ThreadingDetailsView.qml"
-        else if (data.type === "parting")    detailsLoader.source = "PartingDetailsView.qml"
-        else if (data.type === "tapping")    detailsLoader.source = "TappingDetailsView.qml"
-        else                                  detailsLoader.source = ""
-
         Qt.callLater(function() {
             if (detailsLoader.item && detailsLoader.item.applyData) {
                 detailsLoader.item.applyData(index, data)
@@ -121,9 +122,9 @@ Item {
             Layout.fillHeight: true
             spacing: 12
 
-            // LEFT: operations list + header row on top
+            // LEFT: program header + operations box (now contains header + list)
             Rectangle {
-                Layout.preferredWidth: Math.round(parent.width * 0.25)
+                Layout.preferredWidth: Math.round(parent.width * 0.3)
                 Layout.fillHeight: true
                 color: "#ffffff"
                 radius: 6
@@ -133,226 +134,267 @@ Item {
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 8
-                    spacing: 4
+                    spacing: 6
 
-                    // ======== SELECTABLE PROGRAM HEADER ROW (no columns) ========
+                    // Program Header row (selectable, index = -1)
                     Rectangle {
-                        id: headerRow
+                        id: programHeaderRow
                         Layout.fillWidth: true
-                        Layout.minimumHeight: 60
-                        Layout.preferredHeight: 60
-                        Layout.maximumHeight: 60
-                        radius: 0
-                        color: operationEditor.headerSelected ? "#dbe9ff" : "#f7f7f7"
-                        border.width: operationEditor.headerSelected ? 1 : 0
-                        border.color: "#8ec5ff"
+                        Layout.preferredHeight: 44
+                        radius: 4
+                        color: (opsList.currentIndex === -1 ? "#e9f4ff" : "#f9f9f9")
+                        border.width: 1
+                        border.color: (opsList.currentIndex === -1 ? "#8ec5ff" : "#dddddd")
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 6
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 8
 
                             Label {
                                 text: "Program Header"
                                 font.bold: true
                                 Layout.fillWidth: true
-                                elide: Text.ElideRight
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            Label {
-                                text: (operationEditor.selectedProgram
-                                       && (operationEditor.selectedProgram.name
-                                           || (operationEditor.selectedProgram.header
-                                               && operationEditor.selectedProgram.header.name)))
-                                      ? (operationEditor.selectedProgram.name
-                                         || operationEditor.selectedProgram.header.name)
-                                      : ""
-                                color: "#333"
                                 verticalAlignment: Text.AlignVCenter
                             }
                         }
 
                         TapHandler {
                             onTapped: {
-                                // select header, clear op selection
-                                operationEditor.headerSelected = true
                                 opsList.currentIndex = -1
-                                // ask Python for program details
                                 operationEditor.detailsRequested(-1)
                             }
                         }
                     }
 
-                    // ======== TABLE HEADER (Order / Generate / Operation Type / Optional) ========
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.minimumHeight: 40
-                        Layout.preferredHeight: 40
-                        Layout.maximumHeight: 40
-                        spacing: 0
-
-                        Label {
-                            text: "Order"
-                            font.bold: true
-                            Layout.minimumWidth: operationEditor.colOpNumW
-                            Layout.preferredWidth: operationEditor.colOpNumW
-                            Layout.maximumWidth: operationEditor.colOpNumW
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-                        Divider { }
-
-                        Label {
-                            text: "Generate\nGCode"
-                            font.bold: true
-                            Layout.minimumWidth: operationEditor.colGenW
-                            Layout.preferredWidth: operationEditor.colGenW
-                            Layout.maximumWidth: operationEditor.colGenW
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            wrapMode: Text.WordWrap
-                            maximumLineCount: 2
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-                        Divider { }
-
-                        Label {
-                            text: "Operation Type"
-                            font.bold: true
-                            Layout.minimumWidth: operationEditor.colTypeW
-                            Layout.fillWidth: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            elide: Text.ElideRight
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-                        Divider { }
-
-                        Label {
-                            text: "Optional\nBlock"
-                            font.bold: true
-                            Layout.minimumWidth: operationEditor.colOptW
-                            Layout.preferredWidth: operationEditor.colOptW
-                            Layout.maximumWidth: operationEditor.colOptW
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            wrapMode: Text.WordWrap
-                            maximumLineCount: 2
-                            Layout.alignment: Qt.AlignVCenter
-                        }
-                    }
-
-                    // ======== LIST ========
-                    ListView {
-                        id: opsList
+                    // Operations box: title row + divider + header + list (with left margin)
+                    Rectangle {
+                        id: operationsBox
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        clip: true
-                        model: operationEditor.operationsModel
-                        currentIndex: -1
-                        onCurrentIndexChanged: {
-                            // if a row is selected, header must be unselected
-                            if (currentIndex >= 0) {
-                                operationEditor.headerSelected = false
-                                operationEditor.detailsRequested(currentIndex)
-                            }
-                        }
+                        radius: 4
+                        color: "#f8f8f8"
+                        border.width: 1
+                        border.color: "#dddddd"
 
-                        delegate: Rectangle {
-                            width: ListView.view ? ListView.view.width : 400
-                            height: 60
-                            radius: 0
-                            color: (index % 2 === 0 ? "#fafafa" : "#f0f0f0")
-                            border.width: ListView.isCurrentItem ? 1 : 0
-                            border.color: "#8ec5ff"
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: 8
+                            spacing: 6
 
-                            property var op: modelData
-
+                            // Top row inside the operations box
                             RowLayout {
-                                anchors.fill: parent
-                                spacing: 0
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 40
+                                spacing: 8
 
-                                // Order
                                 Label {
-                                    text: (op && op.order !== undefined) ? op.order : (index + 1)
-                                    Layout.minimumWidth: operationEditor.colOpNumW
-                                    Layout.preferredWidth: operationEditor.colOpNumW
-                                    Layout.maximumWidth: operationEditor.colOpNumW
-                                    horizontalAlignment: Text.AlignHCenter
+                                    text: "Operations"
+                                    font.bold: true
                                     verticalAlignment: Text.AlignVCenter
-                                    Layout.alignment: Qt.AlignVCenter
+                                    Layout.fillWidth: true
                                 }
-                                Divider { }
 
-                                // Generate GCode
-                                Item {
-                                    Layout.minimumWidth: operationEditor.colGenW
-                                    Layout.preferredWidth: operationEditor.colGenW
-                                    Layout.maximumWidth: operationEditor.colGenW
-                                    Layout.fillHeight: true
-                                    CheckBox {
-                                        id: genChk
-                                        anchors.centerIn: parent
-                                        checked: !!(op && op.generate_gcode)
-                                        onToggled: {
-                                            if (!op) return
-                                            op.generate_gcode = checked
-                                            typeLabel.enabled = checked
-                                            optCell.enabled   = checked
-                                            operationEditor.toggleGenerateGcode(index, checked)
-                                        }
+                                Button {
+                                    text: "Add New"
+                                    Layout.alignment: Qt.AlignVCenter     // do not stretch vertically
+                                    onClicked: operationEditor.addOperationRequested()
+                                }
+
+                                Switch {
+                                    id: reorderSwitch
+                                    text: "Reorder"
+                                    checked: operationEditor.reorderMode
+                                    Layout.alignment: Qt.AlignVCenter     // do not stretch vertically
+                                    onToggled: {
+                                        operationEditor.reorderMode = checked
+                                        operationEditor.reorderModeToggled(checked)
                                     }
                                 }
-                                Divider { }
+                            }
 
-                                // Operation Type (flex) + 10px left margin
-                                Item {
-                                    Layout.minimumWidth: operationEditor.colTypeW
+                            // Horizontal divider below the title row
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 1
+                                color: "#dddddd"
+                            }
+
+                            // Container for column header + list with left margin
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                Layout.leftMargin: 10
+                                spacing: 4
+
+                                // Column header (inside operations box now)
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Layout.minimumHeight: 40
+                                    Layout.preferredHeight: 40
+                                    Layout.maximumHeight: 40
+                                    spacing: 0
+
+                                    Label {
+                                        text: "Order"
+                                        font.bold: true
+                                        Layout.minimumWidth: operationEditor.colOpNumW
+                                        Layout.preferredWidth: operationEditor.colOpNumW
+                                        Layout.maximumWidth: operationEditor.colOpNumW
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+                                    Divider { }
+
+                                    Label {
+                                        text: "Generate\nGCode"
+                                        font.bold: true
+                                        Layout.minimumWidth: operationEditor.colGenW
+                                        Layout.preferredWidth: operationEditor.colGenW
+                                        Layout.maximumWidth: operationEditor.colGenW
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        wrapMode: Text.WordWrap
+                                        maximumLineCount: 2
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+                                    Divider { }
+
+                                    Label {
+                                        text: "Operation Type"
+                                        font.bold: true
+                                        Layout.minimumWidth: operationEditor.colTypeW
+                                        Layout.fillWidth: true
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        elide: Text.ElideRight
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+                                    Divider { }
+
+                                    Label {
+                                        text: "Optional\nBlock"
+                                        font.bold: true
+                                        Layout.minimumWidth: operationEditor.colOptW
+                                        Layout.preferredWidth: operationEditor.colOptW
+                                        Layout.maximumWidth: operationEditor.colOptW
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        wrapMode: Text.WordWrap
+                                        maximumLineCount: 2
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+                                }
+
+                                // LIST (unchanged logic, now lives inside operations box)
+                                ListView {
+                                    id: opsList
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
-                                    Label {
-                                        id: typeLabel
-                                        anchors.fill: parent
-                                        anchors.leftMargin: 10
-                                        text: (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
-                                        elide: Text.ElideRight
-                                        verticalAlignment: Text.AlignVCenter
+                                    clip: true
+                                    model: operationEditor.operationsModel
+                                    currentIndex: -1
+                                    onCurrentIndexChanged: {
+                                        if (currentIndex >= 0) operationEditor.detailsRequested(currentIndex)
                                     }
-                                }
-                                Divider { }
 
-                                // Optional Block
-                                Item {
-                                    id: optCell
-                                    Layout.minimumWidth: operationEditor.colOptW
-                                    Layout.preferredWidth: operationEditor.colOptW
-                                    Layout.maximumWidth: operationEditor.colOptW
-                                    Layout.fillHeight: true
-                                    CheckBox {
-                                        anchors.centerIn: parent
-                                        checked: !!(op && op.is_optional_block)
-                                        onToggled: {
-                                            if (!op) return
-                                            op.is_optional_block = checked
-                                            operationEditor.toggleOptionalBlock(index, checked)
+                                    delegate: Rectangle {
+                                        width: ListView.view ? ListView.view.width : 400
+                                        height: 60
+                                        radius: 0
+                                        color: (index % 2 === 0 ? "#fafafa" : "#f0f0f0")
+                                        border.width: ListView.isCurrentItem ? 1 : 0
+                                        border.color: "#8ec5ff"
+
+                                        property var op: modelData
+
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            spacing: 0
+
+                                            // Order
+                                            Label {
+                                                text: (op && op.order !== undefined) ? op.order : (index + 1)
+                                                Layout.minimumWidth: operationEditor.colOpNumW
+                                                Layout.preferredWidth: operationEditor.colOpNumW
+                                                Layout.maximumWidth: operationEditor.colOpNumW
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
+                                                Layout.alignment: Qt.AlignVCenter
+                                            }
+                                            Divider { }
+
+                                            // Generate GCode
+                                            Item {
+                                                Layout.minimumWidth: operationEditor.colGenW
+                                                Layout.preferredWidth: operationEditor.colGenW
+                                                Layout.maximumWidth: operationEditor.colGenW
+                                                Layout.fillHeight: true
+                                                CheckBox {
+                                                    id: genChk
+                                                    anchors.centerIn: parent
+                                                    checked: !!(op && op.generate_gcode)
+                                                    onToggled: {
+                                                        if (!op) return
+                                                        op.generate_gcode = checked
+                                                        typeLabel.enabled = checked
+                                                        optCell.enabled   = checked
+                                                        operationEditor.toggleGenerateGcode(index, checked)
+                                                    }
+                                                }
+                                            }
+                                            Divider { }
+
+                                            // Operation Type (flex) + margin
+                                            Item {
+                                                Layout.minimumWidth: operationEditor.colTypeW
+                                                Layout.fillWidth: true
+                                                Layout.fillHeight: true
+                                                Label {
+                                                    id: typeLabel
+                                                    anchors.fill: parent
+                                                    anchors.leftMargin: 10
+                                                    text: (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
+                                                    elide: Text.ElideRight
+                                                    verticalAlignment: Text.AlignVCenter
+                                                }
+                                            }
+                                            Divider { }
+
+                                            // Optional Block
+                                            Item {
+                                                id: optCell
+                                                Layout.minimumWidth: operationEditor.colOptW
+                                                Layout.preferredWidth: operationEditor.colOptW
+                                                Layout.maximumWidth: operationEditor.colOptW
+                                                Layout.fillHeight: true
+                                                CheckBox {
+                                                    anchors.centerIn: parent
+                                                    checked: !!(op && op.is_optional_block)
+                                                    onToggled: {
+                                                        if (!op) return
+                                                        op.is_optional_block = checked
+                                                        operationEditor.toggleOptionalBlock(index, checked)
+                                                    }
+                                                }
+                                            }
                                         }
+
+                                        Component.onCompleted: {
+                                            var en = !!(op && op.generate_gcode)
+                                            typeLabel.enabled = en
+                                            optCell.enabled   = en
+                                        }
+
+                                        TapHandler { onTapped: opsList.currentIndex = index }
                                     }
                                 }
-                            }
-
-                            // init enabled state
-                            Component.onCompleted: {
-                                var en = !!(op && op.generate_gcode)
-                                typeLabel.enabled = en
-                                optCell.enabled   = en
-                            }
-
-                            TapHandler { onTapped: opsList.currentIndex = index }
-                        }
-                    }
-                }
-            }
+                            } // end list container with left margin
+                        } // end operationsBox ColumnLayout
+                    } // end operationsBox
+                } // end outer ColumnLayout
+            } // end left Rectangle
 
             // RIGHT: details
             Rectangle {
@@ -378,14 +420,11 @@ Item {
                     function onSaveRequested(updated) {
                         if (!updated || !updated.payload) return
                         var t = updated.payload.type || ""
-
-                        // Header autosave
-                        if (t === "header") {
+                        if (updated.index === -1) {
                             if (operationEditor.updateHeader)
-                                operationEditor.updateHeader(updated.payload.header)
+                                operationEditor.updateHeader(updated.payload)
                             return
                         }
-
                         if (t === "changeTool" && operationEditor.updateToolChange)
                             operationEditor.updateToolChange(updated.index, updated.payload)
                         else if (t === "facing" && operationEditor.updateFacing)

@@ -2,13 +2,13 @@
     "id": "prog_001",
     "header": {
         "name": "Program Vasi",
-        "last_edit": "2025-09-04 14:02:42",
+        "last_edit": "2025-09-05 12:46:06",
         "datum": 1,
         "units": "mm",
         "workpiece": {
             "material": "Aluminiu 7075",
             "external_diameter": 50.0,
-            "internal_diameter": 0,
+            "internal_diameter": 0.0,
             "stickout_length": 120.0
         }
     },
@@ -146,11 +146,11 @@
             "type": "threading",
             "generate_gcode": true,
             "is_optional_block": false,
-            "location" : "od",
+            "location": "OD",
             "spindle_rpm": 500,
             "thread_type": "metric",
             "pitch": 1.5,
-            "starts" : 1,
+            "starts": 1,
             "major_diameter": 20,
             "minor_diameter": 18.64,
             "z_start": 3,
