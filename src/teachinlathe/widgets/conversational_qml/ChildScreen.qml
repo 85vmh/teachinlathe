@@ -14,47 +14,62 @@ Item {
 
     // Navigation
     property bool showBack: true
+
     signal backRequested()
+
     signal generateGcodeRequested()
 
     // Row-level toggles
     signal toggleGenerateGcode(int index, bool checked)
+
     signal toggleOptionalBlock(int index, bool checked)
 
     // Details bridge
     signal detailsRequested(int index)
+
     signal updateToolChange(int index, var payload)
+
     signal updateFacing(int index, var payload)
+
     signal updateProfiling(int index, var payload)
+
     signal updateDrilling(int index, var payload)
+
     signal updateThreading(int index, var payload)
+
     signal updateParting(int index, var payload)
+
     signal updateTapping(int index, var payload)
+
     signal updateHeader(var payload)
 
     // Numpad / teach
     signal openNumPadRequested(var field)
+
     signal teachXRequested(int index)
+
     signal teachZRequested(int index)
 
     // Operations toolbar
     signal addOperationRequested()
+
     signal reorderModeToggled(bool on)
+
     property bool reorderMode: false
 
     width: parent ? parent.width : 1200
     height: parent ? parent.height : 800
 
     property string titleText: (selectedProgram && (selectedProgram.name || (selectedProgram.header && selectedProgram.header.name)))
-                               ? "Editing: " + (selectedProgram.name || selectedProgram.header.name)
-                               : "Creating New Program"
+        ? "Editing: " + (selectedProgram.name || selectedProgram.header.name)
+        : "Creating New Program"
 
     // Column widths
     readonly property int colOpNumW: 50
-    readonly property int colGenW:   80
-    readonly property int colTypeW:  200   // min; flex fills the rest
-    readonly property int colOptW:   80
-    readonly property int colDelW:   100   // fixed width for Delete/Reorder
+    readonly property int colGenW: 80
+    readonly property int colTypeW: 200   // min; flex fills the rest
+    readonly property int colOptW: 80
+    readonly property int colDelW: 100   // fixed width for Delete/Reorder
 
     // Reusable Icon+Text button: content-sized, gray border, blue on press,
     // vertical centering for icon+text, with left/right padding.
@@ -67,13 +82,14 @@ Item {
             property string text: ""
             property bool  enabled: true
             property bool  compact: false
+
             signal clicked()
 
             // Padding + implicit sizing based on content
             readonly property int hp: 8       // left/right padding
             readonly property int vp: 6       // top/bottom padding
             implicitHeight: 36
-            implicitWidth: Math.max(90, Math.ceil(contentRow.implicitWidth) + hp*2)
+            implicitWidth: Math.max(90, Math.ceil(contentRow.implicitWidth) + hp * 2)
             Layout.preferredWidth: implicitWidth
             Layout.preferredHeight: implicitHeight
 
@@ -146,20 +162,20 @@ Item {
             detailsLoader.source = "ToolChangeDetailsView.qml"
         } else if (data.type === "facing") {
             detailsLoader.source = "FacingDetailsView.qml"
-        } else if (data.type === "profiling")  {
+        } else if (data.type === "profiling") {
             detailsLoader.source = "ProfilingDetailsView.qml"
-        } else if (data.type === "drilling")   {
+        } else if (data.type === "drilling") {
             detailsLoader.source = "DrillingDetailsView.qml"
-        } else if (data.type === "threading")  {
+        } else if (data.type === "threading") {
             detailsLoader.source = "ThreadingDetailsView.qml"
-        } else if (data.type === "parting")    {
+        } else if (data.type === "parting") {
             detailsLoader.source = "PartingDetailsView.qml"
-        } else if (data.type === "tapping")    {
+        } else if (data.type === "tapping") {
             detailsLoader.source = "TappingDetailsView.qml"
         } else {
             detailsLoader.source = ""
         }
-        Qt.callLater(function() {
+        Qt.callLater(function () {
             if (detailsLoader.item && detailsLoader.item.applyData) {
                 detailsLoader.item.applyData(index, data)
             }
@@ -295,7 +311,9 @@ Item {
                                         // make RowLayout honor the button width
                                         addBtn.Layout.preferredWidth = 160
                                         addBtn.Layout.preferredHeight = item.implicitHeight
-                                        item.clicked.connect(function() { operationEditor.addOperationRequested() })
+                                        item.clicked.connect(function () {
+                                            operationEditor.addOperationRequested()
+                                        })
                                     }
                                 }
 
@@ -312,7 +330,7 @@ Item {
                                         item.compact = false       // show text; set true only if you want icon-only
                                         reorderBtn.Layout.preferredWidth = item.implicitWidth
                                         reorderBtn.Layout.preferredHeight = item.implicitHeight
-                                        item.clicked.connect(function() {
+                                        item.clicked.connect(function () {
                                             if (!item.enabled) return
                                             operationEditor.reorderMode = !operationEditor.reorderMode
                                             item.tint = operationEditor.reorderMode ? "#1E88E5" : "#4F4F4F"
@@ -337,7 +355,6 @@ Item {
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                                Layout.leftMargin: 10
                                 spacing: 4
 
                                 // Column header (dynamic last column)
@@ -358,7 +375,8 @@ Item {
                                         verticalAlignment: Text.AlignVCenter
                                         Layout.alignment: Qt.AlignVCenter
                                     }
-                                    Divider { }
+                                    Divider {
+                                    }
 
                                     Label {
                                         text: "Generate\nGCode"
@@ -372,7 +390,8 @@ Item {
                                         maximumLineCount: 2
                                         Layout.alignment: Qt.AlignVCenter
                                     }
-                                    Divider { }
+                                    Divider {
+                                    }
 
                                     Label {
                                         text: "Operation Type"
@@ -384,7 +403,8 @@ Item {
                                         elide: Text.ElideRight
                                         Layout.alignment: Qt.AlignVCenter
                                     }
-                                    Divider { }
+                                    Divider {
+                                    }
 
                                     Label {
                                         text: "Optional\nBlock"
@@ -398,7 +418,8 @@ Item {
                                         maximumLineCount: 2
                                         Layout.alignment: Qt.AlignVCenter
                                     }
-                                    Divider { }
+                                    Divider {
+                                    }
 
                                     Label {
                                         text: operationEditor.reorderMode ? "Change\nOrder" : "Delete"
@@ -431,10 +452,10 @@ Item {
                                         isCurrentItem: ListView.isCurrentItem
 
                                         colOpNumW: operationEditor.colOpNumW
-                                        colGenW:   operationEditor.colGenW
-                                        colTypeW:  operationEditor.colTypeW
-                                        colOptW:   operationEditor.colOptW
-                                        colDelW:   operationEditor.colDelW
+                                        colGenW: operationEditor.colGenW
+                                        colTypeW: operationEditor.colTypeW
+                                        colOptW: operationEditor.colOptW
+                                        colDelW: operationEditor.colDelW
 
                                         editing: operationEditor.reorderMode
 
@@ -442,22 +463,22 @@ Item {
                                         isFirstItem: index === 0
                                         isLastItem: index === (opsList.count - 1)
 
-                                        onGenerateToggled: function(i, checked) {
+                                        onGenerateToggled: function (i, checked) {
                                             operationEditor.toggleGenerateGcode(i, checked)
                                         }
-                                        onOptionalToggled: function(i, checked) {
+                                        onOptionalToggled: function (i, checked) {
                                             operationEditor.toggleOptionalBlock(i, checked)
                                         }
-                                        onDeleteClicked: function(i) {
+                                        onDeleteClicked: function (i) {
                                             console.log("Delete clicked for row", i)
                                         }
-                                        onMoveUpRequested: function(i) {
+                                        onMoveUpRequested: function (i) {
                                             console.log("Move UP requested for row", i)
                                         }
-                                        onMoveDownRequested: function(i) {
+                                        onMoveDownRequested: function (i) {
                                             console.log("Move DOWN requested for row", i)
                                         }
-                                        onRowTapped: function(i) {
+                                        onRowTapped: function (i) {
                                             opsList.currentIndex = i
                                         }
                                     }
@@ -515,9 +536,17 @@ Item {
                             operationEditor.updateOperation(updated.index, updated.payload)
                     }
 
-                    function onTeachXRequested(i) { operationEditor.teachXRequested(i) }
-                    function onTeachZRequested(i) { operationEditor.teachZRequested(i) }
-                    function onOpenNumPadRequested(field) { operationEditor.openNumPadRequested(field) }
+                    function onTeachXRequested(i) {
+                        operationEditor.teachXRequested(i)
+                    }
+
+                    function onTeachZRequested(i) {
+                        operationEditor.teachZRequested(i)
+                    }
+
+                    function onOpenNumPadRequested(field) {
+                        operationEditor.openNumPadRequested(field)
+                    }
                 }
             }
         }
