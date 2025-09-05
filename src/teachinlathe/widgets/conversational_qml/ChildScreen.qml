@@ -1,7 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "."   // Divider.qml and OperationRowDelegate.qml
+import QtGraphicalEffects 1.0
+import "."   // Divider.qml + OperationRowDelegate.qml
 
 Item {
     id: operationEditor
@@ -19,7 +20,6 @@ Item {
     // Row-level toggles
     signal toggleGenerateGcode(int index, bool checked)
     signal toggleOptionalBlock(int index, bool checked)
-    signal deleteOperationRequested(int index)
 
     // Details bridge
     signal detailsRequested(int index)
@@ -30,6 +30,7 @@ Item {
     signal updateThreading(int index, var payload)
     signal updateParting(int index, var payload)
     signal updateTapping(int index, var payload)
+    signal updateHeader(var payload)
 
     // Numpad / teach
     signal openNumPadRequested(var field)
@@ -51,9 +52,9 @@ Item {
     // Column widths
     readonly property int colOpNumW: 50
     readonly property int colGenW:   80
-    readonly property int colTypeW:  200   // used as minimum only
+    readonly property int colTypeW:  200   // min; flex fills the rest
     readonly property int colOptW:   80
-    readonly property int colDelW:   44
+    readonly property int colDelW:   100   // new fixed width for Delete/Reorder
 
     function receiveDetailsData(index, data) {
         if (index === -1) {
@@ -126,7 +127,7 @@ Item {
 
             // LEFT: program header + operations box
             Rectangle {
-                Layout.preferredWidth: Math.round(parent.width * 0.4)
+                Layout.preferredWidth: Math.round(parent.width * 0.3)
                 Layout.fillHeight: true
                 color: "#ffffff"
                 radius: 6
@@ -184,7 +185,7 @@ Item {
                             anchors.margins: 8
                             spacing: 6
 
-                            // Title row + actions
+                            // Title row + icon buttons
                             RowLayout {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 40
@@ -197,20 +198,70 @@ Item {
                                     Layout.fillWidth: true
                                 }
 
-                                Button {
-                                    text: "Add New"
+                                // Add operation (icon-only button)
+                                Rectangle {
+                                    id: addBtn
+                                    width: 36; height: 36; radius: 6
+                                    color: addArea.pressed ? "#e1f0ff" : "transparent"
+                                    border.width: addArea.pressed ? 1 : 0
+                                    border.color: addArea.pressed ? "#8ec5ff" : "transparent"
                                     Layout.alignment: Qt.AlignVCenter
-                                    onClicked: operationEditor.addOperationRequested()
+
+                                    Image {
+                                        id: addImg
+                                        anchors.centerIn: parent
+                                        source: "add_op_icon.svg"
+                                        sourceSize.width: 36
+                                        sourceSize.height: 36
+                                        visible: false
+                                        smooth: true
+                                    }
+                                    ColorOverlay {
+                                        anchors.centerIn: addImg
+                                        width: addImg.width
+                                        height: addImg.height
+                                        source: addImg
+                                        color: "#4F4F4F"
+                                    }
+                                    MouseArea {
+                                        id: addArea
+                                        anchors.fill: parent
+                                        onClicked: operationEditor.addOperationRequested()
+                                    }
                                 }
 
-                                Switch {
-                                    id: reorderSwitch
-                                    text: "Reorder"
-                                    checked: operationEditor.reorderMode
+                                // Reorder toggle (icon-only, grey when off, blue when on)
+                                Rectangle {
+                                    id: reorderBtn
+                                    width: 36; height: 36; radius: 6
+                                    color: reorderArea.pressed ? "#e1f0ff" : "transparent"
+                                    border.width: reorderArea.pressed ? 1 : 0
+                                    border.color: reorderArea.pressed ? "#8ec5ff" : "transparent"
                                     Layout.alignment: Qt.AlignVCenter
-                                    onToggled: {
-                                        operationEditor.reorderMode = checked
-                                        operationEditor.reorderModeToggled(checked)
+
+                                    Image {
+                                        id: reorderImg
+                                        anchors.centerIn: parent
+                                        source: "reorder_icon.svg"
+                                        sourceSize.width: 36
+                                        sourceSize.height: 36
+                                        visible: false
+                                        smooth: true
+                                    }
+                                    ColorOverlay {
+                                        anchors.centerIn: reorderImg
+                                        width: reorderImg.width
+                                        height: reorderImg.height
+                                        source: reorderImg
+                                        color: operationEditor.reorderMode ? "#1E88E5" : "#4F4F4F"
+                                    }
+                                    MouseArea {
+                                        id: reorderArea
+                                        anchors.fill: parent
+                                        onClicked: {
+                                            operationEditor.reorderMode = !operationEditor.reorderMode
+                                            operationEditor.reorderModeToggled(operationEditor.reorderMode)
+                                        }
                                     }
                                 }
                             }
@@ -222,14 +273,14 @@ Item {
                                 color: "#dddddd"
                             }
 
-                            // Header + list (with left margin)
+                            // Container for header + list with left margin
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 Layout.leftMargin: 10
                                 spacing: 4
 
-                                // Column header (now includes Delete)
+                                // Column header (now includes dynamic last column)
                                 RowLayout {
                                     Layout.fillWidth: true
                                     Layout.minimumHeight: 40
@@ -240,9 +291,9 @@ Item {
                                     Label {
                                         text: "Order"
                                         font.bold: true
-                                        Layout.minimumWidth: operationEditor.colOpNumW
-                                        Layout.preferredWidth: operationEditor.colOpNumW
-                                        Layout.maximumWidth: operationEditor.colOpNumW
+                                        Layout.minimumWidth: colOpNumW
+                                        Layout.preferredWidth: colOpNumW
+                                        Layout.maximumWidth: colOpNumW
                                         horizontalAlignment: Text.AlignHCenter
                                         verticalAlignment: Text.AlignVCenter
                                         Layout.alignment: Qt.AlignVCenter
@@ -252,9 +303,9 @@ Item {
                                     Label {
                                         text: "Generate\nGCode"
                                         font.bold: true
-                                        Layout.minimumWidth: operationEditor.colGenW
-                                        Layout.preferredWidth: operationEditor.colGenW
-                                        Layout.maximumWidth: operationEditor.colGenW
+                                        Layout.minimumWidth: colGenW
+                                        Layout.preferredWidth: colGenW
+                                        Layout.maximumWidth: colGenW
                                         horizontalAlignment: Text.AlignHCenter
                                         verticalAlignment: Text.AlignVCenter
                                         wrapMode: Text.WordWrap
@@ -266,7 +317,7 @@ Item {
                                     Label {
                                         text: "Operation Type"
                                         font.bold: true
-                                        Layout.minimumWidth: operationEditor.colTypeW
+                                        Layout.minimumWidth: colTypeW
                                         Layout.fillWidth: true
                                         horizontalAlignment: Text.AlignHCenter
                                         verticalAlignment: Text.AlignVCenter
@@ -278,9 +329,9 @@ Item {
                                     Label {
                                         text: "Optional\nBlock"
                                         font.bold: true
-                                        Layout.minimumWidth: operationEditor.colOptW
-                                        Layout.preferredWidth: operationEditor.colOptW
-                                        Layout.maximumWidth: operationEditor.colOptW
+                                        Layout.minimumWidth: colOptW
+                                        Layout.preferredWidth: colOptW
+                                        Layout.maximumWidth: colOptW
                                         horizontalAlignment: Text.AlignHCenter
                                         verticalAlignment: Text.AlignVCenter
                                         wrapMode: Text.WordWrap
@@ -289,12 +340,13 @@ Item {
                                     }
                                     Divider { }
 
+                                    // Dynamic last column header
                                     Label {
-                                        text: "Delete"
+                                        text: operationEditor.reorderMode ? "Reorder" : "Delete"
                                         font.bold: true
-                                        Layout.minimumWidth: operationEditor.colDelW
-                                        Layout.preferredWidth: operationEditor.colDelW
-                                        Layout.maximumWidth: operationEditor.colDelW
+                                        Layout.minimumWidth: colDelW
+                                        Layout.preferredWidth: colDelW
+                                        Layout.maximumWidth: colDelW
                                         horizontalAlignment: Text.AlignHCenter
                                         verticalAlignment: Text.AlignVCenter
                                         Layout.alignment: Qt.AlignVCenter
@@ -314,33 +366,44 @@ Item {
                                     }
 
                                     delegate: OperationRowDelegate {
-                                        // sizing & selection
                                         width: ListView.view ? ListView.view.width : 400
+                                        rowIndex: index
+                                        op: modelData
                                         isCurrentItem: ListView.isCurrentItem
 
-                                        // data
-                                        op: modelData
-                                        rowIndex: index
-
-                                        // columns
                                         colOpNumW: operationEditor.colOpNumW
                                         colGenW:   operationEditor.colGenW
                                         colTypeW:  operationEditor.colTypeW
                                         colOptW:   operationEditor.colOptW
                                         colDelW:   operationEditor.colDelW
 
-                                        // events -> parent
-                                        onGenerateToggled: operationEditor.toggleGenerateGcode(rowIndex, checked)
-                                        onOptionalToggled: operationEditor.toggleOptionalBlock(rowIndex, checked)
-                                        onDeleteClicked:   operationEditor.deleteOperationRequested(rowIndex)
-                                        onRowTapped:       opsList.currentIndex = rowIndex
+                                        editing: operationEditor.reorderMode
+
+                                        onGenerateToggled: function(i, checked) {
+                                            operationEditor.toggleGenerateGcode(i, checked)
+                                        }
+                                        onOptionalToggled: function(i, checked) {
+                                            operationEditor.toggleOptionalBlock(i, checked)
+                                        }
+                                        onDeleteClicked: function(i) {
+                                            console.log("Delete clicked for row", i)
+                                        }
+                                        onMoveUpRequested: function(i) {
+                                            console.log("Move UP requested for row", i)
+                                        }
+                                        onMoveDownRequested: function(i) {
+                                            console.log("Move DOWN requested for row", i)
+                                        }
+                                        onRowTapped: function(i) {
+                                            opsList.currentIndex = i
+                                        }
                                     }
                                 }
-                            }
-                        }
-                    }
-                }
-            }
+                            } // end list container
+                        } // end operationsBox ColumnLayout
+                    } // end operationsBox
+                } // end outer ColumnLayout
+            } // end left Rectangle
 
             // RIGHT: details
             Rectangle {

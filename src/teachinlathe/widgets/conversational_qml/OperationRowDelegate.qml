@@ -6,28 +6,35 @@ import "."   // for Divider.qml
 
 Rectangle {
     id: root
+
     // Inputs from the ListView delegate
     property var  op
     property int  rowIndex: -1
     property bool isCurrentItem: false
 
-    // Column widths
+    // Column widths (last column fixed to 100px)
     property int colOpNumW: 50
     property int colGenW:   80
     property int colTypeW:  200
     property int colOptW:   80
-    property int colDelW:   80
+    property int colDelW:   100
 
-    // Delete icon customization
-    property url  deleteIconSource: "delete_icon.svg"
-    property color deleteTint: "#C62828"
-    property color deletePressedTint: "#AD2121"
-    property color pressedBgColor: "#E6F0FF"  // soft blue highlight on press
+    // Edit/Reorder mode toggle
+    property bool editing: false
+
+    // Icon sources / tints
+    property url  deleteIconSource:   "delete_icon.svg"
+    property url  moveUpIconSource:   "move_up_icon.svg"
+    property url  moveDownIconSource: "move_down_icon.svg"
+    property color deleteTint:   "#C62828"
+    property color reorderTint:  "#4F4F4F"
 
     // Signals back to parent
     signal generateToggled(int rowIndex, bool checked)
     signal optionalToggled(int rowIndex, bool checked)
     signal deleteClicked(int rowIndex)
+    signal moveUpRequested(int rowIndex)
+    signal moveDownRequested(int rowIndex)
     signal rowTapped(int rowIndex)
 
     width: parent ? parent.width : 400
@@ -36,6 +43,48 @@ Rectangle {
     color: (rowIndex % 2 === 0 ? "#fafafa" : "#f0f0f0")
     border.width: isCurrentItem ? 1 : 0
     border.color: "#8ec5ff"
+
+    // Simple reusable icon button with press feedback and tint
+    Component {
+        id: pressableIcon
+        Rectangle {
+            id: iconBtn
+            width: 36
+            height: 36
+            radius: 6
+            color: pressedArea.pressed ? "#e1f0ff" : "transparent"
+            border.color: pressedArea.pressed ? "#8ec5ff" : "transparent"
+            border.width: pressedArea.pressed ? 1 : 0
+
+            property alias source: baseImg.source
+            property color tint: "#4F4F4F"
+            signal clicked()
+
+            // Base image (hidden) + color overlay for tinting
+            Image {
+                id: baseImg
+                anchors.centerIn: parent
+                sourceSize.width: 24
+                sourceSize.height: 24
+                visible: false
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+            }
+            ColorOverlay {
+                anchors.centerIn: baseImg
+                width: baseImg.width
+                height: baseImg.height
+                source: baseImg
+                color: iconBtn.tint
+            }
+
+            MouseArea {
+                id: pressedArea
+                anchors.fill: parent
+                onClicked: iconBtn.clicked()
+            }
+        }
+    }
 
     RowLayout {
         anchors.fill: parent
@@ -109,59 +158,47 @@ Rectangle {
         }
         Divider { }
 
-        // Delete "icon button" (touch friendly, with pressed feedback)
+        // Delete / Reorder column (fixed 100px)
         Item {
             Layout.minimumWidth: colDelW
             Layout.preferredWidth: colDelW
             Layout.maximumWidth: colDelW
             Layout.fillHeight: true
 
-            // Button container (fixed touch target)
-            Item {
-                id: delBtn
-                width: 40
-                height: 40
+            // NORMAL MODE: single delete icon centered
+            Loader {
                 anchors.centerIn: parent
-                scale: tap.pressed ? 0.92 : 1.0
-
-                // Pressed background highlight
-                Rectangle {
-                    id: pressedBg
-                    anchors.fill: parent
-                    radius: 8
-                    color: tap.pressed ? pressedBgColor : "transparent"
+                active: !root.editing
+                sourceComponent: pressableIcon
+                onLoaded: {
+                    item.source = root.deleteIconSource
+                    item.tint   = root.deleteTint
+                    item.clicked.connect(function() { root.deleteClicked(rowIndex) })
                 }
+            }
 
-                // Source image (hidden, feeds the overlay)
-                Image {
-                    id: delImg
-                    anchors.centerIn: parent
-                    source: deleteIconSource
-                    sourceSize.width: 24
-                    sourceSize.height: 24
-                    visible: false
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
+            // EDIT MODE: two icons (up/down) side-by-side centered
+            Row {
+                anchors.centerIn: parent
+                spacing: 6
+                visible: root.editing
+
+                Loader {
+                    sourceComponent: pressableIcon
+                    onLoaded: {
+                        item.source = root.moveUpIconSource
+                        item.tint   = root.reorderTint
+                        item.clicked.connect(function() { root.moveUpRequested(rowIndex) })
+                    }
                 }
-
-                // Tint overlay; darken a bit when pressed
-                ColorOverlay {
-                    anchors.centerIn: delImg
-                    width: delImg.width
-                    height: delImg.height
-                    source: delImg
-                    color: tap.pressed ? deletePressedTint : deleteTint
+                Loader {
+                    sourceComponent: pressableIcon
+                    onLoaded: {
+                        item.source = root.moveDownIconSource
+                        item.tint   = root.reorderTint
+                        item.clicked.connect(function() { root.moveDownRequested(rowIndex) })
+                    }
                 }
-
-                // Tap handler (no mouse cursor; touch-first)
-                TapHandler {
-                    id: tap
-                    acceptedButtons: Qt.LeftButton
-                    onTapped: root.deleteClicked(rowIndex)
-                }
-
-                // Smooth scale transition
-                Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
             }
         }
     }
