@@ -10,6 +10,8 @@ Item {
     // API & data
     property int  opIndex: -1
     property var  opData:  null
+    signal saveRequested(var updated)
+    signal openNumPadRequested(var field)
 
     // dataclass Drilling
     property int   spindleRpm:   (opData && opData.spindle_rpm    !== undefined) ? opData.spindle_rpm  : 300
@@ -17,9 +19,7 @@ Item {
     property real  zStart:       (opData && opData.z_start        !== undefined) ? opData.z_start      : 0.0
     property real  zEnd:         (opData && opData.z_end          !== undefined) ? opData.z_end        : 0.0
 
-    signal saveRequested(var updated)
-    signal openNumPadRequested(var field)
-    // (drilling nu are teach semnale în cerința actuală, deci le omitem)
+
 
     // Parent calls this to load data
     function applyData(index, data) {
@@ -71,7 +71,7 @@ Item {
                     Layout.preferredWidth: 120
                     settingName: "smart_numpad.input-rpm-2"
                     text: String(root.spindleRpm)
-                    onOpenRequested: root.openNumPadRequested(nfRpm)
+                    onOpenRequested: root.openNumPadRequested(field)
                     onTextChanged: {
                         var v = parseInt(text); if (!isNaN(v)) { root.spindleRpm = v; root.armSave() }
                     }
@@ -86,7 +86,7 @@ Item {
                     Layout.preferredWidth: 100
                     settingName: "smart_numpad.quick-cycles-drill-feed"
                     text: String(root.feedRate)
-                    onOpenRequested: root.openNumPadRequested(nfFeed)
+                    onOpenRequested: root.openNumPadRequested(field)
                     onTextChanged: {
                         var v = parseFloat(text); if (!isNaN(v)) { root.feedRate = v; root.armSave() }
                     }
@@ -115,7 +115,7 @@ Item {
                         Layout.preferredWidth: 120
                         settingName: "smart_numpad.z-start"
                         text: String(root.zStart)
-                        onOpenRequested: root.openNumPadRequested(nfZStart)
+                        onOpenRequested: root.openNumPadRequested(field)
                         onTextChanged: {
                             var v = parseFloat(text); if (!isNaN(v)) { root.zStart = v; root.armSave() }
                         }
@@ -129,7 +129,7 @@ Item {
                         Layout.preferredWidth: 120
                         settingName: "smart_numpad.z-end"
                         text: String(root.zEnd)
-                        onOpenRequested: root.openNumPadRequested(nfZEnd)
+                        onOpenRequested: root.openNumPadRequested(field)
                         onTextChanged: {
                             var v = parseFloat(text); if (!isNaN(v)) { root.zEnd = v; root.armSave() }
                         }

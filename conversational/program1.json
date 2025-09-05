@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "New program name",
-        "last_edit": "2025-09-04 16:47:48",
+        "last_edit": "2025-09-05 11:28:26",
         "datum": 1,
         "units": "in",
         "workpiece": {
@@ -35,7 +35,7 @@
             "type": "facing",
             "generate_gcode": true,
             "is_optional_block": true,
-            "css_value": 100,
+            "css_value": 150,
             "max_speed": 2000,
             "feed_rate": 0.2,
             "doc": 80.0,
@@ -92,7 +92,7 @@
             "type": "profiling",
             "generate_gcode": true,
             "is_optional_block": false,
-            "css_value": 200,
+            "css_value": 100,
             "max_speed": 2000,
             "feed_rate": 0.2,
             "profileId": 1,
@@ -181,10 +181,10 @@
             "type": "drilling",
             "generate_gcode": true,
             "is_optional_block": false,
-            "spindle_rpm": 500,
-            "feed_rate": 0.02,
-            "z_start": 3.0,
-            "z_end": -15.0
+            "spindle_rpm": 700,
+            "feed_rate": 0.1,
+            "z_start": 20.0,
+            "z_end": 11.0
         },
         {
             "order": 11,
