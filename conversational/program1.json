@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2025-09-05 12:10:39",
+        "last_edit": "2025-09-05 12:37:12",
         "datum": 6,
         "units": "mm",
         "workpiece": {
@@ -18,7 +18,7 @@
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": true,
-            "tool_no": 2,
+            "tool_no": 10,
             "tool_orientation": 2,
             "back_angle": 95,
             "front_angle": 80,

@@ -612,8 +612,7 @@ class ConversationalQml(QQuickWidget):
             print("openNumPad failed:", e)
 
     def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
-        """Open SmartNumPadDialog and write the chosen value back into the QML field."""
-        # robust read of 'settingName' from QML Item
+        """Open SmartNumPadDialog and manage focus/highlight on the QML field."""
         setting_name = None
         try:
             setting_name = fake_edit_text.property("settingName")
@@ -622,8 +621,12 @@ class ConversationalQml(QQuickWidget):
         if setting_name is None:
             setting_name = getattr(fake_edit_text, 'settingName', None)
 
-        # try to set numpadActive guard to avoid double-open
         try:
+            fake_edit_text.setProperty("focus", True)
+            try:
+                QMetaObject.invokeMethod(fake_edit_text, 'forceActiveFocus', Qt.QueuedConnection)
+            except Exception:
+                pass
             fake_edit_text.setProperty("numpadActive", True)
         except Exception:
             pass
@@ -643,6 +646,13 @@ class ConversationalQml(QQuickWidget):
                 fake_edit_text.setProperty("numpadActive", False)
             except Exception:
                 pass
+            try:
+                QMetaObject.invokeMethod(fake_edit_text, 'defocus', Qt.QueuedConnection)
+            except Exception:
+                try:
+                    fake_edit_text.setProperty("focus", False)
+                except Exception:
+                    pass
 
     def setSelectedValue(self, field, value):
         """Write a value back into a QML field.
