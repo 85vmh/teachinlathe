@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "."   // to import local components like Divider.qml
+import "."   // Divider.qml and OperationRowDelegate.qml
 
 Item {
     id: operationEditor
@@ -19,6 +19,7 @@ Item {
     // Row-level toggles
     signal toggleGenerateGcode(int index, bool checked)
     signal toggleOptionalBlock(int index, bool checked)
+    signal deleteOperationRequested(int index)
 
     // Details bridge
     signal detailsRequested(int index)
@@ -47,11 +48,12 @@ Item {
                                ? "Editing: " + (selectedProgram.name || selectedProgram.header.name)
                                : "Creating New Program"
 
-    // Fixed widths for non-flex columns; Operation Type will fill remaining
+    // Column widths
     readonly property int colOpNumW: 50
     readonly property int colGenW:   80
     readonly property int colTypeW:  200   // used as minimum only
     readonly property int colOptW:   80
+    readonly property int colDelW:   44
 
     function receiveDetailsData(index, data) {
         if (index === -1) {
@@ -122,9 +124,9 @@ Item {
             Layout.fillHeight: true
             spacing: 12
 
-            // LEFT: program header + operations box (now contains header + list)
+            // LEFT: program header + operations box
             Rectangle {
-                Layout.preferredWidth: Math.round(parent.width * 0.3)
+                Layout.preferredWidth: Math.round(parent.width * 0.4)
                 Layout.fillHeight: true
                 color: "#ffffff"
                 radius: 6
@@ -167,7 +169,7 @@ Item {
                         }
                     }
 
-                    // Operations box: title row + divider + header + list (with left margin)
+                    // Operations box
                     Rectangle {
                         id: operationsBox
                         Layout.fillWidth: true
@@ -182,7 +184,7 @@ Item {
                             anchors.margins: 8
                             spacing: 6
 
-                            // Top row inside the operations box
+                            // Title row + actions
                             RowLayout {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 40
@@ -197,7 +199,7 @@ Item {
 
                                 Button {
                                     text: "Add New"
-                                    Layout.alignment: Qt.AlignVCenter     // do not stretch vertically
+                                    Layout.alignment: Qt.AlignVCenter
                                     onClicked: operationEditor.addOperationRequested()
                                 }
 
@@ -205,7 +207,7 @@ Item {
                                     id: reorderSwitch
                                     text: "Reorder"
                                     checked: operationEditor.reorderMode
-                                    Layout.alignment: Qt.AlignVCenter     // do not stretch vertically
+                                    Layout.alignment: Qt.AlignVCenter
                                     onToggled: {
                                         operationEditor.reorderMode = checked
                                         operationEditor.reorderModeToggled(checked)
@@ -213,21 +215,21 @@ Item {
                                 }
                             }
 
-                            // Horizontal divider below the title row
+                            // Divider under title row
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 1
                                 color: "#dddddd"
                             }
 
-                            // Container for column header + list with left margin
+                            // Header + list (with left margin)
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 Layout.leftMargin: 10
                                 spacing: 4
 
-                                // Column header (inside operations box now)
+                                // Column header (now includes Delete)
                                 RowLayout {
                                     Layout.fillWidth: true
                                     Layout.minimumHeight: 40
@@ -285,9 +287,21 @@ Item {
                                         maximumLineCount: 2
                                         Layout.alignment: Qt.AlignVCenter
                                     }
+                                    Divider { }
+
+                                    Label {
+                                        text: "Delete"
+                                        font.bold: true
+                                        Layout.minimumWidth: operationEditor.colDelW
+                                        Layout.preferredWidth: operationEditor.colDelW
+                                        Layout.maximumWidth: operationEditor.colDelW
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
                                 }
 
-                                // LIST (unchanged logic, now lives inside operations box)
+                                // LIST (uses OperationRowDelegate)
                                 ListView {
                                     id: opsList
                                     Layout.fillWidth: true
@@ -299,102 +313,34 @@ Item {
                                         if (currentIndex >= 0) operationEditor.detailsRequested(currentIndex)
                                     }
 
-                                    delegate: Rectangle {
+                                    delegate: OperationRowDelegate {
+                                        // sizing & selection
                                         width: ListView.view ? ListView.view.width : 400
-                                        height: 60
-                                        radius: 0
-                                        color: (index % 2 === 0 ? "#fafafa" : "#f0f0f0")
-                                        border.width: ListView.isCurrentItem ? 1 : 0
-                                        border.color: "#8ec5ff"
+                                        isCurrentItem: ListView.isCurrentItem
 
-                                        property var op: modelData
+                                        // data
+                                        op: modelData
+                                        rowIndex: index
 
-                                        RowLayout {
-                                            anchors.fill: parent
-                                            spacing: 0
+                                        // columns
+                                        colOpNumW: operationEditor.colOpNumW
+                                        colGenW:   operationEditor.colGenW
+                                        colTypeW:  operationEditor.colTypeW
+                                        colOptW:   operationEditor.colOptW
+                                        colDelW:   operationEditor.colDelW
 
-                                            // Order
-                                            Label {
-                                                text: (op && op.order !== undefined) ? op.order : (index + 1)
-                                                Layout.minimumWidth: operationEditor.colOpNumW
-                                                Layout.preferredWidth: operationEditor.colOpNumW
-                                                Layout.maximumWidth: operationEditor.colOpNumW
-                                                horizontalAlignment: Text.AlignHCenter
-                                                verticalAlignment: Text.AlignVCenter
-                                                Layout.alignment: Qt.AlignVCenter
-                                            }
-                                            Divider { }
-
-                                            // Generate GCode
-                                            Item {
-                                                Layout.minimumWidth: operationEditor.colGenW
-                                                Layout.preferredWidth: operationEditor.colGenW
-                                                Layout.maximumWidth: operationEditor.colGenW
-                                                Layout.fillHeight: true
-                                                CheckBox {
-                                                    id: genChk
-                                                    anchors.centerIn: parent
-                                                    checked: !!(op && op.generate_gcode)
-                                                    onToggled: {
-                                                        if (!op) return
-                                                        op.generate_gcode = checked
-                                                        typeLabel.enabled = checked
-                                                        optCell.enabled   = checked
-                                                        operationEditor.toggleGenerateGcode(index, checked)
-                                                    }
-                                                }
-                                            }
-                                            Divider { }
-
-                                            // Operation Type (flex) + margin
-                                            Item {
-                                                Layout.minimumWidth: operationEditor.colTypeW
-                                                Layout.fillWidth: true
-                                                Layout.fillHeight: true
-                                                Label {
-                                                    id: typeLabel
-                                                    anchors.fill: parent
-                                                    anchors.leftMargin: 10
-                                                    text: (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
-                                                    elide: Text.ElideRight
-                                                    verticalAlignment: Text.AlignVCenter
-                                                }
-                                            }
-                                            Divider { }
-
-                                            // Optional Block
-                                            Item {
-                                                id: optCell
-                                                Layout.minimumWidth: operationEditor.colOptW
-                                                Layout.preferredWidth: operationEditor.colOptW
-                                                Layout.maximumWidth: operationEditor.colOptW
-                                                Layout.fillHeight: true
-                                                CheckBox {
-                                                    anchors.centerIn: parent
-                                                    checked: !!(op && op.is_optional_block)
-                                                    onToggled: {
-                                                        if (!op) return
-                                                        op.is_optional_block = checked
-                                                        operationEditor.toggleOptionalBlock(index, checked)
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        Component.onCompleted: {
-                                            var en = !!(op && op.generate_gcode)
-                                            typeLabel.enabled = en
-                                            optCell.enabled   = en
-                                        }
-
-                                        TapHandler { onTapped: opsList.currentIndex = index }
+                                        // events -> parent
+                                        onGenerateToggled: operationEditor.toggleGenerateGcode(rowIndex, checked)
+                                        onOptionalToggled: operationEditor.toggleOptionalBlock(rowIndex, checked)
+                                        onDeleteClicked:   operationEditor.deleteOperationRequested(rowIndex)
+                                        onRowTapped:       opsList.currentIndex = rowIndex
                                     }
                                 }
-                            } // end list container with left margin
-                        } // end operationsBox ColumnLayout
-                    } // end operationsBox
-                } // end outer ColumnLayout
-            } // end left Rectangle
+                            }
+                        }
+                    }
+                }
+            }
 
             // RIGHT: details
             Rectangle {
