@@ -54,7 +54,88 @@ Item {
     readonly property int colGenW:   80
     readonly property int colTypeW:  200   // min; flex fills the rest
     readonly property int colOptW:   80
-    readonly property int colDelW:   100   // new fixed width for Delete/Reorder
+    readonly property int colDelW:   100   // fixed width for Delete/Reorder
+
+    // Reusable Icon+Text button: content-sized, gray border, blue on press,
+    // vertical centering for icon+text, with left/right padding.
+    Component {
+        id: iconTextButton
+        Rectangle {
+            id: btn
+            property url   iconSource: ""
+            property color tint: "#4F4F4F"
+            property string text: ""
+            property bool  enabled: true
+            property bool  compact: false
+            signal clicked()
+
+            // Padding + implicit sizing based on content
+            readonly property int hp: 8       // left/right padding
+            readonly property int vp: 6       // top/bottom padding
+            implicitHeight: 36
+            implicitWidth: Math.max(90, Math.ceil(contentRow.implicitWidth) + hp*2)
+            Layout.preferredWidth: implicitWidth
+            Layout.preferredHeight: implicitHeight
+
+            radius: 6
+            color: (enabled && area.pressed) ? "#e1f0ff" : "transparent"
+            border.width: 1
+            border.color: enabled ? (area.pressed ? "#8ec5ff" : "#BDBDBD") : "#E0E0E0"
+            opacity: enabled ? 1.0 : 0.35
+
+            // Use RowLayout so children can vertically center via Layout.alignment
+            RowLayout {
+                id: contentRow
+                anchors.fill: parent
+                anchors.leftMargin: btn.hp
+                anchors.rightMargin: btn.hp
+                anchors.topMargin: btn.vp
+                anchors.bottomMargin: btn.vp
+                spacing: 6
+
+                // Icon container so overlay doesn't take an extra slot in the layout
+                Item {
+                    id: iconWrap
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    visible: btn.iconSource !== ""
+
+                    Image {
+                        id: baseImg
+                        anchors.fill: parent
+                        source: btn.iconSource
+                        // keep real geometry, but tint via overlay
+                        opacity: 0
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                    }
+                    ColorOverlay {
+                        anchors.fill: baseImg
+                        source: baseImg
+                        color: btn.tint
+                    }
+                }
+
+                Label {
+                    id: lbl
+                    visible: !btn.compact
+                    text: btn.text
+                    color: btn.tint
+                    Layout.alignment: Qt.AlignVCenter
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
+            }
+
+            MouseArea {
+                id: area
+                anchors.fill: parent
+                enabled: btn.enabled
+                onClicked: btn.clicked()
+            }
+        }
+    }
 
     function receiveDetailsData(index, data) {
         if (index === -1) {
@@ -159,6 +240,7 @@ Item {
                                 font.bold: true
                                 Layout.fillWidth: true
                                 verticalAlignment: Text.AlignVCenter
+                                elide: Text.ElideRight
                             }
                         }
 
@@ -185,83 +267,61 @@ Item {
                             anchors.margins: 8
                             spacing: 6
 
-                            // Title row + icon buttons
+                            // Title row + icon-text buttons (adaptive)
                             RowLayout {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 40
-                                spacing: 8
+                                spacing: 20
 
                                 Label {
                                     text: "Operations"
                                     font.bold: true
                                     verticalAlignment: Text.AlignVCenter
                                     Layout.fillWidth: true
+                                    elide: Text.ElideRight
                                 }
 
-                                // Add operation (icon-only button)
-                                Rectangle {
+                                // Add operation
+                                Loader {
                                     id: addBtn
-                                    width: 36; height: 36; radius: 6
-                                    color: addArea.pressed ? "#e1f0ff" : "transparent"
-                                    border.width: addArea.pressed ? 1 : 0
-                                    border.color: addArea.pressed ? "#8ec5ff" : "transparent"
+                                    sourceComponent: iconTextButton
                                     Layout.alignment: Qt.AlignVCenter
-
-                                    Image {
-                                        id: addImg
-                                        anchors.centerIn: parent
-                                        source: "add_op_icon.svg"
-                                        sourceSize.width: 36
-                                        sourceSize.height: 36
-                                        visible: false
-                                        smooth: true
-                                    }
-                                    ColorOverlay {
-                                        anchors.centerIn: addImg
-                                        width: addImg.width
-                                        height: addImg.height
-                                        source: addImg
-                                        color: "#4F4F4F"
-                                    }
-                                    MouseArea {
-                                        id: addArea
-                                        anchors.fill: parent
-                                        onClicked: operationEditor.addOperationRequested()
+                                    onLoaded: {
+                                        item.iconSource = "add_op_icon.svg"
+                                        item.text = "Add New Operation"
+                                        item.tint = "#2E7D32"      // green
+                                        item.enabled = true
+                                        item.compact = false       // show text; set true only if you want icon-only
+                                        // make RowLayout honor the button width
+                                        addBtn.Layout.preferredWidth = 160
+                                        addBtn.Layout.preferredHeight = item.implicitHeight
+                                        item.clicked.connect(function() { operationEditor.addOperationRequested() })
                                     }
                                 }
 
-                                // Reorder toggle (icon-only, grey when off, blue when on)
-                                Rectangle {
+                                // Reorder toggle
+                                Loader {
                                     id: reorderBtn
-                                    width: 36; height: 36; radius: 6
-                                    color: reorderArea.pressed ? "#e1f0ff" : "transparent"
-                                    border.width: reorderArea.pressed ? 1 : 0
-                                    border.color: reorderArea.pressed ? "#8ec5ff" : "transparent"
+                                    sourceComponent: iconTextButton
                                     Layout.alignment: Qt.AlignVCenter
-
-                                    Image {
-                                        id: reorderImg
-                                        anchors.centerIn: parent
-                                        source: "reorder_icon.svg"
-                                        sourceSize.width: 36
-                                        sourceSize.height: 36
-                                        visible: false
-                                        smooth: true
-                                    }
-                                    ColorOverlay {
-                                        anchors.centerIn: reorderImg
-                                        width: reorderImg.width
-                                        height: reorderImg.height
-                                        source: reorderImg
-                                        color: operationEditor.reorderMode ? "#1E88E5" : "#4F4F4F"
-                                    }
-                                    MouseArea {
-                                        id: reorderArea
-                                        anchors.fill: parent
-                                        onClicked: {
+                                    onLoaded: {
+                                        item.iconSource = "reorder_icon.svg"
+                                        item.text = "Reorder"
+                                        item.enabled = opsList.count > 1
+                                        item.tint = operationEditor.reorderMode ? "#1E88E5" : "#4F4F4F"
+                                        item.compact = false       // show text; set true only if you want icon-only
+                                        reorderBtn.Layout.preferredWidth = item.implicitWidth
+                                        reorderBtn.Layout.preferredHeight = item.implicitHeight
+                                        item.clicked.connect(function() {
+                                            if (!item.enabled) return
                                             operationEditor.reorderMode = !operationEditor.reorderMode
+                                            item.tint = operationEditor.reorderMode ? "#1E88E5" : "#4F4F4F"
                                             operationEditor.reorderModeToggled(operationEditor.reorderMode)
-                                        }
+                                        })
+                                    }
+                                    Connections {
+                                        target: opsList
+                                        onCountChanged: if (reorderBtn.item) reorderBtn.item.enabled = opsList.count > 1
                                     }
                                 }
                             }
@@ -280,7 +340,7 @@ Item {
                                 Layout.leftMargin: 10
                                 spacing: 4
 
-                                // Column header (now includes dynamic last column)
+                                // Column header (dynamic last column)
                                 RowLayout {
                                     Layout.fillWidth: true
                                     Layout.minimumHeight: 40
@@ -340,9 +400,8 @@ Item {
                                     }
                                     Divider { }
 
-                                    // Dynamic last column header
                                     Label {
-                                        text: operationEditor.reorderMode ? "Reorder" : "Delete"
+                                        text: operationEditor.reorderMode ? "Change\nOrder" : "Delete"
                                         font.bold: true
                                         Layout.minimumWidth: colDelW
                                         Layout.preferredWidth: colDelW
@@ -353,7 +412,7 @@ Item {
                                     }
                                 }
 
-                                // LIST (uses OperationRowDelegate)
+                                // LIST
                                 ListView {
                                     id: opsList
                                     Layout.fillWidth: true
@@ -378,6 +437,10 @@ Item {
                                         colDelW:   operationEditor.colDelW
 
                                         editing: operationEditor.reorderMode
+
+                                        totalCount: opsList.count
+                                        isFirstItem: index === 0
+                                        isLastItem: index === (opsList.count - 1)
 
                                         onGenerateToggled: function(i, checked) {
                                             operationEditor.toggleGenerateGcode(i, checked)

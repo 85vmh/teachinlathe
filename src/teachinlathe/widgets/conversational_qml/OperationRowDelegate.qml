@@ -12,6 +12,11 @@ Rectangle {
     property int  rowIndex: -1
     property bool isCurrentItem: false
 
+    // Position info for enabling/disabling reorder buttons
+    property bool isFirstItem: false
+    property bool isLastItem: false
+    property int  totalCount: 0
+
     // Column widths (last column fixed to 100px)
     property int colOpNumW: 50
     property int colGenW:   80
@@ -44,28 +49,36 @@ Rectangle {
     border.width: isCurrentItem ? 1 : 0
     border.color: "#8ec5ff"
 
-    // Simple reusable icon button with press feedback and tint
+    // Reusable icon button with press feedback, tint, and enabled state
     Component {
         id: pressableIcon
         Rectangle {
             id: iconBtn
-            width: 36
-            height: 36
+            width: 40
+            height: 40
             radius: 6
-            color: pressedArea.pressed ? "#e1f0ff" : "transparent"
-            border.color: pressedArea.pressed ? "#8ec5ff" : "transparent"
-            border.width: pressedArea.pressed ? 1 : 0
+
+            // Background stays transparent, flashes light blue when pressed
+            color: (!enabled ? "transparent"
+                             : (pressedArea.pressed ? "#e1f0ff" : "transparent"))
+
+            // Always show a border when enabled: gray by default, blue when pressed
+            border.width: enabled ? 1 : 0
+            border.color: !enabled ? "transparent"
+                                   : (pressedArea.pressed ? "#8ec5ff" : "#BDBDBD")
+
+            opacity: enabled ? 1.0 : 0.35
 
             property alias source: baseImg.source
             property color tint: "#4F4F4F"
+            property bool  enabled: true
             signal clicked()
 
-            // Base image (hidden) + color overlay for tinting
             Image {
                 id: baseImg
                 anchors.centerIn: parent
-                sourceSize.width: 24
-                sourceSize.height: 24
+                sourceSize.width: 30
+                sourceSize.height: 30
                 visible: false
                 fillMode: Image.PreserveAspectFit
                 smooth: true
@@ -81,6 +94,7 @@ Rectangle {
             MouseArea {
                 id: pressedArea
                 anchors.fill: parent
+                enabled: iconBtn.enabled
                 onClicked: iconBtn.clicked()
             }
         }
@@ -173,6 +187,7 @@ Rectangle {
                 onLoaded: {
                     item.source = root.deleteIconSource
                     item.tint   = root.deleteTint
+                    item.enabled = true
                     item.clicked.connect(function() { root.deleteClicked(rowIndex) })
                 }
             }
@@ -183,19 +198,23 @@ Rectangle {
                 spacing: 6
                 visible: root.editing
 
+                // Move Up
                 Loader {
                     sourceComponent: pressableIcon
                     onLoaded: {
-                        item.source = root.moveUpIconSource
-                        item.tint   = root.reorderTint
+                        item.source  = root.moveUpIconSource
+                        item.tint    = root.reorderTint
+                        item.enabled = (root.totalCount > 1 && !root.isFirstItem)
                         item.clicked.connect(function() { root.moveUpRequested(rowIndex) })
                     }
                 }
+                // Move Down
                 Loader {
                     sourceComponent: pressableIcon
                     onLoaded: {
-                        item.source = root.moveDownIconSource
-                        item.tint   = root.reorderTint
+                        item.source  = root.moveDownIconSource
+                        item.tint    = root.reorderTint
+                        item.enabled = (root.totalCount > 1 && !root.isLastItem)
                         item.clicked.connect(function() { root.moveDownRequested(rowIndex) })
                     }
                 }
