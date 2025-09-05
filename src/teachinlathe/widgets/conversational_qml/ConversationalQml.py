@@ -163,19 +163,17 @@ class ConversationalQml(QQuickWidget):
             print("Failed to emit dataChanged:", e)
 
     def _hook_screen_item(self, item):
-        """Connect expected QML signals from the loaded screen."""
         try:
             if hasattr(item, "addNewProgramRequested"):
                 item.addNewProgramRequested.connect(self.openChildScreen)
             if hasattr(item, "editProgramRequested"):
-                item.editProgramRequested.connect(self.openChildScreen)  # gets row index
+                item.editProgramRequested.connect(self.openChildScreen)
             if hasattr(item, "backRequested"):
                 item.backRequested.connect(self.goBack)
             if hasattr(item, "toggleGenerateGcode"):
                 item.toggleGenerateGcode.connect(self.onToggleGenerateGcode)
             if hasattr(item, "toggleOptionalBlock"):
                 item.toggleOptionalBlock.connect(self.onToggleOptionalBlock)
-            # in _hook_screen_item(self, item):
             if hasattr(item, "detailsRequested"):
                 item.detailsRequested.connect(lambda idx, it=item: self.onDetailsRequested(it, idx))
             if hasattr(item, "updateToolChange"):
@@ -200,6 +198,9 @@ class ConversationalQml(QQuickWidget):
                 item.openNumPadRequested.connect(self.onOpenNumPadRequested)
             if hasattr(item, "generateGcodeRequested"):
                 item.generateGcodeRequested.connect(self.onGenerateGcodeRequested)
+            # NEW: header autosave
+            if hasattr(item, "updateHeader"):
+                item.updateHeader.connect(self.onUpdateHeader)
             print("Screen signals connected.")
         except Exception as e:
             print("Failed to hook screen item signals:", e)
@@ -261,6 +262,20 @@ class ConversationalQml(QQuickWidget):
         return ngc_path
 
     def onDetailsRequested(self, screen_item, index: int):
+        # Header selected
+        if index == -1:
+            prog = self._get_current_program()
+            if not prog:
+                return
+            try:
+                data = prog.to_dict() if hasattr(prog, "to_dict") else None
+                if data:
+                    screen_item.receiveDetailsData(-1, data)  # ChildScreen va încărca HeaderDetailsView.qml
+            except Exception as e:
+                print("receiveDetailsData(header) failed:", e)
+            return
+
+        # Normal op details
         op = self._get_current_op(index)
         if op is None:
             return
@@ -387,6 +402,41 @@ class ConversationalQml(QQuickWidget):
         if not (0 <= index < len(ops)):
             return None
         return ops[index]
+
+    def onUpdateHeader(self, payload):
+        try:
+            payload = self._to_py(payload)
+            prog = self._get_current_program()
+            if not prog:
+                return
+
+            header = getattr(prog, "header", None)
+            if not header:
+                return
+
+            # simple fields
+            for attr in ("name", "last_edit", "datum", "units"):
+                if attr in payload and hasattr(header, attr):
+                    try:
+                        setattr(header, attr, payload[attr])
+                    except Exception:
+                        pass
+
+            # nested: workpiece
+            wp_payload = payload.get("workpiece")
+            wp = getattr(header, "workpiece", None)
+            if isinstance(wp_payload, dict) and wp is not None:
+                for attr in ("material", "external_diameter", "internal_diameter", "stickout_length"):
+                    if attr in wp_payload and hasattr(wp, attr):
+                        try:
+                            setattr(wp, attr, wp_payload[attr])
+                        except Exception:
+                            pass
+
+            # persist
+            self._save_current_program()
+        except Exception as e:
+            print("[header] update error:", e)
 
     def onUpdateToolChange(self, index: int, payload):
         payload = self._to_py(payload)

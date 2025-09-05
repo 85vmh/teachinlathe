@@ -10,6 +10,9 @@ Item {
     property var selectedProgram: null
     property var operationsModel: []
 
+    // selection state for the header row (no op selected)
+    property bool headerSelected: false
+
     property bool showBack: true
     signal backRequested()
     signal generateGcodeRequested()
@@ -26,6 +29,9 @@ Item {
     signal updateParting(int index, var payload)
     signal updateTapping(int index, var payload)
 
+    // NEW: autosave for header
+    signal updateHeader(var payload)
+
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
@@ -40,19 +46,34 @@ Item {
     // Fixed widths for non-flex columns; Operation Type will fill remaining
     readonly property int colOpNumW: 50
     readonly property int colGenW:   80
-    readonly property int colTypeW:  240   // used as minimum only
+    readonly property int colTypeW:  240   // minimum; the cell fills rest
     readonly property int colOptW:   80
 
     function receiveDetailsData(index, data) {
+        // Special case: program header selection (-1)
+        if (index === -1) {
+            detailsLoader.source = "HeaderDetailsView.qml"
+            Qt.callLater(function() {
+                if (detailsLoader.item) {
+                    if (detailsLoader.item.applyProgram)
+                        detailsLoader.item.applyProgram(data)      // data = full program dict
+                    else if (detailsLoader.item.applyData)
+                        detailsLoader.item.applyData(index, data)  // fallback
+                }
+            })
+            return
+        }
+
         if (!data || !data.type) { detailsLoader.source = ""; return }
         if (data.type === "changeTool")      detailsLoader.source = "ToolChangeDetailsView.qml"
         else if (data.type === "facing")     detailsLoader.source = "FacingDetailsView.qml"
         else if (data.type === "profiling")  detailsLoader.source = "ProfilingDetailsView.qml"
-        else if (data.type === "drilling")  detailsLoader.source = "DrillingDetailsView.qml"
-        else if (data.type === "threading") detailsLoader.source = "ThreadingDetailsView.qml"
-        else if (data.type === "parting")  detailsLoader.source = "PartingDetailsView.qml"
+        else if (data.type === "drilling")   detailsLoader.source = "DrillingDetailsView.qml"
+        else if (data.type === "threading")  detailsLoader.source = "ThreadingDetailsView.qml"
+        else if (data.type === "parting")    detailsLoader.source = "PartingDetailsView.qml"
         else if (data.type === "tapping")    detailsLoader.source = "TappingDetailsView.qml"
-        else detailsLoader.source = ""
+        else                                  detailsLoader.source = ""
+
         Qt.callLater(function() {
             if (detailsLoader.item && detailsLoader.item.applyData) {
                 detailsLoader.item.applyData(index, data)
@@ -100,7 +121,7 @@ Item {
             Layout.fillHeight: true
             spacing: 12
 
-            // LEFT: operations list
+            // LEFT: operations list + header row on top
             Rectangle {
                 Layout.preferredWidth: Math.round(parent.width * 0.25)
                 Layout.fillHeight: true
@@ -114,7 +135,55 @@ Item {
                     anchors.margins: 8
                     spacing: 4
 
-                    // HEADER
+                    // ======== SELECTABLE PROGRAM HEADER ROW (no columns) ========
+                    Rectangle {
+                        id: headerRow
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 60
+                        Layout.preferredHeight: 60
+                        Layout.maximumHeight: 60
+                        radius: 0
+                        color: operationEditor.headerSelected ? "#dbe9ff" : "#f7f7f7"
+                        border.width: operationEditor.headerSelected ? 1 : 0
+                        border.color: "#8ec5ff"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 8
+                            spacing: 6
+
+                            Label {
+                                text: "Program Header"
+                                font.bold: true
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            Label {
+                                text: (operationEditor.selectedProgram
+                                       && (operationEditor.selectedProgram.name
+                                           || (operationEditor.selectedProgram.header
+                                               && operationEditor.selectedProgram.header.name)))
+                                      ? (operationEditor.selectedProgram.name
+                                         || operationEditor.selectedProgram.header.name)
+                                      : ""
+                                color: "#333"
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+
+                        TapHandler {
+                            onTapped: {
+                                // select header, clear op selection
+                                operationEditor.headerSelected = true
+                                opsList.currentIndex = -1
+                                // ask Python for program details
+                                operationEditor.detailsRequested(-1)
+                            }
+                        }
+                    }
+
+                    // ======== TABLE HEADER (Order / Generate / Operation Type / Optional) ========
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.minimumHeight: 40
@@ -148,7 +217,6 @@ Item {
                         }
                         Divider { }
 
-                        // Operation Type fills remaining space (keeps a minimum)
                         Label {
                             text: "Operation Type"
                             font.bold: true
@@ -173,10 +241,9 @@ Item {
                             maximumLineCount: 2
                             Layout.alignment: Qt.AlignVCenter
                         }
-                        // no trailing filler here
                     }
 
-                    // LIST
+                    // ======== LIST ========
                     ListView {
                         id: opsList
                         Layout.fillWidth: true
@@ -185,7 +252,11 @@ Item {
                         model: operationEditor.operationsModel
                         currentIndex: -1
                         onCurrentIndexChanged: {
-                            if (currentIndex >= 0) operationEditor.detailsRequested(currentIndex)
+                            // if a row is selected, header must be unselected
+                            if (currentIndex >= 0) {
+                                operationEditor.headerSelected = false
+                                operationEditor.detailsRequested(currentIndex)
+                            }
                         }
 
                         delegate: Rectangle {
@@ -196,7 +267,6 @@ Item {
                             border.width: ListView.isCurrentItem ? 1 : 0
                             border.color: "#8ec5ff"
 
-                            // model object for this row
                             property var op: modelData
 
                             RowLayout {
@@ -227,12 +297,9 @@ Item {
                                         checked: !!(op && op.generate_gcode)
                                         onToggled: {
                                             if (!op) return
-                                            // update data object
                                             op.generate_gcode = checked
-                                            // update UI immediately
                                             typeLabel.enabled = checked
                                             optCell.enabled   = checked
-                                            // persist
                                             operationEditor.toggleGenerateGcode(index, checked)
                                         }
                                     }
@@ -251,7 +318,6 @@ Item {
                                         text: (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
                                         elide: Text.ElideRight
                                         verticalAlignment: Text.AlignVCenter
-                                        // do NOT bind enabled; we set it imperatively
                                     }
                                 }
                                 Divider { }
@@ -273,10 +339,9 @@ Item {
                                         }
                                     }
                                 }
-                                // no trailing filler here
                             }
 
-                            // sync initial enabled state when the delegate is created
+                            // init enabled state
                             Component.onCompleted: {
                                 var en = !!(op && op.generate_gcode)
                                 typeLabel.enabled = en
@@ -313,6 +378,14 @@ Item {
                     function onSaveRequested(updated) {
                         if (!updated || !updated.payload) return
                         var t = updated.payload.type || ""
+
+                        // Header autosave
+                        if (t === "header") {
+                            if (operationEditor.updateHeader)
+                                operationEditor.updateHeader(updated.payload.header)
+                            return
+                        }
+
                         if (t === "changeTool" && operationEditor.updateToolChange)
                             operationEditor.updateToolChange(updated.index, updated.payload)
                         else if (t === "facing" && operationEditor.updateFacing)
