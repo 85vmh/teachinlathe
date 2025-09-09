@@ -178,7 +178,6 @@ class MyMainWindow(VCPMainWindow):
         self.addEditToolWidget.setAddToolData(tool_data, tool_model)
 
     def onCurrentToolChanged(self, current_tool):
-        print("--------Current tool changed to: ", current_tool)
         tool_orientation = current_tool.get('Q', 1)
         pixmap = QPixmap(":/images/lathe_control_point_{}.png".format(tool_orientation))
         self.toolOrientation.setPixmap(pixmap)
