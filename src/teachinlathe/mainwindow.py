@@ -393,12 +393,10 @@ class MyMainWindow(VCPMainWindow):
         dialog.valueSelected.connect(self.setZOffset)
         dialog.exec_()
 
-    @staticmethod
-    def setXOffset(value):
+    def setXOffset(self, value):
         print("setXOffset", value)
-        issue_mdi('o<touch_off_x> call [{}]'.format(value))
+        self.latheComponent.nonFeedMdiCall('o<touch_off_x> call [{}]'.format(value))
 
-    @staticmethod
-    def setZOffset(value):
+    def setZOffset(self, value):
         print("setZOffset", value)
-        issue_mdi('o<touch_off_z> call [{}]'.format(value))
+        self.latheComponent.nonFeedMdiCall('o<touch_off_z> call [{}]'.format(value))

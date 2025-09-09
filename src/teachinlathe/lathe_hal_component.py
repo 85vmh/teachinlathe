@@ -2,6 +2,7 @@ import random
 import string
 
 from qtpyvcp import hal
+from qtpyvcp.actions.machine_actions import issue_mdi
 
 from teachinlathe import IN_DESIGNER
 
@@ -25,6 +26,7 @@ class TeachInLatheComponent:
     PinIsPowerFeeding = 'app-status.power-feeding'
     PinIsSpindleStarted = 'app-status.spindle-started'
     PinIsReadyToRunProgram = 'app-status.ready-to-run-program'
+    PinIsNonFeedMDI = 'app-status.is-non-feed-mdi'
     PinButtonCycleStart = 'button.cycle-start'
     PinButtonCycleStop = 'button.cycle-stop'
     PinSpindleCoveredOpened = 'spindle.cover-opened'
@@ -94,5 +96,11 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinIsPowerFeeding, 'bit', 'out')
         self.comp.addPin(self.PinIsSpindleStarted, 'bit', 'out')
         self.comp.addPin(self.PinIsReadyToRunProgram, 'bit', 'out')
+        self.comp.addPin(self.PinIsNonFeedMDI, 'bit', 'out')
         self.comp.ready()
         print("HalComponent instance is created")
+
+    def nonFeedMdiCall(self, value):
+        self.comp.getPin(TeachInLatheComponent.PinIsNonFeedMDI).value = True
+        issue_mdi(value)
+        self.comp.getPin(TeachInLatheComponent.PinIsNonFeedMDI).value = False
