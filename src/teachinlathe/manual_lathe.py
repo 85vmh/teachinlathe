@@ -314,6 +314,10 @@ class ManualLathe:
         print_with_timestamp("startFeeding")
         self.startFeedingTimer = None
 
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
+        currentValue = self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value
+        print("PinIsPowerFeeding: ", currentValue)
+
         # importing it in the beginning of the file causes circular import
         from teachinlathe.turning_helper import TurningHelper
 
@@ -345,10 +349,6 @@ class ManualLathe:
         #         print_with_timestamp("mdi command succeeded at first attempt")
         #     else:
         #         print_with_timestamp("unhandled motion type is: " + STAT.motion_type)
-
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
-        currentValue = self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value
-        print("PinIsPowerFeeding: ", currentValue)
 
     def handleJoystickNeutral(self):
         print("\n\n\n\n")
