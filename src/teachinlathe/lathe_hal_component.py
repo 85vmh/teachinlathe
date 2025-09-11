@@ -79,6 +79,8 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinHandwheelsAngleJogEnable, 'bit', 'out')
         self.comp.addPin(self.PinHandwheelsAngleJogValue, 'float', 'out')
         self.comp.addPin(self.PinFeedPerRevValue, 'float', 'out')
+        self.comp.addPin(self.PinIsAngleFeed, 'bit', 'out')
+        self.comp.addPin(self.PinJogSpeedValue, 'float', 'out')
         self.comp.addPin(self.PinJoystickXPlus, 'bit', 'in')
         self.comp.addPin(self.PinJoystickXMinus, 'bit', 'in')
         self.comp.addPin(self.PinJoystickZPlus, 'bit', 'in')
