@@ -179,6 +179,7 @@ class ManualLathe:
     def onInputFeedChanged(self, value=feedPerRev):
         print("onInputFeedChanged: ", value)
         self.feedPerRev = value
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinFeedPerRevValue).value = self.feedPerRev
 
     def onTaperTurningChanged(self, value=False):
         self.isTaperTurning = value
@@ -222,9 +223,9 @@ class ManualLathe:
         if not canHandleManualOperations():
             return  # if the machine is not on or not homed, ignore spindle switch
 
-        if self.spindleCoverOpened:
-            print("Spindle cover is opened")
-            return self.handleSpindleOff()
+        # if self.spindleCoverOpened:
+        #     print("Spindle cover is opened")
+        #     return self.handleSpindleOff()
 
         match self.spindleMode:
             case SpindleMode.Rpm:
@@ -233,8 +234,8 @@ class ManualLathe:
                     LINUXCNC_CMD.spindle(direction, int(self.spindleRpm), 0)
                     print("Spindle started in RPM mode")
                     self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
-                else:
-                    return self.handleSpindleOff()
+                # else:
+                #     return self.handleSpindleOff()
             case SpindleMode.Css:
                 if self.spindleLever is not SpindleLever.NONE:
                     direction = 'M4' if self.spindleLever == SpindleLever.REV else 'M3'
@@ -249,15 +250,15 @@ class ManualLathe:
                         print("Spindle started in CSS mode")
                         print("MDI command executed: ", cmd)
                         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
-                else:
-                    return self.handleSpindleOff()
+                # else:
+                #     return self.handleSpindleOff()
 
-    def handleSpindleOff(self):
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
-        if self.stopFeeding():
-            self.joystickResetRequired = True
-        return
-
+    # def handleSpindleOff(self):
+    #     self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
+    #     if self.stopFeeding():
+    #         self.joystickResetRequired = True
+    #     return
+    #
     def handleJoystick(self):
         if not canHandleManualOperations():
             return  # if the machine is not on or not homed, ignore joystick
@@ -276,161 +277,161 @@ class ManualLathe:
                     self.joystickWidget.setJoystickState(JoystickState.FEEDING_Z_NEG)
 
         if self.joystickDirection == JoystickDirection.NONE:
-            self.handleJoystickNeutral()
+            # self.handleJoystickNeutral()
             self.joystickWidget.setRapid(False)
             return
         elif self.joystickDirection is not JoystickDirection.NONE and self.isJoystickRapid:
             print("Joystick not none, rapid on")
             self.joystickWidget.setRapid(True)
-            self.startJogging()
+            # self.startJogging()
             self.joystickResetRequired = True
         elif self.joystickFunction == JoystickFunction.JOGGING:
-            self.stopJogging()
+            # self.stopJogging()
             self.joystickResetRequired = True
 
-        if self.spindleLever is not SpindleLever.NONE:
-            if self.joystickResetRequired:
-                print("Joystick reset required")
-            else:
-                self.delayedFeed()
-        else:
-            match self.joystickFunction:
-                case JoystickFunction.FEEDING:
-                    self.stopFeeding()
-                case JoystickFunction.JOGGING:
-                    print("")
-                case JoystickFunction.NONE:
-                    print("Feed attempted while spindle is off")
-
-    def delayedFeed(self):
-        print_with_timestamp("delayedFeed")
-        if self.startFeedingTimer is not None:
-            self.startFeedingTimer.cancel()
-
-        self.startFeedingTimer = threading.Timer(FEED_DELAY, self.startFeeding)  # Delay the start feed
-        self.startFeedingTimer.start()
-
-    def startFeeding(self):
-        print_with_timestamp("startFeeding")
-        self.startFeedingTimer = None
-
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
-        currentValue = self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value
-        print("PinIsPowerFeeding: ", currentValue)
-
-        # importing it in the beginning of the file causes circular import
-        from teachinlathe.turning_helper import TurningHelper
-
-        cmd = f"G95 F{self.feedPerRev} "
-
-        if self.isTaperTurning:
-            cmd += TurningHelper.getTaperTurningCommand(self.joystickDirection, self.feedTaperAngle)
-        else:
-            cmd += TurningHelper.getStraightTurningCommand(self.joystickDirection)
-
-        self.joystickFunction = JoystickFunction.FEEDING
-        LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
-        LINUXCNC_CMD.wait_complete()
-
-        print_with_timestamp("execute mdi command: " + cmd)
-        LINUXCNC_CMD.mdi(cmd)
-
-        # STAT.poll()
-        # print("motion mode: ", STAT.motion_mode)
-        # print("motion type: ", STAT.motion_type)
-        # print("mdi queue: ", STAT.queue)
-
-        # if STAT.motion_mode == linuxcnc.TRAJ_MODE_COORD and STAT.queue > 0:
-        #     if STAT.motion_type == 0:  # motion_type == 0 means the command is not executed
-        #         print_with_timestamp("mdi command failed, wait_complete: " + cmd)
-        #         LINUXCNC_CMD.wait_complete()
-        #         print_with_timestamp("wait_complete finished")
-        #     elif STAT.motion_type == 2:  # motion_type == 2 means "Feed"
-        #         print_with_timestamp("mdi command succeeded at first attempt")
+        # if self.spindleLever is not SpindleLever.NONE:
+        #     if self.joystickResetRequired:
+        #         print("Joystick reset required")
         #     else:
-        #         print_with_timestamp("unhandled motion type is: " + STAT.motion_type)
-
-    def handleJoystickNeutral(self):
-        print("\n\n\n\n")
-        print("handleJoystickNeutral")
-        if self.startFeedingTimer is not None:
-            self.startFeedingTimer.cancel()
-
-        match self.joystickFunction:
-            case JoystickFunction.FEEDING:
-                self.stopFeeding()
-            case JoystickFunction.JOGGING:
-                self.stopJogging()
-            case JoystickFunction.NONE:
-                print("Joystick neutral")
-                self.joggedAxis = JoggedAxis.NONE
-                # remove message: cannot feed with spindle off
-
-        if self.joystickResetRequired:
-            self.joystickResetRequired = False
-            # remove message: joystick reset required
-
-    def stopFeeding(self):
-        if self.startFeedingTimer is not None:
-            print("Feed delay timer was on, canceling timer")
-            self.startFeedingTimer.cancel()
-
-        if self.joystickFunction == JoystickFunction.FEEDING:
-            print("Feeding was on, Stop Feeding")
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = False
-            currentValue = self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value
-            print("PinIsPowerFeeding: ", currentValue)
-            self.joystickFunction = None
-            return True
-        return False
-
-    def startJogging(self):
-        if self.stopFeeding():
-            time.sleep(0.2)  # Wait 200ms for the feed to stop before we start jogging
-
-        if self.joystickDirection is not None:
-            jog_speed = float(SETTINGS.get('machine.jog.linear-speed').getValue())
-
-            print("jogDirection: " + self.joystickDirection.name + ", jogSpeed: " + str(jog_speed))
-            self.joystickFunction = JoystickFunction.JOGGING
-
-            STAT.poll()
-            current_state = STAT.state
-            print("task mode: ", current_state)
-
-            if current_state is not linuxcnc.MODE_MANUAL:
-                LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
-                LINUXCNC_CMD.wait_complete()
-                STAT.poll()
-                print("task mode changed: ", STAT.task_mode)
-
-            actual_jog_speed = jog_speed / 60
-            match self.joystickDirection:
-                case JoystickDirection.X_PLUS:
-                    jog.axis('X', 1, speed=actual_jog_speed)
-                    self.joggedAxis = JoggedAxis.X
-                case JoystickDirection.X_MINUS:
-                    jog.axis('X', -1, speed=actual_jog_speed)
-                    self.joggedAxis = JoggedAxis.X
-                case JoystickDirection.Z_PLUS:
-                    jog.axis('Z', 1, speed=actual_jog_speed)
-                    self.joggedAxis = JoggedAxis.Z
-                case JoystickDirection.Z_MINUS:
-                    jog.axis('Z', -1, speed=actual_jog_speed)
-                    self.joggedAxis = JoggedAxis.Z
-
-    def stopJogging(self):
-        if self.joystickFunction == JoystickFunction.JOGGING:
-            print("stopJogging")
-
-            STAT.poll()
-            if STAT.task_mode is not linuxcnc.MODE_MANUAL:
-                LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
-                LINUXCNC_CMD.wait_complete()
-
-            match self.joggedAxis:
-                case JoggedAxis.X:
-                    jog.axis('X')
-                case JoggedAxis.Z:
-                    jog.axis('Z')
-            self.joystickFunction = None
+        #         self.delayedFeed()
+        # else:
+        #     match self.joystickFunction:
+        #         case JoystickFunction.FEEDING:
+        #             self.stopFeeding()
+        #         case JoystickFunction.JOGGING:
+        #             print("")
+        #         case JoystickFunction.NONE:
+        #             print("Feed attempted while spindle is off")
+    #
+    # def delayedFeed(self):
+    #     print_with_timestamp("delayedFeed")
+    #     if self.startFeedingTimer is not None:
+    #         self.startFeedingTimer.cancel()
+    #
+    #     self.startFeedingTimer = threading.Timer(FEED_DELAY, self.startFeeding)  # Delay the start feed
+    #     self.startFeedingTimer.start()
+    #
+    # def startFeeding(self):
+    #     print_with_timestamp("startFeeding")
+    #     self.startFeedingTimer = None
+    #
+    #     self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = True
+    #     currentValue = self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value
+    #     print("PinIsPowerFeeding: ", currentValue)
+    #
+    #     # importing it in the beginning of the file causes circular import
+    #     from teachinlathe.turning_helper import TurningHelper
+    #
+    #     cmd = f"G95 F{self.feedPerRev} "
+    #
+    #     if self.isTaperTurning:
+    #         cmd += TurningHelper.getTaperTurningCommand(self.joystickDirection, self.feedTaperAngle)
+    #     else:
+    #         cmd += TurningHelper.getStraightTurningCommand(self.joystickDirection)
+    #
+    #     self.joystickFunction = JoystickFunction.FEEDING
+    #     LINUXCNC_CMD.mode(linuxcnc.MODE_MDI)
+    #     LINUXCNC_CMD.wait_complete()
+    #
+    #     print_with_timestamp("execute mdi command: " + cmd)
+    #     LINUXCNC_CMD.mdi(cmd)
+    #
+    #     # STAT.poll()
+    #     # print("motion mode: ", STAT.motion_mode)
+    #     # print("motion type: ", STAT.motion_type)
+    #     # print("mdi queue: ", STAT.queue)
+    #
+    #     # if STAT.motion_mode == linuxcnc.TRAJ_MODE_COORD and STAT.queue > 0:
+    #     #     if STAT.motion_type == 0:  # motion_type == 0 means the command is not executed
+    #     #         print_with_timestamp("mdi command failed, wait_complete: " + cmd)
+    #     #         LINUXCNC_CMD.wait_complete()
+    #     #         print_with_timestamp("wait_complete finished")
+    #     #     elif STAT.motion_type == 2:  # motion_type == 2 means "Feed"
+    #     #         print_with_timestamp("mdi command succeeded at first attempt")
+    #     #     else:
+    #     #         print_with_timestamp("unhandled motion type is: " + STAT.motion_type)
+    #
+    # def handleJoystickNeutral(self):
+    #     print("\n\n\n\n")
+    #     print("handleJoystickNeutral")
+    #     if self.startFeedingTimer is not None:
+    #         self.startFeedingTimer.cancel()
+    #
+    #     match self.joystickFunction:
+    #         case JoystickFunction.FEEDING:
+    #             self.stopFeeding()
+    #         case JoystickFunction.JOGGING:
+    #             self.stopJogging()
+    #         case JoystickFunction.NONE:
+    #             print("Joystick neutral")
+    #             self.joggedAxis = JoggedAxis.NONE
+    #             # remove message: cannot feed with spindle off
+    #
+    #     if self.joystickResetRequired:
+    #         self.joystickResetRequired = False
+    #         # remove message: joystick reset required
+    #
+    # def stopFeeding(self):
+    #     if self.startFeedingTimer is not None:
+    #         print("Feed delay timer was on, canceling timer")
+    #         self.startFeedingTimer.cancel()
+    #
+    #     if self.joystickFunction == JoystickFunction.FEEDING:
+    #         print("Feeding was on, Stop Feeding")
+    #         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value = False
+    #         currentValue = self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsPowerFeeding).value
+    #         print("PinIsPowerFeeding: ", currentValue)
+    #         self.joystickFunction = None
+    #         return True
+    #     return False
+    #
+    # def startJogging(self):
+    #     if self.stopFeeding():
+    #         time.sleep(0.2)  # Wait 200ms for the feed to stop before we start jogging
+    #
+    #     if self.joystickDirection is not None:
+    #         jog_speed = float(SETTINGS.get('machine.jog.linear-speed').getValue())
+    #
+    #         print("jogDirection: " + self.joystickDirection.name + ", jogSpeed: " + str(jog_speed))
+    #         self.joystickFunction = JoystickFunction.JOGGING
+    #
+    #         STAT.poll()
+    #         current_state = STAT.state
+    #         print("task mode: ", current_state)
+    #
+    #         if current_state is not linuxcnc.MODE_MANUAL:
+    #             LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+    #             LINUXCNC_CMD.wait_complete()
+    #             STAT.poll()
+    #             print("task mode changed: ", STAT.task_mode)
+    #
+    #         actual_jog_speed = jog_speed / 60
+    #         match self.joystickDirection:
+    #             case JoystickDirection.X_PLUS:
+    #                 jog.axis('X', 1, speed=actual_jog_speed)
+    #                 self.joggedAxis = JoggedAxis.X
+    #             case JoystickDirection.X_MINUS:
+    #                 jog.axis('X', -1, speed=actual_jog_speed)
+    #                 self.joggedAxis = JoggedAxis.X
+    #             case JoystickDirection.Z_PLUS:
+    #                 jog.axis('Z', 1, speed=actual_jog_speed)
+    #                 self.joggedAxis = JoggedAxis.Z
+    #             case JoystickDirection.Z_MINUS:
+    #                 jog.axis('Z', -1, speed=actual_jog_speed)
+    #                 self.joggedAxis = JoggedAxis.Z
+    #
+    # def stopJogging(self):
+    #     if self.joystickFunction == JoystickFunction.JOGGING:
+    #         print("stopJogging")
+    #
+    #         STAT.poll()
+    #         if STAT.task_mode is not linuxcnc.MODE_MANUAL:
+    #             LINUXCNC_CMD.mode(linuxcnc.MODE_MANUAL)
+    #             LINUXCNC_CMD.wait_complete()
+    #
+    #         match self.joggedAxis:
+    #             case JoggedAxis.X:
+    #                 jog.axis('X')
+    #             case JoggedAxis.Z:
+    #                 jog.axis('Z')
+    #         self.joystickFunction = None

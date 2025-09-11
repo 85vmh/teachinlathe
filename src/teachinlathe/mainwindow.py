@@ -64,7 +64,6 @@ class MyMainWindow(VCPMainWindow):
 
         self.mainSelectedTab = MainTabs.MANUAL_TURNING
         self.lastSpindleRpm = 0
-        self.isPowerFeeding = False
         self.isFirstGear = False
         self.xMpgLastValue = True
         self.zMpgLastValue = True
@@ -83,7 +82,6 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStart, self.onCycleStartPressed)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStop, self.onCycleStopPressed)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsSpindleStarted, self.onSpindleRunningChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsPowerFeeding, self.onPowerFeedingChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsFirstGear, self.onSpindleFirstGearChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsAllowed, self.onHandwheelAllowedChanged)
@@ -291,9 +289,9 @@ class MyMainWindow(VCPMainWindow):
     def setSelectedValue(fake_edit_text, value):
         fake_edit_text.setText(value)
 
-    def onPowerFeedingChanged(self, value):
-        self.isPowerFeeding = value
-        self.update_actual_feed()
+    # def onPowerFeedingChanged(self, value):
+    #     self.isPowerFeeding = value
+    #     self.update_actual_feed()
 
     def onJogIncrementChanged(self, value):
         self.jogIncrement.setText(format(value, '.3f'))
@@ -325,11 +323,13 @@ class MyMainWindow(VCPMainWindow):
 
     def update_actual_feed(self):
         override_factor = self.current_feed_override
-        if self.isPowerFeeding:
-            calculated_feed = float(self.inputFeed.text()) * override_factor
-            self.actualFeed.setText(format(calculated_feed, '.2f'))
-        else:
-            self.actualFeed.setText("0.00")
+        # if self.isPowerFeeding:
+        #     calculated_feed = float(self.inputFeed.text()) * override_factor
+        #     self.actualFeed.setText(format(calculated_feed, '.2f'))
+        # else:
+        #     self.actualFeed.setText("0.00")
+        calculated_feed = float(self.inputFeed.text()) * override_factor
+        self.actualFeed.setText(format(calculated_feed, '.2f'))
 
     def onSpindleOverrideChanged(self, value):
         self.current_spindle_override = value
@@ -394,8 +394,8 @@ class MyMainWindow(VCPMainWindow):
 
     def setXOffset(self, value):
         print("setXOffset", value)
-        self.latheComponent.nonFeedMdiCall('o<touch_off_x> call [{}]'.format(value))
+        issue_mdi('o<touch_off_x> call [{}]'.format(value))
 
     def setZOffset(self, value):
         print("setZOffset", value)
-        self.latheComponent.nonFeedMdiCall('o<touch_off_z> call [{}]'.format(value))
+        issue_mdi('o<touch_off_z> call [{}]'.format(value))

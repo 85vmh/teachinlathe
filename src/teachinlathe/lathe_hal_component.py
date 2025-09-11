@@ -23,10 +23,11 @@ class TeachInLatheComponent:
     PinJoystickZPlus = 'joystick.z-plus'
     PinJoystickZMinus = 'joystick.z-minus'
     PinJoystickRapid = 'joystick.rapid'
-    PinIsPowerFeeding = 'app-status.power-feeding'
+    PinFeedPerRevValue = 'joystick.feed-per-rev'
+    PinIsAngleFeed = 'joystick.is-angle-feed'
+    PinJogSpeedValue = 'joystick.jog-speed'
     PinIsSpindleStarted = 'app-status.spindle-started'
     PinIsReadyToRunProgram = 'app-status.ready-to-run-program'
-    PinIsNonFeedMDI = 'app-status.is-non-feed-mdi'
     PinButtonCycleStart = 'button.cycle-start'
     PinButtonCycleStop = 'button.cycle-stop'
     PinSpindleCoveredOpened = 'spindle.cover-opened'
@@ -77,6 +78,7 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinHandwheelsZEnable, 'bit', 'out')
         self.comp.addPin(self.PinHandwheelsAngleJogEnable, 'bit', 'out')
         self.comp.addPin(self.PinHandwheelsAngleJogValue, 'float', 'out')
+        self.comp.addPin(self.PinFeedPerRevValue, 'float', 'out')
         self.comp.addPin(self.PinJoystickXPlus, 'bit', 'in')
         self.comp.addPin(self.PinJoystickXMinus, 'bit', 'in')
         self.comp.addPin(self.PinJoystickZPlus, 'bit', 'in')
@@ -93,14 +95,7 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinAxisLimitXMax, 'float', 'in')
         self.comp.addPin(self.PinAxisLimitZMin, 'float', 'in')
         self.comp.addPin(self.PinAxisLimitZMax, 'float', 'in')
-        self.comp.addPin(self.PinIsPowerFeeding, 'bit', 'out')
         self.comp.addPin(self.PinIsSpindleStarted, 'bit', 'out')
         self.comp.addPin(self.PinIsReadyToRunProgram, 'bit', 'out')
-        self.comp.addPin(self.PinIsNonFeedMDI, 'bit', 'out')
         self.comp.ready()
         print("HalComponent instance is created")
-
-    def nonFeedMdiCall(self, value):
-        self.comp.getPin(TeachInLatheComponent.PinIsNonFeedMDI).value = True
-        issue_mdi(value)
-        self.comp.getPin(TeachInLatheComponent.PinIsNonFeedMDI).value = False
