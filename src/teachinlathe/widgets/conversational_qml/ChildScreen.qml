@@ -19,6 +19,8 @@ Item {
 
     signal generateGcodeRequested()
 
+    signal addOperationTypeChosen(string type)
+
     // Row-level toggles
     signal toggleGenerateGcode(int index, bool checked)
 
@@ -70,6 +72,19 @@ Item {
     readonly property int colTypeW: 200   // min; flex fills the rest
     readonly property int colOptW: 80
     readonly property int colDelW: 100   // fixed width for Delete/Reorder
+
+    Loader {
+        id: addOpPopupLoader
+        source: "AddOperationPopup.qml"
+        active: false
+
+        onLoaded: {
+            item.operationChosen.connect(function(type) {
+                operationEditor.addOperationTypeChosen(type)
+            })
+            item.open()
+        }
+    }
 
     // Reusable Icon+Text button: content-sized, gray border, blue on press,
     // vertical centering for icon+text, with left/right padding.
@@ -313,6 +328,7 @@ Item {
                                         addBtn.Layout.preferredHeight = item.implicitHeight
                                         item.clicked.connect(function () {
                                             operationEditor.addOperationRequested()
+                                            addOpPopupLoader.active = true
                                         })
                                     }
                                 }

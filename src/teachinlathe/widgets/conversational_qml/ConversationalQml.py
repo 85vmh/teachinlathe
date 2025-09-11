@@ -16,6 +16,7 @@ class ConversationalQml(QQuickWidget):
         self.setResizeMode(QQuickWidget.SizeRootObjectToView)
         self.folder_path = "/home/cnc/Work/teachinlathe/conversational"
         self.current_program = None
+        self.child_screen_item = None
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         programs = load_programs_from_folder(self.folder_path)
@@ -164,6 +165,13 @@ class ConversationalQml(QQuickWidget):
 
     def _hook_screen_item(self, item):
         try:
+            obj_name = item.property("objectName")
+        except Exception:
+            obj_name = None
+        if obj_name == "childScreen":
+            self.child_screen_item = item
+
+        try:
             if hasattr(item, "addNewProgramRequested"):
                 item.addNewProgramRequested.connect(self.openChildScreen)
             if hasattr(item, "editProgramRequested"):
@@ -204,10 +212,26 @@ class ConversationalQml(QQuickWidget):
                 item.addOperationRequested.connect(self.onAddOperationRequested)
             if hasattr(item, "reorderModeToggled"):
                 item.reorderModeToggled.connect(self.onReorderModeToggled)
-
+            if hasattr(item, "addOperationTypeChosen"):
+                item.addOperationTypeChosen.connect(self.onAddOperationTypeChosen)
             print("Screen signals connected.")
         except Exception as e:
             print("Failed to hook screen item signals:", e)
+
+    def onAddOperationTypeChosen(self, op_type: str):
+        print(f"[operations] User picked: {op_type}")
+
+        prog = self._get_current_program()
+        if not prog:
+            return
+
+        #   new_op = Operation(type=op_type, order=len(prog.operations)+1)
+        #   prog.operations.append(new_op)
+        #   self._save_current_program()
+        self._refresh_child_operations()
+
+    def _refresh_child_operations(self):
+        print("Refreshing child operations...")
 
     def onAddOperationRequested(self):
         print("[operations] Add New requested")
