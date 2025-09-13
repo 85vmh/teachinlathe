@@ -246,18 +246,13 @@ class MyMainWindow(VCPMainWindow):
                 self.angleFeedToggled(False)
 
     def angleFeedToggled(self, value):
-        # self.inputFeedAngle.setEnabled(value)
-
+        print("angleFeedToggled", value)
         if value:
             self.feedAnimator.startAnimation()
         else:
+            self.latheJoystick.resetAngle()
             self.feedAnimator.stopAnimation()
-
-        print("angleFeedActive", value)
-        self.manualLathe.onTaperTurningChanged(value)
-        input_text = self.inputFeedAngle.text()
-        if input_text.isdigit():
-            self.manualLathe.onFeedAngleChanged(input_text)
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsAngleFeed).value = value
 
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)
@@ -270,7 +265,6 @@ class MyMainWindow(VCPMainWindow):
         # self.inputFeedAngle.setEnabled(not value and self.checkBoxFeedAngle.isChecked())
         if self.latheJoystick.isRotated() and not value:
             print("Set taper turning off when stopping spindle")
-            self.latheJoystick.resetAngle()
             self.angleFeedToggled(False)
 
     def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
