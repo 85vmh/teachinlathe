@@ -244,13 +244,13 @@ class MyMainWindow(VCPMainWindow):
             if self.latheJoystick.isRotated() and value:
                 print("Set taper turning off when cycle stop pressed")
                 self.angleFeedToggled(False)
+                self.latheJoystick.resetAngle()
 
     def angleFeedToggled(self, value):
         print("angleFeedToggled", value)
         if value:
             self.feedAnimator.startAnimation()
         else:
-            self.latheJoystick.resetAngle()
             self.feedAnimator.stopAnimation()
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsAngleFeed).value = value
 
@@ -266,6 +266,7 @@ class MyMainWindow(VCPMainWindow):
         if self.latheJoystick.isRotated() and not value:
             print("Set taper turning off when stopping spindle")
             self.angleFeedToggled(False)
+            self.latheJoystick.resetAngle()
 
     def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
         setting_name = getattr(fake_edit_text, 'settingName', None)
