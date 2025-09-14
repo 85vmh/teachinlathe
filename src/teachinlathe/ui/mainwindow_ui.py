@@ -492,7 +492,7 @@ class Ui_MainWindow(object):
         self.jogSpeedFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.jogSpeedFrame.setObjectName("jogSpeedFrame")
         self.jogspeedpercentagewidget = JogSpeedPercentageWidget(self.jogSpeedFrame)
-        self.jogspeedpercentagewidget.setGeometry(QtCore.QRect(10, 10, 80, 186))
+        self.jogspeedpercentagewidget.setGeometry(QtCore.QRect(10, 10, 101, 221))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)

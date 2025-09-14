@@ -7,6 +7,7 @@ import linuxcnc
 from PyQt5.QtCore import QTimer, QSignalBlocker
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QPushButton
+from PyQt5.uic.properties import QtWidgets
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.actions.program_actions import load as loadProgram
 from qtpyvcp.plugins import getPlugin
@@ -61,6 +62,13 @@ class MyMainWindow(VCPMainWindow):
     def __init__(self, *args, **kwargs):
         super(MyMainWindow, self).__init__(*args, **kwargs)
         self.setWindowFlag(Qt.FramelessWindowHint)
+
+        self.jogspeedpercentagewidget.setMinimumSize(101, 221)
+        self.jogspeedpercentagewidget.setMaximumSize(101, 221)
+        self.jogspeedpercentagewidget.setSizePolicy(
+            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Fixed
+        )
 
         self.mainSelectedTab = MainTabs.MANUAL_TURNING
         self.lastSpindleRpm = 0
@@ -124,9 +132,6 @@ class MyMainWindow(VCPMainWindow):
         self.inputFeed.settingName = 'smart_numpad.input-feed'
         self.inputFeed.initialize()
 
-        self.inputFeedAngle.settingName = 'smart_numpad.input-feed-angle'
-        self.inputFeedAngle.initialize()
-
         self.inputCss.settingName = 'smart_numpad.input-css'
         self.inputCss.initialize()
 
@@ -135,7 +140,6 @@ class MyMainWindow(VCPMainWindow):
         self.inputFeed.mousePressEvent = lambda _: self.openNumPad(self.inputFeed, self.manualLathe.onInputFeedChanged)
         self.inputCss.mousePressEvent = lambda _: self.openNumPad(self.inputCss, self.manualLathe.onInputCssChanged)
         self.inputMaxRpm.mousePressEvent = lambda _: self.openNumPad(self.inputMaxRpm, self.manualLathe.onMaxSpindleRpmChanged)
-        self.inputFeedAngle.mousePressEvent = lambda _: self.openNumPad(self.inputFeedAngle, self.manualLathe.onFeedAngleChanged)
 
         self.vtk.setViewXZ2()
         self.vtk.enable_panning(True)
@@ -192,7 +196,6 @@ class MyMainWindow(VCPMainWindow):
         self.manualLathe.onInputCssChanged(self.inputCss.text())
         self.manualLathe.onMaxSpindleRpmChanged(self.inputMaxRpm.text())
         self.manualLathe.onInputFeedChanged(self.inputFeed.text())
-        self.manualLathe.onFeedAngleChanged(self.inputFeedAngle.text())
 
     def onMainTabChanged(self, index):
         self.mainSelectedTab = MainTabs(index)
@@ -261,8 +264,6 @@ class MyMainWindow(VCPMainWindow):
         # self.inputRpm.setEnabled(not value)
         # self.inputCss.setEnabled(not value)
         # self.inputMaxRpm.setEnabled(not value)
-        # self.checkBoxJogAngle.setEnabled(not value)
-        # self.inputFeedAngle.setEnabled(not value and self.checkBoxFeedAngle.isChecked())
         if self.latheJoystick.isRotated() and not value:
             print("Set taper turning off when stopping spindle")
             self.angleFeedToggled(False)
@@ -283,10 +284,6 @@ class MyMainWindow(VCPMainWindow):
     @staticmethod
     def setSelectedValue(fake_edit_text, value):
         fake_edit_text.setText(value)
-
-    # def onPowerFeedingChanged(self, value):
-    #     self.isPowerFeeding = value
-    #     self.update_actual_feed()
 
     def onJogIncrementChanged(self, value):
         self.jogIncrement.setText(format(value, '.3f'))
@@ -318,11 +315,6 @@ class MyMainWindow(VCPMainWindow):
 
     def update_actual_feed(self):
         override_factor = self.current_feed_override
-        # if self.isPowerFeeding:
-        #     calculated_feed = float(self.inputFeed.text()) * override_factor
-        #     self.actualFeed.setText(format(calculated_feed, '.2f'))
-        # else:
-        #     self.actualFeed.setText("0.00")
         calculated_feed = float(self.inputFeed.text()) * override_factor
         self.actualFeed.setText(format(calculated_feed, '.2f'))
 
