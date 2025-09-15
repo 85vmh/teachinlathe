@@ -16,12 +16,6 @@ LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
 STATUS = getPlugin('status')
 POSITION = getPlugin('position')
-FEED_DELAY = 0.3 # seconds
-
-
-def print_with_timestamp(message):
-    timestamp = datetime.datetime.now().strftime("%H:%M:%S.%f")[:23]  # Slice to get milliseconds
-    print(f"{timestamp}: {message}")
 
 
 class JoystickDirection(Enum):
