@@ -209,9 +209,9 @@ class ManualLathe:
         if not canHandleManualOperations():
             return  # if the machine is not on or not homed, ignore spindle switch
 
-        # if self.spindleCoverOpened:
-        #     print("Spindle cover is opened")
-        #     return self.handleSpindleOff()
+        if self.spindleCoverOpened:
+            print("Spindle cover is opened")
+            return self.handleSpindleOff()
 
         match self.spindleMode:
             case SpindleMode.Rpm:
@@ -220,8 +220,8 @@ class ManualLathe:
                     LINUXCNC_CMD.spindle(direction, int(self.spindleRpm), 0)
                     print("Spindle started in RPM mode")
                     self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
-                # else:
-                #     return self.handleSpindleOff()
+                else:
+                    return self.handleSpindleOff()
             case SpindleMode.Css:
                 if self.spindleLever is not SpindleLever.NONE:
                     direction = 'M4' if self.spindleLever == SpindleLever.REV else 'M3'
@@ -236,8 +236,9 @@ class ManualLathe:
                         print("Spindle started in CSS mode")
                         print("MDI command executed: ", cmd)
                         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = True
-                # else:
-                #     return self.handleSpindleOff()
+                else:
+                    return self.handleSpindleOff()
+        return None
 
     def handleSpindleOff(self):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsSpindleStarted).value = False
