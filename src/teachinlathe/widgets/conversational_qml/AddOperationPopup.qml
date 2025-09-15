@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 
 Popup {
     id: root
@@ -14,6 +15,9 @@ Popup {
     padding: 0
 
     signal operationChosen(string type)
+
+    // How many buttons per row in the flow area
+    property int buttonsPerRow: 4
 
     background: Rectangle {
         radius: 10
@@ -45,21 +49,41 @@ Popup {
             color: "white"
         }
 
-        Repeater {
-            model: root.options
-            delegate: Button {
-                text: modelData.label
-                width: column.width - 32
-                onClicked: {
-                    root.operationChosen(modelData.type)
-                    root.close()
+        // Flow area for operation buttons
+        Flow {
+            id: flowArea
+            width: column.width - column.padding * 2
+            spacing: 8
+
+            Repeater {
+                model: root.options
+                delegate: Button {
+                    // Fixed height, computed width to fit N per row accounting for spacing
+                    readonly property int itemWidth: Math.floor(
+                        (flowArea.width - flowArea.spacing * (root.buttonsPerRow - 1)) / root.buttonsPerRow
+                    )
+                    width: itemWidth
+                    height: 36
+                    text: modelData.label
+                    onClicked: {
+                        root.operationChosen(modelData.type)
+                        root.close()
+                    }
                 }
             }
         }
 
+        // Separator between the flow grid and the footer (cancel)
+        Rectangle {
+            width: column.width - column.padding * 2
+            height: 1
+            color: "#3A3D41"
+        }
+
+        // Footer with Cancel button
         Button {
             text: "Cancel"
-            width: column.width - 32
+            width: column.width - column.padding * 2
             onClicked: root.close()
         }
     }
