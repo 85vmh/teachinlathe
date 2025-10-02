@@ -318,7 +318,7 @@ Item {
                                     sourceComponent: iconTextButton
                                     Layout.alignment: Qt.AlignVCenter
                                     onLoaded: {
-                                        item.iconSource = "add_op_icon.svg"
+                                        item.iconSource = "icons/add_op_icon.svg"
                                         item.text = "Add New Operation"
                                         item.tint = "#2E7D32"      // green
                                         item.enabled = true
@@ -339,7 +339,7 @@ Item {
                                     sourceComponent: iconTextButton
                                     Layout.alignment: Qt.AlignVCenter
                                     onLoaded: {
-                                        item.iconSource = "reorder_icon.svg"
+                                        item.iconSource = "icons/reorder_icon.svg"
                                         item.text = "Reorder"
                                         item.enabled = opsList.count > 1
                                         item.tint = operationEditor.reorderMode ? "#1E88E5" : "#4F4F4F"

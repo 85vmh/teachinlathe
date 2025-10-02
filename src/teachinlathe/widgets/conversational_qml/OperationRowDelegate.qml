@@ -28,9 +28,9 @@ Rectangle {
     property bool editing: false
 
     // Icon sources / tints
-    property url  deleteIconSource:   "delete_icon.svg"
-    property url  moveUpIconSource:   "move_up_icon.svg"
-    property url  moveDownIconSource: "move_down_icon.svg"
+    property url  deleteIconSource:   "icons/delete_icon.svg"
+    property url  moveUpIconSource:   "icons/move_up_icon.svg"
+    property url  moveDownIconSource: "icons/move_down_icon.svg"
     property color deleteTint:   "#C62828"
     property color reorderTint:  "#4F4F4F"
 

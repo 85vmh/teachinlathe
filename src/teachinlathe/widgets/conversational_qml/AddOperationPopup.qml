@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import "."
 
 Popup {
     id: root
@@ -10,7 +11,7 @@ Popup {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     anchors.centerIn: parent
 
-    contentWidth: 360
+    contentWidth: 500
     contentHeight: column.implicitHeight
     padding: 0
 
@@ -34,7 +35,8 @@ Popup {
         { label: "Threading",      type: "threading"     },
         { label: "Drilling",       type: "drilling"      },
         { label: "Tapping",        type: "tapping"       },
-        { label: "Parting",        type: "parting"       }
+        { label: "Parting",        type: "parting"       },
+        { label: "KeySlot",        type: "keyslot"       }
     ]
 
     contentItem: Column {
@@ -63,7 +65,8 @@ Popup {
                         (flowArea.width - flowArea.spacing * (root.buttonsPerRow - 1)) / root.buttonsPerRow
                     )
                     width: itemWidth
-                    height: 36
+                    height: 40
+                    font.pixelSize: Theme.fontSizeNormal
                     text: modelData.label
                     onClicked: {
                         root.operationChosen(modelData.type)
