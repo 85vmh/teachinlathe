@@ -8,21 +8,63 @@ O<drilling> sub
 #<rpm>          = #6
 #<feed>         = #7
 
-G7  ; Diameter mode
-G17 ; Change plane to XY, canned cycle does not work on G18)
-G21 ; Metric Units
-G90 ; Absolute Distance
-
+(--- setup ---)
+G7   (Diameter mode)
+G21  (Metric)
+G90  (Absolute)
 G97 M4 S#<rpm>
 
-#<x_start> = [#<x_start> / 2] (half the diameter)
+#<x_start> = [#<x_start> / 2]  (half diameter -> radius)
 
 G0 X0
-G98 G83 Z#<z_end> R#<retract> Q#<increment> F#<feed>
-G80 (cancel canned cycle)
+G95
+F#<feed>
+
+(--- manual peck drilling variables ---)
+#<current_z> = #<z_start>
+#<step>      = [ABS[#<increment>]]
+
+O101 if [#<z_end> LT #<z_start>]
+  #<step> = [-#<step>]        (drill toward negative Z)
+O101 endif
+
+(Go to retract plane before first peck)
+G0 Z#<retract>
+
+(--- peck loop ---)
+O100 while [ ( [#<step> LT 0] AND [#<current_z> GT #<z_end>] ) OR ( [#<step> GT 0] AND [#<current_z> LT #<z_end>] ) ]
+
+  (# target for this peck, clamp to z_end)
+  #<target_z> = [#<current_z> + #<step>]
+
+  O102 if [[#<step> LT 0] AND [#<target_z> LT #<z_end>]]
+    #<target_z> = #<z_end>
+  O102 endif
+
+  O103 if [[#<step> GT 0] AND [#<target_z> GT #<z_end>]]
+    #<target_z> = #<z_end>
+  O103 endif
+
+  (feed down to target)
+  G1 Z#<target_z> F#<feed>
+
+  (retract to plane)
+  G0 Z#<retract>
+
+  (optional stop before the next peck, but not after the last)
+  O104 if [#<target_z> NE #<z_end>]
+    M1
+  O104 endif
+
+  (# advance)
+  #<current_z> = #<target_z>
+
+O100 endwhile
+
+(--- restore positions similar to original ---)
 G0 Z#<z_start>
 G0 X#<x_start>
 
-G18 (switch back to XZ plane)
+G18  (back to XZ plane)
 M5
 O<drilling> endsub
