@@ -75,16 +75,26 @@ Item {
 
     Loader {
         id: addOpPopupLoader
-        source: "AddOperationPopup.qml"
         active: false
+        visible: active
+
+        sourceComponent: AddOperationPopup {
+            id: addPopup
+            onOperationChosen: function(type) {
+                childScreen.addOperationTypeChosen(type)
+                addPopup.close()
+            }
+            onClosed: {
+                // eliberează Loader-ul ca să se recreeze curat data viitoare
+                addOpPopupLoader.active = false
+            }
+        }
 
         onLoaded: {
-            item.operationChosen.connect(function(type) {
-                operationEditor.addOperationTypeChosen(type)
-            })
-            item.open()
+            if (item && item.open) item.open()
         }
     }
+
 
     // Reusable Icon+Text button: content-sized, gray border, blue on press,
     // vertical centering for icon+text, with left/right padding.
@@ -328,6 +338,10 @@ Item {
                                         addBtn.Layout.preferredHeight = item.implicitHeight
                                         item.clicked.connect(function () {
                                             operationEditor.addOperationRequested()
+                                            if (addOpPopupLoader.active && addOpPopupLoader.item) {
+                                                addOpPopupLoader.item.close()
+                                                addOpPopupLoader.active = false
+                                            }
                                             addOpPopupLoader.active = true
                                         })
                                     }
