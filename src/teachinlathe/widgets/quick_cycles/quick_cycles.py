@@ -304,12 +304,12 @@ class QuickCycles(QWidget):
                         f"[{45}] "
                         f"[{spring_passes}]")
             case Page.DRILLING.index:
-                z_end = self.drillingZEnd.text()
-                retract = self.drillingZRetract.text()
-                inspection_retract = self.drillingZInspect.text()
-                peck_depth = self.drillingPeckDepth.text()
-                rpm = self.drillingRpm.text()
-                feed = self.drillingFeed.text()
+                z_end = self.drillingZEnd.text().strip()
+                retract = self.drillingZRetract.text().strip()
+                inspection_retract = self.drillingZInspect.text().strip()
+                peck_depth = self.drillingPeckDepth.text().strip()
+                rpm = self.drillingRpm.text().strip()
+                feed = self.drillingFeed.text().strip()
                 return f"o<drilling> call [#<_x> * 2] [#<_z>] [{z_end}] [{retract}] [{inspection_retract}] [{peck_depth}] [{rpm}] [{feed}]"
             case Page.KEY_SLOT.index:
                 x_end = self.keyslotXEnd.text()
