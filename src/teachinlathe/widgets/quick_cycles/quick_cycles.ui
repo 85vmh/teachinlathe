@@ -80,7 +80,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>8</number>
+     <number>6</number>
     </property>
     <widget class="QWidget" name="rootPage">
      <widget class="QPushButton" name="btnTurning">
@@ -1206,9 +1206,9 @@
       <property name="geometry">
        <rect>
         <x>25</x>
-        <y>50</y>
-        <width>282</width>
-        <height>261</height>
+        <y>25</y>
+        <width>311</width>
+        <height>351</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_6">
@@ -1221,13 +1221,53 @@
        <property name="horizontalSpacing">
         <number>10</number>
        </property>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_17">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_42">
          <property name="styleSheet">
           <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
          </property>
          <property name="text">
-          <string>Peck depth:</string>
+          <string>Z Retract</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="VCPSettingsLineEdit" name="drillingPeckDepth">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>300</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="settingName" stdset="0">
+          <string>smart_numpad.quick-cycles-peck-depth</string>
+         </property>
+         <property name="textFormat" stdset="0">
+          <string/>
          </property>
         </widget>
        </item>
@@ -1241,27 +1281,7 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_42">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>Z Retract</string>
-         </property>
-        </widget>
-       </item>
        <item row="4" column="0">
-        <widget class="QLabel" name="label_44">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>Feed:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
         <widget class="QLabel" name="label_45">
          <property name="styleSheet">
           <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
@@ -1271,27 +1291,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="3">
-        <widget class="QLabel" name="label_46">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>mm/peck</string>
-         </property>
-        </widget>
-       </item>
        <item row="4" column="3">
-        <widget class="QLabel" name="label_47">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>mm/rev</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="3">
         <widget class="QLabel" name="label_48">
          <property name="styleSheet">
           <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
@@ -1302,29 +1302,25 @@
         </widget>
        </item>
        <item row="4" column="2">
-        <widget class="VCPSettingsLineEdit" name="drillingFeed">
-         <property name="focusPolicy">
-          <enum>Qt::NoFocus</enum>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>0.1</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="settingName" stdset="0">
-          <string>smart_numpad.quick-cycles-drill-feed</string>
-         </property>
-         <property name="textFormat" stdset="0">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="2">
         <widget class="VCPSettingsLineEdit" name="drillingRpm">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>32</height>
+          </size>
+         </property>
          <property name="focusPolicy">
           <enum>Qt::NoFocus</enum>
          </property>
@@ -1345,60 +1341,63 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="2">
-        <widget class="TeachInLineEdit" name="drillingZEnd">
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       <item row="5" column="2">
+        <widget class="VCPSettingsLineEdit" name="drillingFeed">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <property name="referenceType" stdset="0">
-          <number>1</number>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>32</height>
+          </size>
          </property>
-         <property name="axisNumber" stdset="0">
-          <number>2</number>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>32</height>
+          </size>
          </property>
-         <property name="inchFormat" stdset="0">
-          <string>%9.4f</string>
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
          </property>
-         <property name="millimeterFormat" stdset="0">
-          <string>%10.3f</string>
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
          </property>
-         <property name="degreeFormat" stdset="0">
-          <string>%10.2f</string>
-         </property>
-         <property name="latheMode" stdset="0">
-          <number>0</number>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QPushButton" name="drillingTeachEndBtn">
          <property name="text">
-          <string>TeachIn Z</string>
+          <string>0.1</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="settingName" stdset="0">
+          <string>smart_numpad.quick-cycles-drill-feed</string>
+         </property>
+         <property name="textFormat" stdset="0">
+          <string/>
          </property>
         </widget>
        </item>
-       <item row="1" column="2">
-        <widget class="TeachInLineEdit" name="drillingZRetract">
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_17">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
          </property>
-         <property name="referenceType" stdset="0">
-          <number>1</number>
+         <property name="text">
+          <string>Peck depth:</string>
          </property>
-         <property name="axisNumber" stdset="0">
-          <number>2</number>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QLabel" name="label_46">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
          </property>
-         <property name="inchFormat" stdset="0">
-          <string>%9.4f</string>
-         </property>
-         <property name="millimeterFormat" stdset="0">
-          <string>%10.3f</string>
-         </property>
-         <property name="degreeFormat" stdset="0">
-          <string>%10.2f</string>
-         </property>
-         <property name="latheMode" stdset="0">
-          <number>0</number>
+         <property name="text">
+          <string>mm/peck</string>
          </property>
         </widget>
        </item>
@@ -1409,25 +1408,176 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="2">
-        <widget class="VCPSettingsLineEdit" name="drillingPeckDepth">
-         <property name="focusPolicy">
-          <enum>Qt::NoFocus</enum>
+       <item row="1" column="2">
+        <widget class="TeachInLineEdit" name="drillingZRetract">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="referenceType" stdset="0">
+          <number>1</number>
+         </property>
+         <property name="axisNumber" stdset="0">
+          <number>2</number>
+         </property>
+         <property name="inchFormat" stdset="0">
+          <string>%9.4f</string>
+         </property>
+         <property name="millimeterFormat" stdset="0">
+          <string>%10.3f</string>
+         </property>
+         <property name="degreeFormat" stdset="0">
+          <string>%10.2f</string>
+         </property>
+         <property name="latheMode" stdset="0">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_44">
          <property name="styleSheet">
           <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
          </property>
          <property name="text">
-          <string>300</string>
+          <string>Feed:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QPushButton" name="drillingTeachEndBtn">
+         <property name="text">
+          <string>TeachIn Z</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="3">
+        <widget class="QLabel" name="label_47">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>mm/rev</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="TeachInLineEdit" name="drillingZEnd">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>32</height>
+          </size>
          </property>
          <property name="alignment">
-          <set>Qt::AlignCenter</set>
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
-         <property name="settingName" stdset="0">
-          <string>smart_numpad.quick-cycles-peck-depth</string>
+         <property name="referenceType" stdset="0">
+          <number>1</number>
          </property>
-         <property name="textFormat" stdset="0">
-          <string/>
+         <property name="axisNumber" stdset="0">
+          <number>2</number>
+         </property>
+         <property name="inchFormat" stdset="0">
+          <string>%9.4f</string>
+         </property>
+         <property name="millimeterFormat" stdset="0">
+          <string>%10.3f</string>
+         </property>
+         <property name="degreeFormat" stdset="0">
+          <string>%10.2f</string>
+         </property>
+         <property name="latheMode" stdset="0">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_63">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Z Inspect</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="TeachInLineEdit" name="drillingZInspect">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="referenceType" stdset="0">
+          <number>1</number>
+         </property>
+         <property name="axisNumber" stdset="0">
+          <number>2</number>
+         </property>
+         <property name="inchFormat" stdset="0">
+          <string>%9.4f</string>
+         </property>
+         <property name="millimeterFormat" stdset="0">
+          <string>%10.3f</string>
+         </property>
+         <property name="degreeFormat" stdset="0">
+          <string>%10.2f</string>
+         </property>
+         <property name="latheMode" stdset="0">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QPushButton" name="drillingTeachInspectBtn">
+         <property name="text">
+          <string>TeachIn Z</string>
          </property>
         </widget>
        </item>
@@ -3522,6 +3672,22 @@ QPushButton:checked {
     <hint type="destinationlabel">
      <x>157</x>
      <y>239</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>drillingTeachInspectBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>drillingZInspect</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>293</x>
+     <y>212</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>189</x>
+     <y>212</y>
     </hint>
    </hints>
   </connection>

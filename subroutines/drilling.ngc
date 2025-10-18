@@ -1,12 +1,13 @@
 O<drilling> sub
 
-#<x_start>      = #1
-#<z_start>      = #2
-#<z_end>        = #3
-#<retract>      = #4
-#<increment>    = #5
-#<rpm>          = #6
-#<feed>         = #7
+#<x_start>          = #1
+#<z_start>          = #2
+#<z_end>            = #3
+#<retract>          = #4
+#<retract_on_m1>    = #5
+#<increment>        = #6
+#<rpm>              = #7
+#<feed>             = #8
 
 (--- setup ---)
 G7   (Diameter mode)
@@ -15,51 +16,75 @@ G90  (Absolute)
 G97 M4 S#<rpm>
 
 #<x_start> = [#<x_start> / 2]  (half diameter -> radius)
+#<feed_clearance> = 0.2   (extra amount on re-entering the hole)
+#<dwell>          = 0.5   (seconds)
 
 G0 X0
-G95
-F#<feed>
+G95 F#<feed>
 
 (--- manual peck drilling variables ---)
-#<current_z> = #<z_start>
-#<step>      = [ABS[#<increment>]]
-
-O101 if [#<z_end> LT #<z_start>]
-  #<step> = [-#<step>]        (drill toward negative Z)
-O101 endif
+#<current_z>           = #<z_start>
+#<step>                = [ABS[#<increment>]]
+#<resume_from_m1> = 0   (flag set before M1, consumed after resume)
 
 (Go to retract plane before first peck)
 G0 Z#<retract>
 
 (--- peck loop ---)
-O100 while [ ( [#<step> LT 0] AND [#<current_z> GT #<z_end>] ) OR ( [#<step> GT 0] AND [#<current_z> LT #<z_end>] ) ]
+O210 while [#<current_z> GT #<z_end>]
 
-  (# target for this peck, clamp to z_end)
-  #<target_z> = [#<current_z> + #<step>]
+    (# target for this peck, clamp to z_end)
+    #<target_z> = [#<current_z> + [-#<step>]]
+    O211 if [#<target_z> LT #<z_end>]
+      #<target_z> = #<z_end>
+    O211 endif
 
-  O102 if [[#<step> LT 0] AND [#<target_z> LT #<z_end>]]
-    #<target_z> = #<z_end>
-  O102 endif
+    (ensure we are at retract plane before re-entering the hole)
+    G0 Z#<retract>
 
-  O103 if [[#<step> GT 0] AND [#<target_z> GT #<z_end>]]
-    #<target_z> = #<z_end>
-  O103 endif
+    (rapid re-entry to last depth + clearance, only if last depth is below retract)
+    O213 if [#<current_z> LT #<retract>]
+      G0 Z[#<current_z> + [#<feed_clearance>]]
+    O213 endif
 
-  (feed down to target)
-  G1 Z#<target_z> F#<feed>
+    (feed to the next peck depth)
+    G1 Z#<target_z> F#<feed>
+    G4 P#<dwell>
 
-  (retract to plane)
-  G0 Z#<retract>
+    (normal retract to plane)
+    G0 Z#<retract>
 
-  (optional stop before the next peck, but not after the last)
-  O104 if [#<target_z> NE #<z_end>]
-    M1
-  O104 endif
+    (only before next peck and not after the last)
+    O212 if [#<target_z> NE #<z_end>]
 
-  (# advance)
-  #<current_z> = #<target_z>
+      (read optional stop state NOW)
+      M66 P0 L0        (samples motion.digital-in-00 into #5399, no wait)
 
-O100 endwhile
+      O900 if [#5399 EQ 1]
+        (go higher for tool inspection, stop spindle, arm resume sequence)
+        G0 Z#<retract_on_m1>
+        M5
+        (DEBUG, inspecting, stopped the spindle)
+        #<resume_from_m1> = 1
+        M1
+      O900 endif
+
+      (after resume: if we came from optional stop, restart spindle, return to retract, dwell 2s)
+      O901 if [#<resume_from_m1> EQ 1]
+        (DEBUG, finished inspection, start the spindle)
+        M4 S#<rpm>
+        G0 Z#<retract>
+        M66 P1 L3 Q5       (wait max 5 seconds until motion.digital-in-01 turns ON)
+        #<resume_from_m1> = 0
+        (DEBUG, continuing with drilling...)
+      O901 endif
+
+    O212 endif
+
+    (# advance to the depth just reached)
+    #<current_z> = #<target_z>
+
+O210 endwhile
 
 (--- restore positions similar to original ---)
 G0 Z#<z_start>
@@ -67,4 +92,5 @@ G0 X#<x_start>
 
 G18  (back to XZ plane)
 M5
+
 O<drilling> endsub
