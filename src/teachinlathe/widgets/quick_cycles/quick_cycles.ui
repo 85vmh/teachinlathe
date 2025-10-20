@@ -80,7 +80,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="rootPage">
      <widget class="QPushButton" name="btnTurning">
@@ -727,10 +727,10 @@
      <widget class="QWidget" name="gridLayoutWidget_4">
       <property name="geometry">
        <rect>
-        <x>40</x>
+        <x>30</x>
         <y>40</y>
-        <width>276</width>
-        <height>166</height>
+        <width>296</width>
+        <height>276</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_5">
@@ -743,47 +743,7 @@
        <property name="horizontalSpacing">
         <number>10</number>
        </property>
-       <item row="2" column="3">
-        <widget class="QLabel" name="label_43">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>mm/pass</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_16">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>Depth of cut</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_34">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>Z End:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_33">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>X End:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="2">
+       <item row="4" column="2">
         <widget class="VCPSettingsLineEdit" name="facingDoc">
          <property name="styleSheet">
           <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
@@ -802,8 +762,25 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="2">
-        <widget class="TeachInLineEdit" name="facingXEnd">
+       <item row="1" column="3">
+        <widget class="QPushButton" name="facingTeachZBtn">
+         <property name="text">
+          <string>TeachIn Z</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_34">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Z End:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="TeachInLineEdit" name="facingXInspect">
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
@@ -824,6 +801,16 @@
          </property>
          <property name="latheMode" stdset="0">
           <number>2</number>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_16">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Depth of cut</string>
          </property>
         </widget>
        </item>
@@ -852,6 +839,16 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_33">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>X End:</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="3">
         <widget class="QPushButton" name="facingTeachXBtn">
          <property name="text">
@@ -859,8 +856,95 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="3">
-        <widget class="QPushButton" name="facingTeachZBtn">
+       <item row="4" column="3">
+        <widget class="QLabel" name="label_43">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>mm/pass</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QPushButton" name="facingTeachXInspect">
+         <property name="text">
+          <string>TeachIn X</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="TeachInLineEdit" name="facingXEnd">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="referenceType" stdset="0">
+          <number>1</number>
+         </property>
+         <property name="axisNumber" stdset="0">
+          <number>0</number>
+         </property>
+         <property name="inchFormat" stdset="0">
+          <string>%9.4f</string>
+         </property>
+         <property name="millimeterFormat" stdset="0">
+          <string>%10.3f</string>
+         </property>
+         <property name="degreeFormat" stdset="0">
+          <string>%10.2f</string>
+         </property>
+         <property name="latheMode" stdset="0">
+          <number>2</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_81">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>X Inspect:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_96">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Z Inspect:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="TeachInLineEdit" name="facingZInspect">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="referenceType" stdset="0">
+          <number>1</number>
+         </property>
+         <property name="axisNumber" stdset="0">
+          <number>0</number>
+         </property>
+         <property name="inchFormat" stdset="0">
+          <string>%9.4f</string>
+         </property>
+         <property name="millimeterFormat" stdset="0">
+          <string>%10.3f</string>
+         </property>
+         <property name="degreeFormat" stdset="0">
+          <string>%10.2f</string>
+         </property>
+         <property name="latheMode" stdset="0">
+          <number>2</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QPushButton" name="facingTeachZInspect">
          <property name="text">
           <string>TeachIn Z</string>
          </property>
@@ -3804,6 +3888,38 @@ QPushButton:checked {
     <hint type="destinationlabel">
      <x>193</x>
      <y>209</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>facingTeachXInspect</sender>
+   <signal>clicked()</signal>
+   <receiver>facingXInspect</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>283</x>
+     <y>232</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>187</x>
+     <y>232</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>facingTeachZInspect</sender>
+   <signal>clicked()</signal>
+   <receiver>facingZInspect</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>283</x>
+     <y>284</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>187</x>
+     <y>284</y>
     </hint>
    </hints>
   </connection>
