@@ -219,13 +219,13 @@ class QuickCycles(QWidget):
     def _getSubroutineToCall(self):
         match self.stackedWidget.currentIndex():
             case Page.TURNING.index:
-                x_end = self.turningXEnd.text()
-                z_end = self.turningZEnd.text()
-                x_inspect = self.turningXInspect.text()
-                z_inspect = self.turningZInspect.text()
-                doc = self.turningDoc.text()
-                t_angle = self.turningTurnAngle.text()
-                f_radius = self.turningFilletRadius.text()
+                x_end = self.turningXEnd.text().strip()
+                z_end = self.turningZEnd.text().strip()
+                x_inspect = self.turningXInspect.text().strip()
+                z_inspect = self.turningZInspect.text().strip()
+                doc = self.turningDoc.text().strip()
+                t_angle = self.turningTurnAngle.text().strip()
+                f_radius = self.turningFilletRadius.text().strip()
                 return (f"o<turning> call "
                         f"[#<_x> * 2] "
                         f"[#<_z>] "
@@ -237,42 +237,42 @@ class QuickCycles(QWidget):
                         f"[{t_angle}] "
                         f"[{f_radius}]")
             case Page.BORING.index:
-                x_end = self.boringXEnd.text()
-                z_end = self.boringZEnd.text()
-                doc = self.boringDoc.text()
-                t_angle = self.boringTurnAngle.text()
-                f_radius = self.boringFilletRadius.text()
+                x_end = self.boringXEnd.text().strip()
+                z_end = self.boringZEnd.text().strip()
+                doc = self.boringDoc.text().strip()
+                t_angle = self.boringTurnAngle.text().strip()
+                f_radius = self.boringFilletRadius.text().strip()
                 return f"o<boring> call [#<_x> * 2] [#<_z>] [{x_end}] [{z_end}] [{doc}] [{t_angle}] [{f_radius}]"
             case Page.FACING.index:
-                x_end = self.facingXEnd.text()
-                z_end = self.facingZEnd.text()
-                doc = self.facingDoc.text()
+                x_end = self.facingXEnd.text().strip()
+                z_end = self.facingZEnd.text().strip()
+                doc = self.facingDoc.text().strip()
                 return f"o<facing> call [#<_x> * 2] [#<_z>] [{x_end}] [{z_end}] [{doc}]"
             case Page.CHAMFER.index:
-                corner_x = self.chamferCornerX.text()
-                corner_z = self.chamferCornerZ.text()
-                chamfer = self.chamferWidth.text()
-                doc = self.radiusDoc.text()
+                corner_x = self.chamferCornerX.text().strip()
+                corner_z = self.chamferCornerZ.text().strip()
+                chamfer = self.chamferWidth.text().strip()
+                doc = self.radiusDoc.text().strip()
                 location = self.radiusLocation.currentIndex()
                 return f"o<chamfer> call [#<_x> * 2] [#<_z>] [{corner_x}] [{corner_z}] [{chamfer}] [{doc}] [{location}]"
             case Page.RADIUS.index:
-                corner_x = self.radiusCornerX.text()
-                corner_z = self.radiusCornerZ.text()
-                radius = self.radiusValue.text()
-                doc = self.radiusDoc.text()
+                corner_x = self.radiusCornerX.text().strip()
+                corner_z = self.radiusCornerZ.text().strip()
+                radius = self.radiusValue.text().strip()
+                doc = self.radiusDoc.text().strip()
                 location = self.radiusLocation.currentIndex()
                 return f"o<radius> call [#<_x> * 2] [#<_z>] [{corner_x}] [{corner_z}] [{radius}] [{doc}] [{location}]"
             case Page.THREADING_3.index:
-                pitch = self.threadingPitch.text()
-                starts = self.threadingStarts.currentText()
-                z_end = self.threadingZEnd.text()
-                x_start = self.threadingXStart.text()
-                x_end = self.threadingXEnd.text()
-                first_pass = self.threadingFirstPass.text()
-                depth_degression = self.threadingDepthDegression.currentText()
-                infeed_angle = self.threadingCompAngle.text()
-                taper = self.threadingTaper.currentIndex()
-                spring_passes = self.threadingSpringPasses.currentText()
+                pitch = self.threadingPitch.text().strip()
+                starts = self.threadingStarts.currentText().strip()
+                z_end = self.threadingZEnd.text().strip()
+                x_start = self.threadingXStart.text().strip()
+                x_end = self.threadingXEnd.text().strip()
+                first_pass = self.threadingFirstPass.text().strip()
+                depth_degression = self.threadingDepthDegression.currentText().strip()
+                infeed_angle = self.threadingCompAngle.text().strip()
+                taper = self.threadingTaper.currentIndex().strip()
+                spring_passes = self.threadingSpringPasses.currentText().strip()
 
                 self.last_thread_x_end = x_end
                 return (f"o<threading> call "
@@ -289,16 +289,16 @@ class QuickCycles(QWidget):
                         f"[{45}] "
                         f"[{spring_passes}]")
             case Page.THREADING_5.index:
-                pitch = self.threadingPitch.text()
-                starts = self.threadingStarts.currentText()
-                z_end = self.threadingZEnd.text()
-                x_start = self.threadingXStart.text()
-                x_end = self.newXEnd.text()
+                pitch = self.threadingPitch.text().strip()
+                starts = self.threadingStarts.currentText().strip()
+                z_end = self.threadingZEnd.text().strip()
+                x_start = self.threadingXStart.text().strip()
+                x_end = self.newXEnd.text().strip()
                 first_pass = abs(float(x_start) - float(self.last_thread_x_end))
-                depth_degression = self.threadingDepthDegression.currentText()
-                infeed_angle = self.threadingCompAngle.text()
-                taper = self.threadingTaper.currentIndex()
-                spring_passes = self.threadingNewSpringPasses.currentText()
+                depth_degression = self.threadingDepthDegression.currentText().strip()
+                infeed_angle = self.threadingCompAngle.text().strip()
+                taper = self.threadingTaper.currentIndex().strip()
+                spring_passes = self.threadingNewSpringPasses.currentText().strip()
 
                 self.last_thread_x_end = x_end
                 return (f"o<threading> call "
@@ -332,10 +332,10 @@ class QuickCycles(QWidget):
                         f"[{rpm}] "
                         f"[{feed}]")
             case Page.KEY_SLOT.index:
-                x_end = self.keyslotXEnd.text()
-                z_end = self.keyslotZEnd.text()
-                doc = self.keyslotDoc.text()
-                feed = self.keyslotFeed.text()
+                x_end = self.keyslotXEnd.text().strip()
+                z_end = self.keyslotZEnd.text().strip()
+                doc = self.keyslotDoc.text().strip()
+                feed = self.keyslotFeed.text().strip()
                 return f"o<keyslot> call [#<_x>] [#<_z>] [{x_end}] [{z_end}] [{doc}] [{feed}]"
             case _:
                 return ""
