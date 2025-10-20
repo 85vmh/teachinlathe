@@ -80,7 +80,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>6</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="rootPage">
      <widget class="QPushButton" name="btnTurning">
@@ -192,10 +192,10 @@
      <widget class="QWidget" name="gridLayoutWidget_2">
       <property name="geometry">
        <rect>
-        <x>40</x>
+        <x>30</x>
         <y>25</y>
-        <width>276</width>
-        <height>261</height>
+        <width>296</width>
+        <height>326</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
@@ -208,7 +208,17 @@
        <property name="horizontalSpacing">
         <number>10</number>
        </property>
-       <item row="2" column="2">
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Depth of cut</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
         <widget class="VCPSettingsLineEdit" name="turningDoc">
          <property name="styleSheet">
           <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
@@ -227,35 +237,6 @@
          </property>
          <property name="textFormat" stdset="0">
           <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="2">
-        <widget class="VCPSettingsLineEdit" name="turningFilletRadius">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>0.1</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="settingName" stdset="0">
-          <string>smart_numpad.quick-cycles-fillet-radius</string>
-         </property>
-         <property name="textFormat" stdset="0">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_14">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>Depth of cut</string>
          </property>
         </widget>
        </item>
@@ -279,17 +260,7 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="label_27">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>Fillet radius:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="2">
+       <item row="5" column="2">
         <widget class="VCPSettingsLineEdit" name="turningTurnAngle">
          <property name="styleSheet">
           <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
@@ -308,17 +279,36 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_28">
+       <item row="6" column="2">
+        <widget class="VCPSettingsLineEdit" name="turningFilletRadius">
          <property name="styleSheet">
           <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
          </property>
          <property name="text">
-          <string>Turning angle:</string>
+          <string>0.1</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="settingName" stdset="0">
+          <string>smart_numpad.quick-cycles-fillet-radius</string>
+         </property>
+         <property name="textFormat" stdset="0">
+          <string/>
          </property>
         </widget>
        </item>
-       <item row="2" column="3">
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_27">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Fillet radius:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
         <widget class="QLabel" name="label_35">
          <property name="styleSheet">
           <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
@@ -328,23 +318,10 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="3">
-        <widget class="QLabel" name="label_36">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
+       <item row="1" column="3">
+        <widget class="QPushButton" name="turningTeachZBtn">
          <property name="text">
-          <string>mm</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="3">
-        <widget class="QLabel" name="label_39">
-         <property name="styleSheet">
-          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
-         </property>
-         <property name="text">
-          <string>deg</string>
+          <string>TeachIn Z</string>
          </property>
         </widget>
        </item>
@@ -373,6 +350,53 @@
          </property>
         </widget>
        </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_28">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Turning angle:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QPushButton" name="turningTeachXBtn">
+         <property name="text">
+          <string>TeachIn X</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_82">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>X Inspect:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="3">
+        <widget class="QLabel" name="label_36">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>mm</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="3">
+        <widget class="QLabel" name="label_39">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>deg</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="2">
         <widget class="TeachInLineEdit" name="turningZEnd">
          <property name="alignment">
@@ -398,15 +422,75 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="3">
-        <widget class="QPushButton" name="turningTeachXBtn">
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_95">
+         <property name="styleSheet">
+          <string notr="true">font: 11pt &quot;Noto Sans&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Z Inspect:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="TeachInLineEdit" name="turningXInspect">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="referenceType" stdset="0">
+          <number>1</number>
+         </property>
+         <property name="axisNumber" stdset="0">
+          <number>0</number>
+         </property>
+         <property name="inchFormat" stdset="0">
+          <string>%9.4f</string>
+         </property>
+         <property name="millimeterFormat" stdset="0">
+          <string>%10.3f</string>
+         </property>
+         <property name="degreeFormat" stdset="0">
+          <string>%10.2f</string>
+         </property>
+         <property name="latheMode" stdset="0">
+          <number>2</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="TeachInLineEdit" name="turningZInspect">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="referenceType" stdset="0">
+          <number>1</number>
+         </property>
+         <property name="axisNumber" stdset="0">
+          <number>2</number>
+         </property>
+         <property name="inchFormat" stdset="0">
+          <string>%9.4f</string>
+         </property>
+         <property name="millimeterFormat" stdset="0">
+          <string>%10.3f</string>
+         </property>
+         <property name="degreeFormat" stdset="0">
+          <string>%10.2f</string>
+         </property>
+         <property name="latheMode" stdset="0">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QPushButton" name="teachXInspect">
          <property name="text">
           <string>TeachIn X</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="3">
-        <widget class="QPushButton" name="turningTeachZBtn">
+       <item row="3" column="3">
+        <widget class="QPushButton" name="teachZInspect">
          <property name="text">
           <string>TeachIn Z</string>
          </property>
@@ -3688,6 +3772,38 @@ QPushButton:checked {
     <hint type="destinationlabel">
      <x>189</x>
      <y>212</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>teachXInspect</sender>
+   <signal>clicked()</signal>
+   <receiver>turningXInspect</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>273</x>
+     <y>172</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>193</x>
+     <y>172</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>teachZInspect</sender>
+   <signal>clicked()</signal>
+   <receiver>turningZInspect</receiver>
+   <slot>fillWithCurrentValue()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>273</x>
+     <y>209</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>193</x>
+     <y>209</y>
     </hint>
    </hints>
   </connection>

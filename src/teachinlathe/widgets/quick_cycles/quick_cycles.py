@@ -221,10 +221,21 @@ class QuickCycles(QWidget):
             case Page.TURNING.index:
                 x_end = self.turningXEnd.text()
                 z_end = self.turningZEnd.text()
+                x_inspect = self.turningXInspect.text()
+                z_inspect = self.turningZInspect.text()
                 doc = self.turningDoc.text()
                 t_angle = self.turningTurnAngle.text()
                 f_radius = self.turningFilletRadius.text()
-                return f"o<turning> call [#<_x> * 2] [#<_z>] [{x_end}] [{z_end}] [{doc}] [{t_angle}] [{f_radius}]"
+                return (f"o<turning> call "
+                        f"[#<_x> * 2] "
+                        f"[#<_z>] "
+                        f"[{x_end}] "
+                        f"[{z_end}] "
+                        f"[{x_inspect}] "
+                        f"[{z_inspect}] "
+                        f"[{doc}] "
+                        f"[{t_angle}] "
+                        f"[{f_radius}]")
             case Page.BORING.index:
                 x_end = self.boringXEnd.text()
                 z_end = self.boringZEnd.text()
@@ -306,11 +317,20 @@ class QuickCycles(QWidget):
             case Page.DRILLING.index:
                 z_end = self.drillingZEnd.text().strip()
                 retract = self.drillingZRetract.text().strip()
-                inspection_retract = self.drillingZInspect.text().strip()
+                z_inspect = self.drillingZInspect.text().strip()
                 peck_depth = self.drillingPeckDepth.text().strip()
                 rpm = self.drillingRpm.text().strip()
                 feed = self.drillingFeed.text().strip()
-                return f"o<drilling> call [#<_x> * 2] [#<_z>] [{z_end}] [{retract}] [{inspection_retract}] [{peck_depth}] [{rpm}] [{feed}]"
+                return (f"o<drilling> call "
+                        f"[#<_x> * 2] "
+                        f"[#<_z>] "
+                        f"[{z_end}] "
+                        f"[{retract}] "
+                        f"[0] "
+                        f"[{z_inspect}] "
+                        f"[{peck_depth}] "
+                        f"[{rpm}] "
+                        f"[{feed}]")
             case Page.KEY_SLOT.index:
                 x_end = self.keyslotXEnd.text()
                 z_end = self.keyslotZEnd.text()

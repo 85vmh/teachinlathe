@@ -1,0 +1,42 @@
+O<m1_handling> sub
+
+#<x_inspect>       = #1
+#<z_inspect>       = #2
+#<x_return>        = #3
+#<z_return>        = #4
+#<spindle_dir>	   = #5	
+
+G21 ; Metric Units
+G90 ; Absolute Distance
+#<resume_from_m1> = 0   (flag set before M1, consumed after resume)
+
+M66 P0 L0 (samples motion.digital-in-00 into #5399, no wait)
+
+O900 if [#5399 EQ 1]
+	G0 X#<x_inspect> Z#<z_inspect>
+	M5
+	;(DEBUG, inspecting, stopped the spindle)
+	#<resume_from_m1> = 1
+	M1
+O900 endif
+
+(after resume: if we came from optional stop, restart spindle, return to retract, dwell 2s)
+O901 if [#<resume_from_m1> EQ 1]
+	;(DEBUG, finished inspection, start the spindle)
+	o902 if [#<spindle_dir> EQ 1]
+		M3
+	o902 elseif [#<spindle_dir> EQ -1]
+		M4
+	o902 endif
+
+	G0 X#<x_return> Z[#<z_return>] 
+	
+	o903 if [#<spindle_dir> NE 0] 
+		M66 P1 L3 Q5       (wait max 5 seconds until motion.digital-in-01 turns ON)
+	o903 endif
+	
+	#<resume_from_m1> = 0
+	;(DEBUG, continuing from where left off...)
+O901 endif
+
+O<m1_handling> endsub
