@@ -246,8 +246,17 @@ class QuickCycles(QWidget):
             case Page.FACING.index:
                 x_end = self.facingXEnd.text().strip()
                 z_end = self.facingZEnd.text().strip()
+                x_inspect = self.facingXInspect.text().strip()
+                z_inspect = self.facingZInspect.text().strip()
                 doc = self.facingDoc.text().strip()
-                return f"o<facing> call [#<_x> * 2] [#<_z>] [{x_end}] [{z_end}] [{doc}]"
+                return (f"o<facing> call "
+                        f"[#<_x> * 2] "
+                        f"[#<_z>] "
+                        f"[{x_end}] "
+                        f"[{z_end}] "
+                        f"[{x_inspect}] "
+                        f"[{z_inspect}] "
+                        f"[{doc}]")
             case Page.CHAMFER.index:
                 corner_x = self.chamferCornerX.text().strip()
                 corner_z = self.chamferCornerZ.text().strip()
