@@ -4,14 +4,17 @@ O<facing> sub
 #<z_start>  	= #2
 #<x_end>    	= #3
 #<z_end>    	= #4
-#<doc>      	= #5
-#<x_inspect>    = #6
-#<z_inspect>    = #7
+#<x_inspect>    = #5
+#<z_inspect>    = #6
+#<doc>      	= #7
+
 
 G7 	; Lathe Diameter Mode
 G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
+
+G0 X#<x_start> Z#<z_start>
 
 O200 WHILE [#<z_start> GT #<z_end> + #<doc>]
 
