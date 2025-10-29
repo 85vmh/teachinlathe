@@ -231,6 +231,7 @@ class MyMainWindow(VCPMainWindow):
             print(f'Temporary file created: {temp.name}')
             loadProgram(temp.name, add_to_recents=False)
             self.current_program = temp.name
+            self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
 
     def backToPrograms(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
@@ -243,6 +244,7 @@ class MyMainWindow(VCPMainWindow):
         pass
 
     def onCycleStopPressed(self, value):
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = False
         if self.mainSelectedTab == MainTabs.MANUAL_TURNING:
             if self.latheJoystick.isRotated() and value:
                 print("Set taper turning off when cycle stop pressed")
@@ -381,8 +383,8 @@ class MyMainWindow(VCPMainWindow):
 
     def setXOffset(self, value):
         print("setXOffset", value)
-        issue_mdi('o<touch_off_x> call [{}]'.format(value))
+        issue_mdi('o<touch_off_x> call [{}]'.format(value).strip())
 
     def setZOffset(self, value):
         print("setZOffset", value)
-        issue_mdi('o<touch_off_z> call [{}]'.format(value))
+        issue_mdi('o<touch_off_z> call [{}]'.format(value).strip())

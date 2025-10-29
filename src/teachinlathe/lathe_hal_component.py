@@ -28,7 +28,9 @@ class TeachInLatheComponent:
     PinJogSpeedValue = 'joystick.jog-speed'
     PinIsSpindleStarted = 'app-status.spindle-started'
     PinIsReadyToRunProgram = 'app-status.ready-to-run-program'
+    PinProgramLoaded = 'app-status.program-loaded'
     PinButtonCycleStart = 'button.cycle-start'
+    PinCycleStartLed = 'app-status.cycle-start-led'
     PinButtonCycleStop = 'button.cycle-stop'
     PinSpindleCoveredOpened = 'spindle.cover-opened'
     PinSpindleSwitchRevIn = 'spindle.switch-rev-in'
@@ -99,5 +101,7 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinAxisLimitZMax, 'float', 'in')
         self.comp.addPin(self.PinIsSpindleStarted, 'bit', 'out')
         self.comp.addPin(self.PinIsReadyToRunProgram, 'bit', 'out')
+        self.comp.addPin(self.PinProgramLoaded, 'bit', 'out')
+        self.comp.addPin(self.PinCycleStartLed, 'bit', 'in')
         self.comp.ready()
         print("HalComponent instance is created")
