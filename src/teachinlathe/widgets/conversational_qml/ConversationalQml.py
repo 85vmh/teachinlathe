@@ -486,8 +486,8 @@ class ConversationalQml(QQuickWidget):
                     setattr(op, attr, payload[attr])
                 except Exception:
                     pass
-        d = payload.get("toolchange_details")
-        tcd = getattr(op, "toolchange_details", None)
+        d = payload.get("toolchange_rules")
+        tcd = getattr(op, "toolchange_rules", None)
         if tcd and isinstance(d, dict):
             for attr in ("x_pos", "z_pos", "coordinate_type", "move_sequence", "stop_spindle"):
                 if attr in d and hasattr(tcd, attr):
@@ -630,8 +630,8 @@ class ConversationalQml(QQuickWidget):
     def onTeachX(self, index: int):
         # TODO: read live X from machine and push to UI
         # op = self._get_current_op(index)
-        # if op and hasattr(op, "toolchange_details"):
-        #     x = getattr(op.toolchange_details, "x_pos", 0.0)
+        # if op and hasattr(op, "toolchange_rules"):
+        #     x = getattr(op.toolchange_rules, "x_pos", 0.0)
         #     # You can send it back to QML by re-emitting receiveDetailsData with updated dict,
         #     # or call a small method on the details item if you keep a reference.
         pass

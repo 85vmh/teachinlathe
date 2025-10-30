@@ -24,7 +24,7 @@ Item {
     property real xPos:        0.0
     property real zPos:        0.0
     property string coordType: "absolute"
-    property string moveSeq:   "xz"
+    property string moveSeq:   "both"
     property bool stopSpindle: false
 
     function applyData(index, data) {
@@ -37,7 +37,7 @@ Item {
         backAngle  = (opData.back_angle !== undefined) ? opData.back_angle : 0
         frontAngle = (opData.front_angle !== undefined) ? opData.front_angle : 0
 
-        var det = (opData.toolchange_details || {})
+        var det = (opData.toolchange_rules || {})
         xPos        = (det.x_pos !== undefined) ? det.x_pos : 0.0
         zPos        = (det.z_pos !== undefined) ? det.z_pos : 0.0
         coordType   = det.coordinate_type || "absolute"
@@ -57,7 +57,7 @@ Item {
             tool_orientation: toolOrient,
             back_angle:       backAngle,
             front_angle:      frontAngle,
-            toolchange_details: {
+            toolchange_rules: {
                 x_pos: xPos,
                 z_pos: zPos,
                 coordinate_type: coordType,
@@ -179,8 +179,8 @@ Item {
                         onToggled: if (checked) { root.moveSeq = "zx"; root.emitSave() }
                     }
                     RadioButton {
-                        text: "Straight"; checked: root.moveSeq === "straight"; ButtonGroup.group: moveGroup
-                        onToggled: if (checked) { root.moveSeq = "straight"; root.emitSave() }
+                        text: "Simultaneous"; checked: root.moveSeq === "both"; ButtonGroup.group: moveGroup
+                        onToggled: if (checked) { root.moveSeq = "both"; root.emitSave() }
                     }
                 }
 

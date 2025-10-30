@@ -17,22 +17,22 @@ class ChangeToolDetailsWidget(QWidget, Ui_ToolChangeDetailForm):
                                           f"Back Angle: {set_tool_data.back_angle}°\n"
                                           f"Front Angle: {set_tool_data.front_angle}°")
 
-        print("Tool Change Details: ", set_tool_data.toolchange_details)
+        print("Tool Change Details: ", set_tool_data.toolchange_rules)
 
         # Access values using dictionary keys
-        self.xChangePos.setText(str(set_tool_data.toolchange_details.x_pos))
-        self.zChangePos.setText(str(set_tool_data.toolchange_details.z_pos))
+        self.xChangePos.setText(str(set_tool_data.toolchange_rules.x_pos))
+        self.zChangePos.setText(str(set_tool_data.toolchange_rules.z_pos))
 
         # Set the radio buttons based on move sequence
-        if set_tool_data.toolchange_details.move_sequence == "simultaneous":
+        if set_tool_data.toolchange_rules.move_sequence == "both":
             self.radioButton_4.setChecked(True)
-        elif set_tool_data.toolchange_details.move_sequence == "x_first":
+        elif set_tool_data.toolchange_rules.move_sequence == "xz":
             self.radioButton_5.setChecked(True)
-        elif set_tool_data.toolchange_details.move_sequence == "z_first":
+        elif set_tool_data.toolchange_rules.move_sequence == "zx":
             self.radioButton_6.setChecked(True)
 
         # Set spindle stop option
-        if set_tool_data.toolchange_details.stop_spindle:
+        if set_tool_data.toolchange_rules.stop_spindle:
             self.radioButton_3.setChecked(True)  # Yes
         else:
             self.radioButton_7.setChecked(True)  # No
@@ -45,22 +45,22 @@ class ChangeToolDetailsWidget(QWidget, Ui_ToolChangeDetailForm):
             self.set_tool_data.tool_no = 0
 
         try:
-            self.set_tool_data.toolchange_details.x_pos = float(self.xChangePos.text())
+            self.set_tool_data.toolchange_rules.x_pos = float(self.xChangePos.text())
         except ValueError:
-            self.set_tool_data.toolchange_details.x_pos = 0.0
+            self.set_tool_data.toolchange_rules.x_pos = 0.0
 
         try:
-            self.set_tool_data.toolchange_details.z_pos = float(self.zChangePos.text())
+            self.set_tool_data.toolchange_rules.z_pos = float(self.zChangePos.text())
         except ValueError:
-            self.set_tool_data.toolchange_details.z_pos = 0.0
+            self.set_tool_data.toolchange_rules.z_pos = 0.0
 
         if self.radioButton_4.isChecked():
-            self.set_tool_data.toolchange_details.move_sequence = "simultaneous"
+            self.set_tool_data.toolchange_rules.move_sequence = "both"
         elif self.radioButton_5.isChecked():
-            self.set_tool_data.toolchange_details.move_sequence = "x_first"
+            self.set_tool_data.toolchange_rules.move_sequence = "xz"
         elif self.radioButton_6.isChecked():
-            self.set_tool_data.toolchange_details.move_sequence = "z_first"
+            self.set_tool_data.toolchange_rules.move_sequence = "zx"
         else:
-            self.set_tool_data.toolchange_details.move_sequence = "simultaneous"  # default
+            self.set_tool_data.toolchange_rules.move_sequence = "both"  # default
 
-        self.set_tool_data.toolchange_details.stop_spindle = self.radioButton_3.isChecked()
+        self.set_tool_data.toolchange_rules.stop_spindle = self.radioButton_3.isChecked()

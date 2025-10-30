@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2025-10-02 10:16:44",
+        "last_edit": "2025-10-30 17:10:29",
         "datum": 6,
         "units": "mm",
         "workpiece": {
@@ -18,13 +18,13 @@
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": true,
-            "tool_no": 6,
+            "tool_no": 5,
             "tool_orientation": 2,
             "back_angle": 95,
             "front_angle": 80,
-            "toolchange_details": {
-                "x_pos": 230.0,
-                "z_pos": 200.0,
+            "toolchange_rules": {
+                "x_pos": 100.0,
+                "z_pos": 120.0,
                 "coordinate_type": "relative",
                 "move_sequence": "xz",
                 "stop_spindle": false
@@ -35,8 +35,6 @@
             "type": "facing",
             "generate_gcode": true,
             "is_optional_block": true,
-            "css_value": 150,
-            "max_speed": 2000,
             "feed_rate": 0.2,
             "doc": 80.0,
             "retract": 1.0,
@@ -44,7 +42,17 @@
             "z_start": 3.0,
             "x_end": 10.0,
             "z_end": -30.0,
-            "z_end_becomes_new_z0": true
+            "z_end_becomes_new_z0": true,
+            "inspect_on_m1": {
+                "x_inspect": 40.0,
+                "z_inspect": 40.0,
+                "stop_spindle": true
+            },
+            "spindle": {
+                "direction": -1,
+                "css_value": 150.0,
+                "css_max_speed": 2000
+            }
         },
         {
             "order": 3,
@@ -79,11 +87,11 @@
             "tool_orientation": 2,
             "back_angle": 95,
             "front_angle": 80,
-            "toolchange_details": {
+            "toolchange_rules": {
                 "x_pos": 200.0,
                 "z_pos": 200.0,
-                "coordinate_type": "machine",
-                "move_sequence": "simultaneous",
+                "coordinate_type": "absolute",
+                "move_sequence": "both",
                 "stop_spindle": true
             }
         },
@@ -92,8 +100,6 @@
             "type": "profiling",
             "generate_gcode": true,
             "is_optional_block": false,
-            "css_value": 100,
-            "max_speed": 2000,
             "feed_rate": 0.2,
             "profileId": 1,
             "strategy": "rough",
@@ -105,24 +111,31 @@
                 "x": 0.5,
                 "z": 0.2
             },
-            "spring_passes": null
+            "spring_passes": null,
+            "spindle": {
+                "direction": -1,
+                "rpm_value": 1000
+            }
         },
         {
             "order": 6,
             "type": "profiling",
             "generate_gcode": true,
             "is_optional_block": false,
-            "css_value": 200,
-            "max_speed": 2000,
             "feed_rate": 0.2,
             "profileId": 1,
             "strategy": "finish",
-            "x_start": 55,
-            "z_start": 3,
+            "x_start": 55.0,
+            "z_start": 3.0,
             "doc": 1.5,
-            "retract": 1,
+            "retract": 1.0,
             "stock_to_leave": null,
-            "spring_passes": 1
+            "spring_passes": 1,
+            "spindle": {
+                "direction": -1,
+                "css_value": 150.0,
+                "css_max_speed": 2000
+            }
         },
         {
             "order": 7,
@@ -133,11 +146,11 @@
             "tool_orientation": 6,
             "back_angle": 95,
             "front_angle": 80,
-            "toolchange_details": {
+            "toolchange_rules": {
                 "x_pos": 52.0,
                 "z_pos": 200.0,
-                "coordinate_type": "machine",
-                "move_sequence": "simultaneous",
+                "coordinate_type": "absolute",
+                "move_sequence": "both",
                 "stop_spindle": true
             }
         },
@@ -147,7 +160,6 @@
             "generate_gcode": true,
             "is_optional_block": false,
             "location": "OD",
-            "spindle_rpm": 300,
             "thread_type": "metric",
             "pitch": 1.0,
             "starts": 1,
@@ -157,7 +169,11 @@
             "z_end": 0.0,
             "initial_doc": 0.1,
             "retract": 0.2,
-            "spring_passes": 1
+            "spring_passes": 1,
+            "spindle": {
+                "direction": -1,
+                "rpm_value": 1000
+            }
         },
         {
             "order": 9,
@@ -168,11 +184,11 @@
             "tool_orientation": 6,
             "back_angle": 95,
             "front_angle": 80,
-            "toolchange_details": {
-                "x_pos": 200,
-                "z_pos": 200,
-                "coordinate_type": "machine",
-                "move_sequence": "simultaneous",
+            "toolchange_rules": {
+                "x_pos": 200.0,
+                "z_pos": 200.0,
+                "coordinate_type": "absolute",
+                "move_sequence": "both",
                 "stop_spindle": true
             }
         },
@@ -181,33 +197,42 @@
             "type": "drilling",
             "generate_gcode": true,
             "is_optional_block": false,
-            "spindle_rpm": 700,
             "feed_rate": 0.1,
             "z_start": 20.0,
-            "z_end": 11.0
+            "z_end": 11.0,
+            "spindle": {
+                "direction": -1,
+                "rpm_value": 1000
+            }
         },
         {
             "order": 11,
             "type": "tapping",
             "generate_gcode": true,
             "is_optional_block": false,
-            "spindle_rpm": 500,
             "pitch": 1.5,
             "z_start": 3.0,
-            "z_end": -15.0
+            "z_end": -15.0,
+            "spindle": {
+                "direction": -1,
+                "rpm_value": 1000
+            }
         },
         {
             "order": 12,
             "type": "parting",
             "generate_gcode": true,
             "is_optional_block": false,
-            "css_value": 100,
-            "max_speed": 100,
             "feed_rate": 0.2,
             "peck_depth": 2.0,
             "x_start": 10.0,
             "x_end": 0.0,
-            "z_pos": -15.0
+            "z_pos": -15.0,
+            "spindle": {
+                "direction": -1,
+                "css_value": 150.0,
+                "css_max_speed": 2000
+            }
         }
     ]
 }
