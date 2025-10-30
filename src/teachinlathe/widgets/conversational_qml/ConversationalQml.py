@@ -5,6 +5,7 @@ from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 
+from teachinlathe.conversational.data_types import Workpiece
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
@@ -441,36 +442,56 @@ class ConversationalQml(QQuickWidget):
 
     def onUpdateHeader(self, payload):
         try:
-            payload = self._to_py(payload)
+            p = self._to_py(payload) or {}
+            # Unwrap daca vine sub cheia "header"
+            hdr = p.get("header", p)
+
             prog = self._get_current_program()
-            if not prog:
+            if not prog or not hasattr(prog, "header") or prog.header is None:
                 return
 
-            header = getattr(prog, "header", None)
-            if not header:
-                return
+            header = prog.header
 
-            # simple fields
-            for attr in ("name", "last_edit", "datum", "units"):
-                if attr in payload and hasattr(header, attr):
-                    try:
-                        setattr(header, attr, payload[attr])
-                    except Exception:
-                        pass
+            if "name" in hdr:
+                header.name = str(hdr["name"])
+            if "units" in hdr:
+                header.units = str(hdr["units"])
+            if "datum" in hdr:
+                try:
+                    header.datum = int(hdr["datum"])
+                except Exception:
+                    pass
+            if "last_edit" in hdr and hdr["last_edit"] is not None:
+                header.last_edit = str(hdr["last_edit"])
 
             # nested: workpiece
-            wp_payload = payload.get("workpiece")
-            wp = getattr(header, "workpiece", None)
-            if isinstance(wp_payload, dict) and wp is not None:
-                for attr in ("material", "external_diameter", "internal_diameter", "stickout_length"):
-                    if attr in wp_payload and hasattr(wp, attr):
-                        try:
-                            setattr(wp, attr, wp_payload[attr])
-                        except Exception:
-                            pass
+            wp_payload = hdr.get("workpiece")
+            if isinstance(wp_payload, dict):
+                wp = header.workpiece
+                if wp is None:
+                    wp = Workpiece(material="", external_diameter=0.0,
+                                   internal_diameter=0.0, stickout_length=0.0)
+                if "material" in wp_payload:
+                    wp.material = str(wp_payload["material"])
+                if "external_diameter" in wp_payload:
+                    try:
+                        wp.external_diameter = float(wp_payload["external_diameter"])
+                    except Exception:
+                        pass
+                if "internal_diameter" in wp_payload:
+                    try:
+                        wp.internal_diameter = float(wp_payload["internal_diameter"])
+                    except Exception:
+                        pass
+                if "stickout_length" in wp_payload:
+                    try:
+                        wp.stickout_length = float(wp_payload["stickout_length"])
+                    except Exception:
+                        pass
+                header.workpiece = wp
 
-            # persist
             self._save_current_program()
+
         except Exception as e:
             print("[header] update error:", e)
 

@@ -2,14 +2,14 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2025-10-30 17:10:29",
-        "datum": 6,
+        "last_edit": "2025-10-30 17:21:55",
+        "datum": 4,
         "units": "mm",
         "workpiece": {
-            "material": "Aluminiu 7075",
-            "external_diameter": 31.0,
-            "internal_diameter": 10.0,
-            "stickout_length": 80.0
+            "material": "Aluminiu 70755",
+            "external_diameter": 200.0,
+            "internal_diameter": 50.0,
+            "stickout_length": 16.0
         }
     },
     "operations": [
