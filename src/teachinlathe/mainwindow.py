@@ -110,6 +110,7 @@ class MyMainWindow(VCPMainWindow):
 
         self.onTaskModeChanged(STATUS.task_mode)
         STATUS.task_mode.signal.connect(self.onTaskModeChanged)
+        STATUS.state.signal.connect(self.onStateChanged)
 
         TOOLTABLE.current_tool.signal.connect(self.onCurrentToolChanged)
         self.latheToolTable.toolEditClicked.connect(self.onToolEditClicked)
@@ -345,6 +346,11 @@ class MyMainWindow(VCPMainWindow):
                 print("----Auto mode")
             case 3:
                 print("----MDI mode")
+
+    def onStateChanged(self, state):
+        if state == linuxcnc.RCS_DONE and self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value == True:
+            print("----Loaded program has finished")
+            self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = False
 
     def onHandwheelAllowedChanged(self, allowed: bool):
         print(f"Handwheel allowed changed to: {allowed}")
