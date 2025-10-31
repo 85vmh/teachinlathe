@@ -1,5 +1,5 @@
+# ProgramListModel.py
 from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant
-
 
 class ProgramListModel(QAbstractListModel):
     ProgramNameRole = Qt.UserRole + 1
@@ -32,3 +32,14 @@ class ProgramListModel(QAbstractListModel):
             self.ProgramNameRole: b'programName',
             self.LastEditDateRole: b'lastEditDate',
         }
+
+    # 🔧 nou: înlocuiește programul la index și notifică UI-ul
+    def setProgramAt(self, row, program):
+        if not (0 <= row < len(self._programs)):
+            return False
+        self._programs[row] = program
+        top = self.index(row)
+        bottom = self.index(row)
+        # notify all roles
+        self.dataChanged.emit(top, bottom, [self.ProgramNameRole, self.LastEditDateRole])
+        return True

@@ -5,10 +5,34 @@ from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 
-from teachinlathe.conversational.data_types import Workpiece
+from teachinlathe.conversational.data_types import Workpiece, SpindleParameters, Facing, CuttingParameters, GeometryParameters, M1Parameters, SpindleMode, \
+    operation_types
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
+
+
+def _merge_dataclass(obj, dct):
+    if not isinstance(dct, dict) or obj is None:
+        return
+    for k, v in dct.items():
+        if hasattr(obj, k):
+            try:
+                setattr(obj, k, v)
+            except Exception:
+                pass
+
+
+def _deep_merge(base, patch):
+    if not isinstance(base, dict) or not isinstance(patch, dict):
+        return patch
+    out = dict(base)
+    for k, v in patch.items():
+        if k in out and isinstance(out[k], dict) and isinstance(v, dict):
+            out[k] = _deep_merge(out[k], v)
+        else:
+            out[k] = v
+    return out
 
 
 class ConversationalQml(QQuickWidget):
@@ -114,55 +138,61 @@ class ConversationalQml(QQuickWidget):
 
         return os.path.join(base_dir, base_name)
 
-    # REPLACE your _save_current_program with this version
+    # în _save_current_program(self):
     def _save_current_program(self):
-        """Serialize and write current program to its JSON file (in the original folder if possible)."""
         prog = self._get_current_program()
         if not prog:
             return
 
-        # update last_edit in memory before serialization (optional but useful for UI)
+        from datetime import datetime
         try:
-            from datetime import datetime
             if hasattr(prog, "header") and hasattr(prog.header, "last_edit"):
                 prog.header.last_edit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception:
             pass
 
-        # collect data
         data = prog.to_dict() if hasattr(prog, "to_dict") else None
         if not data:
             print("Program serialization missing (to_dict).")
             return
 
-        # resolve path
         filename = self._resolve_save_path(prog)
         try:
-            # ensure parent directory exists
             os.makedirs(os.path.dirname(filename), exist_ok=True)
             with open(filename, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
-            # cache the filename on the object if it wasn't set
-            try:
-                if not getattr(prog, "filename", None):
-                    prog.filename = filename
-            except Exception:
-                pass
+            if not getattr(prog, "filename", None):
+                prog.filename = filename
             print(f"[autosave] Program written to: {filename}")
         except Exception as e:
             print("Failed to save program:", e)
+            return
 
-        # notify the list model that last_edit changed (refresh row)
+        # 🔁 IMPORTANT: reîncarcă de pe disc și înlocuiește instanța în model + self.current_program
         try:
+            with open(filename, "r", encoding="utf-8") as f:
+                disk_data = json.load(f)
+            from teachinlathe.conversational.data_types import Program
+            new_prog = Program.from_dict(disk_data)
+            new_prog.filename = filename
+
             row = getattr(self, "current_program_index", None)
+            if row is not None and hasattr(self.model, "setProgramAt"):
+                self.model.setProgramAt(row, new_prog)
+                # păstrează *aceeași referință* ca în model
+                self.current_program = self.model.get(row)
+            else:
+                # fallback
+                self.current_program = new_prog
+
+            # notifică last-edit în listă
             if row is not None:
                 top = self.model.index(row)
                 bottom = self.model.index(row)
-                # Only last-edit role for minimal refresh
                 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel as _PLM
                 self.model.dataChanged.emit(top, bottom, [_PLM.LastEditDateRole])
         except Exception as e:
-            print("Failed to emit dataChanged:", e)
+            print("Failed to refresh in-memory program from disk:", e)
 
     def _hook_screen_item(self, item):
         try:
@@ -519,18 +549,48 @@ class ConversationalQml(QQuickWidget):
         self._save_current_program()
 
     def onUpdateFacing(self, index: int, payload):
-        payload = self._to_py(payload)
+        p = self._to_py(payload) or {}
         op = self._get_current_op(index)
-        if op is None or getattr(op, "type", "") != "facing":
+        from teachinlathe.conversational.data_types import Facing
+        if not isinstance(op, Facing):
             return
-        for attr in ("order", "generate_gcode", "is_optional_block",
-                     "css_value", "max_speed", "feed_rate", "doc", "retract",
-                     "x_start", "z_start", "x_end", "z_end", "z_end_becomes_new_z0"):
-            if attr in payload and hasattr(op, attr):
-                try:
-                    setattr(op, attr, payload[attr])
-                except Exception:
-                    pass
+
+        old_dict = op.to_dict()  # sursa de adevăr din memorie
+        sp_old = (old_dict.get("spindle_parameters") or {})
+
+        # --- Normalizează payload-ul de spindle înainte de merge ---
+        sp_new = p.get("spindle_parameters")
+        if isinstance(sp_new, dict):
+            sp_norm = dict(sp_old)  # pornește de la ce aveai
+            # 1) “mode”: dacă vine din UI, ia-l; dacă nu, inferă; altfel păstrează vechiul
+            if "mode" in sp_new and sp_new["mode"]:
+                sp_norm["mode"] = sp_new["mode"]
+            elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
+                sp_norm["mode"] = "rpm"
+            elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
+                sp_norm["mode"] = "css"
+            else:
+                sp_norm["mode"] = sp_old.get("mode", "rpm")
+
+            # 2) Copiază doar ce vine, restul păstrează (NU pune default aici)
+            for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
+                if k in sp_new and sp_new[k] is not None:
+                    sp_norm[k] = sp_new[k]
+
+            # asigură-te că rămân și valorile celuilalt mod pentru UI (nu le ștergem)
+            p["spindle_parameters"] = sp_norm
+
+        # --- Merge pe tot op-ul ---
+        merged = _deep_merge(old_dict, p)
+
+        # --- Reconstruiește instanța curentă (validare într-un singur loc) ---
+        cls = operation_types[merged.get("type", old_dict.get("type"))]
+        new_op = cls.from_dict(merged)
+
+        # --- Înlocuiește în listă și salvează ---
+        prog = self._get_current_program()
+        if prog:
+            prog.operations[index] = new_op
         self._save_current_program()
 
     def onUpdateProfiling(self, index: int, payload):

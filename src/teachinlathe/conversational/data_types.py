@@ -4,6 +4,27 @@ from enum import Enum
 from typing import List, Dict, Any, Optional, Type
 
 
+class CoordinateType(Enum):
+    RELATIVE = "relative"
+    ABSOLUTE = "absolute"
+
+
+class MoveSequence(Enum):
+    XZ = "xz"
+    ZX = "zx"
+    BOTH = "both"
+
+
+class Strategy(Enum):
+    ROUGH = "rough"
+    FINISH = "finish"
+
+
+class SpindleMode(str, Enum):
+    RPM = "rpm"
+    CSS = "css"
+
+
 # ------------------------------ Core header ----------------------------------
 
 @dataclass
@@ -82,87 +103,68 @@ class Operation:
 # ------------------------------ Spindle model --------------------------------
 
 @dataclass
-class Spindle:
-    direction: int                         # mandatory: -1 / +1
-    rpm_value: Optional[int] = None        # RPM mode
-    css_value: Optional[float] = None      # CSS mode (value, e.g. mm/sec)
-    css_max_speed: Optional[int] = None    # CSS max RPM
+class SpindleParameters:
+    direction: int
+    mode: SpindleMode
+    rpm_value: Optional[int] = None
+    css_value: Optional[int] = None
+    css_max_speed: Optional[int] = None
+
+    DEFAULT_RPM = 1000
+    DEFAULT_CSS_VALUE = 100
+    DEFAULT_CSS_MAX = 1000
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "Spindle":
+    def from_dict(data: Dict[str, Any]) -> "SpindleParameters":
         if not isinstance(data, dict):
             raise ValueError("Spindle must be an object")
-        s = Spindle(
-            direction=int(data["direction"]),
-            rpm_value=(None if data.get("rpm_value") is None else int(data.get("rpm_value"))),
-            css_value=(None if data.get("css_value") is None else float(data.get("css_value"))),
-            css_max_speed=(None if data.get("css_max_speed") is None else int(data.get("css_max_speed"))),
+        mode_str = data.get("mode")
+        if mode_str not in (m.value for m in SpindleMode):
+            raise ValueError(f"Invalid spindle mode: {mode_str!r}")
+
+        def as_opt_int(v):
+            return None if v is None or (isinstance(v, str) and v.strip() == "") else int(v)
+
+        return SpindleParameters(
+            direction=int(data.get("direction", 1)),
+            mode=SpindleMode(mode_str),
+            rpm_value=as_opt_int(data.get("rpm_value")),
+            css_value=as_opt_int(data.get("css_value")),
+            css_max_speed=as_opt_int(data.get("css_max_speed")),
         )
-        s._validate_mode()
-        return s
 
     def to_dict(self) -> Dict[str, Any]:
-        out: Dict[str, Any] = {"direction": int(self.direction)}
+        out = {
+            "direction": int(self.direction),
+            "mode": self.mode.value,
+        }
         if self.rpm_value is not None:
             out["rpm_value"] = int(self.rpm_value)
         if self.css_value is not None:
-            out["css_value"] = float(self.css_value)
+            out["css_value"] = int(self.css_value)
         if self.css_max_speed is not None:
             out["css_max_speed"] = int(self.css_max_speed)
         return out
-
-    def _validate_mode(self) -> None:
-        """Require 'direction' and exactly one mode:
-           - RPM: rpm_value present
-           - CSS: css_value AND css_max_speed present
-           Never both."""
-        if self.direction is None:
-            raise ValueError("Spindle.direction is required")
-        if int(self.direction) not in (-1, 1):
-            raise ValueError("Spindle.direction must be -1 or 1")
-
-        has_rpm = self.rpm_value is not None
-        has_css_partial = (self.css_value is not None) or (self.css_max_speed is not None)
-        has_css_full = (self.css_value is not None) and (self.css_max_speed is not None)
-
-        if has_css_partial and not has_css_full:
-            raise ValueError("For CSS mode, both css_value AND css_max_speed are required")
-
-        # XOR: one or the other
-        if not (has_rpm ^ has_css_full):
-            raise ValueError("Choose exactly one spindle mode: rpm_value OR (css_value + css_max_speed)")
-
 
 # --------- TurnableOperation: all spindle-using ops inherit from this --------
 
 @dataclass
 class TurnableOperation(Operation):
-    spindle: Spindle
+    spindleParameters: SpindleParameters
 
     @staticmethod
-    def _parse_spindle(data: Dict[str, Any]) -> Spindle:
-        sp = data.get("spindle")
+    def _parse_spindle(data: Dict[str, Any]) -> SpindleParameters:
+        sp = data.get("spindle_parameters")
         if sp is None:
-            raise ValueError("Missing required 'spindle' block for turnable operation")
-        return Spindle.from_dict(sp)
+            raise ValueError("Missing required 'spindle_parameters' block for turnable operation")
+        return SpindleParameters.from_dict(sp)
 
     def _add_spindle_to(self, base: Dict[str, Any]) -> Dict[str, Any]:
-        base["spindle"] = self.spindle.to_dict()
+        base["spindle_parameters"] = self.spindleParameters.to_dict()
         return base
 
 
 # --------------------------- Tool change (no spindle) ------------------------
-
-class CoordinateType(Enum):
-    RELATIVE = "relative"
-    ABSOLUTE = "absolute"
-
-
-class MoveSequence(Enum):
-    XZ = "xz"
-    ZX = "zx"
-    BOTH = "both"
-
 
 @dataclass
 class ToolChangeRules:
@@ -264,17 +266,19 @@ class ChangeTool(Operation):
         return base
 
 
-# ----------------------------- InspectOnM1 -----------------------------------
+# ----------------------------- M1 Parameters ---------------------------------
 
 @dataclass
-class InspectOnM1:
+class M1Parameters:
+    include_m1: bool
     x_inspect: float
     z_inspect: float
     stop_spindle: bool
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "InspectOnM1":
-        return InspectOnM1(
+    def from_dict(data: Dict[str, Any]) -> "M1Parameters":
+        return M1Parameters(
+            include_m1=bool(data.get("include_m1", True)),
             x_inspect=float(data.get("x_inspect", 0.0)),
             z_inspect=float(data.get("z_inspect", 0.0)),
             stop_spindle=bool(data.get("stop_spindle", False))
@@ -282,9 +286,59 @@ class InspectOnM1:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
+            "include_m1": bool(self.include_m1),
             "x_inspect": float(self.x_inspect),
             "z_inspect": float(self.z_inspect),
             "stop_spindle": bool(self.stop_spindle)
+        }
+
+
+# ---------------------- Cutting / Geometry Parameters ------------------------
+
+@dataclass
+class CuttingParameters:
+    feed_rate: float
+    doc: float
+    retract: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "CuttingParameters":
+        return CuttingParameters(
+            feed_rate=float(data.get("feed_rate", 0.0)),
+            doc=float(data.get("doc", 0.0)),
+            retract=float(data.get("retract", 0.0)),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "feed_rate": float(self.feed_rate),
+            "doc": float(self.doc),
+            "retract": float(self.retract),
+        }
+
+
+@dataclass
+class GeometryParameters:
+    x_start: float
+    z_start: float
+    x_end: float
+    z_end: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "GeometryParameters":
+        return GeometryParameters(
+            x_start=float(data.get("x_start", 0.0)),
+            z_start=float(data.get("z_start", 0.0)),
+            x_end=float(data.get("x_end", 0.0)),
+            z_end=float(data.get("z_end", 0.0)),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "x_start": float(self.x_start),
+            "z_start": float(self.z_start),
+            "x_end": float(self.x_end),
+            "z_end": float(self.z_end),
         }
 
 
@@ -292,54 +346,48 @@ class InspectOnM1:
 
 @dataclass
 class Facing(TurnableOperation):
-    feed_rate: float
-    doc: float
-    retract: float
-    x_start: float
-    z_start: float
-    x_end: float
-    z_end: float
+    cutting_parameters: CuttingParameters
+    geometry_parameters: GeometryParameters
     z_end_becomes_new_z0: bool
-    inspect_on_m1: Optional[InspectOnM1] = None
+    m1_parameters: Optional[M1Parameters] = None
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Facing":
-        spindle = TurnableOperation._parse_spindle(data)
-        inspect = None
-        if "inspect_on_m1" in data and isinstance(data["inspect_on_m1"], dict):
-            inspect = InspectOnM1.from_dict(data["inspect_on_m1"])
+        spindle_parameters = TurnableOperation._parse_spindle(data)
+
+        cp_raw = data.get("cutting_parameters", {})
+        gp_raw = data.get("geometry_parameters", {})
+        m1_raw = data.get("m1_parameters")
+
+        cutting_parameters = CuttingParameters.from_dict(cp_raw)
+        geometry_parameters = GeometryParameters.from_dict(gp_raw)
+        m1_parameters = M1Parameters.from_dict(m1_raw) if isinstance(m1_raw, dict) else None
+
         return Facing(
             order=int(data["order"]),
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindle=spindle,
-            feed_rate=float(data.get("feed_rate", 0.0)),
-            doc=float(data.get("doc", 0.0)),
-            retract=float(data.get("retract", 0.0)),
-            x_start=float(data.get("x_start", 0.0)),
-            z_start=float(data.get("z_start", 0.0)),
-            x_end=float(data.get("x_end", 0.0)),
-            z_end=float(data.get("z_end", 0.0)),
+            spindleParameters=spindle_parameters,
+            cutting_parameters=cutting_parameters,
+            geometry_parameters=geometry_parameters,
             z_end_becomes_new_z0=bool(data.get("z_end_becomes_new_z0", False)),
-            inspect_on_m1=inspect,
+            m1_parameters=m1_parameters,
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
+        self._add_spindle_to(base)
         base.update({
-            "feed_rate": float(self.feed_rate),
-            "doc": float(self.doc),
-            "retract": float(self.retract),
-            "x_start": float(self.x_start),
-            "z_start": float(self.z_start),
-            "x_end": float(self.x_end),
-            "z_end": float(self.z_end),
+            "cutting_parameters": self.cutting_parameters.to_dict(),
+            "geometry_parameters": self.geometry_parameters.to_dict()
+        })
+        if self.m1_parameters is not None:
+            base["m1_parameters"] = self.m1_parameters.to_dict()
+        base.update({
             "z_end_becomes_new_z0": bool(self.z_end_becomes_new_z0)
         })
-        if self.inspect_on_m1 is not None:
-            base["inspect_on_m1"] = self.inspect_on_m1.to_dict()
-        return self._add_spindle_to(base)
+        return base
 
 
 # ---------------------------- Define Profile ---------------------------------
@@ -371,10 +419,6 @@ class DefineProfile(Operation):
 
 # ------------------------------- Profiling -----------------------------------
 
-class Strategy(Enum):
-    ROUGH = "rough"
-    FINISH = "finish"
-
 
 @dataclass
 class Profiling(TurnableOperation):
@@ -393,7 +437,6 @@ class Profiling(TurnableOperation):
         spindle = TurnableOperation._parse_spindle(data)
         strat = data.get("strategy", "rough")
         strat_enum = Strategy(str(strat).lower()) if isinstance(strat, str) else Strategy.ROUGH
-        # allow "ROUGH"/"rough"
         if isinstance(strat, str):
             try:
                 strat_enum = Strategy[str(strat).upper()]
@@ -404,7 +447,7 @@ class Profiling(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindle=spindle,
+            spindleParameters=spindle,
             feed_rate=float(data.get("feed_rate", 0.0)),
             profileId=int(data.get("profileId", data.get("profile_id", 0))),
             strategy=strat_enum,
@@ -476,7 +519,7 @@ class Threading(TurnableOperation):
             type=d["type"],
             generate_gcode=bool(d.get("generate_gcode", True)),
             is_optional_block=bool(d.get("is_optional_block", False)),
-            spindle=spindle,
+            spindleParameters=spindle,
             location=_coerce_thread_location(d.get("location", "OD")),
             thread_type=d["thread_type"],
             pitch=float(d["pitch"]),
@@ -524,7 +567,7 @@ class Drilling(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindle=spindle,
+            spindleParameters=spindle,
             feed_rate=float(data.get("feed_rate", 0.0)),
             z_start=float(data.get("z_start", 0.0)),
             z_end=float(data.get("z_end", 0.0)),
@@ -556,7 +599,7 @@ class Tapping(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindle=spindle,
+            spindleParameters=spindle,
             pitch=float(data["pitch"]),
             z_start=float(data["z_start"]),
             z_end=float(data["z_end"]),
@@ -590,7 +633,7 @@ class Parting(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindle=spindle,
+            spindleParameters=spindle,
             feed_rate=float(data.get("feed_rate", 0.0)),
             peck_depth=float(data.get("peck_depth", 0.0)),
             x_start=float(data.get("x_start", 0.0)),
