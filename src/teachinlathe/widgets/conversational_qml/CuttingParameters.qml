@@ -1,4 +1,4 @@
-// CuttingParameters.qml (styled like SpindleParameters inputs)
+// CuttingParameters.qml (fixed: nested payload + full op context + loading guard)
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -13,39 +13,51 @@ GroupBox {
     font.pixelSize: 16
 
     // bridge
-    property int opIndex: -1
-    property var opData: null
+    property int  opIndex: -1
+    property var  opData: null              // FULL OP (nu doar cutting)
+    property var  cuttingData: ({})         // doar sub-structura cutting_parameters
 
-    signal saveRequested(var updated)
-
+    signal saveRequested(var payload)
     signal openNumPadRequested(var field)
 
     // state
     property real feed_rate: 0.0
     property real doc: 0.0
     property real retract: 0.0
+    property bool _loading: false
 
-    function applyData(index, data) {
+    // compat cu FacingDetailsView:
+    // cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
+    function applyData(index, cuttingParams, fullOp) {
+        _loading = true
         opIndex = index
-        opData = data || {}
-        feed_rate = parseFloat((opData.feed_rate !== undefined) ? opData.feed_rate : 0.0)
-        doc = parseFloat((opData.doc !== undefined) ? opData.doc : 0.0)
-        retract = parseFloat((opData.retract !== undefined) ? opData.retract : 0.0)
+        opData  = fullOp || {}
+        cuttingData = cuttingParams || {}
+
+        feed_rate = parseFloat(cuttingData.feed_rate !== undefined ? cuttingData.feed_rate : 0.0)
+        doc       = parseFloat(cuttingData.doc       !== undefined ? cuttingData.doc       : 0.0)
+        retract   = parseFloat(cuttingData.retract   !== undefined ? cuttingData.retract   : 0.0)
+        _loading = false
     }
 
     function emitSave() {
-        if (!opData) return
+        if (_loading) return
         var payload = {
             order: (opData && opData.order !== undefined) ? opData.order : 0,
-            type: (opData && opData.type) ? opData.type : "",
+            type:  (opData && opData.type)  ? opData.type  : "",
             generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
             is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-            feed_rate: feed_rate,
-            doc: doc,
-            retract: retract
+            cutting_parameters: {
+                feed_rate: feed_rate,
+                doc:       doc,
+                retract:   retract
+            }
         }
-        root.saveRequested({index: opIndex, payload: payload})
+        // FacingDetailsView interceptează și face mergeIntoOp(p.payload || p)
+        root.saveRequested({ index: opIndex, payload: payload })
     }
+
+    DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
 
     GridLayout {
         id: grid
@@ -65,12 +77,8 @@ GroupBox {
             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
             settingName: "cut.feed_rate"
             value: root.feed_rate
-            validatorObject: DoubleValidator {
-                notation: DoubleValidator.StandardNotation
-            }
-            formatter: function (v) {
-                return (v == null) ? "" : Number(v).toFixed(3)
-            }
+            validatorObject: dblVal
+            formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
@@ -93,12 +101,8 @@ GroupBox {
             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
             settingName: "cut.doc"
             value: root.doc
-            validatorObject: DoubleValidator {
-                notation: DoubleValidator.StandardNotation
-            }
-            formatter: function (v) {
-                return (v == null) ? "" : Number(v).toFixed(3)
-            }
+            validatorObject: dblVal
+            formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
@@ -121,12 +125,8 @@ GroupBox {
             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
             settingName: "cut.retract"
             value: root.retract
-            validatorObject: DoubleValidator {
-                notation: DoubleValidator.StandardNotation
-            }
-            formatter: function (v) {
-                return (v == null) ? "" : Number(v).toFixed(3)
-            }
+            validatorObject: dblVal
+            formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
