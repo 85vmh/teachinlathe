@@ -137,7 +137,7 @@ class QuickCycles(QWidget):
         if self.isExternalThread:
             self.labelRetract.setText(str(round(self.currentXValue - float(self.labelMajorDiameter.text()), 1)))
         else:
-            self.labelRetract.setText(str(round(float(self.labelMinorDiameter.text() - self.currentXValue), 1)))
+            self.labelRetract.setText(str(round(float(self.labelMinorDiameter.text()) - self.currentXValue, 1)))
 
         if self.labelZEnd.text() is not None:
             self.labelThreadLength.setText(str(round(abs(float(self.labelZEnd.text()) - self.currentZValue), 1)))
@@ -280,7 +280,7 @@ class QuickCycles(QWidget):
                 first_pass = self.threadingFirstPass.text().strip()
                 depth_degression = self.threadingDepthDegression.currentText().strip()
                 infeed_angle = self.threadingCompAngle.text().strip()
-                taper = self.threadingTaper.currentIndex().strip()
+                taper = self.threadingTaper.currentIndex()
                 spring_passes = self.threadingSpringPasses.currentText().strip()
 
                 self.last_thread_x_end = x_end
