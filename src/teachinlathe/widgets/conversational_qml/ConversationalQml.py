@@ -594,38 +594,39 @@ class ConversationalQml(QQuickWidget):
         self._save_current_program()
 
     def onUpdateProfiling(self, index: int, payload):
-        payload = self._to_py(payload)
-        op = self._get_current_op(index)
-        if op is None or getattr(op, "type", "") != "profiling":
-            return
-        for attr in ("order", "generate_gcode", "is_optional_block",
-                     "css_value", "max_speed", "feed_rate", "profileId",
-                     "x_start", "z_start", "doc", "retract"):
-            if attr in payload and hasattr(op, attr):
-                try:
-                    setattr(op, attr, payload[attr])
-                except Exception:
-                    pass
-        if "strategy" in payload:
-            try:
-                from teachinlathe.widgets.conversational_qml.data_types import Strategy  # adjust import
-                op.strategy = Strategy[payload["strategy"].upper()]
-            except Exception:
-                pass
-        if "stock_to_leave" in payload:
-            stl = payload["stock_to_leave"]
-            if stl is None:
-                op.stock_to_leave = None
-            elif isinstance(stl, dict):
-                try:
-                    op.stock_to_leave = {"x": float(stl.get("x", 0.0)),
-                                         "z": float(stl.get("z", 0.0))}
-                except Exception:
-                    pass
-        if "spring_passes" in payload:
-            sp = payload["spring_passes"]
-            op.spring_passes = None if (sp is None) else int(sp)
-        self._save_current_program()
+        try:
+            p = self._to_py(payload) or {}
+            op = self._get_current_op(index)
+            from teachinlathe.conversational.data_types import Profiling
+            if not isinstance(op, Profiling):
+                return
+
+            old_dict = op.to_dict()
+            sp_old = (old_dict.get("spindle_parameters") or {})
+            sp_new = p.get("spindle_parameters")
+            if isinstance(sp_new, dict):
+                sp_norm = dict(sp_old)
+                if "mode" in sp_new and sp_new["mode"]:
+                    sp_norm["mode"] = sp_new["mode"]
+                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
+                    sp_norm["mode"] = "rpm"
+                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
+                    sp_norm["mode"] = "css"
+                else:
+                    sp_norm["mode"] = sp_old.get("mode", "rpm")
+                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
+                    if k in sp_new and sp_new[k] is not None:
+                        sp_norm[k] = sp_new[k]
+                p["spindle_parameters"] = sp_norm
+
+            merged = _deep_merge(old_dict, p)
+            new_op = Profiling.from_dict(merged)
+            prog = self._get_current_program()
+            if prog:
+                prog.operations[index] = new_op
+            self._save_current_program()
+        except Exception as e:
+            print("[profiling] update error:", e)
 
     def onUpdateDrilling(self, index: int, payload):
         """Drilling autosave."""

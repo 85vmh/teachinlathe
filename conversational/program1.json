@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-20 10:49:24",
+        "last_edit": "2026-02-20 11:03:53",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -97,8 +97,8 @@
             "toolchange_rules": {
                 "x_pos": 200.0,
                 "z_pos": 200.0,
-                "coordinate_type": "absolute",
-                "move_sequence": "both",
+                "coordinate_type": "relative",
+                "move_sequence": "xz",
                 "stop_spindle": false
             }
         },
@@ -108,19 +108,19 @@
             "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
-                "direction": 1,
-                "mode": "rpm",
-                "rpm_value": 1000,
-                "css_value": 100,
+                "direction": -1,
+                "mode": "css",
+                "rpm_value": 1502,
+                "css_value": 200,
                 "css_max_speed": 1500
             },
             "cutting_parameters": {
-                "feed_rate": 0.5,
+                "feed_rate": 0.3,
                 "doc": 0.5,
-                "retract": 2.0
+                "retract": 0.4
             },
             "profiling_parameters": {
-                "profile_id": 1,
+                "profile_id": 5,
                 "x_start": 55.0,
                 "z_start": 3.0
             },
@@ -128,7 +128,7 @@
                 "strategy": "rough",
                 "stock_to_leave_x": 0.5,
                 "stock_to_leave_z": 0.5,
-                "finish_spring_passes": 2
+                "finish_spring_passes": 3
             }
         },
         {
@@ -149,7 +149,7 @@
                 "retract": 2.0
             },
             "profiling_parameters": {
-                "profile_id": 1,
+                "profile_id": 2,
                 "x_start": 55.0,
                 "z_start": 3.0
             },
