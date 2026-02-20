@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-20 11:58:42",
+        "last_edit": "2026-02-20 19:49:22",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -235,8 +235,8 @@
             },
             "edge_break": {
                 "blend_type": "chamfer",
-                "chamfer_width": 1.5,
-                "fillet_radius": 1.5
+                "chamfer_width": 2.0,
+                "fillet_radius": 1.0
             }
         }
     ]

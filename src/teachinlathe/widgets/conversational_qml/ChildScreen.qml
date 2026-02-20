@@ -95,30 +95,34 @@ Item {
             wrapMode: Text.WordWrap
         }
 
-        footer: RowLayout {
-            spacing: 0
-            Item { Layout.fillWidth: true }
-            Button {
-                text: "Cancel"
-                Layout.preferredWidth: 120
-                Layout.preferredHeight: 48
-                Layout.rightMargin: 40
-                Layout.leftMargin: 16
-                Layout.bottomMargin: 16
-                onClicked: deleteConfirmDialog.reject()
-            }
-            Button {
-                text: "Delete"
-                Layout.preferredWidth: 120
-                Layout.preferredHeight: 48
-                Layout.rightMargin: 16
-                Layout.bottomMargin: 16
-                palette.buttonText: "white"
-                background: Rectangle {
-                    color: parent.pressed ? "#B71C1C" : "#C62828"
-                    radius: 4
+        footer: Item {
+            width: parent.width
+            height: 64
+
+            Row {
+                anchors.right: parent.right
+                anchors.rightMargin: 16
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 8
+                spacing: 40
+
+                Button {
+                    text: "Cancel"
+                    width: 120
+                    height: 48
+                    onClicked: deleteConfirmDialog.reject()
                 }
-                onClicked: deleteConfirmDialog.accept()
+                Button {
+                    text: "Delete"
+                    width: 120
+                    height: 48
+                    palette.buttonText: "white"
+                    background: Rectangle {
+                        color: parent.pressed ? "#B71C1C" : "#C62828"
+                        radius: 4
+                    }
+                    onClicked: deleteConfirmDialog.accept()
+                }
             }
         }
 
@@ -155,7 +159,7 @@ Item {
         sourceComponent: AddOperationPopup {
             id: addPopup
             onOperationChosen: function(type) {
-                childScreen.addOperationTypeChosen(type)
+                operationEditor.addOperationTypeChosen(type)
                 addPopup.close()
             }
             onClosed: {
@@ -323,7 +327,8 @@ Item {
 
             // LEFT: program header + operations box
             Rectangle {
-                Layout.preferredWidth: Math.round(parent.width * 0.3)
+                Layout.fillWidth: true
+                Layout.preferredWidth: 3
                 Layout.fillHeight: true
                 color: "#ffffff"
                 radius: 6
@@ -443,7 +448,9 @@ Item {
                                     }
                                     Connections {
                                         target: opsList
-                                        onCountChanged: if (reorderBtn.item) reorderBtn.item.enabled = opsList.count > 1
+                                        function onCountChanged() {
+                                            if (reorderBtn.item) reorderBtn.item.enabled = opsList.count > 1
+                                        }
                                     }
                                 }
                             }
@@ -597,6 +604,7 @@ Item {
             // RIGHT: details
             Rectangle {
                 Layout.fillWidth: true
+                Layout.preferredWidth: 7
                 Layout.fillHeight: true
                 color: "#f5f5f5"
                 radius: 6

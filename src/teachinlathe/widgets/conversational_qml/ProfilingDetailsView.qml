@@ -67,7 +67,8 @@ Item {
 
             SpindleParameters {
                 id: spindlePanel
-                Layout.preferredWidth: firstRow.width * 0.6
+                Layout.fillWidth: true
+                Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function (p) {
@@ -78,7 +79,8 @@ Item {
 
             CuttingParameters {
                 id: cuttingPanel
-                Layout.preferredWidth: firstRow.width * 0.4
+                Layout.fillWidth: true
+                Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function (p) {
@@ -97,8 +99,8 @@ Item {
 
             ProfilingParameters {
                 id: profilingParamsPanel
-                // cere pixeli sau o expresie numerică validă — nu 0.6 simplu
-                Layout.preferredWidth: firstRow.width * 0.6
+                Layout.fillWidth: true
+                Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function (p) {
@@ -109,7 +111,8 @@ Item {
 
             ProfilingOptions {
                 id: profilingOptionsPanel
-                Layout.preferredWidth: firstRow.width * 0.4
+                Layout.fillWidth: true
+                Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function (p) {

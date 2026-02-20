@@ -65,7 +65,8 @@ Item {
 
             SpindleParameters {
                 id: spindlePanel
-                Layout.preferredWidth: firstRow.width * 0.6
+                Layout.fillWidth: true
+                Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function (p) {
@@ -76,7 +77,8 @@ Item {
 
             CuttingParameters {
                 id: cuttingPanel
-                Layout.preferredWidth: firstRow.width * 0.4
+                Layout.fillWidth: true
+                Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function (p) {
@@ -97,7 +99,7 @@ Item {
             CuttingGeometry {
                 id: geometryPanel
                 Layout.fillWidth: true
-                Layout.preferredWidth: firstRow.width * 0.6
+                Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onTeachXRequested: root.teachXRequested(opIndex)
@@ -111,7 +113,7 @@ Item {
             M1Parameters {
                 id: m1Panel
                 Layout.fillWidth: true
-                Layout.preferredWidth: firstRow.width * 0.4
+                Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onTeachXRequested: root.teachXRequested(opIndex)

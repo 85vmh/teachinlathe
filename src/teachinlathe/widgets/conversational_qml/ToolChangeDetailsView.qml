@@ -163,8 +163,8 @@ Item {
             GroupBox {
                 title: "Change Position"
                 font.pixelSize: 16
-                Layout.preferredWidth: parentRow.width * 0.6
                 Layout.fillWidth: true
+                Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
 
                 /* Row: Left (coord type) + Right (grid X/Z) */
@@ -282,10 +282,9 @@ Item {
             GroupBox {
                 title: "Move Sequence"
                 font.pixelSize: 16
-                Layout.preferredWidth: parentRow.width * 0.4
                 Layout.fillWidth: true
+                Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
-                // ex: Layout.preferredWidth: 320
 
                 ColumnLayout {
                     anchors.fill: parent
