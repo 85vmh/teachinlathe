@@ -630,14 +630,33 @@ class ConversationalQml(QQuickWidget):
     def onUpdateDrilling(self, index: int, payload):
         """Drilling autosave."""
         try:
-            payload = self._to_py(payload)
+            p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            if op is None or getattr(op, "type", "") != "drilling":
+            from teachinlathe.conversational.data_types import Drilling
+            if not isinstance(op, Drilling):
                 return
-            for attr in ("order", "generate_gcode", "is_optional_block",
-                         "spindle_rpm", "feed_rate", "z_start", "z_end"):
-                if attr in payload and hasattr(op, attr):
-                    setattr(op, attr, payload[attr])
+
+            old_dict = op.to_dict()
+            sp_old = (old_dict.get("spindle_parameters") or {})
+            sp_new = p.get("spindle_parameters")
+            if isinstance(sp_new, dict):
+                sp_norm = dict(sp_old)
+                if "mode" in sp_new and sp_new["mode"]:
+                    sp_norm["mode"] = sp_new["mode"]
+                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
+                    sp_norm["mode"] = "rpm"
+                else:
+                    sp_norm["mode"] = sp_old.get("mode", "rpm")
+                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
+                    if k in sp_new and sp_new[k] is not None:
+                        sp_norm[k] = sp_new[k]
+                p["spindle_parameters"] = sp_norm
+
+            merged = _deep_merge(old_dict, p)
+            new_op = Drilling.from_dict(merged)
+            prog = self._get_current_program()
+            if prog:
+                prog.operations[index] = new_op
             self._save_current_program()
         except Exception as e:
             print("[drilling] update error:", e)
@@ -645,15 +664,35 @@ class ConversationalQml(QQuickWidget):
     def onUpdateParting(self, index: int, payload):
         """Parting autosave."""
         try:
-            payload = self._to_py(payload)
+            p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            if op is None or getattr(op, "type", "") != "parting":
+            from teachinlathe.conversational.data_types import Parting
+            if not isinstance(op, Parting):
                 return
-            for attr in ("order", "generate_gcode", "is_optional_block",
-                         "css_value", "max_speed", "feed_rate",
-                         "peck_depth", "x_start", "x_end", "z_pos"):
-                if attr in payload and hasattr(op, attr):
-                    setattr(op, attr, payload[attr])
+
+            old_dict = op.to_dict()
+            sp_old = (old_dict.get("spindle_parameters") or {})
+            sp_new = p.get("spindle_parameters")
+            if isinstance(sp_new, dict):
+                sp_norm = dict(sp_old)
+                if "mode" in sp_new and sp_new["mode"]:
+                    sp_norm["mode"] = sp_new["mode"]
+                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
+                    sp_norm["mode"] = "rpm"
+                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
+                    sp_norm["mode"] = "css"
+                else:
+                    sp_norm["mode"] = sp_old.get("mode", "rpm")
+                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
+                    if k in sp_new and sp_new[k] is not None:
+                        sp_norm[k] = sp_new[k]
+                p["spindle_parameters"] = sp_norm
+
+            merged = _deep_merge(old_dict, p)
+            new_op = Parting.from_dict(merged)
+            prog = self._get_current_program()
+            if prog:
+                prog.operations[index] = new_op
             self._save_current_program()
         except Exception as e:
             print("[parting] update error:", e)
@@ -661,14 +700,33 @@ class ConversationalQml(QQuickWidget):
     def onUpdateTapping(self, index: int, payload):
         """Tapping autosave."""
         try:
-            payload = self._to_py(payload)
+            p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            if op is None or getattr(op, "type", "") != "tapping":
+            from teachinlathe.conversational.data_types import Tapping
+            if not isinstance(op, Tapping):
                 return
-            for attr in ("order", "generate_gcode", "is_optional_block",
-                         "spindle_rpm", "pitch", "z_start", "z_end"):
-                if attr in payload and hasattr(op, attr):
-                    setattr(op, attr, payload[attr])
+
+            old_dict = op.to_dict()
+            sp_old = (old_dict.get("spindle_parameters") or {})
+            sp_new = p.get("spindle_parameters")
+            if isinstance(sp_new, dict):
+                sp_norm = dict(sp_old)
+                if "mode" in sp_new and sp_new["mode"]:
+                    sp_norm["mode"] = sp_new["mode"]
+                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
+                    sp_norm["mode"] = "rpm"
+                else:
+                    sp_norm["mode"] = sp_old.get("mode", "rpm")
+                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
+                    if k in sp_new and sp_new[k] is not None:
+                        sp_norm[k] = sp_new[k]
+                p["spindle_parameters"] = sp_norm
+
+            merged = _deep_merge(old_dict, p)
+            new_op = Tapping.from_dict(merged)
+            prog = self._get_current_program()
+            if prog:
+                prog.operations[index] = new_op
             self._save_current_program()
         except Exception as e:
             print("[tapping] update error:", e)

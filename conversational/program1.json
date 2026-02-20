@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-20 10:37:22",
+        "last_edit": "2026-02-20 10:49:24",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -226,20 +226,20 @@
             "spindle_parameters": {
                 "direction": 1,
                 "mode": "rpm",
-                "rpm_value": 1000
+                "rpm_value": 200
             },
             "drilling_parameters": {
-                "z_start": 2.0,
+                "z_start": 5.0,
                 "z_end": -50.0,
-                "z_retract": 2.0,
+                "z_retract": 4.0,
                 "peck_depth": 5.0,
-                "feed_rate": 1.5
+                "feed_rate": 0.3
             },
             "m1_parameters": {
                 "include_m1": true,
                 "x_inspect": 22.0,
                 "z_inspect": 99.0,
-                "stop_spindle": true
+                "stop_spindle": false
             }
         },
         {
