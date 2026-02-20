@@ -31,6 +31,7 @@ class ThreadLocation(Enum):
 
 
 class BlendType(Enum):
+    NONE = "none"
     CHAMFER = "chamfer"
     FILLET = "fillet"
 # ------------------------------ Core header ----------------------------------
@@ -752,9 +753,9 @@ class EdgeBreak:
         if not isinstance(data, dict):
             raise TypeError("edge_break must be a dict")
 
-        blend_raw = data["blend_type"]
-        chamfer_width = data["chamfer_width"]
-        fillet_radius = data["fillet_radius"]
+        blend_raw = data.get("blend_type", "none")
+        chamfer_width = data.get("chamfer_width", 0.0)
+        fillet_radius = data.get("fillet_radius", 0.0)
 
         if isinstance(blend_raw, BlendType):
             blend = blend_raw
