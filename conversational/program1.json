@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-20 11:03:53",
+        "last_edit": "2026-02-20 11:14:51",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -120,7 +120,7 @@
                 "retract": 0.4
             },
             "profiling_parameters": {
-                "profile_id": 5,
+                "profile_id": 4,
                 "x_start": 55.0,
                 "z_start": 3.0
             },

@@ -406,11 +406,15 @@ class ConversationalQml(QQuickWidget):
             # enrich with hints used for display name
             tool_no = getattr(op, "tool_no", None)
             pitch = getattr(op, "pitch", None)
-            d["display_type"] = self._display_name_for_op(d["type"], tool_no=tool_no, pitch=pitch)
+            profile_id = getattr(getattr(op, "profilingParameters", None), "profileId", None)
+            strategy = getattr(getattr(op, "profilingOptions", None), "strategy", None)
+            d["display_type"] = self._display_name_for_op(
+                d["type"], tool_no=tool_no, pitch=pitch, profile_id=profile_id, strategy=strategy
+            )
             out.append(d)
         return out
 
-    def _display_name_for_op(self, op_type, tool_no=None, pitch=None):
+    def _display_name_for_op(self, op_type, tool_no=None, pitch=None, profile_id=None, strategy=None):
         """Map internal operation types to human readable strings."""
         t = (op_type or "").strip()
         if t == "changeTool":
@@ -422,6 +426,11 @@ class ConversationalQml(QQuickWidget):
         if t == "define_profile":
             return "Define Profile"
         if t == "profiling":
+            if profile_id is not None and strategy is not None:
+                strategy_str = strategy.value.capitalize() if hasattr(strategy, "value") else str(strategy).capitalize()
+                return f"Cut Profile (P:{profile_id}, {strategy_str})"
+            if profile_id is not None:
+                return f"Cut Profile (P:{profile_id})"
             return "Cut Profile"
         if t == "threading":
             return f"Threading (P: {pitch})" if pitch is not None else "Threading"
