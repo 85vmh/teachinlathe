@@ -25,6 +25,14 @@ class SpindleMode(str, Enum):
     CSS = "css"
 
 
+class ThreadLocation(Enum):
+    OD = "OD"
+    ID = "ID"
+
+
+class BlendType(Enum):
+    CHAMFER = "chamfer"
+    FILLET = "fillet"
 # ------------------------------ Core header ----------------------------------
 
 @dataclass
@@ -297,21 +305,21 @@ class M1Parameters:
 
 @dataclass
 class CuttingParameters:
-    feed_rate: float
-    doc: float
+    feedRate: float
     retract: float
+    doc: float = 0.0
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "CuttingParameters":
         return CuttingParameters(
-            feed_rate=float(data.get("feed_rate", 0.0)),
-            doc=float(data.get("doc", 0.0)),
+            feedRate=float(data.get("feed_rate", 0.0)),
             retract=float(data.get("retract", 0.0)),
+            doc=float(data.get("doc", 0.0) or 0.0),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "feed_rate": float(self.feed_rate),
+            "feed_rate": float(self.feedRate),
             "doc": float(self.doc),
             "retract": float(self.retract),
         }
@@ -319,26 +327,169 @@ class CuttingParameters:
 
 @dataclass
 class GeometryParameters:
-    x_start: float
-    z_start: float
-    x_end: float
-    z_end: float
+    xStart: float = 0.0
+    zStart: float = 0.0
+    xEnd: float = 0.0
+    zEnd: float = 0.0
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "GeometryParameters":
         return GeometryParameters(
-            x_start=float(data.get("x_start", 0.0)),
-            z_start=float(data.get("z_start", 0.0)),
-            x_end=float(data.get("x_end", 0.0)),
-            z_end=float(data.get("z_end", 0.0)),
+            xStart=float(data.get("x_start", 0.0) or 0.0),
+            zStart=float(data.get("z_start", 0.0) or 0.0),
+            xEnd=float(data.get("x_end", 0.0) or 0.0),
+            zEnd=float(data.get("z_end", 0.0) or 0.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        out = {
+            "z_start": float(self.zStart),
+            "z_end": float(self.zEnd),
+            "x_start" : float(self.xStart),
+            "x_end" : float(self.xEnd)
+        }
+        return out
+
+@dataclass
+class DrillingParameters:
+    zStart: float = 0.0
+    zEnd: float = 0.0
+    zRetract: float = 0.0
+    peckDepth: float = 0.0
+    feedRate: float = 0.0
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "DrillingParameters":
+        return DrillingParameters(
+            zStart=float(data.get("z_start", 0.0) or 0.0),
+            zEnd=float(data.get("z_end", 0.0) or 0.0),
+            zRetract=float(data.get("z_retract", 0.0) or 0.0),
+            peckDepth=float(data.get("peck_depth", 0.0) or 0.0),
+            feedRate=float(data.get("feed_rate", 0.0) or 0.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        out = {
+            "z_start": float(self.zStart),
+            "z_end": float(self.zEnd),
+            "z_retract" : float(self.zRetract),
+            "peck_depth" : float(self.peckDepth),
+            "feed_rate": float(self.feedRate)
+        }
+        return out
+
+@dataclass
+class TappingParameters:
+    zStart: float = 0.0
+    zEnd: float = 0.0
+    zRetract: float = 0.0
+    peckDepth: float = 0.0
+    pitch: float = 0.0
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "TappingParameters":
+        return TappingParameters(
+            zStart=float(data.get("z_start", 0.0) or 0.0),
+            zEnd=float(data.get("z_end", 0.0) or 0.0),
+            zRetract=float(data.get("z_retract", 0.0) or 0.0),
+            peckDepth=float(data.get("peck_depth", 0.0) or 0.0),
+            pitch=float(data.get("pitch", 0.0) or 0.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        out = {
+            "z_start": float(self.zStart),
+            "z_end": float(self.zEnd),
+            "z_retract" : float(self.zRetract),
+            "peck_depth" : float(self.peckDepth),
+            "pitch": float(self.pitch)
+        }
+        return out
+
+@dataclass
+class PartingParameters:
+    xStart: float = 0.0
+    xEnd: float = 0.0
+    zPos: float = 0.0
+    first_feed_rate: float = 0.0
+    second_feed_rate: float = 0.0
+    second_feed_x_pos: float = 0.0
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "PartingParameters":
+        return PartingParameters(
+            xStart=float(data.get("x_start", 0.0) or 0.0),
+            xEnd=float(data.get("x_end", 0.0) or 0.0),
+            zPos=float(data.get("z_pos", 0.0) or 0.0),
+            first_feed_rate=float(data.get("1st_feed_rate", 0.0) or 0.0),
+            second_feed_rate=float(data.get("2nd_feed_rate", 0.0) or 0.0),
+            second_feed_x_pos=float(data.get("2nd_feed_x_pos", 0.0) or 0.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        out = {
+            "x_start": float(self.xStart),
+            "x_end": float(self.xEnd),
+            "z_pos" : float(self.zPos),
+            "1st_feed_rate" : float(self.first_feed_rate),
+            "2nd_feed_rate" : float(self.second_feed_rate),
+            "2nd_feed_x_pos": float(self.second_feed_x_pos)
+        }
+        return out
+
+
+@dataclass
+class ProfilingParameters:
+    profileId: int
+    xStart: float
+    zStart: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "ProfilingParameters":
+        return ProfilingParameters(
+            profileId=int(data.get("profile_id", 0)),
+            xStart=float(data.get("x_start", 0.0)),
+            zStart=float(data.get("z_start", 0.0))
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "x_start": float(self.x_start),
-            "z_start": float(self.z_start),
-            "x_end": float(self.x_end),
-            "z_end": float(self.z_end),
+            "profile_id": int(self.profileId),
+            "x_start": float(self.xStart),
+            "z_start": float(self.zStart)
+        }
+
+
+@dataclass
+class ProfilingOptions:
+    strategy: Strategy
+    stockToLeaveX: float
+    stockToLeaveZ: float
+    finishSpringPasses: int
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "ProfilingOptions":
+        strat = data.get("strategy", "rough")
+        strat_enum = Strategy(str(strat).lower()) if isinstance(strat, str) else Strategy.ROUGH
+        if isinstance(strat, str):
+            try:
+                strat_enum = Strategy[str(strat).upper()]
+            except Exception:
+                strat_enum = Strategy(str(strat).lower())
+
+        return ProfilingOptions(
+            strategy=strat_enum,
+            stockToLeaveX=float(data.get("stock_to_leave_x", 0.0)),
+            stockToLeaveZ=float(data.get("stock_to_leave_z", 0.0)),
+            finishSpringPasses=int(data.get("finish_spring_passes", 0))
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "strategy": self.strategy.value,
+            "stock_to_leave_x": float(self.stockToLeaveX),
+            "stock_to_leave_z": float(self.stockToLeaveZ),
+            "finish_spring_passes": int(self.finishSpringPasses)
         }
 
 
@@ -346,22 +497,18 @@ class GeometryParameters:
 
 @dataclass
 class Facing(TurnableOperation):
-    cutting_parameters: CuttingParameters
-    geometry_parameters: GeometryParameters
-    z_end_becomes_new_z0: bool
-    m1_parameters: Optional[M1Parameters] = None
+    cuttingParameters: CuttingParameters
+    geometryParameters: GeometryParameters
+    m1Parameters: M1Parameters
+    zEndBecomesNewZ0: bool
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Facing":
         spindle_parameters = TurnableOperation._parse_spindle(data)
 
-        cp_raw = data.get("cutting_parameters", {})
-        gp_raw = data.get("geometry_parameters", {})
-        m1_raw = data.get("m1_parameters")
-
-        cutting_parameters = CuttingParameters.from_dict(cp_raw)
-        geometry_parameters = GeometryParameters.from_dict(gp_raw)
-        m1_parameters = M1Parameters.from_dict(m1_raw) if isinstance(m1_raw, dict) else None
+        cutting_parameters = CuttingParameters.from_dict(data.get("cutting_parameters", {}))
+        geometry_parameters = GeometryParameters.from_dict(data.get("geometry_parameters", {}))
+        m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
 
         return Facing(
             order=int(data["order"]),
@@ -369,23 +516,20 @@ class Facing(TurnableOperation):
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
             spindleParameters=spindle_parameters,
-            cutting_parameters=cutting_parameters,
-            geometry_parameters=geometry_parameters,
-            z_end_becomes_new_z0=bool(data.get("z_end_becomes_new_z0", False)),
-            m1_parameters=m1_parameters,
+            cuttingParameters=cutting_parameters,
+            geometryParameters=geometry_parameters,
+            m1Parameters=m1_parameters,
+            zEndBecomesNewZ0=bool(data.get("z_end_becomes_new_z0", False))
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
         self._add_spindle_to(base)
         base.update({
-            "cutting_parameters": self.cutting_parameters.to_dict(),
-            "geometry_parameters": self.geometry_parameters.to_dict()
-        })
-        if self.m1_parameters is not None:
-            base["m1_parameters"] = self.m1_parameters.to_dict()
-        base.update({
-            "z_end_becomes_new_z0": bool(self.z_end_becomes_new_z0)
+            "cutting_parameters": self.cuttingParameters.to_dict(),
+            "geometry_parameters": self.geometryParameters.to_dict(),
+            "m1_parameters": self.m1Parameters.to_dict(),
+            "z_end_becomes_new_z0": bool(self.zEndBecomesNewZ0)
         })
         return base
 
@@ -422,64 +566,40 @@ class DefineProfile(Operation):
 
 @dataclass
 class Profiling(TurnableOperation):
-    feed_rate: float
-    profileId: int
-    strategy: Strategy
-    x_start: float
-    z_start: float
-    doc: float
-    retract: float
-    stock_to_leave: Optional[Dict[str, float]] = field(default=None)
-    spring_passes: Optional[int] = field(default=None)
+    cuttingParameters: CuttingParameters
+    profilingParameters: ProfilingParameters
+    profilingOptions: ProfilingOptions
 
     @classmethod
     def from_dict(cls, data: dict) -> "Profiling":
-        spindle = TurnableOperation._parse_spindle(data)
-        strat = data.get("strategy", "rough")
-        strat_enum = Strategy(str(strat).lower()) if isinstance(strat, str) else Strategy.ROUGH
-        if isinstance(strat, str):
-            try:
-                strat_enum = Strategy[str(strat).upper()]
-            except Exception:
-                strat_enum = Strategy(str(strat).lower())
+        spindle_parameters = TurnableOperation._parse_spindle(data)
+        cutting_parameters = CuttingParameters.from_dict(data.get("cutting_parameters", {}))
+        profiling_parameters = ProfilingParameters.from_dict(data.get("profiling_parameters", {}))
+        profiling_options = ProfilingOptions.from_dict(data.get("profiling_options", {}))
+
         return cls(
             order=int(data["order"]),
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle,
-            feed_rate=float(data.get("feed_rate", 0.0)),
-            profileId=int(data.get("profileId", data.get("profile_id", 0))),
-            strategy=strat_enum,
-            x_start=float(data.get("x_start", 0.0)),
-            z_start=float(data.get("z_start", 0.0)),
-            doc=float(data.get("doc", 0.0)),
-            retract=float(data.get("retract", 0.0)),
-            stock_to_leave=data.get("stock_to_leave"),
-            spring_passes=(None if data.get("spring_passes") is None else int(data.get("spring_passes")))
+            spindleParameters=spindle_parameters,
+            cuttingParameters=cutting_parameters,
+            profilingParameters=profiling_parameters,
+            profilingOptions=profiling_options
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
+        self._add_spindle_to(base)
         base.update({
-            "feed_rate": float(self.feed_rate),
-            "profileId": int(self.profileId),
-            "strategy": self.strategy.value,
-            "x_start": float(self.x_start),
-            "z_start": float(self.z_start),
-            "doc": float(self.doc),
-            "retract": float(self.retract),
-            "stock_to_leave": self.stock_to_leave,
-            "spring_passes": self.spring_passes
+            "cutting_parameters": self.cuttingParameters.to_dict(),
+            "profiling_parameters": self.profilingParameters.to_dict(),
+            "profiling_options": self.profilingOptions.to_dict()
         })
-        return self._add_spindle_to(base)
+        return base
 
 
 # ------------------------------- Threading -----------------------------------
-
-class ThreadLocation(Enum):
-    OD = "OD"
-    ID = "ID"
 
 
 def _coerce_thread_location(val):
@@ -555,102 +675,140 @@ class Threading(TurnableOperation):
 
 @dataclass
 class Drilling(TurnableOperation):
-    feed_rate: float
-    z_start: float
-    z_end: float
+    drillingParameters: DrillingParameters
+    m1Parameters: M1Parameters
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Drilling":
         spindle = TurnableOperation._parse_spindle(data)
+
+        drilling_parameters = DrillingParameters.from_dict(data.get("drilling_parameters", {}))
+        m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
+
         return Drilling(
             order=int(data["order"]),
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
             spindleParameters=spindle,
-            feed_rate=float(data.get("feed_rate", 0.0)),
-            z_start=float(data.get("z_start", 0.0)),
-            z_end=float(data.get("z_end", 0.0)),
+            drillingParameters=drilling_parameters,
+            m1Parameters=m1_parameters,
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
+        self._add_spindle_to(base)
         base.update({
-            "feed_rate": float(self.feed_rate),
-            "z_start": float(self.z_start),
-            "z_end": float(self.z_end)
+            "drilling_parameters": self.drillingParameters.to_dict(),
+            "m1_parameters": self.m1Parameters.to_dict(),
         })
-        return self._add_spindle_to(base)
+        return base
 
 
 # --------------------------------- Tapping -----------------------------------
 
 @dataclass
 class Tapping(TurnableOperation):
-    pitch: float
-    z_start: float
-    z_end: float
+    tappingParameters: TappingParameters
+    m1Parameters: M1Parameters
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Tapping":
         spindle = TurnableOperation._parse_spindle(data)
+
+        cutting_parameters = TappingParameters.from_dict(data.get("tapping_parameters", {}))
+        m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
+
         return Tapping(
             order=int(data["order"]),
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
             spindleParameters=spindle,
-            pitch=float(data["pitch"]),
-            z_start=float(data["z_start"]),
-            z_end=float(data["z_end"]),
+            tappingParameters=cutting_parameters,
+            m1Parameters=m1_parameters,
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
+        self._add_spindle_to(base)
         base.update({
-            "pitch": float(self.pitch),
-            "z_start": float(self.z_start),
-            "z_end": float(self.z_end)
+            "tapping_parameters": self.tappingParameters.to_dict(),
+            "m1_parameters": self.m1Parameters.to_dict(),
         })
-        return self._add_spindle_to(base)
+        return base
 
 
 # --------------------------------- Parting -----------------------------------
 
 @dataclass
+class EdgeBreak:
+    blend_type: BlendType
+    chamfer_width: float
+    fillet_radius: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "EdgeBreak":
+        if not isinstance(data, dict):
+            raise TypeError("edge_break must be a dict")
+
+        blend_raw = data["blend_type"]
+        chamfer_width = data["chamfer_width"]
+        fillet_radius = data["fillet_radius"]
+
+        if isinstance(blend_raw, BlendType):
+            blend = blend_raw
+        elif isinstance(blend_raw, str):
+            try:
+                blend = BlendType(blend_raw)
+            except ValueError:
+                raise ValueError(f"Invalid blend_type: {blend_raw!r}")
+        else:
+            raise TypeError("blend_type must be a string or BlendType")
+
+        return EdgeBreak(
+            blend_type=blend,
+            chamfer_width=float(chamfer_width),
+            fillet_radius=float(fillet_radius)
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "blend_type": self.blend_type.value,
+            "chamfer_width": float(self.chamfer_width),
+            "fillet_radius": float(self.fillet_radius)
+        }
+
+@dataclass
 class Parting(TurnableOperation):
-    feed_rate: float
-    peck_depth: float
-    x_start: float
-    x_end: float
-    z_pos: float
+    partingParameters: PartingParameters
+    edgeBreak: EdgeBreak
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Parting":
         spindle = TurnableOperation._parse_spindle(data)
+
+        parting_parameters = PartingParameters.from_dict(data.get("parting_parameters", {}))
+        edge_break = EdgeBreak.from_dict(data.get("edge_break", {}))
+
         return Parting(
             order=int(data["order"]),
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
             spindleParameters=spindle,
-            feed_rate=float(data.get("feed_rate", 0.0)),
-            peck_depth=float(data.get("peck_depth", 0.0)),
-            x_start=float(data.get("x_start", 0.0)),
-            x_end=float(data.get("x_end", 0.0)),
-            z_pos=float(data.get("z_pos", 0.0)),
+            partingParameters=parting_parameters,
+            edgeBreak=edge_break
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
+        self._add_spindle_to(base)
         base.update({
-            "feed_rate": float(self.feed_rate),
-            "peck_depth": float(self.peck_depth),
-            "x_start": float(self.x_start),
-            "x_end": float(self.x_end),
-            "z_pos": float(self.z_pos)
+            "parting_parameters": self.partingParameters.to_dict(),
+            "edge_break": self.edgeBreak.to_dict(),
         })
-        return self._add_spindle_to(base)
+        return base
 
 
 # --------------------------------- Program -----------------------------------

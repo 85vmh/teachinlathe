@@ -47,7 +47,7 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: 10
-        spacing: 50
+        spacing: 40
 
         Label {
             text: (opData && opData.type) ? ("Facing — Op #" + (opData.order !== undefined ? opData.order : "N/A")) : "Facing"
@@ -64,7 +64,6 @@ Item {
 
             SpindleParameters {
                 id: spindlePanel
-                // cere pixeli sau o expresie numerică validă — nu 0.6 simplu
                 Layout.preferredWidth: firstRow.width * 0.6
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)

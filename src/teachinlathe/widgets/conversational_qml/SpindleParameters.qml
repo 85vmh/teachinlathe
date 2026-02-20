@@ -15,6 +15,7 @@ GroupBox {
     // ---- bridge to parent
     property int  opIndex: -1
     property var  opData: null
+    property bool rpmOnly: false
 
     signal saveRequested(var updated)
 
@@ -37,7 +38,7 @@ GroupBox {
         var hasRPM = (sp.rpm_value !== undefined && sp.rpm_value !== null)
         var hasCSS = (sp.css_value !== undefined && sp.css_max_speed !== undefined)
 
-        spindleMode = hasRPM ? "rpm" : "css"
+        spindleMode = rpmOnly ? "rpm" : (hasRPM ? "rpm" : "css")
         rpm_value = hasRPM ? +sp.rpm_value : 0
         css_value = hasCSS ? +sp.css_value : 0
         css_max_rpm = hasCSS ? +sp.css_max_speed : 0
@@ -47,7 +48,7 @@ GroupBox {
         if (!opData) return
 
         var spindle = {direction: directionCache}
-        if (spindleMode === "rpm") {
+        if (rpmOnly || spindleMode === "rpm") {
             spindle.rpm_value = rpm_value
         } else {
             spindle.css_value = css_value
@@ -121,6 +122,7 @@ GroupBox {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 16
+                visible: !root.rpmOnly
 
                 ButtonGroup {
                     id: modeGroup
@@ -162,8 +164,10 @@ GroupBox {
                     border.color: "#bdbdbd"
                     color: "transparent"
                 }
-
-                Layout.preferredHeight: Math.max(rpmItem.implicitHeight, cssItem.implicitHeight) + 2 * padding
+                Layout.preferredHeight: Math.max(
+                    rpmItem.visible ? rpmItem.implicitHeight : 0,
+                    cssItem.visible ? cssItem.implicitHeight : 0
+                ) + 2 * padding
                 clip: true
 
                 Item {
@@ -213,7 +217,7 @@ GroupBox {
                     Item {
                         id: cssItem
                         anchors.fill: parent
-                        visible: root.spindleMode === "css"
+                        visible: !root.rpmOnly && root.spindleMode === "css"
                         implicitHeight: cssGrid.implicitHeight + 2
 
                         GridLayout {
@@ -224,7 +228,7 @@ GroupBox {
                             rowSpacing: 16
 
                             Label {
-                                text: "CSS value"
+                                text: "CSS value (Vc)"
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                                 font.pixelSize: 16
                             }

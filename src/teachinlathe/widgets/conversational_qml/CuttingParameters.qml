@@ -68,8 +68,7 @@ GroupBox {
 
         // Feed Rate
         Label {
-            text: "Feed rate"
-            Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+            text: "Feed rate (Fz)"
             font.pixelSize: 16
         }
         NumpadField {
@@ -92,7 +91,7 @@ GroupBox {
 
         // Depth of Cut
         Label {
-            text: "Depth of Cut"
+            text: "Depth of Cut (Ap)"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
             font.pixelSize: 16
         }
@@ -109,7 +108,7 @@ GroupBox {
             onValueCommitted: { root.doc = value; root.emitSave() }
         }
         Label {
-            text: "(mm)"
+            text: "(mm/radius)"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
             font.pixelSize: 16
         }

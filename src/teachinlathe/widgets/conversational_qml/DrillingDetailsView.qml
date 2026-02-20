@@ -10,45 +10,31 @@ Item {
     // API & data
     property int  opIndex: -1
     property var  opData:  null
+
     signal saveRequested(var updated)
+
     signal openNumPadRequested(var field)
 
-    // dataclass Drilling
-    property int   spindleRpm:   (opData && opData.spindle_rpm    !== undefined) ? opData.spindle_rpm  : 300
-    property real  feedRate:     (opData && opData.feed_rate      !== undefined) ? opData.feed_rate    : 0.1
-    property real  zStart:       (opData && opData.z_start        !== undefined) ? opData.z_start      : 0.0
-    property real  zEnd:         (opData && opData.z_end          !== undefined) ? opData.z_end        : 0.0
+    signal teachZRequested(int index)
 
-
-
-    // Parent calls this to load data
     function applyData(index, data) {
         opIndex = index
-        opData  = data || {}
-        spindleRpm = (opData.spindle_rpm !== undefined) ? opData.spindle_rpm : spindleRpm
-        feedRate   = (opData.feed_rate   !== undefined) ? opData.feed_rate   : feedRate
-        zStart     = (opData.z_start     !== undefined) ? opData.z_start     : zStart
-        zEnd       = (opData.z_end       !== undefined) ? opData.z_end       : zEnd
+        opData = data || {}
+
+        // populate sub-panels
+        spindlePanel.rpmOnly = true
+        spindlePanel.applyData(opIndex, opData)
+        drillingParamsPanel.applyData(opIndex, (opData.drilling_parameters || {}), opData)
+        m1Panel.applyData(opData && opData.m1_parameters ? opData.m1_parameters : {})
     }
 
-    function payload() {
-        return {
-            order:            (opData && opData.order !== undefined) ? opData.order : 0,
-            type:             "drilling",
-            generate_gcode:   (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
-            is_optional_block:(opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-            spindle_rpm:      spindleRpm,
-            feed_rate:        feedRate,
-            z_start:          zStart,
-            z_end:            zEnd
+    function mergeIntoOp(payload) {
+        var out = JSON.parse(JSON.stringify(opData || {}))
+        for (var k in payload) {
+            if (k === "index") continue
+            if (payload.hasOwnProperty(k)) out[k] = payload[k]
         }
-    }
-    function armSave() { saveDebounce.restart() }
-
-    Timer {
-        id: saveDebounce
-        interval: 60; running: false; repeat: false
-        onTriggered: root.saveRequested({ index: root.opIndex, payload: root.payload() })
+        return out
     }
 
     ColumnLayout {
@@ -56,88 +42,46 @@ Item {
         anchors.margins: 12
         spacing: 10
 
-        GroupBox {
-            title: "Speeds and Feeds"
-            Layout.fillWidth: true
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 12
-
-                Label { text: "Spindle Speed:"; width: 140; verticalAlignment: Text.AlignVCenter }
-                NumpadField {
-                    id: nfRpm
-                    Layout.preferredWidth: 120
-                    settingName: "smart_numpad.input-rpm-2"
-                    text: String(root.spindleRpm)
-                    onOpenRequested: root.openNumPadRequested(field)
-                    onTextChanged: {
-                        var v = parseInt(text); if (!isNaN(v)) { root.spindleRpm = v; root.armSave() }
-                    }
-                }
-                Label { text: "rpm"; width: 50; verticalAlignment: Text.AlignVCenter }
-
-                Item { Layout.preferredWidth: 24 }
-
-                Label { text: "Feed rate:"; width: 110; verticalAlignment: Text.AlignVCenter }
-                NumpadField {
-                    id: nfFeed
-                    Layout.preferredWidth: 100
-                    settingName: "smart_numpad.quick-cycles-drill-feed"
-                    text: String(root.feedRate)
-                    onOpenRequested: root.openNumPadRequested(field)
-                    onTextChanged: {
-                        var v = parseFloat(text); if (!isNaN(v)) { root.feedRate = v; root.armSave() }
-                    }
-                }
-                Label { text: "mm/rev"; width: 70; verticalAlignment: Text.AlignVCenter }
-                Item { Layout.fillWidth: true }
-            }
+        Label {
+            text: (opData && opData.type) ? ("Drilling — Op #" + (opData.order !== undefined ? opData.order : "N/A")) : "Drilling"
+            font.pixelSize: 18
+            font.bold: true
         }
 
-        GroupBox {
-            title: "Drilling Parameters"
-            Layout.fillWidth: true
+        SpindleParameters {
+                id: spindlePanel
+                Layout.preferredWidth: 500
+                Layout.alignment: Qt.AlignTop
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onSaveRequested: function (p) {
+                    var merged = root.mergeIntoOp(p.payload || p)
+                    root.saveRequested({index: opIndex, payload: merged})
+                }
+        }
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 8
+        DrillingParameters {
+                id: drillingParamsPanel
+                Layout.preferredWidth: 500
+                Layout.alignment: Qt.AlignTop
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onTeachZRequested: root.teachZRequested(opIndex)
+                onSaveRequested: function (p) {
+                    var merged = root.mergeIntoOp(p.payload || p)
+                    root.saveRequested({index: opIndex, payload: merged})
+                }
+        }
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-
-                    Label { text: "Z Start:"; width: 120; verticalAlignment: Text.AlignVCenter }
-                    NumpadField {
-                        id: nfZStart
-                        Layout.preferredWidth: 120
-                        settingName: "smart_numpad.z-start"
-                        text: String(root.zStart)
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onTextChanged: {
-                            var v = parseFloat(text); if (!isNaN(v)) { root.zStart = v; root.armSave() }
-                        }
-                    }
-
-                    Item { Layout.preferredWidth: 20 }
-
-                    Label { text: "Z End:"; width: 120; verticalAlignment: Text.AlignVCenter }
-                    NumpadField {
-                        id: nfZEnd
-                        Layout.preferredWidth: 120
-                        settingName: "smart_numpad.z-end"
-                        text: String(root.zEnd)
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onTextChanged: {
-                            var v = parseFloat(text); if (!isNaN(v)) { root.zEnd = v; root.armSave() }
-                        }
-                    }
-
-                    Item { Layout.fillWidth: true }
+        M1Parameters {
+                id: m1Panel
+                Layout.preferredWidth: 500
+                Layout.alignment: Qt.AlignTop
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onTeachXRequested: root.teachXRequested(opIndex)
+                onTeachZRequested: root.teachZRequested(opIndex)
+                onSaveRequested: function (payload) {
+                    var merged = root.mergeIntoOp(payload)
+                    root.saveRequested({index: opIndex, payload: merged})
                 }
             }
-        }
     }
 }
