@@ -249,6 +249,12 @@ class ConversationalQml(QQuickWidget):
                 item.addOperationRequested.connect(self.onAddOperationRequested)
             if hasattr(item, "reorderModeToggled"):
                 item.reorderModeToggled.connect(self.onReorderModeToggled)
+            if hasattr(item, "moveUpRequested"):
+                item.moveUpRequested.connect(self.onMoveUp)
+            if hasattr(item, "moveDownRequested"):
+                item.moveDownRequested.connect(self.onMoveDown)
+            if hasattr(item, "deleteOperationRequested"):
+                item.deleteOperationRequested.connect(self.onDeleteOperation)
             if hasattr(item, "addOperationTypeChosen"):
                 item.addOperationTypeChosen.connect(self.onAddOperationTypeChosen)
             print("Screen signals connected.")
@@ -276,7 +282,39 @@ class ConversationalQml(QQuickWidget):
 
     def onReorderModeToggled(self, on):
         print(f"[operations] Reorder mode: {'ON' if on else 'OFF'}")
-        # TODO: enable drag-reorder in the ListView when you implement it
+
+    def _renumber_operations(self, ops):
+        for i, op in enumerate(ops):
+            op.order = i + 1
+
+    def onMoveUp(self, index: int):
+        prog = self._get_current_program()
+        if not prog or index <= 0:
+            return
+        ops = prog.operations
+        ops.insert(index - 1, ops.pop(index))
+        self._renumber_operations(ops)
+        self.current_op_index = index - 1
+        self._save_current_program()
+
+    def onMoveDown(self, index: int):
+        prog = self._get_current_program()
+        if not prog or index >= len(prog.operations) - 1:
+            return
+        ops = prog.operations
+        ops.insert(index + 1, ops.pop(index))
+        self._renumber_operations(ops)
+        self.current_op_index = index + 1
+        self._save_current_program()
+
+    def onDeleteOperation(self, index: int):
+        prog = self._get_current_program()
+        if not prog or not (0 <= index < len(prog.operations)):
+            return
+        prog.operations.pop(index)
+        self._renumber_operations(prog.operations)
+        self.current_op_index = -1
+        self._save_current_program()
 
     def onGenerateGcodeRequested(self):
         """Called from ChildScreen when user clicks 'Generate GCode' on the top bar."""

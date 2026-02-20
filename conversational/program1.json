@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-20 11:32:22",
+        "last_edit": "2026-02-20 11:52:29",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -63,30 +63,6 @@
         },
         {
             "order": 3,
-            "type": "define_profile",
-            "generate_gcode": true,
-            "is_optional_block": false,
-            "profileId": 1,
-            "profile_primitives": [
-                {
-                    "type": "line",
-                    "x_end": 50,
-                    "z_end": -10
-                },
-                {
-                    "type": "arc",
-                    "x_end": 52,
-                    "z_end": -12
-                },
-                {
-                    "type": "line",
-                    "x_end": 52,
-                    "z_end": -20
-                }
-            ]
-        },
-        {
-            "order": 4,
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -103,7 +79,7 @@
             }
         },
         {
-            "order": 5,
+            "order": 4,
             "type": "profiling",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -132,7 +108,7 @@
             }
         },
         {
-            "order": 6,
+            "order": 5,
             "type": "profiling",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -161,7 +137,7 @@
             }
         },
         {
-            "order": 7,
+            "order": 6,
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -178,7 +154,7 @@
             }
         },
         {
-            "order": 8,
+            "order": 7,
             "type": "threading",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -202,7 +178,7 @@
             }
         },
         {
-            "order": 9,
+            "order": 8,
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -219,7 +195,7 @@
             }
         },
         {
-            "order": 10,
+            "order": 9,
             "type": "drilling",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -243,7 +219,7 @@
             }
         },
         {
-            "order": 11,
+            "order": 10,
             "type": "tapping",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -267,7 +243,7 @@
             }
         },
         {
-            "order": 12,
+            "order": 11,
             "type": "parting",
             "generate_gcode": true,
             "is_optional_block": false,

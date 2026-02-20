@@ -62,6 +62,12 @@ Item {
 
     signal reorderModeToggled(bool on)
 
+    signal moveUpRequested(int index)
+
+    signal moveDownRequested(int index)
+
+    signal deleteOperationRequested(int index)
+
     property bool reorderMode: false
 
     width: parent ? parent.width : 1200
@@ -505,13 +511,13 @@ Item {
                                             operationEditor.toggleOptionalBlock(i, checked)
                                         }
                                         onDeleteClicked: function (i) {
-                                            console.log("Delete clicked for row", i)
+                                            operationEditor.deleteOperationRequested(i)
                                         }
                                         onMoveUpRequested: function (i) {
-                                            console.log("Move UP requested for row", i)
+                                            operationEditor.moveUpRequested(i)
                                         }
                                         onMoveDownRequested: function (i) {
-                                            console.log("Move DOWN requested for row", i)
+                                            operationEditor.moveDownRequested(i)
                                         }
                                         onRowTapped: function (i) {
                                             opsList.currentIndex = i
