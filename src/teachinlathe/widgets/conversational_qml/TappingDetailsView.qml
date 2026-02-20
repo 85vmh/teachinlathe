@@ -34,6 +34,7 @@ Item {
             if (k === "index") continue
             if (payload.hasOwnProperty(k)) out[k] = payload[k]
         }
+        opData = out
         return out
     }
 

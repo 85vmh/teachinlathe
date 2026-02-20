@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-19 11:48:08",
+        "last_edit": "2026-02-20 10:37:22",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -26,7 +26,7 @@
                 "x_pos": 50.0,
                 "z_pos": -20.0,
                 "coordinate_type": "absolute",
-                "move_sequence": "xz",
+                "move_sequence": "zx",
                 "stop_spindle": true
             }
         },
@@ -59,7 +59,7 @@
                 "z_inspect": 99.0,
                 "stop_spindle": true
             },
-            "z_end_becomes_new_z0": true
+            "z_end_becomes_new_z0": false
         },
         {
             "order": 3,
