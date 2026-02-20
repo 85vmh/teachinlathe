@@ -70,6 +70,69 @@ Item {
 
     property bool reorderMode: false
 
+    property int _pendingDeleteIndex: -1
+
+    Dialog {
+        id: deleteConfirmDialog
+        modal: true
+        title: "Delete Operation"
+        anchors.centerIn: Overlay.overlay
+        font.pixelSize: 16
+        implicitWidth: 316
+
+        Label {
+            text: {
+                var idx = operationEditor._pendingDeleteIndex
+                if (idx >= 0 && idx < operationEditor.operationsModel.length) {
+                    var name = operationEditor.operationsModel[idx].display_type
+                               || operationEditor.operationsModel[idx].type
+                               || "this operation"
+                    return "Delete \"" + name + "\"?"
+                }
+                return "Delete this operation?"
+            }
+            font.pixelSize: 16
+            wrapMode: Text.WordWrap
+        }
+
+        footer: RowLayout {
+            spacing: 0
+            Item { Layout.fillWidth: true }
+            Button {
+                text: "Cancel"
+                Layout.preferredWidth: 120
+                Layout.preferredHeight: 48
+                Layout.rightMargin: 40
+                Layout.leftMargin: 16
+                Layout.bottomMargin: 16
+                onClicked: deleteConfirmDialog.reject()
+            }
+            Button {
+                text: "Delete"
+                Layout.preferredWidth: 120
+                Layout.preferredHeight: 48
+                Layout.rightMargin: 16
+                Layout.bottomMargin: 16
+                palette.buttonText: "white"
+                background: Rectangle {
+                    color: parent.pressed ? "#B71C1C" : "#C62828"
+                    radius: 4
+                }
+                onClicked: deleteConfirmDialog.accept()
+            }
+        }
+
+        onAccepted: {
+            if (operationEditor._pendingDeleteIndex >= 0) {
+                operationEditor.deleteOperationRequested(operationEditor._pendingDeleteIndex)
+                operationEditor._pendingDeleteIndex = -1
+            }
+        }
+        onRejected: {
+            operationEditor._pendingDeleteIndex = -1
+        }
+    }
+
     width: parent ? parent.width : 1200
     height: parent ? parent.height : 800
 
@@ -511,7 +574,8 @@ Item {
                                             operationEditor.toggleOptionalBlock(i, checked)
                                         }
                                         onDeleteClicked: function (i) {
-                                            operationEditor.deleteOperationRequested(i)
+                                            operationEditor._pendingDeleteIndex = i
+                                            deleteConfirmDialog.open()
                                         }
                                         onMoveUpRequested: function (i) {
                                             operationEditor.moveUpRequested(i)
