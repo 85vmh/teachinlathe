@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-20 11:14:51",
+        "last_edit": "2026-02-20 11:32:22",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -108,8 +108,8 @@
             "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
-                "direction": -1,
-                "mode": "css",
+                "direction": 1,
+                "mode": "rpm",
                 "rpm_value": 1502,
                 "css_value": 200,
                 "css_max_speed": 1500
@@ -120,7 +120,7 @@
                 "retract": 0.4
             },
             "profiling_parameters": {
-                "profile_id": 4,
+                "profile_id": 5,
                 "x_start": 55.0,
                 "z_start": 3.0
             },
@@ -149,7 +149,7 @@
                 "retract": 2.0
             },
             "profiling_parameters": {
-                "profile_id": 2,
+                "profile_id": 8,
                 "x_start": 55.0,
                 "z_start": 3.0
             },

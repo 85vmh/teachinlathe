@@ -11,6 +11,11 @@ Item {
     // Context from Python
     property var selectedProgram: null
     property var operationsModel: []
+    property int activeOpIndex: -1
+
+    onOperationsModelChanged: {
+        if (activeOpIndex >= 0) Qt.callLater(function() { opsList.currentIndex = activeOpIndex })
+    }
 
     // Navigation
     property bool showBack: true

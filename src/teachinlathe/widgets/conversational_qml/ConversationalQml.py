@@ -191,6 +191,12 @@ class ConversationalQml(QQuickWidget):
                 bottom = self.model.index(row)
                 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel as _PLM
                 self.model.dataChanged.emit(top, bottom, [_PLM.LastEditDateRole])
+
+            # refresh operation labels in the left pane without reloading the screen
+            if getattr(self, "child_screen_item", None) is not None:
+                new_ops = self._build_operations_model(self.current_program)
+                self.child_screen_item.setProperty("activeOpIndex", getattr(self, "current_op_index", -1))
+                self.child_screen_item.setProperty("operationsModel", new_ops)
         except Exception as e:
             print("Failed to refresh in-memory program from disk:", e)
 
@@ -329,6 +335,7 @@ class ConversationalQml(QQuickWidget):
         return ngc_path
 
     def onDetailsRequested(self, screen_item, index: int):
+        self.current_op_index = index
         # Header selected
         if index == -1:
             prog = self._get_current_program()
