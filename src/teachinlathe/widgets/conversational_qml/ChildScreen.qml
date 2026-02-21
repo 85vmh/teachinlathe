@@ -24,7 +24,7 @@ Item {
 
     signal generateGcodeRequested()
 
-    signal addOperationTypeChosen(string type)
+    signal addOperationTypeChosen(string type, int insertIndex)
 
     // Row-level toggles
     signal toggleGenerateGcode(int index, bool checked)
@@ -72,68 +72,102 @@ Item {
 
     property int _pendingDeleteIndex: -1
 
-    Dialog {
+    Popup {
         id: deleteConfirmDialog
+        parent: Overlay.overlay
         modal: true
-        title: "Delete Operation"
-        anchors.centerIn: Overlay.overlay
-        font.pixelSize: 16
-        implicitWidth: 316
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        anchors.centerIn: parent
+        contentWidth: 360
+        contentHeight: column.implicitHeight
+        padding: 0
 
-        Label {
-            text: {
-                var idx = operationEditor._pendingDeleteIndex
-                if (idx >= 0 && idx < operationEditor.operationsModel.length) {
-                    var name = operationEditor.operationsModel[idx].display_type
-                               || operationEditor.operationsModel[idx].type
-                               || "this operation"
-                    return "Delete \"" + name + "\"?"
-                }
-                return "Delete this operation?"
-            }
-            font.pixelSize: 16
-            wrapMode: Text.WordWrap
+        background: Rectangle {
+            radius: 10
+            color: "#202225"
+            border.color: "#3A3D41"
+            border.width: 1
         }
 
-        footer: Item {
-            width: parent.width
-            height: 64
+        contentItem: Column {
+            id: column
+            spacing: 12
+            width: deleteConfirmDialog.contentWidth
+            padding: 16
 
-            Row {
-                anchors.right: parent.right
-                anchors.rightMargin: 16
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: 8
-                spacing: 40
+            Text {
+                text: "Delete Operation"
+                font.pixelSize: 18
+                font.bold: true
+                color: "white"
+            }
 
-                Button {
-                    text: "Cancel"
-                    width: 120
-                    height: 48
-                    onClicked: deleteConfirmDialog.reject()
+            Text {
+                width: column.width - column.padding * 2
+                text: {
+                    var idx = operationEditor._pendingDeleteIndex
+                    if (idx >= 0 && idx < operationEditor.operationsModel.length) {
+                        var name = operationEditor.operationsModel[idx].display_type
+                                   || operationEditor.operationsModel[idx].type
+                                   || "this operation"
+                        return "Delete \"" + name + "\"?"
+                    }
+                    return "Delete this operation?"
                 }
+                font.pixelSize: 15
+                color: "#cccccc"
+                wrapMode: Text.WordWrap
+            }
+
+            Rectangle {
+                width: column.width - column.padding * 2
+                height: 1
+                color: "#3A3D41"
+            }
+
+            Item {
+                width: column.width - column.padding * 2
+                height: 44
+
                 Button {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Cancel"
+                    width: 100
+                    height: 40
+                    onClicked: {
+                        operationEditor._pendingDeleteIndex = -1
+                        deleteConfirmDialog.close()
+                    }
+                }
+
+                Button {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
                     text: "Delete"
                     width: 120
-                    height: 48
-                    palette.buttonText: "white"
-                    background: Rectangle {
-                        color: parent.pressed ? "#B71C1C" : "#C62828"
-                        radius: 4
+                    height: 40
+                    contentItem: Text {
+                        text: parent.text
+                        font: parent.font
+                        color: "white"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
-                    onClicked: deleteConfirmDialog.accept()
+                    background: Rectangle {
+                        radius: 4
+                        color: parent.pressed ? "#B71C1C" : "#C62828"
+                    }
+                    onClicked: {
+                        if (operationEditor._pendingDeleteIndex >= 0) {
+                            operationEditor.deleteOperationRequested(operationEditor._pendingDeleteIndex)
+                            operationEditor._pendingDeleteIndex = -1
+                        }
+                        deleteConfirmDialog.close()
+                    }
                 }
             }
-        }
-
-        onAccepted: {
-            if (operationEditor._pendingDeleteIndex >= 0) {
-                operationEditor.deleteOperationRequested(operationEditor._pendingDeleteIndex)
-                operationEditor._pendingDeleteIndex = -1
-            }
-        }
-        onRejected: {
-            operationEditor._pendingDeleteIndex = -1
         }
     }
 
@@ -158,18 +192,20 @@ Item {
 
         sourceComponent: AddOperationPopup {
             id: addPopup
-            onOperationChosen: function(type) {
-                operationEditor.addOperationTypeChosen(type)
-                addPopup.close()
+            onOperationChosen: function(type, insertIndex) {
+                operationEditor.addOperationTypeChosen(type, insertIndex)
             }
             onClosed: {
-                // eliberează Loader-ul ca să se recreeze curat data viitoare
                 addOpPopupLoader.active = false
             }
         }
 
         onLoaded: {
-            if (item && item.open) item.open()
+            if (item) {
+                item.operationsCount = operationEditor.operationsModel.length
+                item.currentOpIndex  = opsList.currentIndex
+                if (item.open) item.open()
+            }
         }
     }
 

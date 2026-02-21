@@ -28,7 +28,7 @@ def _deep_merge(base, patch):
         return patch
     out = dict(base)
     for k, v in patch.items():
-        if k in out and isinstance(out[k], dict) and isinstance(v, dict):
+        if k in out and isinstance(out[k],  dict) and isinstance(v, dict):
             out[k] = _deep_merge(out[k], v)
         else:
             out[k] = v
@@ -261,20 +261,99 @@ class ConversationalQml(QQuickWidget):
         except Exception as e:
             print("Failed to hook screen item signals:", e)
 
-    def onAddOperationTypeChosen(self, op_type: str):
-        print(f"[operations] User picked: {op_type}")
+    def _default_op_dict(self, op_type: str) -> dict:
+        base = {"order": 1, "type": op_type, "generate_gcode": True, "is_optional_block": False}
+        spindle_rpm = {"direction": 1, "mode": "rpm", "rpm_value": 1000}
+        m1_default  = {"include_m1": False, "x_inspect": 0.0, "z_inspect": 0.0, "stop_spindle": False}
 
+        if op_type == "changeTool":
+            base.update({
+                "tool_no": 1, "tool_orientation": 1, "back_angle": 0, "front_angle": 0,
+                "toolchange_rules": {
+                    "x_pos": 0.0, "z_pos": 0.0,
+                    "coordinate_type": "absolute", "move_sequence": "xz", "stop_spindle": False,
+                },
+            })
+        elif op_type == "facing":
+            base.update({
+                "spindle_parameters": spindle_rpm,
+                "cutting_parameters": {"feed_rate": 0.1, "doc": 0.5, "retract": 1.0},
+                "geometry_parameters": {"x_start": 0.0, "z_start": 0.0, "x_end": 0.0, "z_end": 0.0},
+                "m1_parameters": m1_default,
+                "z_end_becomes_new_z0": False,
+            })
+        elif op_type == "profiling":
+            base.update({
+                "spindle_parameters": spindle_rpm,
+                "cutting_parameters": {"feed_rate": 0.1, "doc": 0.5, "retract": 1.0},
+                "profiling_parameters": {"profile_id": 1, "x_start": 0.0, "z_start": 0.0},
+                "profiling_options": {
+                    "strategy": "rough",
+                    "stock_to_leave_x": 0.0, "stock_to_leave_z": 0.0, "finish_spring_passes": 0,
+                },
+            })
+        elif op_type == "threading":
+            base.update({
+                "spindle_parameters": {"direction": 1, "mode": "rpm", "rpm_value": 500},
+                "location": "OD", "thread_type": "metric",
+                "pitch": 1.0, "starts": 1,
+                "major_diameter": 0.0, "minor_diameter": 0.0,
+                "z_start": 0.0, "z_end": 0.0,
+                "initial_doc": 0.3, "retract": 1.0, "spring_passes": 0,
+            })
+        elif op_type == "drilling":
+            base.update({
+                "spindle_parameters": spindle_rpm,
+                "drilling_parameters": {
+                    "z_start": 0.0, "z_end": 0.0, "z_retract": 5.0, "peck_depth": 3.0, "feed_rate": 0.05,
+                },
+                "m1_parameters": m1_default,
+            })
+        elif op_type == "tapping":
+            base.update({
+                "spindle_parameters": {"direction": 1, "mode": "rpm", "rpm_value": 500},
+                "tapping_parameters": {
+                    "z_start": 0.0, "z_end": 0.0, "z_retract": 5.0, "peck_depth": 0.0, "pitch": 1.0,
+                },
+                "m1_parameters": m1_default,
+            })
+        elif op_type == "parting":
+            base.update({
+                "spindle_parameters": {"direction": 1, "mode": "rpm", "rpm_value": 500},
+                "parting_parameters": {
+                    "x_start": 0.0, "x_end": 0.0, "z_pos": 0.0,
+                    "1st_feed_rate": 0.05, "2nd_feed_rate": 0.02, "2nd_feed_x_pos": 5.0,
+                },
+                "edge_break": {"blend_type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
+            })
+        elif op_type == "define_profile":
+            base.update({
+                "generate_gcode": False,
+                "profileId": 1, "profile_id": 1,
+                "profile_primitives": [],
+            })
+        return base
+
+    def onAddOperationTypeChosen(self, op_type: str, insert_index: int):
+        print(f"[operations] Adding {op_type!r} at index {insert_index}")
         prog = self._get_current_program()
         if not prog:
             return
-
-        #   new_op = Operation(type=op_type, order=len(prog.operations)+1)
-        #   prog.operations.append(new_op)
-        #   self._save_current_program()
-        self._refresh_child_operations()
-
-    def _refresh_child_operations(self):
-        print("Refreshing child operations...")
+        from teachinlathe.conversational.data_types import operation_types
+        if op_type not in operation_types:
+            print(f"[operations] Unknown type: {op_type!r}")
+            return
+        try:
+            op_dict = self._default_op_dict(op_type)
+            new_op  = operation_types[op_type].from_dict(op_dict)
+            ops     = prog.operations
+            idx     = max(0, min(insert_index, len(ops)))
+            ops.insert(idx, new_op)
+            self._renumber_operations(ops)
+            self.current_op_index = idx
+            self._save_current_program()
+        except Exception as e:
+            print(f"[operations] Failed to create {op_type!r}: {e}")
 
     def onAddOperationRequested(self):
         print("[operations] Add New requested")
@@ -347,7 +426,8 @@ class ConversationalQml(QQuickWidget):
         lines = []
         lines.append("( Generated by ConversationalQml placeholder )")
         lines.append(f"( Program: {getattr(getattr(program, 'header', None), 'name', program.id)} )")
-        lines.append(f"( Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} )")
+        from datetime import datetime as _dt
+        lines.append(f"( Date: {_dt.now().strftime('%Y-%m-%d %H:%M:%S')} )")
         lines.append("G21  (mm)")
         lines.append("G90  (absolute)")
         lines.append("G94  (feed per min)")

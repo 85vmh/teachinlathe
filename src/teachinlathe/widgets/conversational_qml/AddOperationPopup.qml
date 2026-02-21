@@ -15,10 +15,15 @@ Popup {
     contentHeight: column.implicitHeight
     padding: 0
 
-    signal operationChosen(string type)
+    // type = operation type string, insertIndex = position in list
+    signal operationChosen(string type, int insertIndex)
 
-    // How many buttons per row in the flow area
-    property int buttonsPerRow: 4
+    property int    operationsCount:  0
+    property int    currentOpIndex:   -1
+    property string selectedType:     ""
+    property int    buttonsPerRow:    4
+
+    onAboutToShow: { selectedType = "" }
 
     background: Rectangle {
         radius: 10
@@ -35,8 +40,7 @@ Popup {
         { label: "Threading",      type: "threading"     },
         { label: "Drilling",       type: "drilling"      },
         { label: "Tapping",        type: "tapping"       },
-        { label: "Parting",        type: "parting"       },
-        { label: "KeySlot",        type: "keyslot"       }
+        { label: "Parting",        type: "parting"       }
     ]
 
     contentItem: Column {
@@ -46,12 +50,13 @@ Popup {
         padding: 16
 
         Text {
-            text: "Add operation"
+            text: "Add Operation"
             font.pixelSize: 18
+            font.bold: true
             color: "white"
         }
 
-        // Flow area for operation buttons
+        // Operation type buttons
         Flow {
             id: flowArea
             width: column.width - column.padding * 2
@@ -60,34 +65,100 @@ Popup {
             Repeater {
                 model: root.options
                 delegate: Button {
-                    // Fixed height, computed width to fit N per row accounting for spacing
                     readonly property int itemWidth: Math.floor(
                         (flowArea.width - flowArea.spacing * (root.buttonsPerRow - 1)) / root.buttonsPerRow
                     )
+                    readonly property bool isSelected: root.selectedType === modelData.type
+
                     width: itemWidth
                     height: 40
                     font.pixelSize: Theme.fontSizeNormal
                     text: modelData.label
+
+                    background: Rectangle {
+                        radius: 4
+                        color: {
+                            if (isSelected)       return "#1E88E5"
+                            if (parent.pressed)   return "#3A4A5A"
+                            if (parent.hovered)   return "#2A3540"
+                            return "#2D3035"
+                        }
+                        border.color: isSelected ? "#1565C0" : "#4A4D52"
+                        border.width: 1
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        font: parent.font
+                        color: "white"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
                     onClicked: {
-                        root.operationChosen(modelData.type)
-                        root.close()
+                        if (root.operationsCount === 0) {
+                            // No existing ops: add at position 0 immediately
+                            root.operationChosen(modelData.type, 0)
+                            root.close()
+                        } else {
+                            // Toggle selection; Insert Above/Below buttons will handle the rest
+                            root.selectedType = (root.selectedType === modelData.type) ? "" : modelData.type
+                        }
                     }
                 }
             }
         }
 
-        // Separator between the flow grid and the footer (cancel)
         Rectangle {
             width: column.width - column.padding * 2
             height: 1
             color: "#3A3D41"
         }
 
-        // Footer with Cancel button
-        Button {
-            text: "Cancel"
+        // Footer row
+        Item {
             width: column.width - column.padding * 2
-            onClicked: root.close()
+            height: 44
+
+            // Cancel — always left
+            Button {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Cancel"
+                width: 100
+                height: 40
+                onClicked: root.close()
+            }
+
+            // Insert buttons — right side, only when list has ops
+            Row {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+                visible: root.operationsCount > 0
+
+                Button {
+                    text: "Insert Above"
+                    width: 130
+                    height: 40
+                    enabled: root.selectedType !== ""
+                    onClicked: {
+                        var idx = Math.max(0, root.currentOpIndex)
+                        root.operationChosen(root.selectedType, idx)
+                        root.close()
+                    }
+                }
+
+                Button {
+                    text: "Insert Below"
+                    width: 130
+                    height: 40
+                    enabled: root.selectedType !== ""
+                    onClicked: {
+                        root.operationChosen(root.selectedType, root.currentOpIndex + 1)
+                        root.close()
+                    }
+                }
+            }
         }
     }
 }
