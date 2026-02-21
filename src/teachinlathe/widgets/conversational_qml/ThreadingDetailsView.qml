@@ -11,78 +11,122 @@ Item {
     property int opIndex: -1
     property var opData: null
 
-    property string location:      (opData && opData.location) ? ("" + opData.location) : "OD"
-    property int spindleRpm:       (opData && opData.spindle_rpm !== undefined) ? opData.spindle_rpm : 0
-    property real pitch:           (opData && opData.pitch !== undefined) ? opData.pitch : 0.0
-    property int starts:           (opData && opData.starts !== undefined) ? opData.starts : 1
-    property real majorDiameter:   (opData && opData.major_diameter !== undefined) ? opData.major_diameter : 0.0
-    property real minorDiameter:   (opData && opData.minor_diameter !== undefined) ? opData.minor_diameter : 0.0
-    property real zStart:          (opData && opData.z_start !== undefined) ? opData.z_start : 0.0
-    property real zEnd:            (opData && opData.z_end !== undefined) ? opData.z_end : 0.0
-    property real initialDoc:      (opData && opData.initial_doc !== undefined) ? opData.initial_doc : 0.0
-    property real retract:         (opData && opData.retract !== undefined) ? opData.retract : 0.0
-    property int springPasses:     (opData && opData.spring_passes !== undefined) ? opData.spring_passes : 0
-
     signal saveRequested(var updated)
+    signal openNumPadRequested(var field)
+    signal teachXRequested(int index)
+    signal teachZRequested(int index)
+
+    // local state
+    property string location:     "OD"
+    property real   pitch:        0.0
+    property int    starts:       1
+    property real   majorDiameter: 0.0
+    property real   minorDiameter: 0.0
+    property real   zStart:       0.0
+    property real   zEnd:         0.0
+    property real   initialDoc:   0.0
+    property real   retract:      0.0
+    property int    springPasses: 0
+    property bool   _loading:     false
 
     function applyData(index, data) {
+        _loading = true
         opIndex = index
-        opData = data || {}
-        location       = (opData.location !== undefined) ? ("" + opData.location) : "OD"
-        spindleRpm     = (opData.spindle_rpm !== undefined) ? opData.spindle_rpm : 0
-        pitch          = (opData.pitch !== undefined) ? opData.pitch : 0.0
-        starts         = (opData.starts !== undefined) ? opData.starts : 1
-        majorDiameter  = (opData.major_diameter !== undefined) ? opData.major_diameter : 0.0
-        minorDiameter  = (opData.minor_diameter !== undefined) ? opData.minor_diameter : 0.0
-        zStart         = (opData.z_start !== undefined) ? opData.z_start : 0.0
-        zEnd           = (opData.z_end !== undefined) ? opData.z_end : 0.0
-        initialDoc     = (opData.initial_doc !== undefined) ? opData.initial_doc : 0.0
-        retract        = (opData.retract !== undefined) ? opData.retract : 0.0
-        springPasses   = (opData.spring_passes !== undefined) ? opData.spring_passes : 0
+        opData  = data || {}
+
+        spindlePanel.rpmOnly = true
+        spindlePanel.applyData(opIndex, opData)
+
+        location      = (opData.location       !== undefined) ? String(opData.location)                : "OD"
+        pitch         = (opData.pitch          !== undefined) ? Number(opData.pitch)                   : 0.0
+        starts        = (opData.starts         !== undefined) ? Math.round(Number(opData.starts))      : 1
+        majorDiameter = (opData.major_diameter !== undefined) ? Number(opData.major_diameter)          : 0.0
+        minorDiameter = (opData.minor_diameter !== undefined) ? Number(opData.minor_diameter)          : 0.0
+        zStart        = (opData.z_start        !== undefined) ? Number(opData.z_start)                 : 0.0
+        zEnd          = (opData.z_end          !== undefined) ? Number(opData.z_end)                   : 0.0
+        initialDoc    = (opData.initial_doc    !== undefined) ? Number(opData.initial_doc)             : 0.0
+        retract       = (opData.retract        !== undefined) ? Number(opData.retract)                 : 0.0
+        springPasses  = (opData.spring_passes  !== undefined) ? Math.round(Number(opData.spring_passes)) : 0
+        _loading = false
+    }
+
+    function mergeIntoOp(payload) {
+        var out = JSON.parse(JSON.stringify(opData || {}))
+        for (var k in payload) {
+            if (k === "index") continue
+            if (payload.hasOwnProperty(k)) out[k] = payload[k]
+        }
+        opData = out
+        return out
     }
 
     function emitSave() {
-        var payload = {
-            order: (opData && opData.order !== undefined) ? opData.order : 0,
-            type: "threading",
-            generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
-            is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-            location: location,
-            spindle_rpm: spindleRpm,
-            pitch: pitch,
-            starts: starts,
-            major_diameter: majorDiameter,
-            minor_diameter: minorDiameter,
-            z_start: zStart,
-            z_end: zEnd,
-            initial_doc: initialDoc,
-            retract: retract,
-            spring_passes: springPasses
-        }
-        root.saveRequested({ index: root.opIndex, payload: payload })
+        if (_loading) return
+        var merged = root.mergeIntoOp({
+            location:       root.location,
+            thread_type:    (opData && opData.thread_type) ? opData.thread_type : "metric",
+            pitch:          root.pitch,
+            starts:         root.starts,
+            major_diameter: root.majorDiameter,
+            minor_diameter: root.minorDiameter,
+            z_start:        root.zStart,
+            z_end:          root.zEnd,
+            initial_doc:    root.initialDoc,
+            retract:        root.retract,
+            spring_passes:  root.springPasses
+        })
+        root.saveRequested({ index: root.opIndex, payload: merged })
     }
+
+    DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
+    IntValidator    { id: intVal; bottom: 1; top: 99 }
+    IntValidator    { id: intValNonNeg; bottom: 0; top: 99 }
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
         spacing: 10
 
+        Label {
+            text: (opData && opData.type)
+                  ? ("Threading — Op #" + (opData.order !== undefined ? opData.order : "N/A"))
+                  : "Threading"
+            font.pixelSize: 18
+            font.bold: true
+        }
+
+        // ── Spindle ──────────────────────────────────────────────────────────
+        SpindleParameters {
+            id: spindlePanel
+            Layout.preferredWidth: 500
+            Layout.alignment: Qt.AlignTop
+            onOpenNumPadRequested: root.openNumPadRequested(field)
+            onSaveRequested: function (p) {
+                var merged = root.mergeIntoOp(p.payload || p)
+                root.saveRequested({ index: opIndex, payload: merged })
+            }
+        }
+
+        // ── Thread Location ───────────────────────────────────────────────────
         GroupBox {
             title: "Thread Location"
-            Layout.fillWidth: true
+            Layout.preferredWidth: 500
+            Layout.alignment: Qt.AlignTop
+            font.pixelSize: 16
+
             RowLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 16
+                spacing: 24
                 ButtonGroup { id: locGroup }
                 RadioButton {
                     text: "External (OD)"
+                    font.pixelSize: 15
                     checked: root.location === "OD"
                     ButtonGroup.group: locGroup
                     onToggled: if (checked) { root.location = "OD"; root.emitSave() }
                 }
                 RadioButton {
                     text: "Internal (ID)"
+                    font.pixelSize: 15
                     checked: root.location === "ID"
                     ButtonGroup.group: locGroup
                     onToggled: if (checked) { root.location = "ID"; root.emitSave() }
@@ -90,143 +134,214 @@ Item {
             }
         }
 
-        GroupBox {
-            title: "Thread Parameters"
+        // ── Thread Parameters | Thread Diameters (side by side) ───────────────
+        RowLayout {
             Layout.fillWidth: true
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 8
+            spacing: 24
+            Layout.alignment: Qt.AlignTop
 
-                RowLayout {
-                    spacing: 8
-                    Label { text: "Pitch (mm)"; width: 110; verticalAlignment: Text.AlignVCenter }
+            GroupBox {
+                title: "Thread Parameters"
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignTop
+                font.pixelSize: 16
+
+                GridLayout {
+                    columns: 3
+                    columnSpacing: 16
+                    rowSpacing: 16
+
+                    Label { text: "Pitch"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                     NumpadField {
-                        Layout.preferredWidth: 120
-                        settingName: "smart_numpad.quick-cycles-thread-pitch-metric"
+                        Layout.preferredWidth: 100
+                        settingName: "threading.pitch"
+                        validatorObject: dblVal
                         value: root.pitch
+                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                        hAlign: Text.AlignRight
+                        fontPixelSize: 16
                         onOpenRequested: root.openNumPadRequested(field)
                         onValueCommitted: { root.pitch = value; root.emitSave() }
                     }
+                    Label { text: "(mm)"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
 
-                    Label { text: "Starts"; width: 80; verticalAlignment: Text.AlignVCenter }
-                    ComboBox {
-                        id: cbStarts
+                    Label { text: "Starts"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
+                    NumpadField {
                         Layout.preferredWidth: 100
-                        model: [1,2,3,4,5,6,7,8]
-                        Component.onCompleted: {
-                            var i = model.indexOf(root.starts)
-                            currentIndex = (i >= 0) ? i : 0
+                        settingName: "threading.starts"
+                        validatorObject: intVal
+                        value: root.starts
+                        formatter: function(v) { return (v == null) ? "1" : String(Math.max(1, Math.round(Number(v)))) }
+                        hAlign: Text.AlignRight
+                        fontPixelSize: 16
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: { root.starts = Math.max(1, Math.round(value)); root.emitSave() }
+                    }
+                    Item {}
+                }
+            }
+
+            GroupBox {
+                id: diametersBox
+                title: "Thread Diameters"
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignTop
+                font.pixelSize: 16
+
+                GridLayout {
+                    columns: 3
+                    columnSpacing: 16
+                    rowSpacing: 16
+
+                    // Row 1: TeachIn diameter (Major for OD, Minor for ID)
+                    Label {
+                        text: root.location === "OD" ? "Major Ø" : "Minor Ø"
+                        font.pixelSize: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.minimumWidth: 90
+                    }
+                    NumpadField {
+                        Layout.preferredWidth: 110
+                        settingName: "threading.teach_diam"
+                        validatorObject: dblVal
+                        value: root.location === "OD" ? root.majorDiameter : root.minorDiameter
+                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                        hAlign: Text.AlignRight
+                        fontPixelSize: 16
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: {
+                            if (root.location === "OD") root.majorDiameter = value
+                            else root.minorDiameter = value
+                            root.emitSave()
                         }
-                        onCurrentIndexChanged: { root.starts = model[currentIndex]; root.emitSave() }
                     }
+                    Button { text: "TeachIn"; onClicked: root.teachXRequested(root.opIndex) }
 
-                    Label { text: "Spindle RPM"; width: 110; verticalAlignment: Text.AlignVCenter }
-                    NumpadField {
-                        Layout.preferredWidth: 120
-                        settingName: "smart_numpad.input-rpm-thread"
-                        value: root.spindleRpm
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: { root.spindleRpm = value; root.emitSave() }
+                    // Row 2: Calculate diameter (Minor for OD, Major for ID)
+                    Label {
+                        text: root.location === "OD" ? "Minor Ø" : "Major Ø"
+                        font.pixelSize: 16
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.minimumWidth: 90
                     }
+                    NumpadField {
+                        Layout.preferredWidth: 110
+                        settingName: "threading.calc_diam"
+                        validatorObject: dblVal
+                        value: root.location === "OD" ? root.minorDiameter : root.majorDiameter
+                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                        hAlign: Text.AlignRight
+                        fontPixelSize: 16
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: {
+                            if (root.location === "OD") root.minorDiameter = value
+                            else root.majorDiameter = value
+                            root.emitSave()
+                        }
+                    }
+                    Button { text: "Calculate" }
                 }
             }
         }
 
-        GroupBox {
-            title: "Diameters"
-            Layout.fillWidth: true
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 8
-
-                RowLayout {
-                    spacing: 8
-                    Label { text: "Major Ø"; width: 110; verticalAlignment: Text.AlignVCenter }
-                    NumpadField {
-                        Layout.preferredWidth: 140
-                        settingName: "smart_numpad.thread-major"
-                        value: root.majorDiameter
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: { root.majorDiameter = value; root.emitSave() }
-                    }
-
-                    Label { text: "Minor Ø"; width: 110; verticalAlignment: Text.AlignVCenter }
-                    NumpadField {
-                        Layout.preferredWidth: 140
-                        settingName: "smart_numpad.thread-minor"
-                        value: root.minorDiameter
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: { root.minorDiameter = value; root.emitSave() }
-                    }
-                }
-            }
-        }
-
+        // ── Z Limits ─────────────────────────────────────────────────────────
         GroupBox {
             title: "Z Limits"
-            Layout.fillWidth: true
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 12
+            Layout.preferredWidth: 500
+            Layout.alignment: Qt.AlignTop
+            font.pixelSize: 16
 
-                Label { text: "Z Start"; width: 110; verticalAlignment: Text.AlignVCenter }
+            GridLayout {
+                columns: 3
+                columnSpacing: 16
+                rowSpacing: 16
+
+                Label { text: "Z Start"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                 NumpadField {
-                    Layout.preferredWidth: 140
-                    settingName: "smart_numpad.thread-z-start"
+                    Layout.preferredWidth: 110
+                    settingName: "threading.z_start"
+                    validatorObject: dblVal
                     value: root.zStart
+                    formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                    hAlign: Text.AlignRight
+                    fontPixelSize: 16
                     onOpenRequested: root.openNumPadRequested(field)
                     onValueCommitted: { root.zStart = value; root.emitSave() }
                 }
+                Button { text: "TeachIn"; onClicked: root.teachZRequested(root.opIndex) }
 
-                Label { text: "Z End"; width: 110; verticalAlignment: Text.AlignVCenter }
+                Label { text: "Z End"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                 NumpadField {
-                    Layout.preferredWidth: 140
-                    settingName: "smart_numpad.thread-z-end"
+                    Layout.preferredWidth: 110
+                    settingName: "threading.z_end"
+                    validatorObject: dblVal
                     value: root.zEnd
+                    formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                    hAlign: Text.AlignRight
+                    fontPixelSize: 16
                     onOpenRequested: root.openNumPadRequested(field)
                     onValueCommitted: { root.zEnd = value; root.emitSave() }
                 }
+                Button { text: "TeachIn"; onClicked: root.teachZRequested(root.opIndex) }
             }
         }
 
+        // ── Cutting Params ────────────────────────────────────────────────────
         GroupBox {
             title: "Cutting Params"
-            Layout.fillWidth: true
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 12
+            Layout.preferredWidth: 500
+            Layout.alignment: Qt.AlignTop
+            font.pixelSize: 16
 
-                Label { text: "Initial DOC (mm/⌀)"; width: 150; verticalAlignment: Text.AlignVCenter }
+            GridLayout {
+                columns: 3
+                columnSpacing: 16
+                rowSpacing: 16
+
+                Label { text: "Initial DOC"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
                 NumpadField {
-                    Layout.preferredWidth: 120
-                    settingName: "smart_numpad.quick-cycles-thread-first-pass"
+                    Layout.preferredWidth: 110
+                    settingName: "threading.initial_doc"
+                    validatorObject: dblVal
                     value: root.initialDoc
+                    formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                    hAlign: Text.AlignRight
+                    fontPixelSize: 16
                     onOpenRequested: root.openNumPadRequested(field)
                     onValueCommitted: { root.initialDoc = value; root.emitSave() }
                 }
+                Label { text: "(mm/diam)"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
 
-                Label { text: "Retract (mm)"; width: 120; verticalAlignment: Text.AlignVCenter }
+                Label { text: "Retract"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
                 NumpadField {
-                    Layout.preferredWidth: 120
-                    settingName: "smart_numpad.thread-retract"
+                    Layout.preferredWidth: 110
+                    settingName: "threading.retract"
+                    validatorObject: dblVal
                     value: root.retract
+                    formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                    hAlign: Text.AlignRight
+                    fontPixelSize: 16
                     onOpenRequested: root.openNumPadRequested(field)
                     onValueCommitted: { root.retract = value; root.emitSave() }
                 }
+                Label { text: "(mm)"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
 
-                Label { text: "Spring passes"; width: 120; verticalAlignment: Text.AlignVCenter }
+                Label { text: "Spring Passes"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
                 NumpadField {
-                    Layout.preferredWidth: 120
-                    settingName: "smart_numpad.thread-spring-passes"
+                    Layout.preferredWidth: 110
+                    settingName: "threading.spring_passes"
+                    validatorObject: intValNonNeg
                     value: root.springPasses
+                    formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
+                    hAlign: Text.AlignRight
+                    fontPixelSize: 16
                     onOpenRequested: root.openNumPadRequested(field)
                     onValueCommitted: { root.springPasses = Math.round(value); root.emitSave() }
                 }
+                Item {}
             }
         }
+
+        Item { Layout.fillHeight: true }
     }
 }

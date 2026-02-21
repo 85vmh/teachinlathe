@@ -787,35 +787,35 @@ class ConversationalQml(QQuickWidget):
             print("[tapping] update error:", e)
 
     def onUpdateThreading(self, index: int, payload):
-        """Threading autosave (odată cu noile câmpuri)."""
+        """Threading autosave."""
         try:
-            payload = self._to_py(payload)
+            p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            if op is None or getattr(op, "type", "") != "threading":
+            from teachinlathe.conversational.data_types import Threading
+            if not isinstance(op, Threading):
                 return
 
-            # câmpuri simple
-            for attr in ("order", "generate_gcode", "is_optional_block",
-                         "spindle_rpm", "thread_type", "pitch", "starts",
-                         "major_diameter", "minor_diameter",
-                         "z_start", "z_end", "initial_doc", "retract", "spring_passes"):
-                if attr in payload and hasattr(op, attr):
-                    setattr(op, attr, payload[attr])
+            old_dict = op.to_dict()
+            sp_old = (old_dict.get("spindle_parameters") or {})
+            sp_new = p.get("spindle_parameters")
+            if isinstance(sp_new, dict):
+                sp_norm = dict(sp_old)
+                if "mode" in sp_new and sp_new["mode"]:
+                    sp_norm["mode"] = sp_new["mode"]
+                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
+                    sp_norm["mode"] = "rpm"
+                else:
+                    sp_norm["mode"] = sp_old.get("mode", "rpm")
+                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
+                    if k in sp_new and sp_new[k] is not None:
+                        sp_norm[k] = sp_new[k]
+                p["spindle_parameters"] = sp_norm
 
-            # location (enum)
-            if "location" in payload:
-                loc = payload["location"]
-                if isinstance(loc, str):
-                    try:
-                        op.location = ThreadLocation[loc]  # "OD"/"ID"
-                    except Exception:
-                        try:
-                            op.location = ThreadLocation(loc)
-                        except Exception:
-                            op.location = ThreadLocation.OD
-                elif isinstance(loc, ThreadLocation):
-                    op.location = loc
-
+            merged = _deep_merge(old_dict, p)
+            new_op = Threading.from_dict(merged)
+            prog = self._get_current_program()
+            if prog:
+                prog.operations[index] = new_op
             self._save_current_program()
         except Exception as e:
             print("[threading] update error:", e)
