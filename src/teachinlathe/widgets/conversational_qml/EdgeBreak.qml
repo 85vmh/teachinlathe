@@ -7,7 +7,7 @@ import "."
 GroupBox {
     id: root
     title: "Edge Break"
-    Layout.fillWidth: true
+    Layout.preferredWidth: 300
     font.pixelSize: 16
 
     /* --- Public API --- */
@@ -46,75 +46,74 @@ GroupBox {
 
     ButtonGroup { id: modeGroup }
 
-    ColumnLayout {
+    GridLayout {
         anchors.fill: parent
-        spacing: 16
+        columns: 3
+        columnSpacing: 12
+        rowSpacing: 16
 
-        // --- None ---
+        // --- None (spans all columns) ---
         RadioButton {
             text: "None"
             font.pixelSize: 15
             checked: root.blend_type === "none"
             ButtonGroup.group: modeGroup
+            Layout.columnSpan: 3
             onToggled: if (checked) { root.blend_type = "none"; root.emitSave() }
         }
 
         // --- Chamfer ---
-        RowLayout {
-            spacing: 12
-            RadioButton {
-                text: "Chamfer"
-                font.pixelSize: 15
-                checked: root.blend_type === "chamfer"
-                ButtonGroup.group: modeGroup
-                onToggled: if (checked) { root.blend_type = "chamfer"; root.emitSave() }
-            }
-            NumpadField {
-                Layout.preferredWidth: 100
-                enabled: root.blend_type === "chamfer"
-                settingName: "edge_break.chamfer_width"
-                value: root.chamfer_width
-                validatorObject: dblVal
-                formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                hAlign: Text.AlignRight
-                font.pixelSize: 16
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.chamfer_width = value; root.emitSave() }
-            }
-            Label {
-                text: "(mm)"
-                font.pixelSize: 15
-                opacity: root.blend_type === "chamfer" ? 1.0 : 0.4
-            }
+        RadioButton {
+            text: "Chamfer"
+            font.pixelSize: 15
+            checked: root.blend_type === "chamfer"
+            ButtonGroup.group: modeGroup
+            Layout.minimumWidth: 110
+            onToggled: if (checked) { root.blend_type = "chamfer"; root.emitSave() }
+        }
+        NumpadField {
+            Layout.preferredWidth: 100
+            enabled: root.blend_type === "chamfer"
+            settingName: "edge_break.chamfer_width"
+            value: root.chamfer_width
+            validatorObject: dblVal
+            formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
+            hAlign: Text.AlignRight
+            font.pixelSize: 16
+            onOpenRequested: root.openNumPadRequested(field)
+            onValueCommitted: { root.chamfer_width = value; root.emitSave() }
+        }
+        Label {
+            text: "(mm)"
+            font.pixelSize: 15
+            opacity: root.blend_type === "chamfer" ? 1.0 : 0.4
         }
 
         // --- Fillet ---
-        RowLayout {
-            spacing: 12
-            RadioButton {
-                text: "Fillet"
-                font.pixelSize: 15
-                checked: root.blend_type === "fillet"
-                ButtonGroup.group: modeGroup
-                onToggled: if (checked) { root.blend_type = "fillet"; root.emitSave() }
-            }
-            NumpadField {
-                Layout.preferredWidth: 100
-                enabled: root.blend_type === "fillet"
-                settingName: "edge_break.fillet_radius"
-                value: root.fillet_radius
-                validatorObject: dblVal
-                formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                hAlign: Text.AlignRight
-                font.pixelSize: 16
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.fillet_radius = value; root.emitSave() }
-            }
-            Label {
-                text: "(mm)"
-                font.pixelSize: 15
-                opacity: root.blend_type === "fillet" ? 1.0 : 0.4
-            }
+        RadioButton {
+            text: "Fillet"
+            font.pixelSize: 15
+            checked: root.blend_type === "fillet"
+            ButtonGroup.group: modeGroup
+            Layout.minimumWidth: 110
+            onToggled: if (checked) { root.blend_type = "fillet"; root.emitSave() }
+        }
+        NumpadField {
+            Layout.preferredWidth: 100
+            enabled: root.blend_type === "fillet"
+            settingName: "edge_break.fillet_radius"
+            value: root.fillet_radius
+            validatorObject: dblVal
+            formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
+            hAlign: Text.AlignRight
+            font.pixelSize: 16
+            onOpenRequested: root.openNumPadRequested(field)
+            onValueCommitted: { root.fillet_radius = value; root.emitSave() }
+        }
+        Label {
+            text: "(mm)"
+            font.pixelSize: 15
+            opacity: root.blend_type === "fillet" ? 1.0 : 0.4
         }
     }
 }

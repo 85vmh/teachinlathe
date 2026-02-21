@@ -72,7 +72,6 @@ Item {
 
         EdgeBreak {
                 id: edgeBreakPanel
-                Layout.preferredWidth: 500
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function (p) {
