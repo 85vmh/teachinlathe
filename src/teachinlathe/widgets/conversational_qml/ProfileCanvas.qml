@@ -259,7 +259,48 @@ Canvas {
         }
     }
 
-        // ── Profile (dark gray, no vertex dots) ────────────────────────────────────
+    // ── Fillet geometry: tangent points + arc centre for a line-line fillet ──────
+    // startZ/X: logical start of line 1, cornerZ/X: the corner (end of lineTo),
+    // nextP: the next primitive (must be a lineTo), fr: fillet radius.
+    // Returns {t1z,t1x, t2z,t2x, fcz,fcx, anticlockwise} or null when invalid.
+    function _filletGeom(startZ, startX, cornerZ, cornerX, nextP, fr) {
+        var sdz = cornerZ - startZ, sdx = cornerX - startX
+        var slen = Math.sqrt(sdz*sdz + sdx*sdx)
+        if (slen < 0.001 || fr < 0.001) return null
+        if (!nextP || nextP.type !== "lineTo") return null
+        var ndz = +(nextP.z_end||0) - cornerZ, ndx = +(nextP.x_end||0) - cornerX
+        var nlen = Math.sqrt(ndz*ndz + ndx*ndx)
+        if (nlen < 0.001) return null
+
+        var d1z = sdz / slen, d1x = sdx / slen   // unit dir of line 1 (into corner)
+        var d2z = ndz / nlen, d2x = ndx / nlen   // unit dir of line 2 (out of corner)
+
+        // 2D cross and dot products
+        var cross = d1z * d2x - d1x * d2z        // sin(θ), sign → turn direction
+        var dot   = d1z * d2z + d1x * d2x        // cos(θ)
+        var absCross = Math.abs(cross)
+        if (absCross < 0.001) return null         // lines (nearly) parallel
+
+        // Tangent length: t = r / tan(α/2) where α = deflection angle between -d1 and d2
+        // cos(α) = -dot, sin(α) = absCross → t = r·(1-dot)/absCross
+        var t   = fr * (1.0 - dot) / absCross
+        var t1z = cornerZ - t * d1z,  t1x = cornerX - t * d1x  // tangent pt on line 1
+        var t2z = cornerZ + t * d2z,  t2x = cornerX + t * d2x  // tangent pt on line 2
+
+        // Perpendicular to d1 pointing towards the arc centre (inside of the turn)
+        // cross > 0 → CW turn → centre is to the LEFT of d1 = (-d1x, d1z)
+        // cross < 0 → CCW turn → centre is to the RIGHT of d1 = (d1x, -d1z)
+        var perpZ = (cross > 0) ? -d1x :  d1x
+        var perpX = (cross > 0) ?  d1z : -d1z
+
+        return {
+            t1z: t1z, t1x: t1x, t2z: t2z, t2x: t2x,
+            fcz: t1z + fr * perpZ, fcx: t1x + fr * perpX,
+            anticlockwise: (cross < 0)   // CW turn → arc drawn CW → anticlockwise=false
+        }
+    }
+
+    // ── Profile (dark gray, no vertex dots) ────────────────────────────────────
     function _paintProfile(ctx) {
         if (!primitives || primitives.length === 0) return
         var logZ = 0, logX = 0
@@ -313,6 +354,23 @@ Canvas {
                         // Dotted "would-have-been" lines to the original corner
                         chamferDashes.push({ z1: csZ, x1: csX, z2: ez,  x2: ex })
                         chamferDashes.push({ z1: ez,  x1: ex,  z2: ceZ, x2: ceX })
+                    } else {
+                        ctx.lineTo(_cx(ez), _cy(ex))
+                        drawZ = ez; drawX = ex
+                    }
+                } else if (p.blend && p.blend.type === "fillet") {
+                    var fr  = +(p.blend.fillet_radius || 0)
+                    var fg  = _filletGeom(logZ, logX, ez, ex,
+                                          i+1 < primitives.length ? primitives[i+1] : null, fr)
+                    if (fg) {
+                        ctx.lineTo(_cx(fg.t1z), _cy(fg.t1x))
+                        var fccx = _cx(fg.fcz), fccy = _cy(fg.fcx), fcr = fr * _scale
+                        var fsa = Math.atan2(_cy(fg.t1x) - fccy, _cx(fg.t1z) - fccx)
+                        var fea = Math.atan2(_cy(fg.t2x) - fccy, _cx(fg.t2z) - fccx)
+                        ctx.arc(fccx, fccy, fcr, fsa, fea, fg.anticlockwise)
+                        drawZ = fg.t2z; drawX = fg.t2x
+                        chamferDashes.push({ z1: fg.t1z, x1: fg.t1x, z2: ez,     x2: ex })
+                        chamferDashes.push({ z1: ez,     x1: ex,     z2: fg.t2z, x2: fg.t2x })
                     } else {
                         ctx.lineTo(_cx(ez), _cy(ex))
                         drawZ = ez; drawX = ex
@@ -387,6 +445,12 @@ Canvas {
                         if (pnlen2 > 0.001) { pceZ = pez + pcw*pnndz/pnlen2; pceX = pex + pcw*pnndx/pnlen2 }
                     }
                     drawZ = pceZ; drawX = pceX
+                } else if (prev.blend && prev.blend.type === "fillet") {
+                    var pfg = _filletGeom(logZ, logX, pez, pex,
+                                          j+1 < primitives.length ? primitives[j+1] : null,
+                                          +(prev.blend.fillet_radius || 0))
+                    if (pfg) { drawZ = pfg.t2z; drawX = pfg.t2x }
+                    else     { drawZ = pez; drawX = pex }
                 } else {
                     drawZ = pez; drawX = pex
                 }
@@ -439,6 +503,24 @@ Canvas {
                     ctx.stroke()
                     ctx.fillStyle = "#E53935"
                     ctx.beginPath(); ctx.arc(_cx(hceZ), _cy(hceX), 5, 0, Math.PI*2); ctx.fill()
+                } else {
+                    ctx.lineTo(_cx(ez), _cy(ex)); ctx.stroke()
+                    ctx.fillStyle = "#E53935"
+                    ctx.beginPath(); ctx.arc(_cx(ez), _cy(ex), 5, 0, Math.PI*2); ctx.fill()
+                }
+            } else if (p.blend && p.blend.type === "fillet") {
+                var hfr = +(p.blend.fillet_radius || 0)
+                var hfg = _filletGeom(logZ, logX, ez, ex,
+                                      idx+1 < primitives.length ? primitives[idx+1] : null, hfr)
+                if (hfg) {
+                    ctx.lineTo(_cx(hfg.t1z), _cy(hfg.t1x))
+                    var hfccx = _cx(hfg.fcz), hfccy = _cy(hfg.fcx), hfcr = hfr * _scale
+                    var hfsa = Math.atan2(_cy(hfg.t1x) - hfccy, _cx(hfg.t1z) - hfccx)
+                    var hfea = Math.atan2(_cy(hfg.t2x) - hfccy, _cx(hfg.t2z) - hfccx)
+                    ctx.arc(hfccx, hfccy, hfcr, hfsa, hfea, hfg.anticlockwise)
+                    ctx.stroke()
+                    ctx.fillStyle = "#E53935"
+                    ctx.beginPath(); ctx.arc(_cx(hfg.t2z), _cy(hfg.t2x), 5, 0, Math.PI*2); ctx.fill()
                 } else {
                     ctx.lineTo(_cx(ez), _cy(ex)); ctx.stroke()
                     ctx.fillStyle = "#E53935"
