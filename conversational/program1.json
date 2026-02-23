@@ -125,7 +125,7 @@
                     "blend": {
                         "type": "fillet",
                         "chamfer_width": 2.0,
-                        "fillet_radius": 1.0
+                        "fillet_radius": 2.0
                     }
                 },
                 {
