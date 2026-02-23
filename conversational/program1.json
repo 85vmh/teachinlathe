@@ -134,9 +134,9 @@
                     "x_end": 40.0,
                     "z_end": -60.0,
                     "blend": {
-                        "type": "chamfer",
+                        "type": "fillet",
                         "chamfer_width": 3.0,
-                        "fillet_radius": 1.0
+                        "fillet_radius": 3.0
                     }
                 },
                 {

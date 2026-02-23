@@ -257,13 +257,18 @@ Canvas {
         }
     }
 
-    // ── Profile (dark gray, no vertex dots) ────────────────────────────────────
+        // ── Profile (dark gray, no vertex dots) ────────────────────────────────────
     function _paintProfile(ctx) {
         if (!primitives || primitives.length === 0) return
         var logZ = 0, logX = 0
         var drawZ = 0, drawX = 0
         ctx.strokeStyle = "#333333"; ctx.lineWidth = 2
         ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.setLineDash([])
+
+        // Collect dotted "extensions" for chamfers so the original corner is still visible
+        // after the chamfer cuts it off.
+        var chamferDashes = []   // each item: { z1, x1, z2, x2 }
+
         ctx.beginPath()
         for (var i = 0; i < primitives.length; i++) {
             var p = primitives[i]
@@ -297,9 +302,15 @@ Canvas {
                             var nlen2 = Math.sqrt(nndz*nndz + nndx*nndx)
                             if (nlen2 > 0.001) { ceZ = ez + cw*nndz/nlen2; ceX = ex + cw*nndx/nlen2 }
                         }
+
+                        // Solid profile up to chamfer start, then chamfer to chamfer end
                         ctx.lineTo(_cx(csZ), _cy(csX))
                         ctx.lineTo(_cx(ceZ), _cy(ceX))
                         drawZ = ceZ; drawX = ceX
+
+                        // Dotted "would-have-been" lines to the original corner
+                        chamferDashes.push({ z1: csZ, x1: csX, z2: ez,  x2: ex })
+                        chamferDashes.push({ z1: ez,  x1: ex,  z2: ceZ, x2: ceX })
                     } else {
                         ctx.lineTo(_cx(ez), _cy(ex))
                         drawZ = ez; drawX = ex
@@ -322,9 +333,26 @@ Canvas {
             }
         }
         ctx.stroke()
+
+        // Draw dotted extensions *after* the solid profile, so we don't mess up the main path.
+        if (chamferDashes.length > 0) {
+            ctx.save()
+            ctx.setLineDash([2, 3])
+            ctx.strokeStyle = "#7a7a7a"
+            ctx.lineWidth = 1.2
+            ctx.lineJoin = "round"
+            ctx.lineCap = "round"
+            ctx.beginPath()
+            for (var d = 0; d < chamferDashes.length; d++) {
+                var s = chamferDashes[d]
+                ctx.moveTo(_cx(s.z1), _cy(s.x1))
+                ctx.lineTo(_cx(s.z2), _cy(s.x2))
+            }
+            ctx.stroke()
+            ctx.restore()
+        }
     }
 
-    // ── Selected primitive highlight ───────────────────────────────────────────
     function _paintHighlight(ctx) {
         var idx = selectedPrimIndex
         if (idx < 0 || !primitives || idx >= primitives.length) return
