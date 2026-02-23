@@ -43,7 +43,7 @@ Rectangle {
     signal rowTapped(int rowIndex)
 
     width: parent ? parent.width : 400
-    height: 60
+    height: 72
     radius: 0
     color: (rowIndex % 2 === 0 ? "#fafafa" : "#f0f0f0")
     border.width: isCurrentItem ? 1 : 0

@@ -441,21 +441,21 @@ class PartingParameters:
 
 @dataclass
 class ProfilingParameters:
-    profileId: int
+    profile_id: int
     xStart: float
     zStart: float
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "ProfilingParameters":
         return ProfilingParameters(
-            profileId=int(data.get("profile_id", 0)),
+            profile_id=int(data.get("profile_id", 0)),
             xStart=float(data.get("x_start", 0.0)),
             zStart=float(data.get("z_start", 0.0))
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "profile_id": int(self.profileId),
+            "profile_id": int(self.profile_id),
             "x_start": float(self.xStart),
             "z_start": float(self.zStart)
         }
@@ -535,29 +535,169 @@ class Facing(TurnableOperation):
         return base
 
 
+# ----------------------- Profile Primitives ----------------------------------
+
+class ProfileBlendType(Enum):
+    NONE   = "none"
+    RADIUS = "radius"
+
+
+@dataclass
+class ProfileBlend:
+    blend_type:    ProfileBlendType
+    chamfer_width: float = 0.0
+    fillet_radius: float = 0.0
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "ProfileBlend":
+        try:
+            bt = ProfileBlendType(data.get("type", "none"))
+        except ValueError:
+            bt = ProfileBlendType.NONE
+        return ProfileBlend(
+            blend_type=bt,
+            chamfer_width=float(data.get("chamfer_width", 0.0)),
+            fillet_radius=float(data.get("fillet_radius", 0.0)),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "type":          self.blend_type.value,
+            "chamfer_width": float(self.chamfer_width),
+            "fillet_radius": float(self.fillet_radius),
+        }
+
+
+@dataclass
+class ProfilePrimitive:
+    primitive_id:   int
+    primitive_type: str
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ProfilePrimitive":
+        t = data.get("type", "")
+        if t == "startPoint":
+            return StartPoint.from_dict(data)
+        if t in ("lineTo", "line"):
+            return LineTo.from_dict(data)
+        if t in ("arcTo", "arc"):
+            return ArcTo.from_dict(data)
+        raise ValueError(f"Unknown primitive type: {t!r}")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"primitive_id": self.primitive_id, "type": self.primitive_type}
+
+
+@dataclass
+class StartPoint(ProfilePrimitive):
+    x_start: float
+    z_start: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "StartPoint":
+        return StartPoint(
+            primitive_id=int(data.get("primitive_id", 0)),
+            primitive_type="startPoint",
+            x_start=float(data.get("x_start", 0.0)),
+            z_start=float(data.get("z_start", 0.0)),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = super().to_dict()
+        d.update({"x_start": float(self.x_start), "z_start": float(self.z_start)})
+        return d
+
+
+@dataclass
+class LineTo(ProfilePrimitive):
+    x_end: float
+    z_end: float
+    blend: ProfileBlend
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "LineTo":
+        return LineTo(
+            primitive_id=int(data.get("primitive_id", 0)),
+            primitive_type="lineTo",
+            x_end=float(data.get("x_end", 0.0)),
+            z_end=float(data.get("z_end", 0.0)),
+            blend=ProfileBlend.from_dict(data.get("blend", {})),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = super().to_dict()
+        d.update({"x_end": float(self.x_end), "z_end": float(self.z_end), "blend": self.blend.to_dict()})
+        return d
+
+
+@dataclass
+class ArcTo(ProfilePrimitive):
+    direction:  str
+    x_end:      float
+    z_end:      float
+    x_center:   float
+    z_center:   float
+    arc_radius: float
+    blend:      ProfileBlend
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "ArcTo":
+        return ArcTo(
+            primitive_id=int(data.get("primitive_id", 0)),
+            primitive_type="arcTo",
+            direction=str(data.get("direction", "cw")),
+            x_end=float(data.get("x_end", 0.0)),
+            z_end=float(data.get("z_end", 0.0)),
+            x_center=float(data.get("x_center", 0.0)),
+            z_center=float(data.get("z_center", 0.0)),
+            arc_radius=float(data.get("arc_radius", 0.0)),
+            blend=ProfileBlend.from_dict(data.get("blend", {})),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = super().to_dict()
+        d.update({
+            "direction":  self.direction,
+            "x_end":      float(self.x_end),
+            "z_end":      float(self.z_end),
+            "x_center":   float(self.x_center),
+            "z_center":   float(self.z_center),
+            "arc_radius": float(self.arc_radius),
+            "blend":      self.blend.to_dict(),
+        })
+        return d
+
+
 # ---------------------------- Define Profile ---------------------------------
 
 @dataclass
 class DefineProfile(Operation):
-    profileId: int
-    profile_primitives: List[Dict[str, Any]]
+    profile_id:         int
+    profile_primitives: List[ProfilePrimitive]
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "DefineProfile":
+        raw = data.get("profile_primitives", [])
+        primitives = []
+        for i, p in enumerate(raw):
+            p_data = dict(p)
+            if "primitive_id" not in p_data:
+                p_data["primitive_id"] = i + 1
+            primitives.append(ProfilePrimitive.from_dict(p_data))
         return DefineProfile(
             order=int(data["order"]),
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            profileId=int(data.get("profileId", data.get("profile_id", 0))),
-            profile_primitives=list(data.get("profile_primitives", []))
+            profile_id=int(data.get("profile_id", 0)),
+            profile_primitives=primitives,
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
         base.update({
-            "profileId": int(self.profileId),
-            "profile_primitives": self.profile_primitives
+            "profile_id":         int(self.profile_id),
+            "profile_primitives": [p.to_dict() for p in self.profile_primitives],
         })
         return base
 
@@ -847,7 +987,7 @@ class Program:
 operation_types: Dict[str, Type[Operation]] = {
     "changeTool": ChangeTool,
     "facing": Facing,
-    "define_profile": DefineProfile,
+    "defineProfile": DefineProfile,
     "profiling": Profiling,
     "threading": Threading,
     "drilling": Drilling,
@@ -858,7 +998,7 @@ operation_types: Dict[str, Type[Operation]] = {
 display_names: Dict[str, str] = {
     "changeTool": "Tool Change",
     "facing": "Facing",
-    "define_profile": "Define Profile",
+    "defineProfile": "Define Profile",
     "profiling": "Profiling",
     "threading": "Threading",
     "drilling": "Drilling",

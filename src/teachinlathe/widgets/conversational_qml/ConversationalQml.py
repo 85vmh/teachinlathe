@@ -223,6 +223,8 @@ class ConversationalQml(QQuickWidget):
                 item.detailsRequested.connect(lambda idx, it=item: self.onDetailsRequested(it, idx))
             if hasattr(item, "updateToolChange"):
                 item.updateToolChange.connect(self.onUpdateToolChange)
+            if hasattr(item, "updateDefineProfile"):
+                item.updateDefineProfile.connect(self.onUpdateDefineProfile)
             if hasattr(item, "teachXRequested"):
                 item.teachXRequested.connect(self.onTeachX)
             if hasattr(item, "teachZRequested"):
@@ -326,10 +328,10 @@ class ConversationalQml(QQuickWidget):
                 },
                 "edge_break": {"blend_type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
             })
-        elif op_type == "define_profile":
+        elif op_type == "defineProfile":
             base.update({
                 "generate_gcode": False,
-                "profileId": 1, "profile_id": 1,
+                "profile_id": 1,
                 "profile_primitives": [],
             })
         return base
@@ -529,10 +531,12 @@ class ConversationalQml(QQuickWidget):
                 "is_optional_block": bool(getattr(op, "is_optional_block", False)),
             }
             # enrich with hints used for display name
-            tool_no = getattr(op, "tool_no", None)
-            pitch = getattr(op, "pitch", None)
-            profile_id = getattr(getattr(op, "profilingParameters", None), "profileId", None)
-            strategy = getattr(getattr(op, "profilingOptions", None), "strategy", None)
+            tool_no    = getattr(op, "tool_no", None)
+            pitch      = getattr(op, "pitch", None)
+            profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
+            if profile_id is None:
+                profile_id = getattr(op, "profile_id", None)
+            strategy   = getattr(getattr(op, "profilingOptions", None), "strategy", None)
             d["display_type"] = self._display_name_for_op(
                 d["type"], tool_no=tool_no, pitch=pitch, profile_id=profile_id, strategy=strategy
             )
@@ -548,7 +552,9 @@ class ConversationalQml(QQuickWidget):
             return "Tool Change"
         if t == "facing":
             return "Facing"
-        if t == "define_profile":
+        if t == "defineProfile":
+            if profile_id is not None:
+                return f"Define Profile (P{profile_id})"
             return "Define Profile"
         if t == "profiling":
             if profile_id is not None and strategy is not None:
@@ -658,6 +664,24 @@ class ConversationalQml(QQuickWidget):
 
         except Exception as e:
             print("[header] update error:", e)
+
+    def onUpdateDefineProfile(self, index: int, payload):
+        """Define Profile autosave."""
+        try:
+            p = self._to_py(payload) or {}
+            op = self._get_current_op(index)
+            from teachinlathe.conversational.data_types import DefineProfile
+            if not isinstance(op, DefineProfile):
+                return
+            old_dict = op.to_dict()
+            merged   = _deep_merge(old_dict, p)
+            new_op   = DefineProfile.from_dict(merged)
+            prog     = self._get_current_program()
+            if prog:
+                prog.operations[index] = new_op
+            self._save_current_program()
+        except Exception as e:
+            print("[defineProfile] update error:", e)
 
     def onUpdateToolChange(self, index: int, payload):
         payload = self._to_py(payload)

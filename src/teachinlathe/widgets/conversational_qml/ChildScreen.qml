@@ -36,6 +36,8 @@ Item {
 
     signal updateToolChange(int index, var payload)
 
+    signal updateDefineProfile(int index, var payload)
+
     signal updateFacing(int index, var payload)
 
     signal updateProfiling(int index, var payload)
@@ -303,6 +305,8 @@ Item {
             detailsLoader.source = "FacingDetailsView.qml"
         } else if (data.type === "profiling") {
             detailsLoader.source = "ProfilingDetailsView.qml"
+        } else if (data.type === "defineProfile") {
+            detailsLoader.source = "DefineProfileDetailsView.qml"
         } else if (data.type === "drilling") {
             detailsLoader.source = "DrillingDetailsView.qml"
         } else if (data.type === "threading") {
@@ -669,6 +673,8 @@ Item {
                         }
                         if (t === "changeTool" && operationEditor.updateToolChange)
                             operationEditor.updateToolChange(updated.index, updated.payload)
+                        else if (t === "defineProfile" && operationEditor.updateDefineProfile)
+                            operationEditor.updateDefineProfile(updated.index, updated.payload)
                         else if (t === "facing" && operationEditor.updateFacing)
                             operationEditor.updateFacing(updated.index, updated.payload)
                         else if (t === "profiling" && operationEditor.updateProfiling)

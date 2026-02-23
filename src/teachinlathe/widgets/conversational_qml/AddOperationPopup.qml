@@ -35,7 +35,7 @@ Popup {
     property var options: [
         { label: "Tool Change",    type: "changeTool"    },
         { label: "Facing",         type: "facing"        },
-        { label: "Define Profile", type: "define_profile"},
+        { label: "Define Profile", type: "defineProfile" },
         { label: "Cut Profile",    type: "profiling"     },
         { label: "Threading",      type: "threading"     },
         { label: "Drilling",       type: "drilling"      },

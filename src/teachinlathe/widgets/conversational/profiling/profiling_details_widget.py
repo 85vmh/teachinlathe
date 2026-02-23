@@ -15,7 +15,7 @@ class ProfilingDetailsWidget(QWidget, Ui_ProfilingDetailForm):
         self.cssValue.setText(str(profiling_data.css_value))
         self.maxSpeed.setText(str(profiling_data.max_speed))
         self.feedRate.setText(str(profiling_data.feed_rate))
-        self.profileId.setText(str(profiling_data.profileId))
+        self.profileId.setText(str(profiling_data.profilingParameters.profile_id))
 
         self.xStart.setText(str(profiling_data.x_start))
         self.zStart.setText(str(profiling_data.z_start))

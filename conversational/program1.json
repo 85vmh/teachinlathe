@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-21 18:15:21",
+        "last_edit": "2026-02-23 10:13:44",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -77,6 +77,69 @@
                 "move_sequence": "xz",
                 "stop_spindle": false
             }
+        },
+        {
+            "order": 4,
+            "type": "defineProfile",
+            "generate_gcode": true,
+            "is_optional_block": false,
+            "profile_id": 5,
+            "profile_primitives": [
+                {
+                    "primitive_id": 1,
+                    "type": "startPoint",
+                    "x_start": 20.0,
+                    "z_start": 0.0
+                },
+                {
+                    "primitive_id": 2,
+                    "type": "lineTo",
+                    "x_end": 20.0,
+                    "z_end": -10.0,
+                    "blend": {
+                        "type": "radius",
+                        "chamfer_width": 2.0,
+                        "fillet_radius": 1.0
+                    }
+                },
+                {
+                    "primitive_id": 3,
+                    "type": "lineTo",
+                    "x_end": 30.0,
+                    "z_end": -30.0,
+                    "blend": {
+                        "type": "none",
+                        "chamfer_width": 2.0,
+                        "fillet_radius": 1.0
+                    }
+                },
+                {
+                    "primitive_id": 4,
+                    "type": "arcTo",
+                    "direction": "cw",
+                    "x_end": 40.0,
+                    "z_end": -40.0,
+                    "x_center": 40.0,
+                    "z_center": -30.0,
+                    "arc_radius": 10.0,
+                    "blend": {
+                        "type": "radius",
+                        "chamfer_width": 2.0,
+                        "fillet_radius": 1.0
+                    }
+                },
+                {
+                    "primitive_id": 5,
+                    "type": "lineTo",
+                    "x_end": 40.0,
+                    "z_end": -60.0,
+                    "blend": {
+                        "type": "none",
+                        "chamfer_width": 2.0,
+                        "fillet_radius": 1.0
+                    }
+                }
+            ]
         },
         {
             "order": 4,
@@ -234,7 +297,7 @@
                 "2nd_feed_x_pos": 5.0
             },
             "edge_break": {
-                "blend_type": "fillet",
+                "blend_type": "none",
                 "chamfer_width": 2.0,
                 "fillet_radius": 1.0
             }
