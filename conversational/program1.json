@@ -97,7 +97,7 @@
                     "x_end": 20.0,
                     "z_end": -25.0,
                     "blend": {
-                        "type": "none",
+                        "type": "fillet",
                         "chamfer_width": 3.0,
                         "fillet_radius": 10.0
                     }
@@ -125,7 +125,7 @@
                     "blend": {
                         "type": "fillet",
                         "chamfer_width": 2.0,
-                        "fillet_radius": 2.0
+                        "fillet_radius": 5.0
                     }
                 },
                 {

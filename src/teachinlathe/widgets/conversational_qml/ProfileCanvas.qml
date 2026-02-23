@@ -300,6 +300,61 @@ Canvas {
         }
     }
 
+    // ── Fillet geometry: arcTo end → lineTo (exact circle-line tangency) ──────
+    // The fillet circle (radius fr) must be externally tangent to the original arc
+    // (|C2-C1| = R+fr) and tangent to line 2 (dist = fr).
+    // Solves the resulting quadratic for the fillet centre C2 on the offset of line 2.
+    // Returns {t1z,t1x, t2z,t2x, fcz,fcx, anticlockwise} or null.
+    // T1 is the tangent point on the original arc, T2 on the line.
+    function _filletArcLine(acz, acx, ar, isCW, jZ, jX, nextP, fr) {
+        if (!nextP || nextP.type !== "lineTo") return null
+        var d2zr = +(nextP.z_end||0) - jZ,  d2xr = +(nextP.x_end||0) - jX
+        var d2len = Math.sqrt(d2zr*d2zr + d2xr*d2xr)
+        if (d2len < 0.001 || fr < 0.001 || ar < 0.001) return null
+        var d2z = d2zr / d2len,  d2x = d2xr / d2len
+
+        // Arc tangent at end:  CW → (-rex, rez)/rlen,  CCW → (rex, -rez)/rlen
+        var rez = jZ - acz,  rex = jX - acx
+        var rlen = Math.sqrt(rez*rez + rex*rex)
+        if (rlen < 0.001) return null
+        var d1z = (isCW ? -rex : rex) / rlen
+        var d1x = (isCW ?  rez : -rez) / rlen
+
+        var cross = d1z * d2x - d1x * d2z
+        if (Math.abs(cross) < 0.001) return null  // arc tangent ~ parallel to line
+
+        // Normal to line 2 pointing toward the fillet centre (same convention as _filletGeom)
+        var n2z = (cross > 0) ? -d2x :  d2x
+        var n2x = (cross > 0) ?  d2z : -d2z
+
+        // Δ = J + fr·n2 − C1  (vector from arc centre to offset-line base)
+        var dz = jZ + fr*n2z - acz
+        var dx = jX + fr*n2x - acx
+
+        // Quadratic: t² + 2(Δ·d2)t + (|Δ|² − (R+fr)²) = 0
+        var dotD2 = dz*d2z + dx*d2x
+        var discrim = dotD2*dotD2 - (dz*dz + dx*dx) + (ar+fr)*(ar+fr)
+        if (discrim < 0) return null
+
+        var t = -dotD2 + Math.sqrt(discrim)   // root nearest to junction
+
+        // Fillet centre C2, tangent point on line T2, tangent point on arc T1
+        var fcz = jZ + fr*n2z + t*d2z
+        var fcx = jX + fr*n2x + t*d2x
+        var t2z = jZ + t*d2z
+        var t2x = jX + t*d2x
+        var vcz = fcz - acz,  vcx = fcx - acx
+        var vclen = Math.sqrt(vcz*vcz + vcx*vcx)
+        if (vclen < 0.001) return null
+        return {
+            t1z: acz + ar * vcz / vclen,
+            t1x: acx + ar * vcx / vclen,
+            t2z: t2z, t2x: t2x,
+            fcz: fcz, fcx: fcx,
+            anticlockwise: (cross < 0)
+        }
+    }
+
     // ── Profile (dark gray, no vertex dots) ────────────────────────────────────
     function _paintProfile(ctx) {
         if (!primitives || primitives.length === 0) return
@@ -420,6 +475,26 @@ Canvas {
                         ctx.arc(ccx, ccy, cr, sa, ea_fb, !isCW)
                         drawZ = aez; drawX = aex
                     }
+                } else if (p.blend && p.blend.type === "fillet") {
+                    var afr = +(p.blend.fillet_radius || 0)
+                    var afg = _filletArcLine(acz, acx, ar, isCW, aez, aex,
+                                             i+1 < primitives.length ? primitives[i+1] : null, afr)
+                    if (afg) {
+                        // Original arc trimmed to T1, then fillet arc to T2
+                        var ea_t1 = Math.atan2(_cy(afg.t1x) - ccy, _cx(afg.t1z) - ccx)
+                        ctx.arc(ccx, ccy, cr, sa, ea_t1, !isCW)
+                        var afccx = _cx(afg.fcz), afccy = _cy(afg.fcx), afcr = afr * _scale
+                        var afsa = Math.atan2(_cy(afg.t1x) - afccy, _cx(afg.t1z) - afccx)
+                        var afea = Math.atan2(_cy(afg.t2x) - afccy, _cx(afg.t2z) - afccx)
+                        ctx.arc(afccx, afccy, afcr, afsa, afea, afg.anticlockwise)
+                        drawZ = afg.t2z; drawX = afg.t2x
+                        chamferDashes.push({ z1: afg.t1z, x1: afg.t1x, z2: aez,     x2: aex })
+                        chamferDashes.push({ z1: aez,     x1: aex,     z2: afg.t2z, x2: afg.t2x })
+                    } else {
+                        var ea_fb3 = Math.atan2(_cy(aex) - ccy, _cx(aez) - ccx)
+                        ctx.arc(ccx, ccy, cr, sa, ea_fb3, !isCW)
+                        drawZ = aez; drawX = aex
+                    }
                 } else {
                     var ea = Math.atan2(_cy(aex) - ccy, _cx(aez) - ccx)
                     ctx.arc(ccx, ccy, cr, sa, ea, !isCW)
@@ -508,6 +583,14 @@ Canvas {
                         }
                     }
                     drawZ = paceZ; drawX = paceX
+                } else if (prev.blend && prev.blend.type === "fillet") {
+                    var pAfg = _filletArcLine(+(prev.z_center||0), +(prev.x_center||0),
+                                              +(prev.arc_radius||0), (prev.direction === "cw"),
+                                              paez, paex,
+                                              j+1 < primitives.length ? primitives[j+1] : null,
+                                              +(prev.blend.fillet_radius || 0))
+                    if (pAfg) { drawZ = pAfg.t2z; drawX = pAfg.t2x }
+                    else      { drawZ = paez; drawX = paex }
                 } else {
                     drawZ = paez; drawX = paex
                 }
@@ -622,6 +705,27 @@ Canvas {
                 } else {
                     var hea2_fb = Math.atan2(_cy(aex) - ccy, _cx(aez) - ccx)
                     ctx.arc(ccx, ccy, cr2, sa2, hea2_fb, !isCW2)
+                    ctx.stroke()
+                    ctx.fillStyle = "#E53935"
+                    ctx.beginPath(); ctx.arc(_cx(aez), _cy(aex), 5, 0, Math.PI*2); ctx.fill()
+                }
+            } else if (p.blend && p.blend.type === "fillet") {
+                var hafr = +(p.blend.fillet_radius || 0)
+                var hafg = _filletArcLine(acz, acx, ar, isCW2, aez, aex,
+                                          idx+1 < primitives.length ? primitives[idx+1] : null, hafr)
+                if (hafg) {
+                    var hea_t1 = Math.atan2(_cy(hafg.t1x) - ccy, _cx(hafg.t1z) - ccx)
+                    ctx.arc(ccx, ccy, cr2, sa2, hea_t1, !isCW2)
+                    var hafccx = _cx(hafg.fcz), hafccy = _cy(hafg.fcx), hafcr = hafr * _scale
+                    var hafsa = Math.atan2(_cy(hafg.t1x) - hafccy, _cx(hafg.t1z) - hafccx)
+                    var hafea = Math.atan2(_cy(hafg.t2x) - hafccy, _cx(hafg.t2z) - hafccx)
+                    ctx.arc(hafccx, hafccy, hafcr, hafsa, hafea, hafg.anticlockwise)
+                    ctx.stroke()
+                    ctx.fillStyle = "#E53935"
+                    ctx.beginPath(); ctx.arc(_cx(hafg.t2z), _cy(hafg.t2x), 5, 0, Math.PI*2); ctx.fill()
+                } else {
+                    var hea_fb4 = Math.atan2(_cy(aex) - ccy, _cx(aez) - ccx)
+                    ctx.arc(ccx, ccy, cr2, sa2, hea_fb4, !isCW2)
                     ctx.stroke()
                     ctx.fillStyle = "#E53935"
                     ctx.beginPath(); ctx.arc(_cx(aez), _cy(aex), 5, 0, Math.PI*2); ctx.fill()
