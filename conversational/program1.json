@@ -116,7 +116,7 @@
                 {
                     "primitive_id": 4,
                     "type": "arcTo",
-                    "direction": "cw",
+                    "direction": "ccw",
                     "x_end": 40.0,
                     "z_end": -40.0,
                     "x_center": 40.0,
