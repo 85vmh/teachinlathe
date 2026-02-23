@@ -537,23 +537,18 @@ class Facing(TurnableOperation):
 
 # ----------------------- Profile Primitives ----------------------------------
 
-class ProfileBlendType(Enum):
-    NONE   = "none"
-    RADIUS = "radius"
-
-
 @dataclass
 class ProfileBlend:
-    blend_type:    ProfileBlendType
+    blend_type:    BlendType
     chamfer_width: float = 0.0
     fillet_radius: float = 0.0
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "ProfileBlend":
         try:
-            bt = ProfileBlendType(data.get("type", "none"))
+            bt = BlendType(data.get("type", "none"))
         except ValueError:
-            bt = ProfileBlendType.NONE
+            bt = BlendType.NONE
         return ProfileBlend(
             blend_type=bt,
             chamfer_width=float(data.get("chamfer_width", 0.0)),

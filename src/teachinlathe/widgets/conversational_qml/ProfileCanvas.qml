@@ -260,28 +260,65 @@ Canvas {
     // ── Profile (dark gray, no vertex dots) ────────────────────────────────────
     function _paintProfile(ctx) {
         if (!primitives || primitives.length === 0) return
-        var curZ = 0, curX = 0
+        var logZ = 0, logX = 0
+        var drawZ = 0, drawX = 0
         ctx.strokeStyle = "#333333"; ctx.lineWidth = 2
         ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.setLineDash([])
         ctx.beginPath()
         for (var i = 0; i < primitives.length; i++) {
             var p = primitives[i]
             if (p.type === "startPoint") {
-                curZ = +(p.z_start||0); curX = +(p.x_start||0)
-                ctx.moveTo(_cx(curZ), _cy(curX))
+                logZ = +(p.z_start||0); logX = +(p.x_start||0)
+                drawZ = logZ; drawX = logX
+                ctx.moveTo(_cx(logZ), _cy(logX))
             } else if (p.type === "lineTo") {
                 var ez = +(p.z_end||0), ex = +(p.x_end||0)
-                ctx.lineTo(_cx(ez), _cy(ex))
-                curZ = ez; curX = ex
+                if (p.blend && p.blend.type === "chamfer") {
+                    var cw  = +(p.blend.chamfer_width || 0)
+                    var sdz = ez - logZ, sdx = ex - logX
+                    var slen = Math.sqrt(sdz*sdz + sdx*sdx)
+                    if (slen > 0.001 && cw > 0.001) {
+                        // chamfer start: back off from end along current segment
+                        var csZ = ez - cw * sdz / slen
+                        var csX = ex - cw * sdx / slen
+                        // chamfer end: advance from corner along next segment
+                        var ceZ = ez, ceX = ex
+                        var nextP = (i+1 < primitives.length) ? primitives[i+1] : null
+                        if (nextP && nextP.type === "lineTo") {
+                            var ndz = +(nextP.z_end||0) - ez
+                            var ndx = +(nextP.x_end||0) - ex
+                            var nlen = Math.sqrt(ndz*ndz + ndx*ndx)
+                            if (nlen > 0.001) { ceZ = ez + cw*ndz/nlen; ceX = ex + cw*ndx/nlen }
+                        } else if (nextP && nextP.type === "arcTo") {
+                            var nacz = +(nextP.z_center||0), nacx = +(nextP.x_center||0)
+                            var nrz = ez - nacz, nrx = ex - nacx
+                            var nndz = (nextP.direction === "cw") ? nrx : -nrx
+                            var nndx = (nextP.direction === "cw") ? -nrz : nrz
+                            var nlen2 = Math.sqrt(nndz*nndz + nndx*nndx)
+                            if (nlen2 > 0.001) { ceZ = ez + cw*nndz/nlen2; ceX = ex + cw*nndx/nlen2 }
+                        }
+                        ctx.lineTo(_cx(csZ), _cy(csX))
+                        ctx.lineTo(_cx(ceZ), _cy(ceX))
+                        drawZ = ceZ; drawX = ceX
+                    } else {
+                        ctx.lineTo(_cx(ez), _cy(ex))
+                        drawZ = ez; drawX = ex
+                    }
+                } else {
+                    ctx.lineTo(_cx(ez), _cy(ex))
+                    drawZ = ez; drawX = ex
+                }
+                logZ = ez; logX = ex
             } else if (p.type === "arcTo") {
                 var aez = +(p.z_end||0),   aex = +(p.x_end||0)
                 var acz = +(p.z_center||0), acx = +(p.x_center||0)
                 var ar  = +(p.arc_radius||0), isCW = (p.direction === "cw")
                 var ccx = _cx(acz), ccy = _cy(acx), cr = ar * _scale
-                var sa = Math.atan2(_cy(curX)-ccy, _cx(curZ)-ccx)
-                var ea = Math.atan2(_cy(aex) -ccy, _cx(aez) -ccx)
+                var sa = Math.atan2(_cy(drawX)-ccy, _cx(drawZ)-ccx)
+                var ea = Math.atan2(_cy(aex)  -ccy, _cx(aez)  -ccx)
                 ctx.arc(ccx, ccy, cr, sa, ea, !isCW)
-                curZ = aez; curX = aex
+                logZ = aez; logX = aex
+                drawZ = aez; drawX = aex
             }
         }
         ctx.stroke()
@@ -292,20 +329,48 @@ Canvas {
         var idx = selectedPrimIndex
         if (idx < 0 || !primitives || idx >= primitives.length) return
 
-        // Track position just before the selected primitive
-        var curZ = 0, curX = 0
+        // Track logical and actual drawn position before the selected primitive
+        var logZ = 0, logX = 0
+        var drawZ = 0, drawX = 0
         for (var j = 0; j < idx; j++) {
             var prev = primitives[j]
-            if      (prev.type === "startPoint") { curZ = +(prev.z_start||0); curX = +(prev.x_start||0) }
-            else if (prev.type === "lineTo")     { curZ = +(prev.z_end  ||0); curX = +(prev.x_end  ||0) }
-            else if (prev.type === "arcTo")      { curZ = +(prev.z_end  ||0); curX = +(prev.x_end  ||0) }
+            if (prev.type === "startPoint") {
+                logZ = +(prev.z_start||0); logX = +(prev.x_start||0)
+                drawZ = logZ; drawX = logX
+            } else if (prev.type === "lineTo") {
+                var pez = +(prev.z_end||0), pex = +(prev.x_end||0)
+                if (prev.blend && prev.blend.type === "chamfer") {
+                    var pcw = +(prev.blend.chamfer_width || 0)
+                    var pNextP = (j+1 < primitives.length) ? primitives[j+1] : null
+                    var pceZ = pez, pceX = pex
+                    if (pNextP && pNextP.type === "lineTo" && pcw > 0.001) {
+                        var pndz = +(pNextP.z_end||0) - pez
+                        var pndx = +(pNextP.x_end||0) - pex
+                        var pnlen = Math.sqrt(pndz*pndz + pndx*pndx)
+                        if (pnlen > 0.001) { pceZ = pez + pcw*pndz/pnlen; pceX = pex + pcw*pndx/pnlen }
+                    } else if (pNextP && pNextP.type === "arcTo" && pcw > 0.001) {
+                        var pnacz = +(pNextP.z_center||0), pnacx = +(pNextP.x_center||0)
+                        var pnrz = pez - pnacz, pnrx = pex - pnacx
+                        var pnndz = (pNextP.direction === "cw") ? pnrx : -pnrx
+                        var pnndx = (pNextP.direction === "cw") ? -pnrz : pnrz
+                        var pnlen2 = Math.sqrt(pnndz*pnndz + pnndx*pnndx)
+                        if (pnlen2 > 0.001) { pceZ = pez + pcw*pnndz/pnlen2; pceX = pex + pcw*pnndx/pnlen2 }
+                    }
+                    drawZ = pceZ; drawX = pceX
+                } else {
+                    drawZ = pez; drawX = pex
+                }
+                logZ = pez; logX = pex
+            } else if (prev.type === "arcTo") {
+                logZ = +(prev.z_end||0); logX = +(prev.x_end||0)
+                drawZ = logZ; drawX = logX
+            }
         }
 
         var p = primitives[idx]
         ctx.setLineDash([])
 
         if (p.type === "startPoint") {
-            // Red dot at start point
             ctx.fillStyle = "#E53935"
             ctx.beginPath()
             ctx.arc(_cx(+(p.z_start||0)), _cy(+(p.x_start||0)), 6, 0, Math.PI*2)
@@ -313,34 +378,62 @@ Canvas {
 
         } else if (p.type === "lineTo") {
             var ez = +(p.z_end||0), ex = +(p.x_end||0)
-            // Red line
             ctx.strokeStyle = "#E53935"; ctx.lineWidth = 2
             ctx.lineJoin = "round"; ctx.lineCap = "round"
             ctx.beginPath()
-            ctx.moveTo(_cx(curZ), _cy(curX))
-            ctx.lineTo(_cx(ez),   _cy(ex))
-            ctx.stroke()
-            // Red dot at end
-            ctx.fillStyle = "#E53935"
-            ctx.beginPath(); ctx.arc(_cx(ez), _cy(ex), 5, 0, Math.PI*2); ctx.fill()
+            ctx.moveTo(_cx(drawZ), _cy(drawX))
+            if (p.blend && p.blend.type === "chamfer") {
+                var hcw  = +(p.blend.chamfer_width || 0)
+                var hsdz = ez - logZ, hsdx = ex - logX
+                var hslen = Math.sqrt(hsdz*hsdz + hsdx*hsdx)
+                if (hslen > 0.001 && hcw > 0.001) {
+                    var hcsZ = ez - hcw * hsdz / hslen
+                    var hcsX = ex - hcw * hsdx / hslen
+                    var hceZ = ez, hceX = ex
+                    var hnextP = (idx+1 < primitives.length) ? primitives[idx+1] : null
+                    if (hnextP && hnextP.type === "lineTo") {
+                        var hndz = +(hnextP.z_end||0) - ez
+                        var hndx = +(hnextP.x_end||0) - ex
+                        var hnlen = Math.sqrt(hndz*hndz + hndx*hndx)
+                        if (hnlen > 0.001) { hceZ = ez + hcw*hndz/hnlen; hceX = ex + hcw*hndx/hnlen }
+                    } else if (hnextP && hnextP.type === "arcTo") {
+                        var hnacz = +(hnextP.z_center||0), hnacx = +(hnextP.x_center||0)
+                        var hnrz = ez - hnacz, hnrx = ex - hnacx
+                        var hnndz = (hnextP.direction === "cw") ? hnrx : -hnrx
+                        var hnndx = (hnextP.direction === "cw") ? -hnrz : hnrz
+                        var hnlen2 = Math.sqrt(hnndz*hnndz + hnndx*hnndx)
+                        if (hnlen2 > 0.001) { hceZ = ez + hcw*hnndz/hnlen2; hceX = ex + hcw*hnndx/hnlen2 }
+                    }
+                    ctx.lineTo(_cx(hcsZ), _cy(hcsX))
+                    ctx.lineTo(_cx(hceZ), _cy(hceX))
+                    ctx.stroke()
+                    ctx.fillStyle = "#E53935"
+                    ctx.beginPath(); ctx.arc(_cx(hceZ), _cy(hceX), 5, 0, Math.PI*2); ctx.fill()
+                } else {
+                    ctx.lineTo(_cx(ez), _cy(ex)); ctx.stroke()
+                    ctx.fillStyle = "#E53935"
+                    ctx.beginPath(); ctx.arc(_cx(ez), _cy(ex), 5, 0, Math.PI*2); ctx.fill()
+                }
+            } else {
+                ctx.lineTo(_cx(ez), _cy(ex)); ctx.stroke()
+                ctx.fillStyle = "#E53935"
+                ctx.beginPath(); ctx.arc(_cx(ez), _cy(ex), 5, 0, Math.PI*2); ctx.fill()
+            }
 
         } else if (p.type === "arcTo") {
             var aez = +(p.z_end||0),    aex = +(p.x_end||0)
             var acz = +(p.z_center||0), acx = +(p.x_center||0)
             var ar  = +(p.arc_radius||0), isCW2 = (p.direction === "cw")
             var ccx = _cx(acz), ccy = _cy(acx), cr2 = ar * _scale
-            var sa2 = Math.atan2(_cy(curX)-ccy, _cx(curZ)-ccx)
-            var ea2 = Math.atan2(_cy(aex) -ccy, _cx(aez) -ccx)
-            // Red arc
+            var sa2 = Math.atan2(_cy(drawX)-ccy, _cx(drawZ)-ccx)
+            var ea2 = Math.atan2(_cy(aex)  -ccy, _cx(aez)  -ccx)
             ctx.strokeStyle = "#E53935"; ctx.lineWidth = 2
             ctx.lineJoin = "round"; ctx.lineCap = "round"
             ctx.beginPath()
             ctx.arc(ccx, ccy, cr2, sa2, ea2, !isCW2)
             ctx.stroke()
-            // Red dot at end
             ctx.fillStyle = "#E53935"
             ctx.beginPath(); ctx.arc(_cx(aez), _cy(aex), 5, 0, Math.PI*2); ctx.fill()
-            // Gray dot at arc centre
             ctx.fillStyle = "#888888"
             ctx.beginPath(); ctx.arc(ccx, ccy, 4, 0, Math.PI*2); ctx.fill()
         }

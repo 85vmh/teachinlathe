@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-23 10:13:44",
+        "last_edit": "2026-02-23 12:40:02",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -26,7 +26,7 @@
                 "x_pos": 50.0,
                 "z_pos": -20.0,
                 "coordinate_type": "absolute",
-                "move_sequence": "zx",
+                "move_sequence": "xz",
                 "stop_spindle": true
             }
         },
@@ -66,14 +66,14 @@
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
-            "tool_no": 3,
-            "tool_orientation": 2,
-            "back_angle": 95,
-            "front_angle": 80,
+            "tool_no": 1,
+            "tool_orientation": 1,
+            "back_angle": 0,
+            "front_angle": 0,
             "toolchange_rules": {
-                "x_pos": 200.0,
-                "z_pos": 200.0,
-                "coordinate_type": "relative",
+                "x_pos": 0.0,
+                "z_pos": 0.0,
+                "coordinate_type": "absolute",
                 "move_sequence": "xz",
                 "stop_spindle": false
             }
@@ -97,7 +97,7 @@
                     "x_end": 20.0,
                     "z_end": -10.0,
                     "blend": {
-                        "type": "radius",
+                        "type": "fillet",
                         "chamfer_width": 2.0,
                         "fillet_radius": 1.0
                     }
@@ -123,7 +123,7 @@
                     "z_center": -30.0,
                     "arc_radius": 10.0,
                     "blend": {
-                        "type": "radius",
+                        "type": "fillet",
                         "chamfer_width": 2.0,
                         "fillet_radius": 1.0
                     }
@@ -134,15 +134,26 @@
                     "x_end": 40.0,
                     "z_end": -60.0,
                     "blend": {
+                        "type": "chamfer",
+                        "chamfer_width": 3.0,
+                        "fillet_radius": 1.0
+                    }
+                },
+                {
+                    "primitive_id": 6,
+                    "type": "lineTo",
+                    "x_end": 50.0,
+                    "z_end": -60.0,
+                    "blend": {
                         "type": "none",
-                        "chamfer_width": 2.0,
+                        "chamfer_width": 3.0,
                         "fillet_radius": 1.0
                     }
                 }
             ]
         },
         {
-            "order": 4,
+            "order": 5,
             "type": "profiling",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -164,14 +175,14 @@
                 "z_start": 3.0
             },
             "profiling_options": {
-                "strategy": "rough",
+                "strategy": "finish",
                 "stock_to_leave_x": 0.5,
                 "stock_to_leave_z": 0.5,
                 "finish_spring_passes": 3
             }
         },
         {
-            "order": 5,
+            "order": 6,
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -188,11 +199,11 @@
             }
         },
         {
-            "order": 6,
+            "order": 7,
             "type": "threading",
             "generate_gcode": true,
             "is_optional_block": false,
-            "location": "OD",
+            "location": "ID",
             "thread_type": "metric",
             "pitch": 2.0,
             "starts": 2,
@@ -212,7 +223,7 @@
             }
         },
         {
-            "order": 7,
+            "order": 8,
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -229,7 +240,7 @@
             }
         },
         {
-            "order": 8,
+            "order": 9,
             "type": "drilling",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -253,7 +264,7 @@
             }
         },
         {
-            "order": 9,
+            "order": 10,
             "type": "tapping",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -277,7 +288,7 @@
             }
         },
         {
-            "order": 10,
+            "order": 11,
             "type": "parting",
             "generate_gcode": true,
             "is_optional_block": false,
