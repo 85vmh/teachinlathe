@@ -11,9 +11,9 @@ Canvas {
     property var primitives: []   // array of primitive objects from JSON
 
     // ── Private state ──────────────────────────────────────────────────────────
-    property real _scale:   5.0          // px / mm
-    property real _originX: width  / 2  // canvas px that maps to world Z = 0
-    property real _originY: height / 2  // canvas px that maps to world X = 0
+    property real _scale:   5.0   // px / mm
+    property real _originX: 0     // canvas px that maps to world Z = 0  (computed)
+    property real _originY: 0     // canvas px that maps to world X = 0  (computed)
 
     // Max positive vertex coords — used to set arrow tip positions
     property real _maxZ: 0
@@ -31,16 +31,27 @@ Canvas {
     onWidthChanged:      { _computeScale(); requestPaint() }
     onHeightChanged:     { _computeScale(); requestPaint() }
 
-    // ── Scale + arrow-length computation ──────────────────────────────────────
+    // ── Scale + origin computation ─────────────────────────────────────────────
+    // Viewport rules:
+    //   top    : exactly 20 mm above the spindle axis (X = 0)
+    //   right  : 20 mm past the Z+ arrow tip  (= _maxZ + 10 + 20 = _maxZ + 30)
+    //   bottom : 10 mm past the X+ arrow tip  (= _maxX + 10 + 10 = _maxX + 20)
+    //   left   : all negative-Z data + 20 mm margin
+    // Full arc bounding boxes are also taken into account so no arc is clipped.
     function _computeScale() {
         if (!primitives || primitives.length === 0 || width <= 0 || height <= 0) {
-            _scale = 5; _maxZ = 0; _maxX = 0
+            _scale   = 5
+            _maxZ    = 0;  _maxX    = 0
+            _originX = width  / 2
+            _originY = height / 2
             return
         }
 
-        var zMin = 1e9, zMax = -1e9
-        var xMin = 1e9, xMax = -1e9
-        var vZMax = 0, vXMax = 0   // vertex-only max positive (for arrows)
+        // fZ/fX: full bounds including arc bbox (ensures no arc is clipped)
+        // vZMax/vXMax: max positive vertex coords (arrow tip positions)
+        var fZMin = 1e9, fZMax = -1e9
+        var fXMin = 1e9, fXMax = -1e9
+        var vZMax = 0,   vXMax = 0
 
         for (var i = 0; i < primitives.length; i++) {
             var p = primitives[i]
@@ -52,36 +63,41 @@ Canvas {
                 vz = +(p.z_end || 0);    vx = +(p.x_end || 0)
             } else if (p.type === "arcTo") {
                 vz = +(p.z_end || 0);    vx = +(p.x_end || 0)
-            } else { continue }
-
-            // Expand vertex bounds (no arc bbox here — used only for arrows)
-            if (vz < zMin) zMin = vz;  if (vz > zMax) zMax = vz
-            if (vx < xMin) xMin = vx;  if (vx > xMax) xMax = vx
-            if (vz > vZMax) vZMax = vz
-            if (vx > vXMax) vXMax = vx
-
-            // Also expand with arc conservative bounding box (for scale only)
-            if (p.type === "arcTo") {
+                // conservative arc bounding box
                 var r  = +(p.arc_radius || 0)
                 var zc = +(p.z_center   || 0)
                 var xc = +(p.x_center   || 0)
-                var bzMin = zc - r, bzMax = zc + r
-                var bxMin = xc - r, bxMax = xc + r
-                if (bzMin < zMin) zMin = bzMin;  if (bzMax > zMax) zMax = bzMax
-                if (bxMin < xMin) xMin = bxMin;  if (bxMax > xMax) xMax = bxMax
-            }
+                if (zc - r < fZMin) fZMin = zc - r;  if (zc + r > fZMax) fZMax = zc + r
+                if (xc - r < fXMin) fXMin = xc - r;  if (xc + r > fXMax) fXMax = xc + r
+            } else { continue }
+
+            if (vz < fZMin) fZMin = vz;  if (vz > fZMax) fZMax = vz
+            if (vx < fXMin) fXMin = vx;  if (vx > fXMax) fXMax = vx
+            if (vz > vZMax) vZMax = vz
+            if (vx > vXMax) vXMax = vx
         }
 
         _maxZ = vZMax
         _maxX = vXMax
 
-        // Add 20 mm margin on every side for scale computation
-        zMin -= 20;  zMax += 20
-        xMin -= 20;  xMax += 20
+        // Viewport world bounds
+        //   left  : all data visible + 20 mm
+        //   right : max(arc bbox right, arrow tip Z+ + 20 mm extra)
+        //   top   : fixed −20 mm (at most 20 mm above spindle axis)
+        //   bottom: max(arc bbox bottom, arrow tip X+ + 10 mm extra)
+        var leftBound   = fZMin - 20
+        var rightBound  = Math.max(fZMax, vZMax + 30)
+        var topBound    = -20
+        var bottomBound = Math.max(fXMax, vXMax + 20)
 
-        var scaleZ = (width  / 2) / Math.max(Math.abs(zMin), Math.abs(zMax), 1)
-        var scaleX = (height / 2) / Math.max(Math.abs(xMin), Math.abs(xMax), 1)
-        _scale = Math.min(scaleZ, scaleX)
+        var worldW = rightBound - leftBound
+        var worldH = bottomBound - topBound
+
+        _scale   = Math.min(width  / Math.max(worldW, 1),
+                            height / Math.max(worldH, 1))
+        // Origin is the canvas pixel that corresponds to world (Z=0, X=0)
+        _originX = (-leftBound)  * _scale   // = (|leftBound|) * scale
+        _originY = (-topBound)   * _scale   // = 20 * scale
     }
 
     // ── Minor / major tick step selection based on current scale ───────────────
