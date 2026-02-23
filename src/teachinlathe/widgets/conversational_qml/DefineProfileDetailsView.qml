@@ -91,7 +91,7 @@ Item {
             ColumnLayout {
                 id: leftPanel
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                width: 380
+                width: 450
                 spacing: 10
 
                 // Profile ID row

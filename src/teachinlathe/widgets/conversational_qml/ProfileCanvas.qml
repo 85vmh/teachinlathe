@@ -253,7 +253,9 @@ Canvas {
             ctx.beginPath(); ctx.moveTo(ocx, ocy)
             ctx.arc(ocx, ocy, r, q.start, q.end, false)
             ctx.closePath()
-            if (q.fill) ctx.fill(); else ctx.stroke()
+            if (q.fill)
+                ctx.fill();
+            ctx.stroke()
         }
     }
 
@@ -262,7 +264,7 @@ Canvas {
         if (!primitives || primitives.length === 0) return
         var logZ = 0, logX = 0
         var drawZ = 0, drawX = 0
-        ctx.strokeStyle = "#333333"; ctx.lineWidth = 2
+        ctx.strokeStyle = "#333333"; ctx.lineWidth = 1
         ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.setLineDash([])
 
         // Collect dotted "extensions" for chamfers so the original corner is still visible
