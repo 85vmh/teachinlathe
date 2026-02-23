@@ -231,7 +231,9 @@ Item {
                     bottom: parent.bottom
                     leftMargin: 12
                 }
-                primitives: (opData && opData.profile_primitives) ? opData.profile_primitives : []
+                primitives:        (opData && opData.profile_primitives) ? opData.profile_primitives : []
+                selectedPrimIndex: root.selectedPrimIndex
+                onPrimitiveSelected: function(idx) { root.selectedPrimIndex = idx }
 
                 // Thin border so the canvas area is visible even when empty
                 Rectangle {
