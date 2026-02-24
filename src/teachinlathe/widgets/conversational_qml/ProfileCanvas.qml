@@ -252,7 +252,7 @@ Canvas {
         ]
         for (var i = 0; i < quads.length; i++) {
             var q = quads[i]
-            ctx.beginPath(); ctx.moveTo(ocx, ocy)
+            ctx.beginPath();  ctx.moveTo(ocx, ocy)
             ctx.arc(ocx, ocy, r, q.start, q.end, false)
             ctx.closePath()
             if (q.fill)
@@ -422,6 +422,50 @@ Canvas {
         }
     }
 
+    // ── Chamfer geometry helpers ────────────────────────────────────────────────
+    // Both return {csZ, csX, ceZ, ceX} (chamfer start / end) or null if degenerate.
+
+    // For a lineTo ending at (ez,ex): csZ/X steps back along the incoming segment,
+    // ceZ/X steps forward along the next segment's tangent direction.
+    function _chamferGeomLine(logZ, logX, ez, ex, nextP, cw) {
+        var sdz = ez - logZ, sdx = ex - logX
+        var slen = Math.sqrt(sdz*sdz + sdx*sdx)
+        if (slen < 0.001 || cw < 0.001) return null
+        var csZ = ez - cw * sdz / slen,  csX = ex - cw * sdx / slen
+        var ceZ = ez, ceX = ex
+        if (nextP && nextP.type === "lineTo") {
+            var ndz = +(nextP.z_end||0) - ez,  ndx = +(nextP.x_end||0) - ex
+            var nlen = Math.sqrt(ndz*ndz + ndx*ndx)
+            if (nlen > 0.001) { ceZ = ez + cw*ndz/nlen; ceX = ex + cw*ndx/nlen }
+        } else if (nextP && nextP.type === "arcTo") {
+            var nacz = +(nextP.z_center||0), nacx = +(nextP.x_center||0)
+            var nrz = ez - nacz, nrx = ex - nacx
+            var nndz = (nextP.direction === "cw") ? -nrx :  nrx
+            var nndx = (nextP.direction === "cw") ?  nrz : -nrz
+            var nlen2 = Math.sqrt(nndz*nndz + nndx*nndx)
+            if (nlen2 > 0.001) { ceZ = ez + cw*nndz/nlen2; ceX = ex + cw*nndx/nlen2 }
+        }
+        return { csZ: csZ, csX: csX, ceZ: ceZ, ceX: ceX }
+    }
+
+    // For an arcTo ending at (aez,aex): csZ/X steps back along the arc end tangent,
+    // ceZ/X steps forward along the next segment's tangent direction.
+    function _chamferGeomArc(acz, acx, ar, isCW, aez, aex, nextP, acw) {
+        var arez = aez - acz, arex = aex - acx
+        var arlen = Math.sqrt(arez*arez + arex*arex)
+        if (arlen < 0.001 || acw < 0.001) return null
+        var atdz = isCW ? -arex :  arex    // tangent at arc end: CW → (-arex, arez)
+        var atdx = isCW ?  arez : -arez
+        var csZ = aez - acw * atdz / arlen,  csX = aex - acw * atdx / arlen
+        var ceZ = aez, ceX = aex
+        if (nextP && nextP.type === "lineTo") {
+            var andz = +(nextP.z_end||0) - aez,  andx = +(nextP.x_end||0) - aex
+            var anlen = Math.sqrt(andz*andz + andx*andx)
+            if (anlen > 0.001) { ceZ = aez + acw*andz/anlen; ceX = aex + acw*andx/anlen }
+        }
+        return { csZ: csZ, csX: csX, ceZ: ceZ, ceX: ceX }
+    }
+
     // ── Profile (dark gray, no vertex dots) ────────────────────────────────────
     function _paintProfile(ctx) {
         if (!primitives || primitives.length === 0) return
@@ -561,6 +605,21 @@ Canvas {
         ctx.stroke()
     }
 
+    // ── Walk primitives up to (not including) targetIdx ─────────────────────────
+    // Returns {logZ, logX}: the logical endpoint of the primitive just before targetIdx.
+    // Blend trimming only affects the draw position, not the logical endpoint —
+    // _paintHighlight renders the full theoretical primitive so only logZ/logX is needed.
+    function _walkToIndex(targetIdx) {
+        var logZ = 0, logX = 0
+        for (var j = 0; j < targetIdx; j++) {
+            var p = primitives[j]
+            if      (p.type === "startPoint") { logZ = +(p.z_start||0); logX = +(p.x_start||0) }
+            else if (p.type === "lineTo")     { logZ = +(p.z_end  ||0); logX = +(p.x_end  ||0) }
+            else if (p.type === "arcTo")      { logZ = +(p.z_end  ||0); logX = +(p.x_end  ||0) }
+        }
+        return { logZ: logZ, logX: logX }
+    }
+
     function _paintHighlight(ctx) {
         if (selectedPrimIndex < 0 && selectedBlendIndex < 0) return
         if (!primitives) return
@@ -568,77 +627,8 @@ Canvas {
         var targetIdx = (selectedPrimIndex >= 0) ? selectedPrimIndex : selectedBlendIndex
         if (targetIdx >= primitives.length) return
 
-        // Track logical position (true endpoint) and draw position before the target
-        var logZ = 0, logX = 0
-        var drawZ = 0, drawX = 0
-        for (var j = 0; j < targetIdx; j++) {
-            var prev = primitives[j]
-            if (prev.type === "startPoint") {
-                logZ = +(prev.z_start||0); logX = +(prev.x_start||0)
-                drawZ = logZ; drawX = logX
-            } else if (prev.type === "lineTo") {
-                var pez = +(prev.z_end||0), pex = +(prev.x_end||0)
-                if (prev.blend && prev.blend.type === "chamfer") {
-                    var pcw = +(prev.blend.chamfer_width || 0)
-                    var pNextP = (j+1 < primitives.length) ? primitives[j+1] : null
-                    var pceZ = pez, pceX = pex
-                    if (pNextP && pNextP.type === "lineTo" && pcw > 0.001) {
-                        var pndz = +(pNextP.z_end||0) - pez
-                        var pndx = +(pNextP.x_end||0) - pex
-                        var pnlen = Math.sqrt(pndz*pndz + pndx*pndx)
-                        if (pnlen > 0.001) { pceZ = pez + pcw*pndz/pnlen; pceX = pex + pcw*pndx/pnlen }
-                    } else if (pNextP && pNextP.type === "arcTo" && pcw > 0.001) {
-                        var pnacz = +(pNextP.z_center||0), pnacx = +(pNextP.x_center||0)
-                        var pnrz = pez - pnacz, pnrx = pex - pnacx
-                        var pnndz = (pNextP.direction === "cw") ? -pnrx :  pnrx
-                        var pnndx = (pNextP.direction === "cw") ?  pnrz : -pnrz
-                        var pnlen2 = Math.sqrt(pnndz*pnndz + pnndx*pnndx)
-                        if (pnlen2 > 0.001) { pceZ = pez + pcw*pnndz/pnlen2; pceX = pex + pcw*pnndx/pnlen2 }
-                    }
-                    drawZ = pceZ; drawX = pceX
-                } else if (prev.blend && prev.blend.type === "fillet") {
-                    var pfr = +(prev.blend.fillet_radius || 0)
-                    var pNextPrim = j+1 < primitives.length ? primitives[j+1] : null
-                    var pfg = (pNextPrim && pNextPrim.type === "arcTo")
-                              ? _filletLineArc(logZ, logX, pez, pex, pNextPrim, pfr)
-                              : _filletGeom(logZ, logX, pez, pex, pNextPrim, pfr)
-                    if (pfg) { drawZ = pfg.t2z; drawX = pfg.t2x }
-                    else     { drawZ = pez; drawX = pex }
-                } else {
-                    drawZ = pez; drawX = pex
-                }
-                logZ = pez; logX = pex
-            } else if (prev.type === "arcTo") {
-                var paez = +(prev.z_end||0), paex = +(prev.x_end||0)
-                if (prev.blend && prev.blend.type === "chamfer") {
-                    var pacw = +(prev.blend.chamfer_width || 0)
-                    var parez = paez - +(prev.z_center||0), parex = paex - +(prev.x_center||0)
-                    var parlen = Math.sqrt(parez*parez + parex*parex)
-                    var paceZ = paez, paceX = paex
-                    if (parlen > 0.001 && pacw > 0.001) {
-                        var pAnextP = (j+1 < primitives.length) ? primitives[j+1] : null
-                        if (pAnextP && pAnextP.type === "lineTo") {
-                            var pandz = +(pAnextP.z_end||0) - paez
-                            var pandx = +(pAnextP.x_end||0) - paex
-                            var panlen = Math.sqrt(pandz*pandz + pandx*pandx)
-                            if (panlen > 0.001) { paceZ = paez + pacw*pandz/panlen; paceX = paex + pacw*pandx/panlen }
-                        }
-                    }
-                    drawZ = paceZ; drawX = paceX
-                } else if (prev.blend && prev.blend.type === "fillet") {
-                    var pAfg = _filletArcLine(+(prev.z_center||0), +(prev.x_center||0),
-                                              +(prev.arc_radius||0), (prev.direction === "cw"),
-                                              paez, paex,
-                                              j+1 < primitives.length ? primitives[j+1] : null,
-                                              +(prev.blend.fillet_radius || 0))
-                    if (pAfg) { drawZ = pAfg.t2z; drawX = pAfg.t2x }
-                    else      { drawZ = paez; drawX = paex }
-                } else {
-                    drawZ = paez; drawX = paex
-                }
-                logZ = paez; logX = paex
-            }
-        }
+        var pos  = _walkToIndex(targetIdx)
+        var logZ = pos.logZ, logX = pos.logX
 
         var p = primitives[targetIdx]
         ctx.setLineDash([])
