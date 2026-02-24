@@ -21,6 +21,7 @@ Canvas {
     property real _maxZ:    0     // max positive vertex Z  (for Z+ arrow length)
     property real _maxX:    0     // max positive vertex X  (for X+ arrow length)
     property var  _renderSegs: [] // cached render segments in world coords
+    property bool _manualView: false  // when true, primitive/size changes don't reset fit
 
     readonly property real _circleR: 8   // origin marker radius
     Geometry { id: geom }
@@ -30,20 +31,49 @@ Canvas {
     function _cy(wX) { return _originY + wX * _scale }
 
     // ── Recompute + repaint on any relevant change ─────────────────────────────
-    onPrimitivesChanged:         { _computeScale(); _rebuildRenderCache(); requestPaint() }
-    onWidthChanged:              { _computeScale(); requestPaint() }
-    onHeightChanged:             { _computeScale(); requestPaint() }
+    onPrimitivesChanged: {
+        _rebuildRenderCache()
+        if (!_manualView) _computeScale()
+        else              _computeArrows()
+        requestPaint()
+    }
+    onWidthChanged:  { if (!_manualView) { _computeScale(); requestPaint() } }
+    onHeightChanged: { if (!_manualView) { _computeScale(); requestPaint() } }
     onSelectedPrimIndexChanged:  requestPaint()
     onSelectedBlendIndexChanged: requestPaint()
 
     // ── Viewport / scale computation ───────────────────────────────────────────
     function _computeScale() {
         var v = geom.computeViewport(primitives, width, height)
-        _scale = v.scale
+        _scale   = v.scale
         _originX = v.originX
         _originY = v.originY
-        _maxZ = v.maxZ
-        _maxX = v.maxX
+        _maxZ    = v.maxZ
+        _maxX    = v.maxX
+    }
+
+    // Updates only the arrow extents when in manual view and primitives change.
+    function _computeArrows() {
+        var b = geom.computeBounds(primitives)
+        if (b) { _maxZ = b.vZMax; _maxX = b.vXMax }
+    }
+
+    // ── Fit to screen (public) ─────────────────────────────────────────────────
+    // Fits all primitives into the canvas with exactly 10 mm margin on every side.
+    function fitToScreen() {
+        if (!primitives || primitives.length === 0 || width <= 0 || height <= 0) return
+        var b = geom.computeBounds(primitives)
+        if (!b) return
+        var MARGIN = 10
+        var spanZ = Math.max(b.fZMax - b.fZMin + 2 * MARGIN, 1)
+        var spanX = Math.max(b.fXMax - b.fXMin + 2 * MARGIN, 1)
+        _scale   = Math.min(width / spanZ, height / spanX)
+        _originX = -(b.fZMin - MARGIN) * _scale
+        _originY = -(b.fXMin - MARGIN) * _scale
+        _maxZ    = b.vZMax
+        _maxX    = b.vXMax
+        _manualView = false
+        requestPaint()
     }
 
     // ── Paint dispatcher ───────────────────────────────────────────────────────
@@ -176,12 +206,67 @@ Canvas {
         return -1
     }
 
-    // ── Click handler ──────────────────────────────────────────────────────────
+    // ── Mouse: pan + zoom + click + double-click fit ──────────────────────────
     MouseArea {
         anchors.fill: parent
+
+        property bool  _wasDrag:    false
+        property real  _dragStartX: 0
+        property real  _dragStartY: 0
+        property real  _originXAtDragStart: 0
+        property real  _originYAtDragStart: 0
+
+        readonly property real _DEAD_ZONE: 4   // px
+
+        onPressed: function(mouse) {
+            _wasDrag  = false
+            _dragStartX = mouse.x
+            _dragStartY = mouse.y
+            _originXAtDragStart = root._originX
+            _originYAtDragStart = root._originY
+        }
+
+        onPositionChanged: function(mouse) {
+            var dx = mouse.x - _dragStartX
+            var dy = mouse.y - _dragStartY
+            if (!_wasDrag && (Math.abs(dx) > _DEAD_ZONE || Math.abs(dy) > _DEAD_ZONE)) {
+                _wasDrag = true
+                root._manualView = true
+            }
+            if (_wasDrag) {
+                root._originX = _originXAtDragStart + dx
+                root._originY = _originYAtDragStart + dy
+                root.requestPaint()
+            }
+        }
+
         onClicked: function(mouse) {
+            if (_wasDrag) return
             var idx = root._hitTest(mouse.x, mouse.y)
             if (idx >= 0) root.primitiveSelected(idx)
+        }
+
+        onDoubleClicked: function(mouse) {
+            root.fitToScreen()
+        }
+
+        onWheel: function(wheel) {
+            var ZOOM_FACTOR = 1.15
+            var factor = (wheel.angleDelta.y > 0) ? ZOOM_FACTOR : (1.0 / ZOOM_FACTOR)
+
+            // world coord under cursor — compute before changing scale
+            var worldZ = (wheel.x - root._originX) / root._scale
+            var worldX = (wheel.y - root._originY) / root._scale
+
+            var newScale = Math.max(0.05, Math.min(200.0, root._scale * factor))
+
+            // keep the world point under the cursor fixed
+            root._originX = wheel.x - worldZ * newScale
+            root._originY = wheel.y - worldX * newScale
+            root._scale   = newScale
+
+            root._manualView = true
+            root.requestPaint()
         }
     }
 }

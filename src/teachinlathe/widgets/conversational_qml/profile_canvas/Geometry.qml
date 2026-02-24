@@ -1,98 +1,65 @@
 import QtQuick 2.15
 
 QtObject {
-    // Viewport margins:
+    // Returns the geometric bounding box of all primitives:
+    //   { fZMin, fZMax, fXMin, fXMax, vZMax, vXMax }
+    // where vZMax/vXMax are the maximum positive vertex coords (used for arrow tips).
+    // Returns null if primitives is empty.
+    function computeBounds(primitives) {
+        if (!primitives || primitives.length === 0) return null
+        var fZMin = 1e9, fZMax = -1e9, fXMin = 1e9, fXMax = -1e9
+        var vZMax = 0, vXMax = 0
+        for (var i = 0; i < primitives.length; i++) {
+            var p = primitives[i]
+            var vz, vx
+            if (p.type === "startPoint") {
+                vz = +(p.z_start || 0); vx = +(p.x_start || 0)
+            } else if (p.type === "lineTo") {
+                vz = +(p.z_end || 0); vx = +(p.x_end || 0)
+            } else if (p.type === "arcTo") {
+                vz = +(p.z_end || 0); vx = +(p.x_end || 0)
+                var r = +(p.arc_radius || 0)
+                var zc = +(p.z_center || 0)
+                var xc = +(p.x_center || 0)
+                fZMin = Math.min(fZMin, zc - r); fZMax = Math.max(fZMax, zc + r)
+                fXMin = Math.min(fXMin, xc - r); fXMax = Math.max(fXMax, xc + r)
+            } else { continue }
+            fZMin = Math.min(fZMin, vz); fZMax = Math.max(fZMax, vz)
+            fXMin = Math.min(fXMin, vx); fXMax = Math.max(fXMax, vx)
+            if (vz > vZMax) vZMax = vz
+            if (vx > vXMax) vXMax = vx
+        }
+        if (fZMin === 1e9) return null
+        return { fZMin: fZMin, fZMax: fZMax, fXMin: fXMin, fXMax: fXMax,
+                 vZMax: vZMax, vXMax: vXMax }
+    }
+
+    // Auto-fit viewport margins:
     //   top    = 20 mm above X=0 (spindle axis)
     //   right  = 20 mm past Z+ arrow tip  (= vZMax + 10 + 20 = vZMax + 30)
     //   bottom = 10 mm past X+ arrow tip  (= vXMax + 10 + 10 = vXMax + 20)
     //   left   = all data + 20 mm margin
     function computeViewport(primitives, width, height) {
-        if (!primitives || primitives.length === 0 || width <= 0 || height <= 0) {
-            return {
-                scale: 5,
-                originX: width / 2,
-                originY: height / 2,
-                maxZ: 0,
-                maxX: 0
-            }
-        }
+        var empty = { scale: 5, originX: width / 2, originY: height / 2, maxZ: 0, maxX: 0 }
+        if (!primitives || primitives.length === 0 || width <= 0 || height <= 0) return empty
+        var b = computeBounds(primitives)
+        if (!b) return empty
 
-        var fZMin = 1e9
-        var fZMax = -1e9
-        var fXMin = 1e9
-        var fXMax = -1e9
-        var vZMax = 0
-        var vXMax = 0
-
-        for (var i = 0; i < primitives.length; i++) {
-            var p = primitives[i]
-            var vz
-            var vx
-
-            if (p.type === "startPoint") {
-                vz = +(p.z_start || 0)
-                vx = +(p.x_start || 0)
-            } else if (p.type === "lineTo") {
-                vz = +(p.z_end || 0)
-                vx = +(p.x_end || 0)
-            } else if (p.type === "arcTo") {
-                vz = +(p.z_end || 0)
-                vx = +(p.x_end || 0)
-                var r = +(p.arc_radius || 0)
-                var zc = +(p.z_center || 0)
-                var xc = +(p.x_center || 0)
-                if (zc - r < fZMin) {
-                    fZMin = zc - r
-                }
-                if (zc + r > fZMax) {
-                    fZMax = zc + r
-                }
-                if (xc - r < fXMin) {
-                    fXMin = xc - r
-                }
-                if (xc + r > fXMax) {
-                    fXMax = xc + r
-                }
-            } else {
-                continue
-            }
-
-            if (vz < fZMin) {
-                fZMin = vz
-            }
-            if (vz > fZMax) {
-                fZMax = vz
-            }
-            if (vx < fXMin) {
-                fXMin = vx
-            }
-            if (vx > fXMax) {
-                fXMax = vx
-            }
-            if (vz > vZMax) {
-                vZMax = vz
-            }
-            if (vx > vXMax) {
-                vXMax = vx
-            }
-        }
-
-        var leftBound = fZMin - 20
-        var rightBound = Math.max(fZMax, vZMax + 30)
-        var topBound = -20
-        var bottomBound = Math.max(fXMax, vXMax + 20)
+        var leftBound   = b.fZMin - 20
+        var rightBound  = Math.max(b.fZMax, b.vZMax + 30)
+        var topBound    = -20
+        var bottomBound = Math.max(b.fXMax, b.vXMax + 20)
 
         var scale = Math.min(
-            width / Math.max(rightBound - leftBound, 1),
+            width  / Math.max(rightBound - leftBound,  1),
             height / Math.max(bottomBound - topBound, 1)
         )
-
         return {
-            scale: scale,
+            scale:   scale,
             originX: (-leftBound) * scale,
-            originY: (-topBound) * scale,
-            maxZ: vZMax,
-            maxX: vXMax
+            originY: (-topBound)  * scale,
+            maxZ:    b.vZMax,
+            maxX:    b.vXMax
         }
     }
 
