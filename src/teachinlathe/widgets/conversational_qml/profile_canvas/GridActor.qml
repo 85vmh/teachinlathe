@@ -6,8 +6,6 @@ QtObject {
     property real originX: 0
     property real originY: 0
     property real scale: 1
-    property var cx
-    property var cy
     property var geometry
     property color gridColor: "#e0e0e0"
     property real gridLineWidth: 0.5
@@ -28,17 +26,17 @@ QtObject {
         var x1 = Math.ceil(xWMax / s.major) * s.major
 
         for (var z = z0; z <= z1; z += s.major) {
-            var x = cx(z)
+            var canvasX = originX + z * scale
             ctx.beginPath()
-            ctx.moveTo(x, 0)
-            ctx.lineTo(x, height)
+            ctx.moveTo(canvasX, 0)
+            ctx.lineTo(canvasX, height)
             ctx.stroke()
         }
         for (var xw = x0; xw <= x1; xw += s.major) {
-            var y = cy(xw)
+            var canvasY = originY + xw * scale
             ctx.beginPath()
-            ctx.moveTo(0, y)
-            ctx.lineTo(width, y)
+            ctx.moveTo(0, canvasY)
+            ctx.lineTo(width, canvasY)
             ctx.stroke()
         }
     }

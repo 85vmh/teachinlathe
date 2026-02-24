@@ -6,8 +6,6 @@ QtObject {
     property real originX: 0
     property real originY: 0
     property real scale: 1
-    property var cx
-    property var cy
     property var geometry
     property color tickStrokeColor: "#666666"
     property color tickFillColor: "#333333"
@@ -28,21 +26,21 @@ QtObject {
         var zt = Math.floor(zWMin / s.minor) * s.minor
         for (var z = zt; z <= zWMax; z += s.minor) {
             var ts = geometry.tickStyle(z, s)
-            var canX = cx(z)
+            var canvasX = originX + z * scale
             ctx.beginPath()
-            ctx.moveTo(canX, 0)
-            ctx.lineTo(canX, ts.len)
+            ctx.moveTo(canvasX, 0)
+            ctx.lineTo(canvasX, ts.len)
             ctx.stroke()
             ctx.beginPath()
-            ctx.moveTo(canX, height)
-            ctx.lineTo(canX, height - ts.len)
+            ctx.moveTo(canvasX, height)
+            ctx.lineTo(canvasX, height - ts.len)
             ctx.stroke()
             if (ts.label) {
                 ctx.font = tickFont
                 ctx.textBaseline = "top"
-                ctx.fillText(Math.round(z).toString(), canX, ts.len + 2)
+                ctx.fillText(Math.round(z).toString(), canvasX, ts.len + 2)
                 ctx.textBaseline = "bottom"
-                ctx.fillText(Math.round(z).toString(), canX, height - ts.len - 2)
+                ctx.fillText(Math.round(z).toString(), canvasX, height - ts.len - 2)
             }
         }
 
@@ -52,22 +50,22 @@ QtObject {
         var xt = Math.floor(xWMin / s.minor) * s.minor
         for (var x = xt; x <= xWMax; x += s.minor) {
             var tsx = geometry.tickStyle(x, s)
-            var canY = cy(x)
+            var canvasY = originY + x * scale
             ctx.beginPath()
-            ctx.moveTo(0, canY)
-            ctx.lineTo(tsx.len, canY)
+            ctx.moveTo(0, canvasY)
+            ctx.lineTo(tsx.len, canvasY)
             ctx.stroke()
             ctx.beginPath()
-            ctx.moveTo(width, canY)
-            ctx.lineTo(width - tsx.len, canY)
+            ctx.moveTo(width, canvasY)
+            ctx.lineTo(width - tsx.len, canvasY)
             ctx.stroke()
             if (tsx.label) {
                 ctx.font = tickFont
                 ctx.textAlign = "left"
                 ctx.textBaseline = "middle"
-                ctx.fillText(Math.round(x).toString(), tsx.len + 2, canY)
+                ctx.fillText(Math.round(x).toString(), tsx.len + 2, canvasY)
                 ctx.textAlign = "right"
-                ctx.fillText(Math.round(x).toString(), width - tsx.len - 2, canY)
+                ctx.fillText(Math.round(x).toString(), width - tsx.len - 2, canvasY)
             }
         }
     }

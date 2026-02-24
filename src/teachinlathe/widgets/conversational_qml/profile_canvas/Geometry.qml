@@ -407,8 +407,8 @@ QtObject {
                             type: "arc",
                             z: fg.t2z,
                             x: fg.t2x,
-                            cz: fg.fcz,
-                            cx: fg.fcx,
+                            zc: fg.fcz,
+                            xc: fg.fcx,
                             r: fr,
                             anticlockwise: fg.anticlockwise
                         })
@@ -436,8 +436,8 @@ QtObject {
                             type: "arc",
                             z: acg.csZ,
                             x: acg.csX,
-                            cz: acz,
-                            cx: acx,
+                            zc: acz,
+                            xc: acx,
                             r: ar,
                             anticlockwise: !isCW
                         })
@@ -447,8 +447,8 @@ QtObject {
                             type: "arc",
                             z: aez,
                             x: aex,
-                            cz: acz,
-                            cx: acx,
+                            zc: acz,
+                            xc: acx,
                             r: ar,
                             anticlockwise: !isCW
                         })
@@ -461,8 +461,8 @@ QtObject {
                             type: "arc",
                             z: afg.t1z,
                             x: afg.t1x,
-                            cz: acz,
-                            cx: acx,
+                            zc: acz,
+                            xc: acx,
                             r: ar,
                             anticlockwise: !isCW
                         })
@@ -470,8 +470,8 @@ QtObject {
                             type: "arc",
                             z: afg.t2z,
                             x: afg.t2x,
-                            cz: afg.fcz,
-                            cx: afg.fcx,
+                            zc: afg.fcz,
+                            xc: afg.fcx,
                             r: afr,
                             anticlockwise: afg.anticlockwise
                         })
@@ -480,8 +480,8 @@ QtObject {
                             type: "arc",
                             z: aez,
                             x: aex,
-                            cz: acz,
-                            cx: acx,
+                            zc: acz,
+                            xc: acx,
                             r: ar,
                             anticlockwise: !isCW
                         })
@@ -491,8 +491,8 @@ QtObject {
                         type: "arc",
                         z: aez,
                         x: aex,
-                        cz: acz,
-                        cx: acx,
+                        zc: acz,
+                        xc: acx,
                         r: ar,
                         anticlockwise: !isCW
                     })
@@ -566,7 +566,6 @@ QtObject {
         var distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
         if (distance < 1) return cr
         var distanceToCircle = Math.abs(distance - cr)
-        if (distanceToCircle > 20) return 1e9
         if (_angleInArc(Math.atan2(deltaY, deltaX), sa, ea, anticlockwise)) return distanceToCircle
         // nearest arc endpoint
         var startX = ccx + cr * Math.cos(sa)

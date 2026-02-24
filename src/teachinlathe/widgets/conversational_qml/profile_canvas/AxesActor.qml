@@ -16,12 +16,11 @@ QtObject {
     function paint(ctx) {
         var aw = 9
         var ah = aw * 0.4
-        var cr = circleR
 
         // Z+ — green
         var zTipX = cx(maxZ + 10)
         var zShaft = zTipX - aw
-        var zStart = originX + cr + 1
+        var zStart = originX + circleR + 1
         ctx.strokeStyle = zAxisColor
         ctx.fillStyle = zAxisColor
         ctx.lineWidth = axisLineWidth
@@ -46,7 +45,7 @@ QtObject {
         // X+ — blue
         var xTipY = cy(maxX + 10)
         var xShaft = xTipY - aw
-        var xStart = originY + cr + 1
+        var xStart = originY + circleR + 1
         ctx.strokeStyle = xAxisColor
         ctx.fillStyle = xAxisColor
         if (xShaft > xStart) {

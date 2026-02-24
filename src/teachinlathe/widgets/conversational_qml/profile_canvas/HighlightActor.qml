@@ -13,9 +13,9 @@ QtObject {
     property color highlightCenterColor: "#888888"
     property color blendColor: "#D97706"
     property real highlightLineWidth: 2
-    property real blendLineWidth: 2.5
-    property real startPointRadius: 6
-    property real endPointRadius: 5
+    property real blendLineWidth: 2
+    property real startPointRadius: 4
+    property real endPointRadius: 3
     property real centerPointRadius: 4
 
     function paint(ctx) {

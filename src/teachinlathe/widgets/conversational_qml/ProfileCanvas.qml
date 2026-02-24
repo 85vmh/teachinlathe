@@ -78,8 +78,6 @@ Canvas {
         originX: root._originX
         originY: root._originY
         scale: root._scale
-        cx: root._cx
-        cy: root._cy
         geometry: geom
     }
 
@@ -90,8 +88,6 @@ Canvas {
         originX: root._originX
         originY: root._originY
         scale: root._scale
-        cx: root._cx
-        cy: root._cy
         geometry: geom
     }
 

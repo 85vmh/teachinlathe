@@ -30,11 +30,11 @@ QtObject {
                 drawZ = s.z
                 drawX = s.x
             } else if (s.type === "arc") {
-                var ccx = cx(s.cz)
-                var ccy = cy(s.cx)
+                var ccx = cx(s.zc)
+                var ccy = cy(s.xc)
                 var cr = s.r * scale
                 var sa = Math.atan2(cy(drawX) - ccy, cx(drawZ) - ccx)
-                var ea = Math.atan2(cy(s.x)    - ccy, cx(s.z)    - ccx)
+                var ea = Math.atan2(cy(s.x)   - ccy, cx(s.z)   - ccx)
                 ctx.arc(ccx, ccy, cr, sa, ea, s.anticlockwise)
                 drawZ = s.z
                 drawX = s.x
