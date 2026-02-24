@@ -378,8 +378,6 @@ Item {
                             root.primUpdated(primIdx, d)
                         }
                     }
-                    Button { text: "Teach"; enabled: false; font.pixelSize: 12; opacity: 0.5
-                             Layout.preferredWidth: 60 }
                 }
 
                 RowLayout {
@@ -399,8 +397,6 @@ Item {
                             root.primUpdated(primIdx, d)
                         }
                     }
-                    Button { text: "Teach"; enabled: false; font.pixelSize: 12; opacity: 0.5
-                             Layout.preferredWidth: 60 }
                 }
             }
         }
@@ -464,8 +460,6 @@ Item {
                             root.primUpdated(primIdx, d)
                         }
                     }
-                    Button { text: "Teach"; enabled: false; font.pixelSize: 12; opacity: 0.5
-                             Layout.preferredWidth: 60 }
                 }
 
                 RowLayout {
@@ -485,8 +479,6 @@ Item {
                             root.primUpdated(primIdx, d)
                         }
                     }
-                    Button { text: "Teach"; enabled: false; font.pixelSize: 12; opacity: 0.5
-                             Layout.preferredWidth: 60 }
                 }
 
                 Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c8d8" }
@@ -615,8 +607,6 @@ Item {
                             root.primUpdated(primIdx, d)
                         }
                     }
-                    Button { text: "Teach"; enabled: false; font.pixelSize: 12; opacity: 0.5
-                             Layout.preferredWidth: 60 }
                 }
 
                 RowLayout {
@@ -636,8 +626,6 @@ Item {
                             root.primUpdated(primIdx, d)
                         }
                     }
-                    Button { text: "Teach"; enabled: false; font.pixelSize: 12; opacity: 0.5
-                             Layout.preferredWidth: 60 }
                 }
 
                 RowLayout {
