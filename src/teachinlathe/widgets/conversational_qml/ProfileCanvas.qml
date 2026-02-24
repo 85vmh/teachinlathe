@@ -7,8 +7,9 @@ import QtQuick 2.15
 Canvas {
     id: root
 
-    property var primitives:       []   // array of primitive objects from JSON
-    property int selectedPrimIndex: -1  // index into primitives; -1 = none
+    property var primitives:        []   // array of primitive objects from JSON
+    property int selectedPrimIndex:  -1  // index into primitives; -1 = none
+    property int selectedBlendIndex: -1  // index of primitive whose blend is selected; -1 = none
 
     signal primitiveSelected(int index)
 
@@ -26,10 +27,11 @@ Canvas {
     function _cy(wX) { return _originY + wX * _scale }
 
     // ── Recompute + repaint on any relevant change ─────────────────────────────
-    onPrimitivesChanged:        { _computeScale(); requestPaint() }
-    onWidthChanged:             { _computeScale(); requestPaint() }
-    onHeightChanged:            { _computeScale(); requestPaint() }
-    onSelectedPrimIndexChanged: requestPaint()
+    onPrimitivesChanged:         { _computeScale(); requestPaint() }
+    onWidthChanged:              { _computeScale(); requestPaint() }
+    onHeightChanged:             { _computeScale(); requestPaint() }
+    onSelectedPrimIndexChanged:  requestPaint()
+    onSelectedBlendIndexChanged: requestPaint()
 
     // ── Viewport / scale computation ───────────────────────────────────────────
     // Viewport margins:
@@ -428,10 +430,6 @@ Canvas {
         ctx.strokeStyle = "#333333"; ctx.lineWidth = 1
         ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.setLineDash([])
 
-        // Collect dotted "extensions" for chamfers so the original corner is still visible
-        // after the chamfer cuts it off.
-        var chamferDashes = []   // each item: { z1, x1, z2, x2 }
-
         ctx.beginPath()
         for (var i = 0; i < primitives.length; i++) {
             var p = primitives[i]
@@ -470,10 +468,6 @@ Canvas {
                         ctx.lineTo(_cx(csZ), _cy(csX))
                         ctx.lineTo(_cx(ceZ), _cy(ceX))
                         drawZ = ceZ; drawX = ceX
-
-                        // Dotted "would-have-been" lines to the original corner
-                        chamferDashes.push({ z1: csZ, x1: csX, z2: ez,  x2: ex })
-                        chamferDashes.push({ z1: ez,  x1: ex,  z2: ceZ, x2: ceX })
                     } else {
                         ctx.lineTo(_cx(ez), _cy(ex))
                         drawZ = ez; drawX = ex
@@ -491,8 +485,6 @@ Canvas {
                         var fea = Math.atan2(_cy(fg.t2x) - fccy, _cx(fg.t2z) - fccx)
                         ctx.arc(fccx, fccy, fcr, fsa, fea, fg.anticlockwise)
                         drawZ = fg.t2z; drawX = fg.t2x
-                        chamferDashes.push({ z1: fg.t1z, x1: fg.t1x, z2: ez,     x2: ex })
-                        chamferDashes.push({ z1: ez,     x1: ex,     z2: fg.t2z, x2: fg.t2x })
                     } else {
                         ctx.lineTo(_cx(ez), _cy(ex))
                         drawZ = ez; drawX = ex
@@ -535,8 +527,6 @@ Canvas {
                         ctx.arc(ccx, ccy, cr, sa, ea_cs, !isCW)
                         ctx.lineTo(_cx(aceZ), _cy(aceX))
                         drawZ = aceZ; drawX = aceX
-                        chamferDashes.push({ z1: acsZ, x1: acsX, z2: aez,  x2: aex })
-                        chamferDashes.push({ z1: aez,  x1: aex,  z2: aceZ, x2: aceX })
                     } else {
                         var ea_fb = Math.atan2(_cy(aex) - ccy, _cx(aez) - ccx)
                         ctx.arc(ccx, ccy, cr, sa, ea_fb, !isCW)
@@ -555,8 +545,6 @@ Canvas {
                         var afea = Math.atan2(_cy(afg.t2x) - afccy, _cx(afg.t2z) - afccx)
                         ctx.arc(afccx, afccy, afcr, afsa, afea, afg.anticlockwise)
                         drawZ = afg.t2z; drawX = afg.t2x
-                        chamferDashes.push({ z1: afg.t1z, x1: afg.t1x, z2: aez,     x2: aex })
-                        chamferDashes.push({ z1: aez,     x1: aex,     z2: afg.t2z, x2: afg.t2x })
                     } else {
                         var ea_fb3 = Math.atan2(_cy(aex) - ccy, _cx(aez) - ccx)
                         ctx.arc(ccx, ccy, cr, sa, ea_fb3, !isCW)
@@ -571,34 +559,19 @@ Canvas {
             }
         }
         ctx.stroke()
-
-        // Draw dotted extensions *after* the solid profile, so we don't mess up the main path.
-        if (chamferDashes.length > 0) {
-            ctx.save()
-            ctx.setLineDash([2, 3])
-            ctx.strokeStyle = "#7a7a7a"
-            ctx.lineWidth = 1.2
-            ctx.lineJoin = "round"
-            ctx.lineCap = "round"
-            ctx.beginPath()
-            for (var d = 0; d < chamferDashes.length; d++) {
-                var s = chamferDashes[d]
-                ctx.moveTo(_cx(s.z1), _cy(s.x1))
-                ctx.lineTo(_cx(s.z2), _cy(s.x2))
-            }
-            ctx.stroke()
-            ctx.restore()
-        }
     }
 
     function _paintHighlight(ctx) {
-        var idx = selectedPrimIndex
-        if (idx < 0 || !primitives || idx >= primitives.length) return
+        if (selectedPrimIndex < 0 && selectedBlendIndex < 0) return
+        if (!primitives) return
 
-        // Track logical and actual drawn position before the selected primitive
+        var targetIdx = (selectedPrimIndex >= 0) ? selectedPrimIndex : selectedBlendIndex
+        if (targetIdx >= primitives.length) return
+
+        // Track logical position (true endpoint) and draw position before the target
         var logZ = 0, logX = 0
         var drawZ = 0, drawX = 0
-        for (var j = 0; j < idx; j++) {
+        for (var j = 0; j < targetIdx; j++) {
             var prev = primitives[j]
             if (prev.type === "startPoint") {
                 logZ = +(prev.z_start||0); logX = +(prev.x_start||0)
@@ -667,149 +640,150 @@ Canvas {
             }
         }
 
-        var p = primitives[idx]
+        var p = primitives[targetIdx]
         ctx.setLineDash([])
 
-        if (p.type === "startPoint") {
-            ctx.fillStyle = "#E53935"
-            ctx.beginPath()
-            ctx.arc(_cx(+(p.z_start||0)), _cy(+(p.x_start||0)), 6, 0, Math.PI*2)
-            ctx.fill()
-
-        } else if (p.type === "lineTo") {
-            var ez = +(p.z_end||0), ex = +(p.x_end||0)
+        if (selectedPrimIndex >= 0) {
+            // ── Full theoretical primitive (ignore blend trimming) ────────────────
             ctx.strokeStyle = "#E53935"; ctx.lineWidth = 2
             ctx.lineJoin = "round"; ctx.lineCap = "round"
-            ctx.beginPath()
-            ctx.moveTo(_cx(drawZ), _cy(drawX))
-            if (p.blend && p.blend.type === "chamfer") {
-                var hcw  = +(p.blend.chamfer_width || 0)
-                var hsdz = ez - logZ, hsdx = ex - logX
-                var hslen = Math.sqrt(hsdz*hsdz + hsdx*hsdx)
-                if (hslen > 0.001 && hcw > 0.001) {
-                    var hcsZ = ez - hcw * hsdz / hslen
-                    var hcsX = ex - hcw * hsdx / hslen
-                    var hceZ = ez, hceX = ex
-                    var hnextP = (idx+1 < primitives.length) ? primitives[idx+1] : null
-                    if (hnextP && hnextP.type === "lineTo") {
-                        var hndz = +(hnextP.z_end||0) - ez
-                        var hndx = +(hnextP.x_end||0) - ex
-                        var hnlen = Math.sqrt(hndz*hndz + hndx*hndx)
-                        if (hnlen > 0.001) { hceZ = ez + hcw*hndz/hnlen; hceX = ex + hcw*hndx/hnlen }
-                    } else if (hnextP && hnextP.type === "arcTo") {
-                        var hnacz = +(hnextP.z_center||0), hnacx = +(hnextP.x_center||0)
-                        var hnrz = ez - hnacz, hnrx = ex - hnacx
-                        var hnndz = (hnextP.direction === "cw") ? -hnrx :  hnrx
-                        var hnndx = (hnextP.direction === "cw") ?  hnrz : -hnrz
-                        var hnlen2 = Math.sqrt(hnndz*hnndz + hnndx*hnndx)
-                        if (hnlen2 > 0.001) { hceZ = ez + hcw*hnndz/hnlen2; hceX = ex + hcw*hnndx/hnlen2 }
-                    }
-                    ctx.lineTo(_cx(hcsZ), _cy(hcsX))
-                    ctx.lineTo(_cx(hceZ), _cy(hceX))
-                    ctx.stroke()
-                    ctx.fillStyle = "#E53935"
-                    ctx.beginPath(); ctx.arc(_cx(hceZ), _cy(hceX), 5, 0, Math.PI*2); ctx.fill()
-                } else {
-                    ctx.lineTo(_cx(ez), _cy(ex)); ctx.stroke()
-                    ctx.fillStyle = "#E53935"
-                    ctx.beginPath(); ctx.arc(_cx(ez), _cy(ex), 5, 0, Math.PI*2); ctx.fill()
-                }
-            } else if (p.blend && p.blend.type === "fillet") {
-                var hfr = +(p.blend.fillet_radius || 0)
-                var hNextPrim = idx+1 < primitives.length ? primitives[idx+1] : null
-                var hfg = (hNextPrim && hNextPrim.type === "arcTo")
-                          ? _filletLineArc(logZ, logX, ez, ex, hNextPrim, hfr)
-                          : _filletGeom(logZ, logX, ez, ex, hNextPrim, hfr)
-                if (hfg) {
-                    ctx.lineTo(_cx(hfg.t1z), _cy(hfg.t1x))
-                    var hfccx = _cx(hfg.fcz), hfccy = _cy(hfg.fcx), hfcr = hfr * _scale
-                    var hfsa = Math.atan2(_cy(hfg.t1x) - hfccy, _cx(hfg.t1z) - hfccx)
-                    var hfea = Math.atan2(_cy(hfg.t2x) - hfccy, _cx(hfg.t2z) - hfccx)
-                    ctx.arc(hfccx, hfccy, hfcr, hfsa, hfea, hfg.anticlockwise)
-                    ctx.stroke()
-                    ctx.fillStyle = "#E53935"
-                    ctx.beginPath(); ctx.arc(_cx(hfg.t2z), _cy(hfg.t2x), 5, 0, Math.PI*2); ctx.fill()
-                } else {
-                    ctx.lineTo(_cx(ez), _cy(ex)); ctx.stroke()
-                    ctx.fillStyle = "#E53935"
-                    ctx.beginPath(); ctx.arc(_cx(ez), _cy(ex), 5, 0, Math.PI*2); ctx.fill()
-                }
-            } else {
-                ctx.lineTo(_cx(ez), _cy(ex)); ctx.stroke()
+
+            if (p.type === "startPoint") {
+                ctx.fillStyle = "#E53935"
+                ctx.beginPath()
+                ctx.arc(_cx(+(p.z_start||0)), _cy(+(p.x_start||0)), 6, 0, Math.PI*2)
+                ctx.fill()
+
+            } else if (p.type === "lineTo") {
+                var ez = +(p.z_end||0), ex = +(p.x_end||0)
+                ctx.beginPath()
+                ctx.moveTo(_cx(logZ), _cy(logX))
+                ctx.lineTo(_cx(ez), _cy(ex))
+                ctx.stroke()
                 ctx.fillStyle = "#E53935"
                 ctx.beginPath(); ctx.arc(_cx(ez), _cy(ex), 5, 0, Math.PI*2); ctx.fill()
-            }
 
-        } else if (p.type === "arcTo") {
-            var aez = +(p.z_end||0),    aex = +(p.x_end||0)
-            var acz = +(p.z_center||0), acx = +(p.x_center||0)
-            var ar  = +(p.arc_radius||0), isCW2 = (p.direction === "cw")
-            var ccx = _cx(acz), ccy = _cy(acx), cr2 = ar * _scale
-            var sa2 = Math.atan2(_cy(drawX)-ccy, _cx(drawZ)-ccx)
-            ctx.strokeStyle = "#E53935"; ctx.lineWidth = 2
-            ctx.lineJoin = "round"; ctx.lineCap = "round"
-            ctx.beginPath()
-
-            if (p.blend && p.blend.type === "chamfer") {
-                var hacw = +(p.blend.chamfer_width || 0)
-                var harez = aez - acz, harex = aex - acx
-                var harlen = Math.sqrt(harez*harez + harex*harex)
-                if (harlen > 0.001 && hacw > 0.001) {
-                    var hatdz = isCW2 ? -harex :  harex
-                    var hatdx = isCW2 ?  harez : -harez
-                    var hacsZ = aez - hacw * hatdz / harlen
-                    var hacsX = aex - hacw * hatdx / harlen
-                    var haceZ = aez, haceX = aex
-                    var hanextP = (idx+1 < primitives.length) ? primitives[idx+1] : null
-                    if (hanextP && hanextP.type === "lineTo") {
-                        var handz = +(hanextP.z_end||0) - aez
-                        var handx = +(hanextP.x_end||0) - aex
-                        var hanlen = Math.sqrt(handz*handz + handx*handx)
-                        if (hanlen > 0.001) { haceZ = aez + hacw*handz/hanlen; haceX = aex + hacw*handx/hanlen }
-                    }
-                    var hea_cs = Math.atan2(_cy(hacsX) - ccy, _cx(hacsZ) - ccx)
-                    ctx.arc(ccx, ccy, cr2, sa2, hea_cs, !isCW2)
-                    ctx.lineTo(_cx(haceZ), _cy(haceX))
-                    ctx.stroke()
-                    ctx.fillStyle = "#E53935"
-                    ctx.beginPath(); ctx.arc(_cx(haceZ), _cy(haceX), 5, 0, Math.PI*2); ctx.fill()
-                } else {
-                    var hea2_fb = Math.atan2(_cy(aex) - ccy, _cx(aez) - ccx)
-                    ctx.arc(ccx, ccy, cr2, sa2, hea2_fb, !isCW2)
-                    ctx.stroke()
-                    ctx.fillStyle = "#E53935"
-                    ctx.beginPath(); ctx.arc(_cx(aez), _cy(aex), 5, 0, Math.PI*2); ctx.fill()
-                }
-            } else if (p.blend && p.blend.type === "fillet") {
-                var hafr = +(p.blend.fillet_radius || 0)
-                var hafg = _filletArcLine(acz, acx, ar, isCW2, aez, aex,
-                                          idx+1 < primitives.length ? primitives[idx+1] : null, hafr)
-                if (hafg) {
-                    var hea_t1 = Math.atan2(_cy(hafg.t1x) - ccy, _cx(hafg.t1z) - ccx)
-                    ctx.arc(ccx, ccy, cr2, sa2, hea_t1, !isCW2)
-                    var hafccx = _cx(hafg.fcz), hafccy = _cy(hafg.fcx), hafcr = hafr * _scale
-                    var hafsa = Math.atan2(_cy(hafg.t1x) - hafccy, _cx(hafg.t1z) - hafccx)
-                    var hafea = Math.atan2(_cy(hafg.t2x) - hafccy, _cx(hafg.t2z) - hafccx)
-                    ctx.arc(hafccx, hafccy, hafcr, hafsa, hafea, hafg.anticlockwise)
-                    ctx.stroke()
-                    ctx.fillStyle = "#E53935"
-                    ctx.beginPath(); ctx.arc(_cx(hafg.t2z), _cy(hafg.t2x), 5, 0, Math.PI*2); ctx.fill()
-                } else {
-                    var hea_fb4 = Math.atan2(_cy(aex) - ccy, _cx(aez) - ccx)
-                    ctx.arc(ccx, ccy, cr2, sa2, hea_fb4, !isCW2)
-                    ctx.stroke()
-                    ctx.fillStyle = "#E53935"
-                    ctx.beginPath(); ctx.arc(_cx(aez), _cy(aex), 5, 0, Math.PI*2); ctx.fill()
-                }
-            } else {
-                var ea2 = Math.atan2(_cy(aex) - ccy, _cx(aez) - ccx)
+            } else if (p.type === "arcTo") {
+                var aez = +(p.z_end||0),    aex = +(p.x_end||0)
+                var acz = +(p.z_center||0), acx = +(p.x_center||0)
+                var ar  = +(p.arc_radius||0), isCW2 = (p.direction === "cw")
+                var ccx = _cx(acz), ccy = _cy(acx), cr2 = ar * _scale
+                var sa2 = Math.atan2(_cy(logX) - ccy, _cx(logZ) - ccx)
+                var ea2 = Math.atan2(_cy(aex)  - ccy, _cx(aez)  - ccx)
+                ctx.beginPath()
                 ctx.arc(ccx, ccy, cr2, sa2, ea2, !isCW2)
                 ctx.stroke()
                 ctx.fillStyle = "#E53935"
                 ctx.beginPath(); ctx.arc(_cx(aez), _cy(aex), 5, 0, Math.PI*2); ctx.fill()
+                ctx.fillStyle = "#888888"
+                ctx.beginPath(); ctx.arc(ccx, ccy, 4, 0, Math.PI*2); ctx.fill()
             }
-            ctx.fillStyle = "#888888"
-            ctx.beginPath(); ctx.arc(ccx, ccy, 4, 0, Math.PI*2); ctx.fill()
+
+        } else {
+            // ── Blend geometry only (amber) ──────────────────────────────────────
+            if (!p.blend || p.blend.type === "none") return
+            ctx.strokeStyle = "#D97706"; ctx.lineWidth = 2.5
+            ctx.lineJoin = "round"; ctx.lineCap = "round"
+
+            var bNextP = (targetIdx + 1 < primitives.length) ? primitives[targetIdx + 1] : null
+
+            if (p.type === "lineTo") {
+                var lez = +(p.z_end||0), lex = +(p.x_end||0)
+
+                if (p.blend.type === "chamfer") {
+                    var lcw  = +(p.blend.chamfer_width || 0)
+                    var lsdz = lez - logZ, lsdx = lex - logX
+                    var lslen = Math.sqrt(lsdz*lsdz + lsdx*lsdx)
+                    if (lslen > 0.001 && lcw > 0.001) {
+                        var lcsZ = lez - lcw * lsdz / lslen
+                        var lcsX = lex - lcw * lsdx / lslen
+                        var lceZ = lez, lceX = lex
+                        if (bNextP && bNextP.type === "lineTo") {
+                            var lndz = +(bNextP.z_end||0) - lez
+                            var lndx = +(bNextP.x_end||0) - lex
+                            var lnlen = Math.sqrt(lndz*lndz + lndx*lndx)
+                            if (lnlen > 0.001) { lceZ = lez + lcw*lndz/lnlen; lceX = lex + lcw*lndx/lnlen }
+                        } else if (bNextP && bNextP.type === "arcTo") {
+                            var lnacz = +(bNextP.z_center||0), lnacx = +(bNextP.x_center||0)
+                            var lnrz = lez - lnacz, lnrx = lex - lnacx
+                            var lnndz = (bNextP.direction === "cw") ? -lnrx :  lnrx
+                            var lnndx = (bNextP.direction === "cw") ?  lnrz : -lnrz
+                            var lnlen2 = Math.sqrt(lnndz*lnndz + lnndx*lnndx)
+                            if (lnlen2 > 0.001) { lceZ = lez + lcw*lnndz/lnlen2; lceX = lex + lcw*lnndx/lnlen2 }
+                        }
+                        ctx.beginPath()
+                        ctx.moveTo(_cx(lcsZ), _cy(lcsX))
+                        ctx.lineTo(_cx(lceZ), _cy(lceX))
+                        ctx.stroke()
+                        ctx.fillStyle = "#D97706"
+                        ctx.beginPath(); ctx.arc(_cx(lcsZ), _cy(lcsX), 5, 0, Math.PI*2); ctx.fill()
+                        ctx.beginPath(); ctx.arc(_cx(lceZ), _cy(lceX), 5, 0, Math.PI*2); ctx.fill()
+                    }
+
+                } else if (p.blend.type === "fillet") {
+                    var lfr = +(p.blend.fillet_radius || 0)
+                    var lfg = (bNextP && bNextP.type === "arcTo")
+                              ? _filletLineArc(logZ, logX, lez, lex, bNextP, lfr)
+                              : _filletGeom(logZ, logX, lez, lex, bNextP, lfr)
+                    if (lfg) {
+                        var lfccx = _cx(lfg.fcz), lfccy = _cy(lfg.fcx), lfcr = lfr * _scale
+                        var lfsa  = Math.atan2(_cy(lfg.t1x) - lfccy, _cx(lfg.t1z) - lfccx)
+                        var lfea  = Math.atan2(_cy(lfg.t2x) - lfccy, _cx(lfg.t2z) - lfccx)
+                        ctx.beginPath()
+                        ctx.arc(lfccx, lfccy, lfcr, lfsa, lfea, lfg.anticlockwise)
+                        ctx.stroke()
+                        ctx.fillStyle = "#D97706"
+                        ctx.beginPath(); ctx.arc(_cx(lfg.t1z), _cy(lfg.t1x), 5, 0, Math.PI*2); ctx.fill()
+                        ctx.beginPath(); ctx.arc(_cx(lfg.t2z), _cy(lfg.t2x), 5, 0, Math.PI*2); ctx.fill()
+                    }
+                }
+
+            } else if (p.type === "arcTo") {
+                var aaez = +(p.z_end||0),    aaex = +(p.x_end||0)
+                var aacz = +(p.z_center||0), aacx = +(p.x_center||0)
+                var aar  = +(p.arc_radius||0), aisCW = (p.direction === "cw")
+
+                if (p.blend.type === "chamfer") {
+                    var aacw  = +(p.blend.chamfer_width || 0)
+                    var aarez = aaez - aacz, aarex = aaex - aacx
+                    var aarlen = Math.sqrt(aarez*aarez + aarex*aarex)
+                    if (aarlen > 0.001 && aacw > 0.001) {
+                        var aatdz = aisCW ? -aarex :  aarex
+                        var aatdx = aisCW ?  aarez : -aarez
+                        var aacsZ = aaez - aacw * aatdz / aarlen
+                        var aacsX = aaex - aacw * aatdx / aarlen
+                        var aaceZ = aaez, aaceX = aaex
+                        if (bNextP && bNextP.type === "lineTo") {
+                            var aandz = +(bNextP.z_end||0) - aaez
+                            var aandx = +(bNextP.x_end||0) - aaex
+                            var aanlen = Math.sqrt(aandz*aandz + aandx*aandx)
+                            if (aanlen > 0.001) { aaceZ = aaez + aacw*aandz/aanlen; aaceX = aaex + aacw*aandx/aanlen }
+                        }
+                        ctx.beginPath()
+                        ctx.moveTo(_cx(aacsZ), _cy(aacsX))
+                        ctx.lineTo(_cx(aaceZ), _cy(aaceX))
+                        ctx.stroke()
+                        ctx.fillStyle = "#D97706"
+                        ctx.beginPath(); ctx.arc(_cx(aacsZ), _cy(aacsX), 5, 0, Math.PI*2); ctx.fill()
+                        ctx.beginPath(); ctx.arc(_cx(aaceZ), _cy(aaceX), 5, 0, Math.PI*2); ctx.fill()
+                    }
+
+                } else if (p.blend.type === "fillet") {
+                    var aafr = +(p.blend.fillet_radius || 0)
+                    var aafg = _filletArcLine(aacz, aacx, aar, aisCW, aaez, aaex, bNextP, aafr)
+                    if (aafg) {
+                        var aafccx = _cx(aafg.fcz), aafccy = _cy(aafg.fcx), aafcr = aafr * _scale
+                        var aafsa  = Math.atan2(_cy(aafg.t1x) - aafccy, _cx(aafg.t1z) - aafccx)
+                        var aafea  = Math.atan2(_cy(aafg.t2x) - aafccy, _cx(aafg.t2z) - aafccx)
+                        ctx.beginPath()
+                        ctx.arc(aafccx, aafccy, aafcr, aafsa, aafea, aafg.anticlockwise)
+                        ctx.stroke()
+                        ctx.fillStyle = "#D97706"
+                        ctx.beginPath(); ctx.arc(_cx(aafg.t1z), _cy(aafg.t1x), 5, 0, Math.PI*2); ctx.fill()
+                        ctx.beginPath(); ctx.arc(_cx(aafg.t2z), _cy(aafg.t2x), 5, 0, Math.PI*2); ctx.fill()
+                    }
+                }
+            }
         }
     }
 

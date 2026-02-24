@@ -10,7 +10,8 @@ Item {
 
     property int opIndex: -1
     property var opData:  null
-    property int selectedPrimIndex: -1
+    property int selectedPrimIndex:  -1
+    property int selectedBlendIndex: -1
 
     property int  profileId: 0
     property bool _loading:  false
@@ -26,7 +27,8 @@ Item {
         opData    = data || {}
         profileId = opData.profile_id !== undefined ? Math.round(Number(opData.profile_id)) : 0
         primitives = JSON.parse(JSON.stringify(opData.profile_primitives || []))
-        selectedPrimIndex = -1
+        selectedPrimIndex  = -1
+        selectedBlendIndex = -1
         _loading  = false
     }
 
@@ -69,7 +71,8 @@ Item {
         arr.splice(idx, 1)
         root.primitives = _renumber(arr)
         var newLen = root.primitives.length
-        root.selectedPrimIndex = (newLen === 0) ? -1 : Math.min(idx, newLen - 1)
+        root.selectedPrimIndex  = (newLen === 0) ? -1 : Math.min(idx, newLen - 1)
+        root.selectedBlendIndex = -1
         root.emitSave()
     }
 
@@ -101,23 +104,14 @@ Item {
                         : Math.max(1, insertIdx)
         arr.splice(actualIdx, 0, newPrim)
         root.primitives = _renumber(arr)
-        root.selectedPrimIndex = actualIdx
+        root.selectedPrimIndex  = actualIdx
+        root.selectedBlendIndex = -1
         root.emitSave()
     }
 
     // ── Blend helpers ───────────────────────────────────────────────────────────
     function blendType(pd) {
         return (pd && pd.blend && pd.blend.type) ? pd.blend.type : "none"
-    }
-    function cycleBlend(pd, idx) {
-        var d   = JSON.parse(JSON.stringify(pd))
-        var cur = blendType(d)
-        var nxt = cur === "none" ? "chamfer" : (cur === "chamfer" ? "fillet" : "none")
-        if (!d.blend) d.blend = {}
-        d.blend.type = nxt
-        if (nxt === "chamfer" && d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
-        if (nxt === "fillet"  && d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
-        root.primUpdated(idx, d)
     }
     function blendValue(pd) {
         if (!pd || !pd.blend) return 0
@@ -134,24 +128,40 @@ Item {
     }
 
     // ── Scroll selected card into view ──────────────────────────────────────────
-    onSelectedPrimIndexChanged: Qt.callLater(_scrollToSelected)
+    onSelectedPrimIndexChanged:  Qt.callLater(_scrollToSelected)
+    onSelectedBlendIndexChanged: Qt.callLater(_scrollToBlend)
 
     function _scrollToSelected() {
         if (root.selectedPrimIndex < 0) return
+        _scrollTo(root.selectedPrimIndex, false)
+    }
+    function _scrollToBlend() {
+        if (root.selectedBlendIndex < 0) return
+        _scrollTo(root.selectedBlendIndex, true)
+    }
+
+    function _scrollTo(targetIdx, scrollBottom) {
         var col = primRepeater.parent
         if (!col) return
         for (var i = 0; i < col.children.length; i++) {
             var child = col.children[i]
-            if (typeof child.mi !== "undefined" && child.mi === root.selectedPrimIndex) {
+            if (typeof child.mi !== "undefined" && child.mi === targetIdx) {
                 var childY = child.y
                 var childH = child.height
                 var fl     = primScroll.contentItem
                 var visTop = fl.contentY
                 var visBot = visTop + primScroll.height
-                if (childY < visTop)
-                    fl.contentY = Math.max(0, childY - 8)
-                else if (childY + childH > visBot)
-                    fl.contentY = childY + childH - primScroll.height + 8
+                if (scrollBottom) {
+                    if (childY + childH > visBot)
+                        fl.contentY = childY + childH - primScroll.height + 8
+                    else if (childY < visTop)
+                        fl.contentY = Math.max(0, childY - 8)
+                } else {
+                    if (childY < visTop)
+                        fl.contentY = Math.max(0, childY - 8)
+                    else if (childY + childH > visBot)
+                        fl.contentY = childY + childH - primScroll.height + 8
+                }
                 break
             }
         }
@@ -359,7 +369,7 @@ Item {
             border.width: isSelected ? 2 : 1
             height: spCol.implicitHeight + 24
 
-            TapHandler { onTapped: root.selectedPrimIndex = primIdx }
+            TapHandler { onTapped: { root.selectedPrimIndex = primIdx; root.selectedBlendIndex = -1 } }
 
             ColumnLayout {
                 id: spCol
@@ -430,13 +440,14 @@ Item {
             border.width: isSelected ? 2 : 1
             height: ltCol.implicitHeight + 24
 
-            TapHandler { onTapped: root.selectedPrimIndex = primIdx }
+            TapHandler { onTapped: { root.selectedPrimIndex = primIdx; root.selectedBlendIndex = -1 } }
 
             ColumnLayout {
                 id: ltCol
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
                 spacing: 8
 
+                // ── Full-width title row ───────────────────────────────────────
                 RowLayout {
                     Layout.fillWidth: true; spacing: 4
                     Text {
@@ -457,64 +468,106 @@ Item {
 
                 Rectangle { Layout.fillWidth: true; height: 1; color: "#e0e0e0" }
 
+                // ── Content: left fields | right blend ────────────────────────
                 RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "X End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                    NumpadField {
-                        Layout.preferredWidth: 110
-                        settingName: "lt." + primIdx + ".x_end"
-                        validatorObject: dblVal
-                        value: primData.x_end !== undefined ? primData.x_end : 0
-                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                        hAlign: Text.AlignRight; fontPixelSize: 14
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: {
-                            var d = JSON.parse(JSON.stringify(primData))
-                            d.x_end = value
-                            root.primUpdated(primIdx, d)
+                    Layout.fillWidth: true
+                    spacing: 12
+
+                    // Left: fields
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Label { text: "X End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                            NumpadField {
+                                Layout.preferredWidth: 110
+                                settingName: "lt." + primIdx + ".x_end"
+                                validatorObject: dblVal
+                                value: primData.x_end !== undefined ? primData.x_end : 0
+                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                                hAlign: Text.AlignRight; fontPixelSize: 14
+                                onOpenRequested: root.openNumPadRequested(field)
+                                onValueCommitted: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.x_end = value
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Label { text: "Z End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                            NumpadField {
+                                Layout.preferredWidth: 110
+                                settingName: "lt." + primIdx + ".z_end"
+                                validatorObject: dblVal
+                                value: primData.z_end !== undefined ? primData.z_end : 0
+                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                                hAlign: Text.AlignRight; fontPixelSize: 14
+                                onOpenRequested: root.openNumPadRequested(field)
+                                onValueCommitted: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.z_end = value
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
                         }
                     }
-                }
 
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "Z End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                    NumpadField {
-                        Layout.preferredWidth: 110
-                        settingName: "lt." + primIdx + ".z_end"
-                        validatorObject: dblVal
-                        value: primData.z_end !== undefined ? primData.z_end : 0
-                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                        hAlign: Text.AlignRight; fontPixelSize: 14
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: {
-                            var d = JSON.parse(JSON.stringify(primData))
-                            d.z_end = value
-                            root.primUpdated(primIdx, d)
+                    // Right: Blend box (hidden for last primitive)
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignTop
+                        implicitHeight: blendLtCol.implicitHeight + 16
+                        visible: primIdx < root.primitives.length - 1
+                        color: "transparent"
+                        border.color: "#c0c0c0"
+                        border.width: 1
+                        radius: 4
+
+                        ColumnLayout {
+                            id: blendLtCol
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+                            spacing: 6
+
+                            Text {
+                                text: "Blend"; font.pixelSize: 12; font.bold: true; color: "#444444"
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true; spacing: 4
+
+                                Button {
+                                    text: "Chamfer"; font.pixelSize: 12
+                                    Layout.fillWidth: true; implicitHeight: 32
+                                    enabled: root.blendType(primData) === "none"
+                                    onClicked: {
+                                        var d = JSON.parse(JSON.stringify(primData))
+                                        if (!d.blend) d.blend = {}
+                                        d.blend.type = "chamfer"
+                                        if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
+                                        root.primUpdated(primIdx, d)
+                                    }
+                                }
+
+                                Button {
+                                    text: "Fillet"; font.pixelSize: 12
+                                    Layout.fillWidth: true; implicitHeight: 32
+                                    enabled: root.blendType(primData) === "none"
+                                    onClicked: {
+                                        var d = JSON.parse(JSON.stringify(primData))
+                                        if (!d.blend) d.blend = {}
+                                        d.blend.type = "fillet"
+                                        if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
+                                        root.primUpdated(primIdx, d)
+                                    }
+                                }
+                            }
                         }
-                    }
-                }
-
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c8d8" }
-
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "Blend:"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                    Button {
-                        text: root.blendType(primData)
-                        font.pixelSize: 12; Layout.preferredWidth: 80
-                        onClicked: root.cycleBlend(primData, primIdx)
-                    }
-                    NumpadField {
-                        visible: root.blendType(primData) !== "none"
-                        Layout.preferredWidth: 90
-                        settingName: "lt." + primIdx + ".blend_val"
-                        validatorObject: dblVal
-                        value: root.blendValue(primData)
-                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                        hAlign: Text.AlignRight; fontPixelSize: 14
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: root.commitBlend(primData, primIdx, value)
                     }
                 }
             }
@@ -535,13 +588,14 @@ Item {
             border.width: isSelected ? 2 : 1
             height: atCol.implicitHeight + 24
 
-            TapHandler { onTapped: root.selectedPrimIndex = primIdx }
+            TapHandler { onTapped: { root.selectedPrimIndex = primIdx; root.selectedBlendIndex = -1 } }
 
             ColumnLayout {
                 id: atCol
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
                 spacing: 8
 
+                // ── Full-width title row ───────────────────────────────────────
                 RowLayout {
                     Layout.fillWidth: true; spacing: 4
                     Text {
@@ -562,138 +616,258 @@ Item {
 
                 Rectangle { Layout.fillWidth: true; height: 1; color: "#e0e0e0" }
 
+                // ── Content: left fields | right blend ────────────────────────
                 RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "Arc Type:"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                    Layout.fillWidth: true
+                    spacing: 12
+
+                    // Left: fields
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Label { text: "Arc Type:"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                            Button {
+                                text: "CW"; font.pixelSize: 12; Layout.preferredWidth: 50
+                                highlighted: primData.direction === "cw"
+                                onClicked: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.direction = "cw"
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
+                            Button {
+                                text: "CCW"; font.pixelSize: 12; Layout.preferredWidth: 50
+                                highlighted: primData.direction === "ccw"
+                                onClicked: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.direction = "ccw"
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Label { text: "Radius"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                            NumpadField {
+                                Layout.preferredWidth: 110
+                                settingName: "at." + primIdx + ".arc_radius"
+                                validatorObject: dblVal
+                                value: primData.arc_radius !== undefined ? primData.arc_radius : 10
+                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                                hAlign: Text.AlignRight; fontPixelSize: 14
+                                onOpenRequested: root.openNumPadRequested(field)
+                                onValueCommitted: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.arc_radius = value
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Label { text: "X End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                            NumpadField {
+                                Layout.preferredWidth: 110
+                                settingName: "at." + primIdx + ".x_end"
+                                validatorObject: dblVal
+                                value: primData.x_end !== undefined ? primData.x_end : 0
+                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                                hAlign: Text.AlignRight; fontPixelSize: 14
+                                onOpenRequested: root.openNumPadRequested(field)
+                                onValueCommitted: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.x_end = value
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Label { text: "Z End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                            NumpadField {
+                                Layout.preferredWidth: 110
+                                settingName: "at." + primIdx + ".z_end"
+                                validatorObject: dblVal
+                                value: primData.z_end !== undefined ? primData.z_end : 0
+                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                                hAlign: Text.AlignRight; fontPixelSize: 14
+                                onOpenRequested: root.openNumPadRequested(field)
+                                onValueCommitted: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.z_end = value
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Label { text: "X Center"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                            NumpadField {
+                                Layout.preferredWidth: 110
+                                settingName: "at." + primIdx + ".x_center"
+                                validatorObject: dblVal
+                                value: primData.x_center !== undefined ? primData.x_center : 0
+                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                                hAlign: Text.AlignRight; fontPixelSize: 14
+                                onOpenRequested: root.openNumPadRequested(field)
+                                onValueCommitted: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.x_center = value
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            Label { text: "Z Center"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                            NumpadField {
+                                Layout.preferredWidth: 110
+                                settingName: "at." + primIdx + ".z_center"
+                                validatorObject: dblVal
+                                value: primData.z_center !== undefined ? primData.z_center : 0
+                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                                hAlign: Text.AlignRight; fontPixelSize: 14
+                                onOpenRequested: root.openNumPadRequested(field)
+                                onValueCommitted: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.z_center = value
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
+                        }
+                    }
+
+                    // Right: Blend box (anchored to bottom; hidden for last primitive)
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignBottom
+                        implicitHeight: blendAtCol.implicitHeight + 16
+                        visible: primIdx < root.primitives.length - 1
+                        color: "transparent"
+                        border.color: "#c0c0c0"
+                        border.width: 1
+                        radius: 4
+
+                        ColumnLayout {
+                            id: blendAtCol
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+                            spacing: 6
+
+                            Text {
+                                text: "Blend"; font.pixelSize: 12; font.bold: true; color: "#444444"
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true; spacing: 4
+
+                                Button {
+                                    text: "Chamfer"; font.pixelSize: 12
+                                    Layout.fillWidth: true; implicitHeight: 32
+                                    enabled: root.blendType(primData) === "none"
+                                    onClicked: {
+                                        var d = JSON.parse(JSON.stringify(primData))
+                                        if (!d.blend) d.blend = {}
+                                        d.blend.type = "chamfer"
+                                        if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
+                                        root.primUpdated(primIdx, d)
+                                    }
+                                }
+
+                                Button {
+                                    text: "Fillet"; font.pixelSize: 12
+                                    Layout.fillWidth: true; implicitHeight: 32
+                                    enabled: root.blendType(primData) === "none"
+                                    onClicked: {
+                                        var d = JSON.parse(JSON.stringify(primData))
+                                        if (!d.blend) d.blend = {}
+                                        d.blend.type = "fillet"
+                                        if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
+                                        root.primUpdated(primIdx, d)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Card: Blend sub-item ────────────────────────────────────────────────────
+    Component {
+        id: blendComp
+        Rectangle {
+            property var primData: ({})
+            property int primIdx:  0
+
+            readonly property bool isBlendSelected: root.selectedBlendIndex === primIdx
+            color:  isBlendSelected ? "#fef9c3" : "#f5f5f5"
+            radius: 4
+            border.color: isBlendSelected ? "#d97706" : "#c0c8d8"
+            border.width: isBlendSelected ? 2 : 1
+            height: blendCardCol.implicitHeight + 24
+
+            TapHandler { onTapped: { root.selectedBlendIndex = primIdx; root.selectedPrimIndex = -1 } }
+
+            // Left accent bar
+            Rectangle {
+                id: blendAccent
+                anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
+                width: 4; radius: 2
+                color: isBlendSelected ? "#d97706" : "#94a3b8"
+            }
+
+            ColumnLayout {
+                id: blendCardCol
+                anchors {
+                    left: blendAccent.right; right: parent.right
+                    top: parent.top; margins: 12; leftMargin: 8
+                }
+                spacing: 8
+
+                RowLayout {
+                    Layout.fillWidth: true; spacing: 4
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: (primIdx + 1) + ". " + (root.blendType(primData) === "chamfer" ? "Chamfer Blend" : "Fillet Blend")
+                        font.pixelSize: 14; font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
                     Button {
-                        text: "CW"; font.pixelSize: 12; Layout.preferredWidth: 50
-                        highlighted: primData.direction === "cw"
+                        text: "✕"; font.pixelSize: 11; padding: 2
+                        Layout.preferredWidth: 24; Layout.preferredHeight: 24
                         onClicked: {
                             var d = JSON.parse(JSON.stringify(primData))
-                            d.direction = "cw"
+                            d.blend = { type: "none" }
                             root.primUpdated(primIdx, d)
-                        }
-                    }
-                    Button {
-                        text: "CCW"; font.pixelSize: 12; Layout.preferredWidth: 50
-                        highlighted: primData.direction === "ccw"
-                        onClicked: {
-                            var d = JSON.parse(JSON.stringify(primData))
-                            d.direction = "ccw"
-                            root.primUpdated(primIdx, d)
+                            if (root.selectedBlendIndex === primIdx)
+                                root.selectedBlendIndex = -1
                         }
                     }
                 }
 
+                Rectangle { Layout.fillWidth: true; height: 1; color: "#d8d8d8" }
+
                 RowLayout {
                     Layout.fillWidth: true; spacing: 8
-                    Label { text: "Radius"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                    Label {
+                        text: root.blendType(primData) === "chamfer" ? "Width" : "Radius"
+                        font.pixelSize: 14; Layout.preferredWidth: 60
+                    }
                     NumpadField {
                         Layout.preferredWidth: 110
-                        settingName: "at." + primIdx + ".arc_radius"
-                        validatorObject: dblVal
-                        value: primData.arc_radius !== undefined ? primData.arc_radius : 10
-                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                        hAlign: Text.AlignRight; fontPixelSize: 14
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: {
-                            var d = JSON.parse(JSON.stringify(primData))
-                            d.arc_radius = value
-                            root.primUpdated(primIdx, d)
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "X End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                    NumpadField {
-                        Layout.preferredWidth: 110
-                        settingName: "at." + primIdx + ".x_end"
-                        validatorObject: dblVal
-                        value: primData.x_end !== undefined ? primData.x_end : 0
-                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                        hAlign: Text.AlignRight; fontPixelSize: 14
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: {
-                            var d = JSON.parse(JSON.stringify(primData))
-                            d.x_end = value
-                            root.primUpdated(primIdx, d)
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "Z End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                    NumpadField {
-                        Layout.preferredWidth: 110
-                        settingName: "at." + primIdx + ".z_end"
-                        validatorObject: dblVal
-                        value: primData.z_end !== undefined ? primData.z_end : 0
-                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                        hAlign: Text.AlignRight; fontPixelSize: 14
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: {
-                            var d = JSON.parse(JSON.stringify(primData))
-                            d.z_end = value
-                            root.primUpdated(primIdx, d)
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "X Center"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                    NumpadField {
-                        Layout.preferredWidth: 110
-                        settingName: "at." + primIdx + ".x_center"
-                        validatorObject: dblVal
-                        value: primData.x_center !== undefined ? primData.x_center : 0
-                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                        hAlign: Text.AlignRight; fontPixelSize: 14
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: {
-                            var d = JSON.parse(JSON.stringify(primData))
-                            d.x_center = value
-                            root.primUpdated(primIdx, d)
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "Z Center"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                    NumpadField {
-                        Layout.preferredWidth: 110
-                        settingName: "at." + primIdx + ".z_center"
-                        validatorObject: dblVal
-                        value: primData.z_center !== undefined ? primData.z_center : 0
-                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                        hAlign: Text.AlignRight; fontPixelSize: 14
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: {
-                            var d = JSON.parse(JSON.stringify(primData))
-                            d.z_center = value
-                            root.primUpdated(primIdx, d)
-                        }
-                    }
-                }
-
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c8d8" }
-
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "Blend:"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                    Button {
-                        text: root.blendType(primData)
-                        font.pixelSize: 12; Layout.preferredWidth: 80
-                        onClicked: root.cycleBlend(primData, primIdx)
-                    }
-                    NumpadField {
-                        visible: root.blendType(primData) !== "none"
-                        Layout.preferredWidth: 90
-                        settingName: "at." + primIdx + ".blend_val"
+                        settingName: "blend." + primIdx + ".value"
                         validatorObject: dblVal
                         value: root.blendValue(primData)
                         formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
@@ -766,22 +940,52 @@ Item {
                             id: primRepeater
                             model: root.primitives
 
-                            delegate: Loader {
+                            delegate: Column {
                                 property var md: modelData
                                 property int mi: index
                                 width: parent ? parent.width : 0
+                                spacing: 4
 
-                                sourceComponent: {
-                                    if (!md) return null
-                                    if (md.type === "startPoint") return startPointComp
-                                    if (md.type === "lineTo")     return lineToComp
-                                    if (md.type === "arcTo")      return arcToComp
-                                    return null
+                                // Keep card data in sync when model updates in-place
+                                onMdChanged: {
+                                    if (primLdr.item) primLdr.item.primData = md
+                                    if (blendLdr.item) blendLdr.item.primData = md
                                 }
 
-                                onLoaded: {
-                                    item.primData = md
-                                    item.primIdx  = mi
+                                // Primitive card
+                                Loader {
+                                    id: primLdr
+                                    width: parent.width
+
+                                    sourceComponent: {
+                                        if (!md) return null
+                                        if (md.type === "startPoint") return startPointComp
+                                        if (md.type === "lineTo")     return lineToComp
+                                        if (md.type === "arcTo")      return arcToComp
+                                        return null
+                                    }
+
+                                    onLoaded: {
+                                        item.primData = md
+                                        item.primIdx  = mi
+                                    }
+                                }
+
+                                // Blend sub-card (visible only when a blend is set)
+                                Loader {
+                                    id: blendLdr
+                                    width: parent.width
+                                    active:  md !== null && md !== undefined &&
+                                             md.blend !== undefined && md.blend !== null &&
+                                             md.blend.type !== "none" && md.type !== "startPoint"
+                                    visible: active
+
+                                    sourceComponent: blendComp
+
+                                    onLoaded: {
+                                        item.primData = md
+                                        item.primIdx  = mi
+                                    }
                                 }
                             }
                         }
@@ -808,9 +1012,13 @@ Item {
                     bottom: parent.bottom
                     leftMargin: 12
                 }
-                primitives:        root.primitives
-                selectedPrimIndex: root.selectedPrimIndex
-                onPrimitiveSelected: function(idx) { root.selectedPrimIndex = idx }
+                primitives:         root.primitives
+                selectedPrimIndex:  root.selectedPrimIndex
+                selectedBlendIndex: root.selectedBlendIndex
+                onPrimitiveSelected: function(idx) {
+                    root.selectedPrimIndex  = idx
+                    root.selectedBlendIndex = -1
+                }
 
                 Rectangle {
                     anchors.fill: parent

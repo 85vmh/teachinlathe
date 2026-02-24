@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-24 16:28:12",
+        "last_edit": "2026-02-24 17:35:20",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -97,9 +97,9 @@
                     "x_end": 20.0,
                     "z_end": -25.0,
                     "blend": {
-                        "type": "none",
+                        "type": "fillet",
                         "chamfer_width": 2.0,
-                        "fillet_radius": 3.0
+                        "fillet_radius": 2.0
                     }
                 },
                 {
@@ -108,7 +108,7 @@
                     "x_end": 30.0,
                     "z_end": -30.0,
                     "blend": {
-                        "type": "none",
+                        "type": "fillet",
                         "chamfer_width": 1.0,
                         "fillet_radius": 4.0
                     }
@@ -123,8 +123,8 @@
                     "z_center": -30.0,
                     "arc_radius": 10.0,
                     "blend": {
-                        "type": "chamfer",
-                        "chamfer_width": 3.0,
+                        "type": "fillet",
+                        "chamfer_width": 0.0,
                         "fillet_radius": 3.0
                     }
                 },
@@ -134,7 +134,7 @@
                     "x_end": 40.0,
                     "z_end": -60.0,
                     "blend": {
-                        "type": "none",
+                        "type": "fillet",
                         "chamfer_width": 2.0,
                         "fillet_radius": 3.0
                     }
@@ -146,8 +146,8 @@
                     "z_end": -60.0,
                     "blend": {
                         "type": "none",
-                        "chamfer_width": 3.0,
-                        "fillet_radius": 1.0
+                        "chamfer_width": 0.0,
+                        "fillet_radius": 0.0
                     }
                 }
             ]
