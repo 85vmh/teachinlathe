@@ -37,11 +37,6 @@ Canvas {
     onSelectedBlendIndexChanged: requestPaint()
 
     // ── Viewport / scale computation ───────────────────────────────────────────
-    // Viewport margins:
-    //   top    = 20 mm above X=0 (spindle axis)
-    //   right  = 20 mm past Z+ arrow tip  (= vZMax + 10 + 20 = vZMax + 30)
-    //   bottom = 10 mm past X+ arrow tip  (= vXMax + 10 + 10 = vXMax + 20)
-    //   left   = all data + 20 mm margin
     function _computeScale() {
         var v = geom.computeViewport(primitives, width, height)
         _scale = v.scale
@@ -49,16 +44,6 @@ Canvas {
         _originY = v.originY
         _maxZ = v.maxZ
         _maxX = v.maxX
-    }
-
-    // ── Tick helpers ───────────────────────────────────────────────────────────
-    function _steps() {
-        return geom.steps(_scale)
-    }
-
-    // Returns {len, label} for a tick at world value `val`
-    function _tickStyle(val, s) {
-        return geom.tickStyle(val, s)
     }
 
     // ── Paint dispatcher ───────────────────────────────────────────────────────
@@ -79,10 +64,6 @@ Canvas {
         _renderSegs = geom.buildRenderSegments(primitives)
     }
 
-    function _walkToIndex(targetIdx) {
-        return geom.walkToIndex(primitives, targetIdx)
-    }
-
     // ── Actor orchestration ───────────────────────────────────────────────────
     BackgroundActor {
         id: backgroundActor
@@ -99,7 +80,7 @@ Canvas {
         scale: root._scale
         cx: root._cx
         cy: root._cy
-        stepsFn: root._steps
+        geometry: geom
     }
 
     TicksActor {
@@ -111,8 +92,7 @@ Canvas {
         scale: root._scale
         cx: root._cx
         cy: root._cy
-        stepsFn: root._steps
-        tickStyleFn: root._tickStyle
+        geometry: geom
     }
 
     CenterLineActor {
@@ -159,53 +139,6 @@ Canvas {
     }
 
     // ── Hit testing ────────────────────────────────────────────────────────────
-    function _distToSegment(px, py, x1, y1, x2, y2) {
-        var deltaX = x2 - x1
-        var deltaY = y2 - y1
-        var lengthSquared = deltaX * deltaX + deltaY * deltaY
-        if (lengthSquared < 1) {
-            return Math.sqrt((px - x1) * (px - x1) + (py - y1) * (py - y1))
-        }
-        var t = Math.max(0, Math.min(1, ((px - x1) * deltaX + (py - y1) * deltaY) / lengthSquared))
-        var closestX = x1 + t * deltaX - px
-        var closestY = y1 + t * deltaY - py
-        return Math.sqrt(closestX * closestX + closestY * closestY)
-    }
-
-    function _normAngle(a) {
-        var TWO_PI = Math.PI * 2
-        return ((a % TWO_PI) + TWO_PI) % TWO_PI
-    }
-
-    function _angleInArc(testAngle, startAng, endAng, anticlockwise) {
-        var start = _normAngle(startAng)
-        var end = _normAngle(endAng)
-        var angle = _normAngle(testAngle)
-        if (!anticlockwise) {          // CW: angles increase from s to e
-            return (start <= end) ? (angle >= start && angle <= end) : (angle >= start || angle <= end)
-        } else {                       // CCW: angles decrease from s to e
-            return (start >= end) ? (angle >= end && angle <= start) : (angle <= end || angle >= start)
-        }
-    }
-
-    function _distToArc(px, py, ccx, ccy, cr, sa, ea, anticlockwise) {
-        var deltaX = px - ccx
-        var deltaY = py - ccy
-        var distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
-        if (distance < 1) return cr
-        var distanceToCircle = Math.abs(distance - cr)
-        if (distanceToCircle > 20) return 1e9
-        if (_angleInArc(Math.atan2(deltaY, deltaX), sa, ea, anticlockwise)) return distanceToCircle
-        // nearest arc endpoint
-        var startX = ccx + cr * Math.cos(sa)
-        var startY = ccy + cr * Math.sin(sa)
-        var endX = ccx + cr * Math.cos(ea)
-        var endY = ccy + cr * Math.sin(ea)
-        var distStart = Math.sqrt((px - startX) * (px - startX) + (py - startY) * (py - startY))
-        var distEnd = Math.sqrt((px - endX) * (px - endX) + (py - endY) * (py - endY))
-        return Math.min(distStart, distEnd)
-    }
-
     function _hitTest(px, py) {
         if (!primitives || primitives.length === 0) return -1
         var HIT = 10    // pixel tolerance
@@ -224,7 +157,7 @@ Canvas {
             } else if (p.type === "lineTo") {
                 var endZ = +(p.z_end || 0)
                 var endX = +(p.x_end || 0)
-                if (_distToSegment(px, py, _cx(currentZ), _cy(currentX), _cx(endZ), _cy(endX)) <= HIT) return i
+                if (geom.distToSegment(px, py, _cx(currentZ), _cy(currentX), _cx(endZ), _cy(endX)) <= HIT) return i
                 currentZ = endZ
                 currentX = endX
             } else if (p.type === "arcTo") {
@@ -239,7 +172,7 @@ Canvas {
                 var radiusCanvas = arcRadius * _scale
                 var startAngle = Math.atan2(_cy(currentX) - centerCanvasY, _cx(currentZ) - centerCanvasX)
                 var endAngle = Math.atan2(_cy(arcEndX) - centerCanvasY, _cx(arcEndZ) - centerCanvasX)
-                if (_distToArc(px, py, centerCanvasX, centerCanvasY, radiusCanvas, startAngle, endAngle, !isClockwise) <= HIT) return i
+                if (geom.distToArc(px, py, centerCanvasX, centerCanvasY, radiusCanvas, startAngle, endAngle, !isClockwise) <= HIT) return i
                 currentZ = arcEndZ
                 currentX = arcEndX
             }

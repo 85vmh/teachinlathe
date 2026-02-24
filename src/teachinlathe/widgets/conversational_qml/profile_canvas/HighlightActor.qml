@@ -58,23 +58,23 @@ QtObject {
                 ctx.fill()
 
             } else if (p.type === "arcTo") {
-                var aez = +(p.z_end||0)
-                var aex = +(p.x_end||0)
+                var ez = +(p.z_end||0)
+                var ex = +(p.x_end||0)
                 var acz = +(p.z_center||0)
                 var acx = +(p.x_center||0)
                 var ar = +(p.arc_radius||0)
-                var isCW2 = (p.direction === "cw")
+                var isCW = (p.direction === "cw")
                 var ccx = cx(acz)
                 var ccy = cy(acx)
-                var cr2 = ar * scale
-                var sa2 = Math.atan2(cy(logX) - ccy, cx(logZ) - ccx)
-                var ea2 = Math.atan2(cy(aex)  - ccy, cx(aez)  - ccx)
+                var cr = ar * scale
+                var sa = Math.atan2(cy(logX) - ccy, cx(logZ) - ccx)
+                var ea = Math.atan2(cy(ex)   - ccy, cx(ez)   - ccx)
                 ctx.beginPath()
-                ctx.arc(ccx, ccy, cr2, sa2, ea2, !isCW2)
+                ctx.arc(ccx, ccy, cr, sa, ea, !isCW)
                 ctx.stroke()
                 ctx.fillStyle = highlightFillColor
                 ctx.beginPath()
-                ctx.arc(cx(aez), cy(aex), endPointRadius, 0, Math.PI*2)
+                ctx.arc(cx(ez), cy(ex), endPointRadius, 0, Math.PI*2)
                 ctx.fill()
                 ctx.fillStyle = highlightCenterColor
                 ctx.beginPath()
@@ -93,93 +93,93 @@ QtObject {
             var bNextP = (targetIdx + 1 < primitives.length) ? primitives[targetIdx + 1] : null
 
             if (p.type === "lineTo") {
-                var lez = +(p.z_end||0)
-                var lex = +(p.x_end||0)
+                var ez = +(p.z_end||0)
+                var ex = +(p.x_end||0)
 
                 if (p.blend.type === "chamfer") {
-                    var lcw  = +(p.blend.chamfer_width || 0)
-                    var lcg = geometry.chamferGeomLine(logZ, logX, lez, lex, bNextP, lcw)
-                    if (lcg) {
+                    var cw = +(p.blend.chamfer_width || 0)
+                    var cg = geometry.chamferGeomLine(logZ, logX, ez, ex, bNextP, cw)
+                    if (cg) {
                         ctx.beginPath()
-                        ctx.moveTo(cx(lcg.csZ), cy(lcg.csX))
-                        ctx.lineTo(cx(lcg.ceZ), cy(lcg.ceX))
+                        ctx.moveTo(cx(cg.csZ), cy(cg.csX))
+                        ctx.lineTo(cx(cg.ceZ), cy(cg.ceX))
                         ctx.stroke()
                         ctx.fillStyle = blendColor
                         ctx.beginPath()
-                        ctx.arc(cx(lcg.csZ), cy(lcg.csX), endPointRadius, 0, Math.PI*2)
+                        ctx.arc(cx(cg.csZ), cy(cg.csX), endPointRadius, 0, Math.PI*2)
                         ctx.fill()
                         ctx.beginPath()
-                        ctx.arc(cx(lcg.ceZ), cy(lcg.ceX), endPointRadius, 0, Math.PI*2)
+                        ctx.arc(cx(cg.ceZ), cy(cg.ceX), endPointRadius, 0, Math.PI*2)
                         ctx.fill()
                     }
 
                 } else if (p.blend.type === "fillet") {
-                    var lfr = +(p.blend.fillet_radius || 0)
-                    var lfg = (bNextP && bNextP.type === "arcTo")
-                              ? geometry.filletLineArc(logZ, logX, lez, lex, bNextP, lfr)
-                              : geometry.filletGeom(logZ, logX, lez, lex, bNextP, lfr)
-                    if (lfg) {
-                        var lfccx = cx(lfg.fcz)
-                        var lfccy = cy(lfg.fcx)
-                        var lfcr = lfr * scale
-                        var lfsa = Math.atan2(cy(lfg.t1x) - lfccy, cx(lfg.t1z) - lfccx)
-                        var lfea = Math.atan2(cy(lfg.t2x) - lfccy, cx(lfg.t2z) - lfccx)
+                    var fr = +(p.blend.fillet_radius || 0)
+                    var fg = (bNextP && bNextP.type === "arcTo")
+                              ? geometry.filletLineArc(logZ, logX, ez, ex, bNextP, fr)
+                              : geometry.filletGeom(logZ, logX, ez, ex, bNextP, fr)
+                    if (fg) {
+                        var ccx = cx(fg.fcz)
+                        var ccy = cy(fg.fcx)
+                        var cr = fr * scale
+                        var sa = Math.atan2(cy(fg.t1x) - ccy, cx(fg.t1z) - ccx)
+                        var ea = Math.atan2(cy(fg.t2x) - ccy, cx(fg.t2z) - ccx)
                         ctx.beginPath()
-                        ctx.arc(lfccx, lfccy, lfcr, lfsa, lfea, lfg.anticlockwise)
+                        ctx.arc(ccx, ccy, cr, sa, ea, fg.anticlockwise)
                         ctx.stroke()
                         ctx.fillStyle = blendColor
                         ctx.beginPath()
-                        ctx.arc(cx(lfg.t1z), cy(lfg.t1x), endPointRadius, 0, Math.PI*2)
+                        ctx.arc(cx(fg.t1z), cy(fg.t1x), endPointRadius, 0, Math.PI*2)
                         ctx.fill()
                         ctx.beginPath()
-                        ctx.arc(cx(lfg.t2z), cy(lfg.t2x), endPointRadius, 0, Math.PI*2)
+                        ctx.arc(cx(fg.t2z), cy(fg.t2x), endPointRadius, 0, Math.PI*2)
                         ctx.fill()
                     }
                 }
 
             } else if (p.type === "arcTo") {
-                var aaez = +(p.z_end||0)
-                var aaex = +(p.x_end||0)
-                var aacz = +(p.z_center||0)
-                var aacx = +(p.x_center||0)
-                var aar = +(p.arc_radius||0)
-                var aisCW = (p.direction === "cw")
+                var ez = +(p.z_end||0)
+                var ex = +(p.x_end||0)
+                var acz = +(p.z_center||0)
+                var acx = +(p.x_center||0)
+                var ar = +(p.arc_radius||0)
+                var isCW = (p.direction === "cw")
 
                 if (p.blend.type === "chamfer") {
-                    var aacw  = +(p.blend.chamfer_width || 0)
-                    var acg2 = geometry.chamferGeomArc(aacz, aacx, aar, aisCW, aaez, aaex, bNextP, aacw)
-                    if (acg2) {
+                    var cw = +(p.blend.chamfer_width || 0)
+                    var cg = geometry.chamferGeomArc(acz, acx, ar, isCW, ez, ex, bNextP, cw)
+                    if (cg) {
                         ctx.beginPath()
-                        ctx.moveTo(cx(acg2.csZ), cy(acg2.csX))
-                        ctx.lineTo(cx(acg2.ceZ), cy(acg2.ceX))
+                        ctx.moveTo(cx(cg.csZ), cy(cg.csX))
+                        ctx.lineTo(cx(cg.ceZ), cy(cg.ceX))
                         ctx.stroke()
                         ctx.fillStyle = blendColor
                         ctx.beginPath()
-                        ctx.arc(cx(acg2.csZ), cy(acg2.csX), endPointRadius, 0, Math.PI*2)
+                        ctx.arc(cx(cg.csZ), cy(cg.csX), endPointRadius, 0, Math.PI*2)
                         ctx.fill()
                         ctx.beginPath()
-                        ctx.arc(cx(acg2.ceZ), cy(acg2.ceX), endPointRadius, 0, Math.PI*2)
+                        ctx.arc(cx(cg.ceZ), cy(cg.ceX), endPointRadius, 0, Math.PI*2)
                         ctx.fill()
                     }
 
                 } else if (p.blend.type === "fillet") {
-                    var aafr = +(p.blend.fillet_radius || 0)
-                    var aafg = geometry.filletArcLine(aacz, aacx, aar, aisCW, aaez, aaex, bNextP, aafr)
-                    if (aafg) {
-                        var aafccx = cx(aafg.fcz)
-                        var aafccy = cy(aafg.fcx)
-                        var aafcr = aafr * scale
-                        var aafsa = Math.atan2(cy(aafg.t1x) - aafccy, cx(aafg.t1z) - aafccx)
-                        var aafea = Math.atan2(cy(aafg.t2x) - aafccy, cx(aafg.t2z) - aafccx)
+                    var fr = +(p.blend.fillet_radius || 0)
+                    var fg = geometry.filletArcLine(acz, acx, ar, isCW, ez, ex, bNextP, fr)
+                    if (fg) {
+                        var ccx = cx(fg.fcz)
+                        var ccy = cy(fg.fcx)
+                        var cr = fr * scale
+                        var sa = Math.atan2(cy(fg.t1x) - ccy, cx(fg.t1z) - ccx)
+                        var ea = Math.atan2(cy(fg.t2x) - ccy, cx(fg.t2z) - ccx)
                         ctx.beginPath()
-                        ctx.arc(aafccx, aafccy, aafcr, aafsa, aafea, aafg.anticlockwise)
+                        ctx.arc(ccx, ccy, cr, sa, ea, fg.anticlockwise)
                         ctx.stroke()
                         ctx.fillStyle = blendColor
                         ctx.beginPath()
-                        ctx.arc(cx(aafg.t1z), cy(aafg.t1x), endPointRadius, 0, Math.PI*2)
+                        ctx.arc(cx(fg.t1z), cy(fg.t1x), endPointRadius, 0, Math.PI*2)
                         ctx.fill()
                         ctx.beginPath()
-                        ctx.arc(cx(aafg.t2z), cy(aafg.t2x), endPointRadius, 0, Math.PI*2)
+                        ctx.arc(cx(fg.t2z), cy(fg.t2x), endPointRadius, 0, Math.PI*2)
                         ctx.fill()
                     }
                 }

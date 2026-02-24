@@ -8,12 +8,12 @@ QtObject {
     property real scale: 1
     property var cx
     property var cy
-    property var stepsFn
+    property var geometry
     property color gridColor: "#e0e0e0"
     property real gridLineWidth: 0.5
 
     function paint(ctx) {
-        var s = stepsFn()
+        var s = geometry.steps(scale)
         ctx.strokeStyle = gridColor
         ctx.lineWidth = gridLineWidth
         ctx.setLineDash([])
