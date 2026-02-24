@@ -355,6 +355,71 @@ Canvas {
         }
     }
 
+    // ── Fillet geometry: lineTo end → arcTo (exact circle-arc tangency) ─────────
+    // The fillet circle (radius fr) must be tangent to line 1 (incoming) and
+    // externally tangent to arc 2 (|C_f - C_arc| = ar + fr).
+    // Parameterises the fillet centre along the offset of line 1 going backward.
+    // Returns {t1z,t1x, t2z,t2x, fcz,fcx, anticlockwise} or null.
+    // T1 is the tangent point on line 1, T2 on arc 2.
+    function _filletLineArc(startZ, startX, cornerZ, cornerX, nextArc, fr) {
+        if (!nextArc || nextArc.type !== "arcTo") return null
+        var isCW = (nextArc.direction === "cw")
+        var acz = +(nextArc.z_center||0), acx = +(nextArc.x_center||0)
+        var ar  = +(nextArc.arc_radius||0)
+        if (fr < 0.001 || ar < 0.001) return null
+
+        // Line 1 direction (into corner)
+        var sdz = cornerZ - startZ, sdx = cornerX - startX
+        var slen = Math.sqrt(sdz*sdz + sdx*sdx)
+        if (slen < 0.001) return null
+        var d1z = sdz / slen, d1x = sdx / slen
+
+        // Arc 2 tangent direction at start (= corner), same formula as arc-end tangent
+        var rsz = cornerZ - acz, rsx = cornerX - acx
+        var rlen = Math.sqrt(rsz*rsz + rsx*rsx)
+        if (rlen < 0.001) return null
+        var d2z = (isCW ? -rsx : rsx) / rlen
+        var d2x = (isCW ?  rsz : -rsz) / rlen
+
+        var cross = d1z * d2x - d1x * d2z
+        if (Math.abs(cross) < 0.001) return null  // line tangent to arc
+
+        // Normal to line 1 pointing toward fillet centre (same convention as _filletGeom)
+        var n1z = (cross > 0) ? -d1x :  d1x
+        var n1x = (cross > 0) ?  d1z : -d1z
+
+        // Δ = J + fr·n1 − C_arc  (vector from arc centre to offset-line base)
+        var dz = cornerZ + fr*n1z - acz
+        var dx = cornerX + fr*n1x - acx
+
+        // Parameterise along −d1 (going backward from corner along line 1):
+        // t² + 2(Δ·(−d1))t + (|Δ|² − (ar+fr)²) = 0
+        // t = (Δ·d1) ± sqrt((Δ·d1)² − |Δ|² + (ar+fr)²)
+        // Take the root nearest to the junction (mirrors _filletArcLine convention)
+        var dotD1 = dz*d1z + dx*d1x
+        var discrim = dotD1*dotD1 - (dz*dz + dx*dx) + (ar+fr)*(ar+fr)
+        if (discrim < 0) return null
+
+        var t = dotD1 + Math.sqrt(discrim)  // T1 is t units back from corner along line 1
+
+        // Fillet centre C_f, tangent point on line T1, tangent point on arc T2
+        var fcz = cornerZ - t*d1z + fr*n1z
+        var fcx = cornerX - t*d1x + fr*n1x
+        var t1z = cornerZ - t*d1z
+        var t1x = cornerX - t*d1x
+        var vcz = fcz - acz, vcx = fcx - acx
+        var vclen = Math.sqrt(vcz*vcz + vcx*vcx)
+        if (vclen < 0.001) return null
+
+        return {
+            t1z: t1z, t1x: t1x,
+            t2z: acz + ar * vcz / vclen,
+            t2x: acx + ar * vcx / vclen,
+            fcz: fcz, fcx: fcx,
+            anticlockwise: (cross < 0)
+        }
+    }
+
     // ── Profile (dark gray, no vertex dots) ────────────────────────────────────
     function _paintProfile(ctx) {
         if (!primitives || primitives.length === 0) return
@@ -395,8 +460,8 @@ Canvas {
                         } else if (nextP && nextP.type === "arcTo") {
                             var nacz = +(nextP.z_center||0), nacx = +(nextP.x_center||0)
                             var nrz = ez - nacz, nrx = ex - nacx
-                            var nndz = (nextP.direction === "cw") ? nrx : -nrx
-                            var nndx = (nextP.direction === "cw") ? -nrz : nrz
+                            var nndz = (nextP.direction === "cw") ? -nrx :  nrx
+                            var nndx = (nextP.direction === "cw") ?  nrz : -nrz
                             var nlen2 = Math.sqrt(nndz*nndz + nndx*nndx)
                             if (nlen2 > 0.001) { ceZ = ez + cw*nndz/nlen2; ceX = ex + cw*nndx/nlen2 }
                         }
@@ -415,8 +480,10 @@ Canvas {
                     }
                 } else if (p.blend && p.blend.type === "fillet") {
                     var fr  = +(p.blend.fillet_radius || 0)
-                    var fg  = _filletGeom(logZ, logX, ez, ex,
-                                          i+1 < primitives.length ? primitives[i+1] : null, fr)
+                    var nextPrim = i+1 < primitives.length ? primitives[i+1] : null
+                    var fg = (nextPrim && nextPrim.type === "arcTo")
+                             ? _filletLineArc(logZ, logX, ez, ex, nextPrim, fr)
+                             : _filletGeom(logZ, logX, ez, ex, nextPrim, fr)
                     if (fg) {
                         ctx.lineTo(_cx(fg.t1z), _cy(fg.t1x))
                         var fccx = _cx(fg.fcz), fccy = _cy(fg.fcx), fcr = fr * _scale
@@ -550,16 +617,18 @@ Canvas {
                     } else if (pNextP && pNextP.type === "arcTo" && pcw > 0.001) {
                         var pnacz = +(pNextP.z_center||0), pnacx = +(pNextP.x_center||0)
                         var pnrz = pez - pnacz, pnrx = pex - pnacx
-                        var pnndz = (pNextP.direction === "cw") ? pnrx : -pnrx
-                        var pnndx = (pNextP.direction === "cw") ? -pnrz : pnrz
+                        var pnndz = (pNextP.direction === "cw") ? -pnrx :  pnrx
+                        var pnndx = (pNextP.direction === "cw") ?  pnrz : -pnrz
                         var pnlen2 = Math.sqrt(pnndz*pnndz + pnndx*pnndx)
                         if (pnlen2 > 0.001) { pceZ = pez + pcw*pnndz/pnlen2; pceX = pex + pcw*pnndx/pnlen2 }
                     }
                     drawZ = pceZ; drawX = pceX
                 } else if (prev.blend && prev.blend.type === "fillet") {
-                    var pfg = _filletGeom(logZ, logX, pez, pex,
-                                          j+1 < primitives.length ? primitives[j+1] : null,
-                                          +(prev.blend.fillet_radius || 0))
+                    var pfr = +(prev.blend.fillet_radius || 0)
+                    var pNextPrim = j+1 < primitives.length ? primitives[j+1] : null
+                    var pfg = (pNextPrim && pNextPrim.type === "arcTo")
+                              ? _filletLineArc(logZ, logX, pez, pex, pNextPrim, pfr)
+                              : _filletGeom(logZ, logX, pez, pex, pNextPrim, pfr)
                     if (pfg) { drawZ = pfg.t2z; drawX = pfg.t2x }
                     else     { drawZ = pez; drawX = pex }
                 } else {
@@ -630,8 +699,8 @@ Canvas {
                     } else if (hnextP && hnextP.type === "arcTo") {
                         var hnacz = +(hnextP.z_center||0), hnacx = +(hnextP.x_center||0)
                         var hnrz = ez - hnacz, hnrx = ex - hnacx
-                        var hnndz = (hnextP.direction === "cw") ? hnrx : -hnrx
-                        var hnndx = (hnextP.direction === "cw") ? -hnrz : hnrz
+                        var hnndz = (hnextP.direction === "cw") ? -hnrx :  hnrx
+                        var hnndx = (hnextP.direction === "cw") ?  hnrz : -hnrz
                         var hnlen2 = Math.sqrt(hnndz*hnndz + hnndx*hnndx)
                         if (hnlen2 > 0.001) { hceZ = ez + hcw*hnndz/hnlen2; hceX = ex + hcw*hnndx/hnlen2 }
                     }
@@ -647,8 +716,10 @@ Canvas {
                 }
             } else if (p.blend && p.blend.type === "fillet") {
                 var hfr = +(p.blend.fillet_radius || 0)
-                var hfg = _filletGeom(logZ, logX, ez, ex,
-                                      idx+1 < primitives.length ? primitives[idx+1] : null, hfr)
+                var hNextPrim = idx+1 < primitives.length ? primitives[idx+1] : null
+                var hfg = (hNextPrim && hNextPrim.type === "arcTo")
+                          ? _filletLineArc(logZ, logX, ez, ex, hNextPrim, hfr)
+                          : _filletGeom(logZ, logX, ez, ex, hNextPrim, hfr)
                 if (hfg) {
                     ctx.lineTo(_cx(hfg.t1z), _cy(hfg.t1x))
                     var hfccx = _cx(hfg.fcz), hfccy = _cy(hfg.fcx), hfcr = hfr * _scale

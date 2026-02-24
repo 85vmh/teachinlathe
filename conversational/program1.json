@@ -98,8 +98,8 @@
                     "z_end": -25.0,
                     "blend": {
                         "type": "fillet",
-                        "chamfer_width": 3.0,
-                        "fillet_radius": 10.0
+                        "chamfer_width": 5.0,
+                        "fillet_radius": 5.0
                     }
                 },
                 {
@@ -108,9 +108,9 @@
                     "x_end": 30.0,
                     "z_end": -30.0,
                     "blend": {
-                        "type": "none",
-                        "chamfer_width": 2.0,
-                        "fillet_radius": 1.0
+                        "type": "chamfer",
+                        "chamfer_width": 1.0,
+                        "fillet_radius": 4.0
                     }
                 },
                 {
@@ -124,8 +124,8 @@
                     "arc_radius": 10.0,
                     "blend": {
                         "type": "fillet",
-                        "chamfer_width": 2.0,
-                        "fillet_radius": 5.0
+                        "chamfer_width": 3.0,
+                        "fillet_radius": 2.0
                     }
                 },
                 {
@@ -134,8 +134,8 @@
                     "x_end": 40.0,
                     "z_end": -60.0,
                     "blend": {
-                        "type": "fillet",
-                        "chamfer_width": 3.0,
+                        "type": "chamfer",
+                        "chamfer_width": 1.0,
                         "fillet_radius": 6.0
                     }
                 },
