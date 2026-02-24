@@ -73,16 +73,28 @@ Item {
         root.emitSave()
     }
 
+    function _refEndCoords(refIdx) {
+        if (refIdx < 0 || refIdx >= root.primitives.length) return { x: 0, z: 0 }
+        var p = root.primitives[refIdx]
+        var rx = p.x_end   !== undefined ? p.x_end   :
+                 (p.x_start !== undefined ? p.x_start : 0)
+        var rz = p.z_end   !== undefined ? p.z_end   :
+                 (p.z_start !== undefined ? p.z_start : 0)
+        return { x: rx, z: rz }
+    }
+
     // insertIdx < 0 or >= arr.length → append; never inserts before startPoint (idx 0)
-    function primInserted(insertIdx, primType) {
+    function primInserted(insertIdx, primType, refX, refZ) {
         var arr = JSON.parse(JSON.stringify(root.primitives))
+        var rx = (refX !== undefined) ? refX : 0
+        var rz = (refZ !== undefined) ? refZ : 0
         var newPrim
         if (primType === "lineTo") {
             newPrim = { type: "lineTo", primitive_id: 0,
-                        x_end: 0, z_end: 0, blend: { type: "none" } }
+                        x_end: rx, z_end: rz, blend: { type: "none" } }
         } else {
             newPrim = { type: "arcTo", primitive_id: 0, direction: "cw", arc_radius: 10,
-                        x_end: 0, z_end: 0, x_center: 0, z_center: 0, blend: { type: "none" } }
+                        x_end: rx, z_end: rz, x_center: 0, z_center: 0, blend: { type: "none" } }
         }
         var actualIdx = (insertIdx < 0 || insertIdx >= arr.length)
                         ? arr.length
@@ -310,7 +322,8 @@ Item {
                         // enabled only when a type is chosen AND something other than startPoint is selected
                         enabled: addPrimPopup.selectedType !== "" && root.selectedPrimIndex > 0
                         onClicked: {
-                            root.primInserted(root.selectedPrimIndex, addPrimPopup.selectedType)
+                            var ref = root._refEndCoords(root.selectedPrimIndex - 1)
+                            root.primInserted(root.selectedPrimIndex, addPrimPopup.selectedType, ref.x, ref.z)
                             addPrimPopup.close()
                         }
                     }
@@ -322,7 +335,8 @@ Item {
                             var idx = root.selectedPrimIndex < 0
                                       ? root.primitives.length
                                       : root.selectedPrimIndex + 1
-                            root.primInserted(idx, addPrimPopup.selectedType)
+                            var ref = root._refEndCoords(root.selectedPrimIndex)
+                            root.primInserted(idx, addPrimPopup.selectedType, ref.x, ref.z)
                             addPrimPopup.close()
                         }
                     }
