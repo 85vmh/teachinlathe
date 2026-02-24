@@ -7,19 +7,19 @@ QtObject {
     property real originY: 0
     property real scale: 1
     property var geometry
-    property color tickStrokeColor: "#666666"
-    property color tickFillColor: "#333333"
+    property color zTickColor: "#2E7D32"   // matches AxesActor.zAxisColor
+    property color xTickColor: "#1565C0"   // matches AxesActor.xAxisColor
     property real tickLineWidth: 1
     property string tickFont: "10px sans-serif"
 
     function paint(ctx) {
         var s = geometry.steps(scale)
-        ctx.strokeStyle = tickStrokeColor
-        ctx.fillStyle = tickFillColor
         ctx.lineWidth = tickLineWidth
         ctx.setLineDash([])
 
-        // Z — top + bottom edges
+        // Z — top + bottom edges (green)
+        ctx.strokeStyle = zTickColor
+        ctx.fillStyle = zTickColor
         ctx.textAlign = "center"
         var zWMin = -originX / scale
         var zWMax = (width - originX) / scale
@@ -44,7 +44,9 @@ QtObject {
             }
         }
 
-        // X — left + right edges
+        // X — left + right edges (blue)
+        ctx.strokeStyle = xTickColor
+        ctx.fillStyle = xTickColor
         var xWMin = -originY / scale
         var xWMax = (height - originY) / scale
         var xt = Math.floor(xWMin / s.minor) * s.minor

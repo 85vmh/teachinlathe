@@ -97,19 +97,9 @@ QtObject {
     }
 
     function steps(scale) {
-        if (scale >= 8) {
-            return { minor: 1, major: 10 }
-        }
-        if (scale >= 3) {
-            return { minor: 2, major: 10 }
-        }
-        if (scale >= 1) {
-            return { minor: 5, major: 10 }
-        }
-        if (scale >= 0.4) {
-            return { minor: 10, major: 50 }
-        }
-        return { minor: 50, major: 100 }
+        if (scale >= 2)   return { minor: 1,  major: 10  }
+        if (scale >= 0.4) return { minor: 10, major: 50  }
+        return                   { minor: 50, major: 100 }
     }
 
     function _isMajor(val, step) {
@@ -117,13 +107,9 @@ QtObject {
     }
 
     function tickStyle(val, s) {
-        if (_isMajor(val, s.major)) {
-            return { len: 7, label: true }
-        }
-        if (s.minor <= 5 && _isMajor(val, 5)) {
-            return { len: 7, label: false }
-        }
-        return { len: 3, label: false }
+        if (_isMajor(val, s.major)) return { len: 7, label: true  }
+        if (_isMajor(val, 5))       return { len: 7, label: false }
+        return                             { len: 3, label: false }
     }
 
     function filletGeom(startZ, startX, cornerZ, cornerX, nextP, fr) {
