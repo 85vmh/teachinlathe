@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-24 11:02:10",
+        "last_edit": "2026-02-24 11:21:21",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -115,17 +115,32 @@
                 },
                 {
                     "primitive_id": 4,
-                    "type": "lineTo",
+                    "type": "arcTo",
+                    "direction": "ccw",
                     "x_end": 40.0,
-                    "z_end": -60.0,
+                    "z_end": -40.0,
+                    "x_center": 40.0,
+                    "z_center": -30.0,
+                    "arc_radius": 10.0,
                     "blend": {
-                        "type": "chamfer",
-                        "chamfer_width": 1.0,
-                        "fillet_radius": 6.0
+                        "type": "fillet",
+                        "chamfer_width": 3.0,
+                        "fillet_radius": 3.0
                     }
                 },
                 {
                     "primitive_id": 5,
+                    "type": "lineTo",
+                    "x_end": 40.0,
+                    "z_end": -60.0,
+                    "blend": {
+                        "type": "fillet",
+                        "chamfer_width": 2.0,
+                        "fillet_radius": 3.0
+                    }
+                },
+                {
+                    "primitive_id": 6,
                     "type": "lineTo",
                     "x_end": 50.0,
                     "z_end": -60.0,
