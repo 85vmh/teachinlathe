@@ -1002,9 +1002,8 @@ Item {
                 }
             }
 
-            // ── Right panel: canvas ──────────────────────────────────────────────
-            ProfileCanvas {
-                id: profileCanvas
+            // ── Right panel: canvas + controls ───────────────────────────────────
+            ColumnLayout {
                 anchors {
                     left:   leftPanel.right
                     right:  parent.right
@@ -1012,19 +1011,53 @@ Item {
                     bottom: parent.bottom
                     leftMargin: 12
                 }
-                primitives:         root.primitives
-                selectedPrimIndex:  root.selectedPrimIndex
-                selectedBlendIndex: root.selectedBlendIndex
-                onPrimitiveSelected: function(idx) {
-                    root.selectedPrimIndex  = idx
-                    root.selectedBlendIndex = -1
+                spacing: 6
+
+                ProfileCanvas {
+                    id: profileCanvas
+                    Layout.fillWidth:  true
+                    Layout.fillHeight: true
+                    primitives:         root.primitives
+                    selectedPrimIndex:  root.selectedPrimIndex
+                    selectedBlendIndex: root.selectedBlendIndex
+                    onPrimitiveSelected: function(idx) {
+                        root.selectedPrimIndex  = idx
+                        root.selectedBlendIndex = -1
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: "transparent"
+                        border.color: "#cccccc"
+                        border.width: 1
+                    }
                 }
 
-                Rectangle {
-                    anchors.fill: parent
-                    color: "transparent"
-                    border.color: "#cccccc"
-                    border.width: 1
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Button {
+                        text: "Zoom In"
+                        Layout.fillWidth: true
+                        implicitHeight: 36
+                        font.pixelSize: 13
+                        onClicked: profileCanvas.zoomIn()
+                    }
+                    Button {
+                        text: "Zoom Out"
+                        Layout.fillWidth: true
+                        implicitHeight: 36
+                        font.pixelSize: 13
+                        onClicked: profileCanvas.zoomOut()
+                    }
+                    Button {
+                        text: "Fit to Screen"
+                        Layout.fillWidth: true
+                        implicitHeight: 36
+                        font.pixelSize: 13
+                        onClicked: profileCanvas.fitToScreen()
+                    }
                 }
             }
         }

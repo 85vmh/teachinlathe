@@ -58,6 +58,21 @@ Canvas {
         if (b) { _maxZ = b.vZMax; _maxX = b.vXMax }
     }
 
+    // ── Zoom in / out (public, zoom around canvas centre) ─────────────────────
+    function zoomIn()  { _zoomAround(width / 2, height / 2, 1.3) }
+    function zoomOut() { _zoomAround(width / 2, height / 2, 1.0 / 1.3) }
+
+    function _zoomAround(cx, cy, factor) {
+        var worldZ = (cx - _originX) / _scale
+        var worldX = (cy - _originY) / _scale
+        var newScale = Math.max(0.05, Math.min(200.0, _scale * factor))
+        _originX = cx - worldZ * newScale
+        _originY = cy - worldX * newScale
+        _scale   = newScale
+        _manualView = true
+        requestPaint()
+    }
+
     // ── Fit to screen (public) ─────────────────────────────────────────────────
     // Fits all primitives into the canvas with exactly 10 mm margin on every side.
     function fitToScreen() {
