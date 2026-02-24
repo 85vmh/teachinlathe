@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-24 17:57:48",
+        "last_edit": "2026-02-24 21:18:39",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -95,50 +95,6 @@
                     "primitive_id": 2,
                     "type": "lineTo",
                     "x_end": 20.0,
-                    "z_end": -5.0,
-                    "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
-                    }
-                },
-                {
-                    "primitive_id": 3,
-                    "type": "lineTo",
-                    "x_end": 15.0,
-                    "z_end": -7.0,
-                    "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
-                    }
-                },
-                {
-                    "primitive_id": 4,
-                    "type": "lineTo",
-                    "x_end": 15.0,
-                    "z_end": -10.0,
-                    "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
-                    }
-                },
-                {
-                    "primitive_id": 5,
-                    "type": "lineTo",
-                    "x_end": 20.0,
-                    "z_end": -12.0,
-                    "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
-                    }
-                },
-                {
-                    "primitive_id": 6,
-                    "type": "lineTo",
-                    "x_end": 20.0,
                     "z_end": -25.0,
                     "blend": {
                         "type": "fillet",
@@ -147,7 +103,7 @@
                     }
                 },
                 {
-                    "primitive_id": 7,
+                    "primitive_id": 3,
                     "type": "lineTo",
                     "x_end": 30.0,
                     "z_end": -30.0,
@@ -158,7 +114,7 @@
                     }
                 },
                 {
-                    "primitive_id": 8,
+                    "primitive_id": 4,
                     "type": "arcTo",
                     "direction": "ccw",
                     "x_end": 40.0,
@@ -167,24 +123,24 @@
                     "z_center": -30.0,
                     "arc_radius": 10.0,
                     "blend": {
-                        "type": "chamfer",
-                        "chamfer_width": 2.0,
+                        "type": "none",
+                        "chamfer_width": 0.0,
                         "fillet_radius": 0.0
                     }
                 },
                 {
-                    "primitive_id": 9,
+                    "primitive_id": 5,
                     "type": "lineTo",
                     "x_end": 40.0,
                     "z_end": -60.0,
                     "blend": {
-                        "type": "fillet",
-                        "chamfer_width": 2.0,
-                        "fillet_radius": 3.0
+                        "type": "none",
+                        "chamfer_width": 0.0,
+                        "fillet_radius": 0.0
                     }
                 },
                 {
-                    "primitive_id": 10,
+                    "primitive_id": 6,
                     "type": "lineTo",
                     "x_end": 50.0,
                     "z_end": -60.0,
