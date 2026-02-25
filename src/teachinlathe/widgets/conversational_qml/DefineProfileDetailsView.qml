@@ -998,7 +998,21 @@ Item {
                     text: "Add New"
                     font.pixelSize: 14
                     implicitWidth: 140
-                    onClicked: addPrimPopup.open()
+                    onClicked: {
+                        var hasStart = root.primitives.length > 0
+                                       && root.primitives[0].type === "startPoint"
+                        if (!hasStart) {
+                            var arr = JSON.parse(JSON.stringify(root.primitives))
+                            arr.unshift({ type: "startPoint", primitive_id: 0,
+                                          x_start: 0, z_start: 0 })
+                            root.primitives     = _renumber(arr)
+                            root.selectedPrimIndex  = 0
+                            root.selectedBlendIndex = -1
+                            root.emitSave()
+                        } else {
+                            addPrimPopup.open()
+                        }
+                    }
                 }
             }
 
