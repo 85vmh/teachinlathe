@@ -30,6 +30,7 @@ Item {
         selectedPrimIndex  = -1
         selectedBlendIndex = -1
         _loading  = false
+        profileCanvas.resetView()
     }
 
     function mergeIntoOp(payload) {

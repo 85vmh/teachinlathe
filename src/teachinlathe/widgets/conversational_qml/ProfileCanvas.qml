@@ -31,21 +31,16 @@ Canvas {
     // ── Recompute + repaint on any relevant change ─────────────────────────────
     onPrimitivesChanged: {
         _rebuildRenderCache()
-        if (!_manualView) _computeScale()
-        requestPaint()
+        if (!_manualView) Qt.callLater(fitToScreen)
+        else              requestPaint()
     }
-    onWidthChanged:  { if (!_manualView) { _computeScale(); requestPaint() } }
-    onHeightChanged: { if (!_manualView) { _computeScale(); requestPaint() } }
+    onWidthChanged:  { if (!_manualView) fitToScreen() }
+    onHeightChanged: { if (!_manualView) fitToScreen() }
     onSelectedPrimIndexChanged:  requestPaint()
     onSelectedBlendIndexChanged: requestPaint()
 
-    // ── Viewport / scale computation ───────────────────────────────────────────
-    function _computeScale() {
-        var v = geom.computeViewport(primitives, width, height)
-        _scale   = v.scale
-        _originX = v.originX
-        _originY = v.originY
-    }
+    // ── Reset view to fit (public, call when entering the screen) ─────────────
+    function resetView() { _manualView = false; Qt.callLater(fitToScreen) }
 
     // ── Zoom in / out (public, zoom around canvas centre) ─────────────────────
     function zoomIn()  { _zoomAround(width / 2, height / 2, 1.3) }
