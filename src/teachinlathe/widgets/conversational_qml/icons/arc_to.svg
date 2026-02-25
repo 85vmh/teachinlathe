@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 512 512"
+     width="512"
+     height="512"
+     fill="none"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+
+  <!-- center -->
+  <circle cx="260" cy="260" r="24" fill="#000"/>
+
+  <!-- start (-60°) -->
+  <circle cx="370" cy="69.47" r="24" fill="#000"/>
+
+  <!-- end (-180°) -->
+  <circle cx="40" cy="260" r="24" fill="#000"/>
+
+  <!-- 120° arc CW -->
+  <path d="M370 69.47
+           A220 220 0 0 0 40 260"
+        stroke="#000"
+        stroke-width="22"/>
+
+</svg>

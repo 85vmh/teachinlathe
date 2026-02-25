@@ -542,29 +542,53 @@ Item {
                             RowLayout {
                                 Layout.fillWidth: true; spacing: 4
 
-                                Button {
-                                    text: "Chamfer"; font.pixelSize: 12
-                                    Layout.fillWidth: true; implicitHeight: 32
+                                Rectangle {
+                                    implicitWidth: 40; implicitHeight: 40; radius: 4
                                     enabled: root.blendType(primData) === "none"
-                                    onClicked: {
-                                        var d = JSON.parse(JSON.stringify(primData))
-                                        if (!d.blend) d.blend = {}
-                                        d.blend.type = "chamfer"
-                                        if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
-                                        root.primUpdated(primIdx, d)
+                                    opacity: enabled ? 1.0 : 0.35
+                                    color:   chamferLtMA.pressed ? "#e1f0ff" : "transparent"
+                                    border.width: enabled ? 1 : 0
+                                    border.color: chamferLtMA.pressed ? "#8ec5ff" : "#BDBDBD"
+                                    Image {
+                                        anchors.centerIn: parent; width: 28; height: 28
+                                        sourceSize.width: 112; sourceSize.height: 112
+                                        source: "icons/chamfer.svg"
+                                        fillMode: Image.PreserveAspectFit; smooth: true
+                                    }
+                                    MouseArea {
+                                        id: chamferLtMA; anchors.fill: parent; enabled: parent.enabled
+                                        onClicked: {
+                                            var d = JSON.parse(JSON.stringify(primData))
+                                            if (!d.blend) d.blend = {}
+                                            d.blend.type = "chamfer"
+                                            if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
+                                            root.primUpdated(primIdx, d)
+                                        }
                                     }
                                 }
 
-                                Button {
-                                    text: "Fillet"; font.pixelSize: 12
-                                    Layout.fillWidth: true; implicitHeight: 32
+                                Rectangle {
+                                    implicitWidth: 40; implicitHeight: 40; radius: 4
                                     enabled: root.blendType(primData) === "none"
-                                    onClicked: {
-                                        var d = JSON.parse(JSON.stringify(primData))
-                                        if (!d.blend) d.blend = {}
-                                        d.blend.type = "fillet"
-                                        if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
-                                        root.primUpdated(primIdx, d)
+                                    opacity: enabled ? 1.0 : 0.35
+                                    color:   filletLtMA.pressed ? "#e1f0ff" : "transparent"
+                                    border.width: enabled ? 1 : 0
+                                    border.color: filletLtMA.pressed ? "#8ec5ff" : "#BDBDBD"
+                                    Image {
+                                        anchors.centerIn: parent; width: 28; height: 28
+                                        sourceSize.width: 112; sourceSize.height: 112
+                                        source: "icons/fillet.svg"
+                                        fillMode: Image.PreserveAspectFit; smooth: true
+                                    }
+                                    MouseArea {
+                                        id: filletLtMA; anchors.fill: parent; enabled: parent.enabled
+                                        onClicked: {
+                                            var d = JSON.parse(JSON.stringify(primData))
+                                            if (!d.blend) d.blend = {}
+                                            d.blend.type = "fillet"
+                                            if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
+                                            root.primUpdated(primIdx, d)
+                                        }
                                     }
                                 }
                             }
@@ -630,22 +654,46 @@ Item {
                         RowLayout {
                             Layout.fillWidth: true; spacing: 8
                             Label { text: "Arc Type:"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                            Button {
-                                text: "CW"; font.pixelSize: 12; Layout.preferredWidth: 50
-                                highlighted: primData.direction === "cw"
-                                onClicked: {
-                                    var d = JSON.parse(JSON.stringify(primData))
-                                    d.direction = "cw"
-                                    root.primUpdated(primIdx, d)
+                            Rectangle {
+                                implicitWidth: 40; implicitHeight: 40; radius: 4
+                                property bool _active: primData.direction === "cw"
+                                color:   _active ? "#e3f2fd" : (cwMA.pressed ? "#e1f0ff" : "transparent")
+                                border.width: 1
+                                border.color: _active ? "#1565C0" : (cwMA.pressed ? "#8ec5ff" : "#BDBDBD")
+                                Image {
+                                    anchors.centerIn: parent; width: 28; height: 28
+                                    sourceSize.width: 112; sourceSize.height: 112
+                                    source: "icons/cw_arrrow.svg"
+                                    fillMode: Image.PreserveAspectFit; smooth: true
+                                }
+                                MouseArea {
+                                    id: cwMA; anchors.fill: parent
+                                    onClicked: {
+                                        var d = JSON.parse(JSON.stringify(primData))
+                                        d.direction = "cw"
+                                        root.primUpdated(primIdx, d)
+                                    }
                                 }
                             }
-                            Button {
-                                text: "CCW"; font.pixelSize: 12; Layout.preferredWidth: 50
-                                highlighted: primData.direction === "ccw"
-                                onClicked: {
-                                    var d = JSON.parse(JSON.stringify(primData))
-                                    d.direction = "ccw"
-                                    root.primUpdated(primIdx, d)
+                            Rectangle {
+                                implicitWidth: 40; implicitHeight: 40; radius: 4
+                                property bool _active: primData.direction === "ccw"
+                                color:   _active ? "#e3f2fd" : (ccwMA.pressed ? "#e1f0ff" : "transparent")
+                                border.width: 1
+                                border.color: _active ? "#1565C0" : (ccwMA.pressed ? "#8ec5ff" : "#BDBDBD")
+                                Image {
+                                    anchors.centerIn: parent; width: 28; height: 28
+                                    sourceSize.width: 112; sourceSize.height: 112
+                                    source: "icons/ccw_arrow.svg"
+                                    fillMode: Image.PreserveAspectFit; smooth: true
+                                }
+                                MouseArea {
+                                    id: ccwMA; anchors.fill: parent
+                                    onClicked: {
+                                        var d = JSON.parse(JSON.stringify(primData))
+                                        d.direction = "ccw"
+                                        root.primUpdated(primIdx, d)
+                                    }
                                 }
                             }
                         }
@@ -770,29 +818,53 @@ Item {
                             RowLayout {
                                 Layout.fillWidth: true; spacing: 4
 
-                                Button {
-                                    text: "Chamfer"; font.pixelSize: 12
-                                    Layout.fillWidth: true; implicitHeight: 32
+                                Rectangle {
+                                    implicitWidth: 40; implicitHeight: 40; radius: 4
                                     enabled: root.blendType(primData) === "none"
-                                    onClicked: {
-                                        var d = JSON.parse(JSON.stringify(primData))
-                                        if (!d.blend) d.blend = {}
-                                        d.blend.type = "chamfer"
-                                        if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
-                                        root.primUpdated(primIdx, d)
+                                    opacity: enabled ? 1.0 : 0.35
+                                    color:   chamferAtMA.pressed ? "#e1f0ff" : "transparent"
+                                    border.width: enabled ? 1 : 0
+                                    border.color: chamferAtMA.pressed ? "#8ec5ff" : "#BDBDBD"
+                                    Image {
+                                        anchors.centerIn: parent; width: 28; height: 28
+                                        sourceSize.width: 112; sourceSize.height: 112
+                                        source: "icons/chamfer.svg"
+                                        fillMode: Image.PreserveAspectFit; smooth: true
+                                    }
+                                    MouseArea {
+                                        id: chamferAtMA; anchors.fill: parent; enabled: parent.enabled
+                                        onClicked: {
+                                            var d = JSON.parse(JSON.stringify(primData))
+                                            if (!d.blend) d.blend = {}
+                                            d.blend.type = "chamfer"
+                                            if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
+                                            root.primUpdated(primIdx, d)
+                                        }
                                     }
                                 }
 
-                                Button {
-                                    text: "Fillet"; font.pixelSize: 12
-                                    Layout.fillWidth: true; implicitHeight: 32
+                                Rectangle {
+                                    implicitWidth: 40; implicitHeight: 40; radius: 4
                                     enabled: root.blendType(primData) === "none"
-                                    onClicked: {
-                                        var d = JSON.parse(JSON.stringify(primData))
-                                        if (!d.blend) d.blend = {}
-                                        d.blend.type = "fillet"
-                                        if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
-                                        root.primUpdated(primIdx, d)
+                                    opacity: enabled ? 1.0 : 0.35
+                                    color:   filletAtMA.pressed ? "#e1f0ff" : "transparent"
+                                    border.width: enabled ? 1 : 0
+                                    border.color: filletAtMA.pressed ? "#8ec5ff" : "#BDBDBD"
+                                    Image {
+                                        anchors.centerIn: parent; width: 28; height: 28
+                                        sourceSize.width: 112; sourceSize.height: 112
+                                        source: "icons/fillet.svg"
+                                        fillMode: Image.PreserveAspectFit; smooth: true
+                                    }
+                                    MouseArea {
+                                        id: filletAtMA; anchors.fill: parent; enabled: parent.enabled
+                                        onClicked: {
+                                            var d = JSON.parse(JSON.stringify(primData))
+                                            if (!d.blend) d.blend = {}
+                                            d.blend.type = "fillet"
+                                            if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
+                                            root.primUpdated(primIdx, d)
+                                        }
                                     }
                                 }
                             }
