@@ -18,8 +18,6 @@ Canvas {
     property real _scale:   5.0
     property real _originX: 0     // canvas px → world Z = 0
     property real _originY: 0     // canvas px → world X = 0
-    property real _maxZ:    0     // max positive vertex Z  (for Z+ arrow length)
-    property real _maxX:    0     // max positive vertex X  (for X+ arrow length)
     property var  _renderSegs: [] // cached render segments in world coords
     property bool _manualView: false  // when true, primitive/size changes don't reset fit
 
@@ -34,7 +32,6 @@ Canvas {
     onPrimitivesChanged: {
         _rebuildRenderCache()
         if (!_manualView) _computeScale()
-        else              _computeArrows()
         requestPaint()
     }
     onWidthChanged:  { if (!_manualView) { _computeScale(); requestPaint() } }
@@ -48,14 +45,6 @@ Canvas {
         _scale   = v.scale
         _originX = v.originX
         _originY = v.originY
-        _maxZ    = v.maxZ
-        _maxX    = v.maxX
-    }
-
-    // Updates only the arrow extents when in manual view and primitives change.
-    function _computeArrows() {
-        var b = geom.computeBounds(primitives)
-        if (b) { _maxZ = b.vZMax; _maxX = b.vXMax }
     }
 
     // ── Zoom in / out (public, zoom around canvas centre) ─────────────────────
@@ -74,19 +63,29 @@ Canvas {
     }
 
     // ── Fit to screen (public) ─────────────────────────────────────────────────
-    // Fits all primitives into the canvas with exactly 10 mm margin on every side.
+    // Z axis: symmetric 10 mm margins left and right of the profile.
+    // X axis: equal margin above the center line (X=0) and below fXMax.
+    //         The non-constraining axis is centred in the remaining canvas space.
     function fitToScreen() {
         if (!primitives || primitives.length === 0 || width <= 0 || height <= 0) return
         var b = geom.computeBounds(primitives)
         if (!b) return
         var MARGIN = 10
+
+        // Z: [zMin-M, zMax+M]
         var spanZ = Math.max(b.fZMax - b.fZMin + 2 * MARGIN, 1)
-        var spanX = Math.max(b.fXMax - b.fXMin + 2 * MARGIN, 1)
-        _scale   = Math.min(width / spanZ, height / spanX)
-        _originX = -(b.fZMin - MARGIN) * _scale
-        _originY = -(b.fXMin - MARGIN) * _scale
-        _maxZ    = b.vZMax
-        _maxX    = b.vXMax
+        // X: [-M, xMax+M]  (center line = 0 is the logical top of the profile)
+        var spanX = Math.max(b.fXMax + 2 * MARGIN, 1)
+
+        var scale = Math.min(width / spanZ, height / spanX)
+
+        // Centre each axis in whatever canvas space it gets
+        var leftOffset = (width  - spanZ * scale) / 2
+        var topOffset  = (height - spanX * scale) / 2
+
+        _scale   = scale
+        _originX = leftOffset + (MARGIN - b.fZMin) * scale
+        _originY = topOffset  + MARGIN * scale   // canvas Y when world X = 0
         _manualView = false
         requestPaint()
     }
@@ -146,11 +145,8 @@ Canvas {
         id: axesActor
         originX: root._originX
         originY: root._originY
-        maxZ: root._maxZ
-        maxX: root._maxX
+        height:  root.height
         circleR: root._circleR
-        cx: root._cx
-        cy: root._cy
     }
 
     OriginActor {

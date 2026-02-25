@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-24 21:18:39",
+        "last_edit": "2026-02-25 08:47:55",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -154,6 +154,14 @@
         },
         {
             "order": 5,
+            "type": "defineProfile",
+            "generate_gcode": false,
+            "is_optional_block": false,
+            "profile_id": 1,
+            "profile_primitives": []
+        },
+        {
+            "order": 6,
             "type": "profiling",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -182,7 +190,7 @@
             }
         },
         {
-            "order": 6,
+            "order": 7,
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -199,7 +207,7 @@
             }
         },
         {
-            "order": 7,
+            "order": 8,
             "type": "threading",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -223,7 +231,7 @@
             }
         },
         {
-            "order": 8,
+            "order": 9,
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -240,7 +248,7 @@
             }
         },
         {
-            "order": 9,
+            "order": 10,
             "type": "drilling",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -264,7 +272,7 @@
             }
         },
         {
-            "order": 10,
+            "order": 11,
             "type": "tapping",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -288,7 +296,7 @@
             }
         },
         {
-            "order": 11,
+            "order": 12,
             "type": "parting",
             "generate_gcode": true,
             "is_optional_block": false,
