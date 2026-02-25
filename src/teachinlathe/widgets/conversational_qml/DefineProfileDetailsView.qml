@@ -439,159 +439,156 @@ Item {
             radius: 4
             border.color: isSelected ? "#3b82f6" : "#cccccc"
             border.width: isSelected ? 2 : 1
-            height: ltCol.implicitHeight + 24
+            height: ltRow.implicitHeight + 24
 
             TapHandler { onTapped: { root.selectedPrimIndex = primIdx; root.selectedBlendIndex = -1 } }
 
-            ColumnLayout {
-                id: ltCol
+            RowLayout {
+                id: ltRow
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                spacing: 8
+                spacing: 4
 
-                // ── Full-width title row ───────────────────────────────────────
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 4
+                Item {
+                    implicitWidth: 56
+                    Layout.fillHeight: true
+
                     Text {
-                        Layout.fillWidth: true
-                        text: (primIdx + 1) + ". LineTo"
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        text: (primIdx + 1) + "."
                         font.pixelSize: 14; font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
                     }
-                    Button {
-                        text: "✕"; font.pixelSize: 11; padding: 2
-                        Layout.preferredWidth: 24; Layout.preferredHeight: 24
-                        onClicked: {
-                            root._pendingDeleteIndex = primIdx
-                            deleteConfirmPopup.open()
+
+                    Image {
+                        anchors.centerIn: parent
+                        width: 56; height: 56
+                        sourceSize.width: 56; sourceSize.height: 56
+                        source: "icons/line_to.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
+                    }
+                }
+
+                Rectangle {
+                    width: 1; Layout.fillHeight: true
+                    Layout.topMargin: 4; Layout.bottomMargin: 4
+                    color: "#d0d0d0"
+                }
+
+                GridLayout {
+                    columns: 2
+                    rowSpacing: 6; columnSpacing: 8
+                    Layout.preferredWidth: 200
+
+                    Label { text: "X End"; font.pixelSize: 14 }
+                    NumpadField {
+                        Layout.preferredWidth: 110
+                        settingName: "lt." + primIdx + ".x_end"
+                        validatorObject: dblVal
+                        value: primData.x_end !== undefined ? primData.x_end : 0
+                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                        hAlign: Text.AlignRight; fontPixelSize: 14
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            d.x_end = value
+                            root.primUpdated(primIdx, d)
+                        }
+                    }
+
+                    Label { text: "Z End"; font.pixelSize: 14 }
+                    NumpadField {
+                        Layout.preferredWidth: 110
+                        settingName: "lt." + primIdx + ".z_end"
+                        validatorObject: dblVal
+                        value: primData.z_end !== undefined ? primData.z_end : 0
+                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                        hAlign: Text.AlignRight; fontPixelSize: 14
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            d.z_end = value
+                            root.primUpdated(primIdx, d)
                         }
                     }
                 }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#e0e0e0" }
+                Rectangle {
+                    width: 1; Layout.fillHeight: true
+                    Layout.topMargin: 4; Layout.bottomMargin: 4
+                    color: "#d0d0d0"
+                }
 
-                // ── Content: left fields | right blend ────────────────────────
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-
-                    // Left: fields
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-
-                        RowLayout {
-                            Layout.fillWidth: true; spacing: 8
-                            Label { text: "X End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "lt." + primIdx + ".x_end"
-                                validatorObject: dblVal
-                                value: primData.x_end !== undefined ? primData.x_end : 0
-                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                                hAlign: Text.AlignRight; fontPixelSize: 14
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: {
-                                    var d = JSON.parse(JSON.stringify(primData))
-                                    d.x_end = value
-                                    root.primUpdated(primIdx, d)
-                                }
-                            }
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true; spacing: 8
-                            Label { text: "Z End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "lt." + primIdx + ".z_end"
-                                validatorObject: dblVal
-                                value: primData.z_end !== undefined ? primData.z_end : 0
-                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                                hAlign: Text.AlignRight; fontPixelSize: 14
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: {
-                                    var d = JSON.parse(JSON.stringify(primData))
-                                    d.z_end = value
-                                    root.primUpdated(primIdx, d)
-                                }
-                            }
+                Rectangle {
+                    implicitWidth: 40; implicitHeight: 40; radius: 4
+                    enabled: root.blendType(primData) === "none"
+                    opacity: enabled ? 1.0 : 0.35
+                    color:   chamferLtMA.pressed ? "#e1f0ff" : "transparent"
+                    border.width: enabled ? 1 : 0
+                    border.color: chamferLtMA.pressed ? "#8ec5ff" : "#BDBDBD"
+                    Layout.alignment: Qt.AlignVCenter
+                    Image {
+                        anchors.centerIn: parent; width: 28; height: 28
+                        sourceSize.width: 112; sourceSize.height: 112
+                        source: "icons/chamfer.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
+                    }
+                    MouseArea {
+                        id: chamferLtMA; anchors.fill: parent; enabled: parent.enabled
+                        onClicked: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            if (!d.blend) d.blend = {}
+                            d.blend.type = "chamfer"
+                            if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
+                            root.primUpdated(primIdx, d)
                         }
                     }
+                }
 
-                    // Right: Blend box (hidden for last primitive)
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignTop
-                        implicitHeight: blendLtCol.implicitHeight + 16
-                        visible: primIdx < root.primitives.length - 1
-                        color: "transparent"
-                        border.color: "#c0c0c0"
-                        border.width: 1
-                        radius: 4
+                Rectangle {
+                    implicitWidth: 40; implicitHeight: 40; radius: 4
+                    enabled: root.blendType(primData) === "none"
+                    opacity: enabled ? 1.0 : 0.35
+                    color:   filletLtMA.pressed ? "#e1f0ff" : "transparent"
+                    border.width: enabled ? 1 : 0
+                    border.color: filletLtMA.pressed ? "#8ec5ff" : "#BDBDBD"
+                    Layout.alignment: Qt.AlignVCenter
+                    Image {
+                        anchors.centerIn: parent; width: 28; height: 28
+                        sourceSize.width: 112; sourceSize.height: 112
+                        source: "icons/fillet.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
+                    }
+                    MouseArea {
+                        id: filletLtMA; anchors.fill: parent; enabled: parent.enabled
+                        onClicked: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            if (!d.blend) d.blend = {}
+                            d.blend.type = "fillet"
+                            if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
+                            root.primUpdated(primIdx, d)
+                        }
+                    }
+                }
 
-                        ColumnLayout {
-                            id: blendLtCol
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
-                            spacing: 6
+                Item { Layout.fillWidth: true }
 
-                            Text {
-                                text: "Blend"; font.pixelSize: 12; font.bold: true; color: "#444444"
-                                Layout.alignment: Qt.AlignHCenter
-                            }
-
-                            RowLayout {
-                                Layout.fillWidth: true; spacing: 4
-
-                                Rectangle {
-                                    implicitWidth: 40; implicitHeight: 40; radius: 4
-                                    enabled: root.blendType(primData) === "none"
-                                    opacity: enabled ? 1.0 : 0.35
-                                    color:   chamferLtMA.pressed ? "#e1f0ff" : "transparent"
-                                    border.width: enabled ? 1 : 0
-                                    border.color: chamferLtMA.pressed ? "#8ec5ff" : "#BDBDBD"
-                                    Image {
-                                        anchors.centerIn: parent; width: 28; height: 28
-                                        sourceSize.width: 112; sourceSize.height: 112
-                                        source: "icons/chamfer.svg"
-                                        fillMode: Image.PreserveAspectFit; smooth: true
-                                    }
-                                    MouseArea {
-                                        id: chamferLtMA; anchors.fill: parent; enabled: parent.enabled
-                                        onClicked: {
-                                            var d = JSON.parse(JSON.stringify(primData))
-                                            if (!d.blend) d.blend = {}
-                                            d.blend.type = "chamfer"
-                                            if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
-                                            root.primUpdated(primIdx, d)
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    implicitWidth: 40; implicitHeight: 40; radius: 4
-                                    enabled: root.blendType(primData) === "none"
-                                    opacity: enabled ? 1.0 : 0.35
-                                    color:   filletLtMA.pressed ? "#e1f0ff" : "transparent"
-                                    border.width: enabled ? 1 : 0
-                                    border.color: filletLtMA.pressed ? "#8ec5ff" : "#BDBDBD"
-                                    Image {
-                                        anchors.centerIn: parent; width: 28; height: 28
-                                        sourceSize.width: 112; sourceSize.height: 112
-                                        source: "icons/fillet.svg"
-                                        fillMode: Image.PreserveAspectFit; smooth: true
-                                    }
-                                    MouseArea {
-                                        id: filletLtMA; anchors.fill: parent; enabled: parent.enabled
-                                        onClicked: {
-                                            var d = JSON.parse(JSON.stringify(primData))
-                                            if (!d.blend) d.blend = {}
-                                            d.blend.type = "fillet"
-                                            if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
-                                            root.primUpdated(primIdx, d)
-                                        }
-                                    }
-                                }
-                            }
+                Rectangle {
+                    implicitWidth: 40; implicitHeight: 40; radius: 4
+                    color:   delLtMA.pressed ? "#ffebee" : "transparent"
+                    border.width: 1
+                    border.color: delLtMA.pressed ? "#C62828" : "#BDBDBD"
+                    Layout.alignment: Qt.AlignVCenter
+                    Image {
+                        anchors.centerIn: parent; width: 28; height: 28
+                        sourceSize.width: 112; sourceSize.height: 112
+                        source: "icons/delete_icon.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
+                    }
+                    MouseArea {
+                        id: delLtMA; anchors.fill: parent
+                        onClicked: {
+                            root._pendingDeleteIndex = primIdx
+                            deleteConfirmPopup.open()
                         }
                     }
                 }
@@ -611,263 +608,251 @@ Item {
             radius: 4
             border.color: isSelected ? "#3b82f6" : "#cccccc"
             border.width: isSelected ? 2 : 1
-            height: atCol.implicitHeight + 24
+            height: atRow.implicitHeight + 24
 
             TapHandler { onTapped: { root.selectedPrimIndex = primIdx; root.selectedBlendIndex = -1 } }
 
-            ColumnLayout {
-                id: atCol
+            RowLayout {
+                id: atRow
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                spacing: 8
+                spacing: 4
 
-                // ── Full-width title row ───────────────────────────────────────
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 4
+                Item {
+                    implicitWidth: 56
+                    Layout.fillHeight: true
+
                     Text {
-                        Layout.fillWidth: true
-                        text: (primIdx + 1) + ". ArcTo"
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        text: (primIdx + 1) + "."
                         font.pixelSize: 14; font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
                     }
-                    Button {
-                        text: "✕"; font.pixelSize: 11; padding: 2
-                        Layout.preferredWidth: 24; Layout.preferredHeight: 24
-                        onClicked: {
-                            root._pendingDeleteIndex = primIdx
-                            deleteConfirmPopup.open()
+
+                    Image {
+                        anchors.centerIn: parent
+                        width: 56; height: 56
+                        sourceSize.width: 56; sourceSize.height: 56
+                        source: "icons/arc_to.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
+                    }
+                }
+
+                Rectangle {
+                    width: 1; Layout.fillHeight: true
+                    Layout.topMargin: 4; Layout.bottomMargin: 4
+                    color: "#d0d0d0"
+                }
+
+                GridLayout {
+                    columns: 2
+                    rowSpacing: 6; columnSpacing: 8
+                    Layout.preferredWidth: 200
+
+                    Label { text: "Direction"; font.pixelSize: 14 }
+                    RowLayout {
+                        spacing: 4
+                        Rectangle {
+                            implicitWidth: 40; implicitHeight: 40; radius: 4
+                            property bool _active: primData.direction === "cw"
+                            color:   _active ? "#e3f2fd" : (cwMA.pressed ? "#e1f0ff" : "transparent")
+                            border.width: 1
+                            border.color: _active ? "#1565C0" : (cwMA.pressed ? "#8ec5ff" : "#BDBDBD")
+                            Image {
+                                anchors.centerIn: parent; width: 28; height: 28
+                                sourceSize.width: 112; sourceSize.height: 112
+                                source: "icons/cw_arrrow.svg"
+                                fillMode: Image.PreserveAspectFit; smooth: true
+                            }
+                            MouseArea {
+                                id: cwMA; anchors.fill: parent
+                                onClicked: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.direction = "cw"
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
+                        }
+                        Rectangle {
+                            implicitWidth: 40; implicitHeight: 40; radius: 4
+                            property bool _active: primData.direction === "ccw"
+                            color:   _active ? "#e3f2fd" : (ccwMA.pressed ? "#e1f0ff" : "transparent")
+                            border.width: 1
+                            border.color: _active ? "#1565C0" : (ccwMA.pressed ? "#8ec5ff" : "#BDBDBD")
+                            Image {
+                                anchors.centerIn: parent; width: 28; height: 28
+                                sourceSize.width: 112; sourceSize.height: 112
+                                source: "icons/ccw_arrow.svg"
+                                fillMode: Image.PreserveAspectFit; smooth: true
+                            }
+                            MouseArea {
+                                id: ccwMA; anchors.fill: parent
+                                onClicked: {
+                                    var d = JSON.parse(JSON.stringify(primData))
+                                    d.direction = "ccw"
+                                    root.primUpdated(primIdx, d)
+                                }
+                            }
+                        }
+                    }
+
+                    Label { text: "Radius"; font.pixelSize: 14 }
+                    NumpadField {
+                        Layout.preferredWidth: 110
+                        settingName: "at." + primIdx + ".arc_radius"
+                        validatorObject: dblVal
+                        value: primData.arc_radius !== undefined ? primData.arc_radius : 10
+                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                        hAlign: Text.AlignRight; fontPixelSize: 14
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            d.arc_radius = value
+                            root.primUpdated(primIdx, d)
+                        }
+                    }
+
+                    Label { text: "X Center"; font.pixelSize: 14 }
+                    NumpadField {
+                        Layout.preferredWidth: 110
+                        settingName: "at." + primIdx + ".x_center"
+                        validatorObject: dblVal
+                        value: primData.x_center !== undefined ? primData.x_center : 0
+                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                        hAlign: Text.AlignRight; fontPixelSize: 14
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            d.x_center = value
+                            root.primUpdated(primIdx, d)
+                        }
+                    }
+
+                    Label { text: "Z Center"; font.pixelSize: 14 }
+                    NumpadField {
+                        Layout.preferredWidth: 110
+                        settingName: "at." + primIdx + ".z_center"
+                        validatorObject: dblVal
+                        value: primData.z_center !== undefined ? primData.z_center : 0
+                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                        hAlign: Text.AlignRight; fontPixelSize: 14
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            d.z_center = value
+                            root.primUpdated(primIdx, d)
+                        }
+                    }
+
+                    Label { text: "X End"; font.pixelSize: 14 }
+                    NumpadField {
+                        Layout.preferredWidth: 110
+                        settingName: "at." + primIdx + ".x_end"
+                        validatorObject: dblVal
+                        value: primData.x_end !== undefined ? primData.x_end : 0
+                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                        hAlign: Text.AlignRight; fontPixelSize: 14
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            d.x_end = value
+                            root.primUpdated(primIdx, d)
+                        }
+                    }
+
+                    Label { text: "Z End"; font.pixelSize: 14 }
+                    NumpadField {
+                        Layout.preferredWidth: 110
+                        settingName: "at." + primIdx + ".z_end"
+                        validatorObject: dblVal
+                        value: primData.z_end !== undefined ? primData.z_end : 0
+                        formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                        hAlign: Text.AlignRight; fontPixelSize: 14
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            d.z_end = value
+                            root.primUpdated(primIdx, d)
                         }
                     }
                 }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#e0e0e0" }
+                Rectangle {
+                    width: 1; Layout.fillHeight: true
+                    Layout.topMargin: 4; Layout.bottomMargin: 4
+                    color: "#d0d0d0"
+                }
 
-                // ── Content: left fields | right blend ────────────────────────
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-
-                    // Left: fields
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-
-                        RowLayout {
-                            Layout.fillWidth: true; spacing: 8
-                            Label { text: "Arc Type:"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                            Rectangle {
-                                implicitWidth: 40; implicitHeight: 40; radius: 4
-                                property bool _active: primData.direction === "cw"
-                                color:   _active ? "#e3f2fd" : (cwMA.pressed ? "#e1f0ff" : "transparent")
-                                border.width: 1
-                                border.color: _active ? "#1565C0" : (cwMA.pressed ? "#8ec5ff" : "#BDBDBD")
-                                Image {
-                                    anchors.centerIn: parent; width: 28; height: 28
-                                    sourceSize.width: 112; sourceSize.height: 112
-                                    source: "icons/cw_arrrow.svg"
-                                    fillMode: Image.PreserveAspectFit; smooth: true
-                                }
-                                MouseArea {
-                                    id: cwMA; anchors.fill: parent
-                                    onClicked: {
-                                        var d = JSON.parse(JSON.stringify(primData))
-                                        d.direction = "cw"
-                                        root.primUpdated(primIdx, d)
-                                    }
-                                }
-                            }
-                            Rectangle {
-                                implicitWidth: 40; implicitHeight: 40; radius: 4
-                                property bool _active: primData.direction === "ccw"
-                                color:   _active ? "#e3f2fd" : (ccwMA.pressed ? "#e1f0ff" : "transparent")
-                                border.width: 1
-                                border.color: _active ? "#1565C0" : (ccwMA.pressed ? "#8ec5ff" : "#BDBDBD")
-                                Image {
-                                    anchors.centerIn: parent; width: 28; height: 28
-                                    sourceSize.width: 112; sourceSize.height: 112
-                                    source: "icons/ccw_arrow.svg"
-                                    fillMode: Image.PreserveAspectFit; smooth: true
-                                }
-                                MouseArea {
-                                    id: ccwMA; anchors.fill: parent
-                                    onClicked: {
-                                        var d = JSON.parse(JSON.stringify(primData))
-                                        d.direction = "ccw"
-                                        root.primUpdated(primIdx, d)
-                                    }
-                                }
-                            }
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true; spacing: 8
-                            Label { text: "Radius"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "at." + primIdx + ".arc_radius"
-                                validatorObject: dblVal
-                                value: primData.arc_radius !== undefined ? primData.arc_radius : 10
-                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                                hAlign: Text.AlignRight; fontPixelSize: 14
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: {
-                                    var d = JSON.parse(JSON.stringify(primData))
-                                    d.arc_radius = value
-                                    root.primUpdated(primIdx, d)
-                                }
-                            }
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true; spacing: 8
-                            Label { text: "X End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "at." + primIdx + ".x_end"
-                                validatorObject: dblVal
-                                value: primData.x_end !== undefined ? primData.x_end : 0
-                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                                hAlign: Text.AlignRight; fontPixelSize: 14
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: {
-                                    var d = JSON.parse(JSON.stringify(primData))
-                                    d.x_end = value
-                                    root.primUpdated(primIdx, d)
-                                }
-                            }
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true; spacing: 8
-                            Label { text: "Z End"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "at." + primIdx + ".z_end"
-                                validatorObject: dblVal
-                                value: primData.z_end !== undefined ? primData.z_end : 0
-                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                                hAlign: Text.AlignRight; fontPixelSize: 14
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: {
-                                    var d = JSON.parse(JSON.stringify(primData))
-                                    d.z_end = value
-                                    root.primUpdated(primIdx, d)
-                                }
-                            }
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true; spacing: 8
-                            Label { text: "X Center"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "at." + primIdx + ".x_center"
-                                validatorObject: dblVal
-                                value: primData.x_center !== undefined ? primData.x_center : 0
-                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                                hAlign: Text.AlignRight; fontPixelSize: 14
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: {
-                                    var d = JSON.parse(JSON.stringify(primData))
-                                    d.x_center = value
-                                    root.primUpdated(primIdx, d)
-                                }
-                            }
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true; spacing: 8
-                            Label { text: "Z Center"; font.pixelSize: 14; Layout.preferredWidth: 70 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "at." + primIdx + ".z_center"
-                                validatorObject: dblVal
-                                value: primData.z_center !== undefined ? primData.z_center : 0
-                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                                hAlign: Text.AlignRight; fontPixelSize: 14
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: {
-                                    var d = JSON.parse(JSON.stringify(primData))
-                                    d.z_center = value
-                                    root.primUpdated(primIdx, d)
-                                }
-                            }
+                Rectangle {
+                    implicitWidth: 40; implicitHeight: 40; radius: 4
+                    enabled: root.blendType(primData) === "none"
+                    opacity: enabled ? 1.0 : 0.35
+                    color:   chamferAtMA.pressed ? "#e1f0ff" : "transparent"
+                    border.width: enabled ? 1 : 0
+                    border.color: chamferAtMA.pressed ? "#8ec5ff" : "#BDBDBD"
+                    Layout.alignment: Qt.AlignVCenter
+                    Image {
+                        anchors.centerIn: parent; width: 28; height: 28
+                        sourceSize.width: 112; sourceSize.height: 112
+                        source: "icons/chamfer.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
+                    }
+                    MouseArea {
+                        id: chamferAtMA; anchors.fill: parent; enabled: parent.enabled
+                        onClicked: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            if (!d.blend) d.blend = {}
+                            d.blend.type = "chamfer"
+                            if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
+                            root.primUpdated(primIdx, d)
                         }
                     }
+                }
 
-                    // Right: Blend box (anchored to bottom; hidden for last primitive)
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignBottom
-                        implicitHeight: blendAtCol.implicitHeight + 16
-                        visible: primIdx < root.primitives.length - 1
-                        color: "transparent"
-                        border.color: "#c0c0c0"
-                        border.width: 1
-                        radius: 4
+                Rectangle {
+                    implicitWidth: 40; implicitHeight: 40; radius: 4
+                    enabled: root.blendType(primData) === "none"
+                    opacity: enabled ? 1.0 : 0.35
+                    color:   filletAtMA.pressed ? "#e1f0ff" : "transparent"
+                    border.width: enabled ? 1 : 0
+                    border.color: filletAtMA.pressed ? "#8ec5ff" : "#BDBDBD"
+                    Layout.alignment: Qt.AlignVCenter
+                    Image {
+                        anchors.centerIn: parent; width: 28; height: 28
+                        sourceSize.width: 112; sourceSize.height: 112
+                        source: "icons/fillet.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
+                    }
+                    MouseArea {
+                        id: filletAtMA; anchors.fill: parent; enabled: parent.enabled
+                        onClicked: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            if (!d.blend) d.blend = {}
+                            d.blend.type = "fillet"
+                            if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
+                            root.primUpdated(primIdx, d)
+                        }
+                    }
+                }
 
-                        ColumnLayout {
-                            id: blendAtCol
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
-                            spacing: 6
+                Item { Layout.fillWidth: true }
 
-                            Text {
-                                text: "Blend"; font.pixelSize: 12; font.bold: true; color: "#444444"
-                                Layout.alignment: Qt.AlignHCenter
-                            }
-
-                            RowLayout {
-                                Layout.fillWidth: true; spacing: 4
-
-                                Rectangle {
-                                    implicitWidth: 40; implicitHeight: 40; radius: 4
-                                    enabled: root.blendType(primData) === "none"
-                                    opacity: enabled ? 1.0 : 0.35
-                                    color:   chamferAtMA.pressed ? "#e1f0ff" : "transparent"
-                                    border.width: enabled ? 1 : 0
-                                    border.color: chamferAtMA.pressed ? "#8ec5ff" : "#BDBDBD"
-                                    Image {
-                                        anchors.centerIn: parent; width: 28; height: 28
-                                        sourceSize.width: 112; sourceSize.height: 112
-                                        source: "icons/chamfer.svg"
-                                        fillMode: Image.PreserveAspectFit; smooth: true
-                                    }
-                                    MouseArea {
-                                        id: chamferAtMA; anchors.fill: parent; enabled: parent.enabled
-                                        onClicked: {
-                                            var d = JSON.parse(JSON.stringify(primData))
-                                            if (!d.blend) d.blend = {}
-                                            d.blend.type = "chamfer"
-                                            if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
-                                            root.primUpdated(primIdx, d)
-                                        }
-                                    }
-                                }
-
-                                Rectangle {
-                                    implicitWidth: 40; implicitHeight: 40; radius: 4
-                                    enabled: root.blendType(primData) === "none"
-                                    opacity: enabled ? 1.0 : 0.35
-                                    color:   filletAtMA.pressed ? "#e1f0ff" : "transparent"
-                                    border.width: enabled ? 1 : 0
-                                    border.color: filletAtMA.pressed ? "#8ec5ff" : "#BDBDBD"
-                                    Image {
-                                        anchors.centerIn: parent; width: 28; height: 28
-                                        sourceSize.width: 112; sourceSize.height: 112
-                                        source: "icons/fillet.svg"
-                                        fillMode: Image.PreserveAspectFit; smooth: true
-                                    }
-                                    MouseArea {
-                                        id: filletAtMA; anchors.fill: parent; enabled: parent.enabled
-                                        onClicked: {
-                                            var d = JSON.parse(JSON.stringify(primData))
-                                            if (!d.blend) d.blend = {}
-                                            d.blend.type = "fillet"
-                                            if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
-                                            root.primUpdated(primIdx, d)
-                                        }
-                                    }
-                                }
-                            }
+                Rectangle {
+                    implicitWidth: 40; implicitHeight: 40; radius: 4
+                    color:   delAtMA.pressed ? "#ffebee" : "transparent"
+                    border.width: 1
+                    border.color: delAtMA.pressed ? "#C62828" : "#BDBDBD"
+                    Layout.alignment: Qt.AlignVCenter
+                    Image {
+                        anchors.centerIn: parent; width: 28; height: 28
+                        sourceSize.width: 112; sourceSize.height: 112
+                        source: "icons/delete_icon.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
+                    }
+                    MouseArea {
+                        id: delAtMA; anchors.fill: parent
+                        onClicked: {
+                            root._pendingDeleteIndex = primIdx
+                            deleteConfirmPopup.open()
                         }
                     }
                 }

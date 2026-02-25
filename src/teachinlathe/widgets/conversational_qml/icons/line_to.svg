@@ -11,7 +11,7 @@
 
   <!-- shaft (2 o'clock -> 8 o'clock) -->
   <line x1="402.50" y1="136.42" x2="179.99" y2="344.97"
-        stroke="#000" stroke-width="22"/>
+        stroke="#000" stroke-width="12"/>
 
   <!-- sharp isosceles arrow head (base ~ 2/3 of side), tip intersects target circle ~20% -->
   <path d="M113.99 406.87
