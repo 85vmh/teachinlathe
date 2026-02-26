@@ -900,7 +900,7 @@ Item {
             radius: 4
             border.color: isBlendSelected ? "#d97706" : "#c0c8d8"
             border.width: isBlendSelected ? 2 : 1
-            height: blendCardCol.implicitHeight + 24
+            height: blendRow.implicitHeight + 24
 
             TapHandler { onTapped: { root.selectedBlendIndex = primIdx; root.selectedPrimIndex = -1 } }
 
@@ -912,45 +912,54 @@ Item {
                 color: isBlendSelected ? "#d97706" : "#94a3b8"
             }
 
-            ColumnLayout {
-                id: blendCardCol
+            RowLayout {
+                id: blendRow
                 anchors {
                     left: blendAccent.right; right: parent.right
                     top: parent.top; margins: 12; leftMargin: 8
                 }
-                spacing: 8
+                spacing: 4
 
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 4
+                Item {
+                    implicitWidth: 56
+                    Layout.fillHeight: true
 
                     Text {
-                        Layout.fillWidth: true
-                        text: (primIdx + 1) + ". " + (root.blendType(primData) === "chamfer" ? "Chamfer Blend" : "Fillet Blend")
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        text: (primIdx + 1) + "."
                         font.pixelSize: 14; font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
+                        color: "#F2992E"
                     }
 
-                    Button {
-                        text: "✕"; font.pixelSize: 11; padding: 2
-                        Layout.preferredWidth: 24; Layout.preferredHeight: 24
-                        onClicked: {
-                            var d = JSON.parse(JSON.stringify(primData))
-                            d.blend = { type: "none" }
-                            root.primUpdated(primIdx, d)
-                            if (root.selectedBlendIndex === primIdx)
-                                root.selectedBlendIndex = -1
-                        }
+                    Image {
+                        anchors.centerIn: parent
+                        width: 40; height: 40
+                        sourceSize.width: 40; sourceSize.height: 40
+                        source: root.blendType(primData) === "chamfer" ? "icons/chamfer.svg" : "icons/fillet.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
                     }
                 }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#d8d8d8" }
+                Rectangle {
+                    width: 1; Layout.fillHeight: true
+                    Layout.topMargin: 4; Layout.bottomMargin: 4
+                    Layout.leftMargin: 0; Layout.rightMargin: 8
+                    color: "#d0d0d0"
+                }
 
                 RowLayout {
-                    Layout.fillWidth: true; spacing: 8
+                    spacing: 8
+                    Layout.preferredWidth: root._primGridWidth
+                    Layout.maximumWidth:   root._primGridWidth
+
                     Label {
                         text: root.blendType(primData) === "chamfer" ? "Width" : "Radius"
-                        font.pixelSize: 14; Layout.preferredWidth: 60
+                        font.pixelSize: 14
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.fillWidth: true
                     }
+
                     NumpadField {
                         Layout.preferredWidth: 110
                         settingName: "blend." + primIdx + ".value"
@@ -960,6 +969,39 @@ Item {
                         hAlign: Text.AlignRight; fontPixelSize: 14
                         onOpenRequested: root.openNumPadRequested(field)
                         onValueCommitted: root.commitBlend(primData, primIdx, value)
+                    }
+                }
+
+                Rectangle {
+                    width: 1; Layout.fillHeight: true
+                    Layout.topMargin: 4; Layout.bottomMargin: 4
+                    Layout.leftMargin: 8; Layout.rightMargin: 0
+                    color: "#d0d0d0"
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Rectangle {
+                    implicitWidth: 40; implicitHeight: 40; radius: 4
+                    color:   delBlendMA.pressed ? "#ffebee" : "transparent"
+                    border.width: 1
+                    border.color: delBlendMA.pressed ? "#C62828" : "#BDBDBD"
+                    Layout.alignment: Qt.AlignVCenter
+                    Image {
+                        anchors.centerIn: parent; width: 28; height: 28
+                        sourceSize.width: 112; sourceSize.height: 112
+                        source: "icons/delete_icon.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
+                    }
+                    MouseArea {
+                        id: delBlendMA; anchors.fill: parent
+                        onClicked: {
+                            var d = JSON.parse(JSON.stringify(primData))
+                            d.blend = { type: "none" }
+                            root.primUpdated(primIdx, d)
+                            if (root.selectedBlendIndex === primIdx)
+                                root.selectedBlendIndex = -1
+                        }
                     }
                 }
             }
