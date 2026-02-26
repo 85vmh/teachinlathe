@@ -306,7 +306,7 @@ Item {
         } else if (data.type === "profiling") {
             detailsLoader.source = "ProfilingDetailsView.qml"
         } else if (data.type === "defineProfile") {
-            detailsLoader.source = "DefineProfileDetailsView.qml"
+            detailsLoader.source = "define_profile/DefineProfileDetailsView.qml"
         } else if (data.type === "drilling") {
             detailsLoader.source = "DrillingDetailsView.qml"
         } else if (data.type === "threading") {
