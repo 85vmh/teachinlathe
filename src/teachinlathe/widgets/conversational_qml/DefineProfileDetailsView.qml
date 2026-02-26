@@ -18,6 +18,8 @@ Item {
     property var  primitives: []
     property int  _pendingDeleteIndex: -1
 
+    readonly property real _primGridWidth: 180
+
     signal saveRequested(var updated)
     signal openNumPadRequested(var field)
 
@@ -368,27 +370,49 @@ Item {
             radius: 4
             border.color: isSelected ? "#3b82f6" : "#cccccc"
             border.width: isSelected ? 2 : 1
-            height: spCol.implicitHeight + 24
+            height: spRow.implicitHeight + 24
 
             TapHandler { onTapped: { root.selectedPrimIndex = primIdx; root.selectedBlendIndex = -1 } }
 
-            ColumnLayout {
-                id: spCol
+            RowLayout {
+                id: spRow
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                spacing: 8
+                spacing: 4
 
-                Text {
-                    Layout.fillWidth: true
-                    text: (primIdx + 1) + ". Start Point"
-                    font.pixelSize: 14; font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
+                Item {
+                    implicitWidth: 56
+                    Layout.fillHeight: true
+
+                    Text {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        text: (primIdx + 1) + "."
+                        font.pixelSize: 14; font.bold: true
+                    }
+
+                    Image {
+                        anchors.centerIn: parent
+                        width: 56; height: 56
+                        sourceSize.width: 56; sourceSize.height: 56
+                        source: "icons/target.svg"
+                        fillMode: Image.PreserveAspectFit; smooth: true
+                    }
                 }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#e0e0e0" }
+                Rectangle {
+                    width: 1; Layout.fillHeight: true
+                    Layout.topMargin: 4; Layout.bottomMargin: 4
+                    Layout.leftMargin: 0; Layout.rightMargin: 8
+                    color: "#d0d0d0"
+                }
 
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "X Start"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                GridLayout {
+                    columns: 2
+                    rowSpacing: 6; columnSpacing: 8
+                    Layout.preferredWidth: root._primGridWidth
+                    Layout.maximumWidth:  root._primGridWidth
+
+                    Label { text: "X Start"; font.pixelSize: 14; Layout.fillWidth: true }
                     NumpadField {
                         Layout.preferredWidth: 110
                         settingName: "sp." + primIdx + ".x_start"
@@ -403,11 +427,8 @@ Item {
                             root.primUpdated(primIdx, d)
                         }
                     }
-                }
 
-                RowLayout {
-                    Layout.fillWidth: true; spacing: 8
-                    Label { text: "Z Start"; font.pixelSize: 14; Layout.preferredWidth: 70 }
+                    Label { text: "Z Start"; font.pixelSize: 14; Layout.fillWidth: true }
                     NumpadField {
                         Layout.preferredWidth: 110
                         settingName: "sp." + primIdx + ".z_start"
@@ -423,6 +444,7 @@ Item {
                         }
                     }
                 }
+                Item { Layout.fillWidth: true }
             }
         }
     }
@@ -471,15 +493,17 @@ Item {
                 Rectangle {
                     width: 1; Layout.fillHeight: true
                     Layout.topMargin: 4; Layout.bottomMargin: 4
+                    Layout.leftMargin: 0; Layout.rightMargin: 8
                     color: "#d0d0d0"
                 }
 
                 GridLayout {
                     columns: 2
                     rowSpacing: 6; columnSpacing: 8
-                    Layout.preferredWidth: 200
+                    Layout.preferredWidth: root._primGridWidth
+                    Layout.maximumWidth:  root._primGridWidth
 
-                    Label { text: "X End"; font.pixelSize: 14 }
+                    Label { text: "X End"; font.pixelSize: 14; Layout.fillWidth: true }
                     NumpadField {
                         Layout.preferredWidth: 110
                         settingName: "lt." + primIdx + ".x_end"
@@ -495,7 +519,7 @@ Item {
                         }
                     }
 
-                    Label { text: "Z End"; font.pixelSize: 14 }
+                    Label { text: "Z End"; font.pixelSize: 14; Layout.fillWidth: true }
                     NumpadField {
                         Layout.preferredWidth: 110
                         settingName: "lt." + primIdx + ".z_end"
@@ -515,6 +539,7 @@ Item {
                 Rectangle {
                     width: 1; Layout.fillHeight: true
                     Layout.topMargin: 4; Layout.bottomMargin: 4
+                    Layout.leftMargin: 8; Layout.rightMargin: 8
                     color: "#d0d0d0"
                 }
 
@@ -640,15 +665,17 @@ Item {
                 Rectangle {
                     width: 1; Layout.fillHeight: true
                     Layout.topMargin: 4; Layout.bottomMargin: 4
+                    Layout.leftMargin: 0; Layout.rightMargin: 8
                     color: "#d0d0d0"
                 }
 
                 GridLayout {
                     columns: 2
                     rowSpacing: 6; columnSpacing: 8
-                    Layout.preferredWidth: 200
+                    Layout.preferredWidth: root._primGridWidth
+                    Layout.maximumWidth:  root._primGridWidth
 
-                    Label { text: "Direction"; font.pixelSize: 14 }
+                    Label { text: "Direction"; font.pixelSize: 14; Layout.fillWidth: true }
                     RowLayout {
                         spacing: 4
                         Rectangle {
@@ -695,7 +722,7 @@ Item {
                         }
                     }
 
-                    Label { text: "Radius"; font.pixelSize: 14 }
+                    Label { text: "Radius"; font.pixelSize: 14; Layout.fillWidth: true }
                     NumpadField {
                         Layout.preferredWidth: 110
                         settingName: "at." + primIdx + ".arc_radius"
@@ -711,7 +738,7 @@ Item {
                         }
                     }
 
-                    Label { text: "X Center"; font.pixelSize: 14 }
+                    Label { text: "X Center"; font.pixelSize: 14; Layout.fillWidth: true }
                     NumpadField {
                         Layout.preferredWidth: 110
                         settingName: "at." + primIdx + ".x_center"
@@ -727,7 +754,7 @@ Item {
                         }
                     }
 
-                    Label { text: "Z Center"; font.pixelSize: 14 }
+                    Label { text: "Z Center"; font.pixelSize: 14; Layout.fillWidth: true }
                     NumpadField {
                         Layout.preferredWidth: 110
                         settingName: "at." + primIdx + ".z_center"
@@ -743,7 +770,7 @@ Item {
                         }
                     }
 
-                    Label { text: "X End"; font.pixelSize: 14 }
+                    Label { text: "X End"; font.pixelSize: 14; Layout.fillWidth: true }
                     NumpadField {
                         Layout.preferredWidth: 110
                         settingName: "at." + primIdx + ".x_end"
@@ -759,7 +786,7 @@ Item {
                         }
                     }
 
-                    Label { text: "Z End"; font.pixelSize: 14 }
+                    Label { text: "Z End"; font.pixelSize: 14; Layout.fillWidth: true }
                     NumpadField {
                         Layout.preferredWidth: 110
                         settingName: "at." + primIdx + ".z_end"
@@ -779,6 +806,7 @@ Item {
                 Rectangle {
                     width: 1; Layout.fillHeight: true
                     Layout.topMargin: 4; Layout.bottomMargin: 4
+                    Layout.leftMargin: 8; Layout.rightMargin: 8
                     color: "#d0d0d0"
                 }
 
