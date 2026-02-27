@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-27 09:16:57",
+        "last_edit": "2026-02-27 10:13:14",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -17,15 +17,15 @@
             "order": 1,
             "type": "changeTool",
             "generate_gcode": true,
-            "is_optional_block": false,
-            "tool_no": 5,
+            "is_optional_block": true,
+            "tool_no": 6,
             "tool_orientation": 2,
             "back_angle": 95,
             "front_angle": 80,
             "toolchange_rules": {
                 "x_pos": 50.0,
                 "z_pos": -20.0,
-                "coordinate_type": "absolute",
+                "coordinate_type": "relative",
                 "move_sequence": "both",
                 "stop_spindle": true
             }
@@ -36,7 +36,7 @@
             "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
-                "direction": -1,
+                "direction": 1,
                 "mode": "rpm",
                 "rpm_value": 300,
                 "css_value": 20,
