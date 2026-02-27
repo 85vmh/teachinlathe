@@ -39,10 +39,7 @@ def generate_drilling_gcode(op):
     elif direction == 1:
         parts.append("M3")
 
-    if str(mode).lower() == "rpm":
-        parts.append(f"S{rpm_value}")
-    elif str(mode).lower() == "css":
-        parts.append(f"S{css_value} D{css_max}")
+    parts.append(f"S{rpm_value}")
 
     if parts:
         lines.append(f"{line_prefix}{' '.join(parts)}")

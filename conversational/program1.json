@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-27 11:28:57",
+        "last_edit": "2026-02-28 00:02:11",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -32,6 +32,21 @@
         },
         {
             "order": 2,
+            "type": "defineProfile",
+            "generate_gcode": false,
+            "is_optional_block": false,
+            "profile_id": 1,
+            "profile_primitives": [
+                {
+                    "primitive_id": 1,
+                    "type": "startPoint",
+                    "x_start": 0.0,
+                    "z_start": 0.0
+                }
+            ]
+        },
+        {
+            "order": 3,
             "type": "facing",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -62,7 +77,7 @@
             "z_end_becomes_new_z0": false
         },
         {
-            "order": 3,
+            "order": 4,
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -79,7 +94,7 @@
             }
         },
         {
-            "order": 4,
+            "order": 5,
             "type": "defineProfile",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -97,9 +112,9 @@
                     "x_end": 20.0,
                     "z_end": -28.0,
                     "blend": {
-                        "type": "none",
+                        "type": "fillet",
                         "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
+                        "fillet_radius": 3.0
                     }
                 },
                 {
@@ -108,9 +123,9 @@
                     "x_end": 30.0,
                     "z_end": -30.0,
                     "blend": {
-                        "type": "none",
+                        "type": "fillet",
                         "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
+                        "fillet_radius": 2.0
                     }
                 },
                 {
@@ -123,9 +138,9 @@
                     "z_center": -30.0,
                     "arc_radius": 10.0,
                     "blend": {
-                        "type": "none",
+                        "type": "fillet",
                         "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
+                        "fillet_radius": 3.0
                     }
                 },
                 {
@@ -136,7 +151,7 @@
                     "blend": {
                         "type": "fillet",
                         "chamfer_width": 0.0,
-                        "fillet_radius": 1.0
+                        "fillet_radius": 5.0
                     }
                 },
                 {
@@ -144,87 +159,6 @@
                     "type": "lineTo",
                     "x_end": 50.0,
                     "z_end": -65.0,
-                    "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
-                    }
-                }
-            ]
-        },
-        {
-            "order": 5,
-            "type": "defineProfile",
-            "generate_gcode": true,
-            "is_optional_block": false,
-            "profile_id": 1,
-            "profile_primitives": [
-                {
-                    "primitive_id": 1,
-                    "type": "startPoint",
-                    "x_start": 136.0,
-                    "z_start": 0.0
-                },
-                {
-                    "primitive_id": 2,
-                    "type": "lineTo",
-                    "x_end": 136.0,
-                    "z_end": -3.51,
-                    "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
-                    }
-                },
-                {
-                    "primitive_id": 3,
-                    "type": "lineTo",
-                    "x_end": 121.18,
-                    "z_end": -6.2,
-                    "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
-                    }
-                },
-                {
-                    "primitive_id": 4,
-                    "type": "lineTo",
-                    "x_end": 121.18,
-                    "z_end": -9.76,
-                    "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
-                    }
-                },
-                {
-                    "primitive_id": 5,
-                    "type": "lineTo",
-                    "x_end": 130.96,
-                    "z_end": -11.54,
-                    "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
-                    }
-                },
-                {
-                    "primitive_id": 6,
-                    "type": "lineTo",
-                    "x_end": 121.18,
-                    "z_end": -13.32,
-                    "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 0.0
-                    }
-                },
-                {
-                    "primitive_id": 7,
-                    "type": "lineTo",
-                    "x_end": 130.96,
-                    "z_end": -15.1,
                     "blend": {
                         "type": "none",
                         "chamfer_width": 0.0,

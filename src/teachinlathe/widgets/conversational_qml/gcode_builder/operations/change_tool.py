@@ -39,5 +39,5 @@ def generate_change_tool_gcode(op):
             lines.append(f"{line_prefix}M5")
         lines.append(f"{line_prefix}{g53_prefix}G0 X{x_pos} Z{z_pos}")
 
-    lines.append(f"{line_prefix}M6 T{tool_number}")
+    lines.append(f"{line_prefix}M6 T{tool_number} G43")
     return lines
