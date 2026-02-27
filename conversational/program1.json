@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-28 00:02:11",
+        "last_edit": "2026-02-28 00:41:49",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -16,7 +16,7 @@
         {
             "order": 1,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 6,
             "tool_orientation": 2,
@@ -48,7 +48,7 @@
         {
             "order": 3,
             "type": "facing",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -110,7 +110,7 @@
                     "primitive_id": 2,
                     "type": "lineTo",
                     "x_end": 20.0,
-                    "z_end": -28.0,
+                    "z_end": -25.0,
                     "blend": {
                         "type": "fillet",
                         "chamfer_width": 0.0,
@@ -181,13 +181,13 @@
             },
             "cutting_parameters": {
                 "feed_rate": 0.3,
-                "doc": 0.5,
-                "retract": 0.4
+                "doc": 2.0,
+                "retract": 1.0
             },
             "profiling_parameters": {
                 "profile_id": 5,
-                "x_start": 55.0,
-                "z_start": 3.0
+                "x_start": 52.0,
+                "z_start": 0.0
             },
             "profiling_options": {
                 "strategy": "rough",
@@ -199,7 +199,7 @@
         {
             "order": 7,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 3,
             "tool_orientation": 6,
@@ -216,7 +216,7 @@
         {
             "order": 8,
             "type": "threading",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "location": "ID",
             "thread_type": "metric",
@@ -240,7 +240,7 @@
         {
             "order": 9,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 3,
             "tool_orientation": 6,
@@ -257,7 +257,7 @@
         {
             "order": 10,
             "type": "drilling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -281,7 +281,7 @@
         {
             "order": 11,
             "type": "tapping",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -305,7 +305,7 @@
         {
             "order": 12,
             "type": "parting",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
