@@ -1,28 +1,70 @@
 O<drilling> sub
 
-#<x_start>      = #1
-#<z_start>      = #2
-#<z_end>        = #3
-#<retract>      = #4
-#<increment>    = #5
-#<rpm>          = #6
-#<feed>         = #7
+#<x_start>          = #1
+#<z_start>          = #2
+#<z_end>            = #3
+#<retract>          = #4
+#<x_inspect>        = #5
+#<z_inspect>        = #6
+#<increment>        = #7
+#<rpm>              = #8
+#<feed>             = #9
 
-G7  ; Diameter mode
-G17 ; Change plane to XY, canned cycle does not work on G18)
-G21 ; Metric Units
-G90 ; Absolute Distance
+(--- setup ---)
+G7   (Diameter mode)
+G21  (Metric)
+G90  (Absolute)
 
-G97 M4 S#<rpm>
-
-#<x_start> = [#<x_start> / 2] (half the diameter)
+#<x_start> = [#<x_start> / 2]  (half diameter -> radius)
+#<feed_clearance> = 0.2   (extra amount on re-entering the hole)
+#<dwell>          = 0.5   (seconds)
 
 G0 X0
-G98 G83 Z#<z_end> R#<retract> Q#<increment> F#<feed>
-G80 (cancel canned cycle)
+G95 F#<feed>
+
+(--- manual peck drilling variables ---)
+#<current_z>           = #<z_start>
+#<step>                = [ABS[#<increment>]]
+
+(Go to retract plane before first peck)
+G0 Z#<retract>
+
+(--- peck loop ---)
+O210 while [#<current_z> GT #<z_end>]
+
+    (# target for this peck, clamp to z_end)
+    #<target_z> = [#<current_z> + [-#<step>]]
+    O211 if [#<target_z> LT #<z_end>]
+      #<target_z> = #<z_end>
+    O211 endif
+
+    (ensure we are at retract plane before re-entering the hole)
+    G0 Z#<retract>
+
+    (rapid re-entry to last depth + clearance, only if last depth is below retract)
+    O213 if [#<current_z> LT #<retract>]
+      G0 Z[#<current_z> + [#<feed_clearance>]]
+    O213 endif
+
+    (feed to the next peck depth)
+    G1 Z#<target_z> F#<feed>
+    G4 P#<dwell>
+
+    (normal retract to plane)
+    G0 Z#<retract>
+
+    (only before next peck and not after the last)
+    O212 if [#<target_z> NE #<z_end>]
+      o<m1_handling> call [#<x_inspect>] [#<z_inspect>] [0] [#<retract>] [-1]
+    O212 endif
+
+    (# advance to the depth just reached)
+    #<current_z> = #<target_z>
+
+O210 endwhile
+
+(--- restore positions similar to original ---)
 G0 Z#<z_start>
 G0 X#<x_start>
 
-G18 (switch back to XZ plane)
-M5
 O<drilling> endsub

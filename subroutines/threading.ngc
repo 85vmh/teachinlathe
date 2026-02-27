@@ -18,7 +18,7 @@ G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
 
-(The drive line will be the path on which the tool will retrach from the cut, it should be bigger than the x_start)
+(The drive line will be the path on which the tool will retract from the cut, it should be bigger than the x_start)
 #<drive_line>       = [#<_x> * 2] (current diameter value, <_x> always represents the radius)
 
 #<diameter_diff>    = [ABS[#<x_start> - #<x_end>]]
