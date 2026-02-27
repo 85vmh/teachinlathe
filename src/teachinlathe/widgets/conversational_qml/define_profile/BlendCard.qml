@@ -113,8 +113,6 @@ Rectangle {
             }
         }
 
-        Item { Layout.fillWidth: true }
-
         Rectangle {
             width: 1; Layout.fillHeight: true
             Layout.topMargin: 4; Layout.bottomMargin: 4

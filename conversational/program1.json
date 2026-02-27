@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-26 10:11:06",
+        "last_edit": "2026-02-27 09:16:57",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -17,7 +17,7 @@
             "order": 1,
             "type": "changeTool",
             "generate_gcode": true,
-            "is_optional_block": true,
+            "is_optional_block": false,
             "tool_no": 5,
             "tool_orientation": 2,
             "back_angle": 95,
@@ -26,7 +26,7 @@
                 "x_pos": 50.0,
                 "z_pos": -20.0,
                 "coordinate_type": "absolute",
-                "move_sequence": "xz",
+                "move_sequence": "both",
                 "stop_spindle": true
             }
         },
@@ -34,7 +34,7 @@
             "order": 2,
             "type": "facing",
             "generate_gcode": true,
-            "is_optional_block": true,
+            "is_optional_block": false,
             "spindle_parameters": {
                 "direction": -1,
                 "mode": "rpm",
@@ -134,16 +134,16 @@
                     "x_end": 40.0,
                     "z_end": -60.0,
                     "blend": {
-                        "type": "chamfer",
-                        "chamfer_width": 3.0,
-                        "fillet_radius": 0.0
+                        "type": "fillet",
+                        "chamfer_width": 0.0,
+                        "fillet_radius": 1.0
                     }
                 },
                 {
                     "primitive_id": 6,
                     "type": "lineTo",
                     "x_end": 50.0,
-                    "z_end": -60.0,
+                    "z_end": -65.0,
                     "blend": {
                         "type": "none",
                         "chamfer_width": 0.0,
@@ -256,7 +256,7 @@
                 "z_start": 3.0
             },
             "profiling_options": {
-                "strategy": "finish",
+                "strategy": "rough",
                 "stock_to_leave_x": 0.5,
                 "stock_to_leave_z": 0.5,
                 "finish_spring_passes": 3
