@@ -1297,69 +1297,6 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               </property>
              </widget>
             </widget>
-            <widget class="QFrame" name="jogSpeedFrame">
-             <property name="geometry">
-              <rect>
-               <x>1095</x>
-               <y>735</y>
-               <width>121</width>
-               <height>241</height>
-              </rect>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">QFrame#jogSpeedFrame {
-    background-color: rgb(230, 230, 230);
-    border: 1px solid rgb(10, 10, 10);
-    border-radius: 8px; /* Optional: Adds rounded corners */
-}</string>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Raised</enum>
-             </property>
-             <widget class="JogSpeedPercentageWidget" name="jogspeedpercentagewidget">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>10</y>
-                <width>80</width>
-                <height>186</height>
-               </rect>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>12</pointsize>
-               </font>
-              </property>
-              <property name="diameter" stdset="0">
-               <number>15</number>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="layoutSpacing">
-               <number>6</number>
-              </property>
-              <property name="color" stdset="0">
-               <color>
-                <red>15</red>
-                <green>224</green>
-                <blue>42</blue>
-               </color>
-              </property>
-             </widget>
-            </widget>
             <widget class="QFrame" name="handwheelsFrame">
              <property name="geometry">
               <rect>
@@ -1566,7 +1503,7 @@ QCheckBox:disabled {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1311</width>
+               <width>1111</width>
                <height>696</height>
               </rect>
              </property>
@@ -1672,31 +1609,12 @@ QCheckBox:disabled {
               <string>[{&quot;name&quot;: &quot;feed_override&quot;, &quot;property&quot;: &quot;Text&quot;, &quot;expression&quot;: &quot;str(int(ch[0]*100)) + '%'&quot;, &quot;channels&quot;: [{&quot;url&quot;: &quot;status:feedrate&quot;, &quot;trigger&quot;: true}]}]</string>
              </property>
             </widget>
-            <widget class="QLabel" name="label_3">
-             <property name="geometry">
-              <rect>
-               <x>1095</x>
-               <y>705</y>
-               <width>121</width>
-               <height>36</height>
-              </rect>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">font: 18pt &quot;Cantarell&quot;;</string>
-             </property>
-             <property name="text">
-              <string>Jog Speed</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
             <widget class="QWidget" name="toolLibraryContainer" native="true">
              <property name="geometry">
               <rect>
-               <x>1310</x>
+               <x>1105</x>
                <y>5</y>
-               <width>601</width>
+               <width>800</width>
                <height>971</height>
               </rect>
              </property>
@@ -5477,11 +5395,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <class>RecentFileComboBox</class>
    <extends>QComboBox</extends>
    <header>qtpyvcp.widgets.input_widgets.recent_file_combobox</header>
-  </customwidget>
-  <customwidget>
-   <class>JogSpeedPercentageWidget</class>
-   <extends>QWidget</extends>
-   <header>qtpyvcp.widgets.input_widgets.jog_speed_percentage</header>
   </customwidget>
   <customwidget>
    <class>FileSystemTable</class>

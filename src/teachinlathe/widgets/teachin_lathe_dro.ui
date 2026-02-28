@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1310</width>
+    <width>1092</width>
     <height>703</height>
    </rect>
   </property>
@@ -16,7 +16,7 @@
   <widget class="QLabel" name="zLabel">
    <property name="geometry">
     <rect>
-     <x>5</x>
+     <x>215</x>
      <y>140</y>
      <width>60</width>
      <height>81</height>
@@ -50,7 +50,7 @@
   <widget class="QLabel" name="xLabel">
    <property name="geometry">
     <rect>
-     <x>5</x>
+     <x>215</x>
      <y>50</y>
      <width>60</width>
      <height>81</height>
@@ -81,7 +81,7 @@
   <widget class="QLabel" name="xSecondaryDro">
    <property name="geometry">
     <rect>
-     <x>476</x>
+     <x>296</x>
      <y>55</y>
      <width>131</width>
      <height>34</height>
@@ -123,7 +123,7 @@
   <widget class="QLabel" name="zSecondaryDro">
    <property name="geometry">
     <rect>
-     <x>476</x>
+     <x>296</x>
      <y>145</y>
      <width>131</width>
      <height>34</height>
@@ -165,7 +165,7 @@
   <widget class="QLabel" name="xPrimaryDro">
    <property name="geometry">
     <rect>
-     <x>610</x>
+     <x>430</x>
      <y>55</y>
      <width>316</width>
      <height>71</height>
@@ -207,7 +207,7 @@
   <widget class="QLabel" name="zPrimaryDro">
    <property name="geometry">
     <rect>
-     <x>610</x>
+     <x>430</x>
      <y>145</y>
      <width>316</width>
      <height>71</height>
@@ -252,7 +252,7 @@
   <widget class="QPushButton" name="zAbsRel">
    <property name="geometry">
     <rect>
-     <x>1230</x>
+     <x>1015</x>
      <y>145</y>
      <width>71</width>
      <height>71</height>
@@ -284,7 +284,7 @@
   <widget class="QPushButton" name="xZero">
    <property name="geometry">
     <rect>
-     <x>1135</x>
+     <x>920</x>
      <y>55</y>
      <width>71</width>
      <height>71</height>
@@ -319,7 +319,7 @@
   <widget class="QPushButton" name="xAbsRel">
    <property name="geometry">
     <rect>
-     <x>1230</x>
+     <x>1015</x>
      <y>55</y>
      <width>71</width>
      <height>71</height>
@@ -351,7 +351,7 @@
   <widget class="QPushButton" name="zZero">
    <property name="geometry">
     <rect>
-     <x>1135</x>
+     <x>920</x>
      <y>145</y>
      <width>71</width>
      <height>71</height>
@@ -383,7 +383,7 @@
   <widget class="QLabel" name="zUnit">
    <property name="geometry">
     <rect>
-     <x>930</x>
+     <x>750</x>
      <y>170</y>
      <width>31</width>
      <height>21</height>
@@ -417,7 +417,7 @@
   <widget class="QLabel" name="xUnit">
    <property name="geometry">
     <rect>
-     <x>930</x>
+     <x>750</x>
      <y>80</y>
      <width>31</width>
      <height>21</height>
@@ -451,7 +451,7 @@
   <widget class="MDIButton" name="mdibutton">
    <property name="geometry">
     <rect>
-     <x>1040</x>
+     <x>825</x>
      <y>145</y>
      <width>71</width>
      <height>71</height>
@@ -476,7 +476,7 @@ Datum</string>
     <rect>
      <x>5</x>
      <y>220</y>
-     <width>1300</width>
+     <width>1081</width>
      <height>476</height>
     </rect>
    </property>
@@ -489,7 +489,7 @@ Datum</string>
    <widget class="QWidget" name="boxZMinusLimit" native="true">
     <property name="geometry">
      <rect>
-      <x>170</x>
+      <x>70</x>
       <y>275</y>
       <width>191</width>
       <height>56</height>
@@ -584,7 +584,7 @@ Datum</string>
    <widget class="QWidget" name="boxZPlusLimit" native="true">
     <property name="geometry">
      <rect>
-      <x>900</x>
+      <x>805</x>
       <y>275</y>
       <width>191</width>
       <height>56</height>
@@ -679,7 +679,7 @@ Datum</string>
    <widget class="Line" name="zLine">
     <property name="geometry">
      <rect>
-      <x>360</x>
+      <x>260</x>
       <y>295</y>
       <width>541</width>
       <height>20</height>
@@ -695,7 +695,7 @@ Datum</string>
    <widget class="QLabel" name="tool_limits_label">
     <property name="geometry">
      <rect>
-      <x>560</x>
+      <x>455</x>
       <y>280</y>
       <width>171</width>
       <height>51</height>
@@ -722,7 +722,7 @@ Datum</string>
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>545</x>
+      <x>435</x>
       <y>45</y>
       <width>206</width>
       <height>51</height>
@@ -751,7 +751,7 @@ Datum</string>
      <rect>
       <x>140</x>
       <y>60</y>
-      <width>961</width>
+      <width>740</width>
       <height>20</height>
      </rect>
     </property>
@@ -765,7 +765,7 @@ Datum</string>
    <widget class="Line" name="xLine">
     <property name="geometry">
      <rect>
-      <x>625</x>
+      <x>520</x>
       <y>205</y>
       <width>46</width>
       <height>206</height>
@@ -781,7 +781,7 @@ Datum</string>
    <widget class="QWidget" name="boxXPlusLimit" native="true">
     <property name="geometry">
      <rect>
-      <x>555</x>
+      <x>445</x>
       <y>410</y>
       <width>191</width>
       <height>56</height>
@@ -876,7 +876,7 @@ Datum</string>
    <widget class="QWidget" name="boxXMinusLimit" native="true">
     <property name="geometry">
      <rect>
-      <x>555</x>
+      <x>445</x>
       <y>150</y>
       <width>191</width>
       <height>56</height>
@@ -971,7 +971,7 @@ Datum</string>
    <widget class="QWidget" name="boxTailstockLimit" native="true">
     <property name="geometry">
      <rect>
-      <x>1100</x>
+      <x>880</x>
       <y>45</y>
       <width>191</width>
       <height>56</height>
@@ -1066,7 +1066,7 @@ Datum</string>
    <widget class="QLabel" name="labelXPlusLimit">
     <property name="geometry">
      <rect>
-      <x>460</x>
+      <x>350</x>
       <y>430</y>
       <width>90</width>
       <height>19</height>
@@ -1090,7 +1090,7 @@ Datum</string>
     </property>
     <property name="geometry">
      <rect>
-      <x>205</x>
+      <x>105</x>
       <y>340</y>
       <width>120</width>
       <height>45</height>
@@ -1115,7 +1115,7 @@ Datum</string>
    <widget class="QLabel" name="labelZMinusLimit">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>110</x>
       <y>250</y>
       <width>111</width>
       <height>19</height>
@@ -1139,7 +1139,7 @@ Datum</string>
     </property>
     <property name="geometry">
      <rect>
-      <x>935</x>
+      <x>840</x>
       <y>340</y>
       <width>120</width>
       <height>45</height>
@@ -1164,7 +1164,7 @@ Datum</string>
    <widget class="QLabel" name="labelZPlusLimit">
     <property name="geometry">
      <rect>
-      <x>945</x>
+      <x>850</x>
       <y>250</y>
       <width>111</width>
       <height>19</height>
@@ -1188,7 +1188,7 @@ Datum</string>
     </property>
     <property name="geometry">
      <rect>
-      <x>1135</x>
+      <x>915</x>
       <y>110</y>
       <width>120</width>
       <height>45</height>
@@ -1219,7 +1219,7 @@ Datum</string>
    <widget class="QLabel" name="labelTailstockLimit">
     <property name="geometry">
      <rect>
-      <x>1100</x>
+      <x>880</x>
       <y>20</y>
       <width>186</width>
       <height>19</height>
@@ -1243,7 +1243,7 @@ Datum</string>
     </property>
     <property name="geometry">
      <rect>
-      <x>755</x>
+      <x>645</x>
       <y>415</y>
       <width>120</width>
       <height>45</height>
@@ -1268,7 +1268,7 @@ Datum</string>
    <widget class="QLabel" name="labelXMinusLimit">
     <property name="geometry">
      <rect>
-      <x>460</x>
+      <x>350</x>
       <y>170</y>
       <width>90</width>
       <height>19</height>
@@ -1292,7 +1292,7 @@ Datum</string>
     </property>
     <property name="geometry">
      <rect>
-      <x>755</x>
+      <x>645</x>
       <y>155</y>
       <width>120</width>
       <height>45</height>
@@ -1454,119 +1454,10 @@ Datum</string>
    <zorder>changeChuck</zorder>
    <zorder>label_6</zorder>
   </widget>
-  <widget class="DROLabel" name="drolabel">
-   <property name="geometry">
-    <rect>
-     <x>85</x>
-     <y>55</y>
-     <width>311</width>
-     <height>71</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QLabel {
-	font: 40pt &quot;Noto Sans Mono&quot;;
-    border-style: solid;
-    border-color: rgb(200, 200, 200);
-    border-width: 1.5px;
-    border-radius: 8px;
-    color: rgb(150, 150, 150);;
-    background: rgb(230, 230, 230);
-}</string>
-   </property>
-   <property name="text">
-    <string>     0.000</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-   <property name="referenceType" stdset="0">
-    <number>0</number>
-   </property>
-   <property name="axisNumber" stdset="0">
-    <number>0</number>
-   </property>
-   <property name="inchFormat" stdset="0">
-    <string>%9.4f</string>
-   </property>
-   <property name="millimeterFormat" stdset="0">
-    <string>%10.3f</string>
-   </property>
-   <property name="degreeFormat" stdset="0">
-    <string>%10.2f</string>
-   </property>
-   <property name="latheMode" stdset="0">
-    <number>1</number>
-   </property>
-  </widget>
-  <widget class="DROLabel" name="drolabel_2">
-   <property name="geometry">
-    <rect>
-     <x>85</x>
-     <y>145</y>
-     <width>311</width>
-     <height>71</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QLabel {
-	font: 40pt &quot;Noto Sans Mono&quot;;
-    border-style: solid;
-    border-color: rgb(200, 200, 200);
-    border-width: 1.5px;
-    border-radius: 8px;
-    color: rgb(150, 150, 150);;
-    background: rgb(230, 230, 230);
-}</string>
-   </property>
-   <property name="text">
-    <string>     0.000</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-   <property name="referenceType" stdset="0">
-    <number>0</number>
-   </property>
-   <property name="axisNumber" stdset="0">
-    <number>2</number>
-   </property>
-   <property name="inchFormat" stdset="0">
-    <string>%9.4f</string>
-   </property>
-   <property name="millimeterFormat" stdset="0">
-    <string>%10.3f</string>
-   </property>
-   <property name="degreeFormat" stdset="0">
-    <string>%10.2f</string>
-   </property>
-   <property name="latheMode" stdset="0">
-    <number>0</number>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_4">
-   <property name="geometry">
-    <rect>
-     <x>85</x>
-     <y>10</y>
-     <width>311</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">font: 18pt &quot;Cantarell&quot;;</string>
-   </property>
-   <property name="text">
-    <string>Machine Coordinates</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_8">
    <property name="geometry">
     <rect>
-     <x>610</x>
+     <x>430</x>
      <y>10</y>
      <width>311</width>
      <height>31</height>
@@ -1585,7 +1476,7 @@ Datum</string>
   <widget class="QLabel" name="label_9">
    <property name="geometry">
     <rect>
-     <x>5</x>
+     <x>210</x>
      <y>10</y>
      <width>66</width>
      <height>31</height>
@@ -1604,7 +1495,7 @@ Datum</string>
   <widget class="QLabel" name="label_10">
    <property name="geometry">
     <rect>
-     <x>1045</x>
+     <x>830</x>
      <y>5</y>
      <width>246</width>
      <height>31</height>
@@ -1634,9 +1525,6 @@ Datum</string>
   <zorder>zUnit</zorder>
   <zorder>xUnit</zorder>
   <zorder>mdibutton</zorder>
-  <zorder>drolabel</zorder>
-  <zorder>drolabel_2</zorder>
-  <zorder>label_4</zorder>
   <zorder>label_8</zorder>
   <zorder>label_9</zorder>
   <zorder>label_10</zorder>
@@ -1646,11 +1534,6 @@ Datum</string>
    <class>MDIButton</class>
    <extends>QPushButton</extends>
    <header>qtpyvcp.widgets.button_widgets.mdi_button</header>
-  </customwidget>
-  <customwidget>
-   <class>DROLabel</class>
-   <extends>QLabel</extends>
-   <header>qtpyvcp.widgets.display_widgets.dro_label</header>
   </customwidget>
   <customwidget>
    <class>TeachInDroLabel</class>
