@@ -15,8 +15,7 @@ GroupBox {
     /* --- Public API --- */
     property var  profilingOptions: null
     property string strategy: "rough"   // "rough" | "finish"
-    property real x_stock_to_leave: 0.0
-    property real z_stock_to_leave: 0.0
+    property real stock_to_leave: 0.0
     property int spring_passes: 0
 
     signal saveRequested(var payload)
@@ -34,8 +33,12 @@ GroupBox {
         print("applyData -> data:\n" + JSON.stringify(opData.profiling_options, null, 2))
 
         strategy = (profilingOptions.strategy !== undefined) ? String(profilingOptions.strategy) : "rough"
-        x_stock_to_leave = (profilingOptions.stock_to_leave_x !== undefined) ? Number(profilingOptions.stock_to_leave_x) : 0.0
-        z_stock_to_leave = (profilingOptions.stock_to_leave_z !== undefined) ? Number(profilingOptions.stock_to_leave_z) : 0.0
+        if (profilingOptions.stock_to_leave_x !== undefined)
+            stock_to_leave = Number(profilingOptions.stock_to_leave_x)
+        else if (profilingOptions.stock_to_leave_z !== undefined)
+            stock_to_leave = Number(profilingOptions.stock_to_leave_z)
+        else
+            stock_to_leave = 0.0
         spring_passes = (profilingOptions.finish_spring_passes !== undefined) ? Number(profilingOptions.finish_spring_passes) : 0
         _loading = false
     }
@@ -45,8 +48,8 @@ GroupBox {
         root.saveRequested({
             profiling_options: {
                 strategy: strategy,
-                stock_to_leave_x: Number(x_stock_to_leave),
-                stock_to_leave_z: Number(z_stock_to_leave),
+                stock_to_leave_x: Number(stock_to_leave),
+                stock_to_leave_z: Number(stock_to_leave),
                 finish_spring_passes: Number(spring_passes)
             }
         })
@@ -133,7 +136,7 @@ GroupBox {
                         rowSpacing: 16
 
                         Label {
-                            text: "X Stock to leave"
+                            text: "Stock to leave"
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                             font.pixelSize: 16
                         }
@@ -141,7 +144,7 @@ GroupBox {
                             Layout.preferredWidth: 100
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                             settingName: "spindle.css.value"
-                            value: root.x_stock_to_leave
+                            value: root.stock_to_leave
                             validatorObject: DoubleValidator {
                                 notation: DoubleValidator.StandardNotation
                             }
@@ -151,34 +154,7 @@ GroupBox {
                             hAlign: Text.AlignRight
                             font.pixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.x_stock_to_leave = value; root.emitSave() }
-                        }
-                        Label {
-                            text: "(mm)"
-                            Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                            font.pixelSize: 16
-                        }
-
-                        Label {
-                            text: "Z Stock to leave"
-                            Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                            font.pixelSize: 16
-                        }
-                        NumpadField {
-                            Layout.preferredWidth: 100
-                            Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                            settingName: "spindle.css.maxrpm"
-                            value: root.z_stock_to_leave
-                            validatorObject: DoubleValidator {
-                                notation: DoubleValidator.StandardNotation
-                            }
-                            formatter: function (v) {
-                                return (v == null) ? "" : Number(v).toFixed(3)
-                            }
-                            hAlign: Text.AlignRight
-                            font.pixelSize: 16
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.z_stock_to_leave = value; root.emitSave() }
+                            onValueCommitted: { root.stock_to_leave = value; root.emitSave() }
                         }
                         Label {
                             text: "(mm)"
