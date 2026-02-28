@@ -306,6 +306,7 @@ class ConversationalQml(QQuickWidget):
                 "major_diameter": 0.0, "minor_diameter": 0.0,
                 "z_start": 0.0, "z_end": 0.0,
                 "initial_doc": 0.3, "retract": 1.0, "spring_passes": 0,
+                "depth_degression": 1.0, "taper_type": 0, "compound_angle": 0.0,
             })
         elif op_type == "drilling":
             base.update({
@@ -609,6 +610,7 @@ class ConversationalQml(QQuickWidget):
             setattr(op, "generate_gcode", bool(checked))
         except Exception:
             pass
+        self.current_op_index = index
         self._save_current_program()
 
     def onToggleOptionalBlock(self, index: int, checked: bool):
@@ -619,6 +621,7 @@ class ConversationalQml(QQuickWidget):
             setattr(op, "is_optional_block", bool(checked))
         except Exception:
             pass
+        self.current_op_index = index
         self._save_current_program()
 
     # def _get_current_op(self, index):

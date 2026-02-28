@@ -45,9 +45,9 @@ Rectangle {
     width: parent ? parent.width : 400
     height: 72
     radius: 0
-    color: (rowIndex % 2 === 0 ? "#fafafa" : "#f0f0f0")
-    border.width: isCurrentItem ? 1 : 0
-    border.color: "#8ec5ff"
+    color: isCurrentItem ? "#dbeafe" : (rowIndex % 2 === 0 ? "#fafafa" : "#f0f0f0")
+    border.width: isCurrentItem ? 2 : 0
+    border.color: isCurrentItem ? "#3b82f6" : "transparent"
 
     // Reusable icon button with press feedback, tint, and enabled state
     Component {
@@ -113,6 +113,7 @@ Rectangle {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             Layout.alignment: Qt.AlignVCenter
+            color: "black"
         }
         Divider { }
 
@@ -149,6 +150,7 @@ Rectangle {
                 text: (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
+                color: "black"
             }
         }
         Divider { }

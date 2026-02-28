@@ -765,6 +765,9 @@ class Threading(TurnableOperation):
     initial_doc: float
     retract: float
     spring_passes: int
+    depth_degression: float
+    taper_type: int
+    compound_angle: float
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Threading":
@@ -787,6 +790,9 @@ class Threading(TurnableOperation):
             initial_doc=float(d.get("initial_doc", 0.0)),
             retract=float(d["retract"]),
             spring_passes=int(d.get("spring_passes", 0)),
+            depth_degression=float(d.get("depth_degression", 1.0)),
+            taper_type=int(d.get("taper_type", 0)),
+            compound_angle=float(d.get("compound_angle", 0.0)),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -802,7 +808,10 @@ class Threading(TurnableOperation):
             "z_end": self.z_end,
             "initial_doc": self.initial_doc,
             "retract": self.retract,
-            "spring_passes": self.spring_passes
+            "spring_passes": self.spring_passes,
+            "depth_degression": self.depth_degression,
+            "taper_type": self.taper_type,
+            "compound_angle": self.compound_angle
         })
         return self._add_spindle_to(base)
 

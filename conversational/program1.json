@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-28 12:31:38",
+        "last_edit": "2026-02-28 16:19:57",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -32,23 +32,8 @@
         },
         {
             "order": 2,
-            "type": "defineProfile",
-            "generate_gcode": false,
-            "is_optional_block": false,
-            "profile_id": 1,
-            "profile_primitives": [
-                {
-                    "primitive_id": 1,
-                    "type": "startPoint",
-                    "x_start": 0.0,
-                    "z_start": 0.0
-                }
-            ]
-        },
-        {
-            "order": 3,
             "type": "facing",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -77,7 +62,7 @@
             "z_end_becomes_new_z0": false
         },
         {
-            "order": 4,
+            "order": 3,
             "type": "changeTool",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -94,7 +79,7 @@
             }
         },
         {
-            "order": 5,
+            "order": 4,
             "type": "defineProfile",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -168,7 +153,7 @@
             ]
         },
         {
-            "order": 6,
+            "order": 5,
             "type": "profiling",
             "generate_gcode": true,
             "is_optional_block": false,
@@ -197,9 +182,38 @@
             }
         },
         {
+            "order": 6,
+            "type": "profiling",
+            "generate_gcode": true,
+            "is_optional_block": false,
+            "spindle_parameters": {
+                "direction": 1,
+                "mode": "rpm",
+                "rpm_value": 1500,
+                "css_value": 200,
+                "css_max_speed": 1500
+            },
+            "cutting_parameters": {
+                "feed_rate": 0.3,
+                "doc": 2.0,
+                "retract": 1.0
+            },
+            "profiling_parameters": {
+                "profile_id": 5,
+                "x_start": 52.0,
+                "z_start": 0.0
+            },
+            "profiling_options": {
+                "strategy": "finish",
+                "stock_to_leave_x": 0.5,
+                "stock_to_leave_z": 0.5,
+                "finish_spring_passes": 2
+            }
+        },
+        {
             "order": 7,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 1,
             "tool_orientation": 1,
@@ -216,7 +230,7 @@
         {
             "order": 8,
             "type": "profiling",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -245,7 +259,7 @@
         {
             "order": 9,
             "type": "changeTool",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "tool_no": 3,
             "tool_orientation": 6,
@@ -264,7 +278,7 @@
             "type": "threading",
             "generate_gcode": true,
             "is_optional_block": false,
-            "location": "ID",
+            "location": "OD",
             "thread_type": "metric",
             "pitch": 2.0,
             "starts": 2,
@@ -275,6 +289,9 @@
             "initial_doc": 0.02,
             "retract": 0.2,
             "spring_passes": 3,
+            "depth_degression": 1.5,
+            "taper_type": 2,
+            "compound_angle": 29.5,
             "spindle_parameters": {
                 "direction": 1,
                 "mode": "rpm",
@@ -286,7 +303,7 @@
         {
             "order": 11,
             "type": "changeTool",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "tool_no": 3,
             "tool_orientation": 6,
