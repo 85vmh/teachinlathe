@@ -2801,6 +2801,18 @@ QHeaderView {
 	border-radius:none;
 	border-style: none;
 	font: 13pt &quot;Noto&quot;;
+}
+
+QTableView::item {
+	padding: 10px 6px;
+}
+
+QScrollBar:vertical {
+	width: 20px;
+}
+
+QScrollBar::handle:vertical {
+	min-height: 40px;
 }</string>
                     </property>
                     <property name="selectionMode">
@@ -2826,6 +2838,12 @@ QHeaderView {
                     </property>
                     <attribute name="horizontalHeaderCascadingSectionResizes">
                      <bool>true</bool>
+                    </attribute>
+                    <attribute name="verticalHeaderMinimumSectionSize">
+                     <number>56</number>
+                    </attribute>
+                    <attribute name="verticalHeaderDefaultSectionSize">
+                     <number>56</number>
                     </attribute>
                    </widget>
                   </item>
@@ -3127,6 +3145,18 @@ QHeaderView {
 	border-radius:none;
 	border-style: none;
 	font: 13pt &quot;Noto&quot;;
+}
+
+QTableView::item {
+	padding: 10px 6px;
+}
+
+QScrollBar:vertical {
+	width: 20px;
+}
+
+QScrollBar::handle:vertical {
+	min-height: 40px;
 }</string>
                     </property>
                     <property name="sizeAdjustPolicy">
@@ -3155,6 +3185,12 @@ QHeaderView {
                     </property>
                     <attribute name="horizontalHeaderCascadingSectionResizes">
                      <bool>true</bool>
+                    </attribute>
+                    <attribute name="verticalHeaderMinimumSectionSize">
+                     <number>56</number>
+                    </attribute>
+                    <attribute name="verticalHeaderDefaultSectionSize">
+                     <number>56</number>
                     </attribute>
                     <attribute name="horizontalHeaderMinimumSectionSize">
                      <number>20</number>

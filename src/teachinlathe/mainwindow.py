@@ -5,6 +5,7 @@ from enum import Enum
 
 import linuxcnc
 from PyQt5.QtCore import QTimer, QSignalBlocker
+from PyQt5.QtCore import QItemSelectionModel
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QPushButton
 from qtpyvcp.actions.machine_actions import issue_mdi
@@ -30,6 +31,10 @@ TOOLTABLE = getPlugin('tooltable')
 LINUXCNC_CMD = linuxcnc.command()
 STAT = linuxcnc.stat()
 PROGRAM_PREFIX = INFO.getProgramPrefix()
+# Base folder for conversational outputs (user-configurable).
+CONVERSATIONAL_OUTPUT_BASE = PROGRAM_PREFIX
+CONVERSATIONAL_GCODE_BASE = CONVERSATIONAL_OUTPUT_BASE
+CONVERSATIONAL_JSON_BASE = CONVERSATIONAL_OUTPUT_BASE
 
 
 class MainTabs(Enum):
@@ -233,6 +238,30 @@ class MyMainWindow(VCPMainWindow):
 
     def backToPrograms(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
+
+    def showGeneratedProgram(self, ngc_path: str):
+        if not ngc_path:
+            return
+        try:
+            folder = os.path.dirname(os.path.abspath(ngc_path))
+            self.tabWidget.setCurrentIndex(MainTabs.PROGRAMS.value)
+            self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
+
+            table = getattr(self, "destinationFsTable", None)
+            if table is not None:
+                try:
+                    table.setRootPath(folder)
+                    idx = table.model.index(ngc_path)
+                    if idx and idx.isValid():
+                        table.selectionModel().select(
+                            idx,
+                            QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows
+                        )
+                        table.scrollTo(idx)
+                except Exception:
+                    pass
+        except Exception as e:
+            print("showGeneratedProgram failed:", e)
 
     def onSpindleModeChanged(self):
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())

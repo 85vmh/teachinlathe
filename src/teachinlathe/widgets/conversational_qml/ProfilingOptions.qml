@@ -22,6 +22,7 @@ GroupBox {
     signal saveRequested(var payload)
 
     signal openNumPadRequested(var field)
+    signal addFinishRequested()
 
     property bool readOnly: false
     property bool _loading: false
@@ -89,6 +90,12 @@ GroupBox {
             }
             Item {
                 Layout.fillWidth: true
+            }
+
+            Button {
+                text: "Add a finish operation"
+                visible: root.strategy === "rough"
+                onClicked: root.addFinishRequested()
             }
         }
 

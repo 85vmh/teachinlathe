@@ -52,6 +52,8 @@ Item {
 
     signal updateHeader(var payload)
 
+    signal addProfilingFinishRequested(int index)
+
     // Numpad / teach
     signal openNumPadRequested(var field)
 
@@ -701,6 +703,11 @@ Item {
 
                     function onOpenNumPadRequested(field) {
                         operationEditor.openNumPadRequested(field)
+                    }
+
+                    function onAddFinishRequested(i) {
+                        if (operationEditor.addProfilingFinishRequested)
+                            operationEditor.addProfilingFinishRequested(i)
                     }
                 }
             }

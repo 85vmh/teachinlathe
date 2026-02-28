@@ -13,7 +13,7 @@ def _safe_program_name(program_dict):
     return safe.replace(" ", "_")
 
 
-def build_ngc_from_json(json_path):
+def build_ngc_from_json(json_path, output_dir=None):
     if not json_path or not os.path.isfile(json_path):
         raise FileNotFoundError(f"Program JSON not found: {json_path}")
 
@@ -21,7 +21,11 @@ def build_ngc_from_json(json_path):
         program_dict = json.load(handle)
 
     base_no_ext, _ = os.path.splitext(json_path)
-    ngc_path = base_no_ext + ".ngc"
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        ngc_path = os.path.join(output_dir, os.path.basename(base_no_ext) + ".ngc")
+    else:
+        ngc_path = base_no_ext + ".ngc"
 
     lines = []
     program_name = program_dict.get("header", {}).get("name", program_dict.get("id", "program"))

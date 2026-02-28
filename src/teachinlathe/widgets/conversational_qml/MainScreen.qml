@@ -141,10 +141,14 @@ Item {
                     Layout.fillHeight: true
                     clip: true
                     model: main.programsModel || programsModel
+                    ScrollBar.vertical: ScrollBar {
+                        width: 18
+                        policy: ScrollBar.AlwaysOn
+                    }
 
                     delegate: Rectangle {
                         width: ListView.view ? ListView.view.width : 400
-                        height: 60
+                        height: 84
                         radius: 0
 
                         // alternating background (unchanged on selection)

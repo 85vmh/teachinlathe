@@ -1,9 +1,11 @@
 import json
 import os
+import time
 
-from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt
+from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
+from PyQt5.QtWidgets import QProgressDialog, QApplication
 
 from teachinlathe.conversational.data_types import Workpiece, SpindleParameters, Facing, CuttingParameters, GeometryParameters, M1Parameters, SpindleMode, \
     operation_types
@@ -249,6 +251,8 @@ class ConversationalQml(QQuickWidget):
                 item.updateHeader.connect(self.onUpdateHeader)
             if hasattr(item, "addOperationRequested"):
                 item.addOperationRequested.connect(self.onAddOperationRequested)
+            if hasattr(item, "addProfilingFinishRequested"):
+                item.addProfilingFinishRequested.connect(self.onAddProfilingFinishRequested)
             if hasattr(item, "reorderModeToggled"):
                 item.reorderModeToggled.connect(self.onReorderModeToggled)
             if hasattr(item, "moveUpRequested"):
@@ -397,34 +401,85 @@ class ConversationalQml(QQuickWidget):
         self.current_op_index = -1
         self._save_current_program()
 
+    def onAddProfilingFinishRequested(self, index: int):
+        prog = self._get_current_program()
+        if not prog or not (0 <= index < len(prog.operations)):
+            return
+        op = prog.operations[index]
+        from teachinlathe.conversational.data_types import Profiling
+        if not isinstance(op, Profiling):
+            return
+        try:
+            d = op.to_dict()
+            opts = d.get("profiling_options", {}) or {}
+            opts["strategy"] = "finish"
+            d["profiling_options"] = opts
+            new_op = Profiling.from_dict(d)
+            insert_idx = index + 1
+            prog.operations.insert(insert_idx, new_op)
+            self._renumber_operations(prog.operations)
+            self.current_op_index = insert_idx
+            self._save_current_program()
+        except Exception as e:
+            print("[profiling] add finish failed:", e)
+
     def onGenerateGcodeRequested(self):
         """Called from ChildScreen when user clicks 'Generate GCode' on the top bar."""
         prog = getattr(self, "current_program", None)
         if not prog:
             print("[gcode] No current program selected.")
             return
+        progress = QProgressDialog("Generating G-Code...", None, 0, 0, self)
+        progress.setWindowTitle("Generate G-Code")
+        progress.setWindowModality(Qt.ApplicationModal)
+        progress.setCancelButton(None)
+        progress.setMinimumDuration(0)
+        progress.setAutoClose(False)
+        progress.show()
+        QApplication.processEvents()
+
+        start = time.monotonic()
+        path = None
         try:
             path = self.generate_gcode_for_program(prog)
             print(f"[gcode] Generated: {path}")
         except Exception as e:
             print("[gcode] Generation failed:", e)
+        finally:
+            elapsed = time.monotonic() - start
+            if elapsed < 1.0:
+                loop = QEventLoop()
+                QTimer.singleShot(int((1.0 - elapsed) * 1000), loop.quit)
+                loop.exec_()
+            progress.close()
+
+        if path:
+            try:
+                mw = self.window()
+                if mw and hasattr(mw, "showGeneratedProgram"):
+                    mw.showGeneratedProgram(path)
+            except Exception as e:
+                print("[gcode] showGeneratedProgram failed:", e)
 
     def generate_gcode_for_program(self, program):
         from .gcode_builder import build_ngc_from_json
+        from teachinlathe import mainwindow as mw
 
-        json_path = getattr(program, "filename", None)
-        if not json_path or not os.path.isabs(json_path):
-            base_dir = getattr(self, "folder_path", os.getcwd())
-            base_name = getattr(getattr(program, "header", None), "name", getattr(program, "id", "program"))
-            base_name = "".join(c for c in str(base_name) if c.isalnum() or c in ("-", "_", " ")).strip()
-            base_name = base_name.replace(" ", "_")
-            json_path = os.path.join(base_dir, base_name + ".json")
+        base_dir = getattr(mw, "CONVERSATIONAL_OUTPUT_BASE", None) \
+            or getattr(mw, "CONVERSATIONAL_GCODE_BASE", None) \
+            or getattr(self, "folder_path", os.getcwd())
+        json_dir = os.path.join(base_dir, "Conversational Json")
+        gcode_dir = os.path.join(base_dir, "Conversational Gcode")
+        base_name = getattr(getattr(program, "header", None), "name", getattr(program, "id", "program"))
+        base_name = "".join(c for c in str(base_name) if c.isalnum() or c in ("-", "_", " ")).strip()
+        base_name = base_name.replace(" ", "_")
+        json_path = os.path.join(json_dir, base_name + ".json")
 
         os.makedirs(os.path.dirname(json_path), exist_ok=True)
         with open(json_path, "w", encoding="utf-8") as handle:
             handle.write(program.to_json())
 
-        return build_ngc_from_json(json_path)
+        return build_ngc_from_json(json_path, output_dir=gcode_dir)
 
     def onDetailsRequested(self, screen_item, index: int):
         self.current_op_index = index

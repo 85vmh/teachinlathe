@@ -18,6 +18,8 @@ Item {
 
     signal teachZRequested(int index)
 
+    signal addFinishRequested(int index)
+
     function applyData(index, data) {
         opIndex = index
         opData = data || {}
@@ -119,6 +121,7 @@ Item {
                     var merged = root.mergeIntoOp(p.payload || p)
                     root.saveRequested({index: opIndex, payload: merged})
                 }
+                onAddFinishRequested: root.addFinishRequested(opIndex)
             }
         }
     }
