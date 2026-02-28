@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-28 00:41:49",
+        "last_edit": "2026-02-28 00:50:11",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -190,10 +190,10 @@
                 "z_start": 0.0
             },
             "profiling_options": {
-                "strategy": "rough",
+                "strategy": "finish",
                 "stock_to_leave_x": 0.5,
                 "stock_to_leave_z": 0.5,
-                "finish_spring_passes": 3
+                "finish_spring_passes": 2
             }
         },
         {

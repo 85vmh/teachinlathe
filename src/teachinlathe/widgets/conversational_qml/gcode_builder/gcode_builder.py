@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 from .operations import OPERATION_GENERATORS
+from teachinlathe.conversational.data_types import display_names
 
 
 def _safe_program_name(program_dict):
@@ -36,9 +37,10 @@ def build_ngc_from_json(json_path):
     operations = program_dict.get("operations", [])
     for index, op in enumerate(operations, 1):
         op_type = op.get("type", "unknown")
-        lines.append(f"( Operation #{index}: type={op_type} )\n")
+        op_display = display_names.get(op_type, op_type)
+        lines.append(f"(----------Operation #{index}: {op_display}----------)\n")
         if not bool(op.get("generate_gcode", True)):
-            lines.append("( Generate GCode unchecked, code not generated for this operation)\n")
+            lines.append("; GCode not generated for this operation\n")
             continue
 
         generator = OPERATION_GENERATORS.get(op_type)
