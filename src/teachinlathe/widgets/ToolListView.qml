@@ -1,25 +1,29 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.5
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 
 Rectangle {
     id: root
     color: "#787878"
 
-    property int rowHeight: 60
-    property int headerHeight: 36
-    property int colT: 32
-    property int colXZ: 120
-    property int colD: 60
-    property int colQ: 70
-    property int colIJ: 120
-    property int colSpacing: 6
-    property int sidePadding: 8
-    property color separatorColor: "#bcbcbc"
+    readonly property color clrCardBg: "white"
+    readonly property color clrCardBgSel: "#dbeafe"
+    readonly property color clrBorder: "#cccccc"
+    readonly property color clrBorderSel: "#3b82f6"
+    readonly property color clrSeparator: "#d0d0d0"
+    readonly property color clrBtnBorder: "#BDBDBD"
+    readonly property color clrDeleteHover: "#ffebee"
+    readonly property color clrDeleteBorder: "#C62828"
 
-    function colR() {
-        var used = colT + colXZ + colD + colQ + colIJ + sidePadding * 2 + colSpacing * 5
-        return Math.max(120, root.width - used)
-    }
+    readonly property int szCardRadius: 4
+    readonly property int szMargin: 12
+    readonly property int szSpacing: 8
+    readonly property int szFont: 14
+    readonly property int szBtn: 40
+    readonly property int szBtnIcon: 28
+    readonly property int szBtnIconSrc: 112
+
+    property int rowWidth: 800
 
     function orientAngle(value) {
         if (value === 1) return 315
@@ -33,172 +37,278 @@ Rectangle {
         return 0
     }
 
-    Column {
+    ScrollView {
         anchors.fill: parent
-        spacing: 0
+        clip: true
+        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+        ScrollBar.vertical.width: 16
 
-        Rectangle {
-            id: header
-            height: root.headerHeight
+        ListView {
+            id: listView
             width: parent.width
-            color: "#dcdcdc"
+            height: parent.height
+            spacing: 5
+            model: toolsProvider ? toolsProvider.tools : []
+            boundsBehavior: Flickable.StopAtBounds
 
-            Row {
-                anchors.fill: parent
-                anchors.leftMargin: root.sidePadding
-                anchors.rightMargin: root.sidePadding
-                spacing: root.colSpacing
+            delegate: Rectangle {
+                id: card
+                width: Math.min(root.rowWidth, listView.width - 2)
+                height: contentRow.implicitHeight + root.szMargin * 2
+                radius: root.szCardRadius
+                color: modelData.isCurrent ? root.clrCardBgSel : root.clrCardBg
+                border.color: modelData.isCurrent ? root.clrBorderSel : root.clrBorder
+                border.width: modelData.isCurrent ? 2 : 1
 
-                Text { text: "T"; width: root.colT; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font.family: "Noto"; font.pointSize: 11; color: "#000000" }
-                Rectangle { width: 1; color: root.separatorColor; anchors.top: parent.top; anchors.bottom: parent.bottom }
-                Text { text: "Offsets"; width: root.colXZ; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font.family: "Noto"; font.pointSize: 11; color: "#000000" }
-                Rectangle { width: 1; color: root.separatorColor; anchors.top: parent.top; anchors.bottom: parent.bottom }
-                Text { text: "Radius"; width: root.colD; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font.family: "Noto"; font.pointSize: 11; color: "#000000" }
-                Rectangle { width: 1; color: root.separatorColor; anchors.top: parent.top; anchors.bottom: parent.bottom }
-                Text { text: "Orient"; width: root.colQ; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font.family: "Noto"; font.pointSize: 11; color: "#000000" }
-                Rectangle { width: 1; color: root.separatorColor; anchors.top: parent.top; anchors.bottom: parent.bottom }
-                Text { text: "Tip Angle"; width: root.colIJ; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font.family: "Noto"; font.pointSize: 11; color: "#000000" }
-                Rectangle { width: 1; color: root.separatorColor; anchors.top: parent.top; anchors.bottom: parent.bottom }
-                Text { text: "Description"; width: root.colR(); horizontalAlignment: Text.AlignLeft; verticalAlignment: Text.AlignVCenter; font.family: "Noto"; font.pointSize: 11; color: "#000000" }
-            }
-        }
+                anchors.horizontalCenter: parent.horizontalCenter
 
-        ScrollView {
-            id: listContainer
-            width: parent.width
-            height: parent.height - header.height
-            clip: true
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: toolsProvider.loadTool(modelData.t)
+                }
 
-            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-            ScrollBar.vertical.width: 16
+                RowLayout {
+                    id: contentRow
+                    anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom; margins: root.szMargin }
+                    spacing: root.szSpacing
 
-            ListView {
-                id: listView
-                model: toolsProvider ? toolsProvider.tools : []
-                boundsBehavior: Flickable.StopAtBounds
-                clip: true
-                spacing: 0
-
-                delegate: Rectangle {
-                    width: listView.width
-                    height: root.rowHeight
-                    color: (index % 2 === 0) ? "#787878" : "#5a5a5a"
-
-                    Row {
-                        anchors.fill: parent
-                        anchors.leftMargin: root.sidePadding
-                        anchors.rightMargin: root.sidePadding
-                        spacing: root.colSpacing
+                    ColumnLayout {
+                        Layout.preferredWidth: 37
+                        Layout.alignment: Qt.AlignVCenter
 
                         Text {
-                            text: modelData.t
-                            width: root.colT
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.family: "Noto Sans Mono"
-                            font.pointSize: 11
-                            font.bold: modelData.isCurrent
-                            color: modelData.isCurrent ? "#006400" : "#ffffff"
+                            text: "T" + modelData.t
+                            font.pixelSize: 18
+                            font.bold: true
                         }
-                        Rectangle { width: 1; color: root.separatorColor; anchors.top: parent.top; anchors.bottom: parent.bottom }
-                        Text {
-                            text: modelData.xz
-                            width: root.colXZ
-                            horizontalAlignment: Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                            font.family: "Noto Sans Mono"
-                            font.pointSize: 10
-                            color: modelData.isCurrent ? "#006400" : "#ffffff"
-                        }
-                        Rectangle { width: 1; color: root.separatorColor; anchors.top: parent.top; anchors.bottom: parent.bottom }
-                        Text {
-                            text: modelData.d
-                            width: root.colD
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.family: "Noto Sans Mono"
-                            font.pointSize: 11
-                            color: modelData.isCurrent ? "#006400" : "#ffffff"
-                        }
-                        Rectangle { width: 1; color: root.separatorColor; anchors.top: parent.top; anchors.bottom: parent.bottom }
-                        Item {
-                            width: root.colQ
-                            height: parent.height
+                    }
 
-                            Canvas {
-                                id: orientCanvas
-                                anchors.left: parent.left
-                                anchors.leftMargin: 10
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: 28
-                                height: 28
+                    Rectangle { width: 1; Layout.fillHeight: true; color: root.clrSeparator }
 
-                                onPaint: {
-                                    var ctx = getContext("2d")
-                                    ctx.reset()
-                                    ctx.clearRect(0, 0, width, height)
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
 
-                                    var value = parseInt(modelData.q)
-                                    var color = modelData.isCurrent ? "#006400" : "#ffffff"
-                                    ctx.strokeStyle = color
-                                    ctx.fillStyle = color
-                                    ctx.lineWidth = 2
+                        RowLayout {
+                            spacing: 12
+                            Layout.fillWidth: true
 
-                                    if (value === 9) {
-                                        ctx.beginPath()
-                                        ctx.arc(width/2, height/2, 5, 0, Math.PI*2, false)
-                                        ctx.fill()
-                                    } else {
-                                        ctx.save()
-                                        ctx.translate(width/2, height/2)
-                                        ctx.rotate(orientAngle(value) * Math.PI / 180)
-                                        ctx.translate(-width/2, -height/2)
+                            ColumnLayout {
+                                spacing: 4
+                                Layout.preferredWidth: 140
 
-                                        var startX = width/2 - 8
-                                        var endX = width/2 + 8
-                                        var centerY = height/2
+                                GridLayout {
+                                    columns: 2
+                                    rowSpacing: 4
+                                    columnSpacing: 12
+                                    Layout.fillWidth: true
 
-                                        ctx.beginPath()
-                                        ctx.moveTo(startX, centerY)
-                                        ctx.lineTo(endX, centerY)
-                                        ctx.stroke()
+                                    Text { text: "X Offset:"; font.pixelSize: root.szFont; horizontalAlignment: Text.AlignLeft; Layout.fillWidth: true }
+                                    Text { text: Number(modelData.x).toFixed(3); font.pixelSize: root.szFont; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true }
 
-                                        ctx.beginPath()
-                                        ctx.moveTo(endX, centerY)
-                                        ctx.lineTo(endX - 4, centerY - 4)
-                                        ctx.lineTo(endX - 4, centerY + 4)
-                                        ctx.closePath()
-                                        ctx.fill()
+                                    Text { text: "Z Offset:"; font.pixelSize: root.szFont; horizontalAlignment: Text.AlignLeft; Layout.fillWidth: true }
+                                    Text { text: Number(modelData.z).toFixed(3); font.pixelSize: root.szFont; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true }
+                                }
+                            }
 
-                                        ctx.restore()
+                            Rectangle { width: 1; Layout.fillHeight: true; color: root.clrSeparator }
+
+                            ColumnLayout {
+                                spacing: 4
+                                Layout.preferredWidth: 170
+
+                                GridLayout {
+                                    columns: 2
+                                    rowSpacing: 4
+                                    columnSpacing: 12
+                                    Layout.fillWidth: true
+
+                                    Text { text: "Tip Radius:"; font.pixelSize: root.szFont; horizontalAlignment: Text.AlignLeft; Layout.fillWidth: true }
+                                    Text { text: Number(modelData.d).toFixed(1); font.pixelSize: root.szFont; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true }
+
+                                    Text { text: "Orientation:"; font.pixelSize: root.szFont; horizontalAlignment: Text.AlignLeft; Layout.fillWidth: true }
+                                    Item {
+                                        Layout.fillWidth: true
+                                        height: 20
+
+                                        Row {
+                                            anchors.right: parent.right
+                                            spacing: 6
+
+                                            Canvas {
+                                                width: 20
+                                                height: 20
+
+                                                onPaint: {
+                                                    var ctx = getContext("2d")
+                                                    ctx.reset()
+                                                    ctx.clearRect(0, 0, width, height)
+
+                                                    var value = parseInt(modelData.q)
+                                                    var color = "#000000"
+                                                    ctx.strokeStyle = color
+                                                    ctx.fillStyle = color
+                                                    ctx.lineWidth = 2
+
+                                                    if (value === 9) {
+                                                        ctx.beginPath()
+                                                        ctx.arc(width/2, height/2, 4, 0, Math.PI*2, false)
+                                                        ctx.fill()
+                                                    } else {
+                                                        ctx.save()
+                                                        ctx.translate(width/2, height/2)
+                                                        ctx.rotate(orientAngle(value) * Math.PI / 180)
+                                                        ctx.translate(-width/2, -height/2)
+
+                                                        var startX = width/2 - 6
+                                                        var endX = width/2 + 6
+                                                        var centerY = height/2
+
+                                                        ctx.beginPath()
+                                                        ctx.moveTo(startX, centerY)
+                                                        ctx.lineTo(endX, centerY)
+                                                        ctx.stroke()
+
+                                                        ctx.beginPath()
+                                                        ctx.moveTo(endX, centerY)
+                                                        ctx.lineTo(endX - 3, centerY - 3)
+                                                        ctx.lineTo(endX - 3, centerY + 3)
+                                                        ctx.closePath()
+                                                        ctx.fill()
+
+                                                        ctx.restore()
+                                                    }
+                                                }
+                                            }
+
+                                            Text { text: String(modelData.q); font.pixelSize: root.szFont }
+                                        }
                                     }
                                 }
                             }
+
+                            Rectangle { width: 1; Layout.fillHeight: true; color: root.clrSeparator }
+
+                            ColumnLayout {
+                                spacing: 4
+                                Layout.preferredWidth: 140
+
+                                GridLayout {
+                                    columns: 2
+                                    rowSpacing: 4
+                                    columnSpacing: 12
+                                    Layout.fillWidth: true
+
+                                    Text { text: "FrontAngle:"; font.pixelSize: root.szFont; horizontalAlignment: Text.AlignLeft; Layout.fillWidth: true }
+                                    Text { text: Math.round(modelData.i) + "°"; font.pixelSize: root.szFont; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true }
+
+                                    Text { text: "BackAngle:"; font.pixelSize: root.szFont; horizontalAlignment: Text.AlignLeft; Layout.fillWidth: true }
+                                    Text { text: Math.round(modelData.j) + "°"; font.pixelSize: root.szFont; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true }
+                                }
+                            }
                         }
-                        Rectangle { width: 1; color: root.separatorColor; anchors.top: parent.top; anchors.bottom: parent.bottom }
-                        Text {
-                            text: modelData.ij
-                            width: root.colIJ
-                            horizontalAlignment: Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                            font.family: "Noto Sans Mono"
-                            font.pointSize: 10
-                            color: modelData.isCurrent ? "#006400" : "#ffffff"
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 1
+                            color: root.clrSeparator
                         }
-                        Rectangle { width: 1; color: root.separatorColor; anchors.top: parent.top; anchors.bottom: parent.bottom }
+
                         Text {
                             text: modelData.r
-                            width: root.colR()
-                            horizontalAlignment: Text.AlignLeft
-                            verticalAlignment: Text.AlignVCenter
-                            font.family: "Noto Sans Mono"
-                            font.pointSize: 10
-                            color: modelData.isCurrent ? "#006400" : "#ffffff"
+                            font.pixelSize: root.szFont + 1
+                            font.bold: true
+                            font.italic: true
+                            color: "#000000"
                             elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    Rectangle {
+                        width: 1
+                        Layout.fillHeight: true
+                        color: root.clrSeparator
+                    }
+
+                    RowLayout {
+                        spacing: 18
+                        Layout.alignment: Qt.AlignVCenter
+
+                        Rectangle {
+                            implicitWidth: root.szBtn
+                            implicitHeight: root.szBtn
+                            radius: root.szCardRadius
+                            color: "transparent"
+                            border.width: 1
+                            border.color: root.clrBtnBorder
+                            opacity: 0.4
+
+                            Image {
+                                anchors.centerIn: parent
+                                width: root.szBtnIcon
+                                height: root.szBtnIcon
+                                sourceSize.width: root.szBtnIconSrc
+                                sourceSize.height: root.szBtnIconSrc
+                                source: "conversational_qml/icons/edit_icon.svg"
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                            }
+                        }
+
+                        Rectangle {
+                            id: deleteBtn
+                            implicitWidth: root.szBtn
+                            implicitHeight: root.szBtn
+                            radius: root.szCardRadius
+                            color: deleteMA.pressed ? root.clrDeleteHover : "transparent"
+                            border.width: 1
+                            border.color: deleteMA.pressed ? root.clrDeleteBorder : root.clrBtnBorder
+                            enabled: !modelData.isCurrent
+                            opacity: enabled ? 1.0 : 0.35
+
+                            Image {
+                                anchors.centerIn: parent
+                                width: root.szBtnIcon
+                                height: root.szBtnIcon
+                                sourceSize.width: root.szBtnIconSrc
+                                sourceSize.height: root.szBtnIconSrc
+                                source: "conversational_qml/icons/delete_icon.svg"
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                            }
+
+                            MouseArea {
+                                id: deleteMA
+                                anchors.fill: parent
+                                enabled: parent.enabled
+                                onClicked: {
+                                    deleteDialog.toolNo = modelData.t
+                                    deleteDialog.open()
+                                }
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+
+    Dialog {
+        id: deleteDialog
+        modal: true
+        title: "Confirm Delete"
+        standardButtons: Dialog.Yes | Dialog.No
+        property int toolNo: -1
+        onAccepted: {
+            if (toolNo >= 0) {
+                toolsProvider.deleteTool(toolNo)
+            }
+        }
+        contentItem: Text {
+            text: toolNo >= 0 ? "Delete tool T" + toolNo + "?" : "Delete tool?"
+            wrapMode: Text.WordWrap
+            padding: 16
         }
     }
 }

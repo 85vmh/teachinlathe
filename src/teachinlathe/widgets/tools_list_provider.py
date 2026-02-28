@@ -1,4 +1,5 @@
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtProperty
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtProperty, pyqtSlot
+from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
 
 
@@ -39,17 +40,19 @@ class ToolsListProvider(QObject):
             x = _safe_float(tdata.get("X", 0.0))
             z = _safe_float(tdata.get("Z", 0.0))
             d = _safe_float(tdata.get("D", 0.0))
-            q = tdata.get("Q", "")
-            i = tdata.get("I", "")
-            j = tdata.get("J", "")
+            q = _safe_float(tdata.get("Q", 0.0))
+            i = _safe_float(tdata.get("I", 0.0))
+            j = _safe_float(tdata.get("J", 0.0))
             r = tdata.get("R", "")
 
             tools.append({
                 "t": int(tnum),
-                "xz": f"X: {x:.3f}\nZ: {z:.3f}",
-                "d": f"{d:.1f}",
+                "x": x,
+                "z": z,
+                "d": d,
                 "q": q,
-                "ij": f"Front: {i}°\nBack: {j}°",
+                "i": i,
+                "j": j,
                 "r": str(r),
                 "isCurrent": (current_tool == tnum),
             })
@@ -60,6 +63,29 @@ class ToolsListProvider(QObject):
     @pyqtProperty("QVariantList", notify=toolsChanged)
     def tools(self):
         return self._tools
+
+    @pyqtSlot(int)
+    def loadTool(self, tool_no):
+        if tool_no is None:
+            return
+        issue_mdi("M61 Q%s G43" % int(tool_no))
+
+    @pyqtSlot(int)
+    def deleteTool(self, tool_no):
+        if tool_no is None:
+            return
+        tool_no = int(tool_no)
+        tool_table = self._tooltable.getToolTable()
+        if tool_no not in tool_table:
+            return
+        if tool_no == getattr(self._stat, "tool_in_spindle", None):
+            return
+        try:
+            del tool_table[tool_no]
+        except Exception:
+            return
+        self._tooltable.saveToolTable(tool_table, self._tooltable.COLUMN_LABELS)
+        self._update_tools(self._tooltable.getToolTable())
 
 
 def _safe_float(val):
