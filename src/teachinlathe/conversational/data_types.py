@@ -415,6 +415,7 @@ class PartingParameters:
     first_feed_rate: float = 0.0
     second_feed_rate: float = 0.0
     second_feed_x_pos: float = 0.0
+    x_clearance: float = 1.0
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "PartingParameters":
@@ -425,6 +426,7 @@ class PartingParameters:
             first_feed_rate=float(data.get("1st_feed_rate", 0.0) or 0.0),
             second_feed_rate=float(data.get("2nd_feed_rate", 0.0) or 0.0),
             second_feed_x_pos=float(data.get("2nd_feed_x_pos", 0.0) or 0.0),
+            x_clearance=float(data.get("x_clearance", 1.0) or 1.0),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -434,7 +436,8 @@ class PartingParameters:
             "z_pos" : float(self.zPos),
             "1st_feed_rate" : float(self.first_feed_rate),
             "2nd_feed_rate" : float(self.second_feed_rate),
-            "2nd_feed_x_pos": float(self.second_feed_x_pos)
+            "2nd_feed_x_pos": float(self.second_feed_x_pos),
+            "x_clearance": float(self.x_clearance),
         }
         return out
 

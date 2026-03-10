@@ -4,6 +4,7 @@ from .facing import generate_facing_gcode
 from .drilling import generate_drilling_gcode
 from .profiling import generate_profiling_gcode
 from .threading import generate_threading_gcode
+from .parting import generate_parting_gcode
 
 OPERATION_GENERATORS = {
     "changeTool": generate_change_tool_gcode,
@@ -12,4 +13,5 @@ OPERATION_GENERATORS = {
     "drilling": generate_drilling_gcode,
     "profiling": generate_profiling_gcode,
     "threading": generate_threading_gcode,
+    "parting": generate_parting_gcode,
 }

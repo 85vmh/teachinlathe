@@ -28,6 +28,7 @@ GroupBox {
     property real second_feed_x_pos:   0.0
     property real first_feed_rate:   0.0
     property real second_feed_rate:   0.0
+    property real x_clearance: 1.0
     property bool _loading: false
 
     function applyData(index, partingParams, fullOp) {
@@ -41,6 +42,7 @@ GroupBox {
         second_feed_x_pos   = parseFloat(partingData.second_feed_x_pos    !== undefined ? partingData.second_feed_x_pos    : 0.0)
         first_feed_rate   = parseFloat(partingData.first_feed_rate    !== undefined ? partingData.first_feed_rate    : 0.0)
         second_feed_rate   = parseFloat(partingData.second_feed_rate    !== undefined ? partingData.second_feed_rate    : 0.0)
+        x_clearance = parseFloat(partingData.x_clearance !== undefined ? partingData.x_clearance : 1.0)
         _loading = false
     }
 
@@ -57,7 +59,8 @@ GroupBox {
                 z_pos:   z_pos,
                 first_feed_rate:   first_feed_rate,
                 second_feed_rate: second_feed_rate,
-                second_feed_x_pos: second_feed_x_pos
+                second_feed_x_pos: second_feed_x_pos,
+                x_clearance: x_clearance
             }
         }
         root.saveRequested(payload)
@@ -79,6 +82,26 @@ GroupBox {
             rowSpacing: 20
 
             // Row 1
+            Label {
+                text: "X Clearance"
+                Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                font.pixelSize: 16
+            }
+            NumpadField {
+                Layout.preferredWidth: 100
+                Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
+                settingName: "parting.x_clearance"
+                validatorObject: dblVal
+                value: root.x_clearance
+                formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
+                hAlign: Text.AlignRight
+                fontPixelSize: 16
+                onOpenRequested: root.openNumPadRequested(field)
+                onValueCommitted: { root.x_clearance = value; root.emitSave() }
+            }
+            Item { Layout.preferredWidth: 1 }
+
+            // Row 2
             Label {
                 text: "X Start (with Fz 1)"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
@@ -170,6 +193,7 @@ GroupBox {
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                 onClicked: root.teachZRequested(root.opIndex)
             }
+
         }
 
         /* RIGHT GRID (End) */

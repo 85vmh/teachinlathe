@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-02-28 16:19:57",
+        "last_edit": "2026-03-10 13:43:39",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -34,7 +34,7 @@
             "order": 2,
             "type": "facing",
             "generate_gcode": true,
-            "is_optional_block": false,
+            "is_optional_block": true,
             "spindle_parameters": {
                 "direction": 1,
                 "mode": "rpm",
@@ -97,8 +97,8 @@
                     "x_end": 20.0,
                     "z_end": -25.0,
                     "blend": {
-                        "type": "none",
-                        "chamfer_width": 0.0,
+                        "type": "chamfer",
+                        "chamfer_width": 1.0,
                         "fillet_radius": 0.0
                     }
                 },
@@ -213,7 +213,7 @@
         {
             "order": 7,
             "type": "changeTool",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "tool_no": 1,
             "tool_orientation": 1,
@@ -368,22 +368,23 @@
         {
             "order": 14,
             "type": "parting",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
-                "direction": 1,
+                "direction": -1,
                 "mode": "rpm",
                 "rpm_value": 1000,
                 "css_value": 100,
                 "css_max_speed": 1500
             },
             "parting_parameters": {
-                "x_start": 10.0,
+                "x_start": 50.0,
                 "x_end": 0.0,
                 "z_pos": -15.0,
                 "1st_feed_rate": 0.05,
                 "2nd_feed_rate": 0.02,
-                "2nd_feed_x_pos": 5.0
+                "2nd_feed_x_pos": 5.0,
+                "x_clearance": 1.0
             },
             "edge_break": {
                 "blend_type": "none",

@@ -330,6 +330,7 @@ class ConversationalQml(QQuickWidget):
                 "parting_parameters": {
                     "x_start": 0.0, "x_end": 0.0, "z_pos": 0.0,
                     "1st_feed_rate": 0.05, "2nd_feed_rate": 0.02, "2nd_feed_x_pos": 5.0,
+                    "x_clearance": 1.0,
                 },
                 "edge_break": {"blend_type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
             })

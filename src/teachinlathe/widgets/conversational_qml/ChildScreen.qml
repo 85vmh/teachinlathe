@@ -12,9 +12,24 @@ Item {
     property var selectedProgram: null
     property var operationsModel: []
     property int activeOpIndex: -1
+    property real _savedContentY: 0
+    property bool _restoreScrollPending: false
 
     onOperationsModelChanged: {
-        if (activeOpIndex >= 0) Qt.callLater(function() { opsList.currentIndex = activeOpIndex })
+        var targetY = _restoreScrollPending ? _savedContentY : opsList.contentY
+        Qt.callLater(function() {
+            if (_restoreScrollPending) {
+                var maxY = Math.max(0, opsList.contentHeight - opsList.height)
+                opsList.contentY = Math.max(0, Math.min(targetY, maxY))
+                _restoreScrollPending = false
+            }
+            if (activeOpIndex >= 0) opsList.currentIndex = activeOpIndex
+        })
+    }
+
+    function _saveScrollPosition() {
+        _savedContentY = opsList.contentY
+        _restoreScrollPending = true
     }
 
     // Navigation
@@ -617,9 +632,11 @@ Item {
                                         isLastItem: index === (opsList.count - 1)
 
                                         onGenerateToggled: function (i, checked) {
+                                            operationEditor._saveScrollPosition()
                                             operationEditor.toggleGenerateGcode(i, checked)
                                         }
                                         onOptionalToggled: function (i, checked) {
+                                            operationEditor._saveScrollPosition()
                                             operationEditor.toggleOptionalBlock(i, checked)
                                         }
                                         onDeleteClicked: function (i) {
