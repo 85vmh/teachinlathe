@@ -1,3 +1,6 @@
+from ..config import fmt
+
+
 def _get_float_value(source, key, default=0.0):
     if not isinstance(source, dict):
         return float(default)
@@ -63,10 +66,10 @@ def generate_profiling_gcode(op):
         passes = int(options.get("finish_spring_passes", 1) or 1)
         # G70 uses D (start distance) and E (end distance)
         lines.append(
-            f"{line_prefix}G70 Q{profile_id} X{x_start} Z{z_start} D{stock} E0 P{passes}"
+            f"{line_prefix}G70 Q{profile_id} X{fmt(x_start)} Z{fmt(z_start)} D{fmt(stock)} E0 P{passes}"
         )
     else:
         lines.append(
-            f"{line_prefix}G71.1 Q{profile_id} X{x_start} Z{z_start} D{stock} I{doc} R{retract}"
+            f"{line_prefix}G71.1 Q{profile_id} X{fmt(x_start)} Z{fmt(z_start)} D{fmt(stock)} I{fmt(doc)} R{fmt(retract)}"
         )
     return lines

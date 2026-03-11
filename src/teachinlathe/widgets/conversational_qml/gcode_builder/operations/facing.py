@@ -1,3 +1,6 @@
+from ..config import fmt
+
+
 def _get_float_value(source, key, default=0.0):
     if not isinstance(source, dict):
         return float(default)
@@ -55,7 +58,7 @@ def generate_facing_gcode(op):
     lines.append(f"{line_prefix}G95 F{feed_rate}")
 
     lines.append(
-        f"{line_prefix}o<facing> call [{x_start}] [{z_start}] [{x_end}] [{z_end}]"
-        f" [{x_inspect}] [{z_inspect}] [{doc}] [{direction}]"
+        f"{line_prefix}o<facing> call [{fmt(x_start)}] [{fmt(z_start)}] [{fmt(x_end)}] [{fmt(z_end)}]"
+        f" [{fmt(x_inspect)}] [{fmt(z_inspect)}] [{fmt(doc)}] [{direction}]"
     )
     return lines

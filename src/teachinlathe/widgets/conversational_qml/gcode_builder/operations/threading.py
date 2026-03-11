@@ -1,3 +1,6 @@
+from ..config import fmt
+
+
 def _get_float_value(source, key, default=0.0):
     if not isinstance(source, dict):
         return float(default)
@@ -64,15 +67,15 @@ def generate_threading_gcode(op):
 
     lines.append(
         f"{line_prefix}o<threading> call "
-        f"[{x_start}] "
-        f"[{z_start}] "
-        f"[{x_end}] "
-        f"[{z_end}] "
-        f"[{pitch}] "
+        f"[{fmt(x_start)}] "
+        f"[{fmt(z_start)}] "
+        f"[{fmt(x_end)}] "
+        f"[{fmt(z_end)}] "
+        f"[{fmt(pitch)}] "
         f"[{starts}] "
-        f"[{initial_doc}] "
-        f"[{depth_degression}] "
-        f"[{compound_angle}] "
+        f"[{fmt(initial_doc)}] "
+        f"[{fmt(depth_degression)}] "
+        f"[{fmt(compound_angle)}] "
         f"[{taper_type}] "
         f"[{taper_angle}] "
         f"[{spring_passes}]"

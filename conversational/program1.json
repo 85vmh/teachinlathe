@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-03-10 13:43:39",
+        "last_edit": "2026-03-11 02:11:41",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -134,9 +134,9 @@
                     "x_end": 40.0,
                     "z_end": -60.0,
                     "blend": {
-                        "type": "fillet",
-                        "chamfer_width": 0.0,
-                        "fillet_radius": 2.0
+                        "type": "chamfer",
+                        "chamfer_width": 5.0,
+                        "fillet_radius": 0.0
                     }
                 },
                 {
@@ -344,7 +344,7 @@
         {
             "order": 13,
             "type": "tapping",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,

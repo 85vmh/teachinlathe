@@ -1,3 +1,6 @@
+from ..config import fmt
+
+
 def _get_float_value(source, key, default=0.0):
     if not isinstance(source, dict):
         return float(default)
@@ -45,7 +48,7 @@ def generate_drilling_gcode(op):
         lines.append(f"{line_prefix}{' '.join(parts)}")
 
     lines.append(
-        f"{line_prefix}o<drilling> call [{x_start}] [{z_start}] [{z_end}] [{retract}]"
-        f" [{x_inspect}] [{z_inspect}] [{increment}] [{rpm}] [{feed}]"
+        f"{line_prefix}o<drilling> call [{fmt(x_start)}] [{fmt(z_start)}] [{fmt(z_end)}] [{fmt(retract)}]"
+        f" [{fmt(x_inspect)}] [{fmt(z_inspect)}] [{fmt(increment)}] [{rpm}] [{feed}]"
     )
     return lines

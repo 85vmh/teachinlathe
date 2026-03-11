@@ -1,3 +1,6 @@
+from ..config import fmt
+
+
 def _get_float_value(source, key, default=0.0):
     if not isinstance(source, dict):
         return None if default is None else float(default)
@@ -79,7 +82,7 @@ def generate_parting_gcode(op):
         lines.append(f"{line_prefix}{' '.join(parts)}")
 
     lines.append(
-        f"{line_prefix}o<parting> call [{x_clearance}] [{x_start}] [{x_end}] [{z_pos}]"
-        f" [{fz1}] [{fz2}] [{fz2_x_pos}] [{edge_break_type}] [{edge_break_value}]"
+        f"{line_prefix}o<parting> call [{fmt(x_clearance)}] [{fmt(x_start)}] [{fmt(x_end)}] [{fmt(z_pos)}]"
+        f" [{fz1}] [{fz2}] [{fmt(fz2_x_pos)}] [{edge_break_type}] [{fmt(edge_break_value)}]"
     )
     return lines
