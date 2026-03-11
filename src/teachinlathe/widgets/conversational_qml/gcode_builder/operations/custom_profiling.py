@@ -9,8 +9,8 @@ The generator is intentionally split into:
 This keeps the orchestration here short while preserving the existing output.
 """
 
-from .custom_profiling_geometry import build_profile_segments, build_render_path, find_deepest_z_at_x_path, profile_extents
-from .custom_profiling_planner import (
+from .custom_cam.custom_profiling_geometry import build_profile_segments, build_render_path, find_deepest_z_at_x_path, profile_extents
+from .custom_cam.custom_profiling_planner import (
     build_spindle_lines,
     emit_contour_pass_gcode,
     emit_finish_gcode,
@@ -18,7 +18,7 @@ from .custom_profiling_planner import (
     plan_finish_passes,
     plan_roughing_passes,
 )
-from .custom_profiling_types import ProfilingConfig, StartPoint
+from .custom_cam.custom_profiling_types import ProfilingConfig, StartPoint
 
 
 def _get_float(source, key, default=0.0):
@@ -65,7 +65,7 @@ def generate_custom_profiling_gcode(op):
 
     lines = []
     lines.extend(build_spindle_lines(spindle, config.optional_prefix, _get_float))
-    lines.append(f"{config.optional_prefix}G95 F{config.feed_rate} \n")
+    lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
 
     if not segments or not isinstance(segments[0], StartPoint):
         lines.append("( ERROR: Custom Profiling -- no valid profile found )")

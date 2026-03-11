@@ -1,6 +1,6 @@
 import math
 
-from ..config import fmt
+from ...config import fmt
 from .custom_profiling_types import ProfilePass, RoughPass, ToolpathArc, ToolpathLine
 
 
