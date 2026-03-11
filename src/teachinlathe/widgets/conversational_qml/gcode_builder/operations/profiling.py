@@ -30,6 +30,8 @@ def generate_profiling_gcode(op):
     stock_x = _get_float_value(options, "stock_to_leave_x", 0.0)
     stock_z = _get_float_value(options, "stock_to_leave_z", 0.0)
     stock = max(stock_x, stock_z)
+    finish_passes = max(1, int(options.get("finish_passes", 1) or 1))
+    spring_passes = max(0, int(options.get("finish_spring_passes", 0) or 0))
 
     mode = spindle.get("mode", None)
     direction = spindle.get("direction", None)
@@ -63,8 +65,9 @@ def generate_profiling_gcode(op):
 
     strategy = str(options.get("strategy", "rough")).lower()
     if strategy == "finish":
-        passes = int(options.get("finish_spring_passes", 1) or 1)
-        # G70 uses D (start distance) and E (end distance)
+        # G70 can only repeat the contour, so map all finish and spring passes
+        # to repeated contour passes starting from the configured allowance.
+        passes = finish_passes + spring_passes
         lines.append(
             f"{line_prefix}G70 Q{profile_id} X{fmt(x_start)} Z{fmt(z_start)} D{fmt(stock)} E0 P{passes}"
         )

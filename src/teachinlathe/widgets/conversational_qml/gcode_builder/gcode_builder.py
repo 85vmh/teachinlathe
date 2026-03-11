@@ -47,6 +47,16 @@ def build_ngc_from_json(json_path, output_dir=None):
             lines.append("; GCode not generated for this operation\n")
             continue
 
+        if op_type == "customProfiling":
+            profile_id = int((op.get("profiling_parameters") or {}).get("profile_id", 0))
+            profile_op = next(
+                (o for o in operations
+                 if o.get("type") == "defineProfile" and int(o.get("profile_id", -1)) == profile_id),
+                {}
+            )
+            op = dict(op)
+            op["_resolved_profile"] = profile_op
+
         generator = OPERATION_GENERATORS.get(op_type)
         if generator:
             lines.extend(generator(op))

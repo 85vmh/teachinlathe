@@ -235,6 +235,8 @@ class ConversationalQml(QQuickWidget):
                 item.updateFacing.connect(self.onUpdateFacing)
             if hasattr(item, "updateProfiling"):
                 item.updateProfiling.connect(self.onUpdateProfiling)
+            if hasattr(item, "updateCustomProfiling"):
+                item.updateCustomProfiling.connect(self.onUpdateCustomProfiling)
             if hasattr(item, "updateDrilling"):
                 item.updateDrilling.connect(self.onUpdateDrilling)
             if hasattr(item, "updateThreading"):
@@ -288,14 +290,14 @@ class ConversationalQml(QQuickWidget):
                 "m1_parameters": m1_default,
                 "z_end_becomes_new_z0": False,
             })
-        elif op_type == "profiling":
+        elif op_type in ("profiling", "customProfiling"):
             base.update({
                 "spindle_parameters": spindle_rpm,
                 "cutting_parameters": {"feed_rate": 0.1, "doc": 0.5, "retract": 1.0},
                 "profiling_parameters": {"profile_id": 1, "x_start": 0.0, "z_start": 0.0},
                 "profiling_options": {
                     "strategy": "rough",
-                    "stock_to_leave_x": 0.0, "stock_to_leave_z": 0.0, "finish_spring_passes": 0,
+                    "stock_to_leave_x": 0.0, "stock_to_leave_z": 0.0, "finish_passes": 1, "finish_spring_passes": 0,
                 },
             })
         elif op_type == "threading":
@@ -816,6 +818,9 @@ class ConversationalQml(QQuickWidget):
             self._save_current_program()
         except Exception as e:
             print("[profiling] update error:", e)
+
+    def onUpdateCustomProfiling(self, index: int, payload):
+        self.onUpdateProfiling(index, payload)
 
     def onUpdateDrilling(self, index: int, payload):
         """Drilling autosave."""

@@ -469,6 +469,7 @@ class ProfilingOptions:
     strategy: Strategy
     stockToLeaveX: float
     stockToLeaveZ: float
+    finishPasses: int
     finishSpringPasses: int
 
     @staticmethod
@@ -485,6 +486,7 @@ class ProfilingOptions:
             strategy=strat_enum,
             stockToLeaveX=float(data.get("stock_to_leave_x", 0.0)),
             stockToLeaveZ=float(data.get("stock_to_leave_z", 0.0)),
+            finishPasses=int(data.get("finish_passes", 1) or 1),
             finishSpringPasses=int(data.get("finish_spring_passes", 0))
         )
 
@@ -493,6 +495,7 @@ class ProfilingOptions:
             "strategy": self.strategy.value,
             "stock_to_leave_x": float(self.stockToLeaveX),
             "stock_to_leave_z": float(self.stockToLeaveZ),
+            "finish_passes": int(self.finishPasses),
             "finish_spring_passes": int(self.finishSpringPasses)
         }
 
@@ -996,6 +999,7 @@ operation_types: Dict[str, Type[Operation]] = {
     "facing": Facing,
     "defineProfile": DefineProfile,
     "profiling": Profiling,
+    "customProfiling": Profiling,
     "threading": Threading,
     "drilling": Drilling,
     "tapping": Tapping,
@@ -1007,6 +1011,7 @@ display_names: Dict[str, str] = {
     "facing": "Facing",
     "defineProfile": "Define Profile",
     "profiling": "Profiling",
+    "customProfiling": "Custom Profiling",
     "threading": "Threading",
     "drilling": "Drilling",
     "tapping": "Tapping",
