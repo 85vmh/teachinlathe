@@ -69,7 +69,7 @@ class ConversationalQml(QQuickWidget):
             print("----Model count:", self.model.rowCount())
 
             main_url = QUrl.fromLocalFile(os.path.join(self.base_dir, "MainScreen.qml")).toString()
-            self.root.loadScreen(main_url, {"programsModel": self.model, "showBack": False})
+            self.root.loadScreen(main_url, {"programsModel": self.model, "showBack": False, "selectedProgramId": ""})
 
             loader = self.root.findChild(QQuickItem, "loader") or self.root.findChild(QObject, "loader")
             if loader is None:
@@ -680,6 +680,12 @@ class ConversationalQml(QQuickWidget):
             "last_edit": program.header.last_edit,
         }
         operations_model = self._build_operations_model(program)
+
+        try:
+            if hasattr(self, "root") and hasattr(self.root, "_currentParams") and isinstance(self.root._currentParams, dict):
+                self.root._currentParams["selectedProgramId"] = program.id
+        except Exception:
+            pass
 
         child_url = QUrl.fromLocalFile(os.path.join(self.base_dir, "ChildScreen.qml")).toString()
         params = {

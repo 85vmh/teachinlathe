@@ -8,6 +8,7 @@ class ProgramListModel(QAbstractListModel):
     CreatedDateRole = Qt.UserRole + 2
     LastEditDateRole = Qt.UserRole + 3
     ProgramOperationsRole = Qt.UserRole + 4
+    ProgramIdRole = Qt.UserRole + 5
 
     def __init__(self, programs=None):
         super().__init__()
@@ -29,6 +30,8 @@ class ProgramListModel(QAbstractListModel):
         program = self._programs[index.row()]
         if role == self.ProgramNameRole:
             return program.header.name
+        if role == self.ProgramIdRole:
+            return program.id
         if role == self.CreatedDateRole:
             return program.header.created_date
         if role == self.LastEditDateRole:
@@ -40,6 +43,7 @@ class ProgramListModel(QAbstractListModel):
     def roleNames(self):
         return {
             self.ProgramNameRole: b'programName',
+            self.ProgramIdRole: b'programId',
             self.CreatedDateRole: b'createdDate',
             self.LastEditDateRole: b'lastEditDate',
             self.ProgramOperationsRole: b'programOperations',

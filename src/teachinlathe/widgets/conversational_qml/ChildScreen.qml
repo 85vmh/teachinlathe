@@ -23,7 +23,7 @@ Item {
                 opsList.contentY = Math.max(0, Math.min(targetY, maxY))
                 _restoreScrollPending = false
             }
-            if (activeOpIndex >= 0) opsList.currentIndex = activeOpIndex
+            opsList.currentIndex = activeOpIndex >= 0 ? activeOpIndex : -1
         })
     }
 
@@ -345,6 +345,8 @@ Item {
                                 font.pixelSize: 18
                                 font.bold: true
                                 Layout.fillWidth: true
+                                horizontalAlignment: Text.AlignHCenter
+                                Layout.alignment: Qt.AlignVCenter
                                 verticalAlignment: Text.AlignVCenter
                                 elide: Text.ElideRight
                             }

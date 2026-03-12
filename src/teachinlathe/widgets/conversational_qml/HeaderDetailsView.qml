@@ -72,7 +72,13 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
-        spacing: 12
+        spacing: 20
+
+        Label {
+            text: "Program Header"
+            font.pixelSize: 18
+            font.bold: true
+        }
 
         GroupBox {
             title: "Program Details"

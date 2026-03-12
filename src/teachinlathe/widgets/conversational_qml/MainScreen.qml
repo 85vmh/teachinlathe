@@ -10,6 +10,7 @@ Item {
 
     property var programsModel
     property bool showBack: false
+    property string selectedProgramId: ""
     property int pendingDeleteIndex: -1
     property string pendingDeleteName: ""
     property string sortField: "last_edit"
@@ -310,8 +311,8 @@ Item {
                         color: rowMouseArea.pressed
                                ? "#dbeafe"
                                : (index % 2 === 0 ? "#f0f0f0" : "#e5e5e5")
-                        border.width: rowMouseArea.pressed ? 1 : 0
-                        border.color: rowMouseArea.pressed ? "#8ec5ff" : "transparent"
+                        border.width: (selectedProgramId === programId || rowMouseArea.pressed) ? 1 : 0
+                        border.color: rowMouseArea.pressed ? "#8ec5ff" : (selectedProgramId === programId ? "#8ec5ff" : "transparent")
 
                         MouseArea {
                             id: rowMouseArea
