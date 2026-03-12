@@ -6,7 +6,6 @@ O<m1_handling> sub
 #<z_return>        = #4
 #<spindle_dir>	   = #5	
 
-G7 (diameter mode)
 G21 ; Metric Units
 G90 ; Absolute Distance
 #<resume_from_m1> = 0   (flag set before M1, consumed after resume)
@@ -41,5 +40,4 @@ O901 if [#<resume_from_m1> EQ 1]
 	;(DEBUG, continuing from where left off...)
 O901 endif
 
-G8 (back to radius mode)
 O<m1_handling> endsub
