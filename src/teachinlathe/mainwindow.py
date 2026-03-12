@@ -69,13 +69,6 @@ class MyMainWindow(VCPMainWindow):
         super(MyMainWindow, self).__init__(*args, **kwargs)
         self.setWindowFlag(Qt.FramelessWindowHint)
 
-        self.jogspeedpercentagewidget.setMinimumSize(101, 221)
-        self.jogspeedpercentagewidget.setMaximumSize(101, 221)
-        self.jogspeedpercentagewidget.setSizePolicy(
-            QtWidgets.QSizePolicy.Fixed,
-            QtWidgets.QSizePolicy.Fixed
-        )
-
         self.mainSelectedTab = MainTabs.MANUAL_TURNING
         self.lastSpindleRpm = 0
         self.isFirstGear = False

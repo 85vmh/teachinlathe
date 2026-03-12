@@ -491,22 +491,6 @@ class Ui_MainWindow(object):
         self.jogSpeedFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.jogSpeedFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.jogSpeedFrame.setObjectName("jogSpeedFrame")
-        self.jogspeedpercentagewidget = JogSpeedPercentageWidget(self.jogSpeedFrame)
-        self.jogspeedpercentagewidget.setGeometry(QtCore.QRect(10, 10, 101, 221))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.jogspeedpercentagewidget.sizePolicy().hasHeightForWidth())
-        self.jogspeedpercentagewidget.setSizePolicy(sizePolicy)
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.jogspeedpercentagewidget.setFont(font)
-        self.jogspeedpercentagewidget.setProperty("diameter", 15)
-        self.jogspeedpercentagewidget.setAlignment(QtCore.Qt.AlignCenter)
-        self.jogspeedpercentagewidget.setOrientation(QtCore.Qt.Vertical)
-        self.jogspeedpercentagewidget.setLayoutSpacing(6)
-        self.jogspeedpercentagewidget.setProperty("color", QtGui.QColor(15, 224, 42))
-        self.jogspeedpercentagewidget.setObjectName("jogspeedpercentagewidget")
         self.handwheelsFrame = QtWidgets.QFrame(self.manualTurningTab)
         self.handwheelsFrame.setGeometry(QtCore.QRect(310, 735, 216, 241))
         self.handwheelsFrame.setStyleSheet("QFrame#handwheelsFrame {\n"
@@ -2721,7 +2705,6 @@ from qtpyvcp.widgets.display_widgets.status_led import StatusLED
 from qtpyvcp.widgets.display_widgets.vtk_backplot.vtk_backplot import VTKBackPlot
 from qtpyvcp.widgets.input_widgets.file_system import FileSystemTable, RemovableDeviceComboBox
 from qtpyvcp.widgets.input_widgets.gcode_text_edit import GcodeTextEdit
-from qtpyvcp.widgets.input_widgets.jog_speed_percentage import JogSpeedPercentageWidget
 from qtpyvcp.widgets.input_widgets.mdientry_widget import MDIEntry
 from qtpyvcp.widgets.input_widgets.offset_table import OffsetTable
 from qtpyvcp.widgets.input_widgets.recent_file_combobox import RecentFileComboBox
