@@ -237,6 +237,7 @@ class MyMainWindow(VCPMainWindow):
     #     self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value if value else ProgramTabs.PROGRAM_LOADED.value)
 
     def loadProgram(self):
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.PROGRAM_LOADED.value)
         self.vtk.clearLivePlot()
 
