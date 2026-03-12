@@ -41,7 +41,7 @@ CONVERSATIONAL_JSON_BASE = CONVERSATIONAL_OUTPUT_BASE
 
 class MainTabs(Enum):
     MANUAL_TURNING = 0
-    QUICK_CYCLES = 1
+    CONVERSATIONAL = 1
     PROGRAMS = 2
     TOOLS_OFFSETS = 3
     MACHINE_SETTINGS = 4
@@ -158,6 +158,7 @@ class MyMainWindow(VCPMainWindow):
 
         QTimer.singleShot(0, self.afterUIInit)
         QTimer.singleShot(0, self._initManualToolsList)
+        QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
         self.latheFixtures.onFixtureSelected.connect(self.onFixtureSelected)
         initial_fixture = self.fixture_repository.getCurrentFixture()
         if initial_fixture:
@@ -207,10 +208,35 @@ class MyMainWindow(VCPMainWindow):
         self.manualToolsList.setSource(QUrl.fromLocalFile(qml_path))
         self.manualToolsList.show()
 
+    def _syncEmbeddedQmlTabs(self):
+        current_index = self.tabWidget.currentIndex()
+        manual_active = current_index == MainTabs.MANUAL_TURNING.value
+        conversational_active = current_index == MainTabs.CONVERSATIONAL.value
+
+        if hasattr(self, "toolLibraryContainer"):
+            self.toolLibraryContainer.setVisible(manual_active)
+            self.toolLibraryContainer.update()
+
+        if hasattr(self, "manualToolsList"):
+            self.manualToolsList.setVisible(manual_active)
+            self.manualToolsList.update()
+
+        if hasattr(self, "conversationalqml"):
+            self.conversationalqml.setVisible(conversational_active)
+            self.conversationalqml.update()
+
+        current_widget = self.tabWidget.currentWidget()
+        if current_widget is not None:
+            current_widget.raise_()
+            current_widget.update()
+            current_widget.repaint()
+        self.tabWidget.update()
+
     def onMainTabChanged(self, index):
         self.mainSelectedTab = MainTabs(index)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = self.mainSelectedTab == MainTabs.PROGRAMS
         self.teachinlathedro.limitsHandler.setChuckLimitsActive(self.mainSelectedTab != MainTabs.MACHINE_SETTINGS)
+        QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
 
     # def handleUsbPresent(self, value):
     #     self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value if value else ProgramTabs.PROGRAM_LOADED.value)
