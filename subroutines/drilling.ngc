@@ -14,7 +14,6 @@ O<drilling> sub
 G7   (Diameter mode)
 G21  (Metric)
 G90  (Absolute)
-G97 M4 S#<rpm>
 
 #<x_start> = [#<x_start> / 2]  (half diameter -> radius)
 #<feed_clearance> = 0.2   (extra amount on re-entering the hole)
@@ -67,8 +66,5 @@ O210 endwhile
 (--- restore positions similar to original ---)
 G0 Z#<z_start>
 G0 X#<x_start>
-
-G18  (back to XZ plane)
-M5
 
 O<drilling> endsub

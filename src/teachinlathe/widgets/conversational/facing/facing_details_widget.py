@@ -29,7 +29,7 @@ class FacingDetailsWidget(QWidget, Ui_Form, SavableOperationForm):
         self.retract.setText(str(facing_data.retract))
 
         # Set the checkbox based on z_end_becomes_new_z0
-        self.zEndAsZero.setChecked(facing_data.z_end_becomes_new_z0)
+        self.zEndAsZero.setChecked(facing_data.zEndBecomesNewZ0)
         self.saveButton.clicked.connect(self.handleSave)
 
     def handleSave(self):
@@ -98,4 +98,4 @@ class FacingDetailsWidget(QWidget, Ui_Form, SavableOperationForm):
             self.facing_data.retract = 0.0
 
         # Checkbox for Z0 update
-        self.facing_data.z_end_becomes_new_z0 = self.zEndAsZero.isChecked()
+        self.facing_data.zEndBecomesNewZ0 = self.zEndAsZero.isChecked()

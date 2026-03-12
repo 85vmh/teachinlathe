@@ -4,9 +4,11 @@ import tempfile
 from enum import Enum
 
 import linuxcnc
-from PyQt5.QtCore import QTimer, QSignalBlocker
+from PyQt5.QtCore import QTimer, QSignalBlocker, QUrl
+from PyQt5.QtCore import QItemSelectionModel
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.uic.properties import QtWidgets
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.actions.program_actions import load as loadProgram
@@ -20,6 +22,7 @@ from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.widgets.FrameAnimator import FrameAnimator
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
+from teachinlathe.widgets.tools_list_provider import ToolsListProvider
 import teachinlathe_rc
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
@@ -31,15 +34,18 @@ TOOLTABLE = getPlugin('tooltable')
 LINUXCNC_CMD = linuxcnc.command()
 STAT = linuxcnc.stat()
 PROGRAM_PREFIX = INFO.getProgramPrefix()
+# Base folder for conversational outputs (user-configurable).
+CONVERSATIONAL_OUTPUT_BASE = PROGRAM_PREFIX
+CONVERSATIONAL_GCODE_BASE = CONVERSATIONAL_OUTPUT_BASE
+CONVERSATIONAL_JSON_BASE = CONVERSATIONAL_OUTPUT_BASE
 
 
 class MainTabs(Enum):
     MANUAL_TURNING = 0
-    QUICK_CYCLES = 1
+    CONVERSATIONAL = 1
     PROGRAMS = 2
     TOOLS_OFFSETS = 3
     MACHINE_SETTINGS = 4
-    CONV_KOTLIN = 5
 
 
 class ProgramTabs(Enum):
@@ -112,7 +118,6 @@ class MyMainWindow(VCPMainWindow):
         STATUS.task_mode.signal.connect(self.onTaskModeChanged)
         STATUS.state.signal.connect(self.onStateChanged)
 
-        TOOLTABLE.current_tool.signal.connect(self.onCurrentToolChanged)
         self.latheToolTable.toolEditClicked.connect(self.onToolEditClicked)
         self.latheToolTable.toolAddClicked.connect(self.onToolAddClicked)
 
@@ -146,14 +151,17 @@ class MyMainWindow(VCPMainWindow):
         self.vtk.enable_panning(True)
 
         # self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
-        self.quickcycles.onLoadClicked.connect(self.prepareToRunProgram)
         self.tabWidget.currentChanged.connect(self.onMainTabChanged)
         self.tabSpindleMode.currentChanged.connect(self.onSpindleModeChanged)
 
         self.addEditToolWidget.onSaved.connect(self.onToolAddEditSaved)
         self.addEditToolWidget.onCanceled.connect(self.onToolAddEditCanceled)
 
+        self.toolsListProvider = ToolsListProvider(self)
+
         QTimer.singleShot(0, self.afterUIInit)
+        QTimer.singleShot(0, self._initManualToolsList)
+        QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
         self.latheFixtures.onFixtureSelected.connect(self.onFixtureSelected)
         initial_fixture = self.fixture_repository.getCurrentFixture()
         if initial_fixture:
@@ -180,12 +188,6 @@ class MyMainWindow(VCPMainWindow):
         self.innerToolsAndOffsets.setCurrentIndex(1)
         self.addEditToolWidget.setAddToolData(tool_data, tool_model)
 
-    def onCurrentToolChanged(self, current_tool):
-        tool_orientation = current_tool.get('Q', 1)
-        pixmap = QPixmap(":/images/lathe_control_point_{}.png".format(tool_orientation))
-        self.toolOrientation.setPixmap(pixmap)
-        self.toolOrientation.show()
-
     def onFixtureSelected(self, fixture):
         print("---Fixture selected: ", fixture)
         self.teachinlathedro.setChuckLimit(fixture.z_minus_limit)
@@ -198,10 +200,45 @@ class MyMainWindow(VCPMainWindow):
         self.manualLathe.onMaxSpindleRpmChanged(self.inputMaxRpm.text())
         self.manualLathe.onInputFeedChanged(self.inputFeed.text())
 
+    def _initManualToolsList(self):
+        self.manualToolsList = QQuickWidget(self.toolLibraryContainer)
+        self.manualToolsList.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        self.manualToolsList.setGeometry(0, 0, self.toolLibraryContainer.width(), self.toolLibraryContainer.height())
+        self.manualToolsList.engine().rootContext().setContextProperty("toolsProvider", self.toolsListProvider)
+
+        qml_path = os.path.join(os.path.dirname(__file__), "widgets", "ToolListView.qml")
+        self.manualToolsList.setSource(QUrl.fromLocalFile(qml_path))
+        self.manualToolsList.show()
+
+    def _syncEmbeddedQmlTabs(self):
+        current_index = self.tabWidget.currentIndex()
+        manual_active = current_index == MainTabs.MANUAL_TURNING.value
+        conversational_active = current_index == MainTabs.CONVERSATIONAL.value
+
+        if hasattr(self, "toolLibraryContainer"):
+            self.toolLibraryContainer.setVisible(manual_active)
+            self.toolLibraryContainer.update()
+
+        if hasattr(self, "manualToolsList"):
+            self.manualToolsList.setVisible(manual_active)
+            self.manualToolsList.update()
+
+        if hasattr(self, "conversationalqml"):
+            self.conversationalqml.setVisible(conversational_active)
+            self.conversationalqml.update()
+
+        current_widget = self.tabWidget.currentWidget()
+        if current_widget is not None:
+            current_widget.raise_()
+            current_widget.update()
+            current_widget.repaint()
+        self.tabWidget.update()
+
     def onMainTabChanged(self, index):
         self.mainSelectedTab = MainTabs(index)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = self.mainSelectedTab == MainTabs.PROGRAMS
         self.teachinlathedro.limitsHandler.setChuckLimitsActive(self.mainSelectedTab != MainTabs.MACHINE_SETTINGS)
+        QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
 
     # def handleUsbPresent(self, value):
     #     self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value if value else ProgramTabs.PROGRAM_LOADED.value)
@@ -210,32 +247,32 @@ class MyMainWindow(VCPMainWindow):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.PROGRAM_LOADED.value)
         self.vtk.clearLivePlot()
 
-    def prepareToRunProgram(self, subroutine_text):
-        print("subroutine_text: ", subroutine_text)
-        subs_without_manual_turning_settings = ["drilling", "keyslot"]
-
-        if any(sub.lower() in subroutine_text.lower() for sub in subs_without_manual_turning_settings):
-            program_header = ''
-        else:
-            program_header = self.manualLathe.getProgramHeader()
-
-        program_text = (f"(Program generated by TeachInLathe)\n\n"
-                        f"{program_header}\n"
-                        f"{subroutine_text}\n\n"
-                        f"{getProgramFooter()}")
-
-        print("Program text:\n", program_text)
-
-        with tempfile.NamedTemporaryFile(dir=PROGRAM_PREFIX, suffix='.ngc', delete=False) as temp:
-            temp.write(program_text.encode('utf-8'))
-            temp.flush()
-            print(f'Temporary file created: {temp.name}')
-            loadProgram(temp.name, add_to_recents=False)
-            self.current_program = temp.name
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
-
     def backToPrograms(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
+
+    def showGeneratedProgram(self, ngc_path: str):
+        if not ngc_path:
+            return
+        try:
+            folder = os.path.dirname(os.path.abspath(ngc_path))
+            self.tabWidget.setCurrentIndex(MainTabs.PROGRAMS.value)
+            self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
+
+            table = getattr(self, "destinationFsTable", None)
+            if table is not None:
+                try:
+                    table.setRootPath(folder)
+                    idx = table.model.index(ngc_path)
+                    if idx and idx.isValid():
+                        table.selectionModel().select(
+                            idx,
+                            QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows
+                        )
+                        table.scrollTo(idx)
+                except Exception:
+                    pass
+        except Exception as e:
+            print("showGeneratedProgram failed:", e)
 
     def onSpindleModeChanged(self):
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())

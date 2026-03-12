@@ -3,12 +3,14 @@ from qtpyvcp.widgets.qtdesigner import _DesignerPlugin
 from .add_edit_tool.add_edit_tool import AddEditToolWidget
 from .conversational.conversational import Conversational
 from .conversational.program_item_widget import ProgramItemWidget
+from .conversational_qml.ConversationalQml import ConversationalQml
 from .lathe_fixtures.lathe_fixtures_cards import LatheFixturesCards
 from .lathe_joystick.lathe_joystick import LatheJoystickWidget
 from .lathe_tool_table import LatheToolTable
 from .lathe_tool_touch_off.tool_touch_off import ToolTouchOff
 from .quick_cycles.quick_cycles import QuickCycles
 from .teachin_lathe_dro import TeachInLatheDro
+
 
 
 class TeachInLatheDro_Plugin(_DesignerPlugin):
@@ -38,6 +40,10 @@ class LatheFixturesCards_Plugin(_DesignerPlugin):
 class Conversational_Plugin(_DesignerPlugin):
     def pluginClass(self):
         return Conversational
+
+class ConversationalQml_Plugin(_DesignerPlugin):
+    def pluginClass(self):
+        return ConversationalQml
 
 class LatheJoystickWidget_Plugin(_DesignerPlugin):
     def pluginClass(self):

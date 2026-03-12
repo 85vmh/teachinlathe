@@ -1,5 +1,4 @@
 import os
-import subprocess
 from enum import Enum
 
 from PyQt5 import QtCore
@@ -17,7 +16,7 @@ from teachinlathe.widgets.conversational.facing.facing_details_widget import Fac
 from teachinlathe.widgets.conversational.headerDetails.header_details_widget import HeaderDetailWidget
 from teachinlathe.widgets.conversational.profiling.profiling_details_widget import ProfilingDetailsWidget
 from teachinlathe.widgets.conversational.program_details_widget import ProgramDetailsWidget
-from teachinlathe.widgets.conversational.program_loader import load_programs_from_folder
+from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.conversational.toolChange.tool_change_details_widget import ChangeToolDetailsWidget
 
 LOG = logger.getLogger(__name__)

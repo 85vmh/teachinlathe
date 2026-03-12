@@ -1,0 +1,46 @@
+;Parting
+O<parting> sub
+
+#<x_clearance>       = #1
+#<x_start>           = #2
+#<x_end>             = #3
+#<z_pos>             = #4
+#<fz1>               = #5
+#<fz2>               = #6
+#<fz2_x_pos>         = #7
+#<edge_break_type>   = #8 ; 0 none, 1 chamfer, 2 fillet
+#<edge_break_value>  = #9
+
+G18 ; XZ Plane
+G21 ; Metric Units
+G90 ; Absolute Distance
+
+    O100 IF [#<edge_break_type> EQ 0]
+        G0 Z#<z_pos>
+        G0 X#<x_start>
+        G95 F#<fz1>
+        G1 X#<fz2_x_pos>
+        G1 X#<x_end> F#<fz2>
+    O100 ELSE
+        ; Edge break in Z+ direction
+        G0 Z#<z_pos>
+        G0 X[#<x_start> + #<x_clearance>]
+        G95 F#<fz1>
+        G1 X[#<x_start> - #<edge_break_value>]
+        G0 X[#<x_start> + #<x_clearance>]
+        G0 Z[#<z_pos> + #<edge_break_value>]
+        G1 X#<x_start>
+
+            O101 IF [#<edge_break_type> EQ 1]
+                ; Chamfer: from (XStart, Z+edge) to (XStart-edge, Z)
+                G1 X[#<x_start> - #<edge_break_value>] Z#<z_pos>
+            O101 ELSEIF [#<edge_break_type> EQ 2]
+                ; Fillet: CW arc from (XStart, Z+edge) to (XStart-edge, Z)
+                G2 X[#<x_start> - #<edge_break_value>] Z#<z_pos> I[-#<edge_break_value>] K0
+            O101 ENDIF
+
+        G1 X#<fz2_x_pos> F#<fz1>
+        G1 X#<x_end> F#<fz2>
+    O100 ENDIF
+
+O<parting> endsub

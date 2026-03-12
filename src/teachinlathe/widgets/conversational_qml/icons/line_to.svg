@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 512 512"
+     width="512" height="512"
+     fill="none"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+
+  <!-- end circles -->
+  <circle cx="420" cy="120" r="24" fill="#000"/>
+  <circle cx="100" cy="420" r="24" fill="#000"/>
+
+  <!-- shaft (2 o'clock -> 8 o'clock) -->
+  <line x1="402.50" y1="136.42" x2="179.99" y2="344.97"
+        stroke="#000" stroke-width="12"/>
+
+  <!-- sharp isosceles arrow head (base ~ 2/3 of side), tip intersects target circle ~20% -->
+  <path d="M113.99 406.87
+           L158.10 321.64
+           L201.88 368.30
+           Z"
+        fill="#000"/>
+
+</svg>
