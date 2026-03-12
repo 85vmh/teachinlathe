@@ -59,6 +59,7 @@ class Workpiece:
 @dataclass
 class Header:
     name: str
+    created_date: str
     last_edit: str
     datum: int
     units: str
@@ -66,8 +67,12 @@ class Header:
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Header":
+        created_date = data.get("created_date")
+        if created_date is None:
+            created_date = data.get("last_edit", "")
         return Header(
             name=data["name"],
+            created_date=str(created_date),
             last_edit=data["last_edit"],
             datum=data["datum"],
             units=data["units"],
@@ -77,6 +82,7 @@ class Header:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
+            "created_date": self.created_date,
             "last_edit": self.last_edit,
             "datum": self.datum,
             "units": self.units,

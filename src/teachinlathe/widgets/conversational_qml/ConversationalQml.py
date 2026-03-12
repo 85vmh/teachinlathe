@@ -1,6 +1,8 @@
 import json
 import os
+import re
 import time
+from datetime import datetime
 
 from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop
 from PyQt5.QtQuick import QQuickItem
@@ -8,7 +10,7 @@ from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import QProgressDialog, QApplication
 
 from teachinlathe.conversational.data_types import Workpiece, SpindleParameters, Facing, CuttingParameters, GeometryParameters, M1Parameters, SpindleMode, \
-    operation_types
+    operation_types, Program, Header
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
@@ -43,6 +45,8 @@ class ConversationalQml(QQuickWidget):
         self.setResizeMode(QQuickWidget.SizeRootObjectToView)
         self.folder_path = "/home/cnc/Work/teachinlathe/conversational"
         self.current_program = None
+        self.current_program_index = None
+        self.current_op_index = -1
         self.child_screen_item = None
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -140,14 +144,14 @@ class ConversationalQml(QQuickWidget):
 
         return os.path.join(base_dir, base_name)
 
-    # în _save_current_program(self):
     def _save_current_program(self):
         prog = self._get_current_program()
         if not prog:
             return
 
-        from datetime import datetime
         try:
+            if hasattr(prog, "header") and hasattr(prog.header, "created_date") and not prog.header.created_date:
+                prog.header.created_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             if hasattr(prog, "header") and hasattr(prog.header, "last_edit"):
                 prog.header.last_edit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         except Exception:
@@ -174,7 +178,6 @@ class ConversationalQml(QQuickWidget):
         try:
             with open(filename, "r", encoding="utf-8") as f:
                 disk_data = json.load(f)
-            from teachinlathe.conversational.data_types import Program
             new_prog = Program.from_dict(disk_data)
             new_prog.filename = filename
 
@@ -212,9 +215,13 @@ class ConversationalQml(QQuickWidget):
 
         try:
             if hasattr(item, "addNewProgramRequested"):
-                item.addNewProgramRequested.connect(self.openChildScreen)
+                item.addNewProgramRequested.connect(self.addNewProgram)
             if hasattr(item, "editProgramRequested"):
                 item.editProgramRequested.connect(self.openChildScreen)
+            if hasattr(item, "deleteProgramRequested"):
+                item.deleteProgramRequested.connect(self.onDeleteProgramRequested)
+            if hasattr(item, "duplicateProgramRequested"):
+                item.duplicateProgramRequested.connect(self.onDuplicateProgramRequested)
             if hasattr(item, "backRequested"):
                 item.backRequested.connect(self.goBack)
             if hasattr(item, "toggleGenerateGcode"):
@@ -266,6 +273,8 @@ class ConversationalQml(QQuickWidget):
             if hasattr(item, "addOperationTypeChosen"):
                 item.addOperationTypeChosen.connect(self.onAddOperationTypeChosen)
             print("Screen signals connected.")
+            if obj_name == "childScreen" and self.current_op_index == -1:
+                QTimer.singleShot(0, lambda: self.onDetailsRequested(item, -1))
         except Exception as e:
             print("Failed to hook screen item signals:", e)
 
@@ -513,7 +522,130 @@ class ConversationalQml(QQuickWidget):
             print("receiveDetailsData failed:", e)
 
     def addNewProgram(self):
-        print("add new program clicked")
+        timestamp = datetime.now()
+        file_stamp = timestamp.strftime("%d_%m_%Y_%H_%M_%S")
+        display_stamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        filename = f"program_{file_stamp}.json"
+        file_path = os.path.join(self.folder_path, filename)
+        program_name = f"Program {file_stamp}"
+
+        header = Header(
+            name=program_name,
+            created_date=display_stamp,
+            last_edit=display_stamp,
+            datum=1,
+            units="mm",
+            workpiece=Workpiece(
+                material="",
+                external_diameter=0.0,
+                internal_diameter=0.0,
+                stickout_length=0.0,
+            ),
+        )
+        program = Program(
+            id=os.path.splitext(filename)[0],
+            header=header,
+            operations=[],
+            filename=file_path,
+        )
+
+        try:
+            os.makedirs(self.folder_path, exist_ok=True)
+            with open(file_path, "w", encoding="utf-8") as handle:
+                json.dump(program.to_dict(), handle, indent=4)
+        except Exception as e:
+            print("Failed to create program:", e)
+            return
+
+        row_index = self.model.appendProgram(program) if hasattr(self.model, "appendProgram") else None
+        self.current_op_index = -1
+        self.openChildScreen(row_index if row_index is not None else program)
+
+    def onDeleteProgramRequested(self, row_index: int):
+        if row_index is None or row_index < 0:
+            return
+        program = self.model.get(row_index) if hasattr(self.model, "get") else None
+        if not program:
+            return
+
+        file_path = getattr(program, "filename", None)
+        if file_path:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                print("Failed to delete program file:", e)
+                return
+
+        if hasattr(self.model, "removeProgramAt"):
+            self.model.removeProgramAt(row_index)
+
+        if self.current_program_index == row_index:
+            self.current_program = None
+            self.current_program_index = None
+            self.current_op_index = -1
+        elif self.current_program_index is not None and row_index < self.current_program_index:
+            self.current_program_index -= 1
+
+    def _make_timestamped_program_path(self):
+        while True:
+            timestamp = datetime.now()
+            file_stamp = timestamp.strftime("%d_%m_%Y_%H_%M_%S")
+            filename = f"program_{file_stamp}.json"
+            file_path = os.path.join(self.folder_path, filename)
+            if not os.path.exists(file_path):
+                return timestamp, filename, file_path
+            time.sleep(0.01)
+
+    def _next_duplicate_name(self, base_name: str) -> str:
+        existing_names = set()
+        if hasattr(self.model, "_programs"):
+            existing_names = {
+                getattr(getattr(program, "header", None), "name", "")
+                for program in self.model._programs
+            }
+
+        stem = re.sub(r"\s+\(\d+\)$", "", base_name).rstrip()
+        suffix = 1
+        while True:
+            candidate = f"{stem} ({suffix})"
+            if candidate not in existing_names:
+                return candidate
+            suffix += 1
+
+    def onDuplicateProgramRequested(self, row_index: int):
+        program = self.model.get(row_index) if hasattr(self.model, "get") else None
+        if not program:
+            return
+
+        timestamp, filename, file_path = self._make_timestamped_program_path()
+        display_stamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+
+        try:
+            program_dict = program.to_dict()
+        except Exception as e:
+            print("Failed to serialize program for duplication:", e)
+            return
+
+        header = program_dict.get("header", {})
+        header["name"] = self._next_duplicate_name(header.get("name", "Program"))
+        header["created_date"] = display_stamp
+        header["last_edit"] = display_stamp
+        program_dict["header"] = header
+        program_dict["id"] = os.path.splitext(filename)[0]
+
+        try:
+            os.makedirs(self.folder_path, exist_ok=True)
+            with open(file_path, "w", encoding="utf-8") as handle:
+                json.dump(program_dict, handle, indent=4)
+            new_program = Program.from_dict(program_dict)
+            new_program.filename = file_path
+        except Exception as e:
+            print("Failed to duplicate program:", e)
+            return
+
+        if hasattr(self.model, "appendProgram"):
+            self.model.appendProgram(new_program)
 
     def openChildScreen(self, arg=None):
         program = None
@@ -526,16 +658,25 @@ class ConversationalQml(QQuickWidget):
                 program = self.model.program_at(arg)
             elif hasattr(self.model, "programAt"):
                 program = self.model.programAt(arg)
+        elif isinstance(arg, Program):
+            program = arg
+            if hasattr(self.model, "_programs"):
+                try:
+                    row_index = self.model._programs.index(arg)
+                except ValueError:
+                    row_index = None
         if program is None:
             print("openChildScreen: program not resolved from", arg)
             return
 
         self.current_program = program
         self.current_program_index = row_index
+        self.current_op_index = -1
 
         selected_program = {
             "id": program.id,
             "name": program.header.name,
+            "created_date": getattr(program.header, "created_date", ""),
             "last_edit": program.header.last_edit,
         }
         operations_model = self._build_operations_model(program)
@@ -659,6 +800,8 @@ class ConversationalQml(QQuickWidget):
 
             if "name" in hdr:
                 header.name = str(hdr["name"])
+            if "created_date" in hdr and hdr["created_date"] is not None:
+                header.created_date = str(hdr["created_date"])
             if "units" in hdr:
                 header.units = str(hdr["units"])
             if "datum" in hdr:

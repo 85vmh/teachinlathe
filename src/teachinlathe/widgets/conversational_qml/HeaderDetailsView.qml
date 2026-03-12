@@ -7,6 +7,7 @@ import "."
 Item {
     id: root
     anchors.fill: parent
+    property int fieldFontSize: 16
 
     // --- Input model ---
     // Expect either applyProgram(programDict) or applyData(_, programDict)
@@ -14,7 +15,6 @@ Item {
 
     // --- Header fields (editable) ---
     property string programName:  (programData && programData.header && programData.header.name) ? programData.header.name : ""
-    property string units:        (programData && programData.header && programData.header.units) ? programData.header.units : "mm"
     property int    datum:        (programData && programData.header && programData.header.datum !== undefined) ? programData.header.datum : 0
 
     // Workpiece
@@ -31,7 +31,6 @@ Item {
     function applyProgram(program) {
         programData = program || {}
         programName = (programData.header && programData.header.name) ? programData.header.name : ""
-        units       = (programData.header && programData.header.units) ? programData.header.units : "mm"
         datum       = (programData.header && programData.header.datum !== undefined) ? programData.header.datum : 0
 
         if (programData.header && programData.header.workpiece) {
@@ -58,7 +57,7 @@ Item {
                 name: programName,
                 // last_edit is set server-side; omit or leave as previous
                 datum: datum,
-                units: units,
+                units: "mm",
                 workpiece: {
                     material: material,
                     external_diameter: extDia,
@@ -78,6 +77,7 @@ Item {
         GroupBox {
             title: "Program Details"
             Layout.fillWidth: true
+            font.pixelSize: root.fieldFontSize
 
             ColumnLayout {
                 anchors.fill: parent
@@ -85,44 +85,39 @@ Item {
                 spacing: 10
 
                 RowLayout {
-                    Layout.fillWidth: true
+                    Layout.preferredWidth: 720
                     spacing: 8
-                    Label { text: "Program name"; width: 130; verticalAlignment: Text.AlignVCenter }
+                    Label {
+                        text: "Program name"
+                        width: 150
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
                     TextField {
-                        Layout.fillWidth: true
+                        Layout.preferredWidth: 340
+                        font.pixelSize: root.fieldFontSize
                         text: root.programName
                         onTextChanged: { root.programName = text; root.emitSave() }
                     }
                 }
 
                 RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 16
+                    Layout.preferredWidth: 720
+                    spacing: 8
 
-                    // Datum via NumpadField
-                    Label { text: "Datum"; width: 130; verticalAlignment: Text.AlignVCenter }
+                    Label {
+                        text: "Datum"
+                        width: 150
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
                     NumpadField {
                         Layout.preferredWidth: 140
                         settingName: "smart_numpad.header-datum"
+                        fontPixelSize: root.fieldFontSize
                         value: root.datum
                         onOpenRequested: root.openNumPadRequested(field)
                         onValueCommitted: { root.datum = Math.round(value); root.emitSave() }
-                    }
-
-                    // Units radios
-                    Label { text: "Units"; width: 80; verticalAlignment: Text.AlignVCenter }
-                    ButtonGroup { id: unitsGroup }
-                    RadioButton {
-                        text: "mm"
-                        checked: root.units === "mm"
-                        ButtonGroup.group: unitsGroup
-                        onToggled: if (checked) { root.units = "mm"; root.emitSave() }
-                    }
-                    RadioButton {
-                        text: "in"
-                        checked: root.units === "in"
-                        ButtonGroup.group: unitsGroup
-                        onToggled: if (checked) { root.units = "in"; root.emitSave() }
                     }
                 }
             }
@@ -130,7 +125,9 @@ Item {
 
         GroupBox {
             title: "Workpiece Details"
-            Layout.fillWidth: true
+            Layout.preferredWidth: 720
+            Layout.maximumWidth: 720
+            font.pixelSize: root.fieldFontSize
 
             ColumnLayout {
                 anchors.fill: parent
@@ -138,34 +135,56 @@ Item {
                 spacing: 10
 
                 RowLayout {
-                    Layout.fillWidth: true
+                    Layout.preferredWidth: 680
                     spacing: 8
-                    Label { text: "Material"; width: 130; verticalAlignment: Text.AlignVCenter }
+                    Label {
+                        text: "Material"
+                        width: 150
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
                     TextField {
-                        Layout.fillWidth: true
+                        Layout.preferredWidth: 340
+                        font.pixelSize: root.fieldFontSize
                         text: root.material
                         onTextChanged: { root.material = text; root.emitSave() }
                     }
                 }
 
                 RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-
-                    Label { text: "External Ø"; width: 130; verticalAlignment: Text.AlignVCenter }
+                    Layout.preferredWidth: 680
+                    spacing: 8
+                    Label {
+                        text: "External Ø"
+                        width: 150
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
                     NumpadField {
                         Layout.preferredWidth: 160
                         settingName: "smart_numpad.workpiece-external-dia"
+                        fontPixelSize: root.fieldFontSize
                         value: root.extDia
                         formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                         onOpenRequested: root.openNumPadRequested(field)
                         onValueCommitted: { root.extDia = value; root.emitSave() }
                     }
 
-                    Label { text: "Internal Ø"; width: 130; verticalAlignment: Text.AlignVCenter }
+                }
+
+                RowLayout {
+                    Layout.preferredWidth: 680
+                    spacing: 8
+                    Label {
+                        text: "Internal Ø"
+                        width: 150
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
                     NumpadField {
                         Layout.preferredWidth: 160
                         settingName: "smart_numpad.workpiece-internal-dia"
+                        fontPixelSize: root.fieldFontSize
                         value: root.intDia
                         formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                         onOpenRequested: root.openNumPadRequested(field)
@@ -174,13 +193,18 @@ Item {
                 }
 
                 RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-
-                    Label { text: "Stickout length"; width: 130; verticalAlignment: Text.AlignVCenter }
+                    Layout.preferredWidth: 680
+                    spacing: 8
+                    Label {
+                        text: "Stickout length"
+                        width: 150
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
                     NumpadField {
                         Layout.preferredWidth: 160
                         settingName: "smart_numpad.workpiece-stickout"
+                        fontPixelSize: root.fieldFontSize
                         value: root.stickout
                         formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                         onOpenRequested: root.openNumPadRequested(field)

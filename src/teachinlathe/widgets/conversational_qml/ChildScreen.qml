@@ -93,101 +93,25 @@ Item {
 
     property int _pendingDeleteIndex: -1
 
-    Popup {
+    ConfirmDialog {
         id: deleteConfirmDialog
-        parent: Overlay.overlay
-        modal: true
-        focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        anchors.centerIn: parent
-        contentWidth: 360
-        contentHeight: column.implicitHeight
-        padding: 0
-
-        background: Rectangle {
-            radius: 10
-            color: "#202225"
-            border.color: "#3A3D41"
-            border.width: 1
+        titleText: "Delete Operation"
+        confirmText: "Delete"
+        messageText: {
+            var idx = operationEditor._pendingDeleteIndex
+            if (idx >= 0 && idx < operationEditor.operationsModel.length) {
+                var name = operationEditor.operationsModel[idx].display_type
+                           || operationEditor.operationsModel[idx].type
+                           || "this operation"
+                return "Delete \"" + name + "\"?"
+            }
+            return "Delete this operation?"
         }
-
-        contentItem: Column {
-            id: column
-            spacing: 12
-            width: deleteConfirmDialog.contentWidth
-            padding: 16
-
-            Text {
-                text: "Delete Operation"
-                font.pixelSize: 18
-                font.bold: true
-                color: "white"
-            }
-
-            Text {
-                width: column.width - column.padding * 2
-                text: {
-                    var idx = operationEditor._pendingDeleteIndex
-                    if (idx >= 0 && idx < operationEditor.operationsModel.length) {
-                        var name = operationEditor.operationsModel[idx].display_type
-                                   || operationEditor.operationsModel[idx].type
-                                   || "this operation"
-                        return "Delete \"" + name + "\"?"
-                    }
-                    return "Delete this operation?"
-                }
-                font.pixelSize: 15
-                color: "#cccccc"
-                wrapMode: Text.WordWrap
-            }
-
-            Rectangle {
-                width: column.width - column.padding * 2
-                height: 1
-                color: "#3A3D41"
-            }
-
-            Item {
-                width: column.width - column.padding * 2
-                height: 44
-
-                Button {
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Cancel"
-                    width: 100
-                    height: 40
-                    onClicked: {
-                        operationEditor._pendingDeleteIndex = -1
-                        deleteConfirmDialog.close()
-                    }
-                }
-
-                Button {
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Delete"
-                    width: 120
-                    height: 40
-                    contentItem: Text {
-                        text: parent.text
-                        font: parent.font
-                        color: "white"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                    background: Rectangle {
-                        radius: 4
-                        color: parent.pressed ? "#B71C1C" : "#C62828"
-                    }
-                    onClicked: {
-                        if (operationEditor._pendingDeleteIndex >= 0) {
-                            operationEditor.deleteOperationRequested(operationEditor._pendingDeleteIndex)
-                            operationEditor._pendingDeleteIndex = -1
-                        }
-                        deleteConfirmDialog.close()
-                    }
-                }
+        onCancelled: operationEditor._pendingDeleteIndex = -1
+        onConfirmed: {
+            if (operationEditor._pendingDeleteIndex >= 0) {
+                operationEditor.deleteOperationRequested(operationEditor._pendingDeleteIndex)
+                operationEditor._pendingDeleteIndex = -1
             }
         }
     }
@@ -418,6 +342,7 @@ Item {
 
                             Label {
                                 text: "Program Header"
+                                font.pixelSize: 18
                                 font.bold: true
                                 Layout.fillWidth: true
                                 verticalAlignment: Text.AlignVCenter
@@ -455,7 +380,8 @@ Item {
                                 spacing: 20
 
                                 Label {
-                                    text: "Operations"
+                                    text: "Operation List"
+                                    font.pixelSize: 18
                                     font.bold: true
                                     verticalAlignment: Text.AlignVCenter
                                     Layout.fillWidth: true

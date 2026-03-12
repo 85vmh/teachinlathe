@@ -1,15 +1,12 @@
-import os
 import json
-
 import os
-import json
 from typing import List
 
 from teachinlathe.conversational.data_types import Program
 
 
 def load_programs_from_folder(folder_path: str) -> List[Program]:
-    """Load all programs from JSON files in the given folder."""
+    """Load only valid program JSON files from the given folder."""
     programs = []
 
     print(f"Loading programs from {folder_path}")
@@ -17,7 +14,7 @@ def load_programs_from_folder(folder_path: str) -> List[Program]:
         print(f"Warning: Folder {folder_path} does not exist.")
         return programs
 
-    for filename in os.listdir(folder_path):
+    for filename in sorted(os.listdir(folder_path)):
         if filename.endswith(".json"):
             file_path = os.path.join(folder_path, filename)
             print(f"---Loading program from {file_path}")
@@ -27,7 +24,7 @@ def load_programs_from_folder(folder_path: str) -> List[Program]:
                     program = Program.from_dict(data)
                     program.filename = file_path
                     programs.append(program)
-            except (json.JSONDecodeError, KeyError) as e:
+            except Exception as e:
                 print(f"Error loading {filename}: {e}")
 
     return programs
