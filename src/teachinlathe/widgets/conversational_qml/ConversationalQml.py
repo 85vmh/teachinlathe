@@ -588,14 +588,16 @@ class ConversationalQml(QQuickWidget):
                 return f"Define Profile (P{profile_id})"
             return "Define Profile"
         if t == "profiling":
+            strategy_value = strategy.value if hasattr(strategy, "value") else str(strategy or "").lower()
+            prefix = "G71 " if strategy_value == "rough" else "G70 " if strategy_value == "finish" else ""
             if profile_id is not None and strategy is not None:
                 strategy_str = strategy.value.capitalize() if hasattr(strategy, "value") else str(strategy).capitalize()
-                return f"Cut Profile (P:{profile_id}, {strategy_str})"
+                return f"{prefix}Cut Profile (P:{profile_id}, {strategy_str})"
             if profile_id is not None:
-                return f"Cut Profile (P:{profile_id})"
-            return "Cut Profile"
+                return f"{prefix}Cut Profile (P:{profile_id})"
+            return f"{prefix}Cut Profile" if prefix else "Cut Profile"
         if t == "threading":
-            return f"Threading (P: {pitch})" if pitch is not None else "Threading"
+            return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"
         if t == "drilling":
             return "Drilling"
         if t == "tapping":

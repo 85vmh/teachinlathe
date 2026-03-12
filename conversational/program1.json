@@ -2,7 +2,7 @@
     "id": "prog_001",
     "header": {
         "name": "Test Operations List",
-        "last_edit": "2026-03-11 21:22:40",
+        "last_edit": "2026-03-12 09:01:24",
         "datum": 5,
         "units": "mm",
         "workpiece": {
@@ -155,7 +155,7 @@
         {
             "order": 5,
             "type": "customProfiling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -183,7 +183,7 @@
         {
             "order": 6,
             "type": "customProfiling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -211,7 +211,7 @@
         {
             "order": 7,
             "type": "profiling",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -241,7 +241,7 @@
         {
             "order": 8,
             "type": "profiling",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -403,7 +403,7 @@
         {
             "order": 15,
             "type": "tapping",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,

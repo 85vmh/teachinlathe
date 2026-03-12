@@ -36,9 +36,9 @@ Popup {
         { label: "Tool Change",      type: "changeTool"      },
         { label: "Facing",           type: "facing"          },
         { label: "Define Profile",   type: "defineProfile"   },
-        { label: "Cut Profile",      type: "profiling"       },
+        { label: "G7x Cut Profile",  type: "profiling"       },
         { label: "Custom Profiling", type: "customProfiling" },
-        { label: "Threading",        type: "threading"       },
+        { label: "G76 Threading",    type: "threading"       },
         { label: "Drilling",         type: "drilling"        },
         { label: "Tapping",          type: "tapping"         },
         { label: "Parting",          type: "parting"         }
