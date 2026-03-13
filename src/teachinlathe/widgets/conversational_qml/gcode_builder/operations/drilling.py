@@ -24,8 +24,8 @@ def generate_drilling_gcode(op):
     z_start = _get_float_value(drilling, "z_start", 0.0)
     z_end = _get_float_value(drilling, "z_end", 0.0)
     retract = _get_float_value(drilling, "z_retract", 0.0)
-    x_inspect = _get_float_value(m1_params, "x_inspect", 0.0)
-    z_inspect = _get_float_value(m1_params, "z_inspect", 0.0)
+    inspect_pos = m1_params.get("inspect_position", "G28")
+    inspect_pos_int = 0 if inspect_pos == "G28" else 1
     increment = _get_float_value(drilling, "peck_depth", 0.0)
     rpm = _get_float_value(spindle, "rpm_value", 0.0)
     feed = _get_float_value(drilling, "feed_rate", 0.0)
@@ -49,6 +49,6 @@ def generate_drilling_gcode(op):
 
     lines.append(
         f"{line_prefix}o<drilling> call [{fmt(x_start)}] [{fmt(z_start)}] [{fmt(z_end)}] [{fmt(retract)}]"
-        f" [{fmt(x_inspect)}] [{fmt(z_inspect)}] [{fmt(increment)}] [{rpm}] [{feed}]"
+        f" [{inspect_pos_int}] [{fmt(increment)}] [{rpm}] [{feed}]"
     )
     return lines

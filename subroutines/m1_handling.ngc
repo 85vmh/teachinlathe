@@ -1,10 +1,9 @@
 O<m1_handling> sub
 
-#<x_inspect>       = #1
-#<z_inspect>       = #2
-#<x_return>        = #3
-#<z_return>        = #4
-#<spindle_dir>	   = #5	
+#<inspect_position>	= #1
+#<x_return>        	= #2
+#<z_return>        	= #3
+#<spindle_dir>	   	= #4	
 
 G21 ; Metric Units
 G90 ; Absolute Distance
@@ -13,7 +12,12 @@ G90 ; Absolute Distance
 M66 P0 L0 (samples motion.digital-in-00 into #5399, no wait)
 
 O900 if [#5399 EQ 1]
-	G0 X#<x_inspect> Z#<z_inspect>
+	O899 if [#<inspect_position> EQ 0]
+		G28
+	O899 else
+		G30
+	O899 endif			
+	
 	M5
 	;(DEBUG, inspecting, stopped the spindle)
 	#<resume_from_m1> = 1
@@ -29,7 +33,7 @@ O901 if [#<resume_from_m1> EQ 1]
 		M4
 	o902 endif
 
-	(DEBUG, returning to X[#<x_return>] Z[#<z_return>])
+	;(DEBUG, returning to X[#<x_return>] Z[#<z_return>])
 	G0 X[#<x_return>] Z[#<z_return>] 
 	
 	o903 if [#<spindle_dir> NE 0] 

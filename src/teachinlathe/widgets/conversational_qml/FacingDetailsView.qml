@@ -115,9 +115,6 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onTeachXRequested: root.teachXRequested(opIndex)
-                onTeachZRequested: root.teachZRequested(opIndex)
                 onSaveRequested: function (payload) {
                     var merged = root.mergeIntoOp(payload)
                     root.saveRequested({index: opIndex, payload: merged})

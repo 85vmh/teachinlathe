@@ -31,8 +31,8 @@ def generate_tapping_gcode(op):
 
     include_m1 = bool(m1_params.get("include_m1", False))
     stop_spindle = bool(m1_params.get("stop_spindle", False))
-    x_inspect = _get_float_value(m1_params, "x_inspect", 0.0)
-    z_inspect = _get_float_value(m1_params, "z_inspect", 0.0)
+    inspect_pos = m1_params.get("inspect_position", "G28")
+    inspect_pos_int = 0 if inspect_pos == "G28" else 1
 
     lines = []
 
@@ -60,7 +60,8 @@ def generate_tapping_gcode(op):
         lines.append(f"{line_prefix}G33.1 Z{fmt(z_target)} K{fmt(pitch)}")
         if include_m1:
             lines.append(
-                f"{line_prefix}o<m1_handling> call [{fmt(x_inspect)}] [{fmt(z_inspect)}] [0.000] [{fmt(z_start)}] [{direction}]"
+                f"{line_prefix}o<m1_handling> call [{inspect_pos_int}]"
+                f" [0.000] [{fmt(z_start)}] [{direction}]"
             )
 
     # Retract to safe position

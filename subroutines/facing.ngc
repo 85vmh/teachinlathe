@@ -1,13 +1,12 @@
 O<facing> sub
 
-#<x_start>  	= #1
-#<z_start>  	= #2
-#<x_end>    	= #3
-#<z_end>    	= #4
-#<x_inspect>    = #5
-#<z_inspect>    = #6
-#<doc>      	= #7
-#<spindle_dir>  = #8
+#<x_start>  	    = #1
+#<z_start>  	    = #2
+#<x_end>    	    = #3
+#<z_end>    	    = #4
+#<inspect_position> = #5
+#<doc>      	    = #6
+#<spindle_dir>      = #7
 
 
 G7 	; Lathe Diameter Mode
@@ -27,7 +26,7 @@ O200 WHILE [#<z_start> GT #<z_end> + #<doc>]
 	G0 X#<x_start>
 	G0 Z#<z_start>
 
-	o<m1_handling> call [#<x_inspect>] [#<z_inspect>] [#<x_start>] [#<z_start>] [#<spindle_dir>]
+	o<m1_handling> call [#<inspect_position>] [#<x_start>] [#<z_start>] [#<spindle_dir>]
 
 O200 ENDWHILE
 

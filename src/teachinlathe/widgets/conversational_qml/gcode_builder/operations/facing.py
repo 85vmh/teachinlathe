@@ -23,8 +23,8 @@ def generate_facing_gcode(op):
     z_start = _get_float_value(geometry, "z_start", 0.0)
     x_end = _get_float_value(geometry, "x_end", 0.0)
     z_end = _get_float_value(geometry, "z_end", 0.0)
-    x_inspect = _get_float_value(m1_params, "x_inspect", 0.0)
-    z_inspect = _get_float_value(m1_params, "z_inspect", 0.0)
+    inspect_pos = m1_params.get("inspect_position", "G28")
+    inspect_pos_int = 0 if inspect_pos == "G28" else 1
     doc = _get_float_value(cutting, "doc", 0.0)
     feed_rate = _get_float_value(cutting, "feed_rate", 0.0)
 
@@ -58,8 +58,7 @@ def generate_facing_gcode(op):
     lines.append(f"{line_prefix}G95 F{feed_rate}")
 
     lines.append(
-        f"{line_prefix}o<facing> call [{fmt(x_start)}] [{fmt(z_start)}] [{fmt(x_end)}] [{fmt(z_end)}]"
-        f" [{fmt(x_inspect)}] [{fmt(z_inspect)}] [{fmt(doc)}] [{direction}]"
+        f"{line_prefix}o<facing> call [{fmt(x_start)}] [{fmt(z_start)}] [{fmt(x_end)}] [{fmt(z_end)}] [{inspect_pos_int}] [{fmt(doc)}] [{direction}]"
     )
 
     if bool(op.get("z_end_becomes_new_z0", False)):

@@ -1,4 +1,4 @@
-// M1Parameters.qml — styled + requested layout (Include → separator → [Grid 3x2 | Stop spindle])
+// M1Parameters.qml
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -13,19 +13,12 @@ GroupBox {
     font.pixelSize: 16
 
     /* --- Public API --- */
-    property var  m1Data: null
-    property bool include_m1: true
-    property real x_inspect: 0.0
-    property real z_inspect: 0.0
-    property bool stop_spindle: false
+    property var    m1Data: null
+    property bool   include_m1: true
+    property string inspect_position: "G28"
+    property bool   stop_spindle: false
 
     signal saveRequested(var payload)
-
-    signal openNumPadRequested(var field)
-
-    signal teachXRequested()
-
-    signal teachZRequested()
 
     property bool readOnly: false
     property bool _loading: false
@@ -33,10 +26,9 @@ GroupBox {
     function applyData(data) {
         _loading = true
         m1Data = data || {}
-        include_m1 = (m1Data.include_m1 !== undefined) ? !!m1Data.include_m1 : true
-        x_inspect = (m1Data.x_inspect !== undefined) ? Number(m1Data.x_inspect) : 0.0
-        z_inspect = (m1Data.z_inspect !== undefined) ? Number(m1Data.z_inspect) : 0.0
-        stop_spindle = (m1Data.stop_spindle !== undefined) ? !!m1Data.stop_spindle : false
+        include_m1       = (m1Data.include_m1       !== undefined) ? !!m1Data.include_m1       : true
+        inspect_position = (m1Data.inspect_position !== undefined) ? m1Data.inspect_position   : "G28"
+        stop_spindle     = (m1Data.stop_spindle     !== undefined) ? !!m1Data.stop_spindle     : false
         _loading = false
     }
 
@@ -44,16 +36,11 @@ GroupBox {
         if (_loading) return
         root.saveRequested({
             m1_parameters: {
-                include_m1: !!include_m1,
-                x_inspect: Number(x_inspect),
-                z_inspect: Number(z_inspect),
-                stop_spindle: !!stop_spindle
+                include_m1:       !!include_m1,
+                inspect_position: inspect_position,
+                stop_spindle:     !!stop_spindle
             }
         })
-    }
-
-    DoubleValidator {
-        id: dblVal; notation: DoubleValidator.StandardNotation
     }
 
     ColumnLayout {
@@ -70,9 +57,7 @@ GroupBox {
                 enabled: !root.readOnly
                 onToggled: { root.include_m1 = checked; root.emitSave() }
             }
-            Item {
-                Layout.fillWidth: true
-            }
+            Item { Layout.fillWidth: true }
         }
 
         // --- horizontal separator ---
@@ -82,73 +67,27 @@ GroupBox {
             color: "#bdbdbd"
         }
 
-        // --- content row: [ Grid 3x2 | Stop spindle ] ---
+        // --- Inspect position radio buttons ---
         RowLayout {
-            id: contentRow
             Layout.fillWidth: true
             spacing: 20
+            enabled: includeBox.checked && !root.readOnly
+            opacity: includeBox.checked ? 1.0 : 0.5
 
-            // LEFT: Grid 3x2 (X/Z Inspect + numpad + TeachIn)
-            GridLayout {
-                id: gridInspect
-                Layout.fillWidth: true
-                columns: 3
-                columnSpacing: 20
-                rowSpacing: 20
-                enabled: includeBox.checked && !root.readOnly
-                opacity: includeBox.checked ? 1.0 : 0.5
+            RadioButton {
+                id: rbG28
+                text: "Position stored in G28"
+                font.pixelSize: 16
+                checked: root.inspect_position === "G28"
+                onToggled: if (checked) { root.inspect_position = "G28"; root.emitSave() }
+            }
 
-                // Row 1 — X Inspect
-                Label {
-                    text: "X Inspect"
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                    font.pixelSize: 16
-                }
-                NumpadField {
-                    Layout.preferredWidth: 100
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                    settingName: "m1_x_inspect"
-                    validatorObject: dblVal
-                    value: root.x_inspect
-                    formatter: function (v) {
-                        return (v == null) ? "" : Number(v).toFixed(3)
-                    }
-                    hAlign: Text.AlignRight
-                    fontPixelSize: 16
-                    onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: { root.x_inspect = value; root.emitSave() }
-                }
-                Button {
-                    text: "TeachIn"
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                    onClicked: root.teachXRequested()
-                }
-
-                // Row 2 — Z Inspect
-                Label {
-                    text: "Z Inspect"
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                    font.pixelSize: 16
-                }
-                NumpadField {
-                    Layout.preferredWidth: 100
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                    settingName: "m1_z_inspect"
-                    validatorObject: dblVal
-                    value: root.z_inspect
-                    formatter: function (v) {
-                        return (v == null) ? "" : Number(v).toFixed(3)
-                    }
-                    hAlign: Text.AlignRight
-                    fontPixelSize: 16
-                    onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: { root.z_inspect = value; root.emitSave() }
-                }
-                Button {
-                    text: "TeachIn"
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                    onClicked: root.teachZRequested()
-                }
+            RadioButton {
+                id: rbG30
+                text: "Position stored in G30"
+                font.pixelSize: 16
+                checked: root.inspect_position === "G30"
+                onToggled: if (checked) { root.inspect_position = "G30"; root.emitSave() }
             }
         }
 
@@ -159,8 +98,8 @@ GroupBox {
             color: "#bdbdbd"
         }
 
+        // --- Stop spindle ---
         RowLayout {
-            id: stopSpindle
             Layout.fillWidth: true
             spacing: 20
 

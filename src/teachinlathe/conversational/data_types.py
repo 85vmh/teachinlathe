@@ -282,24 +282,25 @@ class ChangeTool(Operation):
 @dataclass
 class M1Parameters:
     include_m1: bool
-    x_inspect: float
-    z_inspect: float
+    inspect_position: str
     stop_spindle: bool
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "M1Parameters":
+        # backward compat: old JSON had x_inspect/z_inspect instead of inspect_position
+        inspect_position = data.get("inspect_position", "G28")
+        if inspect_position not in ("G28", "G30"):
+            inspect_position = "G28"
         return M1Parameters(
             include_m1=bool(data.get("include_m1", True)),
-            x_inspect=float(data.get("x_inspect", 0.0)),
-            z_inspect=float(data.get("z_inspect", 0.0)),
+            inspect_position=inspect_position,
             stop_spindle=bool(data.get("stop_spindle", False))
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "include_m1": bool(self.include_m1),
-            "x_inspect": float(self.x_inspect),
-            "z_inspect": float(self.z_inspect),
+            "inspect_position": self.inspect_position,
             "stop_spindle": bool(self.stop_spindle)
         }
 

@@ -281,7 +281,7 @@ class ConversationalQml(QQuickWidget):
     def _default_op_dict(self, op_type: str) -> dict:
         base = {"order": 1, "type": op_type, "generate_gcode": True, "is_optional_block": False}
         spindle_rpm = {"direction": 1, "mode": "rpm", "rpm_value": 1000}
-        m1_default  = {"include_m1": False, "x_inspect": 0.0, "z_inspect": 0.0, "stop_spindle": False}
+        m1_default  = {"include_m1": False, "inspect_position": "G28", "stop_spindle": False}
 
         if op_type == "changeTool":
             base.update({
