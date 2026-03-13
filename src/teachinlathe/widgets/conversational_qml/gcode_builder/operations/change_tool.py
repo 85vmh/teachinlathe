@@ -12,4 +12,4 @@ def generate_change_tool_gcode(op):
     move_sequence = str(rules.get("move_sequence", "xz")).lower().strip()
     seq_num = _SEQ_MAP.get(move_sequence, 0)
 
-    return [f"{lp}o<tc_at_pos> call [{tool_number}] [{x_pos:.3f}] [{z_pos:.3f}] [{seq_num}]"]
+    return [f"{lp}o<tc_at_g28> call [{tool_number}]"]

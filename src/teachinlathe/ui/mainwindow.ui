@@ -5187,6 +5187,97 @@ font: 14pt &quot;Cantarell&quot;;</string>
                 <height>984</height>
                </rect>
               </property>
+              <widget class="QGroupBox" name="groupBoxPredefinedPositions">
+               <property name="geometry">
+                <rect>
+                 <x>475</x>
+                 <y>320</y>
+                 <width>966</width>
+                 <height>96</height>
+                </rect>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+min-height: 30px;
+min-width: 50px;
+font: 12pt &quot;DejaVu Sans&quot;;
+}</string>
+               </property>
+               <property name="title">
+                <string>Predefined Positions</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <widget class="QWidget" name="horizontalLayoutWidgetPredPos">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>35</y>
+                  <width>946</width>
+                  <height>51</height>
+                 </rect>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayoutPredPos">
+                 <property name="spacing">
+                  <number>10</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>4</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>4</number>
+                 </property>
+                 <item>
+                  <widget class="QPushButton" name="btnSetG28">
+                   <property name="text">
+                    <string>Set G28</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btnGoToG28">
+                   <property name="text">
+                    <string>Go to G28</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btnSetG30">
+                   <property name="text">
+                    <string>Set G30</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btnGoToG30">
+                   <property name="text">
+                    <string>Go to G30</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="spacerPredPos">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+              </widget>
+
               <widget class="QGroupBox" name="groupBox_3">
                <property name="geometry">
                 <rect>

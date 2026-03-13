@@ -128,6 +128,11 @@ class MyMainWindow(VCPMainWindow):
         self.xMpgCheckbox.clicked.connect(self.toggleXMpgEnable)
         self.zMpgCheckbox.clicked.connect(self.toggleZMpgEnable)
 
+        self.btnSetG28.clicked.connect(self.onSetG28)
+        self.btnGoToG28.clicked.connect(self.onGoToG28)
+        self.btnSetG30.clicked.connect(self.onSetG30)
+        self.btnGoToG30.clicked.connect(self.onGoToG30)
+
         self.inputFeed.settingName = 'smart_numpad.input-feed'
         self.inputFeed.initialize()
 
@@ -425,3 +430,15 @@ class MyMainWindow(VCPMainWindow):
     def setZOffset(self, value):
         print("setZOffset", value)
         issue_mdi('o<touch_off_z> call [{}]'.format(value).strip())
+
+    def onSetG28(self):
+        issue_mdi("G28.1")
+
+    def onGoToG28(self):
+        issue_mdi("G28")
+
+    def onSetG30(self):
+        issue_mdi("G30.1")
+
+    def onGoToG30(self):
+        issue_mdi("G30")
