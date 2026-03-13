@@ -3,7 +3,7 @@
     "header": {
         "name": "Conversational program demo",
         "created_date": "2026-03-12 09:25:08",
-        "last_edit": "2026-03-13 11:41:44",
+        "last_edit": "2026-03-13 12:43:22",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -337,7 +337,7 @@
             "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
-                "direction": 1,
+                "direction": -1,
                 "mode": "rpm",
                 "rpm_value": 1000
             },

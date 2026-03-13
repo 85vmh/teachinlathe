@@ -3,7 +3,6 @@ o<tc_at_g28> sub
 #<tool_no> =  #1
 
     o<skip> if [#<tool_no> EQ #<_current_tool>]
-        (DEBUG, skipping tool change)
         O<tc_at_g28> return
     o<skip> endif
 

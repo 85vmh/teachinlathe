@@ -355,6 +355,9 @@ class ConversationalQml(QQuickWidget):
 
     def onAddOperationTypeChosen(self, op_type: str, insert_index: int):
         print(f"[operations] Adding {op_type!r} at index {insert_index}")
+        if op_type == "__duplicate__":
+            self._duplicate_operation_at(self.current_op_index, insert_index)
+            return
         prog = self._get_current_program()
         if not prog:
             return
@@ -373,6 +376,22 @@ class ConversationalQml(QQuickWidget):
             self._save_current_program()
         except Exception as e:
             print(f"[operations] Failed to create {op_type!r}: {e}")
+
+    def _duplicate_operation_at(self, src_index: int, insert_index: int):
+        import copy
+        prog = self._get_current_program()
+        if not prog:
+            return
+        ops = prog.operations
+        if src_index < 0 or src_index >= len(ops):
+            print(f"[operations] Cannot duplicate: src_index {src_index} out of range")
+            return
+        new_op = copy.deepcopy(ops[src_index])
+        idx = max(0, min(insert_index, len(ops)))
+        ops.insert(idx, new_op)
+        self._renumber_operations(ops)
+        self.current_op_index = idx
+        self._save_current_program()
 
     def onAddOperationRequested(self):
         print("[operations] Add New requested")

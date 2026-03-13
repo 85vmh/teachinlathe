@@ -57,6 +57,52 @@ Popup {
             color: "white"
         }
 
+        // Duplicate Selected Operation button (centered)
+        Item {
+            width: column.width - column.padding * 2
+            height: 40
+
+            Button {
+                id: duplicateBtn
+                anchors.centerIn: parent
+                readonly property bool isSelected: root.selectedType === "__duplicate__"
+                width: 240
+                height: 40
+                text: "Duplicate Selected Operation"
+                font.pixelSize: Theme.fontSizeNormal
+
+                background: Rectangle {
+                    radius: 4
+                    color: {
+                        if (duplicateBtn.isSelected) return "#1E88E5"
+                        if (duplicateBtn.pressed)    return "#3A4A5A"
+                        if (duplicateBtn.hovered)    return "#2A3540"
+                        return "#2D3035"
+                    }
+                    border.color: duplicateBtn.isSelected ? "#1565C0" : "#4A4D52"
+                    border.width: 1
+                }
+                contentItem: Text {
+                    text: duplicateBtn.text
+                    font: duplicateBtn.font
+                    color: "white"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                onClicked: {
+                    root.selectedType = (root.selectedType === "__duplicate__") ? "" : "__duplicate__"
+                }
+            }
+        }
+
+        // Separator between Duplicate button and operation type buttons
+        Rectangle {
+            width: column.width - column.padding * 2
+            height: 1
+            color: "#3A3D41"
+        }
+
         // Operation type buttons
         Flow {
             id: flowArea
@@ -101,7 +147,7 @@ Popup {
                             root.operationChosen(modelData.type, 0)
                             root.close()
                         } else {
-                            // Toggle selection; Insert Above/Below buttons will handle the rest
+                            // Selecting a type always clears duplicate selection
                             root.selectedType = (root.selectedType === modelData.type) ? "" : modelData.type
                         }
                     }

@@ -5225,7 +5225,7 @@ font: 12pt &quot;DejaVu Sans&quot;;
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayoutPredPos">
                  <property name="spacing">
-                  <number>10</number>
+                  <number>20</number>
                  </property>
                  <property name="leftMargin">
                   <number>4</number>
@@ -5238,12 +5238,34 @@ font: 12pt &quot;DejaVu Sans&quot;;
                    <property name="text">
                     <string>Set G28</string>
                    </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                   </widget>
                  </item>
                  <item>
                   <widget class="QPushButton" name="btnGoToG28">
                    <property name="text">
                     <string>Go to G28</string>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="separatorG28G30">
+                   <property name="frameShape">
+                    <enum>QFrame::VLine</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Sunken</enum>
                    </property>
                   </widget>
                  </item>
@@ -5252,6 +5274,12 @@ font: 12pt &quot;DejaVu Sans&quot;;
                    <property name="text">
                     <string>Set G30</string>
                    </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                   </widget>
                  </item>
                  <item>
@@ -5259,20 +5287,13 @@ font: 12pt &quot;DejaVu Sans&quot;;
                    <property name="text">
                     <string>Go to G30</string>
                    </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                   </widget>
-                 </item>
-                 <item>
-                  <spacer name="spacerPredPos">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
                  </item>
                 </layout>
                </widget>
