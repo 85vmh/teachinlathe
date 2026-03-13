@@ -27,6 +27,8 @@ Rectangle {
     // Edit/Reorder mode toggle
     property bool editing: false
 
+    property bool gcodeEnabled: !!(op && op.generate_gcode)
+
     // Icon sources / tints
     property url  deleteIconSource:   "icons/delete_icon.svg"
     property url  moveUpIconSource:   "icons/move_up_icon.svg"
@@ -113,7 +115,7 @@ Rectangle {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             Layout.alignment: Qt.AlignVCenter
-            color: "black"
+            color: root.gcodeEnabled ? "black" : "#c4c4c4"
         }
         Divider { }
 
@@ -130,7 +132,7 @@ Rectangle {
                 onToggled: {
                     if (!op) return
                     op.generate_gcode = checked
-                    typeLabel.enabled = checked
+                    root.gcodeEnabled = checked
                     optCell.enabled   = checked
                     root.generateToggled(rowIndex, checked)
                 }
@@ -150,7 +152,7 @@ Rectangle {
                 text: (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
-                color: "black"
+                color: root.gcodeEnabled ? "black" : "#c4c4c4"
             }
         }
         Divider { }
@@ -227,7 +229,7 @@ Rectangle {
     // Sync initial enabled state on creation
     Component.onCompleted: {
         var en = !!(op && op.generate_gcode)
-        typeLabel.enabled = en
+        root.gcodeEnabled = en
         optCell.enabled   = en
     }
 

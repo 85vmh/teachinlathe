@@ -44,11 +44,11 @@ def build_ngc_from_json(json_path, output_dir=None):
         op = dict(op)
         op["_datum"] = datum
         op_type = op.get("type", "unknown")
+        if not bool(op.get("generate_gcode", True)):
+            continue
+
         op_display = display_names.get(op_type, op_type)
         lines.append(f"(----------Operation #{index}: {op_display}----------)\n")
-        if not bool(op.get("generate_gcode", True)):
-            lines.append("; GCode not generated for this operation\n")
-            continue
 
         if op_type == "customProfiling":
             profile_id = int((op.get("profiling_parameters") or {}).get("profile_id", 0))

@@ -5,6 +5,7 @@ from .drilling import generate_drilling_gcode
 from .profiling import generate_profiling_gcode
 from .threading import generate_threading_gcode
 from .parting import generate_parting_gcode
+from .tapping import generate_tapping_gcode
 from teachinlathe.widgets.conversational_qml.gcode_builder.operations.custom_cam.custom_profiling import generate_custom_profiling_gcode
 
 OPERATION_GENERATORS = {
@@ -16,4 +17,5 @@ OPERATION_GENERATORS = {
     "customProfiling": generate_custom_profiling_gcode,
     "threading": generate_threading_gcode,
     "parting": generate_parting_gcode,
+    "tapping": generate_tapping_gcode,
 }
