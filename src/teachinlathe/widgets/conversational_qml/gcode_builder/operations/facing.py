@@ -61,4 +61,9 @@ def generate_facing_gcode(op):
         f"{line_prefix}o<facing> call [{fmt(x_start)}] [{fmt(z_start)}] [{fmt(x_end)}] [{fmt(z_end)}]"
         f" [{fmt(x_inspect)}] [{fmt(z_inspect)}] [{fmt(doc)}] [{direction}]"
     )
+
+    if bool(op.get("z_end_becomes_new_z0", False)):
+        datum = int(op.get("_datum", 1))
+        lines.append(f"{line_prefix}G10 L20 P{datum} Z0 (Set the new datum at the current Z position)")
+
     return lines

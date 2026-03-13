@@ -3,7 +3,7 @@
     "header": {
         "name": "Conversational program demo",
         "created_date": "2026-03-12 09:25:08",
-        "last_edit": "2026-03-12 18:55:55",
+        "last_edit": "2026-03-13 11:41:44",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -17,7 +17,7 @@
         {
             "order": 1,
             "type": "changeTool",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "tool_no": 6,
             "tool_orientation": 2,
@@ -26,16 +26,15 @@
             "toolchange_rules": {
                 "x_pos": 50.0,
                 "z_pos": -20.0,
-                "coordinate_type": "relative",
-                "move_sequence": "both",
-                "stop_spindle": true
+                "coordinate_type": "absolute",
+                "move_sequence": "both"
             }
         },
         {
             "order": 2,
             "type": "facing",
-            "generate_gcode": false,
-            "is_optional_block": true,
+            "generate_gcode": true,
+            "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
                 "mode": "rpm",
@@ -60,7 +59,7 @@
                 "z_inspect": 99.0,
                 "stop_spindle": true
             },
-            "z_end_becomes_new_z0": false
+            "z_end_becomes_new_z0": true
         },
         {
             "order": 3,
@@ -72,11 +71,10 @@
             "back_angle": 0,
             "front_angle": 0,
             "toolchange_rules": {
-                "x_pos": 0.0,
+                "x_pos": 50.0,
                 "z_pos": 0.0,
                 "coordinate_type": "absolute",
-                "move_sequence": "xz",
-                "stop_spindle": false
+                "move_sequence": "both"
             }
         },
         {
@@ -196,8 +194,7 @@
                 "x_pos": 0.0,
                 "z_pos": 0.0,
                 "coordinate_type": "absolute",
-                "move_sequence": "xz",
-                "stop_spindle": false
+                "move_sequence": "xz"
             }
         },
         {
@@ -213,8 +210,7 @@
                 "x_pos": 52.0,
                 "z_pos": 200.0,
                 "coordinate_type": "absolute",
-                "move_sequence": "both",
-                "stop_spindle": true
+                "move_sequence": "both"
             }
         },
         {
@@ -257,8 +253,7 @@
                 "x_pos": 200.0,
                 "z_pos": 200.0,
                 "coordinate_type": "absolute",
-                "move_sequence": "both",
-                "stop_spindle": true
+                "move_sequence": "both"
             }
         },
         {
@@ -288,7 +283,7 @@
         {
             "order": 11,
             "type": "tapping",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -339,7 +334,7 @@
         {
             "order": 13,
             "type": "drilling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -363,7 +358,7 @@
         {
             "order": 14,
             "type": "tapping",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -387,7 +382,7 @@
         {
             "order": 15,
             "type": "parting",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,

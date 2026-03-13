@@ -1,0 +1,29 @@
+o<tc_at_pos> sub
+
+#<tool_no>  =   #1
+#<x_abs>    =   #2
+#<z_abs>    =   #3
+#<sequence> =   #4  (0 -> both; 1 -> xz; 2 -> zx)       
+
+    o<skip> if [#<tool_no> EQ #<_current_tool>]
+        (DEBUG, skipping tool change)
+        O<tc_at_pos> return
+    o<skip> endif
+
+    M5  (stop the spindle)
+    G90 (absolute distance)
+    
+    o<seq> if[#<sequence> EQ 0]
+        G53 G0 X[#<x_abs>] Z[#<z_abs>]
+    o<seq> elseif [#<sequence> EQ 1]    
+        G53 G0 X[#<x_abs>]
+        G53 G0 Z[#<z_abs>]
+    o<seq> elseif [#<sequence> EQ 2]    
+        G53 G0 Z[#<z_abs>]
+        G53 G0 X[#<x_abs>]
+    o<seq> endif        
+        
+    M6 T[#<tool_no>] G43
+    M0 (pause the program, requires a cycle start after confirming the tool change)
+
+O<tc_at_pos> endsub

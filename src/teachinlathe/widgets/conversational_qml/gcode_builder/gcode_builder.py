@@ -38,8 +38,11 @@ def build_ngc_from_json(json_path, output_dir=None):
     lines.append("G18  (ZX plane)")
     lines.append("")
 
+    datum = int(program_dict.get("header", {}).get("datum", 1))
     operations = program_dict.get("operations", [])
     for index, op in enumerate(operations, 1):
+        op = dict(op)
+        op["_datum"] = datum
         op_type = op.get("type", "unknown")
         op_display = display_names.get(op_type, op_type)
         lines.append(f"(----------Operation #{index}: {op_display}----------)\n")
@@ -54,7 +57,6 @@ def build_ngc_from_json(json_path, output_dir=None):
                  if o.get("type") == "defineProfile" and int(o.get("profile_id", -1)) == profile_id),
                 {}
             )
-            op = dict(op)
             op["_resolved_profile"] = profile_op
 
         generator = OPERATION_GENERATORS.get(op_type)

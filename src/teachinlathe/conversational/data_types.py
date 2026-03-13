@@ -187,7 +187,6 @@ class ToolChangeRules:
     z_pos: float
     coordinate_type: CoordinateType
     move_sequence: MoveSequence
-    stop_spindle: bool
 
     def __post_init__(self):
         # Coerce strings to enums (defensive)
@@ -220,13 +219,11 @@ class ToolChangeRules:
             z_pos = float(data.get("z_pos", 0.0))
             coordinate_type = data.get("coordinate_type", "absolute")
             move_sequence = data.get("move_sequence", "xz")
-            stop_spindle = bool(data.get("stop_spindle", False))
             return ToolChangeRules(
                 x_pos=x_pos,
                 z_pos=z_pos,
                 coordinate_type=coordinate_type,
                 move_sequence=move_sequence,
-                stop_spindle=stop_spindle
             )
         raise TypeError("ToolChangeRules.coerce expects dict or ToolChangeRules")
 
@@ -240,7 +237,6 @@ class ToolChangeRules:
             "z_pos": float(self.z_pos),
             "coordinate_type": self.coordinate_type.value,
             "move_sequence": self.move_sequence.value,
-            "stop_spindle": bool(self.stop_spindle),
         }
 
 

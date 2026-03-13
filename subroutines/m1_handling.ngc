@@ -37,6 +37,7 @@ O901 if [#<resume_from_m1> EQ 1]
 	o903 endif
 	
 	#<resume_from_m1> = 0
+	M0 (pause the program, requires another cycle start to continue)
 	;(DEBUG, continuing from where left off...)
 O901 endif
 

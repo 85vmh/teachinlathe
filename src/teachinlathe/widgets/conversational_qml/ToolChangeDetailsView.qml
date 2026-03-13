@@ -28,7 +28,6 @@ Item {
     property real zPos: 0.0
     property string coordType: "absolute"
     property string moveSeq: "both"   // "xz", "zx", "both"
-    property bool stopSpindle: false
 
     function applyData(index, data) {
         _loading = true
@@ -45,7 +44,6 @@ Item {
         zPos = (det.z_pos !== undefined) ? det.z_pos : 0.0
         coordType = det.coordinate_type || "absolute"
         moveSeq = det.move_sequence || "xz"
-        stopSpindle = (det.stop_spindle !== undefined) ? det.stop_spindle : false
         _loading = false
     }
 
@@ -64,8 +62,7 @@ Item {
                 x_pos: xPos,
                 z_pos: zPos,
                 coordinate_type: coordType,
-                move_sequence: moveSeq,
-                stop_spindle: stopSpindle
+                move_sequence: moveSeq
             }
         }
         saveRequested({index: opIndex, payload: payload})
@@ -330,20 +327,6 @@ Item {
             }
         }
 
-        /* Stop spindle */
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignTop
-            CheckBox {
-                text: "Stop spindle"
-                checked: root.stopSpindle
-                font.pixelSize: 16
-                onToggled: { root.stopSpindle = checked; root.emitSave() }
-            }
-            Item {
-                Layout.fillWidth: true
-            }
-        }
         Item {
             Layout.fillHeight: true
         }

@@ -1,0 +1,15 @@
+o<tc_at_g28> sub
+
+#<tool_no> =  #1
+
+    o<skip> if [#<tool_no> EQ #<_current_tool>]
+        (DEBUG, skipping tool change)
+        O<tc_at_g28> return
+    o<skip> endif
+
+    M5 (stop the spindle)
+    G28 (absolute move to the position stored with G28.1 )
+    M6 T[#<tool_no>] G43
+    M0 (pause the program, requires a cycle start after confirming the tool change)
+
+O<tc_at_g28> endsub
