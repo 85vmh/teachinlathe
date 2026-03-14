@@ -1,7 +1,8 @@
 import os
+import re
 
 import linuxcnc
-from PyQt5.QtCore import QRect, QSize, Qt
+from PyQt5.QtCore import QRect, QSize, Qt, QTimer
 from PyQt5.QtGui import QColor, QFont, QPainter, QTextBlockFormat, QTextCursor
 from PyQt5.QtWidgets import (
     QFrame,
@@ -15,6 +16,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 from qtpyvcp.plugins import getPlugin
+from qtpyvcp.utilities.info import Info
 
 
 EDITOR_FONT_FAMILY = 'DejaVu Sans Mono'
@@ -22,7 +24,11 @@ EDITOR_FONT_SIZE = 16
 EDITOR_LINE_SPACING = 4
 CURRENT_LINE_BORDER_COLOR = '#3A86FF'
 CURRENT_LINE_BORDER_WIDTH = 1
+SUBROUTINE_CALL_BORDER_COLOR = '#E51400'
+SUBROUTINE_CALL_BORDER_WIDTH = 2
 STATUS = getPlugin('status')
+INFO = Info()
+SUBROUTINE_CALL_PATTERN = re.compile(r"o<([^>]+)>\s+call\b", re.IGNORECASE)
 
 
 class LineNumberArea(QWidget):
@@ -47,6 +53,9 @@ class GCodeTextEdit(QTextEdit):
         self._line_number_area = LineNumberArea(self)
         self._applying_text = False
         self._applying_spacing = False
+        self._highlight_line_number = 0
+        self._highlight_border_color = CURRENT_LINE_BORDER_COLOR
+        self._highlight_border_width = CURRENT_LINE_BORDER_WIDTH
 
         font = QFont(EDITOR_FONT_FAMILY)
         font.setPixelSize(EDITOR_FONT_SIZE)
@@ -99,11 +108,13 @@ class GCodeTextEdit(QTextEdit):
         painter = QPainter(self.viewport())
         painter.setRenderHint(QPainter.Antialiasing, False)
         pen = painter.pen()
-        pen.setColor(QColor(CURRENT_LINE_BORDER_COLOR))
-        pen.setWidth(CURRENT_LINE_BORDER_WIDTH)
+        pen.setColor(QColor(self._highlight_border_color))
+        pen.setWidth(self._highlight_border_width)
         painter.setPen(pen)
 
-        rect = self.cursorRect(self.textCursor())
+        rect = self._line_rect_for_number(self._effective_highlight_line())
+        if rect is None:
+            return
         top_padding = max(0, EDITOR_LINE_SPACING // 2)
         bottom_padding = max(0, EDITOR_LINE_SPACING - top_padding)
         rect.setTop(max(0, rect.top() - top_padding))
@@ -121,7 +132,7 @@ class GCodeTextEdit(QTextEdit):
             block = self.document().firstBlock()
 
         block_number = block.blockNumber()
-        current_block = self.textCursor().blockNumber()
+        current_block = self._effective_highlight_line() - 1
 
         while block.isValid():
             cursor = QTextCursor(block)
@@ -181,6 +192,7 @@ class GCodeTextEdit(QTextEdit):
         self._applying_text = True
         try:
             self.setPlainText(text)
+            self.clearLineHighlight()
             self._apply_line_spacing()
         finally:
             self._applying_text = False
@@ -189,6 +201,15 @@ class GCodeTextEdit(QTextEdit):
         return self._applying_text
 
     def setCurrentLineNumber(self, line_number, center=True):
+        self.setLineHighlight(
+            line_number,
+            border_color=CURRENT_LINE_BORDER_COLOR,
+            border_width=CURRENT_LINE_BORDER_WIDTH,
+            center=center,
+            move_cursor=True,
+        )
+
+    def setLineHighlight(self, line_number, border_color, border_width=1, center=False, move_cursor=False):
         try:
             line_number = int(line_number)
         except (TypeError, ValueError):
@@ -201,14 +222,47 @@ class GCodeTextEdit(QTextEdit):
         if not block.isValid():
             return
 
+        self._highlight_line_number = line_number
+        self._highlight_border_color = border_color
+        self._highlight_border_width = border_width
+
         cursor = QTextCursor(block)
-        self.setTextCursor(cursor)
+        if move_cursor:
+            self.setTextCursor(cursor)
         if center:
-            self.ensureCursorVisible()
-            scrollbar = self.verticalScrollBar()
-            rect = self.cursorRect(cursor)
-            target_value = scrollbar.value() + rect.center().y() - (self.viewport().height() // 2)
-            scrollbar.setValue(max(scrollbar.minimum(), min(scrollbar.maximum(), target_value)))
+            self._center_on_cursor(cursor)
+        self._refresh_gutter()
+        self.viewport().update()
+
+    def clearLineHighlight(self):
+        self._highlight_line_number = 0
+        self._highlight_border_color = CURRENT_LINE_BORDER_COLOR
+        self._highlight_border_width = CURRENT_LINE_BORDER_WIDTH
+        self._refresh_gutter()
+        self.viewport().update()
+
+    def _effective_highlight_line(self):
+        if self._highlight_line_number > 0:
+            return self._highlight_line_number
+        return self.textCursor().blockNumber() + 1
+
+    def currentHighlightedLineNumber(self):
+        return self._effective_highlight_line()
+
+    def _line_rect_for_number(self, line_number):
+        if line_number <= 0:
+            return None
+        block = self.document().findBlockByLineNumber(line_number - 1)
+        if not block.isValid():
+            return None
+        return self.cursorRect(QTextCursor(block))
+
+    def _center_on_cursor(self, cursor):
+        self.ensureCursorVisible()
+        scrollbar = self.verticalScrollBar()
+        rect = self.cursorRect(cursor)
+        target_value = scrollbar.value() + rect.center().y() - (self.viewport().height() // 2)
+        scrollbar.setValue(max(scrollbar.minimum(), min(scrollbar.maximum(), target_value)))
 
     def _apply_line_spacing(self):
         if self._applying_spacing:
@@ -235,6 +289,13 @@ class GCodeEditorPane(QWidget):
         super().__init__(parent)
         self._bridge = bridge
         self._mode = mode
+        self._last_machine_path = ''
+        self._last_motion_line = 0
+        self._active_call_line = 0
+        self._active_subroutine_path = ''
+        self._active_subroutine_name = ''
+        self._last_call_level = 0
+        self._subroutine_active = False
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -283,6 +344,28 @@ class GCodeEditorPane(QWidget):
         self._editor = GCodeTextEdit(self._bridge, self)
         layout.addWidget(self._editor)
 
+        self._subroutine_overlay = QFrame(self._editor.viewport())
+        self._subroutine_overlay.hide()
+        self._subroutine_overlay.setStyleSheet(
+            'QFrame {'
+            'background: #252526;'
+            'border: 2px solid #555555;'
+            'border-radius: 10px;'
+            '}'
+        )
+
+        overlay_layout = QVBoxLayout(self._subroutine_overlay)
+        overlay_layout.setContentsMargins(10, 10, 10, 10)
+        overlay_layout.setSpacing(8)
+
+        self._subroutine_title = QLabel('Subroutine', self._subroutine_overlay)
+        self._subroutine_title.setStyleSheet('color: #d4d4d4; font: 12pt "Noto";')
+        overlay_layout.addWidget(self._subroutine_title)
+
+        self._subroutine_editor = GCodeTextEdit(self._bridge, self._subroutine_overlay)
+        self._subroutine_editor.setReadOnly(True)
+        overlay_layout.addWidget(self._subroutine_editor)
+
         self._bridge.fileContentChanged.connect(self._on_file_content_changed)
         self._bridge.filePathChanged.connect(self._on_file_path_changed)
         self._bridge.editModeChanged.connect(self._on_edit_mode_changed)
@@ -296,6 +379,11 @@ class GCodeEditorPane(QWidget):
         self._on_edit_mode_changed(self._bridge.editMode)
         self._on_dirty_changed(self._bridge.dirty)
         self._on_machine_file_changed(getattr(STATUS.file, 'value', ''))
+
+        self._subroutine_timer = QTimer(self)
+        self._subroutine_timer.setInterval(150)
+        self._subroutine_timer.timeout.connect(self._poll_subroutine_state)
+        self._subroutine_timer.start()
 
     def _toggle_edit_mode(self):
         self._bridge.setEditMode(not self._bridge.editMode)
@@ -344,7 +432,8 @@ class GCodeEditorPane(QWidget):
         self._save_as_button.setEnabled(bool(self._editor.toPlainText()))
 
     def _on_motion_line_changed(self, line_number):
-        if self._is_showing_machine_file():
+        self._last_motion_line = int(line_number or 0)
+        if self._is_showing_machine_file() and not self._subroutine_active:
             self._editor.setCurrentLineNumber(line_number)
 
     def _on_machine_file_changed(self, _path):
@@ -359,3 +448,147 @@ class GCodeEditorPane(QWidget):
         machine_path = getattr(STATUS.file, 'value', '') or ''
         machine_path = os.path.abspath(machine_path) if machine_path else ''
         return bool(editor_path and machine_path and editor_path == machine_path)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._layout_subroutine_overlay()
+
+    def _layout_subroutine_overlay(self):
+        if self._subroutine_overlay is None:
+            return
+        viewport = self._editor.viewport()
+        width = max(320, int(viewport.width() * 0.48))
+        height = max(220, int(viewport.height() * 0.55))
+        x = max(12, viewport.width() - width - 12)
+        y = 12
+        self._subroutine_overlay.setGeometry(x, y, width, height)
+
+    def _poll_subroutine_state(self):
+        if not self._is_showing_machine_file():
+            self._clear_subroutine_state()
+            return
+
+        try:
+            stat = linuxcnc.stat()
+            stat.poll()
+        except Exception:
+            self._clear_subroutine_state()
+            return
+
+        call_level = int(getattr(stat, 'call_level', 0) or 0)
+        motion_line = int(getattr(stat, 'motion_line', 0) or 0)
+
+        if call_level <= 0:
+            self._last_call_level = 0
+            self._clear_subroutine_state()
+            return
+
+        if self._last_call_level <= 0:
+            self._active_call_line = self._resolve_call_line(motion_line)
+            self._active_subroutine_path, self._active_subroutine_name = self._resolve_subroutine_from_call_line(
+                self._active_call_line
+            )
+            if not self._active_call_line or not self._active_subroutine_path:
+                self._clear_subroutine_state()
+                self._last_call_level = call_level
+                return
+
+            self._subroutine_active = True
+            self._show_subroutine_overlay()
+        elif not self._active_subroutine_path:
+            self._clear_subroutine_state()
+            self._last_call_level = call_level
+            return
+
+        self._last_call_level = call_level
+
+        if self._active_call_line > 0:
+            self._editor.setLineHighlight(
+                self._active_call_line,
+                border_color=SUBROUTINE_CALL_BORDER_COLOR,
+                border_width=SUBROUTINE_CALL_BORDER_WIDTH,
+                center=False,
+                move_cursor=True,
+            )
+
+        if self._active_subroutine_path:
+            self._subroutine_editor.setCurrentLineNumber(motion_line, center=True)
+
+    def _clear_subroutine_state(self):
+        self._subroutine_active = False
+        self._active_call_line = 0
+        self._active_subroutine_path = ''
+        self._active_subroutine_name = ''
+        self._subroutine_overlay.hide()
+        if self._is_showing_machine_file():
+            self._sync_motion_line()
+        else:
+            self._editor.clearLineHighlight()
+
+    def _resolve_call_line(self, fallback_line):
+        candidate_lines = []
+        highlighted_line = self._editor.currentHighlightedLineNumber()
+        if highlighted_line:
+            candidate_lines.append(int(highlighted_line))
+        if fallback_line:
+            candidate_lines.append(int(fallback_line))
+        if self._last_motion_line:
+            candidate_lines.append(int(self._last_motion_line))
+        if self._editor.textCursor().block().isValid():
+            candidate_lines.append(self._editor.textCursor().blockNumber() + 1)
+
+        seen = set()
+        candidate_lines = [line for line in candidate_lines if not (line in seen or seen.add(line))]
+
+        for line_number in candidate_lines:
+            if self._line_contains_subroutine_call(line_number):
+                return line_number
+
+        return 0
+
+    def _line_contains_subroutine_call(self, line_number):
+        line = self._get_main_line_text(line_number)
+        return bool(SUBROUTINE_CALL_PATTERN.search(line))
+
+    def _get_main_line_text(self, line_number):
+        if line_number <= 0:
+            return ''
+        lines = self._editor.toPlainText().splitlines()
+        if line_number > len(lines):
+            return ''
+        return lines[line_number - 1]
+
+    def _resolve_subroutine_from_call_line(self, line_number):
+        line = self._get_main_line_text(line_number)
+        match = SUBROUTINE_CALL_PATTERN.search(line)
+        if not match:
+            return '', ''
+
+        sub_name = match.group(1).strip()
+        search_dirs = INFO.getSubroutineSearchDirs()
+        candidates = [f'{sub_name}.ngc', f'{sub_name}.NC', f'{sub_name}.NGC']
+
+        for search_dir in search_dirs:
+            for candidate in candidates:
+                candidate_path = os.path.join(search_dir, candidate)
+                if os.path.isfile(candidate_path):
+                    return candidate_path, sub_name
+
+        return '', sub_name
+
+    def _show_subroutine_overlay(self):
+        if not self._active_subroutine_path:
+            return
+
+        try:
+            with open(self._active_subroutine_path, 'r', encoding='utf-8', errors='replace') as handle:
+                content = handle.read()
+        except Exception:
+            return
+
+        self._subroutine_title.setText(f'Subroutine: {os.path.basename(self._active_subroutine_path)}')
+        self._subroutine_editor.setEditorText(content)
+        self._subroutine_editor.clearLineHighlight()
+        self._layout_subroutine_overlay()
+        self._subroutine_overlay.show()
+        self._subroutine_overlay.raise_()
