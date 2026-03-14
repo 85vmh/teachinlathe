@@ -1351,7 +1351,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_2)
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.vtk = VTKBackPlot(self.horizontalLayoutWidget_2)
+        self.vtk = GremlinWidget(self.horizontalLayoutWidget_2)
         self.vtk.setProperty("backgroundColor", QtGui.QColor(0, 0, 0))
         self.vtk.setObjectName("vtk")
         self.zoomInView = QtWidgets.QPushButton(self.vtk)
@@ -2702,7 +2702,7 @@ from qtpyvcp.widgets.containers.stack import VCPStackedWidget
 from qtpyvcp.widgets.display_widgets.dro_label import DROLabel
 from qtpyvcp.widgets.display_widgets.status_label import StatusLabel
 from qtpyvcp.widgets.display_widgets.status_led import StatusLED
-from qtpyvcp.widgets.display_widgets.vtk_backplot.vtk_backplot import VTKBackPlot
+from teachinlathe.widgets.gremlin.gremlin_widget import GremlinWidget
 from qtpyvcp.widgets.input_widgets.file_system import FileSystemTable, RemovableDeviceComboBox
 from qtpyvcp.widgets.input_widgets.gcode_text_edit import GcodeTextEdit
 from qtpyvcp.widgets.input_widgets.mdientry_widget import MDIEntry

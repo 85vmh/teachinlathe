@@ -3,7 +3,7 @@
     "header": {
         "name": "Conversational program demo",
         "created_date": "2026-03-12 09:25:08",
-        "last_edit": "2026-03-13 19:05:34",
+        "last_edit": "2026-03-14 12:01:20",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -17,7 +17,7 @@
         {
             "order": 1,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 1,
             "tool_orientation": 2,
@@ -183,7 +183,7 @@
         {
             "order": 6,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 1,
             "tool_orientation": 1,
@@ -199,7 +199,7 @@
         {
             "order": 7,
             "type": "profiling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -229,7 +229,7 @@
         {
             "order": 8,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 3,
             "tool_orientation": 6,
@@ -245,7 +245,7 @@
         {
             "order": 9,
             "type": "threading",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "location": "ID",
             "thread_type": "metric",
@@ -272,7 +272,7 @@
         {
             "order": 10,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 3,
             "tool_orientation": 6,
@@ -288,7 +288,7 @@
         {
             "order": 11,
             "type": "drilling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -311,7 +311,7 @@
         {
             "order": 12,
             "type": "tapping",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -334,7 +334,7 @@
         {
             "order": 13,
             "type": "parting",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": -1,
