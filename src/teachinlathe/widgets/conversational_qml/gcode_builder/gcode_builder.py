@@ -13,6 +13,27 @@ def _safe_program_name(program_dict):
     return safe.replace(" ", "_")
 
 
+def _define_profile_needs_subroutine(profile_id, operations):
+    if not profile_id:
+        return False
+
+    for op in operations:
+        if not isinstance(op, dict):
+            continue
+
+        if op.get("type") != "profiling":
+            continue
+
+        if not bool(op.get("generate_gcode", True)):
+            continue
+
+        params = op.get("profiling_parameters") or {}
+        if int(params.get("profile_id", 0) or 0) == profile_id:
+            return True
+
+    return False
+
+
 def build_ngc_from_json(json_path, output_dir=None):
     if not json_path or not os.path.isfile(json_path):
         raise FileNotFoundError(f"Program JSON not found: {json_path}")
@@ -50,6 +71,13 @@ def build_ngc_from_json(json_path, output_dir=None):
         op_display = display_names.get(op_type, op_type)
         lines.append(f"(----------Operation #{index}: {op_display}----------)\n")
 
+        if op_type == "defineProfile":
+            profile_id = int(op.get("profile_id", 0) or 0)
+            if not _define_profile_needs_subroutine(profile_id, operations):
+                lines.append("; The drawn profile is represented in the custom profiling section.")
+                lines.append("")
+                continue
+
         if op_type == "customProfiling":
             profile_id = int((op.get("profiling_parameters") or {}).get("profile_id", 0))
             profile_op = next(
@@ -66,6 +94,7 @@ def build_ngc_from_json(json_path, output_dir=None):
             lines.append(f"( TODO: gcode generator for type={op_type} )")
         lines.append("")
     lines.append("")
+    lines.append("G28")
     lines.append("M30")
 
     with open(ngc_path, "w", encoding="utf-8") as handle:

@@ -1,5 +1,6 @@
 import os
 
+import linuxcnc
 from PyQt5.QtCore import QRect, QSize, Qt
 from PyQt5.QtGui import QColor, QFont, QPainter, QTextBlockFormat, QTextCursor
 from PyQt5.QtWidgets import (
@@ -13,6 +14,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from qtpyvcp.plugins import getPlugin
 
 
 EDITOR_FONT_FAMILY = 'DejaVu Sans Mono'
@@ -20,6 +22,7 @@ EDITOR_FONT_SIZE = 16
 EDITOR_LINE_SPACING = 4
 CURRENT_LINE_BORDER_COLOR = '#3A86FF'
 CURRENT_LINE_BORDER_WIDTH = 1
+STATUS = getPlugin('status')
 
 
 class LineNumberArea(QWidget):
@@ -113,7 +116,10 @@ class GCodeTextEdit(QTextEdit):
         painter = QPainter(self._line_number_area)
         painter.fillRect(event.rect(), QColor('#252526'))
 
-        block = self.document().firstBlock()
+        block = self.cursorForPosition(self.viewport().rect().topLeft()).block()
+        if not block.isValid():
+            block = self.document().firstBlock()
+
         block_number = block.blockNumber()
         current_block = self.textCursor().blockNumber()
 
@@ -121,10 +127,16 @@ class GCodeTextEdit(QTextEdit):
             cursor = QTextCursor(block)
             rect = self.cursorRect(cursor)
             top = rect.top()
-            bottom = rect.bottom()
+            next_block = block.next()
+            if next_block.isValid():
+                next_rect = self.cursorRect(QTextCursor(next_block))
+                bottom = max(rect.bottom(), next_rect.top() - 1)
+            else:
+                bottom = rect.bottom()
 
             if bottom < event.rect().top():
-                block = block.next()
+                block = next_block
+                block_number += 1
                 continue
 
             if top > event.rect().bottom():
@@ -137,15 +149,17 @@ class GCodeTextEdit(QTextEdit):
                     0,
                     top,
                     self._line_number_area.width() - 8,
-                    rect.height(),
+                    max(self.fontMetrics().height(), bottom - top + 1),
                     Qt.AlignRight,
                     str(block_number + 1),
                 )
 
-            block = block.next()
+            block = next_block
             block_number += 1
 
     def selectLineAt(self, y_pos):
+        if self._bridge.isMachineFileRunning():
+            return
         point = self.viewport().rect().topLeft()
         point.setX(8)
         point.setY(y_pos)
@@ -156,6 +170,8 @@ class GCodeTextEdit(QTextEdit):
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         if event.button() == Qt.LeftButton and self.isReadOnly():
+            if self._bridge.isMachineFileRunning():
+                return
             cursor = self.cursorForPosition(event.pos())
             self.setTextCursor(cursor)
 
@@ -171,6 +187,28 @@ class GCodeTextEdit(QTextEdit):
 
     def isApplyingText(self):
         return self._applying_text
+
+    def setCurrentLineNumber(self, line_number, center=True):
+        try:
+            line_number = int(line_number)
+        except (TypeError, ValueError):
+            return
+
+        if line_number <= 0:
+            return
+
+        block = self.document().findBlockByLineNumber(line_number - 1)
+        if not block.isValid():
+            return
+
+        cursor = QTextCursor(block)
+        self.setTextCursor(cursor)
+        if center:
+            self.ensureCursorVisible()
+            scrollbar = self.verticalScrollBar()
+            rect = self.cursorRect(cursor)
+            target_value = scrollbar.value() + rect.center().y() - (self.viewport().height() // 2)
+            scrollbar.setValue(max(scrollbar.minimum(), min(scrollbar.maximum(), target_value)))
 
     def _apply_line_spacing(self):
         if self._applying_spacing:
@@ -250,11 +288,14 @@ class GCodeEditorPane(QWidget):
         self._bridge.editModeChanged.connect(self._on_edit_mode_changed)
         self._bridge.dirtyChanged.connect(self._on_dirty_changed)
         self._editor.textChanged.connect(self._push_editor_changes)
+        STATUS.motion_line.onValueChanged(self._on_motion_line_changed)
+        STATUS.file.notify(self._on_machine_file_changed)
 
         self._on_file_content_changed(self._bridge._current_content)
         self._on_file_path_changed(self._bridge.currentFilePath)
         self._on_edit_mode_changed(self._bridge.editMode)
         self._on_dirty_changed(self._bridge.dirty)
+        self._on_machine_file_changed(getattr(STATUS.file, 'value', ''))
 
     def _toggle_edit_mode(self):
         self._bridge.setEditMode(not self._bridge.editMode)
@@ -290,6 +331,7 @@ class GCodeEditorPane(QWidget):
 
     def _on_file_path_changed(self, path):
         self._path_label.setText(path or 'No file loaded')
+        self._sync_motion_line()
 
     def _on_edit_mode_changed(self, editing):
         self._editor.setReadOnly(not editing)
@@ -300,3 +342,20 @@ class GCodeEditorPane(QWidget):
         self._path_label.setText(f'* {path}' if dirty and path else path)
         self._save_button.setEnabled(bool(self._bridge.currentFilePath) or bool(self._editor.toPlainText()))
         self._save_as_button.setEnabled(bool(self._editor.toPlainText()))
+
+    def _on_motion_line_changed(self, line_number):
+        if self._is_showing_machine_file():
+            self._editor.setCurrentLineNumber(line_number)
+
+    def _on_machine_file_changed(self, _path):
+        self._sync_motion_line()
+
+    def _sync_motion_line(self):
+        if self._is_showing_machine_file():
+            self._editor.setCurrentLineNumber(getattr(STATUS.motion_line, 'value', 0), center=False)
+
+    def _is_showing_machine_file(self):
+        editor_path = os.path.abspath(self._bridge.currentFilePath) if self._bridge.currentFilePath else ''
+        machine_path = getattr(STATUS.file, 'value', '') or ''
+        machine_path = os.path.abspath(machine_path) if machine_path else ''
+        return bool(editor_path and machine_path and editor_path == machine_path)

@@ -1,14 +1,19 @@
 import os
 
-from PyQt5.QtCore import Qt, QUrl
+import linuxcnc
+from PyQt5.QtCore import Qt, QTimer, QUrl
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QWidget, QVBoxLayout, QStackedWidget, QSplitter
 from PyQt5.QtQuickWidgets import QQuickWidget
+from qtpyvcp.plugins import getPlugin
+from qtpyvcp.actions import program_actions
 from qtpyvcp.widgets.button_widgets.action_button import ActionButton
 from qtpyvcp.widgets.input_widgets.mdientry_widget import MDIEntry
 
 from teachinlathe.widgets.gremlin.gremlin_widget import GremlinWidget
 from .FileSystemBridge import FileSystemBridge
 from .GCodeEditorPane import GCodeEditorPane
+
+STATUS = getPlugin('status')
 
 
 class ProgramsQml(QWidget):
@@ -39,7 +44,10 @@ class ProgramsQml(QWidget):
         super().__init__(parent)
 
         self.bridge = FileSystemBridge(folders, self)
+        self._pending_fit_path = ''
         self.bridge.screenChangeRequested.connect(self._setScreen)
+        self.bridge.programLoadRequested.connect(self._prepareGremlinForLoad)
+        STATUS.file.notify(self._onMachineFileChanged)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -87,8 +95,76 @@ class ProgramsQml(QWidget):
 
         splitter = QSplitter(Qt.Horizontal, container)
 
-        self.gremlin = GremlinWidget(splitter)
-        splitter.addWidget(self.gremlin)
+        gremlin_container = QWidget(splitter)
+        gremlin_layout = QVBoxLayout(gremlin_container)
+        gremlin_layout.setContentsMargins(0, 0, 0, 0)
+        gremlin_layout.setSpacing(0)
+
+        gremlin_toolbar = QWidget(gremlin_container)
+        gremlin_toolbar.setMaximumHeight(56)
+        gremlin_toolbar.setStyleSheet('background: #2d2d2d; border-bottom: 1px solid #404040;')
+        gremlin_toolbar_layout = QHBoxLayout(gremlin_toolbar)
+        gremlin_toolbar_layout.setContentsMargins(10, 6, 10, 6)
+        gremlin_toolbar_layout.setSpacing(8)
+
+        gremlin_title = QLabel('Gremlin View', gremlin_toolbar)
+        gremlin_title.setStyleSheet('color: #d4d4d4; font: 11pt "Noto";')
+        gremlin_toolbar_layout.addWidget(gremlin_title)
+        gremlin_toolbar_layout.addStretch(1)
+
+        zoom_in_button = QPushButton('Zoom In', gremlin_toolbar)
+        zoom_in_button.clicked.connect(self._zoomGremlinIn)
+        zoom_in_button.setMinimumHeight(40)
+        zoom_in_button.setStyleSheet(
+            'QPushButton {'
+            'font: 11pt "Noto";'
+            'color: #f0f0f0;'
+            'background: #3a3a3a;'
+            'border: 1px solid #6a6a6a;'
+            'border-radius: 8px;'
+            'padding: 6px 12px;'
+            '}'
+            'QPushButton:pressed { background: #4a4a4a; }'
+        )
+        gremlin_toolbar_layout.addWidget(zoom_in_button)
+
+        zoom_out_button = QPushButton('Zoom Out', gremlin_toolbar)
+        zoom_out_button.clicked.connect(self._zoomGremlinOut)
+        zoom_out_button.setMinimumHeight(40)
+        zoom_out_button.setStyleSheet(
+            'QPushButton {'
+            'font: 11pt "Noto";'
+            'color: #f0f0f0;'
+            'background: #3a3a3a;'
+            'border: 1px solid #6a6a6a;'
+            'border-radius: 8px;'
+            'padding: 6px 12px;'
+            '}'
+            'QPushButton:pressed { background: #4a4a4a; }'
+        )
+        gremlin_toolbar_layout.addWidget(zoom_out_button)
+
+        clear_plot_button = QPushButton('Clear Plot', gremlin_toolbar)
+        clear_plot_button.clicked.connect(self._clearGremlinPlot)
+        clear_plot_button.setMinimumHeight(40)
+        clear_plot_button.setStyleSheet(
+            'QPushButton {'
+            'font: 11pt "Noto";'
+            'color: #f0f0f0;'
+            'background: #7a2d2d;'
+            'border: 1px solid #d16969;'
+            'border-radius: 8px;'
+            'padding: 6px 12px;'
+            '}'
+            'QPushButton:pressed { background: #5f2323; }'
+        )
+        gremlin_toolbar_layout.addWidget(clear_plot_button)
+
+        gremlin_layout.addWidget(gremlin_toolbar)
+
+        self.gremlin = GremlinWidget(gremlin_container)
+        gremlin_layout.addWidget(self.gremlin)
+        splitter.addWidget(gremlin_container)
 
         splitter.addWidget(GCodeEditorPane(self.bridge, 'gremlin', splitter))
 
@@ -103,110 +179,229 @@ class ProgramsQml(QWidget):
 
         layout = QHBoxLayout(container)
         layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(32)
+        layout.setSpacing(24)
 
-        actions_column = QWidget(container)
-        actions_layout = QVBoxLayout(actions_column)
-        actions_layout.setContentsMargins(0, 0, 0, 0)
-        actions_layout.setSpacing(14)
-
-        actions_title = QLabel('Program Controls', actions_column)
-        actions_title.setStyleSheet('color: #d4d4d4; font: 14pt "Noto";')
-        actions_layout.addWidget(actions_title)
-
-        start_button = ActionButton(actions_column)
+        start_button = ActionButton(container)
         start_button.setText('Start Program')
         start_button.actionName = 'program.run'
-        start_button.setMinimumHeight(72)
-        start_button.setMinimumWidth(220)
+        start_button.setMinimumHeight(64)
+        start_button.setMinimumWidth(180)
         start_button.setStyleSheet(
             'QPushButton {'
-            'font: 16pt "Noto";'
+            'font: 15pt "Noto";'
             'color: #f0f0f0;'
             'background: #0e639c;'
             'border: 2px solid #3794ff;'
             'border-radius: 10px;'
-            'padding: 12px 22px;'
+            'padding: 10px 18px;'
             '}'
             'QPushButton:pressed { background: #005a9e; }'
             'QPushButton:disabled { color: #808080; background: #3a3a3a; border-color: #555555; }'
         )
-        actions_layout.addWidget(start_button)
+        layout.addWidget(start_button)
 
-        stop_button = ActionButton(actions_column)
+        stop_button = ActionButton(container)
         stop_button.setText('Stop Program')
         stop_button.actionName = 'program.abort'
-        stop_button.setMinimumHeight(72)
-        stop_button.setMinimumWidth(220)
+        stop_button.setMinimumHeight(64)
+        stop_button.setMinimumWidth(180)
         stop_button.setStyleSheet(
             'QPushButton {'
-            'font: 16pt "Noto";'
+            'font: 15pt "Noto";'
             'color: #f0f0f0;'
             'background: #7a2d2d;'
             'border: 2px solid #d16969;'
             'border-radius: 10px;'
-            'padding: 12px 22px;'
+            'padding: 10px 18px;'
             '}'
             'QPushButton:pressed { background: #5f2323; }'
             'QPushButton:disabled { color: #808080; background: #3a3a3a; border-color: #555555; }'
         )
-        actions_layout.addWidget(stop_button)
-        actions_layout.addStretch(1)
-        layout.addWidget(actions_column, 0)
+        layout.addWidget(stop_button)
 
-        mdi_column = QWidget(container)
-        mdi_layout = QVBoxLayout(mdi_column)
-        mdi_layout.setContentsMargins(0, 0, 0, 0)
-        mdi_layout.setSpacing(14)
+        self.pause_resume_button = QPushButton('Pause Program', container)
+        self.pause_resume_button.setMinimumHeight(64)
+        self.pause_resume_button.setMinimumWidth(200)
+        self.pause_resume_button.clicked.connect(self._togglePauseResume)
+        self.pause_resume_button.setStyleSheet(
+            'QPushButton {'
+            'font: 15pt "Noto";'
+            'color: #f0f0f0;'
+            'background: #6b5d12;'
+            'border: 2px solid #d7ba7d;'
+            'border-radius: 10px;'
+            'padding: 10px 18px;'
+            '}'
+            'QPushButton:pressed { background: #54480e; }'
+            'QPushButton:disabled { color: #808080; background: #3a3a3a; border-color: #555555; }'
+        )
+        layout.addWidget(self.pause_resume_button)
 
-        mdi_title = QLabel('MDI Command', mdi_column)
-        mdi_title.setStyleSheet('color: #d4d4d4; font: 14pt "Noto";')
-        mdi_layout.addWidget(mdi_title)
+        optional_stop_button = ActionButton(container)
+        optional_stop_button.setText('Break on M1')
+        optional_stop_button.actionName = 'program.optional-stop.toggle'
+        optional_stop_button.setCheckable(True)
+        optional_stop_button.setMinimumHeight(64)
+        optional_stop_button.setMinimumWidth(180)
+        optional_stop_button.setStyleSheet(
+            'QPushButton {'
+            'font: 14pt "Noto";'
+            'color: #f0f0f0;'
+            'background: #3a3a3a;'
+            'border: 2px solid #6a6a6a;'
+            'border-radius: 10px;'
+            'padding: 10px 18px;'
+            '}'
+            'QPushButton:checked {'
+            'background: #1f6f43;'
+            'border-color: #3fb950;'
+            '}'
+            'QPushButton:pressed { background: #4a4a4a; }'
+            'QPushButton:checked:pressed { background: #185735; }'
+            'QPushButton:disabled { color: #808080; background: #3a3a3a; border-color: #555555; }'
+        )
+        layout.addWidget(optional_stop_button)
 
-        self.mdi_entry = MDIEntry(mdi_column)
+        block_delete_button = ActionButton(container)
+        block_delete_button.setText('Skip "/" Blocks')
+        block_delete_button.actionName = 'program.block-delete.toggle'
+        block_delete_button.setCheckable(True)
+        block_delete_button.setMinimumHeight(64)
+        block_delete_button.setMinimumWidth(180)
+        block_delete_button.setStyleSheet(
+            'QPushButton {'
+            'font: 14pt "Noto";'
+            'color: #f0f0f0;'
+            'background: #3a3a3a;'
+            'border: 2px solid #6a6a6a;'
+            'border-radius: 10px;'
+            'padding: 10px 18px;'
+            '}'
+            'QPushButton:checked {'
+            'background: #1f6f43;'
+            'border-color: #3fb950;'
+            '}'
+            'QPushButton:pressed { background: #4a4a4a; }'
+            'QPushButton:checked:pressed { background: #185735; }'
+            'QPushButton:disabled { color: #808080; background: #3a3a3a; border-color: #555555; }'
+        )
+        layout.addWidget(block_delete_button)
+
+        mdi_label = QLabel('MDI', container)
+        mdi_label.setStyleSheet('color: #d4d4d4; font: 13pt "Noto";')
+        layout.addWidget(mdi_label)
+
+        self.mdi_entry = MDIEntry(container)
         self.mdi_entry.setObjectName('programs_qml_mdi_entry')
-        self.mdi_entry.setPlaceholderText('Enter MDI command, then press Enter')
-        self.mdi_entry.setMinimumHeight(56)
-        self.mdi_entry.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.mdi_entry.setPlaceholderText('MDI command')
+        self.mdi_entry.setMinimumHeight(52)
+        self.mdi_entry.setMinimumWidth(200)
+        self.mdi_entry.setMaximumWidth(220)
+        self.mdi_entry.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.mdi_entry.setStyleSheet(
             'QLineEdit {'
-            'font: 15pt "JetBrains Mono";'
+            'font: 14pt "JetBrains Mono";'
             'color: #f0f0f0;'
             'background: #1e1e1e;'
             'border: 2px solid #5a5a5a;'
             'border-radius: 8px;'
-            'padding: 8px 12px;'
+            'padding: 6px 10px;'
             '}'
             'QLineEdit:focus { border-color: #3794ff; }'
         )
         self.mdi_entry.initialize()
-        mdi_layout.addWidget(self.mdi_entry)
+        layout.addWidget(self.mdi_entry)
 
-        mdi_button = QPushButton('Run MDI', mdi_column)
-        mdi_button.setMinimumHeight(56)
-        mdi_button.setMinimumWidth(180)
-        mdi_button.clicked.connect(self.mdi_entry.submit)
-        mdi_button.setStyleSheet(
+        layout.addStretch(1)
+
+        self.mdi_button = QPushButton('Run MDI', container)
+        self.mdi_button.setMinimumHeight(52)
+        self.mdi_button.setMinimumWidth(160)
+        self.mdi_button.clicked.connect(self.mdi_entry.submit)
+        self.mdi_button.setStyleSheet(
             'QPushButton {'
             'font: 14pt "Noto";'
             'color: #f0f0f0;'
             'background: #2d7d46;'
             'border: 2px solid #3fb950;'
             'border-radius: 8px;'
-            'padding: 10px 20px;'
+            'padding: 10px 18px;'
             '}'
             'QPushButton:pressed { background: #236437; }'
+            'QPushButton:disabled { color: #808080; background: #3a3a3a; border-color: #555555; }'
         )
-        mdi_layout.addWidget(mdi_button)
-        mdi_layout.addStretch(1)
-        layout.addWidget(mdi_column, 1)
+        layout.addWidget(self.mdi_button)
 
-        layout.addStretch(1)
+        STATUS.state.onValueChanged(lambda *_: self._updatePauseResumeButton())
+        STATUS.paused.onValueChanged(lambda *_: self._updatePauseResumeButton())
+        self._updatePauseResumeButton()
         return container
 
     # ------------------------------------------------------------------
     # Navigation
     # ------------------------------------------------------------------
+
+    def _prepareGremlinForLoad(self, _path):
+        self._pending_fit_path = os.path.abspath(_path) if _path else ''
+        if hasattr(self, 'gremlin'):
+            self.gremlin.clearLivePlot()
+            self.gremlin.update()
+
+    def _fitGremlinToWindow(self):
+        if not hasattr(self, 'gremlin'):
+            return
+
+        self.gremlin.setViewXZ2()
+        self.gremlin.update()
+
+    def _zoomGremlinIn(self):
+        if hasattr(self, 'gremlin'):
+            self.gremlin.zoomIn()
+            self.gremlin.update()
+
+    def _zoomGremlinOut(self):
+        if hasattr(self, 'gremlin'):
+            self.gremlin.zoomOut()
+            self.gremlin.update()
+
+    def _clearGremlinPlot(self):
+        if hasattr(self, 'gremlin'):
+            self.gremlin.clearLivePlot()
+            self.gremlin.update()
+
+    def _onMachineFileChanged(self, path):
+        machine_path = os.path.abspath(path) if path else ''
+        if not machine_path:
+            return
+
+        if self._pending_fit_path and machine_path != self._pending_fit_path:
+            return
+
+        # QTimer.singleShot(0, self._fitGremlinToWindow)
+        QTimer.singleShot(150, self._fitGremlinToWindow)
+        self._pending_fit_path = ''
+
+    def _togglePauseResume(self):
+        stat = STATUS.stat
+        if stat.state == linuxcnc.RCS_EXEC and stat.paused:
+            program_actions.resume()
+        else:
+            program_actions.pause()
+
+    def _updatePauseResumeButton(self):
+        stat = STATUS.stat
+        is_paused = bool(stat.paused)
+        is_running = stat.state == linuxcnc.RCS_EXEC
+
+        if is_paused:
+            self.pause_resume_button.setText('Resume Program')
+            self.pause_resume_button.setEnabled(True)
+        elif is_running:
+            self.pause_resume_button.setText('Pause Program')
+            self.pause_resume_button.setEnabled(True)
+        else:
+            self.pause_resume_button.setText('Pause Program')
+            self.pause_resume_button.setEnabled(False)
 
     def _setScreen(self, index):
         self.stack.setCurrentIndex(index)

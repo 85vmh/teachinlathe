@@ -1,5 +1,6 @@
 import os
 
+import linuxcnc
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, pyqtProperty
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
@@ -23,6 +24,7 @@ class FileSystemBridge(QObject):
     editModeChanged      = pyqtSignal(bool, arguments=['editing'])
     dirtyChanged         = pyqtSignal(bool, arguments=['dirty'])
     folderFilesChanged   = pyqtSignal(str,  arguments=['folderName'])
+    programLoadRequested = pyqtSignal(str,  arguments=['path'])
 
     GCODE_EXTENSIONS = ('.ngc', '.nc', '.gcode', '.G', '.NGC', '.NC')
 
@@ -101,6 +103,7 @@ class FileSystemBridge(QObject):
             return
         if not self._prepare_for_file_change(filepath):
             return
+        self.programLoadRequested.emit(filepath)
         load_program(filepath)
         self._emit_content(filepath)
         self.screenChangeRequested.emit(1)
@@ -161,6 +164,31 @@ class FileSystemBridge(QObject):
 
     def attachHighlighterToDocument(self, text_document):
         self._syntax_highlighter.attach_document(text_document)
+
+    def isMachineFileRunning(self):
+        if not self._current_file_path:
+            return False
+
+        try:
+            stat = linuxcnc.stat()
+            stat.poll()
+        except Exception:
+            return False
+
+        if stat.state != linuxcnc.RCS_EXEC or stat.paused:
+            return False
+
+        machine_path = stat.file or ''
+        if not machine_path:
+            return False
+
+        try:
+            current_path = os.path.abspath(self._current_file_path)
+            machine_path = os.path.abspath(machine_path)
+        except Exception:
+            return False
+
+        return current_path == machine_path
 
     # ------------------------------------------------------------------
     # Internal helpers
