@@ -1,9 +1,9 @@
 {
-    "id": "prog_001",
+    "id": "program_12_03_2026_15_32_08",
     "header": {
-        "name": "Custom Profiling",
-        "created_date": "2026-03-12 09:25:08",
-        "last_edit": "2026-03-14 16:22:27",
+        "name": "Duplicated Program",
+        "created_date": "2026-03-12 15:32:08",
+        "last_edit": "2026-03-14 12:46:15",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -17,16 +17,16 @@
         {
             "order": 1,
             "type": "changeTool",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
-            "tool_no": 1,
+            "tool_no": 6,
             "tool_orientation": 2,
             "back_angle": 95,
             "front_angle": 80,
             "toolchange_rules": {
                 "x_pos": 50.0,
                 "z_pos": -20.0,
-                "coordinate_type": "absolute",
+                "coordinate_type": "relative",
                 "move_sequence": "both"
             }
         },
@@ -34,9 +34,9 @@
             "order": 2,
             "type": "facing",
             "generate_gcode": false,
-            "is_optional_block": false,
+            "is_optional_block": true,
             "spindle_parameters": {
-                "direction": -1,
+                "direction": 1,
                 "mode": "rpm",
                 "rpm_value": 300,
                 "css_value": 20,
@@ -58,7 +58,7 @@
                 "inspect_position": "G28",
                 "stop_spindle": true
             },
-            "z_end_becomes_new_z0": true
+            "z_end_becomes_new_z0": false
         },
         {
             "order": 3,
@@ -70,10 +70,10 @@
             "back_angle": 0,
             "front_angle": 0,
             "toolchange_rules": {
-                "x_pos": 50.0,
+                "x_pos": 0.0,
                 "z_pos": 0.0,
                 "coordinate_type": "absolute",
-                "move_sequence": "both"
+                "move_sequence": "xz"
             }
         },
         {
@@ -93,11 +93,11 @@
                     "primitive_id": 2,
                     "type": "lineTo",
                     "x_end": 20.0,
-                    "z_end": -27.0,
+                    "z_end": -25.0,
                     "blend": {
                         "type": "fillet",
                         "chamfer_width": 0.0,
-                        "fillet_radius": 2.0
+                        "fillet_radius": 0.5
                     }
                 },
                 {
@@ -152,30 +152,32 @@
         },
         {
             "order": 5,
-            "type": "customProfiling",
+            "type": "profiling",
             "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
-                "direction": -1,
+                "direction": 1,
                 "mode": "rpm",
-                "rpm_value": 1000
+                "rpm_value": 1500,
+                "css_value": 200,
+                "css_max_speed": 1500
             },
             "cutting_parameters": {
                 "feed_rate": 0.3,
-                "doc": 1.0,
-                "retract": 0.5
+                "doc": 2.0,
+                "retract": 1.0
             },
             "profiling_parameters": {
                 "profile_id": 5,
-                "x_start": 51.0,
-                "z_start": 1.0
+                "x_start": 52.0,
+                "z_start": 0.0
             },
             "profiling_options": {
                 "strategy": "rough",
-                "stock_to_leave_x": 1.0,
-                "stock_to_leave_z": 1.0,
+                "stock_to_leave_x": 0.5,
+                "stock_to_leave_z": 0.5,
                 "finish_passes": 1,
-                "finish_spring_passes": 0
+                "finish_spring_passes": 2
             }
         },
         {
@@ -196,36 +198,6 @@
         },
         {
             "order": 7,
-            "type": "profiling",
-            "generate_gcode": false,
-            "is_optional_block": false,
-            "spindle_parameters": {
-                "direction": 1,
-                "mode": "rpm",
-                "rpm_value": 1500,
-                "css_value": 200,
-                "css_max_speed": 1500
-            },
-            "cutting_parameters": {
-                "feed_rate": 0.3,
-                "doc": 2.0,
-                "retract": 1.0
-            },
-            "profiling_parameters": {
-                "profile_id": 5,
-                "x_start": 52.0,
-                "z_start": 0.0
-            },
-            "profiling_options": {
-                "strategy": "finish",
-                "stock_to_leave_x": 0.5,
-                "stock_to_leave_z": 0.5,
-                "finish_passes": 1,
-                "finish_spring_passes": 2
-            }
-        },
-        {
-            "order": 8,
             "type": "changeTool",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -241,11 +213,11 @@
             }
         },
         {
-            "order": 9,
+            "order": 8,
             "type": "threading",
             "generate_gcode": false,
             "is_optional_block": false,
-            "location": "ID",
+            "location": "OD",
             "thread_type": "metric",
             "pitch": 2.0,
             "starts": 2,
@@ -260,7 +232,7 @@
             "taper_type": 2,
             "compound_angle": 29.5,
             "spindle_parameters": {
-                "direction": -1,
+                "direction": 1,
                 "mode": "rpm",
                 "rpm_value": 1000,
                 "css_value": 100,
@@ -268,7 +240,7 @@
             }
         },
         {
-            "order": 10,
+            "order": 9,
             "type": "changeTool",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -284,7 +256,7 @@
             }
         },
         {
-            "order": 11,
+            "order": 10,
             "type": "drilling",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -307,9 +279,9 @@
             }
         },
         {
-            "order": 12,
+            "order": 11,
             "type": "tapping",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -320,7 +292,7 @@
                 "z_start": 2.0,
                 "z_end": -50.0,
                 "z_retract": 2.0,
-                "peck_depth": 0.0,
+                "peck_depth": 5.0,
                 "pitch": 1.5
             },
             "m1_parameters": {
@@ -330,7 +302,7 @@
             }
         },
         {
-            "order": 13,
+            "order": 12,
             "type": "parting",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -351,9 +323,80 @@
                 "x_clearance": 1.0
             },
             "edge_break": {
-                "blend_type": "fillet",
+                "blend_type": "none",
                 "chamfer_width": 2.0,
                 "fillet_radius": 1.0
+            }
+        },
+        {
+            "order": 13,
+            "type": "drilling",
+            "generate_gcode": true,
+            "is_optional_block": false,
+            "spindle_parameters": {
+                "direction": 1,
+                "mode": "rpm",
+                "rpm_value": 1000
+            },
+            "drilling_parameters": {
+                "z_start": 0.0,
+                "z_end": 0.0,
+                "z_retract": 5.0,
+                "peck_depth": 3.0,
+                "feed_rate": 0.05
+            },
+            "m1_parameters": {
+                "include_m1": false,
+                "inspect_position": "G28",
+                "stop_spindle": false
+            }
+        },
+        {
+            "order": 14,
+            "type": "tapping",
+            "generate_gcode": true,
+            "is_optional_block": false,
+            "spindle_parameters": {
+                "direction": 1,
+                "mode": "rpm",
+                "rpm_value": 500
+            },
+            "tapping_parameters": {
+                "z_start": 0.0,
+                "z_end": 0.0,
+                "z_retract": 5.0,
+                "peck_depth": 0.0,
+                "pitch": 1.0
+            },
+            "m1_parameters": {
+                "include_m1": false,
+                "inspect_position": "G28",
+                "stop_spindle": false
+            }
+        },
+        {
+            "order": 15,
+            "type": "parting",
+            "generate_gcode": true,
+            "is_optional_block": false,
+            "spindle_parameters": {
+                "direction": 1,
+                "mode": "rpm",
+                "rpm_value": 500
+            },
+            "parting_parameters": {
+                "x_start": 0.0,
+                "x_end": 0.0,
+                "z_pos": 0.0,
+                "1st_feed_rate": 0.05,
+                "2nd_feed_rate": 0.02,
+                "2nd_feed_x_pos": 5.0,
+                "x_clearance": 1.0
+            },
+            "edge_break": {
+                "blend_type": "none",
+                "chamfer_width": 0.0,
+                "fillet_radius": 0.0
             }
         }
     ]

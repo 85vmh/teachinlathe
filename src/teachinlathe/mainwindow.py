@@ -23,6 +23,7 @@ from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.widgets.FrameAnimator import FrameAnimator
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 from teachinlathe.widgets.tools_list_provider import ToolsListProvider
+from teachinlathe.widgets.programs_qml import ProgramsQml
 import teachinlathe_rc
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
@@ -46,6 +47,7 @@ class MainTabs(Enum):
     PROGRAMS = 2
     TOOLS_OFFSETS = 3
     MACHINE_SETTINGS = 4
+    PROGRAMS_QML = 5
 
 
 class ProgramTabs(Enum):
@@ -159,6 +161,7 @@ class MyMainWindow(VCPMainWindow):
 
         QTimer.singleShot(0, self.afterUIInit)
         QTimer.singleShot(0, self._initManualToolsList)
+        QTimer.singleShot(0, self._initProgramsQml)
         QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
         self.latheFixtures.onFixtureSelected.connect(self.onFixtureSelected)
         initial_fixture = self.fixture_repository.getCurrentFixture()
@@ -207,6 +210,26 @@ class MyMainWindow(VCPMainWindow):
         qml_path = os.path.join(os.path.dirname(__file__), "widgets", "ToolListView.qml")
         self.manualToolsList.setSource(QUrl.fromLocalFile(qml_path))
         self.manualToolsList.show()
+
+    def _initProgramsQml(self):
+        from PyQt5.QtWidgets import QWidget, QVBoxLayout
+        gcode_folder = os.path.join(CONVERSATIONAL_GCODE_BASE, "Conversational Gcode")
+        folders = [
+            ("Generated Programs",  gcode_folder),
+            ("USB Stick Programs",  "/media"),
+            ("SyncThing Programs",  os.path.expanduser("~/Sync")),
+        ]
+        # Create the tab container and add it to the tab bar programmatically,
+        # because qtpyvcp loads the UI from the .ui file (uic.loadUi) so edits
+        # to mainwindow_ui.py have no effect at runtime.
+        self.programsQmlTab = QWidget()
+        self.tabWidget.addTab(self.programsQmlTab, "Programs QML")
+
+        tab_layout = QVBoxLayout(self.programsQmlTab)
+        tab_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.programsQmlWidget = ProgramsQml(folders, self.programsQmlTab)
+        tab_layout.addWidget(self.programsQmlWidget)
 
     def _syncEmbeddedQmlTabs(self):
         current_index = self.tabWidget.currentIndex()

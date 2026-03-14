@@ -24,7 +24,7 @@ G90 ; Absolute Distance
     O100 ELSE
         ; Edge break in Z+ direction
         G0 Z#<z_pos>
-        G0 X[#<x_start> + #<x_clearance>]ta
+        G0 X[#<x_start> + #<x_clearance>]
         G95 F#<fz1>
         G1 X[#<x_start> - #<edge_break_value>]
         G0 X[#<x_start> + #<x_clearance>]
