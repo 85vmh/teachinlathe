@@ -6,15 +6,24 @@ Item {
     id: root
 
     property string selectedFolder: ""
-    property string selectedFile: ""
+    property string currentPath: ""
+    property string selectedFilePath: ""
     property var currentFiles: []
+
+    function refreshEntries() {
+        if (root.selectedFolder === "") {
+            root.currentFiles = []
+            return
+        }
+        root.currentFiles = fsBridge.getFilesInPath(root.selectedFolder, root.currentPath)
+    }
 
     Connections {
         target: fsBridge
 
         function onFolderFilesChanged(folderName) {
             if (root.selectedFolder === folderName) {
-                root.currentFiles = fsBridge.getFiles(folderName)
+                root.refreshEntries()
             }
         }
 
@@ -25,8 +34,15 @@ Item {
                 var folderPath = fsBridge.getFolderPath(folderName).replace(/\\/g, "/")
                 if (normalized.indexOf(folderPath + "/") === 0) {
                     root.selectedFolder = folderName
-                    root.currentFiles = fsBridge.getFiles(folderName)
-                    root.selectedFile = normalized.substring(folderPath.length + 1)
+                    root.selectedFilePath = normalized.substring(folderPath.length + 1)
+                    var segments = root.selectedFilePath.split("/")
+                    if (segments.length > 1) {
+                        segments.pop()
+                        root.currentPath = segments.join("/")
+                    } else {
+                        root.currentPath = ""
+                    }
+                    root.refreshEntries()
                     return
                 }
             }
@@ -95,8 +111,9 @@ Item {
                         hoverEnabled: true
                         onClicked: {
                             root.selectedFolder = modelData
-                            root.selectedFile = ""
-                            root.currentFiles = fsBridge.getFiles(modelData)
+                            root.currentPath = ""
+                            root.selectedFilePath = ""
+                            root.refreshEntries()
                         }
                     }
                 }
@@ -120,11 +137,11 @@ Item {
                 delegate: Rectangle {
                     width: ListView.view.width
                     height: 38
-                    color: root.selectedFile === modelData
+                    color: (!modelData.isDir && root.selectedFilePath === modelData.path)
                            ? "#094771"
                            : (fileArea.containsMouse ? "#2a2d2e" : "transparent")
 
-                    Text {
+                    RowLayout {
                         anchors {
                             verticalCenter: parent.verticalCenter
                             left: parent.left
@@ -132,11 +149,21 @@ Item {
                             right: parent.right
                             rightMargin: 8
                         }
-                        text: modelData
-                        color: "#d4d4d4"
-                        font.pixelSize: 13
-                        font.family: "monospace"
-                        elide: Text.ElideLeft
+                        spacing: 10
+
+                        Text {
+                            text: modelData.isDir ? (modelData.isUp ? "↩" : "📁") : "📄"
+                            font.pixelSize: 16
+                        }
+
+                        Text {
+                            text: modelData.name
+                            color: modelData.isDir ? "#dcdcaa" : "#d4d4d4"
+                            font.pixelSize: 13
+                            font.family: "monospace"
+                            Layout.fillWidth: true
+                            elide: Text.ElideLeft
+                        }
                     }
 
                     MouseArea {
@@ -144,12 +171,20 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
-                            root.selectedFile = modelData
-                            fsBridge.selectFile(root.selectedFolder, modelData)
+                            if (modelData.isDir) {
+                                root.currentPath = modelData.path
+                                root.selectedFilePath = ""
+                                root.refreshEntries()
+                            } else {
+                                root.selectedFilePath = modelData.path
+                                fsBridge.selectFile(root.selectedFolder, modelData.path)
+                            }
                         }
                         onDoubleClicked: {
-                            root.selectedFile = modelData
-                            fsBridge.openFile(root.selectedFolder, modelData)
+                            if (!modelData.isDir) {
+                                root.selectedFilePath = modelData.path
+                                fsBridge.openFile(root.selectedFolder, modelData.path)
+                            }
                         }
                     }
                 }
@@ -159,7 +194,7 @@ Item {
                     visible: root.currentFiles.length === 0
                     text: root.selectedFolder === ""
                           ? "Select a folder above"
-                          : "No G-code files found"
+                          : "No folders or G-code files found"
                     color: "#555555"
                     font.pixelSize: 13
                 }

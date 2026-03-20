@@ -1,0 +1,17 @@
+%
+(Main program - nested subroutine test)
+
+G21         (mm)
+G18         (XZ plane - specific lathe style)
+G90         (absolute)
+G94         (feed per minute)
+F120        (default feed mm/min)
+
+G0 X0 Z0
+
+o<level1_square> call
+
+G0 X0 Z0
+
+M2
+%

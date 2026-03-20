@@ -70,15 +70,46 @@ class FileSystemBridge(QObject):
 
     @pyqtSlot(str, result='QVariantList')
     def getFiles(self, folder_name):
-        """Return sorted list of G-code file names in *folder_name*."""
+        """Return sorted list of entries at the root of *folder_name*."""
+        return self.getFilesInPath(folder_name, '')
+
+    @pyqtSlot(str, str, result='QVariantList')
+    def getFilesInPath(self, folder_name, relative_path):
+        """Return sorted directory entries for *relative_path* inside *folder_name*."""
         path = self._folder_map.get(folder_name, '')
         if not os.path.isdir(path):
             return []
-        return sorted(
-            f for f in os.listdir(path)
-            if os.path.isfile(os.path.join(path, f))
-            and f.endswith(self.GCODE_EXTENSIONS)
-        )
+        target_dir = self._resolve_folder_path(path, relative_path)
+        if not target_dir or not os.path.isdir(target_dir):
+            return []
+
+        entries = []
+        try:
+            for name in sorted(os.listdir(target_dir), key=str.lower):
+                full_path = os.path.join(target_dir, name)
+                if os.path.isdir(full_path):
+                    entries.append({
+                        'name': name,
+                        'path': self._join_relative_path(relative_path, name),
+                        'isDir': True,
+                    })
+                elif os.path.isfile(full_path) and name.endswith(self.GCODE_EXTENSIONS):
+                    entries.append({
+                        'name': name,
+                        'path': self._join_relative_path(relative_path, name),
+                        'isDir': False,
+                    })
+        except Exception:
+            return []
+
+        if relative_path:
+            entries.insert(0, {
+                'name': '..',
+                'path': self._parent_relative_path(relative_path),
+                'isDir': True,
+                'isUp': True,
+            })
+        return entries
 
     @pyqtSlot(str, result=str)
     def getFolderPath(self, folder_name):
@@ -88,7 +119,7 @@ class FileSystemBridge(QObject):
     def selectFile(self, folder_name, filename):
         """Read *filename* and emit its content for the text viewer."""
         path = self._folder_map.get(folder_name, '')
-        filepath = os.path.join(path, filename)
+        filepath = self._resolve_folder_path(path, filename)
         if not self._prepare_for_file_change(filepath):
             return
         self._emit_content(filepath)
@@ -98,7 +129,7 @@ class FileSystemBridge(QObject):
         """Load *filename* into LinuxCNC and switch to the Gremlin screen."""
         from qtpyvcp.actions.program_actions import load as load_program
         path = self._folder_map.get(folder_name, '')
-        filepath = os.path.join(path, filename)
+        filepath = self._resolve_folder_path(path, filename)
         if not os.path.isfile(filepath):
             return
         if not self._prepare_for_file_change(filepath):
@@ -254,6 +285,30 @@ class FileSystemBridge(QObject):
     def _notify_folder_change(self, filepath):
         parent_dir = os.path.dirname(filepath)
         for folder_name, folder_path in self._folders:
-            if os.path.abspath(folder_path) == os.path.abspath(parent_dir):
+            try:
+                common_path = os.path.commonpath([os.path.abspath(parent_dir), os.path.abspath(folder_path)])
+            except ValueError:
+                continue
+            if common_path == os.path.abspath(folder_path):
                 self.folderFilesChanged.emit(folder_name)
                 break
+
+    def _resolve_folder_path(self, folder_path, relative_path):
+        base_path = os.path.abspath(folder_path)
+        target_path = os.path.abspath(os.path.join(base_path, relative_path))
+        try:
+            common_path = os.path.commonpath([base_path, target_path])
+        except ValueError:
+            return ''
+        if common_path != base_path:
+            return ''
+        return target_path
+
+    def _join_relative_path(self, relative_path, name):
+        if not relative_path:
+            return name
+        return os.path.join(relative_path, name)
+
+    def _parent_relative_path(self, relative_path):
+        parent_path = os.path.dirname(relative_path)
+        return '' if parent_path == '.' else parent_path

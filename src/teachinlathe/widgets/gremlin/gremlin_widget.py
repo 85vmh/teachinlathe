@@ -70,6 +70,7 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
         # perspective=False is set by set_view_y() automatically.
         self.current_view = 'y'
         self._pending_default_view = False
+        self._last_preview_tool_signature = None
 
         # ------------------------------------------------------------------
         # Color overrides — all values are (R, G, B) tuples in 0.0–1.0 range.
@@ -187,7 +188,120 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
             self._pending_default_view = True
             self.update()
 
+    def _build_preview_initcodes(self, stat):
+        initcodes = []
+
+        tool_offset = "G43.1"
+        has_offset = False
+        for i in range(9):
+            if stat.axis_mask & (1 << i):
+                value = stat.tool_offset[i]
+                tool_offset += " %s%.8f" % ("XYZABCUVW"[i], value)
+                has_offset = has_offset or abs(value) > 1e-12
+
+        if has_offset:
+            initcodes.append(tool_offset)
+
+        return initcodes
+
+    def _reload_preview(self, filename=None, *, sync_task=True):
+        import os
+        import shutil
+        import tempfile
+
+        import gcode
+        from qt5_graphics import DummyProgress, Progress, StatCanon
+
+        linuxcnc = __import__("linuxcnc")
+
+        if sync_task:
+            linuxcnc.command().task_plan_synch()
+        stat = self.stat
+        stat.poll()
+        if not filename and stat.file:
+            filename = stat.file
+        elif not filename and not stat.file:
+            return
+
+        lines = open(filename).readlines()
+        progress = Progress(2, len(lines))
+        progress.emit_percent = self.emit_percent
+
+        code = []
+        i = 0
+        for i, line in enumerate(lines):
+            line = line.expandtabs().replace("\r", "")
+            code.extend(["%6d: " % (i + 1), "lineno", line, ""])
+            if i % 1000 == 0:
+                del code[:]
+                progress.update(i)
+        progress.nextphase(len(lines))
+
+        td = tempfile.mkdtemp()
+        self._current_file = filename
+        canon = None
+        try:
+            self._last_preview_tool_signature = (
+                stat.tool_in_spindle,
+                tuple(stat.tool_offset),
+            )
+            random = int(self.inifile.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
+            arcdivision = int(self.inifile.find("DISPLAY", "ARCDIVISION") or 64)
+            text = ""
+            canon = StatCanon(
+                self.colors,
+                self.get_geometry(),
+                self.foam_option,
+                self.lathe_option,
+                stat,
+                text,
+                random,
+                i,
+                progress,
+                arcdivision,
+            )
+            canon.output_notify_message = self.output_notify_message
+            parameter = self.inifile.find("RS274NGC", "PARAMETER_FILE")
+            temp_parameter = os.path.join(td, os.path.basename(parameter or "linuxcnc.var"))
+            if parameter:
+                shutil.copy(parameter, temp_parameter)
+            canon.parameter_file = temp_parameter
+
+            initcodes = self._build_preview_initcodes(stat)
+            initcode = self.inifile.find("RS274NGC", "RS274NGC_STARTUP_CODE") or ""
+            unitcode = "G%d" % (20 + (stat.linear_units == 1))
+            if initcodes:
+                if initcode:
+                    initcodes.insert(0, initcode)
+                initcodes.insert(0, unitcode)
+                result, seq = self.load_preview(filename, canon, initcodes)
+            else:
+                result, seq = self.load_preview(filename, canon, unitcode, initcode)
+            if result > gcode.MIN_ERROR:
+                self.report_gcode_error(result, seq, filename)
+            self.logger.set_depth(
+                self.from_internal_linear_unit(self.get_foam_z()),
+                self.from_internal_linear_unit(self.get_foam_w()),
+            )
+            self.calculate_gcode_properties(canon)
+        except Exception as e:
+            print(e)
+            self.gcode_properties = None
+        finally:
+            shutil.rmtree(td)
+            if canon:
+                canon.progress = DummyProgress()
+            try:
+                progress.done()
+            except UnboundLocalError:
+                pass
+        self._redraw()
+
+    def load(self, filename=None):
+        self._reload_preview(filename, sync_task=True)
+
     def poll(self):
+        linuxcnc = __import__("linuxcnc")
         s = self.stat
         try:
             s.poll()
@@ -196,7 +310,20 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
 
         # Detect file change (parent poll() doesn't check s.file).
         if s.file and s.file != self._current_file:
-            self.load(s.file)
+            self._reload_preview(s.file, sync_task=False)
+            self._pending_default_view = True
+            return True
+
+        preview_tool_signature = (
+            s.tool_in_spindle,
+            tuple(s.tool_offset),
+        )
+        if (
+            self._current_file
+            and s.task_mode != linuxcnc.MODE_AUTO
+            and preview_tool_signature != self._last_preview_tool_signature
+        ):
+            self._reload_preview(self._current_file, sync_task=False)
             self._pending_default_view = True
             return True
 
@@ -267,4 +394,3 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
     def zoomOut(self):
         """Zoom out slot — connected from zoomOutView button in mainwindow.ui."""
         self.zoomout()
-

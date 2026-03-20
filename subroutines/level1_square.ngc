@@ -1,0 +1,35 @@
+o<level1_square> sub
+
+G91         (incremental)
+F150        (mm/min)
+
+#<side> = 12
+#<i> = 0
+
+o100 while [#<i> LT 4]
+
+    o101 if [#<i> EQ 0]
+        G1 X#<side>
+    o101 endif
+
+    o102 if [#<i> EQ 1]
+        G1 Z-#<side>
+    o102 endif
+
+    o103 if [#<i> EQ 2]
+        G1 X-#<side>
+    o103 endif
+
+    o104 if [#<i> EQ 3]
+        G1 Z#<side>
+    o104 endif
+
+    #<i> = [#<i> + 1]
+
+o100 endwhile
+
+o<level2_steps> call
+
+G90         (back to absolute)
+
+o<level1_square> endsub

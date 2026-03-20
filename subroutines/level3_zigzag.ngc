@@ -1,0 +1,18 @@
+o<level3_zigzag> sub
+
+G91
+F80         (mm/min)
+
+#<amp> = 2
+#<pitch> = 5
+#<k> = 0
+
+o300 while [#<k> LT 4]
+    G1 X#<amp> Z-#<pitch>
+    G1 X-#<amp> Z-#<pitch>
+    #<k> = [#<k> + 1]
+o300 endwhile
+
+G90
+
+o<level3_zigzag> endsub

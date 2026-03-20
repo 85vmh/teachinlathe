@@ -1,0 +1,27 @@
+o<level2_steps> sub
+
+G91
+F100        (mm/min)
+
+#<step_x> = 4
+#<step_z> = 3
+#<n> = 0
+
+o200 while [#<n> LT 3]
+    G1 X#<step_x>
+    G1 Z-#<step_z>
+    #<n> = [#<n> + 1]
+o200 endwhile
+
+o<level3_zigzag> call
+
+#<n> = 0
+o201 while [#<n> LT 3]
+    G1 Z#<step_z>
+    G1 X-#<step_x>
+    #<n> = [#<n> + 1]
+o201 endwhile
+
+G90
+
+o<level2_steps> endsub

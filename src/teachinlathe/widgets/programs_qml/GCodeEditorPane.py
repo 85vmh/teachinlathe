@@ -264,6 +264,27 @@ class GCodeTextEdit(QTextEdit):
         target_value = scrollbar.value() + rect.center().y() - (self.viewport().height() // 2)
         scrollbar.setValue(max(scrollbar.minimum(), min(scrollbar.maximum(), target_value)))
 
+    def positionLineNearBottom(self, line_number, lines_below=1):
+        try:
+            line_number = int(line_number)
+        except (TypeError, ValueError):
+            return
+
+        if line_number <= 0:
+            return
+
+        block = self.document().findBlockByLineNumber(line_number - 1)
+        if not block.isValid():
+            return
+
+        cursor = QTextCursor(block)
+        rect = self.cursorRect(cursor)
+        line_height = max(1, rect.height())
+        target_y = self.viewport().height() - ((lines_below + 1) * line_height)
+        scrollbar = self.verticalScrollBar()
+        target_value = scrollbar.value() + rect.top() - target_y
+        scrollbar.setValue(max(scrollbar.minimum(), min(scrollbar.maximum(), target_value)))
+
     def _apply_line_spacing(self):
         if self._applying_spacing:
             return
@@ -289,7 +310,6 @@ class GCodeEditorPane(QWidget):
         super().__init__(parent)
         self._bridge = bridge
         self._mode = mode
-        self._last_machine_path = ''
         self._last_motion_line = 0
         self._active_call_line = 0
         self._active_subroutine_path = ''
@@ -342,11 +362,11 @@ class GCodeEditorPane(QWidget):
         layout.addWidget(toolbar)
 
         self._editor = GCodeTextEdit(self._bridge, self)
-        layout.addWidget(self._editor)
+        layout.addWidget(self._editor, 1)
 
-        self._subroutine_overlay = QFrame(self._editor.viewport())
-        self._subroutine_overlay.hide()
-        self._subroutine_overlay.setStyleSheet(
+        self._subroutine_panel = QFrame(self)
+        self._subroutine_panel.hide()
+        self._subroutine_panel.setStyleSheet(
             'QFrame {'
             'background: #252526;'
             'border: 2px solid #555555;'
@@ -354,17 +374,18 @@ class GCodeEditorPane(QWidget):
             '}'
         )
 
-        overlay_layout = QVBoxLayout(self._subroutine_overlay)
-        overlay_layout.setContentsMargins(10, 10, 10, 10)
-        overlay_layout.setSpacing(8)
+        panel_layout = QVBoxLayout(self._subroutine_panel)
+        panel_layout.setContentsMargins(10, 10, 10, 10)
+        panel_layout.setSpacing(8)
 
-        self._subroutine_title = QLabel('Subroutine', self._subroutine_overlay)
+        self._subroutine_title = QLabel('Subroutine', self._subroutine_panel)
         self._subroutine_title.setStyleSheet('color: #d4d4d4; font: 12pt "Noto";')
-        overlay_layout.addWidget(self._subroutine_title)
+        panel_layout.addWidget(self._subroutine_title)
 
-        self._subroutine_editor = GCodeTextEdit(self._bridge, self._subroutine_overlay)
+        self._subroutine_editor = GCodeTextEdit(self._bridge, self._subroutine_panel)
         self._subroutine_editor.setReadOnly(True)
-        overlay_layout.addWidget(self._subroutine_editor)
+        panel_layout.addWidget(self._subroutine_editor, 1)
+        layout.addWidget(self._subroutine_panel, 1)
 
         self._bridge.fileContentChanged.connect(self._on_file_content_changed)
         self._bridge.filePathChanged.connect(self._on_file_path_changed)
@@ -399,7 +420,7 @@ class GCodeEditorPane(QWidget):
                 folder_path = candidate_path
                 file_name = file_path[len(candidate_path):].lstrip(os.sep)
                 break
-        if folder_path is None or os.sep in file_name:
+        if folder_path is None:
             self._bridge.saveCurrentFile(self)
             from qtpyvcp.actions.program_actions import load as load_program
             load_program(file_path)
@@ -449,20 +470,6 @@ class GCodeEditorPane(QWidget):
         machine_path = os.path.abspath(machine_path) if machine_path else ''
         return bool(editor_path and machine_path and editor_path == machine_path)
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self._layout_subroutine_overlay()
-
-    def _layout_subroutine_overlay(self):
-        if self._subroutine_overlay is None:
-            return
-        viewport = self._editor.viewport()
-        width = max(320, int(viewport.width() * 0.48))
-        height = max(220, int(viewport.height() * 0.55))
-        x = max(12, viewport.width() - width - 12)
-        y = 12
-        self._subroutine_overlay.setGeometry(x, y, width, height)
-
     def _poll_subroutine_state(self):
         if not self._is_showing_machine_file():
             self._clear_subroutine_state()
@@ -510,6 +517,7 @@ class GCodeEditorPane(QWidget):
                 center=False,
                 move_cursor=True,
             )
+            self._editor.positionLineNearBottom(self._active_call_line, lines_below=1)
 
         if self._active_subroutine_path:
             self._subroutine_editor.setCurrentLineNumber(motion_line, center=True)
@@ -519,7 +527,9 @@ class GCodeEditorPane(QWidget):
         self._active_call_line = 0
         self._active_subroutine_path = ''
         self._active_subroutine_name = ''
-        self._subroutine_overlay.hide()
+        self._subroutine_panel.hide()
+        self._editor.setMinimumHeight(0)
+        self._editor.setMaximumHeight(16777215)
         if self._is_showing_machine_file():
             self._sync_motion_line()
         else:
@@ -565,8 +575,22 @@ class GCodeEditorPane(QWidget):
             return '', ''
 
         sub_name = match.group(1).strip()
-        search_dirs = INFO.getSubroutineSearchDirs()
-        candidates = [f'{sub_name}.ngc', f'{sub_name}.NC', f'{sub_name}.NGC']
+        search_dirs = []
+        for search_dir in INFO.getSubroutineSearchDirs():
+            if not search_dir:
+                continue
+            normalized_dir = os.path.abspath(os.path.expanduser(search_dir))
+            if normalized_dir not in search_dirs:
+                search_dirs.append(normalized_dir)
+
+        candidates = [
+            f'{sub_name}.ngc',
+            f'{sub_name}.nc',
+            f'{sub_name}.gcode',
+            f'{sub_name}.NGC',
+            f'{sub_name}.NC',
+            f'{sub_name}.GCODE',
+        ]
 
         for search_dir in search_dirs:
             for candidate in candidates:
@@ -589,6 +613,6 @@ class GCodeEditorPane(QWidget):
         self._subroutine_title.setText(f'Subroutine: {os.path.basename(self._active_subroutine_path)}')
         self._subroutine_editor.setEditorText(content)
         self._subroutine_editor.clearLineHighlight()
-        self._layout_subroutine_overlay()
-        self._subroutine_overlay.show()
-        self._subroutine_overlay.raise_()
+        self._editor.setMinimumHeight(200)
+        self._editor.setMaximumHeight(200)
+        self._subroutine_panel.show()
