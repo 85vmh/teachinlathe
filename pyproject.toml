@@ -14,6 +14,9 @@ version = "0.0.1"
 packages = [
     { include = "teachinlathe", from = "src" }
 ]
+include = [
+    "src/teachinlathe/widgets/programs_qml/*.json"
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"
