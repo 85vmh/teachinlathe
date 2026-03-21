@@ -1,4 +1,5 @@
 **/__pycache__/
 .idea
 /conversational/program_*.json
-/subroutines/Conversational*/Conversational_program_demo.*
+/subroutines/Conversational Json/*
+/subroutines/Conversational Gcode/*
