@@ -42,17 +42,13 @@ o99 ENDIF
 
 (print, Angle offset per lead: [#<lead_angle_step>])
 
-o100 WHILE [#<lead_index> LE [#<leads_count> - 1]]
-    #<z_pos> = #<z_start>
-    #<lead_angle_offset> = [#<lead_angle_step> * #<lead_index>]
+G0 X[#<x_start>] Z[#<z_pos>]
 
-    (print, Cutting lead [#<lead_index> + 1] at Z position: [#<z_pos>] with angle offset: [#<lead_angle_offset>])
+(print, Cutting pass 1)
+G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
 
-    G0 Z[#<z_pos>]
-    G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D#<lead_angle_offset>
-
-    #<lead_index> = [#<lead_index> + 1]
-o100 ENDWHILE
+(print, Cutting pass 2)
+G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D180
 
 G0 Z#<z_start>
 
