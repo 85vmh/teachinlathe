@@ -23,7 +23,7 @@ from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.widgets.FrameAnimator import FrameAnimator
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 from teachinlathe.widgets.tools_list_provider import ToolsListProvider
-from teachinlathe.widgets.programs_qml import ProgramsQml
+from teachinlathe.widgets.programs_qml.ProgramsQml import ProgramsQml
 import teachinlathe_rc
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
@@ -229,6 +229,7 @@ class MyMainWindow(VCPMainWindow):
         tab_layout.setContentsMargins(0, 0, 0, 0)
 
         self.programsQmlWidget = ProgramsQml(folders, self.programsQmlTab)
+        self.programsQmlWidget.viewmodel.programLoadRequested.connect(self.onProgramsQmlProgramLoadRequested)
         tab_layout.addWidget(self.programsQmlWidget)
 
     def _syncEmbeddedQmlTabs(self):
@@ -268,6 +269,9 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.PROGRAM_LOADED.value)
         self.vtk.clearLivePlot()
+
+    def onProgramsQmlProgramLoadRequested(self, _path):
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
 
     def backToPrograms(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)

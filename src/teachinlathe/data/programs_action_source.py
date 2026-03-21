@@ -1,0 +1,287 @@
+import linuxcnc
+from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+
+from qtpyvcp.actions import program_actions
+from qtpyvcp.actions.machine_actions import issue_mdi
+from qtpyvcp.plugins import getPlugin
+
+
+STATUS = getPlugin('status')
+STAT = STATUS.stat
+CMD = linuxcnc.command()
+
+
+def _channel_value(name, default=None):
+    channel = getattr(STATUS, name, None)
+    if channel is None:
+        return default
+    return getattr(channel, 'value', default)
+
+
+class ProgramButtonState(QObject):
+    textChanged = pyqtSignal(str)
+    enabledChanged = pyqtSignal(bool)
+    activeChanged = pyqtSignal(bool)
+    checkedChanged = pyqtSignal(bool)
+    tooltipChanged = pyqtSignal(str)
+
+    def __init__(self, text='', parent=None):
+        super().__init__(parent)
+        self._text = text
+        self._enabled = False
+        self._active = False
+        self._checked = False
+        self._tooltip = ''
+
+    @pyqtProperty(str, notify=textChanged)
+    def text(self):
+        return self._text
+
+    @pyqtProperty(bool, notify=enabledChanged)
+    def enabled(self):
+        return self._enabled
+
+    @pyqtProperty(bool, notify=activeChanged)
+    def active(self):
+        return self._active
+
+    @pyqtProperty(bool, notify=checkedChanged)
+    def checked(self):
+        return self._checked
+
+    @pyqtProperty(str, notify=tooltipChanged)
+    def tooltip(self):
+        return self._tooltip
+
+    def update(self, *, text=None, enabled=None, active=None, checked=None, tooltip=None):
+        if text is not None and text != self._text:
+            self._text = text
+            self.textChanged.emit(text)
+        if enabled is not None and enabled != self._enabled:
+            self._enabled = enabled
+            self.enabledChanged.emit(enabled)
+        if active is not None and active != self._active:
+            self._active = active
+            self.activeChanged.emit(active)
+        if checked is not None and checked != self._checked:
+            self._checked = checked
+            self.checkedChanged.emit(checked)
+        if tooltip is not None and tooltip != self._tooltip:
+            self._tooltip = tooltip
+            self.tooltipChanged.emit(tooltip)
+
+
+class ProgramsActionSource(QObject):
+    stateChanged = pyqtSignal()
+
+    def __init__(self, runtime_store, parent=None):
+        super().__init__(parent)
+        self._runtime_store = runtime_store
+        self._start = ProgramButtonState('Start Program', self)
+        self._stop = ProgramButtonState('Stop Program', self)
+        self._pause_resume = ProgramButtonState('Pause Program', self)
+        self._optional_stop = ProgramButtonState('Break on M1', self)
+        self._block_delete = ProgramButtonState('Skip "/" Blocks', self)
+        self._mdi = ProgramButtonState('Run MDI', self)
+
+        runtime_store.snapshotChanged.connect(lambda _snapshot: self.refresh())
+        self._bind_status_updates()
+        self.refresh()
+
+    @pyqtProperty(QObject, constant=True)
+    def startAction(self):
+        return self._start
+
+    @pyqtProperty(QObject, constant=True)
+    def stopAction(self):
+        return self._stop
+
+    @pyqtProperty(QObject, constant=True)
+    def pauseResumeAction(self):
+        return self._pause_resume
+
+    @pyqtProperty(QObject, constant=True)
+    def optionalStopAction(self):
+        return self._optional_stop
+
+    @pyqtProperty(QObject, constant=True)
+    def blockDeleteAction(self):
+        return self._block_delete
+
+    @pyqtProperty(QObject, constant=True)
+    def mdiAction(self):
+        return self._mdi
+
+    def _bind_status_updates(self):
+        channels = (
+            getattr(STATUS, 'estop', None),
+            getattr(STATUS, 'enabled', None),
+            getattr(STATUS, 'all_axes_homed', None),
+            getattr(STATUS, 'interp_state', None),
+            getattr(STATUS, 'file', None),
+            getattr(STATUS, 'state', None),
+            getattr(STATUS, 'paused', None),
+            getattr(STATUS, 'task_state', None),
+            getattr(STATUS, 'block_delete', None),
+            getattr(STATUS, 'optional_stop', None),
+            getattr(STATUS, 'homed', None),
+        )
+        for channel in channels:
+            if channel is None:
+                continue
+            try:
+                channel.onValueChanged(lambda *_args: self.refresh())
+            except Exception:
+                try:
+                    channel.notify(lambda *_args: self.refresh())
+                except Exception:
+                    pass
+
+    def refresh(self):
+        snapshot = self._runtime_store.poll()
+        stat = self._runtime_store.stat
+
+        start_enabled, start_tooltip = self._run_state(stat)
+        running = stat.state == linuxcnc.RCS_EXEC and not bool(stat.paused)
+        self._start.update(
+            enabled=start_enabled,
+            active=running,
+            checked=running,
+            tooltip=start_tooltip,
+        )
+
+        stop_enabled, stop_tooltip = self._abort_state(stat)
+        self._stop.update(
+            enabled=stop_enabled,
+            active=stop_enabled,
+            checked=stop_enabled,
+            tooltip=stop_tooltip,
+        )
+
+        pause_enabled, pause_tooltip, pause_text, paused = self._pause_resume_state(stat)
+        self._pause_resume.update(
+            text=pause_text,
+            enabled=pause_enabled,
+            active=paused,
+            checked=paused,
+            tooltip=pause_tooltip,
+        )
+
+        optional_enabled, optional_tooltip = self._optional_stop_state(stat)
+        optional_checked = bool(_channel_value('optional_stop', getattr(stat, 'optional_stop', False)))
+        self._optional_stop.update(
+            enabled=optional_enabled,
+            active=optional_checked,
+            checked=optional_checked,
+            tooltip=optional_tooltip,
+        )
+
+        block_enabled, block_tooltip = self._block_delete_state(stat)
+        block_checked = bool(_channel_value('block_delete', getattr(stat, 'block_delete', False)))
+        self._block_delete.update(
+            enabled=block_enabled,
+            active=block_checked,
+            checked=block_checked,
+            tooltip=block_tooltip,
+        )
+
+        mdi_enabled, mdi_tooltip = self._mdi_state(stat)
+        self._mdi.update(
+            enabled=mdi_enabled,
+            active=False,
+            checked=False,
+            tooltip=mdi_tooltip,
+        )
+        self.stateChanged.emit()
+        return snapshot
+
+    def _run_state(self, stat):
+        if stat.estop:
+            return False, "Can't run program when in E-Stop"
+        if not stat.enabled:
+            return False, "Can't run program when not enabled"
+        if not STATUS.allHomed():
+            return False, "Can't run program when not homed"
+        if not stat.paused and stat.interp_state != linuxcnc.INTERP_IDLE:
+            return False, "Can't run program when already running"
+        if not (stat.file or ''):
+            return False, "Can't run program when no file loaded"
+        return True, 'Run program'
+
+    def _abort_state(self, stat):
+        if stat.state in (linuxcnc.RCS_EXEC, linuxcnc.RCS_ERROR):
+            return True, ''
+        return False, 'Nothing to abort'
+
+    def _pause_resume_state(self, stat):
+        paused = bool(stat.state == linuxcnc.RCS_EXEC and stat.paused)
+        if paused:
+            return True, 'Resume program execution', 'Resume Program', True
+        if stat.state == linuxcnc.RCS_EXEC and not stat.paused:
+            return True, 'Pause program execution', 'Pause Program', False
+        return False, 'No program running to pause', 'Pause Program', False
+
+    def _optional_stop_state(self, stat):
+        if int(_channel_value('task_state', getattr(stat, 'task_state', 0)) or 0) == linuxcnc.STATE_ON:
+            return True, ''
+        return False, 'Machine must be ON to set Opt Stop'
+
+    def _block_delete_state(self, stat):
+        if int(_channel_value('task_state', getattr(stat, 'task_state', 0)) or 0) == linuxcnc.STATE_ON:
+            return True, ''
+        return False, 'Machine must be ON to set Block Del'
+
+    def _mdi_state(self, stat):
+        if stat.task_state == linuxcnc.STATE_ON and STATUS.allHomed() and stat.interp_state == linuxcnc.INTERP_IDLE:
+            return True, ''
+        return False, "Can't issue MDI unless machine is ON, HOMED and IDLE"
+
+    @pyqtSlot()
+    def triggerStart(self):
+        if not self._start.enabled:
+            return
+        program_actions.run()
+        self.refresh()
+
+    @pyqtSlot()
+    def triggerStop(self):
+        if not self._stop.enabled:
+            return
+        program_actions.abort()
+        self.refresh()
+
+    @pyqtSlot()
+    def triggerPauseResume(self):
+        if not self._pause_resume.enabled:
+            return
+        if self._pause_resume.active:
+            program_actions.resume()
+        else:
+            program_actions.pause()
+        self.refresh()
+
+    @pyqtSlot(bool)
+    def setOptionalStopEnabled(self, enabled):
+        if not self._optional_stop.enabled:
+            return
+        CMD.set_optional_stop(bool(enabled))
+        CMD.wait_complete()
+        self._runtime_store.poll()
+        self.refresh()
+
+    @pyqtSlot(bool)
+    def setBlockDeleteEnabled(self, enabled):
+        if not self._block_delete.enabled:
+            return
+        CMD.set_block_delete(bool(enabled))
+        CMD.wait_complete()
+        self._runtime_store.poll()
+        self.refresh()
+
+    @pyqtSlot(str)
+    def submitMdi(self, command):
+        command = (command or '').strip()
+        if not command or not self._mdi.enabled:
+            return
+        issue_mdi(command)
+        self.refresh()

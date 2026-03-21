@@ -1,0 +1,309 @@
+import os
+
+from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+
+from teachinlathe.widgets.programs_qml.FileSystemBridge import FileSystemBridge
+
+from .program_runtime import ProgramRuntimeStore
+from .program_stack import ProgramCallStackResolver
+from .programs_action_source import ProgramsActionSource
+
+
+class ProgramsViewModel(QObject):
+    screenIndexChanged = pyqtSignal(int)
+    currentFilePathChanged = pyqtSignal(str)
+    currentFileContentChanged = pyqtSignal(str)
+    currentFileDisplayPathChanged = pyqtSignal(str)
+    editModeChanged = pyqtSignal(bool)
+    dirtyChanged = pyqtSignal(bool)
+    executionViewChanged = pyqtSignal()
+    runningStateChanged = pyqtSignal()
+    programLoadRequested = pyqtSignal(str)
+    gremlinZoomInRequested = pyqtSignal()
+    gremlinZoomOutRequested = pyqtSignal()
+    gremlinClearRequested = pyqtSignal()
+    gremlinFitRequested = pyqtSignal()
+
+    def __init__(self, folders, parent=None):
+        super().__init__(parent)
+        self._bridge = FileSystemBridge(folders, self)
+        self._runtime_store = ProgramRuntimeStore(self)
+        self._call_stack_resolver = ProgramCallStackResolver(self)
+        self._actions = ProgramsActionSource(self._runtime_store, self)
+        self._screen_index = 0
+        self._execution_frames = []
+        self._active_execution_file_path = ''
+        self._active_execution_title = ''
+        self._active_execution_content = ''
+        self._active_execution_motion_line = 0
+
+        self._bridge.filePathChanged.connect(self._on_file_path_changed)
+        self._bridge.fileContentChanged.connect(self._on_file_content_changed)
+        self._bridge.editModeChanged.connect(self.editModeChanged)
+        self._bridge.dirtyChanged.connect(self._on_dirty_changed)
+        self._bridge.screenChangeRequested.connect(self._set_screen_index)
+        self._bridge.programLoadRequested.connect(self.programLoadRequested)
+
+        self._runtime_store.snapshotChanged.connect(self._on_runtime_snapshot_changed)
+        self._runtime_store.machineFileChanged.connect(lambda _path: self.runningStateChanged.emit())
+        self._actions.stateChanged.connect(self.runningStateChanged)
+
+        self._refresh_execution_view()
+
+    @property
+    def bridge(self):
+        return self._bridge
+
+    @property
+    def runtime_store(self):
+        return self._runtime_store
+
+    @pyqtProperty(QObject, constant=True)
+    def actions(self):
+        return self._actions
+
+    @pyqtProperty('QVariantList', constant=True)
+    def folderNames(self):
+        return self._bridge.folderNames
+
+    @pyqtProperty(int, notify=screenIndexChanged)
+    def screenIndex(self):
+        return self._screen_index
+
+    @pyqtProperty(str, notify=currentFilePathChanged)
+    def currentFilePath(self):
+        return self._bridge.currentFilePath
+
+    @pyqtProperty(str, notify=currentFileContentChanged)
+    def currentFileContent(self):
+        return self._bridge._current_content
+
+    @pyqtProperty(str, notify=currentFileDisplayPathChanged)
+    def currentFileDisplayPath(self):
+        path = self.currentFilePath or 'No file loaded'
+        return f'* {path}' if self.dirty and path else path
+
+    @pyqtProperty(bool, notify=editModeChanged)
+    def editMode(self):
+        return self._bridge.editMode
+
+    @pyqtProperty(bool, notify=dirtyChanged)
+    def dirty(self):
+        return self._bridge.dirty
+
+    @pyqtProperty(bool, notify=executionViewChanged)
+    def hasExecutionStack(self):
+        return bool(self._execution_frames and self._active_execution_content)
+
+    @pyqtProperty('QVariantList', notify=executionViewChanged)
+    def executionFrames(self):
+        return list(self._execution_frames)
+
+    @pyqtProperty(str, notify=executionViewChanged)
+    def activeExecutionFilePath(self):
+        return self._active_execution_file_path
+
+    @pyqtProperty(str, notify=executionViewChanged)
+    def activeExecutionTitle(self):
+        return self._active_execution_title
+
+    @pyqtProperty(str, notify=executionViewChanged)
+    def activeExecutionContent(self):
+        return self._active_execution_content
+
+    @pyqtProperty(int, notify=executionViewChanged)
+    def activeExecutionMotionLine(self):
+        return self._active_execution_motion_line
+
+    @pyqtProperty(int, notify=executionViewChanged)
+    def mainHighlightLine(self):
+        snapshot = self._runtime_store.snapshot
+        if self.hasExecutionStack:
+            return 0
+        if not self._is_showing_machine_file(snapshot.machine_file):
+            return 0
+        return int(snapshot.motion_line or 0)
+
+    @pyqtProperty(bool, notify=currentFilePathChanged)
+    def hasCurrentFile(self):
+        return bool(self.currentFilePath)
+
+    @pyqtProperty(bool, notify=screenIndexChanged)
+    def isGremlinScreen(self):
+        return self._screen_index == 1
+
+    @pyqtSlot(int)
+    def navigateTo(self, screen):
+        self._bridge.navigateTo(screen)
+
+    @pyqtSlot()
+    def showFilesScreen(self):
+        self.navigateTo(0)
+
+    @pyqtSlot()
+    def showGremlinScreen(self):
+        self.navigateTo(1)
+
+    @pyqtSlot(str, result='QVariantList')
+    def getFiles(self, folder_name):
+        return self._bridge.getFiles(folder_name)
+
+    @pyqtSlot(str, str, result='QVariantList')
+    def getFilesInPath(self, folder_name, relative_path):
+        return self._bridge.getFilesInPath(folder_name, relative_path)
+
+    @pyqtSlot(str, result=str)
+    def getFolderPath(self, folder_name):
+        return self._bridge.getFolderPath(folder_name)
+
+    @pyqtSlot(str, str)
+    def selectFile(self, folder_name, relative_path):
+        self._bridge.selectFile(folder_name, relative_path)
+
+    @pyqtSlot(str, str)
+    def openFile(self, folder_name, relative_path):
+        self._bridge.openFile(folder_name, relative_path)
+
+    @pyqtSlot(QObject)
+    def attachHighlighter(self, quick_document):
+        self._bridge.attachHighlighter(quick_document)
+
+    @pyqtSlot(str)
+    def updateCurrentContent(self, content):
+        self._bridge.updateCurrentContent(content)
+
+    @pyqtSlot(bool)
+    def setEditMode(self, editing):
+        self._bridge.setEditMode(editing)
+
+    @pyqtSlot()
+    def toggleEditMode(self):
+        self._bridge.setEditMode(not self._bridge.editMode)
+
+    @pyqtSlot(result=bool)
+    def saveCurrentFile(self):
+        return bool(self._bridge.saveCurrentFile(None))
+
+    @pyqtSlot(result=bool)
+    def saveCurrentFileAs(self):
+        return bool(self._bridge.saveCurrentFileAs(None))
+
+    @pyqtSlot()
+    def openCurrentFileInMachine(self):
+        file_path = self.currentFilePath
+        if not file_path:
+            return
+
+        folder_name = None
+        relative_path = None
+        for candidate_name, candidate_path in self._bridge._folders:
+            candidate_root = os.path.abspath(candidate_path)
+            if file_path == candidate_root or file_path.startswith(candidate_root + os.sep):
+                folder_name = candidate_name
+                relative_path = file_path[len(candidate_root):].lstrip(os.sep)
+                break
+
+        if folder_name is not None and relative_path is not None:
+            self._bridge.openFile(folder_name, relative_path)
+            return
+
+        self._bridge.saveCurrentFile(None)
+        self.programLoadRequested.emit(file_path)
+        from qtpyvcp.actions.program_actions import load as load_program
+        load_program(file_path)
+        self._bridge.navigateTo(1)
+
+    @pyqtSlot()
+    def zoomGremlinIn(self):
+        self.gremlinZoomInRequested.emit()
+
+    @pyqtSlot()
+    def zoomGremlinOut(self):
+        self.gremlinZoomOutRequested.emit()
+
+    @pyqtSlot()
+    def clearGremlinPlot(self):
+        self.gremlinClearRequested.emit()
+
+    @pyqtSlot()
+    def requestGremlinFit(self):
+        self.gremlinFitRequested.emit()
+
+    def _on_file_path_changed(self, path):
+        self.currentFilePathChanged.emit(path)
+        self.currentFileDisplayPathChanged.emit(self.currentFileDisplayPath)
+        self._refresh_execution_view()
+
+    def _on_file_content_changed(self, content):
+        self.currentFileContentChanged.emit(content)
+        self._refresh_execution_view()
+
+    def _on_dirty_changed(self, dirty):
+        self.dirtyChanged.emit(dirty)
+        self.currentFileDisplayPathChanged.emit(self.currentFileDisplayPath)
+
+    def _on_runtime_snapshot_changed(self, _snapshot):
+        self.runningStateChanged.emit()
+        self._refresh_execution_view()
+
+    def _set_screen_index(self, screen):
+        screen = int(screen or 0)
+        if self._screen_index == screen:
+            return
+        self._screen_index = screen
+        self.screenIndexChanged.emit(self._screen_index)
+
+    def _is_showing_machine_file(self, machine_file=''):
+        editor_path = os.path.abspath(self.currentFilePath) if self.currentFilePath else ''
+        runtime_path = os.path.abspath(machine_file) if machine_file else ''
+        return bool(editor_path and runtime_path and editor_path == runtime_path)
+
+    def _refresh_execution_view(self):
+        snapshot = self._runtime_store.snapshot
+        frames = []
+        active_path = ''
+        active_title = ''
+        active_content = ''
+        active_motion_line = 0
+
+        if self._is_showing_machine_file(snapshot.machine_file) and snapshot.call_level > 0:
+            stack_view = self._call_stack_resolver.build_view(snapshot)
+            if stack_view is not None:
+                for frame in stack_view.frames:
+                    frames.append({
+                        'filePath': frame.file_path,
+                        'title': os.path.basename(frame.file_path) or 'Unknown file',
+                        'content': frame.content,
+                        'lineNumber': int(frame.line_number or 0),
+                        'lineText': self._call_stack_resolver.get_line_text(frame.content, frame.line_number),
+                    })
+                active_path = stack_view.active_file_path
+                active_title = os.path.basename(active_path) or 'Subroutine'
+                active_content = stack_view.active_content
+                active_motion_line = int(stack_view.motion_line or 0)
+
+        next_signature = (
+            tuple((frame['filePath'], frame['lineNumber'], frame['lineText']) for frame in frames),
+            active_path,
+            active_content,
+            active_motion_line,
+            int(snapshot.motion_line or 0),
+            bool(self._is_showing_machine_file(snapshot.machine_file)),
+        )
+        current_signature = (
+            tuple((frame['filePath'], frame['lineNumber'], frame['lineText']) for frame in self._execution_frames),
+            self._active_execution_file_path,
+            self._active_execution_content,
+            self._active_execution_motion_line,
+            self.mainHighlightLine,
+            bool(self.hasExecutionStack),
+        )
+        if next_signature == current_signature:
+            return
+
+        self._execution_frames = frames
+        self._active_execution_file_path = active_path
+        self._active_execution_title = active_title
+        self._active_execution_content = active_content
+        self._active_execution_motion_line = active_motion_line
+        self.executionViewChanged.emit()

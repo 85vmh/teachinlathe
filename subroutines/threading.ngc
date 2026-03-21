@@ -32,25 +32,25 @@ G90 ; Absolute Distance
 (print, Taper Length: [#<taper_length>])
 
 #<lead_index> = 0
+#<lead_angle_step> = 0
 
-#<lead_z_offset> = #<pitch>
-
-(if its a left hand thread, reverse the sign)
-o99 IF [#<z_start> LT #<z_end>]
-    #<lead_z_offset> = -#<lead_z_offset>
+(if multiple leads are requested, each lead starts at a different spindle angle)
+o99 IF [#<leads_count> GT 1]
+    #<lead_angle_step> = [360 / #<leads_count>]
 o99 ENDIF
 
-(print, Z offset per lead: [#<lead_z_offset>])
+(print, Angle offset per lead: [#<lead_angle_step>])
 
 o100 WHILE [#<lead_index> LE [#<leads_count> - 1]]
-    #<z_pos> = [#<z_start> + [#<lead_z_offset> * #<lead_index>]]
+    #<z_pos> = #<z_start>
+    #<lead_angle_offset> = [#<lead_angle_step> * #<lead_index>]
 
-    (print, Cutting lead #[#<lead_index> + 1] at Z position: [#<z_pos>])
+    (print, Cutting lead #[#<lead_index> + 1] at Z position: [#<z_pos>] with angle offset: [#<lead_angle_offset>])
 
     G0 Z[#<z_pos>]
-    G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
+    G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D#<lead_angle_offset>
 
-    #<lead_index> = [#<lead_index> + 1]    
+    #<lead_index> = [#<lead_index> + 1]
 o100 ENDWHILE
 
 G0 Z#<z_start>
