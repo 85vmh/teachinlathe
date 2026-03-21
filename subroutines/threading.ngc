@@ -42,7 +42,7 @@ o99 ENDIF
 
 (print, Angle offset per lead: [#<lead_angle_step>])
 
-G0 X[#<z_start>] Z[#<z_pos>]
+G0 X[#<x_start>] Z[#<z_start>]
 
 (print, Cutting pass 1)
 G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
