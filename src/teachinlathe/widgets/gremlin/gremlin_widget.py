@@ -209,6 +209,17 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
 
         return initcodes
 
+    def report_gcode_error(self, result, seq, filename):
+        message = f"Gremlin preview error {result} at line {seq} while loading {filename}"
+        try:
+            LOG.error(message)
+        except Exception:
+            print(message)
+        try:
+            self.output_notify_message(message)
+        except Exception:
+            pass
+
     def _reload_preview(self, filename=None, *, sync_task=True):
         import os
         import shutil
