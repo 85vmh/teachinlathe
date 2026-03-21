@@ -30,6 +30,9 @@ def generate_threading_gcode(op):
     z_end = _get_float_value(op, "z_end", 0.0)
     pitch = _get_float_value(op, "pitch", 0.0)
     starts = int(op.get("starts", 1) or 1)
+    retract = abs(_get_float_value(op, "retract", 0.0))
+    if location.upper() == "ID":
+        retract = -retract
     initial_doc = _get_float_value(op, "initial_doc", 0.0)
     depth_degression = _get_float_value(op, "depth_degression", 1.0)
     compound_angle = _get_float_value(op, "compound_angle", 0.0)
@@ -71,6 +74,7 @@ def generate_threading_gcode(op):
         f"[{fmt(z_start)}] "
         f"[{fmt(x_end)}] "
         f"[{fmt(z_end)}] "
+        f"[{fmt(retract)}] "
         f"[{fmt(pitch)}] "
         f"[{starts}] "
         f"[{fmt(initial_doc)}] "

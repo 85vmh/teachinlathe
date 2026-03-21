@@ -4,22 +4,23 @@ O<threading> sub
 #<z_start>              = #2
 #<x_end>                = #3
 #<z_end>                = #4
-#<pitch>                = #5
-#<leads_count>          = #6
-#<initial_doc>          = #7
-#<depth_degression>     = #8
-#<infeed_angle>         = #9
-#<taper_type>           = #10
-#<taper_angle>          = #11
-#<spring_passes>        = #12
+#<retract>              = #5
+#<pitch>                = #6
+#<leads_count>          = #7
+#<initial_doc>          = #8
+#<depth_degression>     = #9
+#<infeed_angle>         = #10
+#<taper_type>           = #11
+#<taper_angle>          = #12
+#<spring_passes>        = #13
 
 G7  ; Lathe Diameter Mode
 G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
 
-(The drive line will be the path on which the tool will retract from the cut, it should be bigger than the x_start)
-#<drive_line>       = [#<_x> * 2] (current diameter value, <_x> always represents the radius)
+(The drive line is an offset from x_start. Pass retract as + for external threads and - for internal threads.)
+#<drive_line>       = [#<x_start> + #<retract>]
 
 #<diameter_diff>    = [ABS[#<x_start> - #<x_end>]]
 #<taper_length>     = [TAN[#<taper_angle>] * #<diameter_diff> / 2]
@@ -45,7 +46,7 @@ o100 WHILE [#<lead_index> LE [#<leads_count> - 1]]
     #<z_pos> = #<z_start>
     #<lead_angle_offset> = [#<lead_angle_step> * #<lead_index>]
 
-    (print, Cutting lead #[#<lead_index> + 1] at Z position: [#<z_pos>] with angle offset: [#<lead_angle_offset>])
+    (print, Cutting lead [#<lead_index> + 1] at Z position: [#<z_pos>] with angle offset: [#<lead_angle_offset>])
 
     G0 Z[#<z_pos>]
     G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D#<lead_angle_offset>
