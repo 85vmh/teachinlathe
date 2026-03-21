@@ -1,8 +1,6 @@
 import os
-import re
 
-import linuxcnc
-from PyQt5.QtCore import QRect, QSize, Qt, QTimer
+from PyQt5.QtCore import QRect, QSize, Qt
 from PyQt5.QtGui import QColor, QFont, QPainter, QTextBlockFormat, QTextCursor
 from PyQt5.QtWidgets import (
     QFrame,
@@ -15,8 +13,6 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from qtpyvcp.plugins import getPlugin
-from qtpyvcp.utilities.info import Info
 
 
 EDITOR_FONT_FAMILY = 'DejaVu Sans Mono'
@@ -26,9 +22,6 @@ CURRENT_LINE_BORDER_COLOR = '#3A86FF'
 CURRENT_LINE_BORDER_WIDTH = 1
 SUBROUTINE_CALL_BORDER_COLOR = '#E51400'
 SUBROUTINE_CALL_BORDER_WIDTH = 2
-STATUS = getPlugin('status')
-INFO = Info()
-SUBROUTINE_CALL_PATTERN = re.compile(r"o<([^>]+)>\s+call\b", re.IGNORECASE)
 
 
 class LineNumberArea(QWidget):
@@ -242,12 +235,7 @@ class GCodeTextEdit(QTextEdit):
         self.viewport().update()
 
     def _effective_highlight_line(self):
-        if self._highlight_line_number > 0:
-            return self._highlight_line_number
-        return self.textCursor().blockNumber() + 1
-
-    def currentHighlightedLineNumber(self):
-        return self._effective_highlight_line()
+        return self._highlight_line_number if self._highlight_line_number > 0 else 0
 
     def _line_rect_for_number(self, line_number):
         if line_number <= 0:
@@ -305,17 +293,59 @@ class GCodeTextEdit(QTextEdit):
             self._applying_spacing = False
 
 
+class CallStackFrameWidget(QFrame):
+    def __init__(self, bridge, parent=None):
+        super().__init__(parent)
+        self._bridge = bridge
+
+        self.setStyleSheet(
+            'QFrame {'
+            'background: #252526;'
+            'border: 2px solid #555555;'
+            'border-radius: 10px;'
+            '}'
+        )
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(8)
+
+        self._title = QLabel(self)
+        self._title.setStyleSheet('color: #d4d4d4; font: 12pt "Noto";')
+        layout.addWidget(self._title)
+
+        self._editor = GCodeTextEdit(self._bridge, self)
+        self._editor.setReadOnly(True)
+        self._editor.setMinimumHeight(120)
+        self._editor.setMaximumHeight(120)
+        layout.addWidget(self._editor)
+
+    def setFrameContent(self, file_path, content, line_number):
+        title = os.path.basename(file_path) if file_path else 'Unknown file'
+        self._title.setText(title)
+        self._title.setToolTip(file_path or '')
+        self._editor.setEditorText(content)
+        self._editor.clearLineHighlight()
+        if line_number > 0:
+            self._editor.setLineHighlight(
+                line_number,
+                border_color=SUBROUTINE_CALL_BORDER_COLOR,
+                border_width=SUBROUTINE_CALL_BORDER_WIDTH,
+                center=False,
+                move_cursor=True,
+            )
+            self._editor.positionLineNearBottom(line_number, lines_below=1)
+
+
 class GCodeEditorPane(QWidget):
-    def __init__(self, bridge, mode, parent=None):
+    def __init__(self, bridge, mode, runtime_store, call_stack_resolver, parent=None):
         super().__init__(parent)
         self._bridge = bridge
         self._mode = mode
-        self._last_motion_line = 0
-        self._active_call_line = 0
-        self._active_subroutine_path = ''
-        self._active_subroutine_name = ''
-        self._last_call_level = 0
+        self._runtime_store = runtime_store
+        self._call_stack_resolver = call_stack_resolver
         self._subroutine_active = False
+        self._call_stack_widgets = []
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -361,50 +391,42 @@ class GCodeEditorPane(QWidget):
 
         layout.addWidget(toolbar)
 
-        self._editor = GCodeTextEdit(self._bridge, self)
-        layout.addWidget(self._editor, 1)
+        self._content_container = QWidget(self)
+        self._content_layout = QVBoxLayout(self._content_container)
+        self._content_layout.setContentsMargins(0, 0, 0, 0)
+        self._content_layout.setSpacing(0)
+        layout.addWidget(self._content_container, 1)
 
-        self._subroutine_panel = QFrame(self)
-        self._subroutine_panel.hide()
-        self._subroutine_panel.setStyleSheet(
-            'QFrame {'
-            'background: #252526;'
-            'border: 2px solid #555555;'
-            'border-radius: 10px;'
-            '}'
-        )
+        self._editor = GCodeTextEdit(self._bridge, self._content_container)
+        self._content_layout.addWidget(self._editor, 1)
 
-        panel_layout = QVBoxLayout(self._subroutine_panel)
-        panel_layout.setContentsMargins(10, 10, 10, 10)
-        panel_layout.setSpacing(8)
+        self._call_stack_container = QWidget(self._content_container)
+        self._call_stack_container.hide()
+        self._call_stack_layout = QVBoxLayout(self._call_stack_container)
+        self._call_stack_layout.setContentsMargins(0, 0, 0, 0)
+        self._call_stack_layout.setSpacing(8)
+        self._content_layout.addWidget(self._call_stack_container, 1)
 
-        self._subroutine_title = QLabel('Subroutine', self._subroutine_panel)
-        self._subroutine_title.setStyleSheet('color: #d4d4d4; font: 12pt "Noto";')
-        panel_layout.addWidget(self._subroutine_title)
-
-        self._subroutine_editor = GCodeTextEdit(self._bridge, self._subroutine_panel)
-        self._subroutine_editor.setReadOnly(True)
-        panel_layout.addWidget(self._subroutine_editor, 1)
-        layout.addWidget(self._subroutine_panel, 1)
+        self._active_subroutine_editor = GCodeTextEdit(self._bridge, self._call_stack_container)
+        self._active_subroutine_editor.setReadOnly(True)
+        self._call_stack_layout.addWidget(self._active_subroutine_editor, 1)
 
         self._bridge.fileContentChanged.connect(self._on_file_content_changed)
         self._bridge.filePathChanged.connect(self._on_file_path_changed)
         self._bridge.editModeChanged.connect(self._on_edit_mode_changed)
         self._bridge.dirtyChanged.connect(self._on_dirty_changed)
         self._editor.textChanged.connect(self._push_editor_changes)
-        STATUS.motion_line.onValueChanged(self._on_motion_line_changed)
-        STATUS.file.notify(self._on_machine_file_changed)
+        self._runtime_store.machineFileChanged.connect(self._refresh_execution_view)
+        self._runtime_store.callLevelChanged.connect(self._refresh_execution_view)
+        self._runtime_store.callStackChanged.connect(self._refresh_execution_view)
+        self._runtime_store.motionLineChanged.connect(self._on_motion_line_changed)
+        self._runtime_store.snapshotChanged.connect(self._on_runtime_snapshot_changed)
 
         self._on_file_content_changed(self._bridge._current_content)
         self._on_file_path_changed(self._bridge.currentFilePath)
         self._on_edit_mode_changed(self._bridge.editMode)
         self._on_dirty_changed(self._bridge.dirty)
-        self._on_machine_file_changed(getattr(STATUS.file, 'value', ''))
-
-        self._subroutine_timer = QTimer(self)
-        self._subroutine_timer.setInterval(150)
-        self._subroutine_timer.timeout.connect(self._poll_subroutine_state)
-        self._subroutine_timer.start()
+        self._refresh_execution_view()
 
     def _toggle_edit_mode(self):
         self._bridge.setEditMode(not self._bridge.editMode)
@@ -440,7 +462,7 @@ class GCodeEditorPane(QWidget):
 
     def _on_file_path_changed(self, path):
         self._path_label.setText(path or 'No file loaded')
-        self._sync_motion_line()
+        self._apply_runtime_snapshot(self._runtime_store.snapshot)
 
     def _on_edit_mode_changed(self, editing):
         self._editor.setReadOnly(not editing)
@@ -452,167 +474,84 @@ class GCodeEditorPane(QWidget):
         self._save_button.setEnabled(bool(self._bridge.currentFilePath) or bool(self._editor.toPlainText()))
         self._save_as_button.setEnabled(bool(self._editor.toPlainText()))
 
+    def _on_runtime_snapshot_changed(self, snapshot):
+        if not self._subroutine_active:
+            return
+        if int(snapshot.motion_line or 0) <= 0:
+            self._active_subroutine_editor.clearLineHighlight()
+            return
+        self._active_subroutine_editor.setCurrentLineNumber(snapshot.motion_line, center=True)
+
     def _on_motion_line_changed(self, line_number):
-        self._last_motion_line = int(line_number or 0)
-        if self._is_showing_machine_file() and not self._subroutine_active:
-            self._editor.setCurrentLineNumber(line_number)
-
-    def _on_machine_file_changed(self, _path):
-        self._sync_motion_line()
-
-    def _sync_motion_line(self):
-        if self._is_showing_machine_file():
-            self._editor.setCurrentLineNumber(getattr(STATUS.motion_line, 'value', 0), center=False)
-
-    def _is_showing_machine_file(self):
-        editor_path = os.path.abspath(self._bridge.currentFilePath) if self._bridge.currentFilePath else ''
-        machine_path = getattr(STATUS.file, 'value', '') or ''
-        machine_path = os.path.abspath(machine_path) if machine_path else ''
-        return bool(editor_path and machine_path and editor_path == machine_path)
-
-    def _poll_subroutine_state(self):
-        if not self._is_showing_machine_file():
-            self._clear_subroutine_state()
+        snapshot = self._runtime_store.snapshot
+        if not self._is_showing_machine_file(snapshot.machine_file):
             return
 
-        try:
-            stat = linuxcnc.stat()
-            stat.poll()
-        except Exception:
-            self._clear_subroutine_state()
+        line_number = int(line_number or 0)
+        if self._subroutine_active:
+            if line_number <= 0:
+                self._active_subroutine_editor.clearLineHighlight()
+            else:
+                self._active_subroutine_editor.setCurrentLineNumber(line_number, center=True)
+        else:
+            if line_number <= 0:
+                self._editor.clearLineHighlight()
+            else:
+                self._editor.setCurrentLineNumber(line_number, center=False)
+
+    def _refresh_execution_view(self, *_args):
+        self._apply_runtime_snapshot(self._runtime_store.snapshot)
+
+    def _apply_runtime_snapshot(self, snapshot):
+        if not self._is_showing_machine_file(snapshot.machine_file):
+            self._clear_subroutine_state(clear_main_highlight=True)
             return
 
-        call_level = int(getattr(stat, 'call_level', 0) or 0)
-        motion_line = int(getattr(stat, 'motion_line', 0) or 0)
-
-        if call_level <= 0:
-            self._last_call_level = 0
-            self._clear_subroutine_state()
-            return
-
-        if self._last_call_level <= 0:
-            self._active_call_line = self._resolve_call_line(motion_line)
-            self._active_subroutine_path, self._active_subroutine_name = self._resolve_subroutine_from_call_line(
-                self._active_call_line
-            )
-            if not self._active_call_line or not self._active_subroutine_path:
-                self._clear_subroutine_state()
-                self._last_call_level = call_level
+        if snapshot.call_level > 0:
+            stack_view = self._call_stack_resolver.build_view(snapshot)
+            if stack_view is not None:
+                self._show_call_stack_view(stack_view)
                 return
 
-            self._subroutine_active = True
-            self._show_subroutine_overlay()
-        elif not self._active_subroutine_path:
-            self._clear_subroutine_state()
-            self._last_call_level = call_level
-            return
-
-        self._last_call_level = call_level
-
-        if self._active_call_line > 0:
-            self._editor.setLineHighlight(
-                self._active_call_line,
-                border_color=SUBROUTINE_CALL_BORDER_COLOR,
-                border_width=SUBROUTINE_CALL_BORDER_WIDTH,
-                center=False,
-                move_cursor=True,
-            )
-            self._editor.positionLineNearBottom(self._active_call_line, lines_below=1)
-
-        if self._active_subroutine_path:
-            self._subroutine_editor.setCurrentLineNumber(motion_line, center=True)
-
-    def _clear_subroutine_state(self):
-        self._subroutine_active = False
-        self._active_call_line = 0
-        self._active_subroutine_path = ''
-        self._active_subroutine_name = ''
-        self._subroutine_panel.hide()
-        self._editor.setMinimumHeight(0)
-        self._editor.setMaximumHeight(16777215)
-        if self._is_showing_machine_file():
-            self._sync_motion_line()
+        self._clear_subroutine_state(clear_main_highlight=False)
+        if snapshot.motion_line > 0:
+            self._editor.setCurrentLineNumber(snapshot.motion_line, center=False)
         else:
             self._editor.clearLineHighlight()
 
-    def _resolve_call_line(self, fallback_line):
-        candidate_lines = []
-        highlighted_line = self._editor.currentHighlightedLineNumber()
-        if highlighted_line:
-            candidate_lines.append(int(highlighted_line))
-        if fallback_line:
-            candidate_lines.append(int(fallback_line))
-        if self._last_motion_line:
-            candidate_lines.append(int(self._last_motion_line))
-        if self._editor.textCursor().block().isValid():
-            candidate_lines.append(self._editor.textCursor().blockNumber() + 1)
+    def _is_showing_machine_file(self, machine_file=''):
+        editor_path = os.path.abspath(self._bridge.currentFilePath) if self._bridge.currentFilePath else ''
+        runtime_path = os.path.abspath(machine_file) if machine_file else ''
+        return bool(editor_path and runtime_path and editor_path == runtime_path)
 
-        seen = set()
-        candidate_lines = [line for line in candidate_lines if not (line in seen or seen.add(line))]
+    def _clear_subroutine_state(self, clear_main_highlight=False):
+        self._subroutine_active = False
+        self._editor.show()
+        self._call_stack_container.hide()
+        if clear_main_highlight:
+            self._editor.clearLineHighlight()
 
-        for line_number in candidate_lines:
-            if self._line_contains_subroutine_call(line_number):
-                return line_number
+    def _ensure_call_stack_widget_count(self, count):
+        while len(self._call_stack_widgets) < count:
+            widget = CallStackFrameWidget(self._bridge, self._call_stack_container)
+            self._call_stack_widgets.append(widget)
+            insert_index = max(0, self._call_stack_layout.count() - 1)
+            self._call_stack_layout.insertWidget(insert_index, widget)
 
-        return 0
+        while len(self._call_stack_widgets) > count:
+            widget = self._call_stack_widgets.pop()
+            self._call_stack_layout.removeWidget(widget)
+            widget.deleteLater()
 
-    def _line_contains_subroutine_call(self, line_number):
-        line = self._get_main_line_text(line_number)
-        return bool(SUBROUTINE_CALL_PATTERN.search(line))
+    def _show_call_stack_view(self, stack_view):
+        self._subroutine_active = True
+        self._editor.hide()
+        self._call_stack_container.show()
 
-    def _get_main_line_text(self, line_number):
-        if line_number <= 0:
-            return ''
-        lines = self._editor.toPlainText().splitlines()
-        if line_number > len(lines):
-            return ''
-        return lines[line_number - 1]
+        self._ensure_call_stack_widget_count(len(stack_view.frames))
+        for widget, frame in zip(self._call_stack_widgets, stack_view.frames):
+            widget.setFrameContent(frame.file_path, frame.content, frame.line_number)
+            widget.show()
 
-    def _resolve_subroutine_from_call_line(self, line_number):
-        line = self._get_main_line_text(line_number)
-        match = SUBROUTINE_CALL_PATTERN.search(line)
-        if not match:
-            return '', ''
-
-        sub_name = match.group(1).strip()
-        search_dirs = []
-        for search_dir in INFO.getSubroutineSearchDirs():
-            if not search_dir:
-                continue
-            normalized_dir = os.path.abspath(os.path.expanduser(search_dir))
-            if normalized_dir not in search_dirs:
-                search_dirs.append(normalized_dir)
-
-        candidates = [
-            f'{sub_name}.ngc',
-            f'{sub_name}.nc',
-            f'{sub_name}.gcode',
-            f'{sub_name}.NGC',
-            f'{sub_name}.NC',
-            f'{sub_name}.GCODE',
-        ]
-
-        for search_dir in search_dirs:
-            for candidate in candidates:
-                candidate_path = os.path.join(search_dir, candidate)
-                if os.path.isfile(candidate_path):
-                    return candidate_path, sub_name
-
-        return '', sub_name
-
-    def _show_subroutine_overlay(self):
-        if not self._active_subroutine_path:
-            return
-
-        try:
-            with open(self._active_subroutine_path, 'r', encoding='utf-8', errors='replace') as handle:
-                content = handle.read()
-        except Exception:
-            return
-
-        self._subroutine_title.setText(f'Subroutine: {os.path.basename(self._active_subroutine_path)}')
-        self._subroutine_editor.setEditorText(content)
-        self._subroutine_editor.clearLineHighlight()
-        self._editor.setMinimumHeight(200)
-        self._editor.setMaximumHeight(200)
-        self._subroutine_panel.show()
+        self._active_subroutine_editor.setEditorText(stack_view.active_content)
+        self._active_subroutine_editor.setCurrentLineNumber(stack_view.motion_line, center=True)

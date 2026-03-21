@@ -4,16 +4,14 @@ import linuxcnc
 from PyQt5.QtCore import Qt, QTimer, QUrl
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QWidget, QVBoxLayout, QStackedWidget, QSplitter
 from PyQt5.QtQuickWidgets import QQuickWidget
-from qtpyvcp.plugins import getPlugin
 from qtpyvcp.actions import program_actions
 from qtpyvcp.widgets.button_widgets.action_button import ActionButton
 from qtpyvcp.widgets.input_widgets.mdientry_widget import MDIEntry
 
+from teachinlathe.data import ProgramCallStackResolver, ProgramRuntimeStore
 from teachinlathe.widgets.gremlin.gremlin_widget import GremlinWidget
 from .FileSystemBridge import FileSystemBridge
 from .GCodeEditorPane import GCodeEditorPane
-
-STATUS = getPlugin('status')
 
 
 class ProgramsQml(QWidget):
@@ -35,19 +33,18 @@ class ProgramsQml(QWidget):
     _QML_DIR = os.path.dirname(__file__)
 
     def __init__(self, folders, parent=None):
-        """
-        Parameters
-        ----------
-        folders : list of (name: str, path: str)
-            Ordered pairs: display name → absolute folder path.
-        """
         super().__init__(parent)
 
         self.bridge = FileSystemBridge(folders, self)
+        self.runtime_store = ProgramRuntimeStore(self)
+        self.call_stack_resolver = ProgramCallStackResolver(self)
         self._pending_fit_path = ''
+
         self.bridge.screenChangeRequested.connect(self._setScreen)
         self.bridge.programLoadRequested.connect(self._prepareGremlinForLoad)
-        STATUS.file.notify(self._onMachineFileChanged)
+        self.runtime_store.machineFileChanged.connect(self._onMachineFileChanged)
+        self.runtime_store.callLevelChanged.connect(self._onCallLevelChanged)
+        self.runtime_store.snapshotChanged.connect(self._updatePauseResumeButton)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -60,12 +57,9 @@ class ProgramsQml(QWidget):
         self.stack.addWidget(self._buildGremlinScreen())
         layout.addWidget(self._buildProgramActions())
 
-    # ------------------------------------------------------------------
-    # Screen builders
-    # ------------------------------------------------------------------
+        self._updatePauseResumeButton(self.runtime_store.snapshot)
 
     def _buildFilesScreen(self):
-        """Screen 0: QML file browser (left) + native editor (right)."""
         container = QWidget(self)
         layout = QVBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -80,14 +74,19 @@ class ProgramsQml(QWidget):
             os.path.join(self._QML_DIR, 'FileBrowserPane.qml')))
         splitter.addWidget(browser)
 
-        splitter.addWidget(GCodeEditorPane(self.bridge, 'files', splitter))
+        splitter.addWidget(GCodeEditorPane(
+            self.bridge,
+            'files',
+            self.runtime_store,
+            self.call_stack_resolver,
+            splitter,
+        ))
         splitter.setSizes([320, 880])
 
         layout.addWidget(splitter)
         return container
 
     def _buildGremlinScreen(self):
-        """Screen 1: GremlinWidget (left) + native editor (right)."""
         container = QWidget(self)
         layout = QVBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -162,11 +161,17 @@ class ProgramsQml(QWidget):
 
         gremlin_layout.addWidget(gremlin_toolbar)
 
-        self.gremlin = GremlinWidget(gremlin_container)
+        self.gremlin = GremlinWidget(self.runtime_store, gremlin_container)
         gremlin_layout.addWidget(self.gremlin)
         splitter.addWidget(gremlin_container)
 
-        splitter.addWidget(GCodeEditorPane(self.bridge, 'gremlin', splitter))
+        splitter.addWidget(GCodeEditorPane(
+            self.bridge,
+            'gremlin',
+            self.runtime_store,
+            self.call_stack_resolver,
+            splitter,
+        ))
 
         splitter.setSizes([600, 400])
         layout.addWidget(splitter)
@@ -332,17 +337,10 @@ class ProgramsQml(QWidget):
         )
         layout.addWidget(self.mdi_button)
 
-        STATUS.state.onValueChanged(lambda *_: self._updatePauseResumeButton())
-        STATUS.paused.onValueChanged(lambda *_: self._updatePauseResumeButton())
-        self._updatePauseResumeButton()
         return container
 
-    # ------------------------------------------------------------------
-    # Navigation
-    # ------------------------------------------------------------------
-
-    def _prepareGremlinForLoad(self, _path):
-        self._pending_fit_path = os.path.abspath(_path) if _path else ''
+    def _prepareGremlinForLoad(self, path):
+        self._pending_fit_path = os.path.abspath(path) if path else ''
         if hasattr(self, 'gremlin'):
             self.gremlin.clearLivePlot()
             self.gremlin.update()
@@ -350,7 +348,6 @@ class ProgramsQml(QWidget):
     def _fitGremlinToWindow(self):
         if not hasattr(self, 'gremlin'):
             return
-
         self.gremlin.setViewXZ2()
         self.gremlin.update()
 
@@ -373,25 +370,28 @@ class ProgramsQml(QWidget):
         machine_path = os.path.abspath(path) if path else ''
         if not machine_path:
             return
-
         if self._pending_fit_path and machine_path != self._pending_fit_path:
             return
-
-        # QTimer.singleShot(0, self._fitGremlinToWindow)
         QTimer.singleShot(150, self._fitGremlinToWindow)
         self._pending_fit_path = ''
 
+    def _onCallLevelChanged(self, _call_level):
+        QTimer.singleShot(0, self._fitGremlinToWindow)
+
     def _togglePauseResume(self):
-        stat = STATUS.stat
-        if stat.state == linuxcnc.RCS_EXEC and stat.paused:
+        snapshot = self.runtime_store.snapshot
+        if snapshot.state == linuxcnc.RCS_EXEC and snapshot.paused:
             program_actions.resume()
         else:
             program_actions.pause()
 
-    def _updatePauseResumeButton(self):
-        stat = STATUS.stat
-        is_paused = bool(stat.paused)
-        is_running = stat.state == linuxcnc.RCS_EXEC
+    def _updatePauseResumeButton(self, snapshot=None):
+        if not hasattr(self, 'pause_resume_button'):
+            return
+
+        snapshot = snapshot or self.runtime_store.snapshot
+        is_paused = bool(snapshot.paused)
+        is_running = snapshot.state == linuxcnc.RCS_EXEC
 
         if is_paused:
             self.pause_resume_button.setText('Resume Program')

@@ -192,10 +192,17 @@ class GCodeSyntaxHighlighter(QObject):
         if text_document is None:
             return
 
+        alive_highlighters = []
         for highlighter in self._highlighters:
-            if highlighter.document() is text_document:
-                return
+            try:
+                if highlighter.document() is text_document:
+                    self._highlighters = alive_highlighters + [highlighter]
+                    return
+                alive_highlighters.append(highlighter)
+            except RuntimeError:
+                continue
 
+        self._highlighters = alive_highlighters
         self._highlighters.append(_DocumentHighlighter(text_document, self))
 
     @pyqtSlot(QObject)

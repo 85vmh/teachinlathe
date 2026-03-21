@@ -47,7 +47,12 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
     are required in mainwindow.py, only the widget class needs to be swapped.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, runtime_store=None, parent=None):
+        if parent is None and runtime_store is not None and not hasattr(runtime_store, 'poll'):
+            parent = runtime_store
+            runtime_store = None
+
+        self._runtime_store = runtime_store
         if not _LIB_GOOD:
             QWidget.__init__(self, parent)
             layout = QVBoxLayout(self)
@@ -216,14 +221,20 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
 
         if sync_task:
             linuxcnc.command().task_plan_synch()
-        stat = self.stat
-        stat.poll()
-        if not filename and stat.file:
-            filename = stat.file
-        elif not filename and not stat.file:
+
+        snapshot = self._runtime_store.poll() if self._runtime_store else None
+        stat = self._runtime_store.stat if self._runtime_store else self.stat
+        if not self._runtime_store:
+            stat.poll()
+
+        runtime_file = snapshot.machine_file if snapshot else getattr(stat, 'file', '')
+        if not filename and runtime_file:
+            filename = runtime_file
+        elif not filename and not runtime_file:
             return
 
-        lines = open(filename).readlines()
+        with open(filename, 'r', encoding='utf-8', errors='replace') as handle:
+            lines = handle.readlines()
         progress = Progress(2, len(lines))
         progress.emit_percent = self.emit_percent
 
@@ -242,8 +253,10 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
         canon = None
         try:
             self._last_preview_tool_signature = (
-                stat.tool_in_spindle,
-                tuple(stat.tool_offset),
+                snapshot.preview_tool_signature if snapshot else (
+                    stat.tool_in_spindle,
+                    tuple(stat.tool_offset),
+                )
             )
             random = int(self.inifile.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
             arcdivision = int(self.inifile.find("DISPLAY", "ARCDIVISION") or 64)
@@ -269,7 +282,8 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
 
             initcodes = self._build_preview_initcodes(stat)
             initcode = self.inifile.find("RS274NGC", "RS274NGC_STARTUP_CODE") or ""
-            unitcode = "G%d" % (20 + (stat.linear_units == 1))
+            linear_units = snapshot.linear_units if snapshot else stat.linear_units
+            unitcode = "G%d" % (20 + (linear_units == 1))
             if initcodes:
                 if initcode:
                     initcodes.insert(0, initcode)
@@ -302,35 +316,80 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
 
     def poll(self):
         linuxcnc = __import__("linuxcnc")
-        s = self.stat
-        try:
-            s.poll()
-        except Exception:
-            return
 
-        # Detect file change (parent poll() doesn't check s.file).
-        if s.file and s.file != self._current_file:
-            self._reload_preview(s.file, sync_task=False)
+        if self._runtime_store:
+            snapshot = self._runtime_store.poll()
+            s = self._runtime_store.stat
+        else:
+            s = self.stat
+            try:
+                s.poll()
+            except Exception:
+                return
+            preview_tool_signature = (
+                s.tool_in_spindle,
+                tuple(s.tool_offset),
+            )
+            machine_file = s.file
+            task_mode = s.task_mode
+            fingerprint = (
+                self.logger.npts,
+                self.soft_limits(),
+                s.actual_position,
+                s.joint_actual_position,
+                s.homed,
+                s.g5x_offset,
+                s.g92_offset,
+                s.limit,
+                s.tool_in_spindle,
+                s.motion_mode,
+                s.current_vel,
+            )
+            if machine_file and machine_file != self._current_file:
+                self._reload_preview(machine_file, sync_task=False)
+                self._pending_default_view = True
+                return True
+            if (
+                self._current_file
+                and task_mode != linuxcnc.MODE_AUTO
+                and preview_tool_signature != self._last_preview_tool_signature
+            ):
+                self._reload_preview(self._current_file, sync_task=False)
+                self._pending_default_view = True
+                return True
+            if fingerprint != self.fingerprint:
+                self.fingerprint = fingerprint
+                self.update()
+            return True
+
+        machine_file = snapshot.machine_file
+        if machine_file and machine_file != self._current_file:
+            self._reload_preview(machine_file, sync_task=False)
             self._pending_default_view = True
             return True
 
-        preview_tool_signature = (
-            s.tool_in_spindle,
-            tuple(s.tool_offset),
-        )
         if (
             self._current_file
-            and s.task_mode != linuxcnc.MODE_AUTO
-            and preview_tool_signature != self._last_preview_tool_signature
+            and snapshot.task_mode != linuxcnc.MODE_AUTO
+            and snapshot.preview_tool_signature != self._last_preview_tool_signature
         ):
             self._reload_preview(self._current_file, sync_task=False)
             self._pending_default_view = True
             return True
 
-        fingerprint = (self.logger.npts, self.soft_limits(),
-            s.actual_position, s.joint_actual_position,
-            s.homed, s.g5x_offset, s.g92_offset, s.limit, s.tool_in_spindle,
-            s.motion_mode, s.current_vel)
+        fingerprint = (
+            self.logger.npts,
+            self.soft_limits(),
+            snapshot.actual_position,
+            snapshot.joint_actual_position,
+            snapshot.homed,
+            snapshot.g5x_offset,
+            snapshot.g92_offset,
+            snapshot.limit,
+            snapshot.tool_in_spindle,
+            snapshot.motion_mode,
+            snapshot.current_vel,
+        )
 
         if fingerprint != self.fingerprint:
             self.fingerprint = fingerprint
