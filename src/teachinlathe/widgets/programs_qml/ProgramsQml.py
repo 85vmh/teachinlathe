@@ -1,6 +1,6 @@
 import os
 
-from PyQt5.QtCore import QPointF, QTimer, QUrl
+from PyQt5.QtCore import QPoint, QPointF, QTimer, QUrl
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 
@@ -16,7 +16,8 @@ class ProgramsQml(QQuickWidget):
         self.setResizeMode(QQuickWidget.SizeRootObjectToView)
 
         self.viewmodel = ProgramsViewModel(folders, self)
-        self.gremlin = GremlinWidget(self.viewmodel.runtime_store, self)
+        gremlin_parent = parent if parent is not None else self
+        self.gremlin = GremlinWidget(self.viewmodel.runtime_store, gremlin_parent)
         self.gremlin.enable_panning(True)
         self.gremlin.hide()
 
@@ -82,9 +83,10 @@ class ProgramsQml(QQuickWidget):
             return
 
         scene_pos = item.mapToScene(QPointF(0, 0))
+        top_left = self.mapTo(self.gremlin.parentWidget(), QPoint(int(scene_pos.x()), int(scene_pos.y())))
         self.gremlin.setGeometry(
-            int(scene_pos.x()),
-            int(scene_pos.y()),
+            int(top_left.x()),
+            int(top_left.y()),
             int(item.width()),
             int(item.height()),
         )

@@ -6,6 +6,8 @@ F150        (mm/min)
 #<side> = 12
 #<i> = 0
 
+(debug, starting the square)
+
 o100 while [#<i> LT 4]
 
     o101 if [#<i> EQ 0]
@@ -27,6 +29,8 @@ o100 while [#<i> LT 4]
     #<i> = [#<i> + 1]
 
 o100 endwhile
+
+(debug, square finished, do the steps)
 
 o<level2_steps> call
 

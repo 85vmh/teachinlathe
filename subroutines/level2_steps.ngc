@@ -7,11 +7,15 @@ F100        (mm/min)
 #<step_z> = 3
 #<n> = 0
 
+(debug, do the steps)
+
 o200 while [#<n> LT 3]
     G1 X#<step_x>
     G1 Z-#<step_z>
     #<n> = [#<n> + 1]
 o200 endwhile
+
+(debug, steps finished, do the zigzag)
 
 o<level3_zigzag> call
 
