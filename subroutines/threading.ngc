@@ -40,14 +40,21 @@ o99 IF [#<leads_count> GT 1]
     #<lead_angle_step> = [360 / #<leads_count>]
 o99 ENDIF
 
-(print, Angle offset per lead: [#<lead_angle_step>])
+;(print, Angle offset per lead: [#<lead_angle_step>])
 
 G0 X[#<x_start>] Z[#<z_start>]
 
-(print, Cutting pass 1)
+(print, Pass1: P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>)
 G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
 
-(print, Cutting pass 2)
+G0 X#<drive_line>
+G0 Z#<z_start>
+
+
+
+(print, Pass2: P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D180)
+M1
+
 G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D180
 
 G0 X#<drive_line>
