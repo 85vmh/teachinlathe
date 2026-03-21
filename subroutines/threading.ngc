@@ -26,12 +26,6 @@ G90 ; Absolute Distance
 #<taper_length>     = [TAN[#<taper_angle>] * #<diameter_diff> / 2]
 #<thread_peak>      = [#<x_start> - #<drive_line>] (we need a negative value for external threads)
 
-(print, Drive line: [#<drive_line>])
-(print, Diameter diff: [#<diameter_diff>])
-(print, Thread peak: [#<thread_peak>])
-(print, Start diameter: [#<x_start>])
-(print, Taper Length: [#<taper_length>])
-
 #<lead_index> = 0
 #<lead_angle_step> = 0
 
@@ -40,18 +34,12 @@ o99 IF [#<leads_count> GT 1]
     #<lead_angle_step> = [360 / #<leads_count>]
 o99 ENDIF
 
-(print, Angle offset per lead: [#<lead_angle_step>])
-
 o100 WHILE [#<lead_index> LE [#<leads_count> - 1]]
     #<lead_angle_offset> = [#<lead_angle_step> * #<lead_index>]
 
-    (debug, Cutting lead [#<lead_index> + 1] with angle offset: [#<lead_angle_offset>])
-
     G0 X[#<x_start>] Z[#<z_start>]
-    (debug, P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D#<lead_angle_offset>)
     G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D#<lead_angle_offset>
     #<lead_index> = [#<lead_index> + 1]
-    M1 (pause to inspect)
 o100 ENDWHILE
 
 G0 Z#<z_start>
