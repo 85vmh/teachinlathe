@@ -44,23 +44,23 @@ o99 ENDIF
 
 G0 X[#<x_start>] Z[#<z_start>]
 
-(print, Pass1: P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>)
+(debug, Pass1: P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>)
 
 G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes>
 
-(print, finished pass 1)
+(debug, finished pass 1)
 
 G0 X#<drive_line>
 G0 Z#<z_start>
 
 
 M1
-(print, Pass2: P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D180)
+(debug, Pass2: P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D180)
 
 
 G76 P[#<pitch> * #<leads_count>] Z#<z_end> I#<thread_peak> J#<initial_doc> K#<diameter_diff> R#<depth_degression> Q#<infeed_angle> L#<taper_type> E#<taper_length> H#<spring_passes> D180
 
-(print, finished pass 2)
+(debug, finished pass 2)
 
 G0 X#<drive_line>
 G0 Z#<z_start>
