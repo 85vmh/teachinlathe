@@ -14,15 +14,15 @@ Item {
 
         FileSystemView {
             viewModel: root.fileSystemViewModel
-            SplitView.preferredWidth: 380
-            SplitView.minimumWidth: 300
+            SplitView.preferredWidth: parent.width / 2
+            SplitView.minimumWidth: 200
         }
 
         ProgramEditorPane {
             viewModel: root.viewModel
             mode: "files"
             SplitView.fillWidth: true
-            SplitView.minimumWidth: 480
+            SplitView.minimumWidth: 200
         }
     }
 }

@@ -156,7 +156,7 @@ Rectangle {
                     font.family: "DejaVu Sans Mono"
                     font.pixelSize: 16
                     wrapMode: TextEdit.NoWrap
-                    selectByMouse: true
+                    selectByMouse: root.editable
                     selectionColor: "#264F78"
                     selectedTextColor: "#ffffff"
                     cursorVisible: root.editable

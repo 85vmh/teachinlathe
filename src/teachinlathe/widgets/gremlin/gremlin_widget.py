@@ -98,6 +98,7 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
         # Font for the DRO overlay — Pango font string, number at end is point size.
         self._font = 'monospace bold 14'
 
+        # 'back': (0.92, 0.92, 0.92),  # light grey background
         self.colors.update({
             # Background
             'back':               (0.10, 0.10, 0.10),   # dark grey background
