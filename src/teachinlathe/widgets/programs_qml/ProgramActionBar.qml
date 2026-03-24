@@ -7,8 +7,8 @@ Rectangle {
     property var viewModel
     property string mdiText: ""
     readonly property var actions: viewModel ? viewModel.actions : null
-    color: "#252526"
-    border.color: "#404040"
+    color: "#f5f5f5"
+    border.color: "#cccccc"
     border.width: 1
 
     RowLayout {
@@ -45,8 +45,8 @@ Rectangle {
             text: actions ? actions.optionalStopAction.text : "Break on M1"
             enabled: actions ? actions.optionalStopAction.enabled : false
             active: actions ? actions.optionalStopAction.checked : false
-            accentColor: active ? "#6b5d12" : "#353535"
-            borderColor: active ? "#d7ba7d" : "#575757"
+            accentColor: active ? "#6b5d12" : "#e8e8e8"
+            borderColor: active ? "#d7ba7d" : "#cccccc"
             onClicked: {
                 if (actions) {
                     actions.setOptionalStopEnabled(!actions.optionalStopAction.checked)
@@ -58,8 +58,8 @@ Rectangle {
             text: actions ? actions.blockDeleteAction.text : 'Skip "/" Blocks'
             enabled: actions ? actions.blockDeleteAction.enabled : false
             active: actions ? actions.blockDeleteAction.checked : false
-            accentColor: active ? "#5a3d00" : "#353535"
-            borderColor: active ? "#e0a800" : "#575757"
+            accentColor: active ? "#5a3d00" : "#e8e8e8"
+            borderColor: active ? "#e0a800" : "#cccccc"
             onClicked: {
                 if (actions) {
                     actions.setBlockDeleteEnabled(!actions.blockDeleteAction.checked)
@@ -69,7 +69,7 @@ Rectangle {
 
         Text {
             text: "MDI"
-            color: "#d4d4d4"
+            color: "#4f4f4f"
             font.pixelSize: 14
         }
 
@@ -77,8 +77,8 @@ Rectangle {
             Layout.preferredWidth: 220
             Layout.preferredHeight: 46
             radius: 8
-            color: "#1e1e1e"
-            border.color: actions && actions.mdiAction.enabled ? "#5a5a5a" : "#3d3d3d"
+            color: "#ffffff"
+            border.color: actions && actions.mdiAction.enabled ? "#1E88E5" : "#cccccc"
             border.width: 2
             opacity: actions && actions.mdiAction.enabled ? 1.0 : 0.6
 
@@ -86,7 +86,7 @@ Rectangle {
                 anchors.fill: parent
                 anchors.margins: 10
                 text: root.mdiText
-                color: "#f0f0f0"
+                color: "#202020"
                 font.family: "DejaVu Sans Mono"
                 font.pixelSize: 14
                 selectByMouse: true

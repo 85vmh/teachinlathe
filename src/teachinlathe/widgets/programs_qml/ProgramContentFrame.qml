@@ -18,9 +18,9 @@ Rectangle {
 
     default property alias frameContent: contentColumn.data
 
-    color: "#252526"
+    color: "#f9f9f9"
     radius: 6
-    border.color: "#555555"
+    border.color: "#cccccc"
     border.width: 2
 
     implicitHeight: headerText.implicitHeight + contentColumn.implicitHeight + 30
@@ -35,7 +35,7 @@ Rectangle {
             Layout.fillWidth: true
             text: root._formattedPath
             textFormat: Text.RichText
-            color: "#d4d4d4"
+            color: "#4f4f4f"
             font.pixelSize: 13
             elide: Text.ElideLeft
         }

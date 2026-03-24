@@ -7,7 +7,7 @@ Rectangle {
     id: root
     property var viewModel
 
-    color: "#252526"
+    color: "#f5f5f5"
 
     ColumnLayout {
         anchors.fill: parent
@@ -25,7 +25,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: "#3a3a3a"
+            color: "#dddddd"
         }
 
         // Row 2 — FolderUp + Breadcrumb + Filter toggles
@@ -38,7 +38,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: "#333333"
+            color: "#e0e0e0"
         }
 
         // Row 3 — Sortable file list
@@ -51,7 +51,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: "#333333"
+            color: "#e0e0e0"
         }
 
         // Row 4 — Context-sensitive actions + copy progress

@@ -22,11 +22,11 @@ Item {
     readonly property int iconFontSize:    14
 
     // ── Colors ──────────────────────────────────────────────────────────────
-    readonly property color sepColor:  "#353535"
-    readonly property color rowEven:   "#252526"
-    readonly property color rowOdd:    "#222224"
-    readonly property color rowHover:  "#2a2d2e"
-    readonly property color rowSelect: "#094771"
+    readonly property color sepColor:  "#e0e0e0"
+    readonly property color rowEven:   "#ffffff"
+    readonly property color rowOdd:    "#f9f9f9"
+    readonly property color rowHover:  "#e8f4fd"
+    readonly property color rowSelect: "#dbeafe"
 
     ColumnLayout {
         anchors.fill: parent
@@ -36,7 +36,7 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             height: root.headerHeight
-            color: "#1a1a1c"
+            color: "#eeeeee"
 
             RowLayout {
                 anchors.fill: parent
@@ -53,7 +53,7 @@ Item {
                         text: "Name" + (root.viewModel ? (root.viewModel.sortColumn === "name"
                               ? (root.viewModel.sortAscending ? " ↑" : " ↓") : "") : "")
                         color: (root.viewModel ? root.viewModel.sortColumn === "name" : false)
-                               ? "#e8e8e8" : "#888888"
+                               ? "#202020" : "#9e9e9e"
                         font.pixelSize: root.headerFontSize
                         font.bold: root.viewModel ? root.viewModel.sortColumn === "name" : false
                     }
@@ -71,7 +71,7 @@ Item {
                         text: "Size" + (root.viewModel ? (root.viewModel.sortColumn === "size"
                               ? (root.viewModel.sortAscending ? " ↑" : " ↓") : "") : "")
                         color: (root.viewModel ? root.viewModel.sortColumn === "size" : false)
-                               ? "#e8e8e8" : "#888888"
+                               ? "#202020" : "#9e9e9e"
                         font.pixelSize: root.headerFontSize
                         font.bold: root.viewModel ? root.viewModel.sortColumn === "size" : false
                     }
@@ -91,7 +91,7 @@ Item {
                         text: "Modified" + (root.viewModel ? (root.viewModel.sortColumn === "modified"
                               ? (root.viewModel.sortAscending ? " ↑" : " ↓") : "") : "")
                         color: (root.viewModel ? root.viewModel.sortColumn === "modified" : false)
-                               ? "#e8e8e8" : "#888888"
+                               ? "#202020" : "#9e9e9e"
                         font.pixelSize: root.headerFontSize
                         font.bold: root.viewModel ? root.viewModel.sortColumn === "modified" : false
                     }
@@ -141,7 +141,7 @@ Item {
 
                         Text {
                             text: modelData.isUp ? "↑" : (modelData.isDir ? "▸" : "·")
-                            color: modelData.isDir ? "#dcdcaa" : "#569cd6"
+                            color: modelData.isDir ? "#f59e0b" : "#1E88E5"
                             font.pixelSize: root.iconFontSize
                             font.bold: modelData.isDir
                             Layout.alignment: Qt.AlignVCenter
@@ -150,7 +150,7 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: modelData.name
-                            color: modelData.isDir ? "#dcdcaa" : "#d4d4d4"
+                            color: modelData.isDir ? "#4f4f4f" : "#202020"
                             font.pixelSize: root.itemFontSize
                             font.family: "DejaVu Sans Mono"
                             elide: Text.ElideRight
@@ -167,7 +167,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: modelData.sizeDisplay
-                            color: "#999999"
+                            color: "#6b7280"
                             font.pixelSize: root.metaFontSize
                         }
                     }
@@ -183,7 +183,7 @@ Item {
                             anchors.right: parent.right
                             anchors.rightMargin: root.colRightPad
                             text: modelData.modifiedDisplay
-                            color: "#999999"
+                            color: "#6b7280"
                             font.pixelSize: root.metaFontSize
                         }
                     }
@@ -210,7 +210,7 @@ Item {
                 anchors.centerIn: parent
                 visible: fileList.count === 0
                 text: "No files found"
-                color: "#555555"
+                color: "#9e9e9e"
                 font.pixelSize: root.itemFontSize
             }
         }

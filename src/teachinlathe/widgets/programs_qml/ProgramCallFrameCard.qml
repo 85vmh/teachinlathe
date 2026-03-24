@@ -13,7 +13,7 @@ ProgramContentFrame {
     Rectangle {
         id: lineBox
         Layout.fillWidth: true
-        color: "#1e1e1e"
+        color: "#fff3f3"
         radius: 3
         border.color: "#E51400"
         border.width: 2
@@ -24,7 +24,7 @@ ProgramContentFrame {
             anchors.fill: parent
             anchors.margins: 9
             text: (root.lineNumber > 0 ? root.lineNumber : "?") + ": " + (root.lineText || "")
-            color: "#f0f0f0"
+            color: "#202020"
             font.family: "DejaVu Sans Mono"
             font.pixelSize: 14
             elide: Text.ElideRight

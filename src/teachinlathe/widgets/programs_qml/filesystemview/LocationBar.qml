@@ -10,7 +10,7 @@ Rectangle {
 
     readonly property var locs: viewModel ? viewModel.locations : []
 
-    color: "#1e1e1e"
+    color: "#f0f0f0"
     implicitHeight: 42
 
     RowLayout {
@@ -28,8 +28,8 @@ Rectangle {
                 Rectangle {
                     anchors.fill: parent
                     color: modelData.isSelected
-                           ? "#1e3a5f"
-                           : (locArea.containsMouse && modelData.isAvailable ? "#2d2d2e" : "transparent")
+                           ? "#dbeafe"
+                           : (locArea.containsMouse && modelData.isAvailable ? "#e8e8e8" : "transparent")
 
                     // Bottom accent line — marks the selected location
                     Rectangle {
@@ -37,7 +37,7 @@ Rectangle {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         height: 2
-                        color: modelData.isSelected ? "#3794ff" : "transparent"
+                        color: modelData.isSelected ? "#1E88E5" : "transparent"
                     }
 
                     Text {
@@ -46,8 +46,8 @@ Rectangle {
                         anchors.rightMargin: 4
                         text: modelData.name
                         color: !modelData.isAvailable
-                               ? "#555555"
-                               : (modelData.isSelected ? "#e8e8e8" : "#b0b0b0")
+                               ? "#9e9e9e"
+                               : (modelData.isSelected ? "#1565C0" : "#4f4f4f")
                         font.pixelSize: 12
                         font.bold: modelData.isSelected
                         elide: Text.ElideRight
@@ -72,7 +72,7 @@ Rectangle {
                     anchors.topMargin: 8
                     anchors.bottomMargin: 8
                     width: 1
-                    color: "#383838"
+                    color: "#cccccc"
                     visible: index < root.locs.length - 1
                 }
             }
@@ -84,6 +84,6 @@ Rectangle {
         anchors.bottom: parent.bottom
         width: parent.width
         height: 1
-        color: "#2e2e2e"
+        color: "#dddddd"
     }
 }

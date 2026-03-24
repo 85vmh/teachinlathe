@@ -14,7 +14,7 @@ Rectangle {
     property string emptyText: ""
     signal contentEdited(string text)
 
-    color: "#1e1e1e"
+    color: "#ffffff"
 
     readonly property int lineCount: Math.max(1, content === "" ? 1 : content.split("\n").length)
     readonly property string lineNumberText: {
@@ -104,7 +104,7 @@ Rectangle {
             Rectangle {
                 width: 56
                 height: Math.max(viewport.height, lineNumbers.paintedHeight + 20)
-                color: "#252526"
+                color: "#f5f5f5"
 
                 Text {
                     id: lineNumbers
@@ -113,7 +113,7 @@ Rectangle {
                     width: parent.width - 10
                     horizontalAlignment: Text.AlignRight
                     text: root.lineNumberText
-                    color: "#858585"
+                    color: "#9e9e9e"
                     font.family: "DejaVu Sans Mono"
                     font.pixelSize: 16
                     wrapMode: Text.NoWrap
@@ -123,7 +123,7 @@ Rectangle {
                     anchors.right: parent.right
                     width: 1
                     height: parent.height
-                    color: "#333333"
+                    color: "#e0e0e0"
                 }
             }
 
@@ -151,7 +151,7 @@ Rectangle {
                     height: Math.max(1, paintedHeight)
                     readOnly: !root.editable
                     text: root.content
-                    color: "#d4d4d4"
+                    color: "#2e2e2e"
                     textFormat: TextEdit.PlainText
                     font.family: "DejaVu Sans Mono"
                     font.pixelSize: 16
@@ -175,7 +175,7 @@ Rectangle {
                     anchors.centerIn: parent
                     visible: root.content === ""
                     text: root.emptyText
-                    color: "#444444"
+                    color: "#9e9e9e"
                     font.pixelSize: 16
                 }
             }

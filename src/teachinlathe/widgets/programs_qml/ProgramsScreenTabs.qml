@@ -5,8 +5,8 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: root
     property var viewModel
-    color: "#202020"
-    border.color: "#343434"
+    color: "#f0f0f0"
+    border.color: "#cccccc"
     border.width: 1
 
     RowLayout {
@@ -17,7 +17,7 @@ Rectangle {
 
         Text {
             text: "Programs"
-            color: "#f0f0f0"
+            color: "#202020"
             font.pixelSize: 20
             font.bold: true
         }

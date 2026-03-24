@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: root
     property var viewModel
-    color: "#1e1e1e"
+    color: "#ffffff"
 
     function startFrameAt(index) {
         return frameRepeater.itemAt(index)

@@ -6,7 +6,7 @@ Rectangle {
     id: root
     property var viewModel
 
-    color: "#252526"
+    color: "#f5f5f5"
     implicitHeight: 38
 
     RowLayout {
@@ -21,13 +21,13 @@ Rectangle {
             height: 28
             radius: 4
             color: upArea.containsMouse && root.viewModel && root.viewModel.canNavigateUp
-                   ? "#3c3c3c" : "transparent"
+                   ? "#e8e8e8" : "transparent"
             opacity: root.viewModel && root.viewModel.canNavigateUp ? 1.0 : 0.35
 
             Text {
                 anchors.centerIn: parent
                 text: "↑"
-                color: "#d4d4d4"
+                color: "#4f4f4f"
                 font.pixelSize: 16
             }
 
@@ -74,14 +74,14 @@ Rectangle {
                             visible: index > 0
                             anchors.verticalCenter: parent.verticalCenter
                             text: " / "
-                            color: "#555555"
+                            color: "#9e9e9e"
                             font.pixelSize: 12
                         }
 
                         Rectangle {
                             height: parent.height
                             width: segText.implicitWidth + 8
-                            color: segArea.containsMouse ? "#3c3c3c" : "transparent"
+                            color: segArea.containsMouse ? "#e8e8e8" : "transparent"
                             radius: 3
 
                             Text {
@@ -89,7 +89,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 text: modelData.name
                                 color: index === (root.viewModel ? root.viewModel.breadcrumbs.length - 1 : 0)
-                                       ? "#e8e8e8" : "#999999"
+                                       ? "#202020" : "#4f4f4f"
                                 font.pixelSize: 12
                                 font.bold: index === (root.viewModel ? root.viewModel.breadcrumbs.length - 1 : 0)
                             }
@@ -115,15 +115,15 @@ Rectangle {
                 width: filterFoldersText.implicitWidth + 12
                 height: 24
                 radius: 4
-                color: root.viewModel && root.viewModel.showFolders ? "#37373d" : "#2a2a2a"
-                border.color: root.viewModel && root.viewModel.showFolders ? "#555555" : "#383838"
+                color: root.viewModel && root.viewModel.showFolders ? "#dbeafe" : "#f0f0f0"
+                border.color: root.viewModel && root.viewModel.showFolders ? "#1E88E5" : "#cccccc"
                 border.width: 1
 
                 Text {
                     id: filterFoldersText
                     anchors.centerIn: parent
                     text: "Folders"
-                    color: root.viewModel && root.viewModel.showFolders ? "#d4d4d4" : "#666666"
+                    color: root.viewModel && root.viewModel.showFolders ? "#1565C0" : "#9e9e9e"
                     font.pixelSize: 11
                 }
 
@@ -138,15 +138,15 @@ Rectangle {
                 width: filterNgcText.implicitWidth + 12
                 height: 24
                 radius: 4
-                color: root.viewModel && root.viewModel.ngcOnly ? "#37373d" : "#2a2a2a"
-                border.color: root.viewModel && root.viewModel.ngcOnly ? "#555555" : "#383838"
+                color: root.viewModel && root.viewModel.ngcOnly ? "#dbeafe" : "#f0f0f0"
+                border.color: root.viewModel && root.viewModel.ngcOnly ? "#1E88E5" : "#cccccc"
                 border.width: 1
 
                 Text {
                     id: filterNgcText
                     anchors.centerIn: parent
                     text: root.viewModel && root.viewModel.ngcOnly ? "NGC" : "All"
-                    color: root.viewModel && root.viewModel.ngcOnly ? "#d4d4d4" : "#aaaaaa"
+                    color: root.viewModel && root.viewModel.ngcOnly ? "#1565C0" : "#4f4f4f"
                     font.pixelSize: 11
                 }
 

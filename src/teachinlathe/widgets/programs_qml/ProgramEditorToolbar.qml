@@ -7,8 +7,8 @@ Rectangle {
     property var viewModel
     property string mode: "files"
 
-    color: "#2d2d2d"
-    border.color: "#404040"
+    color: "#f0f0f0"
+    border.color: "#cccccc"
     border.width: 1
 
     RowLayout {
@@ -28,7 +28,7 @@ Rectangle {
         Text {
             Layout.fillWidth: true
             text: viewModel ? viewModel.currentFileDisplayPath : "No file loaded"
-            color: "#aaaaaa"
+            color: "#4f4f4f"
             font.pixelSize: 13
             elide: Text.ElideLeft
             verticalAlignment: Text.AlignVCenter

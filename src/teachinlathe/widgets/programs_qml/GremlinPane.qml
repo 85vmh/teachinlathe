@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: root
     property var viewModel
-    color: "#111111"
+    color: "#f5f5f5"
 
     ColumnLayout {
         anchors.fill: parent
@@ -14,8 +14,8 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 58
-            color: "#2d2d2d"
-            border.color: "#404040"
+            color: "#f0f0f0"
+            border.color: "#cccccc"
             border.width: 1
 
             RowLayout {
@@ -26,7 +26,7 @@ Rectangle {
 
                 Text {
                     text: "Gremlin View"
-                    color: "#d4d4d4"
+                    color: "#202020"
                     font.pixelSize: 16
                     font.bold: true
                 }

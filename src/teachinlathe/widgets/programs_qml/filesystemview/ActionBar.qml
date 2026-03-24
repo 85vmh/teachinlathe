@@ -14,7 +14,7 @@ Rectangle {
     id: root
     property var viewModel
 
-    color: "#1e1e1e"
+    color: "#f5f5f5"
     implicitHeight: 60
 
     // ---- Copy progress bar (top edge, shown while copying) ----
@@ -24,7 +24,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         height: 3
-        color: "#2a2a2a"
+        color: "#e0e0e0"
         visible: root.viewModel ? root.viewModel.isCopying : false
 
         Rectangle {
@@ -70,9 +70,9 @@ Rectangle {
             enabled: root.viewModel ? root.viewModel.selectedIsFile : false
             text: "Load Program"
             accentColor: (root.viewModel ? root.viewModel.selectedIsFile : false)
-                         ? "#1a5c2c" : "#2a2a2a"
+                         ? "#1a5c2c" : "#e8e8e8"
             borderColor: (root.viewModel ? root.viewModel.selectedIsFile : false)
-                         ? "#52b788" : "#404040"
+                         ? "#52b788" : "#cccccc"
             onClicked: if (root.viewModel) root.viewModel.openSelectedFile()
         }
     }

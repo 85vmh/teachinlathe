@@ -7,7 +7,7 @@ Rectangle {
     property var viewModel
     property string mode: "files"
 
-    color: "#1e1e1e"
+    color: "#ffffff"
 
     ColumnLayout {
         anchors.fill: parent
