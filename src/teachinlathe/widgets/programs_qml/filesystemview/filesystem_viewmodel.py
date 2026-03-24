@@ -416,6 +416,18 @@ class FileSystemViewModel(QObject):
                 self.selectLocation(loc.name)
                 return
 
+    @pyqtSlot(str)
+    def showFileInGeneratedPrograms(self, abs_path: str) -> None:
+        """Navigate to Generated Programs, select and show the given file in the editor."""
+        self.selectGeneratedProgramsFolder()
+        if not abs_path or not os.path.isfile(abs_path):
+            return
+        rel = os.path.basename(abs_path)
+        self._selected_path = rel
+        self.selectionChanged.emit()
+        self.entriesChanged.emit()
+        self.fileSelected.emit(abs_path)
+
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------

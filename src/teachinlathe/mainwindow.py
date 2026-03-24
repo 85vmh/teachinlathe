@@ -5,7 +5,6 @@ from enum import Enum
 
 import linuxcnc
 from PyQt5.QtCore import QTimer, QSignalBlocker, QUrl
-from PyQt5.QtCore import QItemSelectionModel
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtQuickWidgets import QQuickWidget
@@ -47,7 +46,6 @@ class MainTabs(Enum):
     PROGRAMS = 2
     TOOLS_OFFSETS = 3
     MACHINE_SETTINGS = 4
-    PROGRAMS_QML = 5
 
 
 class ProgramTabs(Enum):
@@ -224,11 +222,10 @@ class MyMainWindow(VCPMainWindow):
             FileSystemLocation("SyncThing Programs",  os.path.expanduser("~/Sync"),        LocationType.SYNCTHING),
             FileSystemLocation("Home",                os.path.expanduser("~"),             LocationType.HOME),
         ]
-        # Create the tab container and add it to the tab bar programmatically,
-        # because qtpyvcp loads the UI from the .ui file (uic.loadUi) so edits
-        # to mainwindow_ui.py have no effect at runtime.
+        # Replace the legacy Programs tab (index 2) with the new Programs QML widget.
+        self.tabWidget.removeTab(MainTabs.PROGRAMS.value)
         self.programsQmlTab = QWidget()
-        self.tabWidget.addTab(self.programsQmlTab, "Programs QML")
+        self.tabWidget.insertTab(MainTabs.PROGRAMS.value, self.programsQmlTab, "Programs")
 
         tab_layout = QVBoxLayout(self.programsQmlTab)
         tab_layout.setContentsMargins(0, 0, 0, 0)
@@ -285,23 +282,10 @@ class MyMainWindow(VCPMainWindow):
         if not ngc_path:
             return
         try:
-            folder = os.path.dirname(os.path.abspath(ngc_path))
             self.tabWidget.setCurrentIndex(MainTabs.PROGRAMS.value)
-            self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
-
-            table = getattr(self, "destinationFsTable", None)
-            if table is not None:
-                try:
-                    table.setRootPath(folder)
-                    idx = table.model.index(ngc_path)
-                    if idx and idx.isValid():
-                        table.selectionModel().select(
-                            idx,
-                            QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows
-                        )
-                        table.scrollTo(idx)
-                except Exception:
-                    pass
+            self.programsQmlWidget.fs_viewmodel.showFileInGeneratedPrograms(
+                os.path.abspath(ngc_path)
+            )
         except Exception as e:
             print("showGeneratedProgram failed:", e)
 
