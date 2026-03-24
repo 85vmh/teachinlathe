@@ -6,15 +6,24 @@ from PyQt5.QtQuickWidgets import QQuickWidget
 
 from teachinlathe.data import ProgramsViewModel
 from teachinlathe.widgets.gremlin.gremlin_widget import GremlinWidget
+from teachinlathe.widgets.programs_qml.filesystemview import FileSystemViewModel
 
 
 class ProgramsQml(QQuickWidget):
     _QML_DIR = os.path.dirname(__file__)
 
-    def __init__(self, folders, parent=None):
+    def __init__(self, locations, parent=None):
+        """
+        Parameters
+        ----------
+        locations : list[FileSystemLocation]
+            Predefined filesystem locations. Passed to both ProgramsViewModel
+            (as name/path tuples for backward compatibility) and FileSystemViewModel.
+        """
         super().__init__(parent)
         self.setResizeMode(QQuickWidget.SizeRootObjectToView)
 
+        folders = [(loc.name, loc.root_path) for loc in locations]
         self.viewmodel = ProgramsViewModel(folders, self)
         gremlin_parent = parent if parent is not None else self
         self.gremlin = GremlinWidget(self.viewmodel.runtime_store, gremlin_parent)
@@ -25,8 +34,13 @@ class ProgramsQml(QQuickWidget):
         self._gremlin_placeholder = None
         self._root_item = None
 
+        self.fs_viewmodel = FileSystemViewModel(locations, self)
+        self.fs_viewmodel.fileSelected.connect(self.viewmodel.bridge.selectFileByAbsolutePath)
+        self.fs_viewmodel.fileOpenRequested.connect(self.viewmodel.openFileByAbsolutePath)
+
         context = self.engine().rootContext()
         context.setContextProperty('programsViewModel', self.viewmodel)
+        context.setContextProperty('fsViewModel', self.fs_viewmodel)
 
         self.statusChanged.connect(self._on_status_changed)
         self.setSource(QUrl.fromLocalFile(os.path.join(self._QML_DIR, 'ProgramsRoot.qml')))

@@ -213,11 +213,16 @@ class MyMainWindow(VCPMainWindow):
 
     def _initProgramsQml(self):
         from PyQt5.QtWidgets import QWidget, QVBoxLayout
-        gcode_folder = os.path.join(CONVERSATIONAL_GCODE_BASE, "Conversational Gcode")
-        folders = [
-            ("Generated Programs",  gcode_folder),
-            ("USB Stick Programs",  "/media"),
-            ("SyncThing Programs",  os.path.expanduser("~/Sync")),
+        from teachinlathe.widgets.programs_qml.filesystemview import (
+            FileSystemLocation, LocationType,
+        )
+        gcode_folder     = os.path.join(CONVERSATIONAL_GCODE_BASE, "Conversational Gcode")
+        usb_stick_folder = os.path.join(CONVERSATIONAL_GCODE_BASE, "USB Stick Programs")
+        locations = [
+            FileSystemLocation("Generated Programs", gcode_folder,                         LocationType.GENERATED),
+            FileSystemLocation("USB Stick Programs",  usb_stick_folder,                    LocationType.USB_STICK),
+            FileSystemLocation("SyncThing Programs",  os.path.expanduser("~/Sync"),        LocationType.SYNCTHING),
+            FileSystemLocation("Home",                os.path.expanduser("~"),             LocationType.HOME),
         ]
         # Create the tab container and add it to the tab bar programmatically,
         # because qtpyvcp loads the UI from the .ui file (uic.loadUi) so edits
@@ -228,7 +233,7 @@ class MyMainWindow(VCPMainWindow):
         tab_layout = QVBoxLayout(self.programsQmlTab)
         tab_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.programsQmlWidget = ProgramsQml(folders, self.programsQmlTab)
+        self.programsQmlWidget = ProgramsQml(locations, self.programsQmlTab)
         self.programsQmlWidget.viewmodel.programLoadRequested.connect(self.onProgramsQmlProgramLoadRequested)
         tab_layout.addWidget(self.programsQmlWidget)
 

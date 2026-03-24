@@ -193,6 +193,28 @@ class FileSystemBridge(QObject):
             return True
         return False
 
+    @pyqtSlot(str)
+    def selectFileByAbsolutePath(self, path: str) -> None:
+        """Select a file by its absolute path and display its content."""
+        if not os.path.isfile(path):
+            return
+        if not self._prepare_for_file_change(path):
+            return
+        self._emit_content(path)
+
+    @pyqtSlot(str)
+    def openFileByAbsolutePath(self, path: str) -> None:
+        """Load a file into LinuxCNC by absolute path and switch to Gremlin screen."""
+        from qtpyvcp.actions.program_actions import load as load_program
+        if not os.path.isfile(path):
+            return
+        if not self._prepare_for_file_change(path):
+            return
+        self.programLoadRequested.emit(path)
+        load_program(path)
+        self._emit_content(path)
+        self.screenChangeRequested.emit(1)
+
     def attachHighlighterToDocument(self, text_document):
         self._syntax_highlighter.attach_document(text_document)
 

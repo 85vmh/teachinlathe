@@ -24,6 +24,7 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 viewModel: programsViewModel
+                fileSystemViewModel: fsViewModel
             }
 
             ProgramsGremlinScreen {

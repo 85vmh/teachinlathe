@@ -140,9 +140,11 @@ class ProgramsActionSource(QObject):
     def refresh(self):
         snapshot = self._runtime_store.poll()
         stat = self._runtime_store.stat
+        state = int(_channel_value('state', getattr(stat, 'state', 0)) or 0)
+        paused = bool(_channel_value('paused', getattr(stat, 'paused', False)))
 
         start_enabled, start_tooltip = self._run_state(stat)
-        running = stat.state == linuxcnc.RCS_EXEC and not bool(stat.paused)
+        running = state == linuxcnc.RCS_EXEC and not paused
         self._start.update(
             enabled=start_enabled,
             active=running,
@@ -158,12 +160,12 @@ class ProgramsActionSource(QObject):
             tooltip=stop_tooltip,
         )
 
-        pause_enabled, pause_tooltip, pause_text, paused = self._pause_resume_state(stat)
+        pause_enabled, pause_tooltip, pause_text, pause_active = self._pause_resume_state(stat)
         self._pause_resume.update(
             text=pause_text,
             enabled=pause_enabled,
-            active=paused,
-            checked=paused,
+            active=pause_active,
+            checked=pause_active,
             tooltip=pause_tooltip,
         )
 
@@ -196,28 +198,36 @@ class ProgramsActionSource(QObject):
         return snapshot
 
     def _run_state(self, stat):
-        if stat.estop:
+        estop = bool(_channel_value('estop', getattr(stat, 'estop', False)))
+        enabled = bool(_channel_value('enabled', getattr(stat, 'enabled', False)))
+        paused = bool(_channel_value('paused', getattr(stat, 'paused', False)))
+        interp_state = int(_channel_value('interp_state', getattr(stat, 'interp_state', 0)) or 0)
+        loaded_file = (_channel_value('file', getattr(stat, 'file', '')) or '')
+
+        if estop:
             return False, "Can't run program when in E-Stop"
-        if not stat.enabled:
+        if not enabled:
             return False, "Can't run program when not enabled"
         if not STATUS.allHomed():
             return False, "Can't run program when not homed"
-        if not stat.paused and stat.interp_state != linuxcnc.INTERP_IDLE:
+        if not paused and interp_state != linuxcnc.INTERP_IDLE:
             return False, "Can't run program when already running"
-        if not (stat.file or ''):
+        if not loaded_file:
             return False, "Can't run program when no file loaded"
         return True, 'Run program'
 
     def _abort_state(self, stat):
-        if stat.state in (linuxcnc.RCS_EXEC, linuxcnc.RCS_ERROR):
+        state = int(_channel_value('state', getattr(stat, 'state', 0)) or 0)
+        if state in (linuxcnc.RCS_EXEC, linuxcnc.RCS_ERROR):
             return True, ''
         return False, 'Nothing to abort'
 
     def _pause_resume_state(self, stat):
-        paused = bool(stat.state == linuxcnc.RCS_EXEC and stat.paused)
-        if paused:
+        state = int(_channel_value('state', getattr(stat, 'state', 0)) or 0)
+        paused = bool(_channel_value('paused', getattr(stat, 'paused', False)))
+        if state == linuxcnc.RCS_EXEC and paused:
             return True, 'Resume program execution', 'Resume Program', True
-        if stat.state == linuxcnc.RCS_EXEC and not stat.paused:
+        if state == linuxcnc.RCS_EXEC and not paused:
             return True, 'Pause program execution', 'Pause Program', False
         return False, 'No program running to pause', 'Pause Program', False
 

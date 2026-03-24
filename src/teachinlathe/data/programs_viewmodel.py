@@ -188,6 +188,11 @@ class ProgramsViewModel(QObject):
     def saveCurrentFileAs(self):
         return bool(self._bridge.saveCurrentFileAs(None))
 
+    @pyqtSlot(str)
+    def openFileByAbsolutePath(self, path: str) -> None:
+        """Load a file into LinuxCNC by absolute path — called from FileSystemViewModel."""
+        self._bridge.openFileByAbsolutePath(path)
+
     @pyqtSlot()
     def openCurrentFileInMachine(self):
         file_path = self.currentFilePath
