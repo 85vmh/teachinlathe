@@ -4,7 +4,7 @@ import re
 import time
 from datetime import datetime
 
-from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop
+from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop, pyqtSignal
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import QProgressDialog, QApplication
@@ -40,6 +40,8 @@ def _deep_merge(base, patch):
 
 
 class ConversationalQml(QQuickWidget):
+    headerStateChanged = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setResizeMode(QQuickWidget.SizeRootObjectToView)
@@ -48,6 +50,7 @@ class ConversationalQml(QQuickWidget):
         self.current_program_index = None
         self.current_op_index = -1
         self.child_screen_item = None
+        self._app_state = None
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         programs = load_programs_from_folder(self.folder_path)
@@ -58,6 +61,15 @@ class ConversationalQml(QQuickWidget):
         root_path = os.path.join(self.base_dir, "Root.qml")
         self.statusChanged.connect(self.onStatusChanged)
         self.setSource(QUrl.fromLocalFile(root_path))
+
+    def setAppState(self, app_state):
+        self._app_state = app_state
+        try:
+            self.engine().rootContext().setContextProperty("appState", app_state)
+            self.engine().rootContext().setContextProperty("cncStore", getattr(app_state, "cncStore", None))
+            self.engine().rootContext().setContextProperty("navigationStore", getattr(app_state, "navigationStore", None))
+        except Exception as e:
+            print("setAppState failed:", e)
 
     def onStatusChanged(self, status):
         if status == QQuickWidget.Ready:
@@ -84,6 +96,7 @@ class ConversationalQml(QQuickWidget):
             current_item = loader.property("item")
             if current_item:
                 self._hook_screen_item(current_item)
+            QTimer.singleShot(0, self._emit_header_state_changed)
 
     def onLoaderItemChanged(self):
         sender = self.sender()
@@ -92,6 +105,64 @@ class ConversationalQml(QQuickWidget):
         item = sender.property("item")
         if item:
             self._hook_screen_item(item)
+        self._emit_header_state_changed()
+
+    def _current_loader_item(self):
+        if not hasattr(self, "root") or self.root is None:
+            return None
+        loader = self.root.findChild(QQuickItem, "loader") or self.root.findChild(QObject, "loader")
+        if loader is None:
+            return None
+        return loader.property("item")
+
+    def _emit_header_state_changed(self):
+        self.headerStateChanged.emit()
+
+    def getHeaderState(self):
+        title = "Conversational"
+        left_actions = []
+        right_actions = []
+        item = self._current_loader_item()
+        object_name = None
+        if item is not None:
+            try:
+                object_name = item.property("objectName")
+            except Exception:
+                object_name = None
+
+        if object_name == "childScreen":
+            program_name = ""
+            try:
+                program_name = getattr(getattr(self.current_program, "header", None), "name", "") or ""
+            except Exception:
+                program_name = ""
+            title = f"Editing: {program_name}" if program_name else "Creating New Program"
+            can_go_back = False
+            try:
+                can_go_back = bool(self.root.canGoBack())
+            except Exception:
+                can_go_back = False
+            if can_go_back:
+                left_actions.append({"id": "back", "text": "Back to Programs", "enabled": True})
+            operations = getattr(self.current_program, "operations", []) or []
+            right_actions.append({"id": "build_gcode", "text": "Build GCode Program", "enabled": bool(operations)})
+        else:
+            title = "Conversational Programs"
+            right_actions.append({"id": "create_new", "text": "Create New", "enabled": True})
+
+        return {
+            "title": title,
+            "left_actions": left_actions,
+            "right_actions": right_actions,
+        }
+
+    def triggerHeaderAction(self, action_id):
+        if action_id == "back":
+            self.goBack()
+        elif action_id == "create_new":
+            self.addNewProgram()
+        elif action_id == "build_gcode":
+            self.onGenerateGcodeRequested()
 
     def _to_py(self, obj):
         """Convert QJSValue / nested JS structures to Python dict/list."""
@@ -724,6 +795,7 @@ class ConversationalQml(QQuickWidget):
         }
         print("openChildScreen for:", selected_program["name"], "ops:", len(operations_model))
         self.root.loadScreen(child_url, params)
+        QTimer.singleShot(0, self._emit_header_state_changed)
 
     def _build_operations_model(self, program):
         """Return a list of dicts friendly to QML with 'display_type' precomputed."""
@@ -880,6 +952,7 @@ class ConversationalQml(QQuickWidget):
                 header.workpiece = wp
 
             self._save_current_program()
+            self._emit_header_state_changed()
 
         except Exception as e:
             print("[header] update error:", e)
@@ -1277,3 +1350,4 @@ class ConversationalQml(QQuickWidget):
     def goBack(self):
         print("back button clicked")
         self.root.goBack()
+        QTimer.singleShot(0, self._emit_header_state_changed)

@@ -64,16 +64,5 @@ Rectangle {
             onClicked: if (root.viewModel) root.viewModel.deleteSelected()
         }
 
-        // "Load Program" — only outside Mounted Media, green, rightmost
-        ProgramButton {
-            visible: root.viewModel ? !root.viewModel.isInMountedMedia : false
-            enabled: root.viewModel ? root.viewModel.selectedIsFile : false
-            text: "Load Program"
-            accentColor: (root.viewModel ? root.viewModel.selectedIsFile : false)
-                         ? "#1a5c2c" : "#e8e8e8"
-            borderColor: (root.viewModel ? root.viewModel.selectedIsFile : false)
-                         ? "#52b788" : "#cccccc"
-            onClicked: if (root.viewModel) root.viewModel.openSelectedFile()
-        }
     }
 }

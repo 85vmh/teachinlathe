@@ -12,7 +12,6 @@ Rectangle {
         ProgramsScreenTabs {
             Layout.fillWidth: true
             Layout.preferredHeight: 58
-            viewModel: programsViewModel
         }
 
         StackLayout {
@@ -32,12 +31,6 @@ Rectangle {
                 Layout.fillHeight: true
                 viewModel: programsViewModel
             }
-        }
-
-        ProgramActionBar {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 180
-            viewModel: programsViewModel
         }
     }
 }

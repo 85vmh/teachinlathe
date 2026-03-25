@@ -19,12 +19,6 @@ Rectangle {
         anchors.bottomMargin: 7
         spacing: 8
 
-        ProgramButton {
-            visible: mode === "gremlin"
-            text: "Files"
-            onClicked: viewModel.showFilesScreen()
-        }
-
         Text {
             Layout.fillWidth: true
             text: viewModel ? viewModel.currentFileDisplayPath : "No file loaded"
@@ -52,12 +46,6 @@ Rectangle {
             onClicked: viewModel.saveCurrentFileAs()
         }
 
-        ProgramButton {
-            visible: mode === "files"
-            text: "View in Gremlin"
-            enabled: !!viewModel
-            onClicked: viewModel.showGremlinScreen()
-        }
 
         ProgramButton {
             visible: mode === "files"

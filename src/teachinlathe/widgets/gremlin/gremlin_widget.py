@@ -442,9 +442,12 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
     def setViewXZ2(self):
         """Set view to XZ plane (standard lathe view). Matches VTKBackPlot.setViewXZ2()."""
         self.current_view = 'y'
-        if self.display_loaded:
+        self._pending_default_view = False
+        try:
             self.set_view_y()
-            self.update()
+        except Exception:
+            pass
+        self.update()
 
     def enable_panning(self, enabled):
         """
@@ -461,14 +464,12 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
 
     def zoomIn(self):
         """Zoom in slot — connected from zoomInView button in mainwindow.ui."""
-        self.zoomin()
         self.current_view = 'y'
-        self.set_view_y()
+        self.zoomin()
         self.update()
 
     def zoomOut(self):
         """Zoom out slot — connected from zoomOutView button in mainwindow.ui."""
-        self.zoomout()
         self.current_view = 'y'
-        self.set_view_y()
+        self.zoomout()
         self.update()

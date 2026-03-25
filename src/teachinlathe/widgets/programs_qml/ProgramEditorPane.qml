@@ -24,6 +24,13 @@ Rectangle {
             Layout.fillHeight: true
             sourceComponent: viewModel && viewModel.hasExecutionStack ? executionComponent : editorComponent
         }
+
+        ProgramActionBar {
+            Layout.fillWidth: true
+            visible: root.mode === "gremlin"
+            Layout.preferredHeight: visible ? 72 : 0
+            viewModel: root.viewModel
+        }
     }
 
     Component {

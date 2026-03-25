@@ -11,45 +11,10 @@ Rectangle {
         anchors.fill: parent
         spacing: 0
 
-        Rectangle {
+        ProgramsDro {
             Layout.fillWidth: true
-            Layout.preferredHeight: 58
-            color: "#f0f0f0"
-            border.color: "#cccccc"
-            border.width: 1
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 10
-                anchors.rightMargin: 10
-                spacing: 8
-
-                Text {
-                    text: "Gremlin View"
-                    color: "#202020"
-                    font.pixelSize: 16
-                    font.bold: true
-                }
-
-                Item { Layout.fillWidth: true }
-
-                ProgramButton {
-                    text: "Zoom In"
-                    onClicked: viewModel.zoomGremlinIn()
-                }
-
-                ProgramButton {
-                    text: "Zoom Out"
-                    onClicked: viewModel.zoomGremlinOut()
-                }
-
-                ProgramButton {
-                    text: "Clear Plot"
-                    accentColor: "#7a2d2d"
-                    borderColor: "#d16969"
-                    onClicked: viewModel.clearGremlinPlot()
-                }
-            }
+            Layout.preferredHeight: 200
+            viewModel: root.viewModel
         }
 
         Rectangle {

@@ -108,40 +108,6 @@ Item {
         anchors.margins: 12
         spacing: 8
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 8
-            Layout.alignment: Qt.AlignVCenter
-
-            Button {
-                text: "Back"
-                visible: main.showBack
-                onClicked: main.backRequested()
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            Label {
-                text: "Conversational Programs"
-                font.pixelSize: 22
-                font.bold: true
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            Button {
-                text: "Create New"
-                font.pixelSize: 18
-                onClicked: main.addNewProgramRequested()
-                Layout.alignment: Qt.AlignVCenter
-            }
-        }
-
-        Item {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 10
-        }
 
         Rectangle {
             Layout.fillWidth: true

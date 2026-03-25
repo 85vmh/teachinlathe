@@ -12,14 +12,14 @@ Item {
 
         GremlinPane {
             viewModel: root.viewModel
-            SplitView.preferredWidth: 620
+            SplitView.preferredWidth: root.width / 2
             SplitView.minimumWidth: 420
         }
 
         ProgramEditorPane {
             viewModel: root.viewModel
             mode: "gremlin"
-            SplitView.fillWidth: true
+            SplitView.preferredWidth: root.width / 2
             SplitView.minimumWidth: 420
         }
     }

@@ -279,36 +279,6 @@ Item {
         anchors.margins: 12
         spacing: 8
 
-        // Top bar (Back left, centered title, Generate GCode button right)
-        Item {
-            Layout.fillWidth: true
-            height: 48
-
-            Button {
-                text: "Back"
-                visible: operationEditor.showBack
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                onClicked: operationEditor.backRequested()
-            }
-
-            Label {
-                text: operationEditor.titleText
-                font.pixelSize: 22
-                font.bold: true
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-            }
-
-            Button {
-                text: "Build G-Code Program"
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                enabled: operationEditor.operationsModel && operationEditor.operationsModel.length > 0
-                onClicked: operationEditor.generateGcodeRequested()
-            }
-        }
-
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true

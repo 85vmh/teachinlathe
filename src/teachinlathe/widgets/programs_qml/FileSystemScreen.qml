@@ -200,24 +200,6 @@ Item {
                             Layout.fillWidth: true
                         }
 
-                        // Gremlin view button
-                        Rectangle {
-                            visible: root.selectedFile !== ""
-                            width: 130; height: 30; radius: 4
-                            color: gremlinBtnArea.pressed ? "#005a9e" : "#0e639c"
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "View in Gremlin"
-                                color: "white"
-                                font.pixelSize: 12
-                            }
-                            MouseArea {
-                                id: gremlinBtnArea
-                                anchors.fill: parent
-                                onClicked: fsBridge.navigateTo(1)
-                            }
-                        }
 
                         // Open in machine button
                         Rectangle {

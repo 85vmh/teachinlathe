@@ -381,10 +381,6 @@ class GCodeEditorPane(QWidget):
         toolbar_layout.addWidget(self._save_as_button)
 
         if self._mode == 'files':
-            self._gremlin_button = QPushButton('View in Gremlin', toolbar)
-            self._gremlin_button.clicked.connect(lambda: self._bridge.navigateTo(1))
-            toolbar_layout.addWidget(self._gremlin_button)
-
             self._open_button = QPushButton('Open in Machine', toolbar)
             self._open_button.clicked.connect(self._open_in_machine)
             toolbar_layout.addWidget(self._open_button)

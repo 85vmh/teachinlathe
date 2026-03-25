@@ -23,6 +23,8 @@ from teachinlathe.widgets.FrameAnimator import FrameAnimator
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 from teachinlathe.widgets.tools_list_provider import ToolsListProvider
 from teachinlathe.widgets.programs_qml.ProgramsQml import ProgramsQml
+from teachinlathe.widgets.app_shell_widget import AppShellWidget
+from teachinlathe.app_state import AppState
 import teachinlathe_rc
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
@@ -77,6 +79,7 @@ class MyMainWindow(VCPMainWindow):
         self.current_spindle_override = 0
         self.current_feed_override = 0
         self.current_program = None
+        self.appState = AppState(self)
 
         self.fixture_repository = LatheFixturesRepository()
         self.manualLathe = ManualLathe()
@@ -161,7 +164,13 @@ class MyMainWindow(VCPMainWindow):
         QTimer.singleShot(0, self._initManualToolsList)
         QTimer.singleShot(0, self._initProgramsQml)
         QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
+        QTimer.singleShot(0, self._initAppShell)
         self.latheFixtures.onFixtureSelected.connect(self.onFixtureSelected)
+        try:
+            self.conversationalqml.setAppState(self.appState)
+        except Exception as e:
+            print("Failed to inject app state into conversational:", e)
+
         initial_fixture = self.fixture_repository.getCurrentFixture()
         if initial_fixture:
             print("Setup initial fixture: ", initial_fixture)
@@ -204,6 +213,9 @@ class MyMainWindow(VCPMainWindow):
         self.manualToolsList.setResizeMode(QQuickWidget.SizeRootObjectToView)
         self.manualToolsList.setGeometry(0, 0, self.toolLibraryContainer.width(), self.toolLibraryContainer.height())
         self.manualToolsList.engine().rootContext().setContextProperty("toolsProvider", self.toolsListProvider)
+        self.manualToolsList.engine().rootContext().setContextProperty("appState", self.appState)
+        self.manualToolsList.engine().rootContext().setContextProperty("cncStore", self.appState.cncStore)
+        self.manualToolsList.engine().rootContext().setContextProperty("navigationStore", self.appState.navigationStore)
 
         qml_path = os.path.join(os.path.dirname(__file__), "widgets", "ToolListView.qml")
         self.manualToolsList.setSource(QUrl.fromLocalFile(qml_path))
@@ -231,8 +243,41 @@ class MyMainWindow(VCPMainWindow):
         tab_layout.setContentsMargins(0, 0, 0, 0)
 
         self.programsQmlWidget = ProgramsQml(locations, self.programsQmlTab)
+        self.programsQmlWidget.setAppState(self.appState)
         self.programsQmlWidget.viewmodel.programLoadRequested.connect(self.onProgramsQmlProgramLoadRequested)
         tab_layout.addWidget(self.programsQmlWidget)
+
+    def _initAppShell(self):
+        if hasattr(self, "appShellWidget") and self.appShellWidget is not None:
+            return
+
+        from PyQt5.QtWidgets import QVBoxLayout
+
+        self.tabWidget.setTabBarAutoHide(True)
+        self.tabWidget.tabBar().hide()
+
+        if self.pageReady.layout() is None:
+            layout = QVBoxLayout(self.pageReady)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(0)
+        else:
+            layout = self.pageReady.layout()
+
+        feature_controllers = {
+            "conversational": getattr(self, "conversationalqml", None),
+            "programs": getattr(self, "programsQmlWidget", None),
+        }
+        self.appShellWidget = AppShellWidget(self.tabWidget, self.appState, self.pageReady, feature_controllers=feature_controllers)
+        layout.addWidget(self.appShellWidget)
+
+        tab_id = {
+            MainTabs.MANUAL_TURNING.value: "manual",
+            MainTabs.CONVERSATIONAL.value: "conversational",
+            MainTabs.PROGRAMS.value: "programs",
+            MainTabs.TOOLS_OFFSETS.value: "tools",
+            MainTabs.MACHINE_SETTINGS.value: "settings",
+        }.get(self.tabWidget.currentIndex(), "manual")
+        self.appState.activateTab(tab_id)
 
     def _syncEmbeddedQmlTabs(self):
         current_index = self.tabWidget.currentIndex()
@@ -262,7 +307,18 @@ class MyMainWindow(VCPMainWindow):
         self.mainSelectedTab = MainTabs(index)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = self.mainSelectedTab == MainTabs.PROGRAMS
         self.teachinlathedro.limitsHandler.setChuckLimitsActive(self.mainSelectedTab != MainTabs.MACHINE_SETTINGS)
+
+        tab_id = {
+            MainTabs.MANUAL_TURNING.value: "manual",
+            MainTabs.CONVERSATIONAL.value: "conversational",
+            MainTabs.PROGRAMS.value: "programs",
+            MainTabs.TOOLS_OFFSETS.value: "tools",
+            MainTabs.MACHINE_SETTINGS.value: "settings",
+        }.get(index, "manual")
+        self.appState.activateTab(tab_id)
+        self.appState.cncStore.addEvent("INFO", "navigation", f"Switched to {tab_id}")
         QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
+        QTimer.singleShot(0, self._initAppShell)
 
     # def handleUsbPresent(self, value):
     #     self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value if value else ProgramTabs.PROGRAM_LOADED.value)
@@ -423,7 +479,7 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = self.xMpgLastValue
 
     def toggleZMpgEnable(self):
-        self.zMpgLastValue = self.xMpgCheckbox.isChecked()
+        self.zMpgLastValue = self.zMpgCheckbox.isChecked()
         print("toggle PinHandwheelsAppZEnable to:", self.zMpgLastValue)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = self.zMpgLastValue
 
