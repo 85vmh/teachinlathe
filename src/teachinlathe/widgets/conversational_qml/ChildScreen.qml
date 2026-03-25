@@ -55,6 +55,8 @@ Item {
 
     signal updateFacing(int index, var payload)
 
+    signal updateKnurling(int index, var payload)
+
     signal updateProfiling(int index, var payload)
 
     signal updateCustomProfiling(int index, var payload)
@@ -246,6 +248,8 @@ Item {
             detailsLoader.source = "ToolChangeDetailsView.qml"
         } else if (data.type === "facing") {
             detailsLoader.source = "FacingDetailsView.qml"
+        } else if (data.type === "knurling") {
+            detailsLoader.source = "KnurlingDetailsView.qml"
         } else if (data.type === "profiling") {
             detailsLoader.source = "ProfilingDetailsView.qml"
         } else if (data.type === "customProfiling") {
@@ -628,6 +632,8 @@ Item {
                             operationEditor.updateDefineProfile(updated.index, updated.payload)
                         else if (t === "facing" && operationEditor.updateFacing)
                             operationEditor.updateFacing(updated.index, updated.payload)
+                        else if (t === "knurling" && operationEditor.updateKnurling)
+                            operationEditor.updateKnurling(updated.index, updated.payload)
                         else if (t === "profiling" && operationEditor.updateProfiling)
                             operationEditor.updateProfiling(updated.index, updated.payload)
                         else if (t === "customProfiling" && operationEditor.updateCustomProfiling)

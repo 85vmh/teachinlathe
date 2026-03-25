@@ -240,6 +240,8 @@ class ConversationalQml(QQuickWidget):
                 item.teachZRequested.connect(self.onTeachZ)
             if hasattr(item, "updateFacing"):
                 item.updateFacing.connect(self.onUpdateFacing)
+            if hasattr(item, "updateKnurling"):
+                item.updateKnurling.connect(self.onUpdateKnurling)
             if hasattr(item, "updateProfiling"):
                 item.updateProfiling.connect(self.onUpdateProfiling)
             if hasattr(item, "updateCustomProfiling"):
@@ -298,6 +300,14 @@ class ConversationalQml(QQuickWidget):
                 "geometry_parameters": {"x_start": 0.0, "z_start": 0.0, "x_end": 0.0, "z_end": 0.0},
                 "m1_parameters": m1_default,
                 "z_end_becomes_new_z0": False,
+            })
+        elif op_type == "knurling":
+            base.update({
+                "generate_gcode": False,
+                "spindle_parameters": {"direction": -1, "mode": "rpm", "rpm_value": 300, "css_value": 20, "css_max_speed": 1500},
+                "cutting_parameters": {"doc": 0.5, "retract": 2.0, "grooves_count": 10},
+                "geometry_parameters": {"z_start": 2.0, "z_end": -50.0, "x_start": 30.0},
+                "m1_parameters": {"include_m1": True, "inspect_position": "G28", "stop_spindle": True},
             })
         elif op_type in ("profiling", "customProfiling"):
             base.update({
@@ -749,6 +759,8 @@ class ConversationalQml(QQuickWidget):
             return "Tool Change"
         if t == "facing":
             return "Facing"
+        if t == "knurling":
+            return "SinglePoint Knurling"
         if t == "defineProfile":
             if profile_id is not None:
                 return f"Define Profile (P{profile_id})"
@@ -762,6 +774,10 @@ class ConversationalQml(QQuickWidget):
             if profile_id is not None:
                 return f"{prefix}Cut Profile (P:{profile_id})"
             return f"{prefix}Cut Profile" if prefix else "Cut Profile"
+        if t == "customProfiling":
+            if profile_id is not None:
+                return f"Custom Profiling P{profile_id}"
+            return "Custom Profiling"
         if t == "threading":
             return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"
         if t == "drilling":
@@ -988,6 +1004,41 @@ class ConversationalQml(QQuickWidget):
             self._save_current_program()
         except Exception as e:
             print("[profiling] update error:", e)
+
+    def onUpdateKnurling(self, index: int, payload):
+        try:
+            p = self._to_py(payload) or {}
+            op = self._get_current_op(index)
+            from teachinlathe.conversational.data_types import Knurling
+            if not isinstance(op, Knurling):
+                return
+
+            old_dict = op.to_dict()
+            sp_old = (old_dict.get("spindle_parameters") or {})
+            sp_new = p.get("spindle_parameters")
+            if isinstance(sp_new, dict):
+                sp_norm = dict(sp_old)
+                if "mode" in sp_new and sp_new["mode"]:
+                    sp_norm["mode"] = sp_new["mode"]
+                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
+                    sp_norm["mode"] = "rpm"
+                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
+                    sp_norm["mode"] = "css"
+                else:
+                    sp_norm["mode"] = sp_old.get("mode", "rpm")
+                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
+                    if k in sp_new and sp_new[k] is not None:
+                        sp_norm[k] = sp_new[k]
+                p["spindle_parameters"] = sp_norm
+
+            merged = _deep_merge(old_dict, p)
+            new_op = Knurling.from_dict(merged)
+            prog = self._get_current_program()
+            if prog:
+                prog.operations[index] = new_op
+            self._save_current_program()
+        except Exception as e:
+            print("[knurling] update error:", e)
 
     def onUpdateCustomProfiling(self, index: int, payload):
         self.onUpdateProfiling(index, payload)

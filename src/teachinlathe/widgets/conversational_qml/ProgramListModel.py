@@ -116,17 +116,22 @@ class ProgramListModel(QAbstractListModel):
         if op_type == "defineProfile":
             profile_id = getattr(op, "profile_id", None)
             return f"Define Profile (P{profile_id})" if profile_id is not None else "Define Profile"
-        if op_type in ("profiling", "customProfiling"):
+        if op_type == "profiling":
             profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
             strategy = getattr(getattr(op, "profilingOptions", None), "strategy", None)
             strategy_value = strategy.value if hasattr(strategy, "value") else str(strategy or "").lower()
             prefix = "G71 " if strategy_value == "rough" else "G70 " if strategy_value == "finish" else ""
             if profile_id is not None and strategy:
                 strategy_str = strategy.value.capitalize() if hasattr(strategy, "value") else str(strategy).capitalize()
-                return f"{prefix}Cut Profile (P:{profile_id}, {strategy_str})"
+                return f"{prefix}Cut Profile (P{profile_id}, {strategy_str})"
             if profile_id is not None:
-                return f"{prefix}Cut Profile (P:{profile_id})"
+                return f"{prefix}Cut Profile (P{profile_id})"
             return f"{prefix}Cut Profile" if prefix else "Cut Profile"
+        if op_type == "customProfiling":
+            profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
+            if profile_id is not None:
+                return f"Custom Profiling (P{profile_id})"
+            return "Custom Profiling"
         if op_type == "threading":
             pitch = getattr(op, "pitch", None)
             return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"

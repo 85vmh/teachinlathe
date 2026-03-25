@@ -1,63 +1,64 @@
-o<knurling> sub
+O<knurling> sub
 
-#<x_start>      = #1
-#<z_start>      = #2
-#<z_end>        = #3
-#<doc>          = #4
-#<leads_count>  = #5
-#<knurl_angle>  = #6
-#<rpm>          = #7
+#<x_start>            = #1
+#<z_start>            = #2
+#<z_end>              = #3
+#<doc>                = #4
+#<retract>            = #5
+#<grooves_count>      = #6
+#<inspect_position>   = #7
+#<include_m1>         = #8
+#<spindle_dir>        = #9
 
-G8  ; Lathe Radius Mode
+G7  ; Lathe Diameter Mode
 G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
 
-#<x_retract> = 1
+#<grooves_count> = [FIX[ABS[#<grooves_count>]]]
+o10 if [#<grooves_count> LT 1]
+    #<grooves_count> = 1
+o10 endif
 
-#<pi> = 3.142
-#<stock_radius> = [#<x_start>/2]
-#<safe_x> = [#<stock_radius> + #<x_retract>]
+#<x_drive> = [#<x_start> - [2 * #<doc>]]
+#<x_clear> = [#<x_start> + #<retract>]
+#<lead> = [3.141592653589793 * #<x_start>]
+#<angle_step> = [360.0 / #<grooves_count>]
 
-; The surface is the circumference of the workpiece
-#<stock_circumference> = [#<pi> * #<x_start>]
+G0 X#<x_clear> Z#<z_start>
 
-; Given a knurl angle, calculate Z feed given <stock_circumference>
-#<thread_pitch> = [TAN[#<knurl_angle>] * #<stock_circumference>]
-#<feed_per_min> = [#<thread_pitch> * #<rpm>]
-(print, thread pitch: #<thread_pitch>; feed per min: #<feed_per_min>)
+#<pass_index> = 0
+o100 while [#<pass_index> LT #<grooves_count>]
+    #<angle_offset> = [#<pass_index> * #<angle_step>]
 
-; To do a n-start thread, we need to start each thread <thread_pitch>
-; further back Z+ than the prior thread
-#<lead_z_offset> = [#<thread_pitch> / #<leads_count>]
+    G0 X#<x_clear> Z#<z_start>
+    G0 X#<x_drive>
+    G33 Z#<z_end> K#<lead> D#<angle_offset>
+    G0 X#<x_clear>
 
-#<current_lead> = #<leads_count>
-#<lead_z_start> = [[#<leads_count> * #<lead_z_offset>] + #<z_start>]
-(print, knurl z start: #<lead_z_start>)
+    o110 if [#<include_m1> NE 0]
+        o<m1_handling> call [#<inspect_position>] [#<x_clear>] [#<z_end>] [#<spindle_dir>]
+    o110 endif
 
-M4 S#<rpm>
+    #<pass_index> = [#<pass_index> + 1]
+o100 endwhile
 
-G0 Z#<lead_z_start>
-G0 X[#<stock_radius> - #<doc>]
+#<pass_index> = 0
+o200 while [#<pass_index> LT #<grooves_count>]
+    #<angle_offset> = [#<pass_index> * #<angle_step>]
 
-O100 WHILE [#<current_lead> GT 0]
-    (print, current lead: #<current_lead>)
-    (print, start Z: #<lead_z_start>; pitch: #<thread_pitch>; feed: #<feed_per_min>)
+    G0 X#<x_clear> Z#<z_end>
+    G0 X#<x_drive>
+    G33 Z#<z_start> K#<lead> D#<angle_offset>
+    G0 X#<x_clear>
 
-    (calculate the z start for the knurl AFTER this one)
-    #105 = #<lead_z_start>
-    #<lead_z_start> = [#<lead_z_start> - #<lead_z_offset>]
+    o210 if [#<include_m1> NE 0]
+        o<m1_handling> call [#<inspect_position>] [#<x_clear>] [#<z_start>] [#<spindle_dir>]
+    o210 endif
 
-    ;G33 Z#<lead_z_start> K#<thread_pitch>
+    #<pass_index> = [#<pass_index> + 1]
+o200 endwhile
 
-    G33 Z#<z_end> K#<thread_pitch>
-    G33 Z#105 K#<thread_pitch>
-    ;G0 X#<safe_x>
-    G0 Z#<lead_z_start>
-    ;G0 X[#<stock_radius> - #<doc>]
+G0 X#<x_clear> Z#<z_start>
 
-    #<current_lead> = [#<current_lead> - 1]
-O100 ENDWHILE
-
-M5
-o<knurling> sub
+O<knurling> endsub

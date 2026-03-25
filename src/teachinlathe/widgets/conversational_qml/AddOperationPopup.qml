@@ -35,6 +35,7 @@ Popup {
     property var options: [
         { label: "Tool Change",      type: "changeTool"      },
         { label: "Facing",           type: "facing"          },
+        { label: "SinglePoint Knurling", type: "knurling"    },
         { label: "Define Profile",   type: "defineProfile"   },
         { label: "G7x Cut Profile",  type: "profiling"       },
         { label: "Custom Profiling", type: "customProfiling" },

@@ -330,6 +330,28 @@ class CuttingParameters:
 
 
 @dataclass
+class KnurlingCuttingParameters:
+    doc: float
+    retract: float
+    groovesCount: int
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "KnurlingCuttingParameters":
+        return KnurlingCuttingParameters(
+            doc=float(data.get("doc", 0.0) or 0.0),
+            retract=float(data.get("retract", 0.0) or 0.0),
+            groovesCount=int(data.get("grooves_count", 1) or 1),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "doc": float(self.doc),
+            "retract": float(self.retract),
+            "grooves_count": int(self.groovesCount),
+        }
+
+
+@dataclass
 class GeometryParameters:
     xStart: float = 0.0
     zStart: float = 0.0
@@ -353,6 +375,28 @@ class GeometryParameters:
             "x_end" : float(self.xEnd)
         }
         return out
+
+
+@dataclass
+class KnurlingGeometryParameters:
+    zStart: float = 0.0
+    zEnd: float = 0.0
+    xStart: float = 0.0
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "KnurlingGeometryParameters":
+        return KnurlingGeometryParameters(
+            zStart=float(data.get("z_start", 0.0) or 0.0),
+            zEnd=float(data.get("z_end", 0.0) or 0.0),
+            xStart=float(data.get("x_start", 0.0) or 0.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "z_start": float(self.zStart),
+            "z_end": float(self.zEnd),
+            "x_start": float(self.xStart),
+        }
 
 @dataclass
 class DrillingParameters:
@@ -540,6 +584,41 @@ class Facing(TurnableOperation):
             "geometry_parameters": self.geometryParameters.to_dict(),
             "m1_parameters": self.m1Parameters.to_dict(),
             "z_end_becomes_new_z0": bool(self.zEndBecomesNewZ0)
+        })
+        return base
+
+
+@dataclass
+class Knurling(TurnableOperation):
+    cuttingParameters: KnurlingCuttingParameters
+    geometryParameters: KnurlingGeometryParameters
+    m1Parameters: M1Parameters
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Knurling":
+        spindle_parameters = TurnableOperation._parse_spindle(data)
+        cutting_parameters = KnurlingCuttingParameters.from_dict(data.get("cutting_parameters", {}))
+        geometry_parameters = KnurlingGeometryParameters.from_dict(data.get("geometry_parameters", {}))
+        m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
+
+        return Knurling(
+            order=int(data["order"]),
+            type=data["type"],
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            spindleParameters=spindle_parameters,
+            cuttingParameters=cutting_parameters,
+            geometryParameters=geometry_parameters,
+            m1Parameters=m1_parameters,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        self._add_spindle_to(base)
+        base.update({
+            "cutting_parameters": self.cuttingParameters.to_dict(),
+            "geometry_parameters": self.geometryParameters.to_dict(),
+            "m1_parameters": self.m1Parameters.to_dict(),
         })
         return base
 
@@ -1000,6 +1079,7 @@ class Program:
 operation_types: Dict[str, Type[Operation]] = {
     "changeTool": ChangeTool,
     "facing": Facing,
+    "knurling": Knurling,
     "defineProfile": DefineProfile,
     "profiling": Profiling,
     "customProfiling": Profiling,
@@ -1012,6 +1092,7 @@ operation_types: Dict[str, Type[Operation]] = {
 display_names: Dict[str, str] = {
     "changeTool": "Tool Change",
     "facing": "Facing",
+    "knurling": "SinglePoint Knurling",
     "defineProfile": "Define Profile",
     "profiling": "Profiling",
     "customProfiling": "Custom Profiling",

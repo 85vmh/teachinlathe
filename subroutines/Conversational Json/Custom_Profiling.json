@@ -3,7 +3,7 @@
     "header": {
         "name": "Custom Profiling",
         "created_date": "2026-03-12 09:25:08",
-        "last_edit": "2026-03-24 22:33:25",
+        "last_edit": "2026-03-25 11:13:12",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -17,7 +17,7 @@
         {
             "order": 1,
             "type": "changeTool",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "tool_no": 1,
             "tool_orientation": 2,
@@ -32,6 +32,34 @@
         },
         {
             "order": 2,
+            "type": "knurling",
+            "generate_gcode": true,
+            "is_optional_block": false,
+            "spindle_parameters": {
+                "direction": -1,
+                "mode": "rpm",
+                "rpm_value": 300,
+                "css_value": 20,
+                "css_max_speed": 1500
+            },
+            "cutting_parameters": {
+                "doc": 0.5,
+                "retract": 2.0,
+                "grooves_count": 10
+            },
+            "geometry_parameters": {
+                "z_start": 2.0,
+                "z_end": -50.0,
+                "x_start": 30.0
+            },
+            "m1_parameters": {
+                "include_m1": false,
+                "inspect_position": "G28",
+                "stop_spindle": true
+            }
+        },
+        {
+            "order": 3,
             "type": "facing",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -61,9 +89,37 @@
             "z_end_becomes_new_z0": true
         },
         {
-            "order": 3,
+            "order": 4,
+            "type": "knurling",
+            "generate_gcode": false,
+            "is_optional_block": false,
+            "spindle_parameters": {
+                "direction": -1,
+                "mode": "rpm",
+                "rpm_value": 300,
+                "css_value": 20,
+                "css_max_speed": 1500
+            },
+            "cutting_parameters": {
+                "doc": 0.5,
+                "retract": 2.0,
+                "grooves_count": 10
+            },
+            "geometry_parameters": {
+                "z_start": 2.0,
+                "z_end": -50.0,
+                "x_start": 30.0
+            },
+            "m1_parameters": {
+                "include_m1": true,
+                "inspect_position": "G28",
+                "stop_spindle": true
+            }
+        },
+        {
+            "order": 5,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 1,
             "tool_orientation": 1,
@@ -77,9 +133,9 @@
             }
         },
         {
-            "order": 4,
+            "order": 6,
             "type": "defineProfile",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "profile_id": 5,
             "profile_primitives": [
@@ -134,7 +190,7 @@
                     "blend": {
                         "type": "fillet",
                         "chamfer_width": 0.0,
-                        "fillet_radius": 5.0
+                        "fillet_radius": 3.0
                     }
                 },
                 {
@@ -151,9 +207,9 @@
             ]
         },
         {
-            "order": 5,
+            "order": 7,
             "type": "customProfiling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": -1,
@@ -179,7 +235,7 @@
             }
         },
         {
-            "order": 6,
+            "order": 8,
             "type": "changeTool",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -195,7 +251,7 @@
             }
         },
         {
-            "order": 7,
+            "order": 9,
             "type": "profiling",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -225,7 +281,7 @@
             }
         },
         {
-            "order": 8,
+            "order": 10,
             "type": "changeTool",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -241,7 +297,7 @@
             }
         },
         {
-            "order": 9,
+            "order": 11,
             "type": "threading",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -268,7 +324,7 @@
             }
         },
         {
-            "order": 10,
+            "order": 12,
             "type": "changeTool",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -284,7 +340,7 @@
             }
         },
         {
-            "order": 11,
+            "order": 13,
             "type": "drilling",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -307,7 +363,7 @@
             }
         },
         {
-            "order": 12,
+            "order": 14,
             "type": "tapping",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -330,7 +386,7 @@
             }
         },
         {
-            "order": 13,
+            "order": 15,
             "type": "parting",
             "generate_gcode": false,
             "is_optional_block": false,
