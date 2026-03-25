@@ -10,7 +10,7 @@ Item {
         anchors.fill: parent
         orientation: Qt.Horizontal
 
-        GremlinPane {
+        ProgramLoadedLeftPane {
             viewModel: root.viewModel
             SplitView.preferredWidth: root.width / 2
             SplitView.minimumWidth: 420

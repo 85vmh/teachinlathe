@@ -9,7 +9,7 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 0
+        spacing: 4
 
         ProgramsDro {
             Layout.fillWidth: true

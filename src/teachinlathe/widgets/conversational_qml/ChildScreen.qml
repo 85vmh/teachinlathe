@@ -131,6 +131,7 @@ Item {
     readonly property int colTypeW: 200   // min; flex fills the rest
     readonly property int colOptW: 80
     readonly property int colDelW: 100   // fixed width for Delete/Reorder
+    readonly property int opHeaderFontSize: 14
 
     Loader {
         id: addOpPopupLoader
@@ -276,7 +277,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
+        anchors.bottomMargin: 36
         spacing: 8
 
         RowLayout {
@@ -292,18 +293,18 @@ Item {
                 color: "#ffffff"
                 radius: 6
                 border.color: "#ccc"
-                border.width: 1
+                border.width: 0
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 8
+                    anchors.margins: 1
                     spacing: 6
 
                     // Program Header row (selectable, index = -1)
                     Rectangle {
                         id: programHeaderRow
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 44
+                        Layout.preferredHeight: 60
                         radius: 4
                         color: (opsList.currentIndex === -1 ? "#e9f4ff" : "#f9f9f9")
                         border.width: 1
@@ -352,12 +353,12 @@ Item {
                             // Title row + icon-text buttons (adaptive)
                             RowLayout {
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: 40
+                                Layout.preferredHeight: 50
                                 spacing: 20
 
                                 Label {
                                     text: "Operation List"
-                                    font.pixelSize: 18
+                                    font.pixelSize: operationEditor.opHeaderFontSize
                                     font.bold: true
                                     verticalAlignment: Text.AlignVCenter
                                     Layout.fillWidth: true
@@ -441,6 +442,7 @@ Item {
 
                                     Label {
                                         text: "Order"
+                                        font.pixelSize: operationEditor.opHeaderFontSize
                                         font.bold: true
                                         Layout.minimumWidth: colOpNumW
                                         Layout.preferredWidth: colOpNumW
@@ -454,6 +456,7 @@ Item {
 
                                     Label {
                                         text: "Generate\nGCode"
+                                        font.pixelSize: operationEditor.opHeaderFontSize
                                         font.bold: true
                                         Layout.minimumWidth: colGenW
                                         Layout.preferredWidth: colGenW
@@ -469,6 +472,7 @@ Item {
 
                                     Label {
                                         text: "Operation Type"
+                                        font.pixelSize: operationEditor.opHeaderFontSize
                                         font.bold: true
                                         Layout.minimumWidth: colTypeW
                                         Layout.fillWidth: true
@@ -482,6 +486,7 @@ Item {
 
                                     Label {
                                         text: "Optional\nBlock"
+                                        font.pixelSize: operationEditor.opHeaderFontSize
                                         font.bold: true
                                         Layout.minimumWidth: colOptW
                                         Layout.preferredWidth: colOptW
@@ -497,6 +502,7 @@ Item {
 
                                     Label {
                                         text: operationEditor.reorderMode ? "Change\nOrder" : "Delete"
+                                        font.pixelSize: operationEditor.opHeaderFontSize
                                         font.bold: true
                                         Layout.minimumWidth: colDelW
                                         Layout.preferredWidth: colDelW

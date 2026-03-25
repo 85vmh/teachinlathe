@@ -62,19 +62,19 @@ class AppShellWidget(QWidget):
         self.title_bar.setObjectName('appShellTitleBar')
         self.title_bar.setStyleSheet(
             'QFrame#appShellTitleBar { background: #f5f7fb; border-bottom: 1px solid #d6dce7; }'
-            'QLabel#appShellTitle { color: #1e2430; font: 700 20pt "Noto Sans"; }'
-            'QPushButton#appShellActionButton { background: #2d7d46; color: white; border: 1px solid #3fb950; padding: 10px 16px; font: 700 12pt "Noto Sans"; border-radius: 6px; }'
+            'QLabel#appShellTitle { color: #1e2430; font: 700 17pt "Noto Sans"; }'
+            'QPushButton#appShellActionButton { background: #2d7d46; color: white; border: 1px solid #3fb950; padding: 8px 14px; font: 12pt "Noto Sans"; border-radius: 6px; }'
             'QPushButton#appShellActionButton:hover { background: #25673a; }'
             'QPushButton#appShellActionButton:checked { background: #7a5a12; border-color: #d7ba7d; }'
             'QPushButton#appShellActionButton:hover:checked { background: #684b0f; }'
             'QPushButton#appShellActionButton:disabled { color: #d9e7de; background: #8ea99a; border-color: #8ea99a; }'
-            'QPushButton#appShellBackButton { background: #eef3fb; color: #1e2430; border: 1px solid #c5d0df; padding: 8px 12px; font: 11pt "Noto Sans"; border-radius: 6px; min-width: 0px; }'
+            'QPushButton#appShellBackButton { background: #eef3fb; color: #1e2430; border: 1px solid #c5d0df; padding: 7px 11px; font: 11pt "Noto Sans"; border-radius: 6px; min-width: 0px; }'
             'QPushButton#appShellBackButton:hover { background: #e5edf9; }'
             'QPushButton#appShellBackButton:disabled { color: #8c97a8; background: #f3f5f8; border-color: #d5dbe4; }'
         )
         title_layout = QHBoxLayout(self.title_bar)
-        title_layout.setContentsMargins(24, 14, 24, 14)
-        title_layout.setSpacing(16)
+        title_layout.setContentsMargins(20, 10, 20, 10)
+        title_layout.setSpacing(12)
 
         self.left_actions = QWidget(self.title_bar)
         self.left_actions_layout = QHBoxLayout(self.left_actions)
@@ -144,17 +144,17 @@ class AppShellWidget(QWidget):
         drawer_layout.addWidget(self.events_list, 1)
 
         drawer_host_layout.addWidget(self.drawer_container)
-        root.addWidget(self.drawer_host, 0, Qt.AlignBottom)
+        self.drawer_host.hide()
 
         self.bottom_bar = QFrame(self)
         self.bottom_bar.setObjectName('appShellBottomBar')
         self.bottom_bar.setStyleSheet(
-            'QFrame#appShellBottomBar { background: #191c22; border-top: 1px solid #2e3440; }'
-            'QToolButton { color: #cfd6e4; background: transparent; border: none; padding: 14px 18px; font: 12pt "Noto Sans"; }'
-            'QToolButton:checked { background: #283244; color: white; }'
-            'QToolButton:hover:!checked { background: #222a36; }'
-            'QPushButton { background: #18202b; color: white; border: none; padding: 14px 18px; font: 12pt "Noto Sans"; }'
-            'QPushButton:hover { background: #223043; }'
+            'QFrame#appShellBottomBar { background: #f5f7fb; border-top: 1px solid #d6dce7; }'
+            'QToolButton { color: #4a5568; background: transparent; border: none; padding: 14px 18px; font: 12pt "Noto Sans"; border-radius: 0px; }'
+            'QToolButton:checked { color: #1e2430; background: #e6edf7; border-top: 3px solid #2d7d46; padding-top: 11px; }'
+            'QToolButton:hover:!checked { background: #eef3fb; color: #1e2430; }'
+            'QPushButton { background: transparent; color: #4a5568; border: none; padding: 14px 18px; font: 12pt "Noto Sans"; }'
+            'QPushButton:hover { background: #eef3fb; color: #1e2430; }'
         )
         bottom_layout = QHBoxLayout(self.bottom_bar)
         bottom_layout.setContentsMargins(12, 0, 12, 0)
@@ -165,6 +165,7 @@ class AppShellWidget(QWidget):
             btn.setCheckable(True)
             btn.setText(label)
             btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
+            btn.setFixedWidth(200)
             btn.clicked.connect(lambda _checked=False, tid=tab_id: self._app_state.activateTab(tid))
             bottom_layout.addWidget(btn)
             self._buttons[tab_id] = btn
@@ -257,13 +258,35 @@ class AppShellWidget(QWidget):
         controller.triggerHeaderAction(action_id)
         self._sync_from_store()
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._position_drawer_overlay()
+
+    def _position_drawer_overlay(self):
+        if self.bottom_bar is None or self.content_host is None:
+            return
+
+        width = max(420, self.width() // 2)
+        width = min(width, max(0, self.width() - 24))
+        height = max(220, self.height() // 3)
+        max_height = max(0, self.content_host.height() - 24)
+        if max_height > 0:
+            height = min(height, max_height)
+
+        bottom_bar_height = self.bottom_bar.height()
+        x = self.width() - width - 12
+        y = self.height() - bottom_bar_height - height
+        self.drawer_host.setGeometry(x, y, width, height)
+        self.drawer_container.setFixedWidth(width)
+        self.drawer_container.setFixedHeight(height)
+
     def _apply_log_panel_state(self):
         expanded = self._nav_store.logsExpanded
         self.drawer_container.setVisible(expanded)
         self.drawer_host.setVisible(expanded)
         if expanded:
-            self.drawer_container.setFixedWidth(max(420, self.width() // 2))
-            self.drawer_container.setFixedHeight(max(220, self.height() // 3))
+            self._position_drawer_overlay()
+            self.drawer_host.raise_()
         else:
             self.drawer_container.setFixedWidth(0)
             self.drawer_container.setFixedHeight(0)

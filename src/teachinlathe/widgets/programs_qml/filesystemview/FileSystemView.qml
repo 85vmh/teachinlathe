@@ -8,9 +8,13 @@ Rectangle {
     property var viewModel
 
     color: "#f5f5f5"
+    radius: 6
+    border.color: "#ccc"
+    border.width: 1
 
     ColumnLayout {
         anchors.fill: parent
+        anchors.margins: 8
         spacing: 0
 
         // Row 1 — Predefined location selector

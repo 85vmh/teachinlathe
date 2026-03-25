@@ -105,9 +105,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
-
+        anchors.bottomMargin: 36
 
         Rectangle {
             Layout.fillWidth: true
@@ -119,7 +117,7 @@ Item {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 8
+                anchors.margins: 1
                 spacing: 4
 
                 // HEADER (fixed 40px)

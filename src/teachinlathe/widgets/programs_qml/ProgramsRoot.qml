@@ -17,6 +17,10 @@ Rectangle {
         StackLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.leftMargin: 8
+            Layout.rightMargin: 8
+            Layout.topMargin: 8
+            Layout.bottomMargin: 8
             currentIndex: programsViewModel.screenIndex
 
             ProgramsFilesScreen {
