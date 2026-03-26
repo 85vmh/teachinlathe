@@ -78,7 +78,7 @@ def build_ngc_from_json(json_path, output_dir=None):
                 lines.append("")
                 continue
 
-        if op_type == "customProfiling":
+        if op_type in ("customProfiling", "profileBoring"):
             profile_id = int((op.get("profiling_parameters") or {}).get("profile_id", 0))
             profile_op = next(
                 (o for o in operations

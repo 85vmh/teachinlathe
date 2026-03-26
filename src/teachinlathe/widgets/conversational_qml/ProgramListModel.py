@@ -132,6 +132,11 @@ class ProgramListModel(QAbstractListModel):
             if profile_id is not None:
                 return f"Custom Profiling (P{profile_id})"
             return "Custom Profiling"
+        if op_type == "profileBoring":
+            profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
+            if profile_id is not None:
+                return f"Profile Boring (P{profile_id})"
+            return "Profile Boring"
         if op_type == "threading":
             pitch = getattr(op, "pitch", None)
             return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"

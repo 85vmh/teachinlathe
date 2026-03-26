@@ -317,6 +317,8 @@ class ConversationalQml(QQuickWidget):
                 item.updateProfiling.connect(self.onUpdateProfiling)
             if hasattr(item, "updateCustomProfiling"):
                 item.updateCustomProfiling.connect(self.onUpdateCustomProfiling)
+            if hasattr(item, "updateProfileBoring"):
+                item.updateProfileBoring.connect(self.onUpdateProfileBoring)
             if hasattr(item, "updateDrilling"):
                 item.updateDrilling.connect(self.onUpdateDrilling)
             if hasattr(item, "updateThreading"):
@@ -389,6 +391,18 @@ class ConversationalQml(QQuickWidget):
                     "strategy": "rough",
                     "stock_to_leave_x": 0.0, "stock_to_leave_z": 0.0, "finish_passes": 1, "finish_spring_passes": 0,
                 },
+            })
+        elif op_type == "profileBoring":
+            base.update({
+                "spindle_parameters": spindle_rpm,
+                "cutting_parameters": {"feed_rate": 0.1, "doc": 0.5, "retract": 1.0},
+                "profiling_parameters": {"profile_id": 1, "x_start": 0.0, "z_start": 0.0},
+                "profiling_options": {
+                    "strategy": "rough",
+                    "stock_to_leave_x": 0.0, "stock_to_leave_z": 0.0, "finish_passes": 1, "finish_spring_passes": 0,
+                },
+                "roughing_strategy": {"movement": "axially", "cut_toward": "interior"},
+                "m1_parameters": {"include_m1": True, "inspect_position": "G28", "stop_spindle": False},
             })
         elif op_type == "threading":
             base.update({
@@ -1115,6 +1129,40 @@ class ConversationalQml(QQuickWidget):
 
     def onUpdateCustomProfiling(self, index: int, payload):
         self.onUpdateProfiling(index, payload)
+
+    def onUpdateProfileBoring(self, index: int, payload):
+        """Profile Boring autosave."""
+        try:
+            p = self._to_py(payload) or {}
+            op = self._get_current_op(index)
+            from teachinlathe.conversational.data_types import ProfileBoring
+            if not isinstance(op, ProfileBoring):
+                return
+
+            old_dict = op.to_dict()
+            sp_old = (old_dict.get("spindle_parameters") or {})
+            sp_new = p.get("spindle_parameters")
+            if isinstance(sp_new, dict):
+                sp_norm = dict(sp_old)
+                if "mode" in sp_new and sp_new["mode"]:
+                    sp_norm["mode"] = sp_new["mode"]
+                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
+                    sp_norm["mode"] = "rpm"
+                else:
+                    sp_norm["mode"] = sp_old.get("mode", "rpm")
+                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
+                    if k in sp_new and sp_new[k] is not None:
+                        sp_norm[k] = sp_new[k]
+                p["spindle_parameters"] = sp_norm
+
+            merged = _deep_merge(old_dict, p)
+            new_op = ProfileBoring.from_dict(merged)
+            prog = self._get_current_program()
+            if prog:
+                prog.operations[index] = new_op
+            self._save_current_program()
+        except Exception as e:
+            print("[profileBoring] update error:", e)
 
     def onUpdateDrilling(self, index: int, payload):
         """Drilling autosave."""

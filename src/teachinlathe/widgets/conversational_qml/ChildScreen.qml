@@ -61,6 +61,8 @@ Item {
 
     signal updateCustomProfiling(int index, var payload)
 
+    signal updateProfileBoring(int index, var payload)
+
     signal updateDrilling(int index, var payload)
 
     signal updateThreading(int index, var payload)
@@ -255,6 +257,8 @@ Item {
             detailsLoader.source = "ProfilingDetailsView.qml"
         } else if (data.type === "customProfiling") {
             detailsLoader.source = "CustomProfilingDetailsView.qml"
+        } else if (data.type === "profileBoring") {
+            detailsLoader.source = "ProfileBoringDetailsView.qml"
         } else if (data.type === "defineProfile") {
             detailsLoader.source = "define_profile/DefineProfileDetailsView.qml"
         } else if (data.type === "drilling") {
@@ -614,6 +618,8 @@ Item {
                             operationEditor.updateProfiling(updated.index, updated.payload)
                         else if (t === "customProfiling" && operationEditor.updateCustomProfiling)
                             operationEditor.updateCustomProfiling(updated.index, updated.payload)
+                        else if (t === "profileBoring" && operationEditor.updateProfileBoring)
+                            operationEditor.updateProfileBoring(updated.index, updated.payload)
                         else if (t === "drilling" && operationEditor.updateDrilling)
                             operationEditor.updateDrilling(updated.index, updated.payload)
                         else if (t === "threading")

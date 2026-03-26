@@ -3,7 +3,7 @@
     "header": {
         "name": "Duplicated Program",
         "created_date": "2026-03-12 15:32:08",
-        "last_edit": "2026-03-25 23:13:51",
+        "last_edit": "2026-03-26 18:26:08",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -17,7 +17,7 @@
         {
             "order": 1,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 6,
             "tool_orientation": 2,
@@ -81,6 +81,102 @@
             "type": "defineProfile",
             "generate_gcode": true,
             "is_optional_block": false,
+            "profile_id": 1,
+            "profile_primitives": [
+                {
+                    "primitive_id": 1,
+                    "type": "startPoint",
+                    "x_start": 40.0,
+                    "z_start": 0.0
+                },
+                {
+                    "primitive_id": 2,
+                    "type": "lineTo",
+                    "x_end": 40.0,
+                    "z_end": -15.0,
+                    "blend": {
+                        "type": "fillet",
+                        "chamfer_width": 0.0,
+                        "fillet_radius": 5.0
+                    }
+                },
+                {
+                    "primitive_id": 3,
+                    "type": "lineTo",
+                    "x_end": 30.0,
+                    "z_end": -18.0,
+                    "blend": {
+                        "type": "fillet",
+                        "chamfer_width": 0.0,
+                        "fillet_radius": 2.0
+                    }
+                },
+                {
+                    "primitive_id": 4,
+                    "type": "lineTo",
+                    "x_end": 25.0,
+                    "z_end": -35.0,
+                    "blend": {
+                        "type": "chamfer",
+                        "chamfer_width": 1.0,
+                        "fillet_radius": 0.0
+                    }
+                },
+                {
+                    "primitive_id": 5,
+                    "type": "lineTo",
+                    "x_end": 15.0,
+                    "z_end": -35.0,
+                    "blend": {
+                        "type": "none",
+                        "chamfer_width": 0.0,
+                        "fillet_radius": 0.0
+                    }
+                }
+            ]
+        },
+        {
+            "order": 5,
+            "type": "profileBoring",
+            "generate_gcode": true,
+            "is_optional_block": false,
+            "spindle_parameters": {
+                "direction": -1,
+                "mode": "rpm",
+                "rpm_value": 1000
+            },
+            "cutting_parameters": {
+                "feed_rate": 0.4,
+                "doc": 1.0,
+                "retract": 0.5
+            },
+            "profiling_parameters": {
+                "profile_id": 1,
+                "x_start": 15.0,
+                "z_start": 0.0
+            },
+            "profiling_options": {
+                "strategy": "rough",
+                "stock_to_leave_x": 0.0,
+                "stock_to_leave_z": 0.0,
+                "finish_passes": 1,
+                "finish_spring_passes": 0
+            },
+            "roughing_strategy": {
+                "movement": "diagonal",
+                "cut_toward": "interior"
+            },
+            "m1_parameters": {
+                "include_m1": false,
+                "inspect_position": "G28",
+                "stop_spindle": false
+            }
+        },
+        {
+            "order": 6,
+            "type": "defineProfile",
+            "generate_gcode": false,
+            "is_optional_block": false,
             "profile_id": 5,
             "profile_primitives": [
                 {
@@ -93,7 +189,7 @@
                     "primitive_id": 2,
                     "type": "lineTo",
                     "x_end": 20.0,
-                    "z_end": -25.0,
+                    "z_end": -30.0,
                     "blend": {
                         "type": "fillet",
                         "chamfer_width": 0.0,
@@ -151,9 +247,37 @@
             ]
         },
         {
-            "order": 5,
+            "order": 7,
+            "type": "customProfiling",
+            "generate_gcode": false,
+            "is_optional_block": false,
+            "spindle_parameters": {
+                "direction": -1,
+                "mode": "rpm",
+                "rpm_value": 1000
+            },
+            "cutting_parameters": {
+                "feed_rate": 0.1,
+                "doc": 1.0,
+                "retract": 0.5
+            },
+            "profiling_parameters": {
+                "profile_id": 5,
+                "x_start": 52.0,
+                "z_start": 0.0
+            },
+            "profiling_options": {
+                "strategy": "rough",
+                "stock_to_leave_x": 0.0,
+                "stock_to_leave_z": 0.0,
+                "finish_passes": 1,
+                "finish_spring_passes": 0
+            }
+        },
+        {
+            "order": 8,
             "type": "profiling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -181,7 +305,7 @@
             }
         },
         {
-            "order": 6,
+            "order": 9,
             "type": "changeTool",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -197,7 +321,7 @@
             }
         },
         {
-            "order": 7,
+            "order": 10,
             "type": "changeTool",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -213,7 +337,7 @@
             }
         },
         {
-            "order": 8,
+            "order": 11,
             "type": "threading",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -240,7 +364,7 @@
             }
         },
         {
-            "order": 9,
+            "order": 12,
             "type": "changeTool",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -256,7 +380,7 @@
             }
         },
         {
-            "order": 10,
+            "order": 13,
             "type": "drilling",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -279,9 +403,9 @@
             }
         },
         {
-            "order": 11,
+            "order": 14,
             "type": "tapping",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -302,7 +426,7 @@
             }
         },
         {
-            "order": 12,
+            "order": 15,
             "type": "parting",
             "generate_gcode": false,
             "is_optional_block": false,
@@ -329,9 +453,9 @@
             }
         },
         {
-            "order": 13,
+            "order": 16,
             "type": "drilling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -352,9 +476,9 @@
             }
         },
         {
-            "order": 14,
+            "order": 17,
             "type": "tapping",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -375,9 +499,9 @@
             }
         },
         {
-            "order": 15,
+            "order": 18,
             "type": "parting",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
