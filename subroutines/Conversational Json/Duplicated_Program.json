@@ -3,7 +3,7 @@
     "header": {
         "name": "Duplicated Program",
         "created_date": "2026-03-12 15:32:08",
-        "last_edit": "2026-03-26 18:26:08",
+        "last_edit": "2026-03-26 22:18:23",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -146,9 +146,9 @@
                 "rpm_value": 1000
             },
             "cutting_parameters": {
-                "feed_rate": 0.4,
+                "feed_rate": 0.5,
                 "doc": 1.0,
-                "retract": 0.5
+                "retract": 0.2
             },
             "profiling_parameters": {
                 "profile_id": 1,
@@ -163,7 +163,7 @@
                 "finish_spring_passes": 0
             },
             "roughing_strategy": {
-                "movement": "diagonal",
+                "movement": "axially",
                 "cut_toward": "interior"
             },
             "m1_parameters": {

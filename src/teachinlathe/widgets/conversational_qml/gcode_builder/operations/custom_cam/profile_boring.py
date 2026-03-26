@@ -266,6 +266,7 @@ def _emit_axial_roughing(lines, config, path, x_safe, x_cut_max):
         return
 
     pass_count = max(1, math.ceil((x_cut_max - x_start) / doc))
+    x_profile_limit = x_cut_max
 
     lines.append(f"{pfx}G0 X{fmt(x_safe)} Z{fmt(z_start)}")
     for n in range(pass_count):
@@ -273,15 +274,17 @@ def _emit_axial_roughing(lines, config, path, x_safe, x_cut_max):
         # Find axial extent at cut_x: x_shift=-stock_x → samples profile at cut_x + stock_x
         cut_z = find_deepest_z_at_x_path(path, cut_x, -stock_x, stock_z)
         exit_x = cut_x - retract
+        entry_z = z_start + retract if n == 0 or cut_x < x_profile_limit - 1e-9 else z_start
 
         if cut_toward == "interior":
-            # Enter from ZStart (face), cut axially toward Z-
-            # Retract at 45° (X- and Z+ simultaneously) then straight to ZStart
-            retract_z = cut_z + retract
+            # When the tool is still inside the face profile opening, start from ZStart+clearance.
+            # After the cut, retract on a Z-parallel line offset by the same clearance in X.
+            lines.append(f"{pfx}G0 Z{fmt(entry_z)}")
             lines.append(f"{pfx}G0 X{fmt(cut_x)}")
             lines.append(f"{pfx}G1 Z{fmt(cut_z)}")
-            lines.append(f"{pfx}G0 X{fmt(exit_x)} Z{fmt(retract_z)}")
-            lines.append(f"{pfx}G0 Z{fmt(z_start)}")
+            lines.append(f"{pfx}G0 X{fmt(exit_x)}")
+            lines.append(f"{pfx}G0 Z{fmt(entry_z)}")
+            lines.append(f"( DEBUG axial pass {n + 1}/ {pass_count}: cut_x={fmt(cut_x)} cut_z={fmt(cut_z)} entry_z={fmt(entry_z)} exit_x={fmt(exit_x)} )")
         else:
             # Enter from deep end, cut toward ZStart (face)
             # Retract straight in X- (already at face level)
@@ -289,6 +292,7 @@ def _emit_axial_roughing(lines, config, path, x_safe, x_cut_max):
             lines.append(f"{pfx}G0 X{fmt(cut_x)}")
             lines.append(f"{pfx}G1 Z{fmt(z_start)}")
             lines.append(f"{pfx}G0 X{fmt(exit_x)}")
+            lines.append(f"( DEBUG axial pass {n + 1}/ {pass_count}: cut_x={fmt(cut_x)} cut_z={fmt(cut_z)} z_end={fmt(z_start)} exit_x={fmt(exit_x)} )")
 
     lines.append(f"{pfx}G0 X{fmt(x_safe)} Z{fmt(z_start)}")
     lines.append("")
@@ -326,18 +330,21 @@ def _emit_radial_roughing(lines, config, path, x_safe, z_cut_deepest):
         lines.append(f"{pfx}G1 X{fmt(cut_x)}")
         lines.append(f"{pfx}G0 X{fmt(retract_x)} Z{fmt(retract_z)}")
         lines.append(f"{pfx}G0 X{fmt(x_start)}")
+        lines.append(f"( DEBUG radial pass {n + 1}/ {pass_count}: cut_z={fmt(cut_z)} cut_x={fmt(cut_x)} retract_x={fmt(retract_x)} retract_z={fmt(retract_z)} )")
 
     lines.append(f"{pfx}G0 X{fmt(x_safe)} Z{fmt(z_start)}")
     lines.append("")
 
 
 def _emit_diagonal_roughing(lines, config, path, x_safe, x_cut_max, z_cut_deepest):
-    """Emit diagonal boring passes following the explicit plunge-cut-retract cycle."""
+    """Emit diagonal boring passes while preserving a parallel 45-degree line family."""
     pfx = config["optional_prefix"]
     x_start = config["x_start"]
     z_start = config["z_start"]
     doc = config["doc"] if config["doc"] > 0 else 0.5
     retract = config["retract"]
+    stock_x = config["stock_x"]
+    stock_z = config["stock_z"]
     cut_toward = config["cut_toward"]
 
     max_span_x = max(0.0, x_cut_max - x_start)
@@ -354,25 +361,56 @@ def _emit_diagonal_roughing(lines, config, path, x_safe, x_cut_max, z_cut_deepes
     lines.append(f"{pfx}G0 X{fmt(x_safe)} Z{fmt(start_z_clear)}")
     for n in range(pass_count):
         step = min((n + 1) * doc, max_span)
-        face_x = min(x_start + step, x_cut_max)
-        deep_z = max(z_start - step, z_cut_deepest)
-        points = (face_x, deep_z)
+        top_x = x_start + step
+        left_z = z_start - step
+
+        if top_x <= x_cut_max + 1e-9:
+            start_x = top_x
+            start_z = z_start
+        else:
+            hit = _find_45deg_profile_intersection(
+                path, top_x, z_start, -1.0, -1.0, -stock_x, stock_z
+            )
+            if hit is None:
+                continue
+            start_x, start_z = hit
+
+        if left_z >= z_cut_deepest - 1e-9:
+            end_x = x_start
+            end_z = left_z
+        else:
+            hit = _find_45deg_profile_intersection(
+                path, x_start, left_z, 1.0, 1.0, -stock_x, stock_z
+            )
+            if hit is None:
+                continue
+            end_x, end_z = hit
+
+        if start_x < x_safe - 1e-9 or end_x < x_safe - 1e-9:
+            continue
+        if start_z > z_start + 1e-9 or end_z > z_start + 1e-9:
+            continue
+
+        points = (round(start_x, 9), round(start_z, 9), round(end_x, 9), round(end_z, 9))
         if points == last_points:
             continue
         last_points = points
 
         if cut_toward == "interior":
-            lines.append(f"{pfx}G0 X{fmt(face_x)}")
-            lines.append(f"{pfx}G1 Z{fmt(z_start)}")
-            lines.append(f"{pfx}G1 X{fmt(x_start)} Z{fmt(deep_z)}")
-            lines.append(f"{pfx}G0 X{fmt(x_start + retract)} Z{fmt(deep_z + retract)}")
-            lines.append(f"{pfx}G0 Z{fmt(z_start)}")
+            lines.append(f"{pfx}G0 X{fmt(start_x)}")
+            lines.append(f"{pfx}G1 Z{fmt(start_z)}")
+            lines.append(f"{pfx}G1 X{fmt(end_x)} Z{fmt(end_z)}")
+            lines.append(f"{pfx}G1 X{fmt(end_x - retract)} Z{fmt(end_z)}")
+            lines.append(f"{pfx}G0 X{fmt(start_x)} Z{fmt(start_z_clear)}")
+            lines.append(f"{pfx}G0 Z{fmt(z_start + retract)}")
+            lines.append(f"( DEBUG diagonal1 pass {n + 1}/ {pass_count}: start_x={fmt(start_x)} start_z={fmt(start_z)} end_x={fmt(end_x)} end_z={fmt(end_z)} )")
         else:
-            lines.append(f"{pfx}G0 Z{fmt(deep_z)}")
-            lines.append(f"{pfx}G1 X{fmt(x_start)}")
-            lines.append(f"{pfx}G1 X{fmt(face_x)} Z{fmt(z_start)}")
-            lines.append(f"{pfx}G0 X{fmt(face_x - retract)} Z{fmt(z_start + retract)}")
+            lines.append(f"{pfx}G0 Z{fmt(end_z)}")
+            lines.append(f"{pfx}G1 X{fmt(end_x)}")
+            lines.append(f"{pfx}G1 X{fmt(start_x)} Z{fmt(start_z)}")
+            lines.append(f"{pfx}G0 X{fmt(start_x - retract)} Z{fmt(start_z + retract)}")
             lines.append(f"{pfx}G0 X{fmt(x_safe)}")
+            lines.append(f"( DEBUG diagonal2 pass {n + 1}/ {pass_count}: start_x={fmt(start_x)} start_z={fmt(start_z)} end_x={fmt(end_x)} end_z={fmt(end_z)} )")
 
     lines.append(f"{pfx}G0 X{fmt(x_safe)} Z{fmt(start_z_clear)}")
     lines.append("")

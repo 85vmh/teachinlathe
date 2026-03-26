@@ -130,6 +130,61 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
             'grid':               (0.20, 0.20, 0.20),
         })
 
+    def _draw_dashed_traverse(self, for_selection):
+        from OpenGL.GL import GL_LINES, glBegin, glEnd, glVertex3f
+
+        if for_selection:
+            self.draw_lines(self.traverse, for_selection)
+            return
+
+        self.color_with_alpha("traverse")
+        glBegin(GL_LINES)
+        dash_len = 0.8
+        gap_len = 0.5
+        step = dash_len + gap_len
+        for _lineno, start, end, _tooloffset in self.traverse:
+            sx, sy, sz = start[:3]
+            ex, ey, ez = end[:3]
+            dx = ex - sx
+            dy = ey - sy
+            dz = ez - sz
+            length = (dx * dx + dy * dy + dz * dz) ** 0.5
+            if length <= 1e-9:
+                continue
+            ux = dx / length
+            uy = dy / length
+            uz = dz / length
+            pos = 0.0
+            while pos < length:
+                seg_end = min(pos + dash_len, length)
+                ax = sx + ux * pos
+                ay = sy + uy * pos
+                az = sz + uz * pos
+                bx = sx + ux * seg_end
+                by = sy + uy * seg_end
+                bz = sz + uz * seg_end
+                glVertex3f(ax, ay, az)
+                glVertex3f(bx, by, bz)
+                pos += step
+        glEnd()
+
+    def draw(self, for_selection=0, no_traverse=True):
+        from OpenGL.GL import glLineWidth
+
+        if not no_traverse:
+            self._draw_dashed_traverse(for_selection)
+        else:
+            self.colored_lines("straight_feed", self.feed, for_selection, len(self.traverse))
+            self.colored_lines("arc_feed", self.arcfeed, for_selection, len(self.traverse) + len(self.feed))
+            glLineWidth(2)
+            self.draw_dwells(
+                self.dwells,
+                int(self.colors.get("dwell_alpha", 1/3.)),
+                for_selection,
+                len(self.traverse) + len(self.feed) + len(self.arcfeed),
+            )
+            glLineWidth(1)
+
     # ------------------------------------------------------------------
     # Overrides to fix file loading and view fitting
     # ------------------------------------------------------------------
