@@ -26,11 +26,10 @@ def generate_tapping_gcode(op):
     peck_depth = _get_float_value(tapping, "peck_depth", 0.0)
     pitch = _get_float_value(tapping, "pitch", 0.0)
 
-    rpm_value = _get_float_value(spindle, "rpm_value", 0.0)
+    rpm_value = _get_float_value(spindle, "rpm_value", 0)
     direction = spindle.get("direction", 1)
 
     include_m1 = bool(m1_params.get("include_m1", False))
-    stop_spindle = bool(m1_params.get("stop_spindle", False))
     inspect_pos = m1_params.get("inspect_position", "G28")
     inspect_pos_int = 0 if inspect_pos == "G28" else 1
 

@@ -9,7 +9,7 @@ GroupBox {
     title: "Roughing Strategy"
     Layout.fillWidth: true
 
-    property string movement:  "axially"   // "axially" | "radially" | "diagonal"
+    property string movement:  "axially"   // "axially" | "radially" | "diagonal" | "offset" | "equidistant_offset"
     property string cutToward: "interior"  // "interior" | "exterior"
 
     property bool _loading: false
@@ -68,6 +68,20 @@ GroupBox {
                 font.pixelSize: 15
                 checked: root.movement === "diagonal"
                 onToggled: if (checked) { root.movement = "diagonal"; root.emitSave() }
+            }
+            RadioButton {
+                id: rbOffset
+                text: "Offset Passes"
+                font.pixelSize: 15
+                checked: root.movement === "offset"
+                onToggled: if (checked) { root.movement = "offset"; root.emitSave() }
+            }
+            RadioButton {
+                id: rbEquidistant
+                text: "Equidistant Offset"
+                font.pixelSize: 15
+                checked: root.movement === "equidistant_offset"
+                onToggled: if (checked) { root.movement = "equidistant_offset"; root.emitSave() }
             }
         }
 

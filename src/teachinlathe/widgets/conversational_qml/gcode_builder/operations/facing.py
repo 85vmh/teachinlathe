@@ -32,9 +32,9 @@ def generate_facing_gcode(op):
 
     direction = spindle.get("direction", None)
     mode = spindle.get("mode", None)
-    rpm_value = _get_float_value(spindle, "rpm_value", 0.0)
+    rpm_value = _get_float_value(spindle, "rpm_value", 0)
     css_value = _get_float_value(spindle, "css_value", 0.0)
-    css_max = _get_float_value(spindle, "css_max_speed", 0.0)
+    css_max = _get_float_value(spindle, "css_max_speed", 0)
 
     parts = []
     if str(mode).lower() == "rpm":

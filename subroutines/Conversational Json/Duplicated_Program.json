@@ -3,7 +3,7 @@
     "header": {
         "name": "Duplicated Program",
         "created_date": "2026-03-12 15:32:08",
-        "last_edit": "2026-03-26 22:18:23",
+        "last_edit": "2026-03-27 11:25:57",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -117,9 +117,9 @@
                     "x_end": 25.0,
                     "z_end": -35.0,
                     "blend": {
-                        "type": "chamfer",
-                        "chamfer_width": 1.0,
-                        "fillet_radius": 0.0
+                        "type": "fillet",
+                        "chamfer_width": 0.0,
+                        "fillet_radius": 1.0
                     }
                 },
                 {
@@ -163,7 +163,7 @@
                 "finish_spring_passes": 0
             },
             "roughing_strategy": {
-                "movement": "axially",
+                "movement": "equidistant_offset",
                 "cut_toward": "interior"
             },
             "m1_parameters": {

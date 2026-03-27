@@ -7,7 +7,7 @@ from .custom_profiling_types import ProfilePass, RoughPass, ToolpathArc, Toolpat
 def build_spindle_lines(spindle, optional_prefix, get_float):
     mode = spindle.get("mode", None)
     direction = spindle.get("direction", None)
-    rpm_value = get_float(spindle, "rpm_value", 0.0)
+    rpm_value = get_float(spindle, "rpm_value", 0)
     css_value = get_float(spindle, "css_value", 0.0)
     css_max = get_float(spindle, "css_max_speed", 0.0)
 

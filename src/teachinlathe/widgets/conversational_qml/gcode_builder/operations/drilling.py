@@ -31,7 +31,7 @@ def generate_drilling_gcode(op):
     feed = _get_float_value(drilling, "feed_rate", 0.0)
     mode = spindle.get("mode", None)
     direction = spindle.get("direction", None)
-    rpm_value = _get_float_value(spindle, "rpm_value", 0.0)
+    rpm_value = _get_float_value(spindle, "rpm_value", 0)
 
     lines = []
 

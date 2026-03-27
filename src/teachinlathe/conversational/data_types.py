@@ -513,13 +513,13 @@ class ProfilingParameters:
 
 @dataclass
 class RoughingStrategy:
-    movement: str   # "axially" | "radially" | "diagonal"
+    movement: str   # "axially" | "radially" | "diagonal" | "offset"
     cut_toward: str  # "interior" | "exterior"
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "RoughingStrategy":
         movement = str(data.get("movement", "axially")).lower()
-        if movement not in ("axially", "radially", "diagonal"):
+        if movement not in ("axially", "radially", "diagonal", "offset", "equidistant_offset"):
             movement = "axially"
         cut_toward = str(data.get("cut_toward", "interior")).lower()
         if cut_toward not in ("interior", "exterior"):
