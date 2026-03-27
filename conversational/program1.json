@@ -223,7 +223,6 @@
             },
             "profiling_parameters": {
                 "profile_id": 1,
-                "x_start": 0.0,
                 "z_start": 0.0
             },
             "profiling_options": {
@@ -429,9 +428,9 @@
                 "x_start": 50.0,
                 "x_end": 0.0,
                 "z_pos": -15.0,
-                "1st_feed_rate": 0.05,
-                "2nd_feed_rate": 0.02,
-                "2nd_feed_x_pos": 5.0,
+                "first_feed_rate": 0.05,
+                "second_feed_rate": 0.02,
+                "second_feed_x_pos": 5.0,
                 "x_clearance": 1.0
             },
             "edge_break": {

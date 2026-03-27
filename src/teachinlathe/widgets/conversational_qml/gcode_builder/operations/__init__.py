@@ -3,7 +3,7 @@ from .define_profile import generate_define_profile_gcode
 from .facing import generate_facing_gcode
 from .knurling import generate_knurling_gcode
 from .drilling import generate_drilling_gcode
-from .profiling import generate_profiling_gcode
+from .g7x_profiling import generate_profiling_gcode
 from .threading import generate_threading_gcode
 from .parting import generate_parting_gcode
 from .tapping import generate_tapping_gcode

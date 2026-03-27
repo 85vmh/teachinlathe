@@ -302,15 +302,17 @@ class ChangeTool(Operation):
 @dataclass
 class M1Parameters:
     include_m1: bool
-    inspect_position: str
+    inspect_position: InspectPosition
     stop_spindle: bool
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "M1Parameters":
         # backward compat: old JSON had x_inspect/z_inspect instead of inspect_position
-        inspect_position = data.get("inspect_position", "G28")
-        if inspect_position not in ("G28", "G30"):
-            inspect_position = "G28"
+        inspect_raw = str(data.get("inspect_position", InspectPosition.G28.value))
+        try:
+            inspect_position = InspectPosition(inspect_raw)
+        except ValueError:
+            inspect_position = InspectPosition.G28
         return M1Parameters(
             include_m1=bool(data.get("include_m1", True)),
             inspect_position=inspect_position,
@@ -320,7 +322,7 @@ class M1Parameters:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "include_m1": bool(self.include_m1),
-            "inspect_position": self.inspect_position,
+            "inspect_position": self.inspect_position.value,
             "stop_spindle": bool(self.stop_spindle)
         }
 
@@ -389,10 +391,10 @@ class GeometryParameters:
 
     def to_dict(self) -> Dict[str, Any]:
         out = {
+            "x_start": float(self.xStart),
             "z_start": float(self.zStart),
             "z_end": float(self.zEnd),
-            "x_start" : float(self.xStart),
-            "x_end" : float(self.xEnd)
+            "x_end": float(self.xEnd)
         }
         return out
 
@@ -490,9 +492,9 @@ class PartingParameters:
             xStart=float(data.get("x_start", 0.0) or 0.0),
             xEnd=float(data.get("x_end", 0.0) or 0.0),
             zPos=float(data.get("z_pos", 0.0) or 0.0),
-            first_feed_rate=float(data.get("1st_feed_rate", 0.0) or 0.0),
-            second_feed_rate=float(data.get("2nd_feed_rate", 0.0) or 0.0),
-            second_feed_x_pos=float(data.get("2nd_feed_x_pos", 0.0) or 0.0),
+            first_feed_rate=float(data.get("first_feed_rate", 0.0) or 0.0),
+            second_feed_rate=float(data.get("second_feed_rate", 0.0) or 0.0),
+            second_feed_x_pos=float(data.get("second_feed_x_pos", 0.0) or 0.0),
             x_clearance=float(data.get("x_clearance", 1.0) or 1.0),
         )
 
@@ -501,9 +503,9 @@ class PartingParameters:
             "x_start": float(self.xStart),
             "x_end": float(self.xEnd),
             "z_pos" : float(self.zPos),
-            "1st_feed_rate" : float(self.first_feed_rate),
-            "2nd_feed_rate" : float(self.second_feed_rate),
-            "2nd_feed_x_pos": float(self.second_feed_x_pos),
+            "first_feed_rate" : float(self.first_feed_rate),
+            "second_feed_rate" : float(self.second_feed_rate),
+            "second_feed_x_pos": float(self.second_feed_x_pos),
             "x_clearance": float(self.x_clearance),
         }
         return out
@@ -526,7 +528,6 @@ class ProfilingParameters:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "profile_id": int(self.profile_id),
-            "x_start": float(self.xStart),
             "z_start": float(self.zStart)
         }
 

@@ -1,36 +1,34 @@
+from teachinlathe.conversational.data_types import Facing
+
 from ..config import fmt
 from ..helpers.m1 import inspect_position_int
 from ..helpers.spindle import build_spindle_gcode
-from ..helpers.utils import get_float
 
 
-def generate_facing_gcode(op):
-    is_optional = bool(op.get("is_optional_block", False))
-    line_prefix = "/" if is_optional else ""
 
-    spindle = op.get("spindle_parameters", {}) or {}
-    geometry = op.get("geometry_parameters", {}) or {}
-    cutting = op.get("cutting_parameters", {}) or {}
-    m1_params = op.get("m1_parameters", {}) or {}
+def generate_facing_gcode(op: Facing, datum: int = 1):
+    line_prefix = "/" if op.is_optional_block else ""
 
-    x_start = get_float(geometry, "x_start", 0.0)
-    z_start = get_float(geometry, "z_start", 0.0)
-    x_end = get_float(geometry, "x_end", 0.0)
-    z_end = get_float(geometry, "z_end", 0.0)
-    doc = get_float(cutting, "doc", 0.0)
-    feed_rate = get_float(cutting, "feed_rate", 0.0)
-    direction = spindle.get("direction", None)
+    spindle = op.spindleParameters
+    geometry = op.geometryParameters
+    cutting = op.cuttingParameters
+    m1_params = op.m1Parameters
 
     lines = []
     lines.extend(build_spindle_gcode(spindle, line_prefix))
-    lines.append(f"{line_prefix}G95 F{feed_rate}")
+    lines.append(f"{line_prefix}G95 F{cutting.feedRate}")
     lines.append(
-        f"{line_prefix}o<facing> call [{fmt(x_start)}] [{fmt(z_start)}] [{fmt(x_end)}] [{fmt(z_end)}]"
-        f" [{inspect_position_int(m1_params)}] [{fmt(doc)}] [{direction}]"
+        f"{line_prefix}o<facing> call "
+        f"[{fmt(geometry.xStart)}] "
+        f"[{fmt(geometry.zStart)}] "
+        f"[{fmt(geometry.xEnd)}] "
+        f"[{fmt(geometry.zEnd)}] "
+        f"[{inspect_position_int(m1_params)}] "
+        f"[{fmt(cutting.doc)}] "
+        f"[{spindle.direction}]"
     )
 
-    if bool(op.get("z_end_becomes_new_z0", False)):
-        datum = int(op.get("_datum", 1))
-        lines.append(f"{line_prefix}G10 L20 P{datum} Z0 (Set the new datum at the current Z position)")
+    if op.zEndBecomesNewZ0:
+        lines.append(f"{line_prefix}G10 L20 P{int(datum)} Z0 (Set the new datum at the current Z position)")
 
     return lines

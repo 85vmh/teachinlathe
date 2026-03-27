@@ -435,7 +435,7 @@ class ConversationalQml(QQuickWidget):
                 "spindle_parameters": {"direction": 1, "mode": "rpm", "rpm_value": 500},
                 "parting_parameters": {
                     "x_start": 0.0, "x_end": 0.0, "z_pos": 0.0,
-                    "1st_feed_rate": 0.05, "2nd_feed_rate": 0.02, "2nd_feed_x_pos": 5.0,
+                    "first_feed_rate": 0.05, "second_feed_rate": 0.02, "second_feed_x_pos": 5.0,
                     "x_clearance": 1.0,
                 },
                 "edge_break": {"blend_type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
@@ -589,7 +589,7 @@ class ConversationalQml(QQuickWidget):
                 print("[gcode] showGeneratedProgram failed:", e)
 
     def generate_gcode_for_program(self, program):
-        from .gcode_builder import build_ngc_from_json
+        from .gcode_builder import build_ngc_from_program
         from teachinlathe import mainwindow as mw
 
         base_dir = getattr(mw, "CONVERSATIONAL_OUTPUT_BASE", None) \
@@ -606,7 +606,7 @@ class ConversationalQml(QQuickWidget):
         with open(json_path, "w", encoding="utf-8") as handle:
             handle.write(program.to_json())
 
-        return build_ngc_from_json(json_path, output_dir=gcode_dir)
+        return build_ngc_from_program(program, output_dir=gcode_dir)
 
     def onDetailsRequested(self, screen_item, index: int):
         self.current_op_index = index

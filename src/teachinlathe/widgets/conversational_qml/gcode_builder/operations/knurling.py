@@ -1,39 +1,34 @@
+from teachinlathe.conversational.data_types import Knurling
+
 from ..config import fmt
 from ..helpers.m1 import inspect_position_int
 from ..helpers.spindle import build_spindle_gcode
-from ..helpers.utils import get_float
 
 
-def generate_knurling_gcode(op):
-    is_optional = bool(op.get("is_optional_block", False))
-    line_prefix = "/" if is_optional else ""
 
-    spindle = op.get("spindle_parameters", {}) or {}
-    geometry = op.get("geometry_parameters", {}) or {}
-    cutting = op.get("cutting_parameters", {}) or {}
-    m1_params = op.get("m1_parameters", {}) or {}
+def generate_knurling_gcode(op: Knurling):
+    line_prefix = "/" if op.is_optional_block else ""
 
-    x_start = get_float(geometry, "x_start", 0.0)
-    z_start = get_float(geometry, "z_start", 0.0)
-    z_end = get_float(geometry, "z_end", 0.0)
-    doc = get_float(cutting, "doc", 0.0)
-    retract = get_float(cutting, "retract", 0.0)
-    grooves_count = max(1, int(cutting.get("grooves_count", 1) or 1))
-    include_m1 = 1 if bool(m1_params.get("include_m1", False)) else 0
-    direction = spindle.get("direction", None)
+    spindle = op.spindleParameters
+    geometry = op.geometryParameters
+    cutting = op.cuttingParameters
+    m1_params = op.m1Parameters
+
+    include_m1 = 1 if m1_params.include_m1 else 0
+    direction = spindle.direction if spindle.direction is not None else 0
 
     lines = []
     lines.extend(build_spindle_gcode(spindle, line_prefix))
     lines.append(
         f"{line_prefix}o<knurling> call "
-        f"[{fmt(x_start)}] "
-        f"[{fmt(z_start)}] "
-        f"[{fmt(z_end)}] "
-        f"[{fmt(doc)}] "
-        f"[{fmt(retract)}] "
-        f"[{grooves_count}] "
+        f"[{fmt(geometry.xStart)}] "
+        f"[{fmt(geometry.zStart)}] "
+        f"[{fmt(geometry.zEnd)}] "
+        f"[{fmt(cutting.doc)}] "
+        f"[{fmt(cutting.retract)}] "
+        f"[{max(1, int(cutting.groovesCount))}] "
         f"[{inspect_position_int(m1_params)}] "
         f"[{include_m1}] "
-        f"[{direction if direction is not None else 0}]"
+        f"[{direction}]"
     )
     return lines

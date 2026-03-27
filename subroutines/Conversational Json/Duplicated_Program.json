@@ -3,7 +3,7 @@
     "header": {
         "name": "Duplicated Program",
         "created_date": "2026-03-12 15:32:08",
-        "last_edit": "2026-03-27 17:06:51",
+        "last_edit": "2026-03-27 18:30:09",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -17,7 +17,7 @@
         {
             "order": 1,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 6,
             "tool_orientation": 2,
@@ -33,7 +33,7 @@
         {
             "order": 2,
             "type": "facing",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": true,
             "spindle_parameters": {
                 "direction": 1,
@@ -48,9 +48,9 @@
                 "retract": 2.0
             },
             "geometry_parameters": {
+                "x_start": 0.0,
                 "z_start": 2.0,
                 "z_end": -50.0,
-                "x_start": 30.0,
                 "x_end": 11.0
             },
             "m1_parameters": {
@@ -152,8 +152,7 @@
             },
             "profiling_parameters": {
                 "profile_id": 1,
-                "x_start": 15.0,
-                "z_start": 0.0
+                "z_start": 2.0
             },
             "profiling_options": {
                 "strategy": "rough",
@@ -163,7 +162,7 @@
                 "finish_spring_passes": 0
             },
             "roughing_strategy": {
-                "movement": "equidistant_offset",
+                "movement": "radially",
                 "cut_toward": "interior"
             },
             "m1_parameters": {
@@ -175,7 +174,7 @@
         {
             "order": 6,
             "type": "defineProfile",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "profile_id": 5,
             "profile_primitives": [
@@ -249,7 +248,7 @@
         {
             "order": 7,
             "type": "customProfiling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": -1,
@@ -263,8 +262,7 @@
             },
             "profiling_parameters": {
                 "profile_id": 5,
-                "x_start": 52.0,
-                "z_start": 0.0
+                "z_start": 2.0
             },
             "profiling_options": {
                 "strategy": "rough",
@@ -277,7 +275,7 @@
         {
             "order": 8,
             "type": "profiling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": -1,
@@ -293,7 +291,6 @@
             },
             "profiling_parameters": {
                 "profile_id": 5,
-                "x_start": 52.0,
                 "z_start": 0.0
             },
             "profiling_options": {
@@ -307,7 +304,7 @@
         {
             "order": 9,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 1,
             "tool_orientation": 1,
@@ -323,7 +320,7 @@
         {
             "order": 10,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 3,
             "tool_orientation": 6,
@@ -339,7 +336,7 @@
         {
             "order": 11,
             "type": "threading",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "location": "OD",
             "thread_type": "metric",
@@ -366,7 +363,7 @@
         {
             "order": 12,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 3,
             "tool_orientation": 6,
@@ -382,7 +379,7 @@
         {
             "order": 13,
             "type": "drilling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -405,7 +402,7 @@
         {
             "order": 14,
             "type": "tapping",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -428,7 +425,7 @@
         {
             "order": 15,
             "type": "parting",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": -1,
@@ -438,12 +435,12 @@
                 "css_max_speed": 1500
             },
             "parting_parameters": {
-                "x_start": 50.0,
+                "x_start": 0.0,
                 "x_end": 0.0,
                 "z_pos": -15.0,
-                "1st_feed_rate": 0.05,
-                "2nd_feed_rate": 0.02,
-                "2nd_feed_x_pos": 5.0,
+                "first_feed_rate": 0.05,
+                "second_feed_rate": 0.02,
+                "second_feed_x_pos": 5.0,
                 "x_clearance": 1.0
             },
             "edge_break": {
@@ -455,7 +452,7 @@
         {
             "order": 16,
             "type": "drilling",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -478,7 +475,7 @@
         {
             "order": 17,
             "type": "tapping",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -501,7 +498,7 @@
         {
             "order": 18,
             "type": "parting",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
@@ -512,9 +509,9 @@
                 "x_start": 0.0,
                 "x_end": 0.0,
                 "z_pos": 0.0,
-                "1st_feed_rate": 0.05,
-                "2nd_feed_rate": 0.02,
-                "2nd_feed_x_pos": 5.0,
+                "first_feed_rate": 0.05,
+                "second_feed_rate": 0.02,
+                "second_feed_x_pos": 5.0,
                 "x_clearance": 1.0
             },
             "edge_break": {
