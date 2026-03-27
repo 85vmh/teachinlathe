@@ -1,35 +1,22 @@
 import math
+from dataclasses import dataclass
 
 from ...config import fmt
-from .custom_profiling_types import ProfilePass, RoughPass, ToolpathArc, ToolpathLine
+from .custom_profiling_geometry import ToolpathArc, ToolpathLine
 
 
-def build_spindle_lines(spindle, optional_prefix, get_float):
-    mode = spindle.get("mode", None)
-    direction = spindle.get("direction", None)
-    rpm_value = get_float(spindle, "rpm_value", 0)
-    css_value = get_float(spindle, "css_value", 0.0)
-    css_max = get_float(spindle, "css_max_speed", 0.0)
+@dataclass(frozen=True)
+class RoughPass:
+    cut_x: float
+    cut_z: float
+    exit_x: float
+    exit_z: float
 
-    words = []
-    if str(mode).lower() == "rpm":
-        words.append("G97")
-    elif str(mode).lower() == "css":
-        words.append("G96")
 
-    if direction == -1:
-        words.append("M4")
-    elif direction == 1:
-        words.append("M3")
-
-    if str(mode).lower() == "rpm":
-        words.append(f"S{rpm_value}")
-    elif str(mode).lower() == "css":
-        words.append(f"S{css_value} D{css_max}")
-
-    if words:
-        return [f"{optional_prefix}{' '.join(words)}"]
-    return []
+@dataclass(frozen=True)
+class ProfilePass:
+    offset_x: float
+    offset_z: float
 
 
 def plan_roughing_passes(config, x_min, x_profile_start, find_deepest_z_at_x):

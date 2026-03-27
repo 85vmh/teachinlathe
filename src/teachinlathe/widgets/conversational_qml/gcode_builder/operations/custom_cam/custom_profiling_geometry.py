@@ -1,12 +1,48 @@
 import math
+from dataclasses import dataclass
 
-from .custom_profiling_types import (
-    ProfileArcSegment,
-    ProfileLineSegment,
-    StartPoint,
-    ToolpathArc,
-    ToolpathLine,
-)
+
+@dataclass(frozen=True)
+class StartPoint:
+    x: float
+    z: float
+
+
+@dataclass(frozen=True)
+class ProfileLineSegment:
+    end_x: float
+    end_z: float
+    blend_type: str = "none"
+    blend_radius: float = 0.0
+    blend_width: float = 0.0
+
+
+@dataclass(frozen=True)
+class ProfileArcSegment:
+    end_x: float
+    end_z: float
+    center_x: float
+    center_z: float
+    radius: float
+    gcode_dir: int
+    blend_type: str = "none"
+    blend_radius: float = 0.0
+    blend_width: float = 0.0
+
+
+@dataclass(frozen=True)
+class ToolpathLine:
+    end_x: float
+    end_z: float
+
+
+@dataclass(frozen=True)
+class ToolpathArc:
+    end_x: float
+    end_z: float
+    center_x: float
+    center_z: float
+    anticlockwise: bool
 
 
 def json_dir_to_gcode(direction_str):
@@ -405,3 +441,243 @@ def find_deepest_z_at_x_path(path, target_x, x_shift=0.0, z_shift=0.0):
     if candidates:
         return min(candidates)
     return final_z
+
+
+def find_profile_x_at_z(path, target_z, x_shift=0.0, z_shift=0.0):
+    """Return the maximum X on the render path at a given Z (for boring).
+
+    Analogous to find_deepest_z_at_x_path but transposed: given Z, find X.
+    x_shift / z_shift are added to each path point before the search so that
+    stock offsets can be applied.
+    """
+    if not path:
+        return 0.0
+
+    current_x = path[0].x + x_shift
+    current_z = path[0].z + z_shift
+    candidates = []
+
+    for element in path[1:]:
+        end_x = element.end_x + x_shift
+        end_z = element.end_z + z_shift
+        z_lo = min(current_z, end_z)
+        z_hi = max(current_z, end_z)
+
+        if isinstance(element, ToolpathLine):
+            if abs(end_z - current_z) > 1e-9:
+                if z_lo <= target_z <= z_hi:
+                    interp = current_x + (target_z - current_z) * (end_x - current_x) / (end_z - current_z)
+                    candidates.append(interp)
+            elif abs(target_z - current_z) < 1e-6:
+                candidates.append(max(current_x, end_x))
+        else:  # ToolpathArc
+            if z_lo <= target_z <= z_hi:
+                cx = element.center_x + x_shift
+                cz = element.center_z + z_shift
+                r = math.sqrt((current_x - cx) ** 2 + (current_z - cz) ** 2)
+                dz = target_z - cz
+                if abs(dz) <= r:
+                    disc = r ** 2 - dz ** 2
+                    for candidate in (cx + math.sqrt(disc), cx - math.sqrt(disc)):
+                        x_lo = min(current_x, end_x)
+                        x_hi = max(current_x, end_x)
+                        if x_lo - 1e-6 <= candidate <= x_hi + 1e-6:
+                            candidates.append(candidate)
+
+        current_x, current_z = end_x, end_z
+
+    return max(candidates) if candidates else current_x
+
+
+def _normalize_angle(angle):
+    two_pi = 2.0 * math.pi
+    while angle < 0.0:
+        angle += two_pi
+    while angle >= two_pi:
+        angle -= two_pi
+    return angle
+
+
+def _angle_on_arc(angle, start_angle, end_angle, anticlockwise):
+    angle = _normalize_angle(angle)
+    start_angle = _normalize_angle(start_angle)
+    end_angle = _normalize_angle(end_angle)
+
+    if anticlockwise:
+        if end_angle < start_angle:
+            end_angle += 2.0 * math.pi
+        if angle < start_angle:
+            angle += 2.0 * math.pi
+        return start_angle - 1e-9 <= angle <= end_angle + 1e-9
+
+    if start_angle < end_angle:
+        start_angle += 2.0 * math.pi
+    if angle > start_angle:
+        angle -= 2.0 * math.pi
+    return end_angle - 1e-9 <= angle <= start_angle + 1e-9
+
+
+def find_45deg_profile_intersection(path, start_x, start_z, dir_x, dir_z, x_shift=0.0, z_shift=0.0):
+    """Return the first intersection between a 45-degree ray and the render path."""
+    if not path:
+        return None
+
+    current_x = path[0].x + x_shift
+    current_z = path[0].z + z_shift
+    candidates = []
+
+    for element in path[1:]:
+        end_x = element.end_x + x_shift
+        end_z = element.end_z + z_shift
+
+        if isinstance(element, ToolpathLine):
+            seg_dx = end_x - current_x
+            seg_dz = end_z - current_z
+            denom = dir_x * seg_dz - dir_z * seg_dx
+            if abs(denom) > 1e-9:
+                rel_x = current_x - start_x
+                rel_z = current_z - start_z
+                t = (rel_x * seg_dz - rel_z * seg_dx) / denom
+                u = (rel_x * dir_z - rel_z * dir_x) / denom
+                if t >= -1e-9 and -1e-9 <= u <= 1.0 + 1e-9:
+                    hit_x = start_x + t * dir_x
+                    hit_z = start_z + t * dir_z
+                    candidates.append((max(0.0, t), hit_x, hit_z))
+        else:
+            cx = element.center_x + x_shift
+            cz = element.center_z + z_shift
+            rel_x = start_x - cx
+            rel_z = start_z - cz
+            a = dir_x * dir_x + dir_z * dir_z
+            b = 2.0 * (rel_x * dir_x + rel_z * dir_z)
+            radius = math.hypot(current_x - cx, current_z - cz)
+            c = rel_x * rel_x + rel_z * rel_z - radius * radius
+            disc = b * b - 4.0 * a * c
+            if disc >= -1e-9:
+                disc = max(0.0, disc)
+                root = math.sqrt(disc)
+                for t in ((-b - root) / (2.0 * a), (-b + root) / (2.0 * a)):
+                    if t < -1e-9:
+                        continue
+                    hit_x = start_x + t * dir_x
+                    hit_z = start_z + t * dir_z
+                    angle = math.atan2(hit_z - cz, hit_x - cx)
+                    start_angle = math.atan2(current_z - cz, current_x - cx)
+                    end_angle = math.atan2(end_z - cz, end_x - cx)
+                    if _angle_on_arc(angle, start_angle, end_angle, element.anticlockwise):
+                        candidates.append((max(0.0, t), hit_x, hit_z))
+
+        current_x, current_z = end_x, end_z
+
+    if not candidates:
+        return None
+    _, hit_x, hit_z = min(candidates, key=lambda item: item[0])
+    return hit_x, hit_z
+
+
+def _offset_line_right(sx, sz, ex, ez, d):
+    """Offset line segment by d toward bore center (right of traversal direction)."""
+    dx, dz = ex - sx, ez - sz
+    length = math.hypot(dx, dz)
+    if length < 1e-12:
+        return sx, sz, ex, ez
+    rx, rz = dz / length, -dx / length
+    return sx + d * rx, sz + d * rz, ex + d * rx, ez + d * rz
+
+
+def _line_line_intersect(s1, s2):
+    """Intersection of infinite lines through s1(sx→ex) and s2(sx→ex). Returns (x,z) or None."""
+    d1x, d1z = s1['ex'] - s1['sx'], s1['ez'] - s1['sz']
+    d2x, d2z = s2['ex'] - s2['sx'], s2['ez'] - s2['sz']
+    denom = d1x * d2z - d1z * d2x
+    if abs(denom) < 1e-12:
+        return None
+    t = ((s2['sx'] - s1['sx']) * d2z - (s2['sz'] - s1['sz']) * d2x) / denom
+    u = ((s2['sx'] - s1['sx']) * d1z - (s2['sz'] - s1['sz']) * d1x) / denom
+    if t < -1e-9 or u < -1e-9:
+        return None
+    return s1['sx'] + t * d1x, s1['sz'] + t * d1z
+
+
+def build_equidistant_offset(path, d):
+    """Build equidistant offset of boring path by perpendicular distance d toward bore center.
+
+    For each line: shift right (bore center side) by d.
+    For each arc:
+      - Center on right of chord (CW-like, concave from bore): r' = r - d (can shrink to zero)
+      - Center on left of chord (CCW-like, convex from bore): r' = r + d
+
+    When a fillet arc shrinks to zero, the two surrounding offset lines are connected at
+    their intersection point instead (sharp corner, no fillet).
+
+    Returns list of ('start', x, z) + ('line', x, z) / ('arc', x, z, cx, cz, anticlockwise).
+    """
+    if not path or len(path) < 2:
+        return []
+
+    segs = []
+    cur_x, cur_z = path[0].x, path[0].z
+
+    for elem in path[1:]:
+        end_x, end_z = elem.end_x, elem.end_z
+
+        if isinstance(elem, ToolpathLine):
+            sx, sz, ex, ez = _offset_line_right(cur_x, cur_z, end_x, end_z, d)
+            segs.append({'type': 'line', 'sx': sx, 'sz': sz, 'ex': ex, 'ez': ez})
+        else:
+            cx, cz = elem.center_x, elem.center_z
+            r = math.hypot(cur_x - cx, cur_z - cz)
+            cross = (end_x - cur_x) * (cz - cur_z) - (end_z - cur_z) * (cx - cur_x)
+            r_prime = (r + d) if cross > 0 else (r - d)
+
+            if r_prime < 1e-9:
+                segs.append({'type': 'degen'})
+            else:
+                a_s = math.atan2(cur_z - cz, cur_x - cx)
+                a_e = math.atan2(end_z - cz, end_x - cx)
+                segs.append({
+                    'type': 'arc',
+                    'sx': cx + r_prime * math.cos(a_s), 'sz': cz + r_prime * math.sin(a_s),
+                    'ex': cx + r_prime * math.cos(a_e), 'ez': cz + r_prime * math.sin(a_e),
+                    'cx': cx, 'cz': cz, 'r': r_prime, 'anticlockwise': elem.anticlockwise,
+                })
+
+        cur_x, cur_z = end_x, end_z
+
+    n = len(segs)
+
+    # Pass 1: resolve degenerate arcs → connect surrounding lines at their intersection
+    for i in range(n):
+        if segs[i]['type'] != 'degen':
+            continue
+        pi, ni = i - 1, i + 1
+        while pi >= 0 and segs[pi]['type'] == 'degen':
+            pi -= 1
+        while ni < n and segs[ni]['type'] == 'degen':
+            ni += 1
+        if 0 <= pi < n and ni < n and segs[pi]['type'] == 'line' and segs[ni]['type'] == 'line':
+            pt = _line_line_intersect(segs[pi], segs[ni])
+            if pt:
+                segs[pi]['ex'], segs[pi]['ez'] = pt
+                segs[ni]['sx'], segs[ni]['sz'] = pt
+
+    # Pass 2: fix line-line corners that aren't already aligned
+    for i in range(n - 1):
+        if segs[i]['type'] == 'line' and segs[i + 1]['type'] == 'line':
+            if abs(segs[i]['ex'] - segs[i + 1]['sx']) > 1e-6 or abs(segs[i]['ez'] - segs[i + 1]['sz']) > 1e-6:
+                pt = _line_line_intersect(segs[i], segs[i + 1])
+                if pt:
+                    segs[i]['ex'], segs[i]['ez'] = pt
+                    segs[i + 1]['sx'], segs[i + 1]['sz'] = pt
+
+    result = []
+    for seg in segs:
+        if seg['type'] == 'degen':
+            continue
+        if not result:
+            result.append(('start', seg['sx'], seg['sz']))
+        if seg['type'] == 'line':
+            result.append(('line', seg['ex'], seg['ez']))
+        else:
+            result.append(('arc', seg['ex'], seg['ez'], seg['cx'], seg['cz'], seg['anticlockwise']))
+    return result

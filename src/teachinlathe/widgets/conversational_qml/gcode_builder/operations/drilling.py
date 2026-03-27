@@ -1,13 +1,7 @@
 from ..config import fmt
-
-
-def _get_float_value(source, key, default=0.0):
-    if not isinstance(source, dict):
-        return float(default)
-    try:
-        return float(source.get(key, default))
-    except Exception:
-        return float(default)
+from ..helpers.m1 import inspect_position_int
+from ..helpers.spindle import build_spindle_gcode
+from ..helpers.utils import get_float, get_int
 
 
 def generate_drilling_gcode(op):
@@ -18,37 +12,20 @@ def generate_drilling_gcode(op):
     drilling = op.get("drilling_parameters", {}) or {}
     m1_params = op.get("m1_parameters", {}) or {}
 
-    x_start = _get_float_value(drilling, "x_start", 0.0)
+    x_start = get_float(drilling, "x_start", 0.0)
     if x_start == 0.0:
-        x_start = _get_float_value(op, "x_start", 0.0)
-    z_start = _get_float_value(drilling, "z_start", 0.0)
-    z_end = _get_float_value(drilling, "z_end", 0.0)
-    retract = _get_float_value(drilling, "z_retract", 0.0)
-    inspect_pos = m1_params.get("inspect_position", "G28")
-    inspect_pos_int = 0 if inspect_pos == "G28" else 1
-    increment = _get_float_value(drilling, "peck_depth", 0.0)
-    rpm = _get_float_value(spindle, "rpm_value", 0.0)
-    feed = _get_float_value(drilling, "feed_rate", 0.0)
-    mode = spindle.get("mode", None)
-    direction = spindle.get("direction", None)
-    rpm_value = _get_float_value(spindle, "rpm_value", 0)
+        x_start = get_float(op, "x_start", 0.0)
+    z_start = get_float(drilling, "z_start", 0.0)
+    z_end = get_float(drilling, "z_end", 0.0)
+    retract = get_float(drilling, "z_retract", 0.0)
+    increment = get_float(drilling, "peck_depth", 0.0)
+    rpm = get_int(spindle, "rpm_value", 0)
+    feed = get_float(drilling, "feed_rate", 0.0)
 
-    lines = []
-
-    parts = ["G97"]
-
-    if direction == -1:
-        parts.append("M4")
-    elif direction == 1:
-        parts.append("M3")
-
-    parts.append(f"S{rpm_value}")
-
-    if parts:
-        lines.append(f"{line_prefix}{' '.join(parts)}")
-
+    # Drilling always uses G97 (CSS not valid at centre-line)
+    lines = list(build_spindle_gcode(spindle, line_prefix, force_rpm=True))
     lines.append(
         f"{line_prefix}o<drilling> call [{fmt(x_start)}] [{fmt(z_start)}] [{fmt(z_end)}] [{fmt(retract)}]"
-        f" [{inspect_pos_int}] [{fmt(increment)}] [{rpm}] [{feed}]"
+        f" [{inspect_position_int(m1_params)}] [{fmt(increment)}] [{rpm}] [{feed}]"
     )
     return lines

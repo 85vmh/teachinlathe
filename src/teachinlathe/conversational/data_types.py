@@ -34,6 +34,26 @@ class BlendType(Enum):
     NONE = "none"
     CHAMFER = "chamfer"
     FILLET = "fillet"
+
+
+class InspectPosition(str, Enum):
+    G28 = "G28"
+    G30 = "G30"
+
+
+class RoughingMovement(str, Enum):
+    AXIALLY = "axially"
+    RADIALLY = "radially"
+    DIAGONAL = "diagonal"
+    OFFSET = "offset"
+    EQUIDISTANT_OFFSET = "equidistant_offset"
+
+
+class CutToward(str, Enum):
+    INTERIOR = "interior"
+    EXTERIOR = "exterior"
+
+
 # ------------------------------ Core header ----------------------------------
 
 @dataclass
@@ -1170,3 +1190,38 @@ display_names: Dict[str, str] = {
     "tapping": "Tapping",
     "parting": "Parting",
 }
+
+
+# -------------------- CAM config objects (built from JSON operation dicts) -------------------
+
+
+@dataclass(frozen=True)
+class ProfilingConfig:
+    x_start: float
+    z_start: float
+    doc: float
+    retract: float
+    feed_rate: float
+    stock_x: float
+    stock_z: float
+    finish_passes: int
+    spring_passes: int
+    strategy: Strategy
+    optional_prefix: str
+
+
+@dataclass(frozen=True)
+class BoringConfig:
+    x_start: float
+    z_start: float
+    doc: float
+    retract: float
+    feed_rate: float
+    stock_x: float
+    stock_z: float
+    finish_passes: int
+    spring_passes: int
+    strategy: Strategy
+    movement: RoughingMovement
+    cut_toward: CutToward
+    optional_prefix: str

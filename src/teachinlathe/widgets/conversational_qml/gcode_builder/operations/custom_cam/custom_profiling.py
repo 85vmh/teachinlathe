@@ -9,43 +9,41 @@ The generator is intentionally split into:
 This keeps the orchestration here short while preserving the existing output.
 """
 
-from teachinlathe.widgets.conversational_qml.gcode_builder.operations.custom_cam.custom_profiling_geometry import build_profile_segments, build_render_path, find_deepest_z_at_x_path, profile_extents
-from teachinlathe.widgets.conversational_qml.gcode_builder.operations.custom_cam.custom_profiling_planner import (
-    build_spindle_lines,
+from teachinlathe.conversational.data_types import ProfilingConfig, Strategy
+
+from ...helpers.spindle import build_spindle_gcode
+from ...helpers.utils import get_float
+from .custom_profiling_geometry import StartPoint, build_profile_segments, build_render_path, find_deepest_z_at_x_path, profile_extents
+from .custom_profiling_planner import (
     emit_contour_pass_gcode,
     emit_finish_gcode,
     emit_roughing_gcode,
     plan_finish_passes,
     plan_roughing_passes,
 )
-from teachinlathe.widgets.conversational_qml.gcode_builder.operations.custom_cam.custom_profiling_types import ProfilingConfig, StartPoint
 
 
-def _get_float(source, key, default=0.0):
-    if not isinstance(source, dict):
-        return float(default)
-    try:
-        return float(source.get(key, default))
-    except Exception:
-        return float(default)
-
-
-def _parse_config(op):
+def _parse_config(op) -> ProfilingConfig:
     cutting = op.get("cutting_parameters", {}) or {}
     params = op.get("profiling_parameters", {}) or {}
     options = op.get("profiling_options", {}) or {}
 
+    try:
+        strategy = Strategy(str(options.get("strategy", "rough")).lower())
+    except ValueError:
+        strategy = Strategy.ROUGH
+
     return ProfilingConfig(
-        x_start=_get_float(params, "x_start", 0.0),
-        z_start=_get_float(params, "z_start", 0.0),
-        doc=_get_float(cutting, "doc", 0.5),
-        retract=_get_float(cutting, "retract", 1.0),
-        feed_rate=_get_float(cutting, "feed_rate", 0.1),
-        stock_x=_get_float(options, "stock_to_leave_x", 0.0),
-        stock_z=_get_float(options, "stock_to_leave_z", 0.0),
+        x_start=get_float(params, "x_start", 0.0),
+        z_start=get_float(params, "z_start", 0.0),
+        doc=get_float(cutting, "doc", 0.5),
+        retract=get_float(cutting, "retract", 1.0),
+        feed_rate=get_float(cutting, "feed_rate", 0.1),
+        stock_x=get_float(options, "stock_to_leave_x", 0.0),
+        stock_z=get_float(options, "stock_to_leave_z", 0.0),
         finish_passes=max(1, int(options.get("finish_passes", 1) or 1)),
         spring_passes=max(0, int(options.get("finish_spring_passes", 0) or 0)),
-        strategy=str(options.get("strategy", "rough")).lower(),
+        strategy=strategy,
         optional_prefix="/" if bool(op.get("is_optional_block", False)) else "",
     )
 
@@ -64,7 +62,7 @@ def generate_custom_profiling_gcode(op):
     segments, render_path = _resolve_profile(op)
 
     lines = []
-    lines.extend(build_spindle_lines(spindle, config.optional_prefix, _get_float))
+    lines.extend(build_spindle_gcode(spindle, config.optional_prefix))
     lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
 
     if not segments or not isinstance(segments[0], StartPoint):
@@ -76,7 +74,7 @@ def generate_custom_profiling_gcode(op):
     x_min, _ = profile_extents(segments)
     x_safe = config.x_start + config.retract
 
-    if config.strategy == "rough":
+    if config.strategy == Strategy.ROUGH:
         rough_passes = plan_roughing_passes(
             config=config,
             x_min=x_min,
