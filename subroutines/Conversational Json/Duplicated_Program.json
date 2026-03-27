@@ -3,7 +3,7 @@
     "header": {
         "name": "Duplicated Program",
         "created_date": "2026-03-12 15:32:08",
-        "last_edit": "2026-03-27 18:30:09",
+        "last_edit": "2026-03-27 19:31:28",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -34,7 +34,7 @@
             "order": 2,
             "type": "facing",
             "generate_gcode": false,
-            "is_optional_block": true,
+            "is_optional_block": false,
             "spindle_parameters": {
                 "direction": 1,
                 "mode": "rpm",
@@ -142,8 +142,10 @@
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": -1,
-                "mode": "rpm",
-                "rpm_value": 1000
+                "mode": "css",
+                "rpm_value": 1000,
+                "css_value": 200,
+                "css_max_speed": 1500
             },
             "cutting_parameters": {
                 "feed_rate": 0.5,
@@ -152,7 +154,8 @@
             },
             "profiling_parameters": {
                 "profile_id": 1,
-                "z_start": 2.0
+                "x_start": 15.0,
+                "z_start": 1.0
             },
             "profiling_options": {
                 "strategy": "rough",
@@ -262,6 +265,7 @@
             },
             "profiling_parameters": {
                 "profile_id": 5,
+                "x_start": 50.0,
                 "z_start": 2.0
             },
             "profiling_options": {
@@ -291,6 +295,7 @@
             },
             "profiling_parameters": {
                 "profile_id": 5,
+                "x_start": 0.0,
                 "z_start": 0.0
             },
             "profiling_options": {

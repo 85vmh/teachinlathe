@@ -528,6 +528,7 @@ class ProfilingParameters:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "profile_id": int(self.profile_id),
+            "x_start": float(self.xStart),
             "z_start": float(self.zStart)
         }
 

@@ -1148,6 +1148,8 @@ class ConversationalQml(QQuickWidget):
                     sp_norm["mode"] = sp_new["mode"]
                 elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
                     sp_norm["mode"] = "rpm"
+                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
+                    sp_norm["mode"] = "css"
                 else:
                     sp_norm["mode"] = sp_old.get("mode", "rpm")
                 for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
@@ -1182,6 +1184,8 @@ class ConversationalQml(QQuickWidget):
                     sp_norm["mode"] = sp_new["mode"]
                 elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
                     sp_norm["mode"] = "rpm"
+                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
+                    sp_norm["mode"] = "css"
                 else:
                     sp_norm["mode"] = sp_old.get("mode", "rpm")
                 for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
@@ -1252,6 +1256,8 @@ class ConversationalQml(QQuickWidget):
                     sp_norm["mode"] = sp_new["mode"]
                 elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
                     sp_norm["mode"] = "rpm"
+                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
+                    sp_norm["mode"] = "css"
                 else:
                     sp_norm["mode"] = sp_old.get("mode", "rpm")
                 for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
@@ -1286,6 +1292,8 @@ class ConversationalQml(QQuickWidget):
                     sp_norm["mode"] = sp_new["mode"]
                 elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
                     sp_norm["mode"] = "rpm"
+                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
+                    sp_norm["mode"] = "css"
                 else:
                     sp_norm["mode"] = sp_old.get("mode", "rpm")
                 for k in ("direction", "rpm_value", "css_value", "css_max_speed"):

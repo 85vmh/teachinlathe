@@ -2,7 +2,7 @@ import os
 
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
-from teachinlathe.widgets.programs_qml.FileSystemBridge import FileSystemBridge
+from teachinlathe.widgets.programs_qml.FileSystemBridge import FileSystemBridge, load_or_reload_program
 
 from .program_runtime import ProgramRuntimeStore
 from .program_stack import ProgramCallStackResolver
@@ -214,8 +214,7 @@ class ProgramsViewModel(QObject):
 
         self._bridge.saveCurrentFile(None)
         self.programLoadRequested.emit(file_path)
-        from qtpyvcp.actions.program_actions import load as load_program
-        load_program(file_path)
+        load_or_reload_program(file_path)
         self._bridge.navigateTo(1)
 
     @pyqtSlot()

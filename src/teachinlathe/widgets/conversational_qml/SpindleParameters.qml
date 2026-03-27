@@ -38,7 +38,7 @@ GroupBox {
         var hasRPM = (sp.rpm_value !== undefined && sp.rpm_value !== null)
         var hasCSS = (sp.css_value !== undefined && sp.css_max_speed !== undefined)
 
-        spindleMode = rpmOnly ? "rpm" : (hasRPM ? "rpm" : "css")
+        spindleMode = rpmOnly ? "rpm" : ((sp.mode === "css" || sp.mode === "rpm") ? sp.mode : (hasRPM ? "rpm" : "css"))
         rpm_value = hasRPM ? +sp.rpm_value : 0
         css_value = hasCSS ? +sp.css_value : 0
         css_max_rpm = hasCSS ? +sp.css_max_speed : 0
@@ -47,7 +47,7 @@ GroupBox {
     function emitSave() {
         if (!opData) return
 
-        var spindle = {direction: directionCache}
+        var spindle = {direction: directionCache, mode: (rpmOnly ? "rpm" : spindleMode)}
         if (rpmOnly || spindleMode === "rpm") {
             spindle.rpm_value = rpm_value
         } else {

@@ -7,6 +7,28 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from .GCodeSyntaxHighlighter import GCodeSyntaxHighlighter
 
 
+def load_or_reload_program(path: str) -> None:
+    from qtpyvcp.actions.program_actions import load as load_program
+    from qtpyvcp.actions.program_actions import reload as reload_program
+
+    if not path or not os.path.isfile(path):
+        return
+
+    requested_path = os.path.abspath(path)
+    stat = linuxcnc.stat()
+    try:
+        stat.poll()
+    except Exception:
+        load_program(requested_path)
+        return
+
+    current_path = os.path.abspath(stat.file) if getattr(stat, "file", None) else ""
+    if current_path and requested_path == current_path:
+        reload_program()
+    else:
+        load_program(requested_path)
+
+
 class FileSystemBridge(QObject):
     """
     QObject bridge between QML file-system screens and Python/LinuxCNC.
@@ -127,7 +149,6 @@ class FileSystemBridge(QObject):
     @pyqtSlot(str, str)
     def openFile(self, folder_name, filename):
         """Load *filename* into LinuxCNC and switch to the Gremlin screen."""
-        from qtpyvcp.actions.program_actions import load as load_program
         path = self._folder_map.get(folder_name, '')
         filepath = self._resolve_folder_path(path, filename)
         if not os.path.isfile(filepath):
@@ -135,7 +156,7 @@ class FileSystemBridge(QObject):
         if not self._prepare_for_file_change(filepath):
             return
         self.programLoadRequested.emit(filepath)
-        load_program(filepath)
+        load_or_reload_program(filepath)
         self._emit_content(filepath)
         self.screenChangeRequested.emit(1)
 
@@ -205,13 +226,12 @@ class FileSystemBridge(QObject):
     @pyqtSlot(str)
     def openFileByAbsolutePath(self, path: str) -> None:
         """Load a file into LinuxCNC by absolute path and switch to Gremlin screen."""
-        from qtpyvcp.actions.program_actions import load as load_program
         if not os.path.isfile(path):
             return
         if not self._prepare_for_file_change(path):
             return
         self.programLoadRequested.emit(path)
-        load_program(path)
+        load_or_reload_program(path)
         self._emit_content(path)
         self.screenChangeRequested.emit(1)
 
@@ -228,109 +248,100 @@ class FileSystemBridge(QObject):
         except Exception:
             return False
 
-        if stat.state != linuxcnc.RCS_EXEC or stat.paused:
+        current_machine_file = os.path.abspath(stat.file) if stat.file else ''
+        current_view_file = os.path.abspath(self._current_file_path)
+        if not current_machine_file or current_machine_file != current_view_file:
             return False
 
-        machine_path = stat.file or ''
-        if not machine_path:
+        if getattr(stat, 'state', None) != linuxcnc.RCS_EXEC:
             return False
 
-        try:
-            current_path = os.path.abspath(self._current_file_path)
-            machine_path = os.path.abspath(machine_path)
-        except Exception:
-            return False
+        exec_state = getattr(stat, 'exec_state', None)
+        idle_states = {
+            getattr(linuxcnc, 'EXEC_DONE', None),
+            getattr(linuxcnc, 'EXEC_WAITING_FOR_MOTION', None),
+            getattr(linuxcnc, 'EXEC_WAITING_FOR_MOTION_QUEUE', None),
+            getattr(linuxcnc, 'EXEC_WAITING_FOR_IO', None),
+            getattr(linuxcnc, 'EXEC_WAITING_FOR_MOTION_AND_IO', None),
+        }
+        return exec_state not in idle_states
 
-        return current_path == machine_path
+    def refreshCurrentFile(self):
+        if self._current_file_path:
+            self._emit_content(self._current_file_path)
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def refreshCurrentFile(self):
-        """Re-read the currently loaded LinuxCNC program and emit its content."""
-        import linuxcnc
-        stat = linuxcnc.stat()
-        try:
-            stat.poll()
-            if stat.file:
-                self._emit_content(stat.file)
-        except Exception:
-            pass
+    def _resolve_folder_path(self, folder_path, relative_path):
+        base_path = os.path.abspath(folder_path or '')
+        candidate = os.path.abspath(os.path.join(base_path, relative_path or ''))
+        if candidate == base_path or candidate.startswith(base_path + os.sep):
+            return candidate
+        return ''
 
-    def _emit_content(self, filepath):
-        if not os.path.isfile(filepath):
-            return
-        try:
-            with open(filepath, 'r', errors='replace') as fh:
-                content = fh.read()
-        except Exception as exc:
-            content = f'; Error reading file: {exc}'
+    def _join_relative_path(self, current_path, entry_name):
+        if not current_path:
+            return entry_name
+        return os.path.join(current_path, entry_name)
+
+    def _parent_relative_path(self, relative_path):
+        parent = os.path.dirname(relative_path.rstrip(os.sep))
+        return parent if parent != '.' else ''
+
+    def _prepare_for_file_change(self, filepath):
+        if not filepath or not os.path.isfile(filepath):
+            return False
+        if self._dirty:
+            answer = QMessageBox.question(
+                None,
+                'Unsaved changes',
+                'Discard unsaved changes?',
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+            if answer != QMessageBox.Yes:
+                return False
         self._current_file_path = filepath
-        self._current_content = content
-        self._saved_content = content
-        self.fileContentChanged.emit(content)
-        self.filePathChanged.emit(filepath)
+        self.filePathChanged.emit(self._current_file_path)
         self._set_dirty(False)
         self.setEditMode(False)
+        return True
+
+    def _emit_content(self, filepath):
+        try:
+            with open(filepath, 'r', encoding='utf-8') as fh:
+                content = fh.read()
+        except Exception:
+            content = ''
+        self._current_content = content
+        self._saved_content = content
+        self.fileContentChanged.emit(self._current_content)
+        self.filePathChanged.emit(self._current_file_path)
+        self._set_dirty(False)
+
+    def _write_file(self, filepath):
+        try:
+            with open(filepath, 'w', encoding='utf-8') as fh:
+                fh.write(self._current_content)
+        except Exception as exc:
+            QMessageBox.critical(None, 'Save failed', str(exc))
+            return False
+        self._notify_folder_change(filepath)
+        return True
+
+    def _notify_folder_change(self, filepath):
+        abs_path = os.path.abspath(filepath)
+        for name, folder_path in self._folders:
+            base = os.path.abspath(folder_path)
+            if abs_path == base or abs_path.startswith(base + os.sep):
+                self.folderFilesChanged.emit(name)
+                break
 
     def _set_dirty(self, dirty):
+        dirty = bool(dirty)
         if self._dirty == dirty:
             return
         self._dirty = dirty
         self.dirtyChanged.emit(self._dirty)
-
-    def _prepare_for_file_change(self, filepath):
-        if filepath == self._current_file_path:
-            return True
-        if not self._dirty:
-            return True
-
-        result = QMessageBox.question(
-            None,
-            'Discard changes?',
-            'You have unsaved changes. Discard them and load another file?',
-            QMessageBox.Discard | QMessageBox.Cancel,
-            QMessageBox.Cancel,
-        )
-        return result == QMessageBox.Discard
-
-    def _write_file(self, filepath):
-        try:
-            with open(filepath, 'w', encoding='utf-8', errors='replace') as fh:
-                fh.write(self._current_content)
-            return True
-        except Exception as exc:
-            QMessageBox.critical(None, 'Save failed', f'Could not save file:\n{exc}')
-            return False
-
-    def _notify_folder_change(self, filepath):
-        parent_dir = os.path.dirname(filepath)
-        for folder_name, folder_path in self._folders:
-            try:
-                common_path = os.path.commonpath([os.path.abspath(parent_dir), os.path.abspath(folder_path)])
-            except ValueError:
-                continue
-            if common_path == os.path.abspath(folder_path):
-                self.folderFilesChanged.emit(folder_name)
-                break
-
-    def _resolve_folder_path(self, folder_path, relative_path):
-        base_path = os.path.abspath(folder_path)
-        target_path = os.path.abspath(os.path.join(base_path, relative_path))
-        try:
-            common_path = os.path.commonpath([base_path, target_path])
-        except ValueError:
-            return ''
-        if common_path != base_path:
-            return ''
-        return target_path
-
-    def _join_relative_path(self, relative_path, name):
-        if not relative_path:
-            return name
-        return os.path.join(relative_path, name)
-
-    def _parent_relative_path(self, relative_path):
-        parent_path = os.path.dirname(relative_path)
-        return '' if parent_path == '.' else parent_path

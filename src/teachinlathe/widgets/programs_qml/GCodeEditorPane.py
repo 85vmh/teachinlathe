@@ -1,5 +1,7 @@
 import os
 
+from .FileSystemBridge import load_or_reload_program
+
 from PyQt5.QtCore import QRect, QSize, Qt
 from PyQt5.QtGui import QColor, QFont, QPainter, QTextBlockFormat, QTextCursor
 from PyQt5.QtWidgets import (
@@ -440,8 +442,7 @@ class GCodeEditorPane(QWidget):
                 break
         if folder_path is None:
             self._bridge.saveCurrentFile(self)
-            from qtpyvcp.actions.program_actions import load as load_program
-            load_program(file_path)
+            load_or_reload_program(file_path)
             self._bridge.navigateTo(1)
             return
 
