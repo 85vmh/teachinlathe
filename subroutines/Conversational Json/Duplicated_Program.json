@@ -1,9 +1,9 @@
 {
-    "id": "program_12_03_2026_15_32_08",
+    "id": "program_30_03_2026_11_20_44",
     "header": {
         "name": "Duplicated Program",
-        "created_date": "2026-03-12 15:32:08",
-        "last_edit": "2026-03-27 19:31:28",
+        "created_date": "2026-03-30 11:20:44",
+        "last_edit": "2026-03-30 11:21:07",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -17,7 +17,7 @@
         {
             "order": 1,
             "type": "changeTool",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "tool_no": 6,
             "tool_orientation": 2,
@@ -36,7 +36,7 @@
             "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
-                "direction": 1,
+                "direction": -1,
                 "mode": "rpm",
                 "rpm_value": 300,
                 "css_value": 20,
@@ -58,7 +58,7 @@
                 "inspect_position": "G28",
                 "stop_spindle": true
             },
-            "z_end_becomes_new_z0": false
+            "z_end_becomes_new_z0": true
         },
         {
             "order": 3,
@@ -72,7 +72,7 @@
             "toolchange_rules": {
                 "x_pos": 0.0,
                 "z_pos": 0.0,
-                "coordinate_type": "absolute",
+                "coordinate_type": "relative",
                 "move_sequence": "xz"
             }
         },
@@ -165,11 +165,11 @@
                 "finish_spring_passes": 0
             },
             "roughing_strategy": {
-                "movement": "radially",
+                "movement": "axially",
                 "cut_toward": "interior"
             },
             "m1_parameters": {
-                "include_m1": false,
+                "include_m1": true,
                 "inspect_position": "G28",
                 "stop_spindle": false
             }
@@ -191,11 +191,11 @@
                     "primitive_id": 2,
                     "type": "lineTo",
                     "x_end": 20.0,
-                    "z_end": -30.0,
+                    "z_end": -25.0,
                     "blend": {
                         "type": "fillet",
                         "chamfer_width": 0.0,
-                        "fillet_radius": 0.5
+                        "fillet_radius": 3.0
                     }
                 },
                 {
@@ -410,7 +410,7 @@
             "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
-                "direction": 1,
+                "direction": -1,
                 "mode": "rpm",
                 "rpm_value": 1000
             },
@@ -460,7 +460,7 @@
             "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
-                "direction": 1,
+                "direction": -1,
                 "mode": "rpm",
                 "rpm_value": 1000
             },

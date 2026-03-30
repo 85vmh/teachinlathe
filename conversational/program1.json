@@ -3,7 +3,7 @@
     "header": {
         "name": "Custom Profiling",
         "created_date": "2026-03-12 09:25:08",
-        "last_edit": "2026-03-25 21:50:01",
+        "last_edit": "2026-03-30 11:21:33",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -76,9 +76,9 @@
                 "retract": 2.0
             },
             "geometry_parameters": {
+                "x_start": 30.0,
                 "z_start": 2.0,
                 "z_end": -50.0,
-                "x_start": 30.0,
                 "x_end": 11.0
             },
             "m1_parameters": {
@@ -223,6 +223,7 @@
             },
             "profiling_parameters": {
                 "profile_id": 1,
+                "x_start": 0.0,
                 "z_start": 0.0
             },
             "profiling_options": {

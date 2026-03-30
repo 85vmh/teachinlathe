@@ -9,34 +9,41 @@ from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import QProgressDialog, QApplication
 
-from teachinlathe.conversational.data_types import Workpiece, SpindleParameters, Facing, CuttingParameters, GeometryParameters, M1Parameters, SpindleMode, \
-    operation_types, Program, Header
+from teachinlathe.conversational.data_types import Header, Program, Workpiece, operation_types
+from teachinlathe.conversational.program_commands import (
+    add_profiling_finish,
+    create_new_program,
+    delete_operation,
+    delete_program_file,
+    duplicate_operation,
+    duplicate_program,
+    insert_default_operation,
+    move_operation_down,
+    move_operation_up,
+)
+from teachinlathe.conversational.program_store import resolve_save_path, save_program_to_disk
+from teachinlathe.conversational.qml_adapter import build_details_payload, build_operations_model, build_selected_program_summary
+from teachinlathe.conversational.updaters import (
+    apply_cutting_update,
+    apply_define_profile_update,
+    apply_drilling_update,
+    apply_edge_break_update,
+    apply_geometry_update,
+    apply_knurling_cutting_update,
+    apply_m1_update,
+    apply_operation_update,
+    apply_parting_update,
+    apply_profiling_options_update,
+    apply_profiling_parameters_update,
+    apply_roughing_strategy_update,
+    apply_tapping_update,
+    apply_threading_update,
+    apply_toolchange_rules_update,
+    apply_turnable_operation_update,
+)
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
-
-
-def _merge_dataclass(obj, dct):
-    if not isinstance(dct, dict) or obj is None:
-        return
-    for k, v in dct.items():
-        if hasattr(obj, k):
-            try:
-                setattr(obj, k, v)
-            except Exception:
-                pass
-
-
-def _deep_merge(base, patch):
-    if not isinstance(base, dict) or not isinstance(patch, dict):
-        return patch
-    out = dict(base)
-    for k, v in patch.items():
-        if k in out and isinstance(out[k],  dict) and isinstance(v, dict):
-            out[k] = _deep_merge(out[k], v)
-        else:
-            out[k] = v
-    return out
 
 
 class ConversationalQml(QQuickWidget):
@@ -182,39 +189,6 @@ class ConversationalQml(QQuickWidget):
         return getattr(self, "current_program", None)
 
     # ADD this helper in class ConversationalQml
-    def _sanitize_filename(self, name: str) -> str:
-        # very simple sanitizer: keep alnum, space, dash, underscore, dot
-        safe = "".join(c for c in name if c.isalnum() or c in (" ", "-", "_", "."))
-        safe = safe.strip().replace(" ", "_")
-        return safe or "program"
-
-    def _resolve_save_path(self, prog) -> str:
-        # 1) Prefer path provided by loader
-        filename = getattr(prog, "filename", None)
-        if filename and isinstance(filename, str) and filename.strip():
-            return filename
-
-        # 2) Fallback to folder_path + header.name/id + .json
-        base_dir = getattr(self, "folder_path", os.getcwd())
-        base_name = None
-        # try header.name
-        try:
-            base_name = prog.header.name
-        except Exception:
-            pass
-        if not base_name:
-            # try id
-            try:
-                base_name = prog.id
-            except Exception:
-                base_name = "program"
-
-        base_name = self._sanitize_filename(str(base_name))
-        if not base_name.lower().endswith(".json"):
-            base_name += ".json"
-
-        return os.path.join(base_dir, base_name)
-
     def _save_current_program(self):
         prog = self._get_current_program()
         if not prog:
@@ -233,48 +207,29 @@ class ConversationalQml(QQuickWidget):
             print("Program serialization missing (to_dict).")
             return
 
-        filename = self._resolve_save_path(prog)
         try:
-            os.makedirs(os.path.dirname(filename), exist_ok=True)
-            with open(filename, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
-            if not getattr(prog, "filename", None):
-                prog.filename = filename
+            filename = save_program_to_disk(prog, self.folder_path)
             print(f"[autosave] Program written to: {filename}")
         except Exception as e:
             print("Failed to save program:", e)
             return
 
-        # 🔁 IMPORTANT: reîncarcă de pe disc și înlocuiește instanța în model + self.current_program
-        try:
-            with open(filename, "r", encoding="utf-8") as f:
-                disk_data = json.load(f)
-            new_prog = Program.from_dict(disk_data)
-            new_prog.filename = filename
+        row = getattr(self, "current_program_index", None)
+        if row is not None and hasattr(self.model, "setProgramAt"):
+            self.model.setProgramAt(row, prog)
+            top = self.model.index(row)
+            bottom = self.model.index(row)
+            from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel as _PLM
+            self.model.dataChanged.emit(top, bottom, [_PLM.LastEditDateRole])
 
-            row = getattr(self, "current_program_index", None)
-            if row is not None and hasattr(self.model, "setProgramAt"):
-                self.model.setProgramAt(row, new_prog)
-                # păstrează *aceeași referință* ca în model
-                self.current_program = self.model.get(row)
-            else:
-                # fallback
-                self.current_program = new_prog
+        self.current_program = prog
 
-            # notifică last-edit în listă
-            if row is not None:
-                top = self.model.index(row)
-                bottom = self.model.index(row)
-                from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel as _PLM
-                self.model.dataChanged.emit(top, bottom, [_PLM.LastEditDateRole])
+        if getattr(self, "child_screen_item", None) is not None:
+            new_ops = build_operations_model(self.current_program)
+            self.child_screen_item.setProperty("activeOpIndex", getattr(self, "current_op_index", -1))
+            self.child_screen_item.setProperty("operationsModel", new_ops)
 
-            # refresh operation labels in the left pane without reloading the screen
-            if getattr(self, "child_screen_item", None) is not None:
-                new_ops = self._build_operations_model(self.current_program)
-                self.child_screen_item.setProperty("activeOpIndex", getattr(self, "current_op_index", -1))
-                self.child_screen_item.setProperty("operationsModel", new_ops)
-        except Exception as e:
-            print("Failed to refresh in-memory program from disk:", e)
+        self._emit_header_state_changed()
 
     def _hook_screen_item(self, item):
         try:
@@ -353,203 +308,6 @@ class ConversationalQml(QQuickWidget):
         except Exception as e:
             print("Failed to hook screen item signals:", e)
 
-    def _default_op_dict(self, op_type: str) -> dict:
-        base = {"order": 1, "type": op_type, "generate_gcode": True, "is_optional_block": False}
-        spindle_rpm = {"direction": 1, "mode": "rpm", "rpm_value": 1000}
-        m1_default  = {"include_m1": False, "inspect_position": "G28", "stop_spindle": False}
-
-        if op_type == "changeTool":
-            base.update({
-                "tool_no": 1, "tool_orientation": 1, "back_angle": 0, "front_angle": 0,
-                "toolchange_rules": {
-                    "x_pos": 0.0, "z_pos": 0.0,
-                    "coordinate_type": "absolute", "move_sequence": "xz", "stop_spindle": False,
-                },
-            })
-        elif op_type == "facing":
-            base.update({
-                "spindle_parameters": spindle_rpm,
-                "cutting_parameters": {"feed_rate": 0.1, "doc": 0.5, "retract": 1.0},
-                "geometry_parameters": {"x_start": 0.0, "z_start": 0.0, "x_end": 0.0, "z_end": 0.0},
-                "m1_parameters": m1_default,
-                "z_end_becomes_new_z0": False,
-            })
-        elif op_type == "knurling":
-            base.update({
-                "generate_gcode": False,
-                "spindle_parameters": {"direction": -1, "mode": "rpm", "rpm_value": 300, "css_value": 20, "css_max_speed": 1500},
-                "cutting_parameters": {"doc": 0.5, "retract": 2.0, "grooves_count": 10},
-                "geometry_parameters": {"z_start": 2.0, "z_end": -50.0, "x_start": 30.0},
-                "m1_parameters": {"include_m1": True, "inspect_position": "G28", "stop_spindle": True},
-            })
-        elif op_type in ("profiling", "customProfiling"):
-            base.update({
-                "spindle_parameters": spindle_rpm,
-                "cutting_parameters": {"feed_rate": 0.1, "doc": 0.5, "retract": 1.0},
-                "profiling_parameters": {"profile_id": 1, "x_start": 0.0, "z_start": 0.0},
-                "profiling_options": {
-                    "strategy": "rough",
-                    "stock_to_leave_x": 0.0, "stock_to_leave_z": 0.0, "finish_passes": 1, "finish_spring_passes": 0,
-                },
-            })
-        elif op_type == "profileBoring":
-            base.update({
-                "spindle_parameters": spindle_rpm,
-                "cutting_parameters": {"feed_rate": 0.1, "doc": 0.5, "retract": 1.0},
-                "profiling_parameters": {"profile_id": 1, "x_start": 0.0, "z_start": 0.0},
-                "profiling_options": {
-                    "strategy": "rough",
-                    "stock_to_leave_x": 0.0, "stock_to_leave_z": 0.0, "finish_passes": 1, "finish_spring_passes": 0,
-                },
-                "roughing_strategy": {"movement": "axially", "cut_toward": "interior"},
-                "m1_parameters": {"include_m1": True, "inspect_position": "G28", "stop_spindle": False},
-            })
-        elif op_type == "threading":
-            base.update({
-                "spindle_parameters": {"direction": 1, "mode": "rpm", "rpm_value": 500},
-                "location": "OD", "thread_type": "metric",
-                "pitch": 1.0, "starts": 1,
-                "major_diameter": 0.0, "minor_diameter": 0.0,
-                "z_start": 0.0, "z_end": 0.0,
-                "initial_doc": 0.3, "retract": 1.0, "spring_passes": 0,
-                "depth_degression": 1.0, "taper_type": 0, "compound_angle": 0.0,
-            })
-        elif op_type == "drilling":
-            base.update({
-                "spindle_parameters": spindle_rpm,
-                "drilling_parameters": {
-                    "z_start": 0.0, "z_end": 0.0, "z_retract": 5.0, "peck_depth": 3.0, "feed_rate": 0.05,
-                },
-                "m1_parameters": m1_default,
-            })
-        elif op_type == "tapping":
-            base.update({
-                "spindle_parameters": {"direction": 1, "mode": "rpm", "rpm_value": 500},
-                "tapping_parameters": {
-                    "z_start": 0.0, "z_end": 0.0, "z_retract": 5.0, "peck_depth": 0.0, "pitch": 1.0,
-                },
-                "m1_parameters": m1_default,
-            })
-        elif op_type == "parting":
-            base.update({
-                "spindle_parameters": {"direction": 1, "mode": "rpm", "rpm_value": 500},
-                "parting_parameters": {
-                    "x_start": 0.0, "x_end": 0.0, "z_pos": 0.0,
-                    "first_feed_rate": 0.05, "second_feed_rate": 0.02, "second_feed_x_pos": 5.0,
-                    "x_clearance": 1.0,
-                },
-                "edge_break": {"blend_type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
-            })
-        elif op_type == "defineProfile":
-            base.update({
-                "generate_gcode": False,
-                "profile_id": 1,
-                "profile_primitives": [],
-            })
-        return base
-
-    def onAddOperationTypeChosen(self, op_type: str, insert_index: int):
-        print(f"[operations] Adding {op_type!r} at index {insert_index}")
-        if op_type == "__duplicate__":
-            self._duplicate_operation_at(self.current_op_index, insert_index)
-            return
-        prog = self._get_current_program()
-        if not prog:
-            return
-        from teachinlathe.conversational.data_types import operation_types
-        if op_type not in operation_types:
-            print(f"[operations] Unknown type: {op_type!r}")
-            return
-        try:
-            op_dict = self._default_op_dict(op_type)
-            new_op  = operation_types[op_type].from_dict(op_dict)
-            ops     = prog.operations
-            idx     = max(0, min(insert_index, len(ops)))
-            ops.insert(idx, new_op)
-            self._renumber_operations(ops)
-            self.current_op_index = idx
-            self._save_current_program()
-        except Exception as e:
-            print(f"[operations] Failed to create {op_type!r}: {e}")
-
-    def _duplicate_operation_at(self, src_index: int, insert_index: int):
-        import copy
-        prog = self._get_current_program()
-        if not prog:
-            return
-        ops = prog.operations
-        if src_index < 0 or src_index >= len(ops):
-            print(f"[operations] Cannot duplicate: src_index {src_index} out of range")
-            return
-        new_op = copy.deepcopy(ops[src_index])
-        idx = max(0, min(insert_index, len(ops)))
-        ops.insert(idx, new_op)
-        self._renumber_operations(ops)
-        self.current_op_index = idx
-        self._save_current_program()
-
-    def onAddOperationRequested(self):
-        print("[operations] Add New requested")
-        # TODO: open your 'add operation' flow
-
-    def onReorderModeToggled(self, on):
-        print(f"[operations] Reorder mode: {'ON' if on else 'OFF'}")
-
-    def _renumber_operations(self, ops):
-        for i, op in enumerate(ops):
-            op.order = i + 1
-
-    def onMoveUp(self, index: int):
-        prog = self._get_current_program()
-        if not prog or index <= 0:
-            return
-        ops = prog.operations
-        ops.insert(index - 1, ops.pop(index))
-        self._renumber_operations(ops)
-        self.current_op_index = index - 1
-        self._save_current_program()
-
-    def onMoveDown(self, index: int):
-        prog = self._get_current_program()
-        if not prog or index >= len(prog.operations) - 1:
-            return
-        ops = prog.operations
-        ops.insert(index + 1, ops.pop(index))
-        self._renumber_operations(ops)
-        self.current_op_index = index + 1
-        self._save_current_program()
-
-    def onDeleteOperation(self, index: int):
-        prog = self._get_current_program()
-        if not prog or not (0 <= index < len(prog.operations)):
-            return
-        prog.operations.pop(index)
-        self._renumber_operations(prog.operations)
-        self.current_op_index = -1
-        self._save_current_program()
-
-    def onAddProfilingFinishRequested(self, index: int):
-        prog = self._get_current_program()
-        if not prog or not (0 <= index < len(prog.operations)):
-            return
-        op = prog.operations[index]
-        from teachinlathe.conversational.data_types import Profiling
-        if not isinstance(op, Profiling):
-            return
-        try:
-            d = op.to_dict()
-            opts = d.get("profiling_options", {}) or {}
-            opts["strategy"] = "finish"
-            d["profiling_options"] = opts
-            new_op = Profiling.from_dict(d)
-            insert_idx = index + 1
-            prog.operations.insert(insert_idx, new_op)
-            self._renumber_operations(prog.operations)
-            self.current_op_index = insert_idx
-            self._save_current_program()
-        except Exception as e:
-            print("[profiling] add finish failed:", e)
-
     def onGenerateGcodeRequested(self):
         """Called from ChildScreen when user clicks 'Generate GCode' on the top bar."""
         prog = getattr(self, "current_program", None)
@@ -610,24 +368,22 @@ class ConversationalQml(QQuickWidget):
 
     def onDetailsRequested(self, screen_item, index: int):
         self.current_op_index = index
-        # Header selected
         if index == -1:
             prog = self._get_current_program()
             if not prog:
                 return
             try:
-                data = prog.to_dict() if hasattr(prog, "to_dict") else None
+                data = build_details_payload(prog)
                 if data:
-                    screen_item.receiveDetailsData(-1, data)  # ChildScreen va încărca HeaderDetailsView.qml
+                    screen_item.receiveDetailsData(-1, data)
             except Exception as e:
                 print("receiveDetailsData(header) failed:", e)
             return
 
-        # Normal op details
         op = self._get_current_op(index)
         if op is None:
             return
-        data = op.to_dict() if hasattr(op, "to_dict") else None
+        data = build_details_payload(op)
         if not data:
             return
         try:
@@ -636,37 +392,9 @@ class ConversationalQml(QQuickWidget):
             print("receiveDetailsData failed:", e)
 
     def addNewProgram(self):
-        timestamp = datetime.now()
-        file_stamp = timestamp.strftime("%d_%m_%Y_%H_%M_%S")
-        display_stamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        filename = f"program_{file_stamp}.json"
-        file_path = os.path.join(self.folder_path, filename)
-        program_name = f"Program {file_stamp}"
-
-        header = Header(
-            name=program_name,
-            created_date=display_stamp,
-            last_edit=display_stamp,
-            datum=1,
-            units="mm",
-            workpiece=Workpiece(
-                material="",
-                external_diameter=0.0,
-                internal_diameter=0.0,
-                stickout_length=0.0,
-            ),
-        )
-        program = Program(
-            id=os.path.splitext(filename)[0],
-            header=header,
-            operations=[],
-            filename=file_path,
-        )
-
         try:
-            os.makedirs(self.folder_path, exist_ok=True)
-            with open(file_path, "w", encoding="utf-8") as handle:
-                json.dump(program.to_dict(), handle, indent=4)
+            program = create_new_program(self.folder_path)
+            save_program_to_disk(program, self.folder_path)
         except Exception as e:
             print("Failed to create program:", e)
             return
@@ -682,14 +410,11 @@ class ConversationalQml(QQuickWidget):
         if not program:
             return
 
-        file_path = getattr(program, "filename", None)
-        if file_path:
-            try:
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-            except Exception as e:
-                print("Failed to delete program file:", e)
-                return
+        try:
+            delete_program_file(program)
+        except Exception as e:
+            print("Failed to delete program file:", e)
+            return
 
         if hasattr(self.model, "removeProgramAt"):
             self.model.removeProgramAt(row_index)
@@ -701,59 +426,21 @@ class ConversationalQml(QQuickWidget):
         elif self.current_program_index is not None and row_index < self.current_program_index:
             self.current_program_index -= 1
 
-    def _make_timestamped_program_path(self):
-        while True:
-            timestamp = datetime.now()
-            file_stamp = timestamp.strftime("%d_%m_%Y_%H_%M_%S")
-            filename = f"program_{file_stamp}.json"
-            file_path = os.path.join(self.folder_path, filename)
-            if not os.path.exists(file_path):
-                return timestamp, filename, file_path
-            time.sleep(0.01)
-
-    def _next_duplicate_name(self, base_name: str) -> str:
-        existing_names = set()
-        if hasattr(self.model, "_programs"):
-            existing_names = {
-                getattr(getattr(program, "header", None), "name", "")
-                for program in self.model._programs
-            }
-
-        stem = re.sub(r"\s+\(\d+\)$", "", base_name).rstrip()
-        suffix = 1
-        while True:
-            candidate = f"{stem} ({suffix})"
-            if candidate not in existing_names:
-                return candidate
-            suffix += 1
-
     def onDuplicateProgramRequested(self, row_index: int):
         program = self.model.get(row_index) if hasattr(self.model, "get") else None
         if not program:
             return
 
-        timestamp, filename, file_path = self._make_timestamped_program_path()
-        display_stamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        existing_names = set()
+        if hasattr(self.model, "_programs"):
+            existing_names = {
+                getattr(getattr(candidate, "header", None), "name", "")
+                for candidate in self.model._programs
+            }
 
         try:
-            program_dict = program.to_dict()
-        except Exception as e:
-            print("Failed to serialize program for duplication:", e)
-            return
-
-        header = program_dict.get("header", {})
-        header["name"] = self._next_duplicate_name(header.get("name", "Program"))
-        header["created_date"] = display_stamp
-        header["last_edit"] = display_stamp
-        program_dict["header"] = header
-        program_dict["id"] = os.path.splitext(filename)[0]
-
-        try:
-            os.makedirs(self.folder_path, exist_ok=True)
-            with open(file_path, "w", encoding="utf-8") as handle:
-                json.dump(program_dict, handle, indent=4)
-            new_program = Program.from_dict(program_dict)
-            new_program.filename = file_path
+            new_program = duplicate_program(program, self.folder_path, existing_names)
+            save_program_to_disk(new_program, self.folder_path)
         except Exception as e:
             print("Failed to duplicate program:", e)
             return
@@ -761,9 +448,78 @@ class ConversationalQml(QQuickWidget):
         if hasattr(self.model, "appendProgram"):
             self.model.appendProgram(new_program)
 
+    def onAddOperationTypeChosen(self, op_type: str, insert_index: int):
+        print(f"[operations] Adding {op_type!r} at index {insert_index}")
+        prog = self._get_current_program()
+        if not prog:
+            return
+        try:
+            if op_type == "__duplicate__":
+                idx = duplicate_operation(prog, self.current_op_index, insert_index)
+            else:
+                if op_type not in operation_types:
+                    print(f"[operations] Unknown type: {op_type!r}")
+                    return
+                idx = insert_default_operation(prog, op_type, insert_index)
+            self.current_op_index = idx
+            self._save_current_program()
+        except Exception as e:
+            print(f"[operations] Failed to create {op_type!r}: {e}")
+
+    def onAddOperationRequested(self):
+        print("[operations] Add New requested")
+
+    def onReorderModeToggled(self, on):
+        print(f"[operations] Reorder mode: {'ON' if on else 'OFF'}")
+
+    def onMoveUp(self, index: int):
+        prog = self._get_current_program()
+        if not prog:
+            return
+        new_index = move_operation_up(prog, index)
+        if new_index is None:
+            return
+        self.current_op_index = new_index
+        self._save_current_program()
+
+    def onMoveDown(self, index: int):
+        prog = self._get_current_program()
+        if not prog:
+            return
+        new_index = move_operation_down(prog, index)
+        if new_index is None:
+            return
+        self.current_op_index = new_index
+        self._save_current_program()
+
+    def onDeleteOperation(self, index: int):
+        prog = self._get_current_program()
+        if not prog or not delete_operation(prog, index):
+            return
+        self.current_op_index = -1
+        self._save_current_program()
+
+    def onAddProfilingFinishRequested(self, index: int):
+        prog = self._get_current_program()
+        if not prog:
+            return
+        try:
+            insert_idx = add_profiling_finish(prog, index)
+            self.current_op_index = insert_idx
+            self._save_current_program()
+        except Exception as e:
+            print("[profiling] add finish failed:", e)
+
     def openChildScreen(self, arg=None):
         program = None
         row_index = None
+        if hasattr(arg, "toVariant"):
+            try:
+                arg = arg.toVariant()
+            except Exception:
+                pass
+        if isinstance(arg, float) and arg.is_integer():
+            arg = int(arg)
         if isinstance(arg, int):
             row_index = arg
             if hasattr(self.model, "get"):
@@ -787,13 +543,8 @@ class ConversationalQml(QQuickWidget):
         self.current_program_index = row_index
         self.current_op_index = -1
 
-        selected_program = {
-            "id": program.id,
-            "name": program.header.name,
-            "created_date": getattr(program.header, "created_date", ""),
-            "last_edit": program.header.last_edit,
-        }
-        operations_model = self._build_operations_model(program)
+        selected_program = build_selected_program_summary(program)
+        operations_model = build_operations_model(program)
 
         try:
             if hasattr(self, "root") and hasattr(self.root, "_currentParams") and isinstance(self.root._currentParams, dict):
@@ -810,70 +561,6 @@ class ConversationalQml(QQuickWidget):
         print("openChildScreen for:", selected_program["name"], "ops:", len(operations_model))
         self.root.loadScreen(child_url, params)
         QTimer.singleShot(0, self._emit_header_state_changed)
-
-    def _build_operations_model(self, program):
-        """Return a list of dicts friendly to QML with 'display_type' precomputed."""
-        out = []
-        ops = getattr(program, "operations", []) or []
-        for op in ops:
-            # base fields
-            d = {
-                "order": getattr(op, "order", None),
-                "type": getattr(op, "type", ""),
-                "generate_gcode": bool(getattr(op, "generate_gcode", False)),
-                "is_optional_block": bool(getattr(op, "is_optional_block", False)),
-            }
-            # enrich with hints used for display name
-            tool_no    = getattr(op, "tool_no", None)
-            pitch      = getattr(op, "pitch", None)
-            profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
-            if profile_id is None:
-                profile_id = getattr(op, "profile_id", None)
-            strategy   = getattr(getattr(op, "profilingOptions", None), "strategy", None)
-            d["display_type"] = self._display_name_for_op(
-                d["type"], tool_no=tool_no, pitch=pitch, profile_id=profile_id, strategy=strategy
-            )
-            out.append(d)
-        return out
-
-    def _display_name_for_op(self, op_type, tool_no=None, pitch=None, profile_id=None, strategy=None):
-        """Map internal operation types to human readable strings."""
-        t = (op_type or "").strip()
-        if t == "changeTool":
-            if tool_no is not None:
-                return f"Tool Change (T{tool_no})"
-            return "Tool Change"
-        if t == "facing":
-            return "Facing"
-        if t == "knurling":
-            return "SinglePoint Knurling"
-        if t == "defineProfile":
-            if profile_id is not None:
-                return f"Define Profile (P{profile_id})"
-            return "Define Profile"
-        if t == "profiling":
-            strategy_value = strategy.value if hasattr(strategy, "value") else str(strategy or "").lower()
-            prefix = "G71 " if strategy_value == "rough" else "G70 " if strategy_value == "finish" else ""
-            if profile_id is not None and strategy is not None:
-                strategy_str = strategy.value.capitalize() if hasattr(strategy, "value") else str(strategy).capitalize()
-                return f"{prefix}Cut Profile (P:{profile_id}, {strategy_str})"
-            if profile_id is not None:
-                return f"{prefix}Cut Profile (P:{profile_id})"
-            return f"{prefix}Cut Profile" if prefix else "Cut Profile"
-        if t == "customProfiling":
-            if profile_id is not None:
-                return f"Custom Profiling P{profile_id}"
-            return "Custom Profiling"
-        if t == "threading":
-            return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"
-        if t == "drilling":
-            return "Drilling"
-        if t == "tapping":
-            return "Tapping"
-        if t == "parting":
-            return "Parting"
-        # fallback
-        return t or "Unknown"
 
     def onToggleGenerateGcode(self, index: int, checked: bool):
         op = self._get_current_op(index)
@@ -916,7 +603,6 @@ class ConversationalQml(QQuickWidget):
     def onUpdateHeader(self, payload):
         try:
             p = self._to_py(payload) or {}
-            # Unwrap daca vine sub cheia "header"
             hdr = p.get("header", p)
 
             prog = self._get_current_program()
@@ -939,7 +625,6 @@ class ConversationalQml(QQuickWidget):
             if "last_edit" in hdr and hdr["last_edit"] is not None:
                 header.last_edit = str(hdr["last_edit"])
 
-            # nested: workpiece
             wp_payload = hdr.get("workpiece")
             if isinstance(wp_payload, dict):
                 wp = header.workpiece
@@ -979,37 +664,22 @@ class ConversationalQml(QQuickWidget):
             from teachinlathe.conversational.data_types import DefineProfile
             if not isinstance(op, DefineProfile):
                 return
-            old_dict = op.to_dict()
-            merged   = _deep_merge(old_dict, p)
-            new_op   = DefineProfile.from_dict(merged)
-            prog     = self._get_current_program()
-            if prog:
-                prog.operations[index] = new_op
+            apply_define_profile_update(op, p)
             self._save_current_program()
         except Exception as e:
             print("[defineProfile] update error:", e)
 
     def onUpdateToolChange(self, index: int, payload):
-        payload = self._to_py(payload)
+        payload = self._to_py(payload) or {}
         op = self._get_current_op(index)
         if op is None:
             return
-        for attr in ("order", "generate_gcode", "is_optional_block",
-                     "tool_no", "tool_orientation", "back_angle", "front_angle"):
-            if attr in payload and hasattr(op, attr):
-                try:
-                    setattr(op, attr, payload[attr])
-                except Exception:
-                    pass
-        d = payload.get("toolchange_rules")
-        tcd = getattr(op, "toolchange_rules", None)
-        if tcd and isinstance(d, dict):
-            for attr in ("x_pos", "z_pos", "coordinate_type", "move_sequence", "stop_spindle"):
-                if attr in d and hasattr(tcd, attr):
-                    try:
-                        setattr(tcd, attr, d[attr])
-                    except Exception:
-                        pass
+        apply_operation_update(op, payload)
+        setattr(op, "tool_no", int(payload["tool_no"])) if "tool_no" in payload and payload["tool_no"] is not None else None
+        setattr(op, "tool_orientation", int(payload["tool_orientation"])) if "tool_orientation" in payload and payload["tool_orientation"] is not None else None
+        setattr(op, "back_angle", int(payload["back_angle"])) if "back_angle" in payload and payload["back_angle"] is not None else None
+        setattr(op, "front_angle", int(payload["front_angle"])) if "front_angle" in payload and payload["front_angle"] is not None else None
+        apply_toolchange_rules_update(getattr(op, "toolchange_rules", None), payload.get("toolchange_rules"))
         self._save_current_program()
 
     def onUpdateFacing(self, index: int, payload):
@@ -1019,42 +689,11 @@ class ConversationalQml(QQuickWidget):
         if not isinstance(op, Facing):
             return
 
-        old_dict = op.to_dict()  # sursa de adevăr din memorie
-        sp_old = (old_dict.get("spindle_parameters") or {})
-
-        # --- Normalizează payload-ul de spindle înainte de merge ---
-        sp_new = p.get("spindle_parameters")
-        if isinstance(sp_new, dict):
-            sp_norm = dict(sp_old)  # pornește de la ce aveai
-            # 1) “mode”: dacă vine din UI, ia-l; dacă nu, inferă; altfel păstrează vechiul
-            if "mode" in sp_new and sp_new["mode"]:
-                sp_norm["mode"] = sp_new["mode"]
-            elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
-                sp_norm["mode"] = "rpm"
-            elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
-                sp_norm["mode"] = "css"
-            else:
-                sp_norm["mode"] = sp_old.get("mode", "rpm")
-
-            # 2) Copiază doar ce vine, restul păstrează (NU pune default aici)
-            for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
-                if k in sp_new and sp_new[k] is not None:
-                    sp_norm[k] = sp_new[k]
-
-            # asigură-te că rămân și valorile celuilalt mod pentru UI (nu le ștergem)
-            p["spindle_parameters"] = sp_norm
-
-        # --- Merge pe tot op-ul ---
-        merged = _deep_merge(old_dict, p)
-
-        # --- Reconstruiește instanța curentă (validare într-un singur loc) ---
-        cls = operation_types[merged.get("type", old_dict.get("type"))]
-        new_op = cls.from_dict(merged)
-
-        # --- Înlocuiește în listă și salvează ---
-        prog = self._get_current_program()
-        if prog:
-            prog.operations[index] = new_op
+        apply_turnable_operation_update(op, p)
+        apply_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
+        apply_geometry_update(op.geometryParameters, p.get("geometry_parameters"))
+        apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
+        setattr(op, "zEndBecomesNewZ0", bool(p["z_end_becomes_new_z0"])) if "z_end_becomes_new_z0" in p and p["z_end_becomes_new_z0"] is not None else None
         self._save_current_program()
 
     def onUpdateProfiling(self, index: int, payload):
@@ -1065,29 +704,10 @@ class ConversationalQml(QQuickWidget):
             if not isinstance(op, Profiling):
                 return
 
-            old_dict = op.to_dict()
-            sp_old = (old_dict.get("spindle_parameters") or {})
-            sp_new = p.get("spindle_parameters")
-            if isinstance(sp_new, dict):
-                sp_norm = dict(sp_old)
-                if "mode" in sp_new and sp_new["mode"]:
-                    sp_norm["mode"] = sp_new["mode"]
-                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
-                    sp_norm["mode"] = "rpm"
-                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
-                    sp_norm["mode"] = "css"
-                else:
-                    sp_norm["mode"] = sp_old.get("mode", "rpm")
-                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
-                    if k in sp_new and sp_new[k] is not None:
-                        sp_norm[k] = sp_new[k]
-                p["spindle_parameters"] = sp_norm
-
-            merged = _deep_merge(old_dict, p)
-            new_op = Profiling.from_dict(merged)
-            prog = self._get_current_program()
-            if prog:
-                prog.operations[index] = new_op
+            apply_turnable_operation_update(op, p)
+            apply_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
+            apply_profiling_parameters_update(op.profilingParameters, p.get("profiling_parameters"))
+            apply_profiling_options_update(op.profilingOptions, p.get("profiling_options"))
             self._save_current_program()
         except Exception as e:
             print("[profiling] update error:", e)
@@ -1100,29 +720,10 @@ class ConversationalQml(QQuickWidget):
             if not isinstance(op, Knurling):
                 return
 
-            old_dict = op.to_dict()
-            sp_old = (old_dict.get("spindle_parameters") or {})
-            sp_new = p.get("spindle_parameters")
-            if isinstance(sp_new, dict):
-                sp_norm = dict(sp_old)
-                if "mode" in sp_new and sp_new["mode"]:
-                    sp_norm["mode"] = sp_new["mode"]
-                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
-                    sp_norm["mode"] = "rpm"
-                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
-                    sp_norm["mode"] = "css"
-                else:
-                    sp_norm["mode"] = sp_old.get("mode", "rpm")
-                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
-                    if k in sp_new and sp_new[k] is not None:
-                        sp_norm[k] = sp_new[k]
-                p["spindle_parameters"] = sp_norm
-
-            merged = _deep_merge(old_dict, p)
-            new_op = Knurling.from_dict(merged)
-            prog = self._get_current_program()
-            if prog:
-                prog.operations[index] = new_op
+            apply_turnable_operation_update(op, p)
+            apply_knurling_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
+            apply_geometry_update(op.geometryParameters, p.get("geometry_parameters"))
+            apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
             self._save_current_program()
         except Exception as e:
             print("[knurling] update error:", e)
@@ -1139,29 +740,12 @@ class ConversationalQml(QQuickWidget):
             if not isinstance(op, ProfileBoring):
                 return
 
-            old_dict = op.to_dict()
-            sp_old = (old_dict.get("spindle_parameters") or {})
-            sp_new = p.get("spindle_parameters")
-            if isinstance(sp_new, dict):
-                sp_norm = dict(sp_old)
-                if "mode" in sp_new and sp_new["mode"]:
-                    sp_norm["mode"] = sp_new["mode"]
-                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
-                    sp_norm["mode"] = "rpm"
-                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
-                    sp_norm["mode"] = "css"
-                else:
-                    sp_norm["mode"] = sp_old.get("mode", "rpm")
-                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
-                    if k in sp_new and sp_new[k] is not None:
-                        sp_norm[k] = sp_new[k]
-                p["spindle_parameters"] = sp_norm
-
-            merged = _deep_merge(old_dict, p)
-            new_op = ProfileBoring.from_dict(merged)
-            prog = self._get_current_program()
-            if prog:
-                prog.operations[index] = new_op
+            apply_turnable_operation_update(op, p)
+            apply_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
+            apply_profiling_parameters_update(op.profilingParameters, p.get("profiling_parameters"))
+            apply_profiling_options_update(op.profilingOptions, p.get("profiling_options"))
+            apply_roughing_strategy_update(op.roughingStrategy, p.get("roughing_strategy"))
+            apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
             self._save_current_program()
         except Exception as e:
             print("[profileBoring] update error:", e)
@@ -1175,29 +759,9 @@ class ConversationalQml(QQuickWidget):
             if not isinstance(op, Drilling):
                 return
 
-            old_dict = op.to_dict()
-            sp_old = (old_dict.get("spindle_parameters") or {})
-            sp_new = p.get("spindle_parameters")
-            if isinstance(sp_new, dict):
-                sp_norm = dict(sp_old)
-                if "mode" in sp_new and sp_new["mode"]:
-                    sp_norm["mode"] = sp_new["mode"]
-                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
-                    sp_norm["mode"] = "rpm"
-                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
-                    sp_norm["mode"] = "css"
-                else:
-                    sp_norm["mode"] = sp_old.get("mode", "rpm")
-                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
-                    if k in sp_new and sp_new[k] is not None:
-                        sp_norm[k] = sp_new[k]
-                p["spindle_parameters"] = sp_norm
-
-            merged = _deep_merge(old_dict, p)
-            new_op = Drilling.from_dict(merged)
-            prog = self._get_current_program()
-            if prog:
-                prog.operations[index] = new_op
+            apply_turnable_operation_update(op, p)
+            apply_drilling_update(op.drillingParameters, p.get("drilling_parameters"))
+            apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
             self._save_current_program()
         except Exception as e:
             print("[drilling] update error:", e)
@@ -1211,29 +775,9 @@ class ConversationalQml(QQuickWidget):
             if not isinstance(op, Parting):
                 return
 
-            old_dict = op.to_dict()
-            sp_old = (old_dict.get("spindle_parameters") or {})
-            sp_new = p.get("spindle_parameters")
-            if isinstance(sp_new, dict):
-                sp_norm = dict(sp_old)
-                if "mode" in sp_new and sp_new["mode"]:
-                    sp_norm["mode"] = sp_new["mode"]
-                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
-                    sp_norm["mode"] = "rpm"
-                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
-                    sp_norm["mode"] = "css"
-                else:
-                    sp_norm["mode"] = sp_old.get("mode", "rpm")
-                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
-                    if k in sp_new and sp_new[k] is not None:
-                        sp_norm[k] = sp_new[k]
-                p["spindle_parameters"] = sp_norm
-
-            merged = _deep_merge(old_dict, p)
-            new_op = Parting.from_dict(merged)
-            prog = self._get_current_program()
-            if prog:
-                prog.operations[index] = new_op
+            apply_turnable_operation_update(op, p)
+            apply_parting_update(op.partingParameters, p.get("parting_parameters"))
+            apply_edge_break_update(op.edgeBreak, p.get("edge_break"))
             self._save_current_program()
         except Exception as e:
             print("[parting] update error:", e)
@@ -1247,29 +791,9 @@ class ConversationalQml(QQuickWidget):
             if not isinstance(op, Tapping):
                 return
 
-            old_dict = op.to_dict()
-            sp_old = (old_dict.get("spindle_parameters") or {})
-            sp_new = p.get("spindle_parameters")
-            if isinstance(sp_new, dict):
-                sp_norm = dict(sp_old)
-                if "mode" in sp_new and sp_new["mode"]:
-                    sp_norm["mode"] = sp_new["mode"]
-                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
-                    sp_norm["mode"] = "rpm"
-                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
-                    sp_norm["mode"] = "css"
-                else:
-                    sp_norm["mode"] = sp_old.get("mode", "rpm")
-                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
-                    if k in sp_new and sp_new[k] is not None:
-                        sp_norm[k] = sp_new[k]
-                p["spindle_parameters"] = sp_norm
-
-            merged = _deep_merge(old_dict, p)
-            new_op = Tapping.from_dict(merged)
-            prog = self._get_current_program()
-            if prog:
-                prog.operations[index] = new_op
+            apply_turnable_operation_update(op, p)
+            apply_tapping_update(op.tappingParameters, p.get("tapping_parameters"))
+            apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
             self._save_current_program()
         except Exception as e:
             print("[tapping] update error:", e)
@@ -1283,29 +807,8 @@ class ConversationalQml(QQuickWidget):
             if not isinstance(op, Threading):
                 return
 
-            old_dict = op.to_dict()
-            sp_old = (old_dict.get("spindle_parameters") or {})
-            sp_new = p.get("spindle_parameters")
-            if isinstance(sp_new, dict):
-                sp_norm = dict(sp_old)
-                if "mode" in sp_new and sp_new["mode"]:
-                    sp_norm["mode"] = sp_new["mode"]
-                elif "rpm_value" in sp_new and sp_new["rpm_value"] is not None:
-                    sp_norm["mode"] = "rpm"
-                elif (sp_new.get("css_value") is not None) and (sp_new.get("css_max_speed") is not None):
-                    sp_norm["mode"] = "css"
-                else:
-                    sp_norm["mode"] = sp_old.get("mode", "rpm")
-                for k in ("direction", "rpm_value", "css_value", "css_max_speed"):
-                    if k in sp_new and sp_new[k] is not None:
-                        sp_norm[k] = sp_new[k]
-                p["spindle_parameters"] = sp_norm
-
-            merged = _deep_merge(old_dict, p)
-            new_op = Threading.from_dict(merged)
-            prog = self._get_current_program()
-            if prog:
-                prog.operations[index] = new_op
+            apply_turnable_operation_update(op, p)
+            apply_threading_update(op, p)
             self._save_current_program()
         except Exception as e:
             print("[threading] update error:", e)
