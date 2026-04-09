@@ -1,6 +1,5 @@
-import json
 import os
-import re
+import os
 import time
 from datetime import datetime
 
@@ -9,7 +8,7 @@ from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import QProgressDialog, QApplication
 
-from teachinlathe.conversational.data_types import Header, Program, Workpiece, operation_types
+from teachinlathe.conversational.data_types import Program, Workpiece, operation_types
 from teachinlathe.conversational.program_commands import (
     add_profiling_finish,
     create_new_program,
@@ -21,7 +20,7 @@ from teachinlathe.conversational.program_commands import (
     move_operation_down,
     move_operation_up,
 )
-from teachinlathe.conversational.program_store import resolve_save_path, save_program_to_disk
+from teachinlathe.conversational.program_store import save_program_to_disk
 from teachinlathe.conversational.qml_adapter import build_details_payload, build_operations_model, build_selected_program_summary
 from teachinlathe.conversational.updaters import (
     apply_cutting_update,
@@ -153,7 +152,7 @@ class ConversationalQml(QQuickWidget):
             if can_go_back:
                 left_actions.append({"id": "back", "text": "Back to Programs", "enabled": True})
             operations = getattr(self.current_program, "operations", []) or []
-            right_actions.append({"id": "build_gcode", "text": "Build GCode Program", "enabled": bool(operations)})
+            right_actions.append({"id": "build_gcode", "text": "Generate GCode", "enabled": bool(operations)})
         else:
             title = "Conversational Programs"
             right_actions.append({"id": "create_new", "text": "Create New", "enabled": True})
@@ -335,9 +334,10 @@ class ConversationalQml(QQuickWidget):
             print("[gcode] Generation failed:", e)
         finally:
             elapsed = time.monotonic() - start
-            if elapsed < 1.0:
+            duration = 0.3
+            if elapsed < duration:
                 loop = QEventLoop()
-                QTimer.singleShot(int((1.0 - elapsed) * 1000), loop.quit)
+                QTimer.singleShot(int((duration - elapsed) * 1000), loop.quit)
                 loop.exec_()
             progress.close()
 

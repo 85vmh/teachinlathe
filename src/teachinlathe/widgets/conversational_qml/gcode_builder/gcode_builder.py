@@ -78,8 +78,8 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None):
     lines.append(f"( Program: {program_name} )")
     lines.append(f"( Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} )")
     lines.append("G21  (mm)")
-    lines.append("G90  (absolute)")
-    lines.append("G94  (feed per min)")
+    lines.append("G90  (absolute distance mode)")
+    lines.append("G95  (feed per rev)")
     lines.append("G18  (ZX plane)")
     lines.append("")
 
@@ -110,7 +110,7 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None):
             lines.append(f"( TODO: gcode generator for type={op.type} )")
         lines.append("")
     lines.append("")
-    lines.append("G28")
+    lines.append("G28  (rapid move to predefined position)")
     lines.append("M30")
 
     with open(ngc_path, "w", encoding="utf-8") as handle:
