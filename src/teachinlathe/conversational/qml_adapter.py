@@ -15,6 +15,8 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
     op_type_value = (op_type or "").strip()
     if op_type_value == "changeTool":
         return f"Tool Change (T{tool_no})" if tool_no is not None else "Tool Change"
+    if op_type_value == "positionAt":
+        return "Position At"
     if op_type_value == "facing":
         return "Facing"
     if op_type_value == "knurling":

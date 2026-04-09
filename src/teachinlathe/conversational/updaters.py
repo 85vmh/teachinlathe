@@ -1,8 +1,8 @@
 from teachinlathe.conversational.data_types import (
     BlendType,
     CoordinateType,
-    InspectPosition,
     MoveSequence,
+    PredefinedPosition,
     ProfilePrimitive,
     SpindleMode,
     Strategy,
@@ -63,7 +63,7 @@ def apply_m1_update(m1, payload):
     _set_attr_if_present(m1, payload, "include_m1", coerce=bool)
     if "inspect_position" in payload and payload["inspect_position"] is not None:
         try:
-            m1.inspect_position = _coerce_enum(payload["inspect_position"], InspectPosition, lambda v: str(v).upper())
+            m1.inspect_position = _coerce_enum(payload["inspect_position"], PredefinedPosition, lambda v: str(v).upper())
         except Exception:
             pass
     _set_attr_if_present(m1, payload, "stop_spindle", coerce=bool)
@@ -210,14 +210,14 @@ def apply_define_profile_update(op, payload):
         op.profile_primitives = primitives
 
 
-def apply_toolchange_rules_update(rules, payload):
-    if rules is None or not isinstance(payload, dict):
+def apply_position_details_update(details, payload):
+    if details is None or not isinstance(payload, dict):
         return
-    _set_attr_if_present(rules, payload, "x_pos", coerce=float)
-    _set_attr_if_present(rules, payload, "z_pos", coerce=float)
+    _set_attr_if_present(details, payload, "x_pos", coerce=float)
+    _set_attr_if_present(details, payload, "z_pos", coerce=float)
     if "coordinate_type" in payload and payload["coordinate_type"] is not None:
         try:
-            rules.coordinate_type = _coerce_enum(payload["coordinate_type"], CoordinateType, lambda v: str(v).lower())
+            details.coordinate_type = _coerce_enum(payload["coordinate_type"], CoordinateType, lambda v: str(v).lower())
         except Exception:
             pass
     if "move_sequence" in payload and payload["move_sequence"] is not None:
@@ -225,9 +225,18 @@ def apply_toolchange_rules_update(rules, payload):
             raw = str(payload["move_sequence"]).lower()
             if raw == "simultaneous":
                 raw = "both"
-            rules.move_sequence = _coerce_enum(raw, MoveSequence)
+            details.move_sequence = _coerce_enum(raw, MoveSequence)
         except Exception:
             pass
+
+
+def apply_predefined_position_update(op, payload, key="toolchange_position"):
+    if op is None or not isinstance(payload, dict) or key not in payload or payload[key] is None:
+        return
+    try:
+        setattr(op, key, _coerce_enum(payload[key], PredefinedPosition, lambda v: str(v).upper()))
+    except Exception:
+        pass
 
 
 def apply_turnable_operation_update(op, payload):

@@ -34,6 +34,7 @@ Popup {
 
     property var options: [
         { label: "Tool Change",      type: "changeTool"      },
+        { label: "Position At",      type: "positionAt"      },
         { label: "Facing",           type: "facing"          },
         { label: "SinglePoint Knurling", type: "knurling"    },
         { label: "Define Profile",   type: "defineProfile"   },

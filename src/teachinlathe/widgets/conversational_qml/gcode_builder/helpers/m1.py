@@ -1,22 +1,22 @@
-from teachinlathe.conversational.data_types import InspectPosition, M1Parameters
+from teachinlathe.conversational.data_types import M1Parameters, PredefinedPosition
 
 
-def _inspect_position(value) -> InspectPosition:
+def _inspect_position(value) -> PredefinedPosition:
     if isinstance(value, M1Parameters):
         return value.inspect_position
     if not value:
-        return InspectPosition.G28
-    inspect_str = value.get("inspect_position", InspectPosition.G28.value)
+        return PredefinedPosition.G28
+    inspect_str = value.get("inspect_position", PredefinedPosition.G28.value)
     try:
-        return InspectPosition(inspect_str)
+        return PredefinedPosition(inspect_str)
     except ValueError:
-        return InspectPosition.G28
+        return PredefinedPosition.G28
 
 
 def inspect_position_int(m1_params) -> int:
     """Return 0 for G28 or 1 for G30, for passing to LinuxCNC subroutines."""
     pos = _inspect_position(m1_params)
-    return 0 if pos == InspectPosition.G28 else 1
+    return 0 if pos == PredefinedPosition.G28 else 1
 
 
 

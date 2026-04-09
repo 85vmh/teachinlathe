@@ -36,7 +36,7 @@ class BlendType(Enum):
     FILLET = "fillet"
 
 
-class InspectPosition(str, Enum):
+class PredefinedPosition(str, Enum):
     G28 = "G28"
     G30 = "G30"
 
@@ -202,7 +202,7 @@ class TurnableOperation(Operation):
 # --------------------------- Tool change (no spindle) ------------------------
 
 @dataclass
-class ToolChangeRules:
+class PositionDetails:
     x_pos: float
     z_pos: float
     coordinate_type: CoordinateType
@@ -227,9 +227,9 @@ class ToolChangeRules:
             }.get(val, MoveSequence.XZ)
 
     @staticmethod
-    def coerce(obj: Any) -> "ToolChangeRules":
-        """Accept dict or ToolChangeRules and always return ToolChangeRules instance."""
-        if isinstance(obj, ToolChangeRules):
+    def coerce(obj: Any) -> "PositionDetails":
+        """Accept dict or PositionDetails and always return PositionDetails instance."""
+        if isinstance(obj, PositionDetails):
             obj.__post_init__()
             return obj
         if isinstance(obj, dict):
@@ -239,17 +239,17 @@ class ToolChangeRules:
             z_pos = float(data.get("z_pos", 0.0))
             coordinate_type = data.get("coordinate_type", "absolute")
             move_sequence = data.get("move_sequence", "xz")
-            return ToolChangeRules(
+            return PositionDetails(
                 x_pos=x_pos,
                 z_pos=z_pos,
                 coordinate_type=coordinate_type,
                 move_sequence=move_sequence,
             )
-        raise TypeError("ToolChangeRules.coerce expects dict or ToolChangeRules")
+        raise TypeError("PositionDetails.coerce expects dict or PositionDetails")
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "ToolChangeRules":
-        return ToolChangeRules.coerce(data)
+    def from_dict(data: Dict[str, Any]) -> "PositionDetails":
+        return PositionDetails.coerce(data)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -266,12 +266,15 @@ class ChangeTool(Operation):
     tool_orientation: int
     back_angle: int
     front_angle: int
-    toolchange_rules: ToolChangeRules
+    toolchange_position: PredefinedPosition
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "ChangeTool":
-        # tolerant parse: coerce toolchange_rules
-        rules = ToolChangeRules.from_dict(data.get("toolchange_rules", {}))
+        position_raw = str(data.get("toolchange_position", PredefinedPosition.G28.value))
+        try:
+            toolchange_position = PredefinedPosition(position_raw)
+        except ValueError:
+            toolchange_position = PredefinedPosition.G28
         return ChangeTool(
             order=data["order"],
             type=data["type"],
@@ -281,18 +284,43 @@ class ChangeTool(Operation):
             tool_orientation=int(data["tool_orientation"]),
             back_angle=int(data["back_angle"]),
             front_angle=int(data["front_angle"]),
-            toolchange_rules=rules
+            toolchange_position=toolchange_position
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        rules = ToolChangeRules.coerce(self.toolchange_rules)
         base.update({
             "tool_no": int(self.tool_no),
             "tool_orientation": int(self.tool_orientation),
             "back_angle": int(self.back_angle),
             "front_angle": int(self.front_angle),
-            "toolchange_rules": rules.to_dict()
+            "toolchange_position": self.toolchange_position.value
+        })
+        return base
+
+
+@dataclass
+class PositionAt(Operation):
+    position_details: PositionDetails
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "PositionAt":
+        details = PositionDetails.from_dict(
+            data.get("position_details", data.get("toolchange_rules", {}))
+        )
+        return PositionAt(
+            order=int(data["order"]),
+            type=data["type"],
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            position_details=details,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        details = PositionDetails.coerce(self.position_details)
+        base.update({
+            "position_details": details.to_dict()
         })
         return base
 
@@ -302,17 +330,17 @@ class ChangeTool(Operation):
 @dataclass
 class M1Parameters:
     include_m1: bool
-    inspect_position: InspectPosition
+    inspect_position: PredefinedPosition
     stop_spindle: bool
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "M1Parameters":
         # backward compat: old JSON had x_inspect/z_inspect instead of inspect_position
-        inspect_raw = str(data.get("inspect_position", InspectPosition.G28.value))
+        inspect_raw = str(data.get("inspect_position", PredefinedPosition.G28.value))
         try:
-            inspect_position = InspectPosition(inspect_raw)
+            inspect_position = PredefinedPosition(inspect_raw)
         except ValueError:
-            inspect_position = InspectPosition.G28
+            inspect_position = PredefinedPosition.G28
         return M1Parameters(
             include_m1=bool(data.get("include_m1", True)),
             inspect_position=inspect_position,
@@ -1167,6 +1195,7 @@ class Program:
 
 operation_types: Dict[str, Type[Operation]] = {
     "changeTool": ChangeTool,
+    "positionAt": PositionAt,
     "facing": Facing,
     "knurling": Knurling,
     "defineProfile": DefineProfile,
@@ -1181,6 +1210,7 @@ operation_types: Dict[str, Type[Operation]] = {
 
 display_names: Dict[str, str] = {
     "changeTool": "Tool Change",
+    "positionAt": "Position At",
     "facing": "Facing",
     "knurling": "SinglePoint Knurling",
     "defineProfile": "Define Profile",

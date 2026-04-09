@@ -35,10 +35,11 @@ from teachinlathe.conversational.updaters import (
     apply_parting_update,
     apply_profiling_options_update,
     apply_profiling_parameters_update,
+    apply_predefined_position_update,
+    apply_position_details_update,
     apply_roughing_strategy_update,
     apply_tapping_update,
     apply_threading_update,
-    apply_toolchange_rules_update,
     apply_turnable_operation_update,
 )
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
@@ -258,6 +259,8 @@ class ConversationalQml(QQuickWidget):
                 item.detailsRequested.connect(lambda idx, it=item: self.onDetailsRequested(it, idx))
             if hasattr(item, "updateToolChange"):
                 item.updateToolChange.connect(self.onUpdateToolChange)
+            if hasattr(item, "updatePositionAt"):
+                item.updatePositionAt.connect(self.onUpdatePositionAt)
             if hasattr(item, "updateDefineProfile"):
                 item.updateDefineProfile.connect(self.onUpdateDefineProfile)
             if hasattr(item, "teachXRequested"):
@@ -679,7 +682,16 @@ class ConversationalQml(QQuickWidget):
         setattr(op, "tool_orientation", int(payload["tool_orientation"])) if "tool_orientation" in payload and payload["tool_orientation"] is not None else None
         setattr(op, "back_angle", int(payload["back_angle"])) if "back_angle" in payload and payload["back_angle"] is not None else None
         setattr(op, "front_angle", int(payload["front_angle"])) if "front_angle" in payload and payload["front_angle"] is not None else None
-        apply_toolchange_rules_update(getattr(op, "toolchange_rules", None), payload.get("toolchange_rules"))
+        apply_predefined_position_update(op, payload, "toolchange_position")
+        self._save_current_program()
+
+    def onUpdatePositionAt(self, index: int, payload):
+        payload = self._to_py(payload) or {}
+        op = self._get_current_op(index)
+        if op is None:
+            return
+        apply_operation_update(op, payload)
+        apply_position_details_update(getattr(op, "position_details", None), payload.get("position_details"))
         self._save_current_program()
 
     def onUpdateFacing(self, index: int, payload):
@@ -817,8 +829,8 @@ class ConversationalQml(QQuickWidget):
     def onTeachX(self, index: int):
         # TODO: read live X from machine and push to UI
         # op = self._get_current_op(index)
-        # if op and hasattr(op, "toolchange_rules"):
-        #     x = getattr(op.toolchange_rules, "x_pos", 0.0)
+        # if op and hasattr(op, "position_details"):
+        #     x = getattr(op.position_details, "x_pos", 0.0)
         #     # You can send it back to QML by re-emitting receiveDetailsData with updated dict,
         #     # or call a small method on the details item if you keep a reference.
         pass

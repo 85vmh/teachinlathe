@@ -111,6 +111,8 @@ class ProgramListModel(QAbstractListModel):
         if op_type == "changeTool":
             tool_no = getattr(op, "tool_no", None)
             return f"Tool Change (T{tool_no})" if tool_no is not None else "Tool Change"
+        if op_type == "positionAt":
+            return "Position At"
         if op_type == "facing":
             return "Facing"
         if op_type == "defineProfile":

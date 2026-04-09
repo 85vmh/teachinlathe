@@ -50,6 +50,7 @@ Item {
     signal detailsRequested(int index)
 
     signal updateToolChange(int index, var payload)
+    signal updatePositionAt(int index, var payload)
 
     signal updateDefineProfile(int index, var payload)
 
@@ -249,6 +250,8 @@ Item {
             detailsLoader.source = ""
         } else if (data.type === "changeTool") {
             detailsLoader.source = "ToolChangeDetailsView.qml"
+        } else if (data.type === "positionAt") {
+            detailsLoader.source = "PositionAtDetailsView.qml"
         } else if (data.type === "facing") {
             detailsLoader.source = "FacingDetailsView.qml"
         } else if (data.type === "knurling") {
@@ -608,6 +611,8 @@ Item {
                         }
                         if (t === "changeTool" && operationEditor.updateToolChange)
                             operationEditor.updateToolChange(updated.index, updated.payload)
+                        else if (t === "positionAt" && operationEditor.updatePositionAt)
+                            operationEditor.updatePositionAt(updated.index, updated.payload)
                         else if (t === "defineProfile" && operationEditor.updateDefineProfile)
                             operationEditor.updateDefineProfile(updated.index, updated.payload)
                         else if (t === "facing" && operationEditor.updateFacing)
