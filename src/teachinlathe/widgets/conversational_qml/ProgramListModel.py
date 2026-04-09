@@ -3,6 +3,8 @@ from datetime import datetime
 
 from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, pyqtSlot
 
+from teachinlathe.date_utils import format_recent_datetime_string
+
 class ProgramListModel(QAbstractListModel):
     ProgramNameRole = Qt.UserRole + 1
     CreatedDateRole = Qt.UserRole + 2
@@ -33,9 +35,9 @@ class ProgramListModel(QAbstractListModel):
         if role == self.ProgramIdRole:
             return program.id
         if role == self.CreatedDateRole:
-            return program.header.created_date
+            return format_recent_datetime_string(program.header.created_date)
         if role == self.LastEditDateRole:
-            return program.header.last_edit
+            return format_recent_datetime_string(program.header.last_edit)
         if role == self.ProgramOperationsRole:
             return self._operations_summary(program)
         return QVariant()

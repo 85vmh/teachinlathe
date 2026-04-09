@@ -1,12 +1,12 @@
 import os
 import shutil
-from datetime import datetime, timedelta
-
 from PyQt5.QtCore import (
     QFileSystemWatcher, QObject, QThread,
     pyqtProperty, pyqtSignal, pyqtSlot,
 )
 from PyQt5.QtWidgets import QMessageBox
+
+from teachinlathe.date_utils import format_recent_timestamp
 
 from .data_types import FileSystemEntry, FileSystemLocation, LocationType
 from .usb_monitor import UsbDriveMonitor
@@ -62,18 +62,7 @@ def _format_size(entry: FileSystemEntry) -> str:
 def _format_modified(entry: FileSystemEntry) -> str:
     if entry.is_up or entry.modified_timestamp == 0.0:
         return ""
-    try:
-        dt = datetime.fromtimestamp(entry.modified_timestamp)
-        delta = datetime.now() - dt
-        if delta < timedelta(hours=24):
-            return dt.strftime("%H:%M:%S")
-        if delta < timedelta(days=7):
-            return dt.strftime("%A")
-        if delta < timedelta(days=30):
-            return dt.strftime("%-d %B")
-        return dt.strftime("%-d %b, %Y")
-    except Exception:
-        return ""
+    return format_recent_timestamp(entry.modified_timestamp)
 
 
 class FileSystemViewModel(QObject):

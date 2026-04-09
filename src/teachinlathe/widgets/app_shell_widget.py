@@ -63,15 +63,16 @@ class AppShellWidget(QWidget):
         self.title_bar.setStyleSheet(
             'QFrame#appShellTitleBar { background: #f5f7fb; border-bottom: 1px solid #d6dce7; }'
             'QLabel#appShellTitle { color: #1e2430; font: 700 17pt "Noto Sans"; }'
-            'QPushButton#appShellActionButton { background: #2d7d46; color: white; border: 1px solid #3fb950; padding: 8px 14px; font: 12pt "Noto Sans"; border-radius: 6px; }'
+            'QPushButton#appShellActionButton { background: #2d7d46; color: white; border: 1px solid #3fb950; padding: 8px 18px; min-height: 40px; font: 12pt "Noto Sans"; border-radius: 6px; }'
             'QPushButton#appShellActionButton:hover { background: #25673a; }'
             'QPushButton#appShellActionButton:checked { background: #7a5a12; border-color: #d7ba7d; }'
             'QPushButton#appShellActionButton:hover:checked { background: #684b0f; }'
             'QPushButton#appShellActionButton:disabled { color: #d9e7de; background: #8ea99a; border-color: #8ea99a; }'
-            'QPushButton#appShellBackButton { background: #eef3fb; color: #1e2430; border: 1px solid #c5d0df; padding: 7px 11px; font: 11pt "Noto Sans"; border-radius: 6px; min-width: 0px; }'
+            'QPushButton#appShellBackButton { background: #eef3fb; color: #1e2430; border: 1px solid #c5d0df; padding: 6px 14px; min-height: 40px; font: 11pt "Noto Sans"; border-radius: 6px; min-width: 0px; }'
             'QPushButton#appShellBackButton:hover { background: #e5edf9; }'
             'QPushButton#appShellBackButton:disabled { color: #8c97a8; background: #f3f5f8; border-color: #d5dbe4; }'
         )
+        self.title_bar.setMinimumHeight(60)
         title_layout = QHBoxLayout(self.title_bar)
         title_layout.setContentsMargins(20, 10, 20, 10)
         title_layout.setSpacing(12)
