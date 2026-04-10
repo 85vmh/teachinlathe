@@ -54,6 +54,18 @@ class CutToward(str, Enum):
     EXTERIOR = "exterior"
 
 
+class ProfilingType(str, Enum):
+    OD = "od"
+    ID = "id"
+
+
+class PassType(str, Enum):
+    AXIAL = "axial"
+    RADIAL = "radial"
+    DIAGONAL_INTERIOR = "diagonal_interior"
+    DIAGONAL_EXTERIOR = "diagonal_exterior"
+
+
 # ------------------------------ Core header ----------------------------------
 
 @dataclass
@@ -619,6 +631,58 @@ class ProfilingOptions:
         }
 
 
+@dataclass
+class ProfileRoughingStrategy:
+    profiling_type: ProfilingType
+    pass_type: PassType
+
+    _OD_PASS_TYPES = {PassType.AXIAL, PassType.RADIAL}
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "ProfileRoughingStrategy":
+        pt_raw = str(data.get("profiling_type", "od")).lower()
+        try:
+            profiling_type = ProfilingType(pt_raw)
+        except ValueError:
+            profiling_type = ProfilingType.OD
+
+        pp_raw = str(data.get("pass_type", "axial")).lower()
+        try:
+            pass_type = PassType(pp_raw)
+        except ValueError:
+            pass_type = PassType.AXIAL
+
+        if profiling_type == ProfilingType.OD and pass_type not in {PassType.AXIAL, PassType.RADIAL}:
+            pass_type = PassType.AXIAL
+
+        return ProfileRoughingStrategy(profiling_type=profiling_type, pass_type=pass_type)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "profiling_type": self.profiling_type.value,
+            "pass_type": self.pass_type.value,
+        }
+
+
+@dataclass
+class StockToLeave:
+    stockToLeaveX: float
+    stockToLeaveZ: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "StockToLeave":
+        return StockToLeave(
+            stockToLeaveX=float(data.get("stock_to_leave_x", 0.0)),
+            stockToLeaveZ=float(data.get("stock_to_leave_z", 0.0)),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "stock_to_leave_x": float(self.stockToLeaveX),
+            "stock_to_leave_z": float(self.stockToLeaveZ),
+        }
+
+
 # ------------------------------- Facing --------------------------------------
 
 @dataclass
@@ -940,6 +1004,51 @@ class ProfileBoring(TurnableOperation):
         return base
 
 
+# ------------------------------ Profile Roughing -----------------------------
+
+@dataclass
+class ProfileRoughing(TurnableOperation):
+    cuttingParameters: CuttingParameters
+    profilingParameters: ProfilingParameters
+    profileRoughingStrategy: ProfileRoughingStrategy
+    stockToLeave: StockToLeave
+    m1Parameters: M1Parameters
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "ProfileRoughing":
+        spindle_parameters = TurnableOperation._parse_spindle(data)
+        cutting_parameters = CuttingParameters.from_dict(data.get("cutting_parameters", {}))
+        profiling_parameters = ProfilingParameters.from_dict(data.get("profiling_parameters", {}))
+        profile_roughing_strategy = ProfileRoughingStrategy.from_dict(data.get("profile_roughing_strategy", {}))
+        stock_to_leave = StockToLeave.from_dict(data.get("stock_to_leave", {}))
+        m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
+
+        return cls(
+            order=int(data["order"]),
+            type=data["type"],
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            spindleParameters=spindle_parameters,
+            cuttingParameters=cutting_parameters,
+            profilingParameters=profiling_parameters,
+            profileRoughingStrategy=profile_roughing_strategy,
+            stockToLeave=stock_to_leave,
+            m1Parameters=m1_parameters,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        self._add_spindle_to(base)
+        base.update({
+            "cutting_parameters": self.cuttingParameters.to_dict(),
+            "profiling_parameters": self.profilingParameters.to_dict(),
+            "profile_roughing_strategy": self.profileRoughingStrategy.to_dict(),
+            "stock_to_leave": self.stockToLeave.to_dict(),
+            "m1_parameters": self.m1Parameters.to_dict(),
+        })
+        return base
+
+
 # ------------------------------- Threading -----------------------------------
 
 
@@ -1202,6 +1311,7 @@ operation_types: Dict[str, Type[Operation]] = {
     "profiling": Profiling,
     "customProfiling": Profiling,
     "profileBoring": ProfileBoring,
+    "profileRoughing": ProfileRoughing,
     "threading": Threading,
     "drilling": Drilling,
     "tapping": Tapping,
@@ -1217,6 +1327,7 @@ display_names: Dict[str, str] = {
     "profiling": "Profiling",
     "customProfiling": "Custom Profiling",
     "profileBoring": "Profile Boring",
+    "profileRoughing": "Profile Roughing",
     "threading": "Threading",
     "drilling": "Drilling",
     "tapping": "Tapping",

@@ -11,7 +11,7 @@ def build_details_payload(obj):
     return obj.to_dict() if hasattr(obj, "to_dict") else None
 
 
-def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, strategy=None):
+def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, strategy=None, profiling_type=None):
     op_type_value = (op_type or "").strip()
     if op_type_value == "changeTool":
         return f"Tool Change (T{tool_no})" if tool_no is not None else "Tool Change"
@@ -34,6 +34,10 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
         return f"{prefix}Cut Profile" if prefix else "Cut Profile"
     if op_type_value == "customProfiling":
         return f"Custom Profiling P{profile_id}" if profile_id is not None else "Custom Profiling"
+    if op_type_value == "profileRoughing":
+        pt = str(profiling_type or "od").lower()
+        prefix = "OD" if pt == "od" else "ID"
+        return f"{prefix} Profile Roughing (P{profile_id})" if profile_id is not None else f"{prefix} Profile Roughing"
     if op_type_value == "threading":
         return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"
     if op_type_value == "drilling":
@@ -61,8 +65,12 @@ def build_operations_model(program):
         if profile_id is None:
             profile_id = getattr(op, "profile_id", None)
         strategy = getattr(getattr(op, "profilingOptions", None), "strategy", None)
+        profiling_type = getattr(getattr(op, "profileRoughingStrategy", None), "profiling_type", None)
+        if profiling_type is not None and hasattr(profiling_type, "value"):
+            profiling_type = profiling_type.value
         item["display_type"] = display_name_for_op(
-            item["type"], tool_no=tool_no, pitch=pitch, profile_id=profile_id, strategy=strategy
+            item["type"], tool_no=tool_no, pitch=pitch, profile_id=profile_id,
+            strategy=strategy, profiling_type=profiling_type,
         )
         out.append(item)
     return out

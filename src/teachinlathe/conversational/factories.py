@@ -23,13 +23,18 @@ from teachinlathe.conversational.data_types import (
     PredefinedPosition,
     Parting,
     PartingParameters,
+    PassType,
     ProfileBoring,
+    ProfileRoughing,
+    ProfileRoughingStrategy,
     Profiling,
     ProfilingOptions,
     ProfilingParameters,
+    ProfilingType,
     Program,
     RoughingMovement,
     RoughingStrategy,
+    StockToLeave,
     SpindleMode,
     SpindleParameters,
     StartPoint,
@@ -110,6 +115,19 @@ def make_default_operation(op_type: str, order: int = 1):
             ),
             roughingStrategy=RoughingStrategy(movement=RoughingMovement.AXIALLY.value, cut_toward=CutToward.INTERIOR.value),
             m1Parameters=M1Parameters(include_m1=True, inspect_position=PredefinedPosition.G28, stop_spindle=False),
+        )
+    if op_type == "profileRoughing":
+        return ProfileRoughing(
+            order=order, type=op_type, generate_gcode=True, is_optional_block=False,
+            spindleParameters=spindle_rpm,
+            cuttingParameters=CuttingParameters(feedRate=0.1, doc=0.5, retract=1.0),
+            profilingParameters=ProfilingParameters(profile_id=1, xStart=0.0, zStart=0.0),
+            profileRoughingStrategy=ProfileRoughingStrategy(
+                profiling_type=ProfilingType.OD,
+                pass_type=PassType.AXIAL,
+            ),
+            stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
+            m1Parameters=M1Parameters(include_m1=False, inspect_position=PredefinedPosition.G28, stop_spindle=False),
         )
     if op_type == "threading":
         return Threading(

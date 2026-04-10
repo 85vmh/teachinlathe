@@ -64,6 +64,10 @@ Item {
 
     signal updateProfileBoring(int index, var payload)
 
+    signal updateProfileRoughing(int index, var payload)
+
+    signal addProfileContourRequested(int index)
+
     signal updateDrilling(int index, var payload)
 
     signal updateThreading(int index, var payload)
@@ -262,6 +266,8 @@ Item {
             detailsLoader.source = "CustomProfilingDetailsView.qml"
         } else if (data.type === "profileBoring") {
             detailsLoader.source = "ProfileBoringDetailsView.qml"
+        } else if (data.type === "profileRoughing") {
+            detailsLoader.source = "ProfileRoughingDetailsView.qml"
         } else if (data.type === "defineProfile") {
             detailsLoader.source = "define_profile/DefineProfileDetailsView.qml"
         } else if (data.type === "drilling") {
@@ -625,6 +631,8 @@ Item {
                             operationEditor.updateCustomProfiling(updated.index, updated.payload)
                         else if (t === "profileBoring" && operationEditor.updateProfileBoring)
                             operationEditor.updateProfileBoring(updated.index, updated.payload)
+                        else if (t === "profileRoughing" && operationEditor.updateProfileRoughing)
+                            operationEditor.updateProfileRoughing(updated.index, updated.payload)
                         else if (t === "drilling" && operationEditor.updateDrilling)
                             operationEditor.updateDrilling(updated.index, updated.payload)
                         else if (t === "threading")
@@ -652,6 +660,11 @@ Item {
                     function onAddFinishRequested(i) {
                         if (operationEditor.addProfilingFinishRequested)
                             operationEditor.addProfilingFinishRequested(i)
+                    }
+
+                    function onAddProfileContourRequested(i) {
+                        if (operationEditor.addProfileContourRequested)
+                            operationEditor.addProfileContourRequested(i)
                     }
                 }
             }

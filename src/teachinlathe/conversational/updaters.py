@@ -2,8 +2,10 @@ from teachinlathe.conversational.data_types import (
     BlendType,
     CoordinateType,
     MoveSequence,
+    PassType,
     PredefinedPosition,
     ProfilePrimitive,
+    ProfilingType,
     SpindleMode,
     Strategy,
     ThreadLocation,
@@ -153,6 +155,30 @@ def apply_roughing_strategy_update(strategy, payload):
         return
     _set_attr_if_present(strategy, payload, "movement", coerce=lambda v: str(v).lower())
     _set_attr_if_present(strategy, payload, "cut_toward", coerce=lambda v: str(v).lower())
+
+
+def apply_profile_roughing_strategy_update(strategy, payload):
+    if strategy is None or not isinstance(payload, dict):
+        return
+    if "profiling_type" in payload and payload["profiling_type"] is not None:
+        try:
+            strategy.profiling_type = _coerce_enum(payload["profiling_type"], ProfilingType, lambda v: str(v).lower())
+        except Exception:
+            pass
+    if "pass_type" in payload and payload["pass_type"] is not None:
+        try:
+            strategy.pass_type = _coerce_enum(payload["pass_type"], PassType, lambda v: str(v).lower())
+        except Exception:
+            pass
+    if strategy.profiling_type == ProfilingType.OD and strategy.pass_type not in {PassType.AXIAL, PassType.RADIAL}:
+        strategy.pass_type = PassType.AXIAL
+
+
+def apply_stock_to_leave_update(stock, payload):
+    if stock is None or not isinstance(payload, dict):
+        return
+    _set_attr_if_present(stock, payload, "stock_to_leave_x", attr="stockToLeaveX", coerce=float)
+    _set_attr_if_present(stock, payload, "stock_to_leave_z", attr="stockToLeaveZ", coerce=float)
 
 
 def apply_edge_break_update(edge_break, payload):

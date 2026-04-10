@@ -3,7 +3,7 @@
     "header": {
         "name": "Duplicated Program",
         "created_date": "2026-03-30 11:20:44",
-        "last_edit": "2026-03-30 11:21:07",
+        "last_edit": "2026-04-09 23:51:48",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -17,18 +17,13 @@
         {
             "order": 1,
             "type": "changeTool",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "tool_no": 6,
             "tool_orientation": 2,
             "back_angle": 95,
             "front_angle": 80,
-            "toolchange_rules": {
-                "x_pos": 50.0,
-                "z_pos": -20.0,
-                "coordinate_type": "relative",
-                "move_sequence": "both"
-            }
+            "toolchange_position": "G28"
         },
         {
             "order": 2,
@@ -69,17 +64,12 @@
             "tool_orientation": 1,
             "back_angle": 0,
             "front_angle": 0,
-            "toolchange_rules": {
-                "x_pos": 0.0,
-                "z_pos": 0.0,
-                "coordinate_type": "relative",
-                "move_sequence": "xz"
-            }
+            "toolchange_position": "G28"
         },
         {
             "order": 4,
             "type": "defineProfile",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "profile_id": 1,
             "profile_primitives": [
@@ -97,7 +87,7 @@
                     "blend": {
                         "type": "fillet",
                         "chamfer_width": 0.0,
-                        "fillet_radius": 5.0
+                        "fillet_radius": 3.0
                     }
                 },
                 {
@@ -126,7 +116,7 @@
                     "primitive_id": 5,
                     "type": "lineTo",
                     "x_end": 15.0,
-                    "z_end": -35.0,
+                    "z_end": -38.0,
                     "blend": {
                         "type": "none",
                         "chamfer_width": 0.0,
@@ -138,7 +128,7 @@
         {
             "order": 5,
             "type": "profileBoring",
-            "generate_gcode": true,
+            "generate_gcode": false,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": -1,
@@ -169,7 +159,7 @@
                 "cut_toward": "interior"
             },
             "m1_parameters": {
-                "include_m1": true,
+                "include_m1": false,
                 "inspect_position": "G28",
                 "stop_spindle": false
             }
@@ -177,7 +167,7 @@
         {
             "order": 6,
             "type": "defineProfile",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "profile_id": 5,
             "profile_primitives": [
@@ -251,7 +241,7 @@
         {
             "order": 7,
             "type": "customProfiling",
-            "generate_gcode": false,
+            "generate_gcode": true,
             "is_optional_block": false,
             "spindle_parameters": {
                 "direction": -1,
@@ -315,12 +305,7 @@
             "tool_orientation": 1,
             "back_angle": 0,
             "front_angle": 0,
-            "toolchange_rules": {
-                "x_pos": 0.0,
-                "z_pos": 0.0,
-                "coordinate_type": "absolute",
-                "move_sequence": "xz"
-            }
+            "toolchange_position": "G28"
         },
         {
             "order": 10,
@@ -331,12 +316,7 @@
             "tool_orientation": 6,
             "back_angle": 95,
             "front_angle": 80,
-            "toolchange_rules": {
-                "x_pos": 52.0,
-                "z_pos": 200.0,
-                "coordinate_type": "absolute",
-                "move_sequence": "both"
-            }
+            "toolchange_position": "G28"
         },
         {
             "order": 11,
@@ -374,12 +354,7 @@
             "tool_orientation": 6,
             "back_angle": 95,
             "front_angle": 80,
-            "toolchange_rules": {
-                "x_pos": 200.0,
-                "z_pos": 200.0,
-                "coordinate_type": "absolute",
-                "move_sequence": "both"
-            }
+            "toolchange_position": "G28"
         },
         {
             "order": 13,
