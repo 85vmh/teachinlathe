@@ -11,37 +11,33 @@ Rectangle {
     border.width: 1
 
     RowLayout {
-        anchors.fill: parent
-        anchors.margins: 20
-        spacing: 16
+        anchors.centerIn: parent
+        spacing: 20
 
-        ProgramButton {
-            text: actions ? actions.startAction.text : "Start Program"
-            enabled: actions ? actions.startAction.enabled : false
-            active: actions ? actions.startAction.active : false
-            onClicked: actions.triggerStart()
-        }
-
-        ProgramButton {
-            text: actions ? actions.stopAction.text : "Stop Program"
+        // ── Cycle Abort ───────────────────────────────────────────────
+        MachineButton {
+            text: "Cycle\nAbort"
             enabled: actions ? actions.stopAction.enabled : false
-            active: actions ? actions.stopAction.active : false
-            accentColor: "#7a2d2d"
-            borderColor: actions && actions.stopAction.active ? "#ff7b72" : "#d16969"
-            onClicked: actions.triggerStop()
+            active: false
+            centerColor:       "#6a0000"
+            midColor:          "#c62828"
+            rimColor:          "#ef9a9a"
+            activeCenterColor: "#c62828"
+            activeRimColor:    "#ef9a9a"
+            onClicked: if (actions) actions.triggerStop()
         }
 
-        ProgramButton {
-            text: actions ? actions.pauseResumeAction.text : "Pause Program"
-            enabled: actions ? actions.pauseResumeAction.enabled : false
-            active: actions ? actions.pauseResumeAction.active : false
-            accentColor: actions && actions.pauseResumeAction.active ? "#946200" : "#6b5d12"
-            borderColor: "#d7ba7d"
-            onClicked: actions.triggerPauseResume()
-        }
-
-        Item {
-            Layout.fillWidth: true
+        // ── Cycle Start / Pause / Resume ──────────────────────────────
+        MachineButton {
+            text:    actions ? actions.cycleStartAction.text    : "Cycle\nStart"
+            enabled: actions ? actions.cycleStartAction.enabled : false
+            active:  actions ? actions.cycleStartAction.active  : false
+            centerColor:       "#1a5e20"
+            midColor:          "#2e7d32"
+            rimColor:          "#a5d6a7"
+            activeCenterColor: "#2e7d32"
+            activeRimColor:    "#81c784"
+            onClicked: if (actions) actions.triggerCycleStart()
         }
     }
 }

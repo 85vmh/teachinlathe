@@ -80,6 +80,7 @@ class ProgramsActionSource(QObject):
         self._start = ProgramButtonState('Start Program', self)
         self._stop = ProgramButtonState('Stop Program', self)
         self._pause_resume = ProgramButtonState('Pause Program', self)
+        self._cycle_start_combined = ProgramButtonState('Cycle\nStart', self)
         self._optional_stop = ProgramButtonState('Break on M1', self)
         self._block_delete = ProgramButtonState('Skip "/" Blocks', self)
         self._mdi = ProgramButtonState('Run MDI', self)
@@ -99,6 +100,10 @@ class ProgramsActionSource(QObject):
     @pyqtProperty(QObject, constant=True)
     def pauseResumeAction(self):
         return self._pause_resume
+
+    @pyqtProperty(QObject, constant=True)
+    def cycleStartAction(self):
+        return self._cycle_start_combined
 
     @pyqtProperty(QObject, constant=True)
     def optionalStopAction(self):
@@ -168,6 +173,19 @@ class ProgramsActionSource(QObject):
             checked=pause_active,
             tooltip=pause_tooltip,
         )
+
+        # Combined Cycle Start / Pause / Resume action.
+        # pauseResume takes priority: once a program is active (running or paused)
+        # the button only ever shows Pause or Resume, never Cycle Start.
+        if self._pause_resume.enabled and self._pause_resume.active:
+            cycle_text, cycle_enabled, cycle_active = 'Resume', True, False
+        elif self._pause_resume.enabled:
+            cycle_text, cycle_enabled, cycle_active = 'Pause', True, True
+        elif self._start.enabled:
+            cycle_text, cycle_enabled, cycle_active = 'Cycle\nStart', True, False
+        else:
+            cycle_text, cycle_enabled, cycle_active = 'Cycle\nStart', False, False
+        self._cycle_start_combined.update(text=cycle_text, enabled=cycle_enabled, active=cycle_active)
 
         optional_enabled, optional_tooltip = self._optional_stop_state(stat)
         optional_checked = bool(_channel_value('optional_stop', getattr(stat, 'optional_stop', False)))
@@ -269,6 +287,13 @@ class ProgramsActionSource(QObject):
         else:
             program_actions.pause()
         self.refresh()
+
+    @pyqtSlot()
+    def triggerCycleStart(self):
+        if self._start.enabled:
+            self.triggerStart()
+        elif self._pause_resume.enabled:
+            self.triggerPauseResume()
 
     @pyqtSlot(bool)
     def setOptionalStopEnabled(self, enabled):
