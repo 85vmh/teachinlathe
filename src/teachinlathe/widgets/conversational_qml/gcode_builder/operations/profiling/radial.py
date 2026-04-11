@@ -23,54 +23,54 @@ from .geometry import find_profile_x_at_z
 from .context import RoughingContext
 
 
-def emit_radial_roughing(lines: list, ctx: RoughingContext, path: list, z_cut_deepest: float) -> None:
-    pfx = ctx.optional_prefix
+def emit_radial_roughing(lines: list, context: RoughingContext, path: list, z_cut_deepest: float) -> None:
+    prefix = context.optional_prefix
 
-    if z_cut_deepest >= ctx.z_start - 1e-9:
+    if z_cut_deepest >= context.z_start - 1e-9:
         lines.append("( ProfileRoughing radial: nothing to cut – check z_start vs profile )")
         return
 
-    pass_count = max(1, math.ceil((ctx.z_start - z_cut_deepest) / ctx.doc))
+    pass_count = max(1, math.ceil((context.z_start - z_cut_deepest) / context.doc))
 
-    lines.append(f"{pfx}G0 X{fmt(ctx.x_safe)} Z{fmt(ctx.z_start)}")
+    lines.append(f"{prefix}G0 X{fmt(context.x_safe)} Z{fmt(context.z_start)}")
 
     for n in range(pass_count):
-        cut_z = ctx.z_start - (n + 1) * ctx.doc
+        cut_z = context.z_start - (n + 1) * context.doc
         if cut_z < z_cut_deepest:
             cut_z = z_cut_deepest
 
         cut_x = find_profile_x_at_z(path, cut_z)
 
-        if ctx.x_direction < 0:
+        if context.x_direction < 0:
             # OD: tool approaches from x_safe (large X), cuts inward to cut_x.
             # cut_x is the offset-profile boundary (profile_x + stock_x).
-            if cut_x >= ctx.x_start - 1e-9:
+            if cut_x >= context.x_start - 1e-9:
                 continue  # offset profile flush with x_start, nothing to remove
-            entry_x = ctx.x_start - ctx.x_direction * ctx.retract
-            entry_z = cut_z + ctx.retract
-            exit_x = cut_x - ctx.x_direction * ctx.retract
-            exit_z = cut_z + ctx.retract
-            lines.append(f"{pfx}G0 Z{fmt(entry_z)}")
-            lines.append(f"{pfx}G0 X{fmt(entry_x)}")
-            lines.append(f"{pfx}G0 X{fmt(ctx.x_start)} Z{fmt(cut_z)}")
-            lines.append(f"{pfx}G1 X{fmt(cut_x)}")
-            lines.append(f"{pfx}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
-            lines.append(f"{pfx}G0 X{fmt(ctx.x_safe)}")
+            entry_x = context.x_start - context.x_direction * context.retract
+            entry_z = cut_z + context.retract
+            exit_x = cut_x - context.x_direction * context.retract
+            exit_z = cut_z + context.retract
+            lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
+            lines.append(f"{prefix}G0 X{fmt(entry_x)}")
+            lines.append(f"{prefix}G0 X{fmt(context.x_start)} Z{fmt(cut_z)}")
+            lines.append(f"{prefix}G1 X{fmt(cut_x)}")
+            lines.append(f"{prefix}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
+            lines.append(f"{prefix}G0 X{fmt(context.x_safe)}")
         else:
             # ID: tool moves to x_start (bore entry), cuts outward to cut_x.
             # cut_x is the offset-profile boundary (profile_x - stock_x).
-            if cut_x <= ctx.x_start + 1e-9:
+            if cut_x <= context.x_start + 1e-9:
                 continue  # offset profile flush with x_start at this depth
-            entry_x = ctx.x_start - ctx.x_direction * ctx.retract
-            entry_z = cut_z + ctx.retract
-            exit_x = cut_x - ctx.x_direction * ctx.retract
-            exit_z = cut_z + ctx.retract
-            lines.append(f"{pfx}G0 Z{fmt(entry_z)}")
-            lines.append(f"{pfx}G0 X{fmt(entry_x)}")
-            lines.append(f"{pfx}G0 X{fmt(ctx.x_start)} Z{fmt(cut_z)}")
-            lines.append(f"{pfx}G1 X{fmt(cut_x)}")
-            lines.append(f"{pfx}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
-            lines.append(f"{pfx}G0 X{fmt(ctx.x_safe)}")
+            entry_x = context.x_start - context.x_direction * context.retract
+            entry_z = cut_z + context.retract
+            exit_x = cut_x - context.x_direction * context.retract
+            exit_z = cut_z + context.retract
+            lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
+            lines.append(f"{prefix}G0 X{fmt(entry_x)}")
+            lines.append(f"{prefix}G0 X{fmt(context.x_start)} Z{fmt(cut_z)}")
+            lines.append(f"{prefix}G1 X{fmt(cut_x)}")
+            lines.append(f"{prefix}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
+            lines.append(f"{prefix}G0 X{fmt(context.x_safe)}")
 
-    lines.append(f"{pfx}G0 X{fmt(ctx.x_safe)} Z{fmt(ctx.z_start)}")
+    lines.append(f"{prefix}G0 X{fmt(context.x_safe)} Z{fmt(context.z_start)}")
     lines.append("")

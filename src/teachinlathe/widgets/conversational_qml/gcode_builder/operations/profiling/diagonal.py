@@ -39,50 +39,50 @@ from .context import RoughingContext
 
 def emit_diagonal_roughing(
     lines: list,
-    ctx: RoughingContext,
+    context: RoughingContext,
     path: list,
     x_cut_limit: float,
     z_cut_deepest: float,
     pass_type: PassType,
 ) -> None:
-    pfx = ctx.optional_prefix
+    pfx = context.optional_prefix
 
-    max_span_x = abs(x_cut_limit - ctx.x_start)
-    max_span_z = abs(ctx.z_start - z_cut_deepest)
+    max_span_x = abs(x_cut_limit - context.x_start)
+    max_span_z = abs(context.z_start - z_cut_deepest)
     max_span = max(max_span_x, max_span_z)
     if max_span <= 1e-9:
         lines.append("( ProfileRoughing diagonal: nothing to cut – check x_start/profile/depth )")
         return
 
-    pass_count = max(1, math.ceil(max_span / ctx.doc))
-    start_z_clear = ctx.z_start + ctx.retract
+    pass_count = max(1, math.ceil(max_span / context.doc))
+    start_z_clear = context.z_start + context.retract
     last_points = None
 
-    lines.append(f"{pfx}G0 X{fmt(ctx.x_safe)} Z{fmt(start_z_clear)}")
+    lines.append(f"{pfx}G0 X{fmt(context.x_safe)} Z{fmt(start_z_clear)}")
 
     for n in range(pass_count):
-        step = min((n + 1) * ctx.doc, max_span)
+        step = min((n + 1) * context.doc, max_span)
 
         # ---- corner B: profile side at z_start ----
-        corner_b_x = ctx.x_start + ctx.x_direction * step
-        corner_b_z = ctx.z_start
+        corner_b_x = context.x_start + context.x_direction * step
+        corner_b_z = context.z_start
 
-        if ctx.x_direction * (corner_b_x - x_cut_limit) <= 0:
+        if context.x_direction * (corner_b_x - x_cut_limit) <= 0:
             # within radial limit — use geometric corner
             start_x, start_z = corner_b_x, corner_b_z
         else:
             # clipped by profile: ray from corner_B in direction (-x_dir, -1)
             hit = find_45deg_profile_intersection(
                 path, corner_b_x, corner_b_z,
-                float(-ctx.x_direction), -1.0,
+                float(-context.x_direction), -1.0,
             )
             if hit is None:
                 continue
             start_x, start_z = hit
 
         # ---- corner A: x_start side at depth ----
-        corner_a_x = ctx.x_start
-        corner_a_z = ctx.z_start - step
+        corner_a_x = context.x_start
+        corner_a_z = context.z_start - step
 
         if corner_a_z >= z_cut_deepest - 1e-9:
             # within axial limit — use geometric corner
@@ -91,14 +91,14 @@ def emit_diagonal_roughing(
             # clipped by profile: ray from corner_A in direction (x_dir, +1)
             hit = find_45deg_profile_intersection(
                 path, corner_a_x, corner_a_z,
-                float(ctx.x_direction), 1.0,
+                float(context.x_direction), 1.0,
             )
             if hit is None:
                 continue
             end_x, end_z = hit
 
         # sanity checks
-        if start_z > ctx.z_start + 1e-9 or end_z > ctx.z_start + 1e-9:
+        if start_z > context.z_start + 1e-9 or end_z > context.z_start + 1e-9:
             continue
 
         points = (round(start_x, 9), round(start_z, 9), round(end_x, 9), round(end_z, 9))
@@ -121,7 +121,7 @@ def emit_diagonal_roughing(
 
         normal_x = -dz / length
         normal_z = dx / length
-        safe_mid_x = ctx.x_safe
+        safe_mid_x = context.x_safe
         safe_mid_z = start_z_clear
         mid_x = (cut_start_x + cut_end_x) * 0.5
         mid_z = (cut_start_z + cut_end_z) * 0.5
@@ -130,8 +130,8 @@ def emit_diagonal_roughing(
             normal_x = -normal_x
             normal_z = -normal_z
 
-        offset_x = normal_x * ctx.retract
-        offset_z = normal_z * ctx.retract
+        offset_x = normal_x * context.retract
+        offset_z = normal_z * context.retract
         entry_x = cut_start_x + offset_x
         entry_z = cut_start_z + offset_z
         exit_x = cut_end_x + offset_x
@@ -143,7 +143,7 @@ def emit_diagonal_roughing(
         lines.append(f"{pfx}G1 X{fmt(cut_end_x)} Z{fmt(cut_end_z)}")
         lines.append(f"{pfx}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
         lines.append(f"{pfx}G0 X{fmt(entry_x)} Z{fmt(entry_z)}")
-        lines.append(f"{pfx}G0 X{fmt(ctx.x_safe)} Z{fmt(start_z_clear)}")
+        lines.append(f"{pfx}G0 X{fmt(context.x_safe)} Z{fmt(start_z_clear)}")
 
-    lines.append(f"{pfx}G0 X{fmt(ctx.x_safe)} Z{fmt(start_z_clear)}")
+    lines.append(f"{pfx}G0 X{fmt(context.x_safe)} Z{fmt(start_z_clear)}")
     lines.append("")
