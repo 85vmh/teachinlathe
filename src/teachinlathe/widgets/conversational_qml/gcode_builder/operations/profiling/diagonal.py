@@ -14,10 +14,11 @@ x_direction = +1 (ID) means corner_B moves toward larger  X (bore wall).
 
 Profile clipping
 ----------------
+The supplied path is already offset by stock-to-leave and clipped to X Start.
 When corner_B would pass x_limit:
-    ray direction = (-x_direction, -1)   → from corner_B toward the offset profile
+    ray direction = (-x_direction, -1)   → from corner_B toward the roughing profile
 When corner_A would pass z_cut_deepest:
-    ray direction = ( x_direction, +1)   → from corner_A toward the offset profile
+    ray direction = ( x_direction, +1)   → from corner_A toward the roughing profile
 
 Cut direction
 -------------
@@ -32,7 +33,7 @@ import math
 from teachinlathe.conversational.data_types import PassType
 
 from ...config import fmt
-from ..custom_cam.custom_profiling_geometry import find_45deg_profile_intersection
+from .geometry import find_45deg_profile_intersection
 from .context import RoughingContext
 
 
@@ -74,7 +75,6 @@ def emit_diagonal_roughing(
             hit = find_45deg_profile_intersection(
                 path, corner_b_x, corner_b_z,
                 float(-ctx.x_direction), -1.0,
-                ctx.geo_x_shift, ctx.geo_z_shift,
             )
             if hit is None:
                 continue
@@ -92,7 +92,6 @@ def emit_diagonal_roughing(
             hit = find_45deg_profile_intersection(
                 path, corner_a_x, corner_a_z,
                 float(ctx.x_direction), 1.0,
-                ctx.geo_x_shift, ctx.geo_z_shift,
             )
             if hit is None:
                 continue

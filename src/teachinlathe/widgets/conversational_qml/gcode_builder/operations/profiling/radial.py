@@ -2,9 +2,9 @@
 
 Strategy: step in Z one doc at a time, cut radially in X at each depth.
 
-Both OD and ID share the same pass-planning logic.  The profile X query uses
-BOTH geo_x_shift and geo_z_shift so the radial cut target is consistent with
-the offset profile used by axial passes and the contour pass.
+Both OD and ID share the same pass-planning logic. The supplied path is already
+offset by stock-to-leave and clipped to X Start, so all strategies use the same
+working profile.
 
   OD (x_direction=-1): tool sits at x_safe (large X / outside).  At each
       depth the tool feeds INWARD (decreasing X) to the offset-profile
@@ -19,7 +19,7 @@ the offset profile used by axial passes and the contour pass.
 import math
 
 from ...config import fmt
-from ..custom_cam.custom_profiling_geometry import find_profile_x_at_z
+from .geometry import find_profile_x_at_z
 from .context import RoughingContext
 
 
@@ -39,9 +39,7 @@ def emit_radial_roughing(lines: list, ctx: RoughingContext, path: list, z_cut_de
         if cut_z < z_cut_deepest:
             cut_z = z_cut_deepest
 
-        # Query the offset profile at this depth.
-        # geo_z_shift is applied here (fix vs. old boring radial which used z_shift=0).
-        cut_x = find_profile_x_at_z(path, cut_z, ctx.geo_x_shift, ctx.geo_z_shift)
+        cut_x = find_profile_x_at_z(path, cut_z)
 
         if ctx.x_direction < 0:
             # OD: tool approaches from x_safe (large X), cuts inward to cut_x.

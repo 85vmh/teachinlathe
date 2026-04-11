@@ -32,8 +32,6 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
         if profile_id is not None:
             return f"{prefix}Cut Profile (P:{profile_id})"
         return f"{prefix}Cut Profile" if prefix else "Cut Profile"
-    if op_type_value == "customProfiling":
-        return f"Custom Profiling P{profile_id}" if profile_id is not None else "Custom Profiling"
     if op_type_value == "profileRoughing":
         pt = str(profiling_type or "od").lower()
         prefix = "OD" if pt == "od" else "ID"

@@ -17,9 +17,9 @@ ID: x_safe = x_start - retract  (safe is toward bore centre / small X)
     x_direction = +1             (X increases toward profile)
     stock_x_sign = -1            (profile queries shift profile left to leave stock)
 
-The geometry query shifts (geo_x_shift, geo_z_shift) are applied consistently
-to ALL profile lookups — axial and radial alike — so every pass targets the
-same "offset profile" (profile translated by ±stock_x, +stock_z).
+ProfileRoughing builds one shared roughing path from geo_x_shift / geo_z_shift
+and clips it to X Start before dispatching to axial, radial, diagonal, and
+contour strategies.
 """
 
 from dataclasses import dataclass

@@ -41,19 +41,6 @@ class PredefinedPosition(str, Enum):
     G30 = "G30"
 
 
-class RoughingMovement(str, Enum):
-    AXIALLY = "axial"
-    RADIALLY = "radial"
-    DIAGONAL = "diagonal"
-    OFFSET = "offset"
-    EQUIDISTANT_OFFSET = "equidistant_offset"
-
-
-class CutToward(str, Enum):
-    INTERIOR = "interior"
-    EXTERIOR = "exterior"
-
-
 class ProfilingType(str, Enum):
     OD = "od"
     ID = "id"
@@ -574,28 +561,6 @@ class ProfilingParameters:
 
 
 @dataclass
-class RoughingStrategy:
-    movement: str   # "axial" | "radial" | "diagonal" | "offset"
-    cut_toward: str  # "interior" | "exterior"
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "RoughingStrategy":
-        movement = str(data.get("movement", "axial")).lower()
-        if movement not in ("axial", "radial", "diagonal", "offset", "equidistant_offset"):
-            movement = "axial"
-        cut_toward = str(data.get("cut_toward", "interior")).lower()
-        if cut_toward not in ("interior", "exterior"):
-            cut_toward = "interior"
-        return RoughingStrategy(movement=movement, cut_toward=cut_toward)
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "movement": self.movement,
-            "cut_toward": self.cut_toward,
-        }
-
-
-@dataclass
 class ProfilingOptions:
     strategy: Strategy
     stockToLeaveX: float
@@ -978,51 +943,6 @@ class Profiling(TurnableOperation):
         return base
 
 
-# ------------------------------ Profile Boring -------------------------------
-
-@dataclass
-class ProfileBoring(TurnableOperation):
-    cuttingParameters: CuttingParameters
-    profilingParameters: ProfilingParameters
-    profilingOptions: ProfilingOptions
-    roughingStrategy: RoughingStrategy
-    m1Parameters: M1Parameters
-
-    @classmethod
-    def from_dict(cls, data: dict) -> "ProfileBoring":
-        spindle_parameters = TurnableOperation._parse_spindle(data)
-        cutting_parameters = CuttingParameters.from_dict(data.get("cutting_parameters", {}))
-        profiling_parameters = ProfilingParameters.from_dict(data.get("profiling_parameters", {}))
-        profiling_options = ProfilingOptions.from_dict(data.get("profiling_options", {}))
-        roughing_strategy = RoughingStrategy.from_dict(data.get("roughing_strategy", {}))
-        m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
-
-        return cls(
-            order=int(data["order"]),
-            type=data["type"],
-            generate_gcode=bool(data.get("generate_gcode", True)),
-            is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle_parameters,
-            cuttingParameters=cutting_parameters,
-            profilingParameters=profiling_parameters,
-            profilingOptions=profiling_options,
-            roughingStrategy=roughing_strategy,
-            m1Parameters=m1_parameters,
-        )
-
-    def to_dict(self) -> Dict[str, Any]:
-        base = super().to_dict()
-        self._add_spindle_to(base)
-        base.update({
-            "cutting_parameters": self.cuttingParameters.to_dict(),
-            "profiling_parameters": self.profilingParameters.to_dict(),
-            "profiling_options": self.profilingOptions.to_dict(),
-            "roughing_strategy": self.roughingStrategy.to_dict(),
-            "m1_parameters": self.m1Parameters.to_dict(),
-        })
-        return base
-
-
 # ------------------------------ Profile Roughing -----------------------------
 
 @dataclass
@@ -1370,8 +1290,6 @@ operation_types: Dict[str, Type[Operation]] = {
     "knurling": Knurling,
     "defineProfile": DefineProfile,
     "profiling": Profiling,
-    "customProfiling": Profiling,
-    "profileBoring": ProfileBoring,
     "profileRoughing": ProfileRoughing,
     "profileContour": ProfileContour,
     "threading": Threading,
@@ -1387,8 +1305,6 @@ display_names: Dict[str, str] = {
     "knurling": "SinglePoint Knurling",
     "defineProfile": "Define Profile",
     "profiling": "Profiling",
-    "customProfiling": "Custom Profiling",
-    "profileBoring": "Profile Boring",
     "profileRoughing": "Profile Roughing",
     "profileContour": "Profile Contour",
     "threading": "Threading",
@@ -1399,38 +1315,6 @@ display_names: Dict[str, str] = {
 
 
 # -------------------- CAM config objects (built from JSON operation dicts) -------------------
-
-
-@dataclass(frozen=True)
-class ProfilingConfig:
-    x_start: float
-    z_start: float
-    doc: float
-    retract: float
-    feed_rate: float
-    stock_x: float
-    stock_z: float
-    finish_passes: int
-    spring_passes: int
-    strategy: Strategy
-    optional_prefix: str
-
-
-@dataclass(frozen=True)
-class BoringConfig:
-    x_start: float
-    z_start: float
-    doc: float
-    retract: float
-    feed_rate: float
-    stock_x: float
-    stock_z: float
-    finish_passes: int
-    spring_passes: int
-    strategy: Strategy
-    movement: RoughingMovement
-    cut_toward: CutToward
-    optional_prefix: str
 
 
 @dataclass(frozen=True)

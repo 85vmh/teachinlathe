@@ -517,6 +517,119 @@ def _angle_on_arc(angle, start_angle, end_angle, anticlockwise):
     return end_angle - 1e-9 <= angle <= start_angle + 1e-9
 
 
+def _arc_angle_progress(angle, start_angle, end_angle, anticlockwise):
+    angle = _normalize_angle(angle)
+    start_angle = _normalize_angle(start_angle)
+    end_angle = _normalize_angle(end_angle)
+
+    if anticlockwise:
+        if end_angle < start_angle:
+            end_angle += 2.0 * math.pi
+        if angle < start_angle:
+            angle += 2.0 * math.pi
+        return angle - start_angle
+
+    if start_angle < end_angle:
+        start_angle += 2.0 * math.pi
+    if angle > start_angle:
+        angle -= 2.0 * math.pi
+    return start_angle - angle
+
+
+def _line_x_intersection(sx, sz, ex, ez, target_x):
+    if abs(ex - sx) <= 1e-9:
+        return None
+    t = (target_x - sx) / (ex - sx)
+    if -1e-9 <= t <= 1.0 + 1e-9:
+        return target_x, sz + t * (ez - sz)
+    return None
+
+
+def _arc_x_intersection(sx, sz, ex, ez, cx, cz, anticlockwise, target_x):
+    radius = math.hypot(sx - cx, sz - cz)
+    dx = target_x - cx
+    if abs(dx) > radius + 1e-9:
+        return None
+
+    disc = max(0.0, radius * radius - dx * dx)
+    start_angle = math.atan2(sz - cz, sx - cx)
+    end_angle = math.atan2(ez - cz, ex - cx)
+    candidates = []
+    for z in (cz + math.sqrt(disc), cz - math.sqrt(disc)):
+        angle = math.atan2(z - cz, target_x - cx)
+        if _angle_on_arc(angle, start_angle, end_angle, anticlockwise):
+            candidates.append((_arc_angle_progress(angle, start_angle, end_angle, anticlockwise), target_x, z))
+
+    if not candidates:
+        return None
+    _, hit_x, hit_z = min(candidates, key=lambda item: item[0])
+    return hit_x, hit_z
+
+
+def build_shifted_path_clipped_to_x_boundary(path, offset_x, offset_z, x_boundary, keep_side):
+    """Return shifted path clipped to one side of a vertical X boundary."""
+    if not path:
+        return []
+
+    if keep_side not in ("lte", "gte"):
+        raise ValueError("keep_side must be 'lte' or 'gte'")
+
+    def is_inside(x):
+        if keep_side == "lte":
+            return x <= x_boundary + 1e-9
+        return x >= x_boundary - 1e-9
+
+    current_x = path[0].x + offset_x
+    current_z = path[0].z + offset_z
+    clipped = []
+
+    if is_inside(current_x):
+        clipped.append(StartPoint(current_x, current_z))
+
+    for element in path[1:]:
+        end_x = element.end_x + offset_x
+        end_z = element.end_z + offset_z
+        current_inside = is_inside(current_x)
+        end_inside = is_inside(end_x)
+
+        if isinstance(element, ToolpathLine):
+            hit = _line_x_intersection(current_x, current_z, end_x, end_z, x_boundary)
+            if not clipped:
+                if not current_inside and end_inside and hit:
+                    clipped.append(StartPoint(*hit))
+                    clipped.append(ToolpathLine(end_x, end_z))
+            elif end_inside:
+                clipped.append(ToolpathLine(end_x, end_z))
+            elif hit:
+                clipped.append(ToolpathLine(*hit))
+                break
+        else:
+            center_x = element.center_x + offset_x
+            center_z = element.center_z + offset_z
+            hit = _arc_x_intersection(
+                current_x,
+                current_z,
+                end_x,
+                end_z,
+                center_x,
+                center_z,
+                element.anticlockwise,
+                x_boundary,
+            )
+            if not clipped:
+                if not current_inside and end_inside and hit:
+                    clipped.append(StartPoint(*hit))
+                    clipped.append(ToolpathArc(end_x, end_z, center_x, center_z, element.anticlockwise))
+            elif end_inside:
+                clipped.append(ToolpathArc(end_x, end_z, center_x, center_z, element.anticlockwise))
+            elif hit:
+                clipped.append(ToolpathArc(hit[0], hit[1], center_x, center_z, element.anticlockwise))
+                break
+
+        current_x, current_z = end_x, end_z
+
+    return clipped
+
 def find_45deg_profile_intersection(path, start_x, start_z, dir_x, dir_z, x_shift=0.0, z_shift=0.0):
     """Return the first intersection between a 45-degree ray and the render path."""
     if not path:

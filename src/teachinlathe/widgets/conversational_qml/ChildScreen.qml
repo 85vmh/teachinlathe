@@ -60,10 +60,6 @@ Item {
 
     signal updateProfiling(int index, var payload)
 
-    signal updateCustomProfiling(int index, var payload)
-
-    signal updateProfileBoring(int index, var payload)
-
     signal updateProfileRoughing(int index, var payload)
 
     signal updateProfileContour(int index, var payload)
@@ -264,10 +260,6 @@ Item {
             detailsLoader.source = "KnurlingDetailsView.qml"
         } else if (data.type === "profiling") {
             detailsLoader.source = "ProfilingDetailsView.qml"
-        } else if (data.type === "customProfiling") {
-            detailsLoader.source = "CustomProfilingDetailsView.qml"
-        } else if (data.type === "profileBoring") {
-            detailsLoader.source = "ProfileBoringDetailsView.qml"
         } else if (data.type === "profileRoughing") {
             detailsLoader.source = "ProfileRoughingDetailsView.qml"
         } else if (data.type === "profileContour") {
@@ -631,10 +623,6 @@ Item {
                             operationEditor.updateKnurling(updated.index, updated.payload)
                         else if (t === "profiling" && operationEditor.updateProfiling)
                             operationEditor.updateProfiling(updated.index, updated.payload)
-                        else if (t === "customProfiling" && operationEditor.updateCustomProfiling)
-                            operationEditor.updateCustomProfiling(updated.index, updated.payload)
-                        else if (t === "profileBoring" && operationEditor.updateProfileBoring)
-                            operationEditor.updateProfileBoring(updated.index, updated.payload)
                         else if (t === "profileRoughing" && operationEditor.updateProfileRoughing)
                             operationEditor.updateProfileRoughing(updated.index, updated.payload)
                         else if (t === "profileContour" && operationEditor.updateProfileContour)

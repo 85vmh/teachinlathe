@@ -131,16 +131,6 @@ class ProgramListModel(QAbstractListModel):
             if profile_id is not None:
                 return f"{prefix}Cut Profile (P{profile_id})"
             return f"{prefix}Cut Profile" if prefix else "Cut Profile"
-        if op_type == "customProfiling":
-            profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
-            if profile_id is not None:
-                return f"Custom Profiling (P{profile_id})"
-            return "Custom Profiling"
-        if op_type == "profileBoring":
-            profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
-            if profile_id is not None:
-                return f"Profile Boring (P{profile_id})"
-            return "Profile Boring"
         if op_type == "profileRoughing":
             profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
             profiling_type = getattr(getattr(op, "profileRoughingStrategy", None), "profiling_type", None)

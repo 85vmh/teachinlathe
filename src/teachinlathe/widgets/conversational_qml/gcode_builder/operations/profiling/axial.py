@@ -11,14 +11,14 @@ sequence differs because:
       3-move approach (clear Z → approach X from inside → diagonal to z_start)
       is required to avoid colliding with the bore wall.
 
-Profile queries always use (ctx.geo_x_shift, ctx.geo_z_shift) so every pass
-targets the offset profile (original + stock translation) consistently.
+Profile queries use the roughing path supplied by ProfileRoughing. That path is
+already offset by stock-to-leave and clipped to X Start.
 """
 
 import math
 
 from ...config import fmt
-from ..custom_cam.custom_profiling_geometry import find_deepest_z_at_x_path
+from .geometry import find_deepest_z_at_x_path
 from .context import RoughingContext
 
 
@@ -34,7 +34,7 @@ def emit_axial_roughing(lines: list, ctx: RoughingContext, path: list) -> None:
     for n in range(pass_count):
         raw_x = ctx.x_start + ctx.x_direction * (n + 1) * ctx.doc
         cut_x = ctx.clamp_cut_x(raw_x)
-        cut_z = find_deepest_z_at_x_path(path, cut_x, ctx.geo_x_shift, ctx.geo_z_shift)
+        cut_z = find_deepest_z_at_x_path(path, cut_x)
         if cut_z > ctx.z_start + 1e-9:
             continue
         passes.append((cut_x, cut_z))

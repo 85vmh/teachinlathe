@@ -9,8 +9,9 @@ from teachinlathe.conversational.data_types import PassType, ProfileRoughingConf
 from ..helpers.m1 import emit_m1_block
 from ..helpers.spindle import build_spindle_gcode
 from ..helpers.utils import get_float
-from .custom_cam.custom_profiling_geometry import (
+from .profiling.geometry import (
     StartPoint,
+    build_shifted_path_clipped_to_x_boundary,
     build_profile_segments,
     build_render_path,
 )
@@ -77,6 +78,16 @@ def _profile_extents(segments):
     return x_min, x_max, z_min
 
 
+def _path_z_min(path):
+    z_vals = []
+    for element in path:
+        if isinstance(element, StartPoint):
+            z_vals.append(element.z)
+        else:
+            z_vals.append(element.end_z)
+    return min(z_vals) if z_vals else 0.0
+
+
 def generate_profile_roughing_gcode(op):
     if hasattr(op, "to_dict"):
         op = op.to_dict()
@@ -94,27 +105,40 @@ def generate_profile_roughing_gcode(op):
         lines.append("( ERROR: Profile Roughing -- no valid profile found )")
         return lines
 
-    x_profile_start = segments[0].x
-    x_min, x_max, z_min = _profile_extents(segments)
+    x_min, x_max, _ = _profile_extents(segments)
 
     if config.profiling_type == ProfilingType.OD:
         ctx = make_od_context(config, x_min)
+        keep_side = "lte"
     else:
         ctx = make_id_context(config, x_max)
+        keep_side = "gte"
 
-    # z_cut_deepest is used by radial and diagonal strategies
-    z_cut_deepest = z_min + config.stock_z
+    roughing_path = build_shifted_path_clipped_to_x_boundary(
+        path,
+        ctx.geo_x_shift,
+        ctx.geo_z_shift,
+        ctx.x_start,
+        keep_side,
+    )
+
+    if not roughing_path or not isinstance(roughing_path[0], StartPoint):
+        lines.append("( ERROR: Profile Roughing -- no valid roughing profile after stock/clipping )")
+        return lines
+
+    # z_cut_deepest is used by radial and diagonal strategies.
+    z_cut_deepest = _path_z_min(roughing_path)
 
     if config.pass_type == PassType.AXIAL:
-        emit_axial_roughing(lines, ctx, path)
+        emit_axial_roughing(lines, ctx, roughing_path)
 
     elif config.pass_type == PassType.RADIAL:
-        emit_radial_roughing(lines, ctx, path, z_cut_deepest)
+        emit_radial_roughing(lines, ctx, roughing_path, z_cut_deepest)
 
     elif config.pass_type in (PassType.DIAGONAL_INTERIOR, PassType.DIAGONAL_EXTERIOR):
-        emit_diagonal_roughing(lines, ctx, path, ctx.x_limit, z_cut_deepest, config.pass_type)
+        emit_diagonal_roughing(lines, ctx, roughing_path, ctx.x_limit, z_cut_deepest, config.pass_type)
 
-    emit_roughing_contour_pass(lines, ctx, path, x_profile_start)
+    emit_roughing_contour_pass(lines, ctx, roughing_path)
 
     lines.extend(emit_m1_block(m1_params, config.optional_prefix))
     return lines

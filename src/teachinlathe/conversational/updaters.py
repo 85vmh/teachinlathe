@@ -150,13 +150,6 @@ def apply_profiling_options_update(options, payload):
     _set_attr_if_present(options, payload, "finish_spring_passes", attr="finishSpringPasses", coerce=int)
 
 
-def apply_roughing_strategy_update(strategy, payload):
-    if strategy is None or not isinstance(payload, dict):
-        return
-    _set_attr_if_present(strategy, payload, "movement", coerce=lambda v: str(v).lower())
-    _set_attr_if_present(strategy, payload, "cut_toward", coerce=lambda v: str(v).lower())
-
-
 def apply_profile_roughing_strategy_update(strategy, payload):
     if strategy is None or not isinstance(payload, dict):
         return

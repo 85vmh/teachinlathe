@@ -5,7 +5,6 @@ from teachinlathe.conversational.data_types import (
     BlendType,
     ChangeTool,
     CoordinateType,
-    CutToward,
     CuttingParameters,
     Drilling,
     DrillingParameters,
@@ -24,7 +23,6 @@ from teachinlathe.conversational.data_types import (
     Parting,
     PartingParameters,
     PassType,
-    ProfileBoring,
     ProfileContour,
     ProfileContourStrategy,
     ProfileRoughing,
@@ -34,8 +32,6 @@ from teachinlathe.conversational.data_types import (
     ProfilingParameters,
     ProfilingType,
     Program,
-    RoughingMovement,
-    RoughingStrategy,
     StockToLeave,
     SpindleMode,
     SpindleParameters,
@@ -96,7 +92,7 @@ def make_default_operation(op_type: str, order: int = 1):
             geometryParameters=KnurlingGeometryParameters(zStart=0.0, zEnd=0.0, xStart=0.0),
             m1Parameters=M1Parameters(include_m1=True, inspect_position=PredefinedPosition.G28, stop_spindle=False),
         )
-    if op_type in ("profiling", "customProfiling"):
+    if op_type == "profiling":
         return Profiling(
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
             spindleParameters=spindle_rpm,
@@ -105,18 +101,6 @@ def make_default_operation(op_type: str, order: int = 1):
             profilingOptions=ProfilingOptions(
                 strategy=Strategy.ROUGH, stockToLeaveX=0.0, stockToLeaveZ=0.0, finishPasses=1, finishSpringPasses=0
             ),
-        )
-    if op_type == "profileBoring":
-        return ProfileBoring(
-            order=order, type=op_type, generate_gcode=True, is_optional_block=False,
-            spindleParameters=spindle_rpm,
-            cuttingParameters=CuttingParameters(feedRate=0.1, doc=0.5, retract=1.0),
-            profilingParameters=ProfilingParameters(profile_id=1, xStart=0.0, zStart=0.0),
-            profilingOptions=ProfilingOptions(
-                strategy=Strategy.ROUGH, stockToLeaveX=0.0, stockToLeaveZ=0.0, finishPasses=1, finishSpringPasses=0
-            ),
-            roughingStrategy=RoughingStrategy(movement=RoughingMovement.AXIALLY.value, cut_toward=CutToward.INTERIOR.value),
-            m1Parameters=M1Parameters(include_m1=True, inspect_position=PredefinedPosition.G28, stop_spindle=False),
         )
     if op_type == "profileRoughing":
         return ProfileRoughing(

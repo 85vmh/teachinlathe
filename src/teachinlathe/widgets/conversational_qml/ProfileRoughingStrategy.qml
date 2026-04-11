@@ -85,7 +85,7 @@ GroupBox {
 
             TabButton {
                 id: idTab
-                text: "Profile Boring (ID)"
+                text: "Profile Roughing (ID)"
                 font.pixelSize: 15
                 height: 40
                 background: Rectangle {

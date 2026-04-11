@@ -38,7 +38,6 @@ from teachinlathe.conversational.updaters import (
     apply_profiling_parameters_update,
     apply_predefined_position_update,
     apply_position_details_update,
-    apply_roughing_strategy_update,
     apply_stock_to_leave_update,
     apply_tapping_update,
     apply_threading_update,
@@ -275,10 +274,6 @@ class ConversationalQml(QQuickWidget):
                 item.updateKnurling.connect(self.onUpdateKnurling)
             if hasattr(item, "updateProfiling"):
                 item.updateProfiling.connect(self.onUpdateProfiling)
-            if hasattr(item, "updateCustomProfiling"):
-                item.updateCustomProfiling.connect(self.onUpdateCustomProfiling)
-            if hasattr(item, "updateProfileBoring"):
-                item.updateProfileBoring.connect(self.onUpdateProfileBoring)
             if hasattr(item, "updateProfileRoughing"):
                 item.updateProfileRoughing.connect(self.onUpdateProfileRoughing)
             if hasattr(item, "updateProfileContour"):
@@ -748,28 +743,6 @@ class ConversationalQml(QQuickWidget):
             self._save_current_program()
         except Exception as e:
             print("[knurling] update error:", e)
-
-    def onUpdateCustomProfiling(self, index: int, payload):
-        self.onUpdateProfiling(index, payload)
-
-    def onUpdateProfileBoring(self, index: int, payload):
-        """Profile Boring autosave."""
-        try:
-            p = self._to_py(payload) or {}
-            op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import ProfileBoring
-            if not isinstance(op, ProfileBoring):
-                return
-
-            apply_turnable_operation_update(op, p)
-            apply_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
-            apply_profiling_parameters_update(op.profilingParameters, p.get("profiling_parameters"))
-            apply_profiling_options_update(op.profilingOptions, p.get("profiling_options"))
-            apply_roughing_strategy_update(op.roughingStrategy, p.get("roughing_strategy"))
-            apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
-            self._save_current_program()
-        except Exception as e:
-            print("[profileBoring] update error:", e)
 
     def onUpdateProfileRoughing(self, index: int, payload):
         """Profile Roughing autosave."""

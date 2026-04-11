@@ -2,8 +2,9 @@ from teachinlathe.conversational.data_types import ProfileContourConfig, Profili
 
 from ..helpers.spindle import build_spindle_gcode
 from ..helpers.utils import get_float
-from .custom_cam.custom_profiling_geometry import (
+from .profiling.geometry import (
     StartPoint,
+    build_shifted_path_clipped_to_x_boundary,
     build_profile_segments,
     build_render_path,
 )
@@ -76,13 +77,26 @@ def generate_profile_contour_gcode(op):
         lines.append("( ERROR: Profile Contour -- no valid profile found )")
         return lines
 
-    x_profile_start = segments[0].x
     x_min, x_max = _profile_extents(segments)
 
     if config.profiling_type == ProfilingType.OD:
         ctx = make_od_context(config, x_min)
+        keep_side = "lte"
     else:
         ctx = make_id_context(config, x_max)
+        keep_side = "gte"
 
-    emit_roughing_contour_pass(lines, ctx, path, x_profile_start)
+    contour_path = build_shifted_path_clipped_to_x_boundary(
+        path,
+        ctx.geo_x_shift,
+        ctx.geo_z_shift,
+        ctx.x_start,
+        keep_side,
+    )
+
+    if not contour_path or not isinstance(contour_path[0], StartPoint):
+        lines.append("( ERROR: Profile Contour -- no valid contour profile after stock/clipping )")
+        return lines
+
+    emit_roughing_contour_pass(lines, ctx, contour_path)
     return lines
