@@ -48,7 +48,7 @@ def _resolve_profile_operation(profile_id, operations):
 
 def _build_operation_payload(op, program):
     payload = op.to_dict()
-    if op.type in ("customProfiling", "profileBoring"):
+    if op.type in ("customProfiling", "profileBoring", "profileRoughing", "profileContour"):
         profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)
         profile_op = _resolve_profile_operation(profile_id, program.operations)
         payload["_resolved_profile"] = profile_op.to_dict() if profile_op else {}

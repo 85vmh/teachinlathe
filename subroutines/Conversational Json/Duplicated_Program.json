@@ -149,13 +149,13 @@
             },
             "profiling_options": {
                 "strategy": "rough",
-                "stock_to_leave_x": 0.0,
-                "stock_to_leave_z": 0.0,
+                "radial": 0.0,
+                "axial": 0.0,
                 "finish_passes": 1,
                 "finish_spring_passes": 0
             },
             "roughing_strategy": {
-                "movement": "axially",
+                "movement": "axial",
                 "cut_toward": "interior"
             },
             "m1_parameters": {
@@ -260,8 +260,8 @@
             },
             "profiling_options": {
                 "strategy": "rough",
-                "stock_to_leave_x": 0.0,
-                "stock_to_leave_z": 0.0,
+                "radial": 0.0,
+                "axial": 0.0,
                 "finish_passes": 1,
                 "finish_spring_passes": 0
             }
@@ -290,8 +290,8 @@
             },
             "profiling_options": {
                 "strategy": "rough",
-                "stock_to_leave_x": 0.5,
-                "stock_to_leave_z": 0.5,
+                "radial": 0.5,
+                "axial": 0.5,
                 "finish_passes": 1,
                 "finish_spring_passes": 2
             }

@@ -38,6 +38,10 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
         pt = str(profiling_type or "od").lower()
         prefix = "OD" if pt == "od" else "ID"
         return f"{prefix} Profile Roughing (P{profile_id})" if profile_id is not None else f"{prefix} Profile Roughing"
+    if op_type_value == "profileContour":
+        pt = str(profiling_type or "od").lower()
+        prefix = "OD" if pt == "od" else "ID"
+        return f"{prefix} Profile Contour (P{profile_id})" if profile_id is not None else f"{prefix} Profile Contour"
     if op_type_value == "threading":
         return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"
     if op_type_value == "drilling":
@@ -66,6 +70,8 @@ def build_operations_model(program):
             profile_id = getattr(op, "profile_id", None)
         strategy = getattr(getattr(op, "profilingOptions", None), "strategy", None)
         profiling_type = getattr(getattr(op, "profileRoughingStrategy", None), "profiling_type", None)
+        if profiling_type is None:
+            profiling_type = getattr(getattr(op, "profileContourStrategy", None), "profiling_type", None)
         if profiling_type is not None and hasattr(profiling_type, "value"):
             profiling_type = profiling_type.value
         item["display_type"] = display_name_for_op(

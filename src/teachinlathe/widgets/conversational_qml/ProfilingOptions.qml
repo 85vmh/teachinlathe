@@ -15,8 +15,8 @@ GroupBox {
     /* --- Public API --- */
     property var  profilingOptions: null
     property string strategy: "rough"   // "rough" | "finish"
-    property real stock_to_leave_x: 0.0
-    property real stock_to_leave_z: 0.0
+    property real radial: 0.0
+    property real axial: 0.0
     property int finish_passes: 1
     property int spring_passes: 0
 
@@ -33,8 +33,8 @@ GroupBox {
         profilingOptions = data || {}
 
         strategy = (profilingOptions.strategy !== undefined) ? String(profilingOptions.strategy) : "rough"
-        stock_to_leave_x = (profilingOptions.stock_to_leave_x !== undefined) ? Number(profilingOptions.stock_to_leave_x) : 0.0
-        stock_to_leave_z = (profilingOptions.stock_to_leave_z !== undefined) ? Number(profilingOptions.stock_to_leave_z) : 0.0
+        radial = (profilingOptions.radial !== undefined) ? Number(profilingOptions.radial) : 0.0
+        axial = (profilingOptions.axial !== undefined) ? Number(profilingOptions.axial) : 0.0
         finish_passes = (profilingOptions.finish_passes !== undefined) ? Number(profilingOptions.finish_passes) : 1
         spring_passes = (profilingOptions.finish_spring_passes !== undefined) ? Number(profilingOptions.finish_spring_passes) : 0
         _loading = false
@@ -45,8 +45,8 @@ GroupBox {
         root.saveRequested({
             profiling_options: {
                 strategy: strategy,
-                stock_to_leave_x: Number(stock_to_leave_x),
-                stock_to_leave_z: Number(stock_to_leave_z),
+                radial: Number(radial),
+                axial: Number(axial),
                 finish_passes: Number(finish_passes),
                 finish_spring_passes: Number(spring_passes)
             }
@@ -134,7 +134,7 @@ GroupBox {
                         rowSpacing: 16
 
                         Label {
-                            text: "Stock to leave X"
+                            text: "Radial"
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                             font.pixelSize: 16
                         }
@@ -142,13 +142,13 @@ GroupBox {
                             Layout.preferredWidth: 100
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                             settingName: "profiling.stock_x"
-                            value: root.stock_to_leave_x
+                            value: root.radial
                             validatorObject: DoubleValidator { notation: DoubleValidator.StandardNotation }
                             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
                             font.pixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.stock_to_leave_x = value; root.emitSave() }
+                            onValueCommitted: { root.radial = value; root.emitSave() }
                         }
                         Label {
                             text: "(mm)"
@@ -157,7 +157,7 @@ GroupBox {
                         }
 
                         Label {
-                            text: "Stock to leave Z"
+                            text: "Axial"
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                             font.pixelSize: 16
                         }
@@ -165,13 +165,13 @@ GroupBox {
                             Layout.preferredWidth: 100
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                             settingName: "profiling.stock_z"
-                            value: root.stock_to_leave_z
+                            value: root.axial
                             validatorObject: DoubleValidator { notation: DoubleValidator.StandardNotation }
                             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
                             font.pixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.stock_to_leave_z = value; root.emitSave() }
+                            onValueCommitted: { root.axial = value; root.emitSave() }
                         }
                         Label {
                             text: "(mm)"

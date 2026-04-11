@@ -6,8 +6,8 @@ and retract is toward X- (bore centre).
 
 Roughing strategies
 -------------------
-axially            – step in X, cut axially in Z at each diameter
-radially           – step in Z, cut radially in X at each depth
+axial            – step in X, cut axial in Z at each diameter
+radial           – step in Z, cut radial in X at each depth
 diagonal           – step in Z, cut at 45° (ΔX = ΔZ)
 offset             – translate profile by (-n*doc, +n*doc) per pass
 equidistant_offset – geometrically offset profile by perpendicular n*doc per pass
@@ -45,7 +45,7 @@ def _parse_config(op) -> BoringConfig:
         strategy = Strategy.ROUGH
 
     try:
-        movement = RoughingMovement(str(strat.get("movement", "axially")).lower())
+        movement = RoughingMovement(str(strat.get("movement", "axial")).lower())
     except ValueError:
         movement = RoughingMovement.AXIALLY
 
@@ -60,8 +60,8 @@ def _parse_config(op) -> BoringConfig:
         doc=get_float(cutting, "doc", 0.5),
         retract=abs(get_float(cutting, "retract", 1.0)),
         feed_rate=get_float(cutting, "feed_rate", 0.1),
-        stock_x=get_float(options, "stock_to_leave_x", 0.0),
-        stock_z=get_float(options, "stock_to_leave_z", 0.0),
+        stock_x=get_float(options, "radial", 0.0),
+        stock_z=get_float(options, "axial", 0.0),
         finish_passes=max(1, int(options.get("finish_passes", 1) or 1)),
         spring_passes=max(0, int(options.get("finish_spring_passes", 0) or 0)),
         strategy=strategy,

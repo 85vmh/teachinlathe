@@ -8,7 +8,7 @@ from ..custom_profiling_geometry import find_deepest_z_at_x_path
 
 
 def emit_axial_roughing(lines: list, config: BoringConfig, path: list, x_safe: float, x_cut_max: float):
-    """Step in X (one doc per pass), cut axially in Z at each diameter.
+    """Step in X (one doc per pass), cut axial in Z at each diameter.
 
     The boring tool retracts on a 45-degree move, traverses straight to the next
     pass approach point, then re-enters on another 45-degree move.

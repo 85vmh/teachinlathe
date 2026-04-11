@@ -7,7 +7,7 @@ from ..custom_profiling_geometry import find_profile_x_at_z
 
 
 def emit_radial_roughing(lines: list, config: BoringConfig, path: list, x_safe: float, z_cut_deepest: float):
-    """Step in Z (one doc per pass), cut radially in X at each depth."""
+    """Step in Z (one doc per pass), cut radial in X at each depth."""
     pfx = config.optional_prefix
     x_start = config.x_start
     z_start = config.z_start

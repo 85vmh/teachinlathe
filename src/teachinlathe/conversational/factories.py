@@ -25,6 +25,8 @@ from teachinlathe.conversational.data_types import (
     PartingParameters,
     PassType,
     ProfileBoring,
+    ProfileContour,
+    ProfileContourStrategy,
     ProfileRoughing,
     ProfileRoughingStrategy,
     Profiling,
@@ -128,6 +130,16 @@ def make_default_operation(op_type: str, order: int = 1):
             ),
             stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
             m1Parameters=M1Parameters(include_m1=False, inspect_position=PredefinedPosition.G28, stop_spindle=False),
+        )
+    if op_type == "profileContour":
+        return ProfileContour(
+            order=order, type=op_type, generate_gcode=True, is_optional_block=False,
+            spindleParameters=spindle_rpm,
+            cuttingParameters=CuttingParameters(feedRate=0.1, doc=0.5, retract=1.0),
+            profilingParameters=ProfilingParameters(profile_id=1, xStart=0.0, zStart=0.0),
+            profileContourStrategy=ProfileContourStrategy(profiling_type=ProfilingType.OD),
+            stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
+            stockToLeaveEnabled=False,
         )
     if op_type == "threading":
         return Threading(

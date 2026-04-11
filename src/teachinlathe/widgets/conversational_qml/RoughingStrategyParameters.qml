@@ -9,7 +9,7 @@ GroupBox {
     title: "Roughing Strategy"
     Layout.fillWidth: true
 
-    property string movement:  "axially"   // "axially" | "radially" | "diagonal" | "offset" | "equidistant_offset"
+    property string movement:  "axial"   // "axial" | "radial" | "diagonal" | "offset" | "equidistant_offset"
     property string cutToward: "interior"  // "interior" | "exterior"
 
     property bool _loading: false
@@ -18,7 +18,7 @@ GroupBox {
 
     function applyData(data) {
         _loading = true
-        var m = (data && data.movement)   ? data.movement   : "axially"
+        var m = (data && data.movement)   ? data.movement   : "axial"
         var c = (data && data.cut_toward) ? data.cut_toward : "interior"
         movement  = m
         cutToward = c
@@ -52,15 +52,15 @@ GroupBox {
                 id: rbAxial
                 text: "Axial Passes"
                 font.pixelSize: 15
-                checked: root.movement === "axially"
-                onToggled: if (checked) { root.movement = "axially"; root.emitSave() }
+                checked: root.movement === "axial"
+                onToggled: if (checked) { root.movement = "axial"; root.emitSave() }
             }
             RadioButton {
                 id: rbRadial
                 text: "Radial Passes"
                 font.pixelSize: 15
-                checked: root.movement === "radially"
-                onToggled: if (checked) { root.movement = "radially"; root.emitSave() }
+                checked: root.movement === "radial"
+                onToggled: if (checked) { root.movement = "radial"; root.emitSave() }
             }
             RadioButton {
                 id: rbDiagonal

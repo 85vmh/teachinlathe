@@ -144,8 +144,8 @@ def apply_profiling_options_update(options, payload):
             options.strategy = _coerce_enum(payload["strategy"], Strategy, lambda v: str(v).lower())
         except Exception:
             pass
-    _set_attr_if_present(options, payload, "stock_to_leave_x", attr="stockToLeaveX", coerce=float)
-    _set_attr_if_present(options, payload, "stock_to_leave_z", attr="stockToLeaveZ", coerce=float)
+    _set_attr_if_present(options, payload, "radial", attr="stockToLeaveX", coerce=float)
+    _set_attr_if_present(options, payload, "axial", attr="stockToLeaveZ", coerce=float)
     _set_attr_if_present(options, payload, "finish_passes", attr="finishPasses", coerce=int)
     _set_attr_if_present(options, payload, "finish_spring_passes", attr="finishSpringPasses", coerce=int)
 
@@ -174,11 +174,21 @@ def apply_profile_roughing_strategy_update(strategy, payload):
         strategy.pass_type = PassType.AXIAL
 
 
+def apply_profile_contour_strategy_update(strategy, payload):
+    if strategy is None or not isinstance(payload, dict):
+        return
+    if "profiling_type" in payload and payload["profiling_type"] is not None:
+        try:
+            strategy.profiling_type = _coerce_enum(payload["profiling_type"], ProfilingType, lambda v: str(v).lower())
+        except Exception:
+            pass
+
+
 def apply_stock_to_leave_update(stock, payload):
     if stock is None or not isinstance(payload, dict):
         return
-    _set_attr_if_present(stock, payload, "stock_to_leave_x", attr="stockToLeaveX", coerce=float)
-    _set_attr_if_present(stock, payload, "stock_to_leave_z", attr="stockToLeaveZ", coerce=float)
+    _set_attr_if_present(stock, payload, "radial", attr="stockToLeaveX", coerce=float)
+    _set_attr_if_present(stock, payload, "axial", attr="stockToLeaveZ", coerce=float)
 
 
 def apply_edge_break_update(edge_break, payload):

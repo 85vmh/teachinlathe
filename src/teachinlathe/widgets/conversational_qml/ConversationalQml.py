@@ -32,6 +32,7 @@ from teachinlathe.conversational.updaters import (
     apply_m1_update,
     apply_operation_update,
     apply_parting_update,
+    apply_profile_contour_strategy_update,
     apply_profile_roughing_strategy_update,
     apply_profiling_options_update,
     apply_profiling_parameters_update,
@@ -280,6 +281,8 @@ class ConversationalQml(QQuickWidget):
                 item.updateProfileBoring.connect(self.onUpdateProfileBoring)
             if hasattr(item, "updateProfileRoughing"):
                 item.updateProfileRoughing.connect(self.onUpdateProfileRoughing)
+            if hasattr(item, "updateProfileContour"):
+                item.updateProfileContour.connect(self.onUpdateProfileContour)
             if hasattr(item, "addProfileContourRequested"):
                 item.addProfileContourRequested.connect(self.onAddProfileContourRequested)
             if hasattr(item, "updateDrilling"):
@@ -786,9 +789,37 @@ class ConversationalQml(QQuickWidget):
         except Exception as e:
             print("[profileRoughing] update error:", e)
 
+    def onUpdateProfileContour(self, index: int, payload):
+        """Profile Contour autosave."""
+        try:
+            p = self._to_py(payload) or {}
+            op = self._get_current_op(index)
+            from teachinlathe.conversational.data_types import ProfileContour
+            if not isinstance(op, ProfileContour):
+                return
+            apply_turnable_operation_update(op, p)
+            apply_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
+            apply_profiling_parameters_update(op.profilingParameters, p.get("profiling_parameters"))
+            apply_profile_contour_strategy_update(op.profileContourStrategy, p.get("profile_contour_strategy"))
+            apply_stock_to_leave_update(op.stockToLeave, p.get("stock_to_leave"))
+            if "stock_to_leave_enabled" in p and p["stock_to_leave_enabled"] is not None:
+                op.stockToLeaveEnabled = bool(p["stock_to_leave_enabled"])
+            self._save_current_program()
+        except Exception as e:
+            print("[profileContour] update error:", e)
+
     def onAddProfileContourRequested(self, index: int):
-        # TODO: implement when Profile Contour operation type is defined
-        print("[profileRoughing] addProfileContourRequested at index", index, "- not yet implemented")
+        try:
+            prog = self._get_current_program()
+            if not prog:
+                return
+            insert_idx = insert_default_operation(prog, "profileContour", index + 1)
+            self.current_op_index = insert_idx
+            self._save_current_program()
+            self._emit_header_state_changed()
+        except Exception as e:
+            print("[profileRoughing] addProfileContourRequested failed:", e)
+
 
     def onUpdateDrilling(self, index: int, payload):
         """Drilling autosave."""

@@ -42,8 +42,8 @@ class PredefinedPosition(str, Enum):
 
 
 class RoughingMovement(str, Enum):
-    AXIALLY = "axially"
-    RADIALLY = "radially"
+    AXIALLY = "axial"
+    RADIALLY = "radial"
     DIAGONAL = "diagonal"
     OFFSET = "offset"
     EQUIDISTANT_OFFSET = "equidistant_offset"
@@ -575,14 +575,14 @@ class ProfilingParameters:
 
 @dataclass
 class RoughingStrategy:
-    movement: str   # "axially" | "radially" | "diagonal" | "offset"
+    movement: str   # "axial" | "radial" | "diagonal" | "offset"
     cut_toward: str  # "interior" | "exterior"
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "RoughingStrategy":
-        movement = str(data.get("movement", "axially")).lower()
-        if movement not in ("axially", "radially", "diagonal", "offset", "equidistant_offset"):
-            movement = "axially"
+        movement = str(data.get("movement", "axial")).lower()
+        if movement not in ("axial", "radial", "diagonal", "offset", "equidistant_offset"):
+            movement = "axial"
         cut_toward = str(data.get("cut_toward", "interior")).lower()
         if cut_toward not in ("interior", "exterior"):
             cut_toward = "interior"
@@ -615,8 +615,8 @@ class ProfilingOptions:
 
         return ProfilingOptions(
             strategy=strat_enum,
-            stockToLeaveX=float(data.get("stock_to_leave_x", 0.0)),
-            stockToLeaveZ=float(data.get("stock_to_leave_z", 0.0)),
+            stockToLeaveX=float(data.get("radial", 0.0)),
+            stockToLeaveZ=float(data.get("axial", 0.0)),
             finishPasses=int(data.get("finish_passes", 1) or 1),
             finishSpringPasses=int(data.get("finish_spring_passes", 0))
         )
@@ -624,8 +624,8 @@ class ProfilingOptions:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "strategy": self.strategy.value,
-            "stock_to_leave_x": float(self.stockToLeaveX),
-            "stock_to_leave_z": float(self.stockToLeaveZ),
+            "radial": float(self.stockToLeaveX),
+            "axial": float(self.stockToLeaveZ),
             "finish_passes": int(self.finishPasses),
             "finish_spring_passes": int(self.finishSpringPasses)
         }
@@ -665,6 +665,25 @@ class ProfileRoughingStrategy:
 
 
 @dataclass
+class ProfileContourStrategy:
+    profiling_type: ProfilingType
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "ProfileContourStrategy":
+        pt_raw = str(data.get("profiling_type", "od")).lower()
+        try:
+            profiling_type = ProfilingType(pt_raw)
+        except ValueError:
+            profiling_type = ProfilingType.OD
+        return ProfileContourStrategy(profiling_type=profiling_type)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "profiling_type": self.profiling_type.value,
+        }
+
+
+@dataclass
 class StockToLeave:
     stockToLeaveX: float
     stockToLeaveZ: float
@@ -672,14 +691,14 @@ class StockToLeave:
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "StockToLeave":
         return StockToLeave(
-            stockToLeaveX=float(data.get("stock_to_leave_x", 0.0)),
-            stockToLeaveZ=float(data.get("stock_to_leave_z", 0.0)),
+            stockToLeaveX=float(data.get("radial", 0.0)),
+            stockToLeaveZ=float(data.get("axial", 0.0)),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "stock_to_leave_x": float(self.stockToLeaveX),
-            "stock_to_leave_z": float(self.stockToLeaveZ),
+            "radial": float(self.stockToLeaveX),
+            "axial": float(self.stockToLeaveZ),
         }
 
 
@@ -1049,6 +1068,48 @@ class ProfileRoughing(TurnableOperation):
         return base
 
 
+@dataclass
+class ProfileContour(TurnableOperation):
+    cuttingParameters: CuttingParameters
+    profilingParameters: ProfilingParameters
+    profileContourStrategy: ProfileContourStrategy
+    stockToLeave: StockToLeave
+    stockToLeaveEnabled: bool
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "ProfileContour":
+        spindle_parameters = TurnableOperation._parse_spindle(data)
+        cutting_parameters = CuttingParameters.from_dict(data.get("cutting_parameters", {}))
+        profiling_parameters = ProfilingParameters.from_dict(data.get("profiling_parameters", {}))
+        profile_contour_strategy = ProfileContourStrategy.from_dict(data.get("profile_contour_strategy", {}))
+        stock_to_leave = StockToLeave.from_dict(data.get("stock_to_leave", {}))
+
+        return cls(
+            order=int(data["order"]),
+            type=data["type"],
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            spindleParameters=spindle_parameters,
+            cuttingParameters=cutting_parameters,
+            profilingParameters=profiling_parameters,
+            profileContourStrategy=profile_contour_strategy,
+            stockToLeave=stock_to_leave,
+            stockToLeaveEnabled=bool(data.get("stock_to_leave_enabled", False)),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        self._add_spindle_to(base)
+        base.update({
+            "cutting_parameters": self.cuttingParameters.to_dict(),
+            "profiling_parameters": self.profilingParameters.to_dict(),
+            "profile_contour_strategy": self.profileContourStrategy.to_dict(),
+            "stock_to_leave": self.stockToLeave.to_dict(),
+            "stock_to_leave_enabled": bool(self.stockToLeaveEnabled),
+        })
+        return base
+
+
 # ------------------------------- Threading -----------------------------------
 
 
@@ -1312,6 +1373,7 @@ operation_types: Dict[str, Type[Operation]] = {
     "customProfiling": Profiling,
     "profileBoring": ProfileBoring,
     "profileRoughing": ProfileRoughing,
+    "profileContour": ProfileContour,
     "threading": Threading,
     "drilling": Drilling,
     "tapping": Tapping,
@@ -1328,6 +1390,7 @@ display_names: Dict[str, str] = {
     "customProfiling": "Custom Profiling",
     "profileBoring": "Profile Boring",
     "profileRoughing": "Profile Roughing",
+    "profileContour": "Profile Contour",
     "threading": "Threading",
     "drilling": "Drilling",
     "tapping": "Tapping",
@@ -1367,4 +1430,32 @@ class BoringConfig:
     strategy: Strategy
     movement: RoughingMovement
     cut_toward: CutToward
+    optional_prefix: str
+
+
+@dataclass(frozen=True)
+class ProfileRoughingConfig:
+    x_start: float
+    z_start: float
+    doc: float
+    retract: float
+    feed_rate: float
+    stock_x: float
+    stock_z: float
+    profiling_type: ProfilingType
+    pass_type: PassType
+    optional_prefix: str
+
+
+@dataclass(frozen=True)
+class ProfileContourConfig:
+    x_start: float
+    z_start: float
+    doc: float
+    retract: float
+    feed_rate: float
+    stock_x: float
+    stock_z: float
+    stock_enabled: bool
+    profiling_type: ProfilingType
     optional_prefix: str
