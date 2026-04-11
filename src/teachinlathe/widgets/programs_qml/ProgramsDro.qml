@@ -5,36 +5,78 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: root
     property var viewModel
+    property int axisLabelWidth: 44
+    property int valueBoxWidth: 240
+    property int valueBoxHeight: 60
+    property int axisLabelFontSize: 60
+    property int droValueFontSize: 40
+    property int headerFontSize: 18
+    property int headerHeight: 24
+    property int rowSpacing: 12
+    property int columnSpacing: 6
+
     color: "#eef2f7"
     border.color: "#cfd7e3"
     border.width: 1
+    radius: 4
 
-    Rectangle {
-        anchors.fill: parent
-        anchors.margins: 16
-        radius: 12
-        color: "#ffffff"
-        border.color: "#d6dce7"
-        border.width: 1
+    ColumnLayout {
+        anchors.centerIn: parent
+        spacing: root.columnSpacing
 
-        Column {
-            anchors.centerIn: parent
-            spacing: 8
+        RowLayout {
+            spacing: root.rowSpacing
+
+            Item {
+                Layout.preferredWidth: root.axisLabelWidth
+                Layout.preferredHeight: root.headerHeight
+            }
 
             Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Programs DRO"
-                color: "#1e2430"
-                font.pixelSize: 20
+                Layout.preferredWidth: root.valueBoxWidth
+                Layout.preferredHeight: root.headerHeight
+                text: "G54 Position"
+                color: "#475569"
+                font.pixelSize: root.headerFontSize
                 font.bold: true
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Placeholder"
-                color: "#5a6473"
-                font.pixelSize: 13
+                Layout.preferredWidth: root.valueBoxWidth
+                Layout.preferredHeight: root.headerHeight
+                text: "Distance to Go"
+                color: "#475569"
+                font.pixelSize: root.headerFontSize
+                font.bold: true
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
+        }
+
+        AutoAxisDro {
+            axisLabel: "X"
+            position: -1234.345
+            dtg: -0.300
+            axisLabelWidth: root.axisLabelWidth
+            valueBoxWidth: root.valueBoxWidth
+            valueBoxHeight: root.valueBoxHeight
+            axisLabelFontSize: root.axisLabelFontSize
+            valueFontSize: root.droValueFontSize
+            rowSpacing: root.rowSpacing
+        }
+
+        AutoAxisDro {
+            axisLabel: "Z"
+            position: 450.125
+            dtg: 12.750
+            axisLabelWidth: root.axisLabelWidth
+            valueBoxWidth: root.valueBoxWidth
+            valueBoxHeight: root.valueBoxHeight
+            axisLabelFontSize: root.axisLabelFontSize
+            valueFontSize: root.droValueFontSize
+            rowSpacing: root.rowSpacing
         }
     }
 }

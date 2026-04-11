@@ -11,7 +11,13 @@ Rectangle {
     border.width: 1
 
     RowLayout {
-        anchors.centerIn: parent
+        anchors {
+            left: parent.left
+            right: parent.right
+            verticalCenter: parent.verticalCenter
+            leftMargin: 16
+            rightMargin: 16
+        }
         spacing: 20
 
         // ── Cycle Abort ───────────────────────────────────────────────
@@ -38,6 +44,18 @@ Rectangle {
             activeCenterColor: "#2e7d32"
             activeRimColor:    "#81c784"
             onClicked: if (actions) actions.triggerCycleStart()
+        }
+
+        // ── spacer ────────────────────────────────────────────────────
+        Item { Layout.fillWidth: true }
+
+        // ── Feed Override ─────────────────────────────────────────────
+        OverrideSelector {
+            label: "Rapid Override"
+            maxSpeed: 6000
+            value: 100
+            Layout.alignment: Qt.AlignVCenter
+            onSelected: function(v) { /* TODO: wire to HAL feed override pin */ }
         }
     }
 }

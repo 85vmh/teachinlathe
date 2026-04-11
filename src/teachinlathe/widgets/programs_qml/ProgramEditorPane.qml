@@ -28,7 +28,7 @@ Rectangle {
         ProgramActionBar {
             Layout.fillWidth: true
             visible: root.mode === "gremlin"
-            Layout.preferredHeight: visible ? 72 : 0
+            Layout.preferredHeight: visible ? 90 : 0
             viewModel: root.viewModel
         }
     }
