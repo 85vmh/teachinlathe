@@ -1,6 +1,24 @@
+"""G-code generator for Profile Roughing (OD and ID).
+
+Dispatches to the shared profiling/ strategies based on ProfilingType (OD/ID)
+and PassType (AXIAL / RADIAL / DIAGONAL_*).
+"""
+
 from teachinlathe.conversational.data_types import PassType, ProfileRoughingConfig, ProfilingType
 
+from ..helpers.m1 import emit_m1_block
+from ..helpers.spindle import build_spindle_gcode
 from ..helpers.utils import get_float
+from .custom_cam.custom_profiling_geometry import (
+    StartPoint,
+    build_profile_segments,
+    build_render_path,
+)
+from .profiling.axial import emit_axial_roughing
+from .profiling.contour import emit_roughing_contour_pass
+from .profiling.context import make_id_context, make_od_context
+from .profiling.diagonal import emit_diagonal_roughing
+from .profiling.radial import emit_radial_roughing
 
 
 def parse_profile_roughing_config(op) -> ProfileRoughingConfig:
@@ -35,6 +53,68 @@ def parse_profile_roughing_config(op) -> ProfileRoughingConfig:
     )
 
 
+def _resolve_profile(op):
+    resolved = op.get("_resolved_profile") or {}
+    primitives = resolved.get("profile_primitives", []) or []
+    segments = build_profile_segments(primitives)
+    path = build_render_path(segments)
+    return segments, path
+
+
+def _profile_extents(segments):
+    """Return (x_min, x_max, z_min) across all segment endpoints."""
+    x_vals, z_vals = [], []
+    for seg in segments:
+        if isinstance(seg, StartPoint):
+            x_vals.append(seg.x)
+            z_vals.append(seg.z)
+        else:
+            x_vals.append(seg.end_x)
+            z_vals.append(seg.end_z)
+    x_min = min(x_vals) if x_vals else 0.0
+    x_max = max(x_vals) if x_vals else 0.0
+    z_min = min(z_vals) if z_vals else 0.0
+    return x_min, x_max, z_min
+
+
 def generate_profile_roughing_gcode(op):
-    parse_profile_roughing_config(op)
-    return ["( TODO: gcode generator for Profile Roughing )"]
+    if hasattr(op, "to_dict"):
+        op = op.to_dict()
+
+    config = parse_profile_roughing_config(op)
+    spindle = op.get("spindle_parameters", {}) or {}
+    m1_params = op.get("m1_parameters", {}) or {}
+    segments, path = _resolve_profile(op)
+
+    lines = []
+    lines.extend(build_spindle_gcode(spindle, config.optional_prefix))
+    lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
+
+    if not segments or not isinstance(segments[0], StartPoint):
+        lines.append("( ERROR: Profile Roughing -- no valid profile found )")
+        return lines
+
+    x_profile_start = segments[0].x
+    x_min, x_max, z_min = _profile_extents(segments)
+
+    if config.profiling_type == ProfilingType.OD:
+        ctx = make_od_context(config, x_min)
+    else:
+        ctx = make_id_context(config, x_max)
+
+    # z_cut_deepest is used by radial and diagonal strategies
+    z_cut_deepest = z_min + config.stock_z
+
+    if config.pass_type == PassType.AXIAL:
+        emit_axial_roughing(lines, ctx, path)
+
+    elif config.pass_type == PassType.RADIAL:
+        emit_radial_roughing(lines, ctx, path, z_cut_deepest)
+
+    elif config.pass_type in (PassType.DIAGONAL_INTERIOR, PassType.DIAGONAL_EXTERIOR):
+        emit_diagonal_roughing(lines, ctx, path, ctx.x_limit, z_cut_deepest, config.pass_type)
+
+    emit_roughing_contour_pass(lines, ctx, path, x_profile_start)
+
+    lines.extend(emit_m1_block(m1_params, config.optional_prefix))
+    return lines

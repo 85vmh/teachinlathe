@@ -100,7 +100,7 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None):
 
         generator = OPERATION_GENERATORS.get(op.type)
         if generator:
-            if op.type in ("customProfiling", "profileBoring"):
+            if op.type in ("customProfiling", "profileBoring", "profileRoughing", "profileContour"):
                 lines.extend(generator(_build_operation_payload(op, program)))
             elif op.type == "facing":
                 lines.extend(generator(op, datum=datum))
