@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 from PyQt5.QtCore import (
     QFileSystemWatcher, QObject, QThread,
@@ -12,6 +13,7 @@ from .data_types import FileSystemEntry, FileSystemLocation, LocationType
 from .usb_monitor import UsbDriveMonitor
 
 GCODE_EXTENSIONS = ('.ngc', '.nc', '.gcode', '.G', '.NGC', '.NC')
+PROGRAM_HEADER_RE = re.compile(r"^\s*\(\s*Program:\s*(?P<program>.*?)\s*\)\s*$")
 
 
 class _CopyWorker(QThread):
@@ -89,7 +91,7 @@ class FileSystemViewModel(QObject):
     fileSelected = pyqtSignal(str, arguments=["absolutePath"])
     fileOpenRequested = pyqtSignal(str, arguments=["absolutePath"])
 
-    def __init__(self, locations: list, parent=None):
+    def __init__(self, locations: list, parent=None, json_folder_path: str = ""):
         """
         Parameters
         ----------
@@ -110,6 +112,7 @@ class FileSystemViewModel(QObject):
         self._is_copying: bool = False
         self._copy_progress: float = 0.0
         self._copy_worker: _CopyWorker | None = None
+        self._json_folder_path = os.path.abspath(json_folder_path) if json_folder_path else ""
 
         self._usb_monitor = UsbDriveMonitor(self)
         self._usb_monitor.driveConnected.connect(self._on_drive_connected)
@@ -192,6 +195,19 @@ class FileSystemViewModel(QObject):
     def isInMountedMedia(self) -> bool:
         loc = self._current_location()
         return loc is not None and loc.location_type == LocationType.MOUNTED_MEDIA
+
+    @pyqtProperty(bool, notify=navigationChanged)
+    def isInGeneratedPrograms(self) -> bool:
+        loc = self._current_location()
+        return loc is not None and loc.location_type == LocationType.GENERATED
+
+    @pyqtProperty(str, notify=selectionChanged)
+    def selectedGeneratedJsonPath(self) -> str:
+        return self._selected_generated_json_path()
+
+    @pyqtProperty(bool, notify=selectionChanged)
+    def canEditSelectedGeneratedProgram(self) -> bool:
+        return bool(self._selected_generated_json_path())
 
     @pyqtProperty(bool, notify=filterChanged)
     def showFolders(self) -> bool:
@@ -417,6 +433,10 @@ class FileSystemViewModel(QObject):
         self.entriesChanged.emit()
         self.fileSelected.emit(abs_path)
 
+    @pyqtSlot(result=str)
+    def selectedGeneratedJsonPathForEdit(self) -> str:
+        return self._selected_generated_json_path()
+
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
@@ -441,6 +461,57 @@ class FileSystemViewModel(QObject):
         except ValueError:
             pass
         return None
+
+    def _selected_absolute_path(self) -> str | None:
+        if not self._selected_path:
+            return None
+        loc = self._current_location()
+        if loc is None:
+            return None
+        return self._resolve(loc.root_path, self._selected_path)
+
+    def _generated_json_root(self) -> str:
+        if self._json_folder_path:
+            return self._json_folder_path
+        generated = next((loc for loc in self._static if loc.location_type == LocationType.GENERATED), None)
+        if generated is None:
+            return ""
+        return os.path.join(os.path.dirname(os.path.abspath(generated.root_path)), "Conversational Json")
+
+    def _read_generated_program_json_name(self, ngc_path: str) -> str:
+        try:
+            with open(ngc_path, "r", encoding="utf-8", errors="replace") as handle:
+                for _ in range(20):
+                    line = handle.readline()
+                    if not line:
+                        break
+                    match = PROGRAM_HEADER_RE.match(line.strip())
+                    if match:
+                        return match.group("program").strip()
+        except OSError:
+            return ""
+        return ""
+
+    def _selected_generated_json_path(self) -> str:
+        loc = self._current_location()
+        if loc is None or loc.location_type != LocationType.GENERATED:
+            return ""
+        ngc_path = self._selected_absolute_path()
+        if not ngc_path or not os.path.isfile(ngc_path) or not ngc_path.lower().endswith(".ngc"):
+            return ""
+        json_name = self._read_generated_program_json_name(ngc_path)
+        if not json_name:
+            return ""
+        json_name = os.path.basename(json_name)
+        if not json_name.lower().endswith(".json"):
+            return ""
+        json_root = self._generated_json_root()
+        if not json_root:
+            return ""
+        json_path = os.path.abspath(os.path.join(json_root, json_name))
+        if os.path.commonpath([os.path.abspath(json_root), json_path]) != os.path.abspath(json_root):
+            return ""
+        return json_path if os.path.isfile(json_path) else ""
 
     def _watch_current(self) -> None:
         if self._dir_watcher.directories():

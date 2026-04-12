@@ -18,7 +18,7 @@ class ProgramsQml(QQuickWidget):
 
     _QML_DIR = os.path.dirname(__file__)
 
-    def __init__(self, locations, parent=None):
+    def __init__(self, locations, parent=None, json_folder_path=''):
         super().__init__(parent)
         self.setResizeMode(QQuickWidget.SizeRootObjectToView)
 
@@ -46,7 +46,7 @@ class ProgramsQml(QQuickWidget):
         self._create_gremlin_overlay_controls()
         self._hide_gremlin_overlay_controls()
 
-        self.fs_viewmodel = FileSystemViewModel(locations, self)
+        self.fs_viewmodel = FileSystemViewModel(locations, self, json_folder_path=json_folder_path)
         self.fs_viewmodel.fileSelected.connect(self.viewmodel.bridge.selectFileByAbsolutePath)
         self.fs_viewmodel.fileOpenRequested.connect(self.viewmodel.openFileByAbsolutePath)
         self.fs_viewmodel.selectionChanged.connect(self._emit_header_state_changed)
@@ -135,6 +135,12 @@ class ProgramsQml(QQuickWidget):
             ])
             title = f'Loaded Program [{self._current_program_name()}]'
         else:
+            if self.fs_viewmodel.isInGeneratedPrograms:
+                left_actions.append({
+                    "id": "edit_program",
+                    "text": "Edit Program",
+                    "enabled": bool(self.fs_viewmodel.canEditSelectedGeneratedProgram),
+                })
             right_actions.append({
                 "id": "load_program",
                 "text": "Load Program",
@@ -151,6 +157,13 @@ class ProgramsQml(QQuickWidget):
             self.viewmodel.showFilesScreen()
         elif action_id == "load_program":
             self.fs_viewmodel.openSelectedFile()
+        elif action_id == "edit_program":
+            json_path = self.fs_viewmodel.selectedGeneratedJsonPathForEdit()
+            if not json_path:
+                return
+            window = self.window()
+            if window and hasattr(window, "editConversationalProgramFromJson"):
+                window.editConversationalProgramFromJson(json_path)
         elif action_id == "toggle_optional_stop":
             actions = self.viewmodel.actions
             actions.setOptionalStopEnabled(not actions.optionalStopAction.checked)

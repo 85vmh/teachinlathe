@@ -25,6 +25,14 @@ Item {
         loader.setSource(url) // Qt5-safe; we apply params in onLoaded
     }
 
+    // Replace current screen without adding another history entry.
+    function replaceScreen(url, params) {
+        currentSource = url
+        _currentParams = params || {}
+        _pendingParams = _currentParams
+        loader.setSource(url)
+    }
+
     // Pop last screen and restore its params
     function goBack() {
         if (!canGoBack())

@@ -1,5 +1,5 @@
 import os
-import os
+import json
 import time
 from datetime import datetime
 
@@ -365,11 +365,16 @@ class ConversationalQml(QQuickWidget):
         base_name = getattr(getattr(program, "header", None), "name", getattr(program, "id", "program"))
         base_name = "".join(c for c in str(base_name) if c.isalnum() or c in ("-", "_", " ")).strip()
         base_name = base_name.replace(" ", "_")
-        json_path = os.path.join(json_dir, base_name + ".json")
+        current_json_path = os.path.abspath(getattr(program, "filename", "") or "")
+        if current_json_path and os.path.dirname(current_json_path) == os.path.abspath(json_dir):
+            json_path = current_json_path
+        else:
+            json_path = os.path.join(json_dir, base_name + ".json")
 
         os.makedirs(os.path.dirname(json_path), exist_ok=True)
         with open(json_path, "w", encoding="utf-8") as handle:
             handle.write(program.to_json())
+        program.filename = json_path
 
         return build_ngc_from_program(program, output_dir=gcode_dir)
 
@@ -409,6 +414,41 @@ class ConversationalQml(QQuickWidget):
         row_index = self.model.appendProgram(program) if hasattr(self.model, "appendProgram") else None
         self.current_op_index = -1
         self.openChildScreen(row_index if row_index is not None else program)
+
+    def openProgramFile(self, json_path: str):
+        json_path = os.path.abspath(json_path or "")
+        if not json_path or not os.path.isfile(json_path):
+            print("openProgramFile: missing JSON", json_path)
+            return
+        try:
+            with open(json_path, "r", encoding="utf-8") as handle:
+                program = Program.from_dict(json.load(handle))
+            program.filename = json_path
+        except Exception as e:
+            print("openProgramFile: failed to load", json_path, e)
+            return
+
+        row_index = -1
+        if hasattr(self.model, "indexOfFilename"):
+            row_index = self.model.indexOfFilename(json_path)
+
+        if row_index >= 0 and hasattr(self.model, "setProgramAt"):
+            self.model.setProgramAt(row_index, program)
+        elif hasattr(self.model, "appendProgram"):
+            row_index = self.model.appendProgram(program)
+        else:
+            row_index = None
+
+        self.current_op_index = -1
+        replace_current = False
+        try:
+            replace_current = bool(self.root.canGoBack())
+        except Exception:
+            replace_current = False
+        self.openChildScreen(
+            row_index if row_index is not None and row_index >= 0 else program,
+            replace_current=replace_current,
+        )
 
     def onDeleteProgramRequested(self, row_index: int):
         if row_index is None or row_index < 0:
@@ -517,7 +557,7 @@ class ConversationalQml(QQuickWidget):
         except Exception as e:
             print("[profiling] add finish failed:", e)
 
-    def openChildScreen(self, arg=None):
+    def openChildScreen(self, arg=None, replace_current=False):
         program = None
         row_index = None
         if hasattr(arg, "toVariant"):
@@ -566,7 +606,10 @@ class ConversationalQml(QQuickWidget):
             "operationsModel": operations_model,
         }
         print("openChildScreen for:", selected_program["name"], "ops:", len(operations_model))
-        self.root.loadScreen(child_url, params)
+        if replace_current and hasattr(self.root, "replaceScreen"):
+            self.root.replaceScreen(child_url, params)
+        else:
+            self.root.loadScreen(child_url, params)
         QTimer.singleShot(0, self._emit_header_state_changed)
 
     def onToggleGenerateGcode(self, index: int, checked: bool):

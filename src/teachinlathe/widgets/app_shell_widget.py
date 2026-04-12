@@ -240,7 +240,7 @@ class AppShellWidget(QWidget):
         current_tab = self._nav_store.currentTab
         for action in actions:
             button = QPushButton(action.get('text', ''), self.title_bar)
-            if action.get('id') == 'back':
+            if action.get('id') in ('back', 'edit_program'):
                 button.setObjectName('appShellBackButton')
                 button.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
             else:

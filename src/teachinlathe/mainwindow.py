@@ -227,6 +227,7 @@ class MyMainWindow(VCPMainWindow):
             FileSystemLocation, LocationType,
         )
         gcode_folder     = os.path.join(CONVERSATIONAL_GCODE_BASE, "Conversational Gcode")
+        json_folder      = os.path.join(CONVERSATIONAL_JSON_BASE, "Conversational Json")
         usb_stick_folder = os.path.join(CONVERSATIONAL_GCODE_BASE, "USB Stick Programs")
         locations = [
             FileSystemLocation("Generated Programs", gcode_folder,                         LocationType.GENERATED),
@@ -242,7 +243,7 @@ class MyMainWindow(VCPMainWindow):
         tab_layout = QVBoxLayout(self.programsQmlTab)
         tab_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.programsQmlWidget = ProgramsQml(locations, self.programsQmlTab)
+        self.programsQmlWidget = ProgramsQml(locations, self.programsQmlTab, json_folder_path=json_folder)
         self.programsQmlWidget.setAppState(self.appState)
         self.programsQmlWidget.viewmodel.programLoadRequested.connect(self.onProgramsQmlProgramLoadRequested)
         tab_layout.addWidget(self.programsQmlWidget)
@@ -344,6 +345,16 @@ class MyMainWindow(VCPMainWindow):
             )
         except Exception as e:
             print("showGeneratedProgram failed:", e)
+
+    def editConversationalProgramFromJson(self, json_path: str):
+        if not json_path or not os.path.isfile(json_path):
+            return
+        try:
+            self.tabWidget.setCurrentIndex(MainTabs.CONVERSATIONAL.value)
+            if hasattr(self, "conversationalqml"):
+                self.conversationalqml.openProgramFile(os.path.abspath(json_path))
+        except Exception as e:
+            print("editConversationalProgramFromJson failed:", e)
 
     def onSpindleModeChanged(self):
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
