@@ -235,159 +235,6 @@ class Ui_MainWindow(object):
         self.spindleFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.spindleFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.spindleFrame.setObjectName("spindleFrame")
-        self.tabSpindleMode = QtWidgets.QTabWidget(self.spindleFrame)
-        self.tabSpindleMode.setGeometry(QtCore.QRect(5, 5, 286, 231))
-        self.tabSpindleMode.setStyleSheet("QTabWidget#tabSpindleMode QTabBar::tab {\n"
-"    height: 40px;\n"
-"    min-width: 120px;\n"
-"    font: 14pt \"Noto Sans\";\n"
-"}")
-        self.tabSpindleMode.setObjectName("tabSpindleMode")
-        self.tab = QtWidgets.QWidget()
-        self.tab.setObjectName("tab")
-        self.rpmUnit_10 = QtWidgets.QLabel(self.tab)
-        self.rpmUnit_10.setGeometry(QtCore.QRect(210, 55, 61, 36))
-        self.rpmUnit_10.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.rpmUnit_10.setObjectName("rpmUnit_10")
-        self.rpmUnit_7 = QtWidgets.QLabel(self.tab)
-        self.rpmUnit_7.setGeometry(QtCore.QRect(210, 15, 61, 36))
-        self.rpmUnit_7.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.rpmUnit_7.setObjectName("rpmUnit_7")
-        self.label_16 = QtWidgets.QLabel(self.tab)
-        self.label_16.setGeometry(QtCore.QRect(10, 55, 91, 36))
-        self.label_16.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.label_16.setObjectName("label_16")
-        self.label_15 = QtWidgets.QLabel(self.tab)
-        self.label_15.setGeometry(QtCore.QRect(10, 15, 81, 36))
-        self.label_15.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.label_15.setObjectName("label_15")
-        self.inputRpm = TeachInDroLabel(self.tab)
-        self.inputRpm.setGeometry(QtCore.QRect(125, 15, 66, 36))
-        font = QtGui.QFont()
-        font.setFamily("Noto Sans Mono")
-        font.setPointSize(12)
-        font.setBold(False)
-        font.setItalic(False)
-        font.setWeight(50)
-        self.inputRpm.setFont(font)
-        self.inputRpm.setStyleSheet("QLabel {\n"
-"        border-style: solid;\n"
-"        border-color: rgb(119, 118, 123);\n"
-"        border-width: 1px;\n"
-"        border-radius: 5px;\n"
-"        color: rgb(20, 20, 20);\n"
-"        background: rgb(246, 245, 244);\n"
-"        font: 12pt \"Noto Sans Mono\";\n"
-"}")
-        self.inputRpm.setAlignment(QtCore.Qt.AlignCenter)
-        self.inputRpm.setProperty("referenceType", 1)
-        self.inputRpm.setProperty("axisNumber", 2)
-        self.inputRpm.setProperty("latheMode", 0)
-        self.inputRpm.setObjectName("inputRpm")
-        self.actualRpm = QtWidgets.QLabel(self.tab)
-        self.actualRpm.setGeometry(QtCore.QRect(125, 55, 66, 36))
-        self.actualRpm.setStyleSheet("font: 12pt \"Noto Sans Mono\";")
-        self.actualRpm.setAlignment(QtCore.Qt.AlignCenter)
-        self.actualRpm.setObjectName("actualRpm")
-        self.tabSpindleMode.addTab(self.tab, "")
-        self.tab_2 = QtWidgets.QWidget()
-        self.tab_2.setObjectName("tab_2")
-        self.actualCss = QtWidgets.QLabel(self.tab_2)
-        self.actualCss.setGeometry(QtCore.QRect(125, 140, 66, 36))
-        self.actualCss.setStyleSheet("font: 12pt \"Noto Sans Mono\";")
-        self.actualCss.setAlignment(QtCore.Qt.AlignCenter)
-        self.actualCss.setObjectName("actualCss")
-        self.rpmUnit_11 = QtWidgets.QLabel(self.tab_2)
-        self.rpmUnit_11.setGeometry(QtCore.QRect(210, 140, 56, 36))
-        self.rpmUnit_11.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.rpmUnit_11.setObjectName("rpmUnit_11")
-        self.actualRpmCss = QtWidgets.QLabel(self.tab_2)
-        self.actualRpmCss.setGeometry(QtCore.QRect(125, 55, 66, 36))
-        font = QtGui.QFont()
-        font.setFamily("Noto Sans Mono")
-        font.setPointSize(12)
-        font.setBold(False)
-        font.setItalic(False)
-        font.setWeight(50)
-        self.actualRpmCss.setFont(font)
-        self.actualRpmCss.setStyleSheet("font: 12pt \"Noto Sans Mono\";")
-        self.actualRpmCss.setAlignment(QtCore.Qt.AlignCenter)
-        self.actualRpmCss.setObjectName("actualRpmCss")
-        self.label_19 = QtWidgets.QLabel(self.tab_2)
-        self.label_19.setGeometry(QtCore.QRect(10, 100, 81, 36))
-        self.label_19.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.label_19.setObjectName("label_19")
-        self.rpmUnit_12 = QtWidgets.QLabel(self.tab_2)
-        self.rpmUnit_12.setGeometry(QtCore.QRect(210, 15, 66, 36))
-        self.rpmUnit_12.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.rpmUnit_12.setObjectName("rpmUnit_12")
-        self.rpmUnit_14 = QtWidgets.QLabel(self.tab_2)
-        self.rpmUnit_14.setGeometry(QtCore.QRect(210, 100, 56, 36))
-        self.rpmUnit_14.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.rpmUnit_14.setObjectName("rpmUnit_14")
-        self.label_18 = QtWidgets.QLabel(self.tab_2)
-        self.label_18.setGeometry(QtCore.QRect(10, 15, 81, 36))
-        self.label_18.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.label_18.setObjectName("label_18")
-        self.label_20 = QtWidgets.QLabel(self.tab_2)
-        self.label_20.setGeometry(QtCore.QRect(10, 55, 101, 36))
-        self.label_20.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.label_20.setObjectName("label_20")
-        self.rpmUnit_15 = QtWidgets.QLabel(self.tab_2)
-        self.rpmUnit_15.setGeometry(QtCore.QRect(210, 55, 61, 36))
-        self.rpmUnit_15.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.rpmUnit_15.setObjectName("rpmUnit_15")
-        self.label_17 = QtWidgets.QLabel(self.tab_2)
-        self.label_17.setGeometry(QtCore.QRect(10, 140, 96, 36))
-        self.label_17.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.label_17.setObjectName("label_17")
-        self.inputMaxRpm = TeachInDroLabel(self.tab_2)
-        self.inputMaxRpm.setGeometry(QtCore.QRect(125, 15, 66, 36))
-        font = QtGui.QFont()
-        font.setFamily("Noto Sans Mono")
-        font.setPointSize(12)
-        font.setBold(False)
-        font.setItalic(False)
-        font.setWeight(50)
-        self.inputMaxRpm.setFont(font)
-        self.inputMaxRpm.setStyleSheet("QLabel {\n"
-"        border-style: solid;\n"
-"        border-color: rgb(119, 118, 123);\n"
-"        border-width: 1px;\n"
-"        border-radius: 5px;\n"
-"        color: rgb(20, 20, 20);\n"
-"        background: rgb(246, 245, 244);\n"
-"        font: 12pt \"Noto Sans Mono\";\n"
-"}")
-        self.inputMaxRpm.setAlignment(QtCore.Qt.AlignCenter)
-        self.inputMaxRpm.setProperty("referenceType", 1)
-        self.inputMaxRpm.setProperty("axisNumber", 2)
-        self.inputMaxRpm.setProperty("latheMode", 0)
-        self.inputMaxRpm.setObjectName("inputMaxRpm")
-        self.inputCss = TeachInDroLabel(self.tab_2)
-        self.inputCss.setGeometry(QtCore.QRect(125, 100, 66, 36))
-        font = QtGui.QFont()
-        font.setFamily("Noto Sans Mono")
-        font.setPointSize(12)
-        font.setBold(False)
-        font.setItalic(False)
-        font.setWeight(50)
-        self.inputCss.setFont(font)
-        self.inputCss.setStyleSheet("QLabel {\n"
-"        border-style: solid;\n"
-"        border-color: rgb(119, 118, 123);\n"
-"        border-width: 1px;\n"
-"        border-radius: 5px;\n"
-"        color: rgb(20, 20, 20);\n"
-"        background: rgb(246, 245, 244);\n"
-"        font: 12pt \"Noto Sans Mono\";\n"
-"}")
-        self.inputCss.setAlignment(QtCore.Qt.AlignCenter)
-        self.inputCss.setProperty("referenceType", 1)
-        self.inputCss.setProperty("axisNumber", 2)
-        self.inputCss.setProperty("latheMode", 0)
-        self.inputCss.setObjectName("inputCss")
-        self.tabSpindleMode.addTab(self.tab_2, "")
         self.feedFrame = QtWidgets.QFrame(self.manualTurningTab)
         self.feedFrame.setGeometry(QtCore.QRect(535, 735, 551, 241))
         self.feedFrame.setStyleSheet("QFrame#feedFrame {\n"
@@ -398,89 +245,6 @@ class Ui_MainWindow(object):
         self.feedFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.feedFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.feedFrame.setObjectName("feedFrame")
-        self.actualFeed = QtWidgets.QLabel(self.feedFrame)
-        self.actualFeed.setGeometry(QtCore.QRect(400, 55, 66, 36))
-        self.actualFeed.setStyleSheet("font: 12pt \"Noto Sans Mono\";")
-        self.actualFeed.setAlignment(QtCore.Qt.AlignCenter)
-        self.actualFeed.setObjectName("actualFeed")
-        self.actualFeedType = QtWidgets.QLabel(self.feedFrame)
-        self.actualFeedType.setGeometry(QtCore.QRect(475, 55, 61, 36))
-        self.actualFeedType.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.actualFeedType.setObjectName("actualFeedType")
-        self.label_31 = QtWidgets.QLabel(self.feedFrame)
-        self.label_31.setGeometry(QtCore.QRect(285, 55, 91, 36))
-        self.label_31.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.label_31.setObjectName("label_31")
-        self.label_32 = QtWidgets.QLabel(self.feedFrame)
-        self.label_32.setGeometry(QtCore.QRect(285, 15, 76, 36))
-        self.label_32.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.label_32.setObjectName("label_32")
-        self.rpmUnit_23 = QtWidgets.QLabel(self.feedFrame)
-        self.rpmUnit_23.setGeometry(QtCore.QRect(480, 155, 36, 36))
-        self.rpmUnit_23.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.rpmUnit_23.setObjectName("rpmUnit_23")
-        self.actualFeedType_2 = QtWidgets.QLabel(self.feedFrame)
-        self.actualFeedType_2.setGeometry(QtCore.QRect(475, 15, 61, 36))
-        self.actualFeedType_2.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.actualFeedType_2.setObjectName("actualFeedType_2")
-        self.inputFeed = TeachInDroLabel(self.feedFrame)
-        self.inputFeed.setGeometry(QtCore.QRect(400, 15, 66, 36))
-        font = QtGui.QFont()
-        font.setFamily("Noto Sans Mono")
-        font.setPointSize(12)
-        font.setBold(False)
-        font.setItalic(False)
-        font.setWeight(50)
-        self.inputFeed.setFont(font)
-        self.inputFeed.setStyleSheet("QLabel {\n"
-"        border-style: solid;\n"
-"        border-color: rgb(119, 118, 123);\n"
-"        border-width: 1px;\n"
-"        border-radius: 5px;\n"
-"        color: rgb(20, 20, 20);\n"
-"        background: rgb(246, 245, 244);\n"
-"        font: 12pt \"Noto Sans Mono\";\n"
-"}")
-        self.inputFeed.setAlignment(QtCore.Qt.AlignCenter)
-        self.inputFeed.setProperty("referenceType", 1)
-        self.inputFeed.setProperty("axisNumber", 2)
-        self.inputFeed.setProperty("latheMode", 0)
-        self.inputFeed.setObjectName("inputFeed")
-        self.latheJoystick = LatheJoystickWidget(self.feedFrame)
-        self.latheJoystick.setGeometry(QtCore.QRect(5, 5, 250, 230))
-        self.latheJoystick.setObjectName("latheJoystick")
-        self.line = QtWidgets.QFrame(self.feedFrame)
-        self.line.setGeometry(QtCore.QRect(255, 10, 16, 221))
-        self.line.setFrameShape(QtWidgets.QFrame.VLine)
-        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line.setObjectName("line")
-        self.inputFeedAngle = TeachInDroLabel(self.feedFrame)
-        self.inputFeedAngle.setGeometry(QtCore.QRect(400, 155, 66, 36))
-        font = QtGui.QFont()
-        font.setFamily("Noto Sans Mono")
-        font.setPointSize(12)
-        font.setBold(False)
-        font.setItalic(False)
-        font.setWeight(50)
-        self.inputFeedAngle.setFont(font)
-        self.inputFeedAngle.setStyleSheet("QLabel {\n"
-"        border-style: solid;\n"
-"        border-color: rgb(119, 118, 123);\n"
-"        border-width: 1px;\n"
-"        border-radius: 5px;\n"
-"        color: rgb(20, 20, 20);\n"
-"        background: rgb(246, 245, 244);\n"
-"        font: 12pt \"Noto Sans Mono\";\n"
-"}")
-        self.inputFeedAngle.setAlignment(QtCore.Qt.AlignCenter)
-        self.inputFeedAngle.setProperty("referenceType", 1)
-        self.inputFeedAngle.setProperty("axisNumber", 2)
-        self.inputFeedAngle.setProperty("latheMode", 0)
-        self.inputFeedAngle.setObjectName("inputFeedAngle")
-        self.label_35 = QtWidgets.QLabel(self.feedFrame)
-        self.label_35.setGeometry(QtCore.QRect(285, 155, 91, 36))
-        self.label_35.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.label_35.setObjectName("label_35")
         self.jogSpeedFrame = QtWidgets.QFrame(self.manualTurningTab)
         self.jogSpeedFrame.setGeometry(QtCore.QRect(1095, 735, 121, 241))
         self.jogSpeedFrame.setStyleSheet("QFrame#jogSpeedFrame {\n"
@@ -501,91 +265,6 @@ class Ui_MainWindow(object):
         self.handwheelsFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.handwheelsFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.handwheelsFrame.setObjectName("handwheelsFrame")
-        self.statuslabel_35 = StatusLabel(self.handwheelsFrame)
-        self.statuslabel_35.setGeometry(QtCore.QRect(40, 695, 66, 16))
-        self.statuslabel_35.setStyleSheet("")
-        self.statuslabel_35.setAlignment(QtCore.Qt.AlignCenter)
-        self.statuslabel_35.setObjectName("statuslabel_35")
-        self.xMpgCheckbox = QtWidgets.QCheckBox(self.handwheelsFrame)
-        self.xMpgCheckbox.setGeometry(QtCore.QRect(20, 60, 80, 80))
-        font = QtGui.QFont()
-        font.setPointSize(32)
-        font.setBold(True)
-        font.setWeight(75)
-        self.xMpgCheckbox.setFont(font)
-        self.xMpgCheckbox.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.xMpgCheckbox.setStyleSheet("QCheckBox::indicator {\n"
-"    width: 0px;\n"
-"    height: 0px;\n"
-"}\n"
-"QCheckBox {\n"
-"    border-radius: 40px;\n"
-"    background-color: lightgray;\n"
-"    border-style: solid;\n"
-"    border-width: 1px;\n"
-"    border-color: gray;\n"
-"    color: black;\n"
-"    padding-left: 20px;\n"
-"}\n"
-"QCheckBox:checked {\n"
-"    background-color: lightblue;\n"
-"       color: black;\n"
-"    padding-left: 20px;\n"
-"}\n"
-"QCheckBox:disabled {\n"
-"    background-color: #f0f0f0; \n"
-"    border-color: #d3d3d3; \n"
-"    color: #a0a0a0;\n"
-"}")
-        self.xMpgCheckbox.setChecked(True)
-        self.xMpgCheckbox.setObjectName("xMpgCheckbox")
-        self.zMpgCheckbox = QtWidgets.QCheckBox(self.handwheelsFrame)
-        self.zMpgCheckbox.setEnabled(True)
-        self.zMpgCheckbox.setGeometry(QtCore.QRect(115, 145, 80, 80))
-        font = QtGui.QFont()
-        font.setPointSize(32)
-        font.setBold(True)
-        font.setWeight(75)
-        self.zMpgCheckbox.setFont(font)
-        self.zMpgCheckbox.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.zMpgCheckbox.setStyleSheet("QCheckBox::indicator {\n"
-"    width: 0px;\n"
-"    height: 0px;\n"
-"}\n"
-"QCheckBox {\n"
-"    border-radius: 40px;\n"
-"    background-color: lightgray;\n"
-"    border-style: solid;\n"
-"    border-width: 1px;\n"
-"    border-color: gray;\n"
-"    color: black;\n"
-"    padding-left: 20px;\n"
-"}\n"
-"QCheckBox:checked {\n"
-"    background-color: lightblue;\n"
-"       color: black;\n"
-"    padding-left: 20px;\n"
-"}\n"
-"QCheckBox:disabled {\n"
-"    background-color: #f0f0f0; \n"
-"    border-color: #d3d3d3; \n"
-"    color: #a0a0a0;\n"
-"}")
-        self.zMpgCheckbox.setChecked(True)
-        self.zMpgCheckbox.setObjectName("zMpgCheckbox")
-        self.jogIncrement = QtWidgets.QLabel(self.handwheelsFrame)
-        self.jogIncrement.setGeometry(QtCore.QRect(110, 10, 56, 36))
-        self.jogIncrement.setStyleSheet("font: 12pt \"Noto Sans Mono\";")
-        self.jogIncrement.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.jogIncrement.setObjectName("jogIncrement")
-        self.label_21 = QtWidgets.QLabel(self.handwheelsFrame)
-        self.label_21.setGeometry(QtCore.QRect(15, 10, 91, 36))
-        self.label_21.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.label_21.setObjectName("label_21")
-        self.actualFeedType_4 = QtWidgets.QLabel(self.handwheelsFrame)
-        self.actualFeedType_4.setGeometry(QtCore.QRect(170, 10, 36, 36))
-        self.actualFeedType_4.setStyleSheet("font: 13pt \"Cantarell\";")
-        self.actualFeedType_4.setObjectName("actualFeedType_4")
         self.quickcycles = QuickCycles(self.manualTurningTab)
         self.quickcycles.setGeometry(QtCore.QRect(1445, 5, 371, 461))
         self.quickcycles.setObjectName("quickcycles")
@@ -2403,7 +2082,6 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.stackedWidget.setCurrentIndex(1)
         self.tabWidget.setCurrentIndex(1)
-        self.tabSpindleMode.setCurrentIndex(0)
         self.currentTool.setCurrentIndex(1)
         self.stackedProgramsTab.setCurrentIndex(0)
         self.innerToolsAndOffsets.setCurrentIndex(0)
@@ -2472,57 +2150,6 @@ class Ui_MainWindow(object):
         self.axisactionbutton_7.setProperty("actionName", _translate("MainWindow", "machine.home.axis:x"))
         self.axisactionbutton_8.setText(_translate("MainWindow", "Home Z"))
         self.axisactionbutton_8.setProperty("actionName", _translate("MainWindow", "machine.home.axis:z"))
-        self.rpmUnit_10.setText(_translate("MainWindow", "rev/min"))
-        self.rpmUnit_7.setText(_translate("MainWindow", "rev/min"))
-        self.label_16.setText(_translate("MainWindow", "Actual RPM:"))
-        self.label_15.setText(_translate("MainWindow", "Set RPM:"))
-        self.inputRpm.setText(_translate("MainWindow", "1000"))
-        self.inputRpm.setProperty("inchFormat", _translate("MainWindow", "%9.4f"))
-        self.inputRpm.setProperty("millimeterFormat", _translate("MainWindow", "%10.3f"))
-        self.inputRpm.setProperty("degreeFormat", _translate("MainWindow", "%10.2f"))
-        self.actualRpm.setText(_translate("MainWindow", "0000"))
-        self.tabSpindleMode.setTabText(self.tabSpindleMode.indexOf(self.tab), _translate("MainWindow", "RPM"))
-        self.actualCss.setText(_translate("MainWindow", "000"))
-        self.rpmUnit_11.setText(_translate("MainWindow", "m/min"))
-        self.actualRpmCss.setText(_translate("MainWindow", "0000"))
-        self.label_19.setText(_translate("MainWindow", "Set CSS:"))
-        self.rpmUnit_12.setText(_translate("MainWindow", "rev/min"))
-        self.rpmUnit_14.setText(_translate("MainWindow", "m/min"))
-        self.label_18.setText(_translate("MainWindow", "Max RPM:"))
-        self.label_20.setText(_translate("MainWindow", "Actual RPM:"))
-        self.rpmUnit_15.setText(_translate("MainWindow", "rev/min"))
-        self.label_17.setText(_translate("MainWindow", "Actual CSS:"))
-        self.inputMaxRpm.setText(_translate("MainWindow", "1000"))
-        self.inputMaxRpm.setProperty("inchFormat", _translate("MainWindow", "%9.4f"))
-        self.inputMaxRpm.setProperty("millimeterFormat", _translate("MainWindow", "%10.3f"))
-        self.inputMaxRpm.setProperty("degreeFormat", _translate("MainWindow", "%10.2f"))
-        self.inputCss.setText(_translate("MainWindow", "100"))
-        self.inputCss.setProperty("inchFormat", _translate("MainWindow", "%9.4f"))
-        self.inputCss.setProperty("millimeterFormat", _translate("MainWindow", "%10.3f"))
-        self.inputCss.setProperty("degreeFormat", _translate("MainWindow", "%10.2f"))
-        self.tabSpindleMode.setTabText(self.tabSpindleMode.indexOf(self.tab_2), _translate("MainWindow", "CSS"))
-        self.actualFeed.setText(_translate("MainWindow", "0.00"))
-        self.actualFeedType.setText(_translate("MainWindow", "mm/rev"))
-        self.label_31.setText(_translate("MainWindow", "Actual feed:"))
-        self.label_32.setText(_translate("MainWindow", "Set feed:"))
-        self.rpmUnit_23.setText(_translate("MainWindow", "deg"))
-        self.actualFeedType_2.setText(_translate("MainWindow", "mm/rev"))
-        self.inputFeed.setText(_translate("MainWindow", "0.10"))
-        self.inputFeed.setProperty("inchFormat", _translate("MainWindow", "%9.4f"))
-        self.inputFeed.setProperty("millimeterFormat", _translate("MainWindow", "%10.3f"))
-        self.inputFeed.setProperty("degreeFormat", _translate("MainWindow", "%10.2f"))
-        self.inputFeedAngle.setText(_translate("MainWindow", "45"))
-        self.inputFeedAngle.setProperty("inchFormat", _translate("MainWindow", "%9.4f"))
-        self.inputFeedAngle.setProperty("millimeterFormat", _translate("MainWindow", "%10.3f"))
-        self.inputFeedAngle.setProperty("degreeFormat", _translate("MainWindow", "%10.2f"))
-        self.label_35.setText(_translate("MainWindow", "Feed angle:"))
-        self.statuslabel_35.setText(_translate("MainWindow", "N/A/min"))
-        self.statuslabel_35.setProperty("rules", _translate("MainWindow", "[{\"channels\": [{\"url\": \"status:program_units?text\", \"trigger\": true}], \"property\": \"Text\", \"expression\": \"ch[0] + \'/min\'\", \"name\": \"Rapid Speed\"}]"))
-        self.xMpgCheckbox.setText(_translate("MainWindow", "X"))
-        self.zMpgCheckbox.setText(_translate("MainWindow", "Z"))
-        self.jogIncrement.setText(_translate("MainWindow", "0.001"))
-        self.label_21.setText(_translate("MainWindow", "Increment:"))
-        self.actualFeedType_4.setText(_translate("MainWindow", "mm"))
         self.label_8.setText(_translate("MainWindow", "Spindle"))
         self.statuslabel_6.setText(_translate("MainWindow", "0%"))
         self.statuslabel_6.setProperty("rules", _translate("MainWindow", "[{\"name\": \"spindle_override\", \"property\": \"Text\", \"expression\": \"str(int(ch[0] * 100)) + \'%\'\", \"channels\": [{\"url\": \"status:spindle.0.override\", \"trigger\": true}]}]"))
@@ -2708,11 +2335,9 @@ from qtpyvcp.widgets.input_widgets.gcode_text_edit import GcodeTextEdit
 from qtpyvcp.widgets.input_widgets.mdientry_widget import MDIEntry
 from qtpyvcp.widgets.input_widgets.offset_table import OffsetTable
 from qtpyvcp.widgets.input_widgets.recent_file_combobox import RecentFileComboBox
-from qtpyvcp.widgets.input_widgets.teachin_dro_label import TeachInDroLabel
 from teachinlathe.widgets.add_edit_tool.add_edit_tool import AddEditToolWidget
 from teachinlathe.widgets.conversational_qml.ConversationalQml import ConversationalQml
 from teachinlathe.widgets.lathe_fixtures.lathe_fixtures_cards import LatheFixturesCards
-from teachinlathe.widgets.lathe_joystick.lathe_joystick import LatheJoystickWidget
 from teachinlathe.widgets.lathe_tool_table import LatheToolTable
 from teachinlathe.widgets.quick_cycles.quick_cycles import QuickCycles
 from teachinlathe.widgets.teachin_lathe_dro import TeachInLatheDro

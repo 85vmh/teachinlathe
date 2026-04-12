@@ -10,7 +10,7 @@ from qtpyvcp.plugins.status import STAT
 from qtpyvcp.utilities.info import Info
 
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
-from teachinlathe.widgets.lathe_joystick.lathe_joystick import JoystickState
+from teachinlathe.widgets.manual_qml.joystick_state import JoystickState
 
 LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
@@ -269,4 +269,3 @@ class ManualLathe:
         elif self.joystickDirection is not JoystickDirection.NONE and self.isJoystickRapid:
             print("Joystick not none, rapid on")
             self.joystickWidget.setRapid(True)
-
