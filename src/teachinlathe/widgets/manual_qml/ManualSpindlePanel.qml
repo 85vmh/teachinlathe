@@ -9,12 +9,18 @@ Rectangle {
     signal openNumPadRequested(var field)
 
     color: "#e6e6e6"
+    border.color: "#0a0a0a"
+    border.width: 1
+    radius: 8
 
     TabBar {
         id: tabBar
         anchors.left: parent.left
+        anchors.leftMargin: 1
         anchors.right: parent.right
+        anchors.rightMargin: 1
         anchors.top: parent.top
+        anchors.topMargin: 1
         height: 44
         currentIndex: viewModel ? viewModel.spindleMode : 0
         onCurrentIndexChanged: if (viewModel) viewModel.setSpindleMode(currentIndex)
@@ -58,9 +64,12 @@ Rectangle {
 
     Rectangle {
         anchors.left: parent.left
+        anchors.leftMargin: 1
         anchors.right: parent.right
+        anchors.rightMargin: 1
         anchors.top: tabBar.bottom
         anchors.bottom: parent.bottom
+        anchors.bottomMargin: 1
         color: "#e6e6e6"
 
         StackLayout {

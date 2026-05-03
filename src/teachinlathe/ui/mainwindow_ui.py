@@ -268,9 +268,6 @@ class Ui_MainWindow(object):
         self.quickcycles = QuickCycles(self.manualTurningTab)
         self.quickcycles.setGeometry(QtCore.QRect(1445, 5, 371, 461))
         self.quickcycles.setObjectName("quickcycles")
-        self.teachinlathedro = TeachInLatheDro(self.manualTurningTab)
-        self.teachinlathedro.setGeometry(QtCore.QRect(0, 0, 1311, 696))
-        self.teachinlathedro.setObjectName("teachinlathedro")
         self.label_8 = QtWidgets.QLabel(self.manualTurningTab)
         self.label_8.setGeometry(QtCore.QRect(70, 705, 106, 31))
         self.label_8.setStyleSheet("font: 18pt \"Cantarell\";")
@@ -2340,5 +2337,4 @@ from teachinlathe.widgets.conversational_qml.ConversationalQml import Conversati
 from teachinlathe.widgets.lathe_fixtures.lathe_fixtures_cards import LatheFixturesCards
 from teachinlathe.widgets.lathe_tool_table import LatheToolTable
 from teachinlathe.widgets.quick_cycles.quick_cycles import QuickCycles
-from teachinlathe.widgets.teachin_lathe_dro import TeachInLatheDro
 import teachinlathe_rc

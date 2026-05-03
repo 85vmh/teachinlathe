@@ -1,32 +1,28 @@
 # Setup logging
 import os
-import tempfile
 from enum import Enum
 
 import linuxcnc
-from PyQt5.QtCore import Q_ARG, QMetaObject, QObject, QTimer, QSignalBlocker, QUrl, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QColor, QPixmap
-from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtCore import Q_ARG, QMetaObject, QObject, QTimer, QUrl, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QColor
 from PyQt5.QtQuickWidgets import QQuickWidget
-from PyQt5.uic.properties import QtWidgets
 from qtpyvcp.actions.machine_actions import issue_mdi
-from qtpyvcp.actions.program_actions import load as loadProgram
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities import logger
 from qtpyvcp.utilities.info import Info
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
+from teachinlathe.app_state import AppState
+from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
-from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.widgets.FrameAnimator import FrameAnimator
-from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
-from teachinlathe.widgets.tools_list_provider import ToolsListProvider
-from teachinlathe.widgets.programs_qml.ProgramsQml import ProgramsQml
 from teachinlathe.widgets.app_shell_widget import AppShellWidget
 from teachinlathe.widgets.manual_qml import ManualTurningViewModel
-from teachinlathe.app_state import AppState
-import teachinlathe_rc
+from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLatheDroViewModel
+from teachinlathe.widgets.programs_qml.ProgramsQml import ProgramsQml
+from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
+from teachinlathe.widgets.tools_list_provider import ToolsListProvider
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
 from PyQt5.QtCore import Qt
@@ -136,6 +132,7 @@ class MyMainWindow(VCPMainWindow):
         self.fixture_repository = LatheFixturesRepository()
         self.manualLathe = ManualLathe()
         self.manualTurningViewModel = ManualTurningViewModel(self.manualLathe, self)
+        self.teachInLatheDroViewModel = TeachInLatheDroViewModel(self)
         self.manualJoystickController = ManualJoystickController(self)
         self.latheJoystick = self.manualJoystickController
         self.manualLathe.setJoystickWidget(self.manualJoystickController)
@@ -155,8 +152,8 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = True
         self.onSpindleFirstGearChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
 
-        self.teachinlathedro.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
-        self.teachinlathedro.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
+        self.teachInLatheDroViewModel.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
+        self.teachInLatheDroViewModel.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
 
         # spindle override, initial value and updates
         self.onSpindleOverrideChanged(STATUS.spindle[0].override.value)
@@ -200,9 +197,8 @@ class MyMainWindow(VCPMainWindow):
 
         self.toolsListProvider = ToolsListProvider(self)
 
-        QTimer.singleShot(0, self._initManualTurningQml)
+        QTimer.singleShot(0, self._initManualTurningRoot)
         QTimer.singleShot(0, self.afterUIInit)
-        QTimer.singleShot(0, self._initManualToolsList)
         QTimer.singleShot(0, self._initProgramsQml)
         QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
         QTimer.singleShot(0, self._initAppShell)
@@ -239,7 +235,7 @@ class MyMainWindow(VCPMainWindow):
 
     def onFixtureSelected(self, fixture):
         print("---Fixture selected: ", fixture)
-        self.teachinlathedro.setChuckLimit(fixture.z_minus_limit)
+        self.teachInLatheDroViewModel.setChuckLimit(fixture.z_minus_limit)
 
     def afterUIInit(self):
         # set the current values
@@ -248,6 +244,69 @@ class MyMainWindow(VCPMainWindow):
         self.manualLathe.onInputCssChanged(self.manualTurningViewModel.inputCss)
         self.manualLathe.onMaxSpindleRpmChanged(self.manualTurningViewModel.inputMaxRpm)
         self.manualLathe.onInputFeedChanged(self.manualTurningViewModel.inputFeed)
+
+    def _initManualTurningRoot(self):
+        if hasattr(self, "manualTurningRootQml"):
+            return
+
+        self.manualInputBridge = ManualInputBridge(self, self)
+        self._active_numpad_field = None
+
+        tab = self.manualTurningTab
+        self.manualTurningRootQml = QQuickWidget(tab)
+        self.manualTurningRootQml.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        self.manualTurningRootQml.setClearColor(QColor("#efefef"))
+        self.manualTurningRootQml.setGeometry(0, 0, tab.width(), tab.height())
+        self.manualTurningRootQml.setFocusPolicy(Qt.StrongFocus)
+        self.manualTurningRootQml.setMouseTracking(True)
+
+        ctx = self.manualTurningRootQml.engine().rootContext()
+        ctx.setContextProperty("manualViewModel",     self.manualTurningViewModel)
+        ctx.setContextProperty("manualInputBridge",   self.manualInputBridge)
+        ctx.setContextProperty("teachInDroViewModel", self.teachInLatheDroViewModel)
+        ctx.setContextProperty("toolsProvider",       self.toolsListProvider)
+        ctx.setContextProperty("appState",            self.appState)
+        ctx.setContextProperty("cncStore",            self.appState.cncStore)
+        ctx.setContextProperty("navigationStore",     self.appState.navigationStore)
+
+        self.manualTurningRootQml.statusChanged.connect(self._on_manual_root_status_changed)
+
+        qml_path = os.path.join(os.path.dirname(__file__), "widgets", "manual_qml", "ManualTurningRoot.qml")
+        self.manualTurningRootQml.setSource(QUrl.fromLocalFile(qml_path))
+        self.manualTurningRootQml.show()
+        self.manualTurningRootQml.raise_()
+
+        # Hide legacy widgets now superseded by the QML root
+        if hasattr(self, "toolLibraryContainer"):
+            self.toolLibraryContainer.setVisible(False)
+
+        # Restore persisted state into ViewModel
+        self.onSpindleFirstGearChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
+        spindle_mode           = self.manualTurningViewModel.spindleMode
+        jog_increment          = self.manualTurningViewModel.jogIncrement
+        x_handwheel_enabled    = self.manualTurningViewModel.xHandwheelEnabled
+        z_handwheel_enabled    = self.manualTurningViewModel.zHandwheelEnabled
+        self.manualTurningViewModel.setSpindleMode(spindle_mode)
+        self.manualTurningViewModel.setFeedOverride(self.current_feed_override)
+        self.manualTurningViewModel.setSpindleOverride(self.current_spindle_override)
+        self.manualTurningViewModel.setJogIncrement(jog_increment)
+        self.manualTurningViewModel.setHandwheelStates(x_handwheel_enabled, z_handwheel_enabled)
+        self.manualLathe.onInputCssChanged(self.manualTurningViewModel.inputCss)
+        self.manualLathe.onInputFeedChanged(self.manualTurningViewModel.inputFeed)
+
+    def _on_manual_root_status_changed(self, status):
+        if status != QQuickWidget.Ready:
+            return
+        root = self.manualTurningRootQml.rootObject()
+        if root is None:
+            return
+        root.openNumPadRequested.connect(lambda field: self.openNumPad(field))
+        root.xToggled.connect(self.onManualQmlXHandwheelToggled)
+        root.zToggled.connect(self.onManualQmlZHandwheelToggled)
+        root.angleFeedToggled.connect(self.manualJoystickController.handleAngleFeedToggled)
+        self.manualJoystickController.attach(root)
+        self.latheJoystick = self.manualJoystickController
+        self.manualLathe.setJoystickWidget(self.manualJoystickController)
 
     def _initManualToolsList(self):
         self.manualToolsList = QQuickWidget(self.toolLibraryContainer)
@@ -261,6 +320,22 @@ class MyMainWindow(VCPMainWindow):
         qml_path = os.path.join(os.path.dirname(__file__), "widgets", "ToolListView.qml")
         self.manualToolsList.setSource(QUrl.fromLocalFile(qml_path))
         self.manualToolsList.show()
+
+    def _initTeachInLatheDroQml(self):
+        if hasattr(self, "teachInLatheDroQml"):
+            return
+        self.teachInLatheDroQml = QQuickWidget(self.manualTurningTab)
+        self.teachInLatheDroQml.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        self.teachInLatheDroQml.setClearColor(QColor("#efefef"))
+        self.teachInLatheDroQml.setGeometry(0, 0, 1311, 696)
+        self.teachInLatheDroQml.engine().rootContext().setContextProperty(
+            "teachInDroViewModel",
+            self.teachInLatheDroViewModel,
+        )
+        qml_path = os.path.join(os.path.dirname(__file__), "widgets", "manual_qml", "TeachInLatheDroRoot.qml")
+        self.teachInLatheDroQml.setSource(QUrl.fromLocalFile(qml_path))
+        self.teachInLatheDroQml.show()
+        self.teachInLatheDroQml.raise_()
 
     def _initManualTurningQml(self):
         if hasattr(self, "manualSpindleQml"):
@@ -336,15 +411,9 @@ class MyMainWindow(VCPMainWindow):
         return widget
 
     def _raise_manual_qml_widgets(self):
-        for widget_name in (
-            "manualJoystickQml",
-            "manualFeedQml",
-            "manualSpindleQml",
-            "manualHandwheelsQml",
-        ):
-            widget = getattr(self, widget_name, None)
-            if widget is not None:
-                widget.raise_()
+        widget = getattr(self, "manualTurningRootQml", None)
+        if widget is not None:
+            widget.raise_()
 
     def _on_manual_qml_status_changed(self, status, widget):
         if status != QQuickWidget.Ready:
@@ -433,13 +502,10 @@ class MyMainWindow(VCPMainWindow):
         manual_active = current_index == MainTabs.MANUAL_TURNING.value
         conversational_active = current_index == MainTabs.CONVERSATIONAL.value
 
-        if hasattr(self, "toolLibraryContainer"):
-            self.toolLibraryContainer.setVisible(manual_active)
-            self.toolLibraryContainer.update()
-
-        if hasattr(self, "manualToolsList"):
-            self.manualToolsList.setVisible(manual_active)
-            self.manualToolsList.update()
+        if hasattr(self, "manualTurningRootQml"):
+            self.manualTurningRootQml.setVisible(manual_active)
+            if manual_active:
+                self.manualTurningRootQml.raise_()
 
         if hasattr(self, "conversationalqml"):
             self.conversationalqml.setVisible(conversational_active)
@@ -455,7 +521,7 @@ class MyMainWindow(VCPMainWindow):
     def onMainTabChanged(self, index):
         self.mainSelectedTab = MainTabs(index)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = self.mainSelectedTab == MainTabs.PROGRAMS
-        self.teachinlathedro.limitsHandler.setChuckLimitsActive(self.mainSelectedTab != MainTabs.MACHINE_SETTINGS)
+        self.teachInLatheDroViewModel.limitsHandler.setChuckLimitsActive(self.mainSelectedTab != MainTabs.MACHINE_SETTINGS)
 
         tab_id = {
             MainTabs.MANUAL_TURNING.value: "manual",

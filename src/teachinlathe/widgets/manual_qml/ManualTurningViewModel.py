@@ -220,6 +220,14 @@ class ManualTurningViewModel(QObject):
         self._actual_rpm = str(abs(int(value or 0)))
         self.spindleValuesChanged.emit()
 
+    @pyqtProperty(int, notify=spindleValuesChanged)
+    def spindleOverridePercent(self):
+        return int(round(self._spindle_override * 100))
+
+    @pyqtProperty(int, notify=feedValuesChanged)
+    def feedOverridePercent(self):
+        return int(round(self._feed_override * 100))
+
     def setSpindleOverride(self, value):
         self._spindle_override = self._to_float(value, 1.0)
         self._update_actual_css()

@@ -3,7 +3,7 @@
     "header": {
         "name": "Custom Profiling",
         "created_date": "2026-03-12 09:25:08",
-        "last_edit": "2026-03-30 11:21:33",
+        "last_edit": "2026-04-20 07:43:29",
         "datum": 1,
         "units": "mm",
         "workpiece": {
@@ -23,12 +23,7 @@
             "tool_orientation": 2,
             "back_angle": 95,
             "front_angle": 80,
-            "toolchange_rules": {
-                "x_pos": 50.0,
-                "z_pos": -20.0,
-                "coordinate_type": "absolute",
-                "move_sequence": "both"
-            }
+            "toolchange_position": "G28"
         },
         {
             "order": 2,
@@ -125,12 +120,7 @@
             "tool_orientation": 1,
             "back_angle": 0,
             "front_angle": 0,
-            "toolchange_rules": {
-                "x_pos": 50.0,
-                "z_pos": 0.0,
-                "coordinate_type": "absolute",
-                "move_sequence": "both"
-            }
+            "toolchange_position": "G28"
         },
         {
             "order": 6,
@@ -243,12 +233,7 @@
             "tool_orientation": 1,
             "back_angle": 0,
             "front_angle": 0,
-            "toolchange_rules": {
-                "x_pos": 0.0,
-                "z_pos": 0.0,
-                "coordinate_type": "absolute",
-                "move_sequence": "xz"
-            }
+            "toolchange_position": "G28"
         },
         {
             "order": 9,
@@ -289,12 +274,7 @@
             "tool_orientation": 6,
             "back_angle": 95,
             "front_angle": 80,
-            "toolchange_rules": {
-                "x_pos": 52.0,
-                "z_pos": 200.0,
-                "coordinate_type": "absolute",
-                "move_sequence": "both"
-            }
+            "toolchange_position": "G28"
         },
         {
             "order": 11,
@@ -332,12 +312,7 @@
             "tool_orientation": 6,
             "back_angle": 95,
             "front_angle": 80,
-            "toolchange_rules": {
-                "x_pos": 200.0,
-                "z_pos": 200.0,
-                "coordinate_type": "absolute",
-                "move_sequence": "both"
-            }
+            "toolchange_position": "G28"
         },
         {
             "order": 13,

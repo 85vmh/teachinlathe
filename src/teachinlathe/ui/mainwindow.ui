@@ -624,16 +624,6 @@ font: 14pt &quot;DejaVu Sans&quot;; }</string>
               <enum>QFrame::Raised</enum>
              </property>
             </widget>
-            <widget class="TeachInLatheDro" name="teachinlathedro">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>1111</width>
-               <height>696</height>
-              </rect>
-             </property>
-            </widget>
             <widget class="QLabel" name="label_8">
              <property name="geometry">
               <rect>
@@ -4674,11 +4664,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <class>LatheToolTable</class>
    <extends>QTableView</extends>
    <header>teachinlathe.widgets.lathe_tool_table</header>
-  </customwidget>
-  <customwidget>
-   <class>TeachInLatheDro</class>
-   <extends>QWidget</extends>
-   <header>teachinlathe.widgets.teachin_lathe_dro</header>
   </customwidget>
   <customwidget>
    <class>QQuickWidget</class>
