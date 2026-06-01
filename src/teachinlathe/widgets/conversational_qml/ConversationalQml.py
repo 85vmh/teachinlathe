@@ -139,7 +139,11 @@ class ConversationalQml(QQuickWidget):
             except Exception:
                 object_name = None
 
-        if object_name == "childScreen":
+        if getattr(self, "_profile_editor_active", False):
+            title = getattr(self, "_profile_editor_title", "Define Profile")
+            left_actions.append({"id": "back", "text": "← Back", "enabled": True})
+            right_actions.append({"id": "done", "text": "Done", "enabled": True})
+        elif object_name == "childScreen":
             program_name = ""
             try:
                 program_name = getattr(getattr(self.current_program, "header", None), "name", "") or ""
@@ -166,7 +170,7 @@ class ConversationalQml(QQuickWidget):
         }
 
     def triggerHeaderAction(self, action_id):
-        if action_id == "back":
+        if action_id in ("back", "done"):
             self.goBack()
         elif action_id == "create_new":
             self.addNewProgram()
@@ -238,9 +242,12 @@ class ConversationalQml(QQuickWidget):
         self.current_program = prog
 
         if getattr(self, "child_screen_item", None) is not None:
-            new_ops = build_operations_model(self.current_program)
-            self.child_screen_item.setProperty("activeOpIndex", getattr(self, "current_op_index", -1))
-            self.child_screen_item.setProperty("operationsModel", new_ops)
+            try:
+                new_ops = build_operations_model(self.current_program)
+                self.child_screen_item.setProperty("activeOpIndex", getattr(self, "current_op_index", -1))
+                self.child_screen_item.setProperty("operationsModel", new_ops)
+            except RuntimeError:
+                self.child_screen_item = None
 
         self._emit_header_state_changed()
 
@@ -319,9 +326,22 @@ class ConversationalQml(QQuickWidget):
                 item.deleteOperationRequested.connect(self.onDeleteOperation)
             if hasattr(item, "addOperationTypeChosen"):
                 item.addOperationTypeChosen.connect(self.onAddOperationTypeChosen)
+            if hasattr(item, "openProfileEditorRequested"):
+                item.openProfileEditorRequested.connect(self.onOpenProfileEditorRequested)
             print("Screen signals connected.")
-            if obj_name == "childScreen" and self.current_op_index == -1:
-                QTimer.singleShot(0, lambda: self.onDetailsRequested(item, -1))
+            if obj_name == "childScreen":
+                if self.current_op_index == -1:
+                    QTimer.singleShot(0, lambda it=item: self.onDetailsRequested(it, -1))
+                else:
+                    QTimer.singleShot(0, lambda it=item, idx=self.current_op_index: self.onDetailsRequested(it, idx))
+            if obj_name == "profileEditorScreen":
+                op_index = self.current_op_index
+                op_data = None
+                op = self._get_current_op(op_index)
+                if op is not None:
+                    op_data = build_details_payload(op)
+                if op_data and hasattr(item, "applyData"):
+                    QTimer.singleShot(0, lambda i=item, idx=op_index, d=op_data: i.applyData(idx, d))
         except Exception as e:
             print("Failed to hook screen item signals:", e)
 
@@ -521,6 +541,10 @@ class ConversationalQml(QQuickWidget):
                 idx = insert_default_operation(prog, op_type, insert_index)
             self.current_op_index = idx
             self._save_current_program()
+            if op_type == "defineProfile":
+                op = self._get_current_op(idx)
+                op_data = build_details_payload(op) if op is not None else {}
+                QTimer.singleShot(0, lambda i=idx, d=op_data: self.onOpenProfileEditorRequested(i, d))
         except Exception as e:
             print(f"[operations] Failed to create {op_type!r}: {e}")
 
@@ -1012,7 +1036,64 @@ class ConversationalQml(QQuickWidget):
         except Exception as e:
             print("setSelectedValue fallback failed:", e)
 
+    def onOpenProfileEditorRequested(self, op_index, op_data):
+        try:
+            op_index = int(op_index)
+        except (TypeError, ValueError):
+            op_index = self.current_op_index
+        self.current_op_index = op_index
+        # Store activeOpIndex in ChildScreen's history params so it's restored on goBack
+        try:
+            current_params = self.root._currentParams
+            if isinstance(current_params, dict):
+                current_params["activeOpIndex"] = op_index
+                self.root._currentParams = current_params
+        except Exception:
+            pass
+        # Build header title for AppShell title bar
+        try:
+            op_data_py = self._to_py(op_data) if op_data else {}
+            profile_type = str(op_data_py.get("profile_type", "od")).lower()
+            op_order = op_data_py.get("order", "")
+            type_str = "ID" if profile_type == "id" else "OD"
+            self._profile_editor_title = (
+                f"Define {type_str} Profile Op #{op_order}" if op_order else f"Define {type_str} Profile"
+            )
+        except Exception:
+            self._profile_editor_title = "Define Profile"
+        self._profile_editor_active = True
+        self._emit_header_state_changed()
+
+        # Stretch this QQuickWidget below the AppShell title bar
+        main_window = self.window()
+        if hasattr(main_window, "enterContentFullScreen"):
+            main_window.enterContentFullScreen(self)
+            self._in_profile_editor_full_screen = True
+        editor_url = QUrl.fromLocalFile(
+            os.path.join(self.base_dir, "define_profile", "ProfileEditorScreen.qml")
+        ).toString()
+        self.root.loadScreen(editor_url, {})
+
     def goBack(self):
         print("back button clicked")
+        returning_from_editor = getattr(self, "_in_profile_editor_full_screen", False)
+        if returning_from_editor:
+            self._in_profile_editor_full_screen = False
+            self._profile_editor_active = False
+            self._emit_header_state_changed()
+            main_window = self.window()
+            if hasattr(main_window, "exitFullScreen"):
+                main_window.exitFullScreen()
         self.root.goBack()
+        if returning_from_editor:
+            def _restore_selection():
+                cs = getattr(self, "child_screen_item", None)
+                if cs is None:
+                    return
+                prog = self._get_current_program()
+                if prog:
+                    cs.setProperty("operationsModel", build_operations_model(prog))
+                cs.setProperty("activeOpIndex", self.current_op_index)
+                self.onDetailsRequested(cs, self.current_op_index)
+            QTimer.singleShot(0, _restore_selection)
         QTimer.singleShot(0, self._emit_header_state_changed)

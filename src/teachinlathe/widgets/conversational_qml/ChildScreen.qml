@@ -15,6 +15,10 @@ Item {
     property real _savedContentY: 0
     property bool _restoreScrollPending: false
 
+    onActiveOpIndexChanged: {
+        opsList.currentIndex = activeOpIndex >= 0 ? activeOpIndex : -1
+    }
+
     onOperationsModelChanged: {
         var targetY = _restoreScrollPending ? _savedContentY : opsList.contentY
         Qt.callLater(function() {
@@ -53,6 +57,8 @@ Item {
     signal updatePositionAt(int index, var payload)
 
     signal updateDefineProfile(int index, var payload)
+
+    signal openProfileEditorRequested(int opIndex, var opData)
 
     signal updateFacing(int index, var payload)
 
@@ -265,7 +271,7 @@ Item {
         } else if (data.type === "profileContour") {
             detailsLoader.source = "ProfileContourDetailsView.qml"
         } else if (data.type === "defineProfile") {
-            detailsLoader.source = "define_profile/DefineProfileDetailsView.qml"
+            detailsLoader.source = "define_profile/ProfileDetailsView.qml"
         } else if (data.type === "drilling") {
             detailsLoader.source = "DrillingDetailsView.qml"
         } else if (data.type === "threading") {
@@ -659,6 +665,10 @@ Item {
                     function onAddProfileContourRequested(i) {
                         if (operationEditor.addProfileContourRequested)
                             operationEditor.addProfileContourRequested(i)
+                    }
+
+                    function onOpenProfileEditorRequested(opIdx, opData) {
+                        operationEditor.openProfileEditorRequested(opIdx, opData)
                     }
                 }
             }

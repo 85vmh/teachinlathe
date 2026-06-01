@@ -1,36 +1,43 @@
-// DefineProfileDetailsView.qml
+// ProfileEditorPopup.qml — full-screen editor for Define Profile primitives
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
 
-Item {
+Popup {
     id: root
-    anchors.fill: parent
 
-    property int opIndex: -1
-    property var opData:  null
-    property int selectedPrimIndex:  -1
-    property int selectedBlendIndex: -1
+    parent: Overlay.overlay
+    x: 0; y: 0
+    width:  Overlay.overlay ? Overlay.overlay.width  : 800
+    height: Overlay.overlay ? Overlay.overlay.height : 600
+    modal: true
+    focus: true
+    closePolicy: Popup.NoAutoClose
+    padding: 0
 
-    property int    profileId:   0
-    property string profileType: "od"
-    property bool   _loading:    false
-    property var    primitives:  []
-    property int  _pendingDeleteIndex: -1
-
-    readonly property real _primGridWidth: 180
+    // ── Public API ──────────────────────────────────────────────────────────────
+    property int    opIndex:            -1
+    property var    opData:             null
+    property int    profileId:          0
+    property string profileType:        "od"
+    property bool   _loading:           false
+    property var    primitives:         []
+    property int    selectedPrimIndex:  -1
+    property int    selectedBlendIndex: -1
+    property int    _pendingDeleteIndex: -1
 
     signal saveRequested(var updated)
     signal openNumPadRequested(var field)
 
+    // ── Data functions ──────────────────────────────────────────────────────────
     function applyData(index, data) {
         _loading  = true
         opIndex   = index
         opData    = data || {}
         profileId   = opData.profile_id   !== undefined ? Math.round(Number(opData.profile_id)) : 0
         profileType = opData.profile_type !== undefined ? String(opData.profile_type) : "od"
-        primitives = JSON.parse(JSON.stringify(opData.profile_primitives || []))
+        primitives  = JSON.parse(JSON.stringify(opData.profile_primitives || []))
         selectedPrimIndex  = -1
         selectedBlendIndex = -1
         _loading  = false
@@ -50,8 +57,8 @@ Item {
     function emitSave() {
         if (_loading) return
         var merged = root.mergeIntoOp({
-            profile_id:   root.profileId,
-            profile_type: root.profileType,
+            profile_id:         root.profileId,
+            profile_type:       root.profileType,
             profile_primitives: root.primitives
         })
         root.saveRequested({ index: root.opIndex, payload: merged })
@@ -70,7 +77,6 @@ Item {
         root.emitSave()
     }
 
-    // Called from the confirmed delete popup
     function primDeleted(idx) {
         if (idx <= 0) return
         var arr = JSON.parse(JSON.stringify(root.primitives))
@@ -92,7 +98,6 @@ Item {
         return { x: rx, z: rz }
     }
 
-    // insertIdx < 0 or >= arr.length → append; never inserts before startPoint (idx 0)
     function primInserted(insertIdx, primType, refX, refZ) {
         var arr = JSON.parse(JSON.stringify(root.primitives))
         var rx = (refX !== undefined) ? refX : 0
@@ -115,7 +120,6 @@ Item {
         root.emitSave()
     }
 
-    // ── Scroll selected card into view ──────────────────────────────────────────
     onSelectedPrimIndexChanged:  Qt.callLater(_scrollToSelected)
     onSelectedBlendIndexChanged: Qt.callLater(_scrollToBlend)
 
@@ -155,7 +159,8 @@ Item {
         }
     }
 
-    IntValidator    { id: intVal; bottom: 1; top: 999 }
+    // ── Validators ──────────────────────────────────────────────────────────────
+    IntValidator { id: intVal; bottom: 1; top: 999 }
 
     // ── Delete confirm popup ────────────────────────────────────────────────────
     Popup {
@@ -167,11 +172,9 @@ Item {
         contentWidth: 360
         contentHeight: delCol.implicitHeight
         padding: 0
+        z: 200
 
-        background: Rectangle {
-            radius: 10; color: "#202225"
-            border.color: "#3A3D41"; border.width: 1
-        }
+        background: Rectangle { radius: 10; color: "#202225"; border.color: "#3A3D41"; border.width: 1 }
 
         contentItem: Column {
             id: delCol
@@ -202,28 +205,16 @@ Item {
                 Button {
                     anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
                     text: "Cancel"; width: 100; height: 40
-                    onClicked: {
-                        root._pendingDeleteIndex = -1
-                        deleteConfirmPopup.close()
-                    }
+                    onClicked: { root._pendingDeleteIndex = -1; deleteConfirmPopup.close() }
                 }
 
                 Button {
                     anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                     text: "Delete"; width: 120; height: 40
-                    contentItem: Text {
-                        text: parent.text; color: "white"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font: parent.font
-                    }
-                    background: Rectangle {
-                        radius: 4
-                        color: parent.pressed ? "#B71C1C" : "#C62828"
-                    }
+                    contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font: parent.font }
+                    background: Rectangle { radius: 4; color: parent.pressed ? "#B71C1C" : "#C62828" }
                     onClicked: {
-                        if (root._pendingDeleteIndex > 0)
-                            root.primDeleted(root._pendingDeleteIndex)
+                        if (root._pendingDeleteIndex > 0) root.primDeleted(root._pendingDeleteIndex)
                         root._pendingDeleteIndex = -1
                         deleteConfirmPopup.close()
                     }
@@ -242,14 +233,12 @@ Item {
         contentWidth: 420
         contentHeight: addCol.implicitHeight
         padding: 0
+        z: 200
 
         property string selectedType: ""
         onAboutToShow: selectedType = ""
 
-        background: Rectangle {
-            radius: 10; color: "#202225"
-            border.color: "#3A3D41"; border.width: 1
-        }
+        background: Rectangle { radius: 10; color: "#202225"; border.color: "#3A3D41"; border.width: 1 }
 
         contentItem: Column {
             id: addCol
@@ -259,48 +248,28 @@ Item {
 
             Text { text: "Add Primitive"; font.pixelSize: 18; font.bold: true; color: "white" }
 
-            // Type selector buttons
             Row {
                 spacing: 8
-
                 Repeater {
-                    model: [
-                        { label: "LineTo", type: "lineTo" },
-                        { label: "ArcTo",  type: "arcTo"  }
-                    ]
+                    model: [{ label: "LineTo", type: "lineTo" }, { label: "ArcTo", type: "arcTo" }]
                     delegate: Button {
                         readonly property bool isSelected: addPrimPopup.selectedType === modelData.type
                         width: 150; height: 44
                         text: modelData.label
                         font.pixelSize: 15
-
                         background: Rectangle {
                             radius: 4
-                            color: {
-                                if (isSelected)      return "#1E88E5"
-                                if (parent.pressed)  return "#3A4A5A"
-                                if (parent.hovered)  return "#2A3540"
-                                return "#2D3035"
-                            }
-                            border.color: isSelected ? "#1565C0" : "#4A4D52"
-                            border.width: 1
+                            color: { if (isSelected) return "#1E88E5"; if (parent.pressed) return "#3A4A5A"; if (parent.hovered) return "#2A3540"; return "#2D3035" }
+                            border.color: isSelected ? "#1565C0" : "#4A4D52"; border.width: 1
                         }
-                        contentItem: Text {
-                            text: parent.text; font: parent.font; color: "white"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        onClicked: {
-                            addPrimPopup.selectedType =
-                                (addPrimPopup.selectedType === modelData.type) ? "" : modelData.type
-                        }
+                        contentItem: Text { text: parent.text; font: parent.font; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        onClicked: addPrimPopup.selectedType = (addPrimPopup.selectedType === modelData.type) ? "" : modelData.type
                     }
                 }
             }
 
             Rectangle { width: addPrimPopup.contentWidth - 32; height: 1; color: "#3A3D41" }
 
-            // Footer: Cancel | Insert Above | Insert Below
             Item {
                 width: addPrimPopup.contentWidth - 32; height: 44
 
@@ -316,7 +285,6 @@ Item {
 
                     Button {
                         text: "Insert Above"; width: 130; height: 40
-                        // enabled only when a type is chosen AND something other than startPoint is selected
                         enabled: addPrimPopup.selectedType !== "" && root.selectedPrimIndex > 0
                         onClicked: {
                             var ref = root._refEndCoords(root.selectedPrimIndex - 1)
@@ -342,85 +310,143 @@ Item {
         }
     }
 
-    // ── Main layout ─────────────────────────────────────────────────────────────
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 12
-        spacing: 16
+    // ── Background ──────────────────────────────────────────────────────────────
+    background: Rectangle { color: "#16191e" }
 
-        Label {
-            text: {
-                var typeStr = (root.profileType === "id") ? "ID" : "OD"
-                if (opData && opData.type)
-                    return "Define " + typeStr + " Profile — Op #" + (opData.order !== undefined ? opData.order : "N/A")
-                return "Define " + typeStr + " Profile"
+    // ── Main content ────────────────────────────────────────────────────────────
+    contentItem: ColumnLayout {
+        spacing: 0
+
+        // ── Title bar ────────────────────────────────────────────────────────
+        Rectangle {
+            Layout.fillWidth: true
+            height: 60
+            color: "#f5f7fb"
+
+            Rectangle {
+                anchors.bottom: parent.bottom
+                width: parent.width; height: 1
+                color: "#d6dce7"
             }
-            font.pixelSize: 18; font.bold: true
-            bottomPadding: 4
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 20; anchors.rightMargin: 20
+                spacing: 12
+
+                // Back button
+                Button {
+                    text: "← Back"
+                    implicitHeight: 40
+                    Layout.alignment: Qt.AlignVCenter
+                    contentItem: Text {
+                        text: parent.text; color: "#1e2430"
+                        font.pixelSize: 15; font.family: "Noto Sans"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment:   Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.pressed ? "#e5edf9" : parent.hovered ? "#eef3fb" : "#eef3fb"
+                        radius: 6; border.color: "#c5d0df"; border.width: 1
+                    }
+                    onClicked: root.close()
+                }
+
+                // Title
+                Text {
+                    Layout.fillWidth: true
+                    text: {
+                        var typeStr = (root.profileType === "id") ? "ID" : "OD"
+                        var opNum = (root.opData && root.opData.order !== undefined) ? root.opData.order : ""
+                        return "Define " + typeStr + " Profile" + (opNum !== "" ? " Op #" + opNum : "")
+                    }
+                    color: "#1e2430"
+                    font.pixelSize: 17; font.bold: true; font.family: "Noto Sans"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment:   Text.AlignVCenter
+                }
+
+                // Done button
+                Button {
+                    text: "Done"
+                    implicitHeight: 40
+                    Layout.alignment: Qt.AlignVCenter
+                    contentItem: Text {
+                        text: parent.text; color: "white"
+                        font.pixelSize: 15; font.family: "Noto Sans"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment:   Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: parent.pressed ? "#25673a" : parent.hovered ? "#348a50" : "#2d7d46"
+                        radius: 6; border.color: "#3fb950"; border.width: 1
+                    }
+                    onClicked: root.close()
+                }
+            }
         }
 
+        // ── Editor area: 30% list | 70% canvas ───────────────────────────────
         Item {
-            Layout.fillWidth:  true
+            Layout.fillWidth: true
             Layout.fillHeight: true
 
-            // ── Left panel ───────────────────────────────────────────────────────
+            // ── Left panel: primitive list ──────────────────────────────────
             ColumnLayout {
                 id: leftPanel
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                width: 480
+                width: parent.width * 0.30
                 spacing: 8
+                clip: true
 
                 // Profile ID + Type row
                 RowLayout {
-                    spacing: 16
-                    Label { text: "Profile ID"; font.pixelSize: 16 }
+                    Layout.leftMargin: 10; Layout.rightMargin: 10; Layout.topMargin: 8
+                    spacing: 12
+
+                    Label { text: "Profile ID"; font.pixelSize: 15 }
                     NumpadField {
-                        Layout.preferredWidth: 80
+                        Layout.preferredWidth: 70
                         settingName: "defineProfile.profile_id"
                         validatorObject: intVal
                         value: root.profileId
                         formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
-                        hAlign: Text.AlignRight; fontPixelSize: 16
+                        hAlign: Text.AlignRight; fontPixelSize: 15
                         onOpenRequested: root.openNumPadRequested(field)
                         onValueCommitted: { root.profileId = Math.round(value); root.emitSave() }
                     }
 
-                    Rectangle { width: 1; height: 24; color: "#555" }
-
-                    Label { text: "Type:"; font.pixelSize: 16 }
+                    Rectangle { width: 1; height: 20; color: "#555" }
 
                     ButtonGroup { id: profileTypeGroup }
-
                     RadioButton {
-                        text: "OD"
-                        font.pixelSize: 16
+                        text: "OD"; font.pixelSize: 14
                         checked: root.profileType === "od"
                         ButtonGroup.group: profileTypeGroup
                         onToggled: if (checked) { root.profileType = "od"; root.emitSave() }
                     }
                     RadioButton {
-                        text: "ID"
-                        font.pixelSize: 16
+                        text: "ID"; font.pixelSize: 14
                         checked: root.profileType === "id"
                         ButtonGroup.group: profileTypeGroup
                         onToggled: if (checked) { root.profileType = "id"; root.emitSave() }
                     }
                 }
 
-                // Scrollable cards
+                // Scrollable primitive cards
                 ScrollView {
                     id: primScroll
                     Layout.fillWidth:  true
                     Layout.fillHeight: true
+                    Layout.leftMargin: 6; Layout.rightMargin: 6
                     clip: true
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                     contentWidth: availableWidth
 
                     Column {
                         width: primScroll.availableWidth
-                        spacing: 8
-                        topPadding: 2
-                        bottomPadding: 4
+                        spacing: 6
+                        topPadding: 2; bottomPadding: 4
 
                         Repeater {
                             id: primRepeater
@@ -432,17 +458,14 @@ Item {
                                 width: parent ? parent.width : 0
                                 spacing: 4
 
-                                // Keep card data in sync when model updates in-place
                                 onMdChanged: {
                                     if (primLdr.item)  primLdr.item.primData  = md
                                     if (blendLdr.item) blendLdr.item.primData = md
                                 }
 
-                                // Primitive card
                                 Loader {
                                     id: primLdr
                                     width: parent.width
-
                                     sourceComponent: {
                                         if (!md) return null
                                         if (md.type === "startPoint") return startPointComp
@@ -450,14 +473,11 @@ Item {
                                         if (md.type === "arcTo")      return arcToComp
                                         return null
                                     }
-
                                     onLoaded: {
                                         item.primData   = md
                                         item.primIdx    = mi
                                         item.primCount  = Qt.binding(function() { return root.primitives.length })
-                                        item.isSelected = Qt.binding(function() {
-                                            return root.selectedPrimIndex === mi
-                                        })
+                                        item.isSelected = Qt.binding(function() { return root.selectedPrimIndex === mi })
                                         item.tapped.connect(function() {
                                             root.selectedPrimIndex  = mi
                                             root.selectedBlendIndex = -1
@@ -473,7 +493,6 @@ Item {
                                     }
                                 }
 
-                                // Blend sub-card (visible only when a blend is set)
                                 Loader {
                                     id: blendLdr
                                     width: parent.width
@@ -481,15 +500,11 @@ Item {
                                              md.blend !== undefined && md.blend !== null &&
                                              md.blend.type !== "none"
                                     visible: active
-
                                     sourceComponent: blendComp
-
                                     onLoaded: {
                                         item.primData   = md
                                         item.primIdx    = mi
-                                        item.isSelected = Qt.binding(function() {
-                                            return root.selectedBlendIndex === mi
-                                        })
+                                        item.isSelected = Qt.binding(function() { return root.selectedBlendIndex === mi })
                                         item.tapped.connect(function() {
                                             root.selectedBlendIndex = mi
                                             root.selectedPrimIndex  = -1
@@ -510,15 +525,15 @@ Item {
                     }
                 }
 
-                // Add New button — centered
+                // Add New button
                 Button {
                     Layout.alignment: Qt.AlignHCenter
+                    Layout.bottomMargin: 8
                     text: "Add New"
-                    font.pixelSize: 14
-                    implicitWidth: 140
+                    font.pixelSize: 13
+                    implicitWidth: 120
                     onClicked: {
-                        var hasStart = root.primitives.length > 0
-                                       && root.primitives[0].type === "startPoint"
+                        var hasStart = root.primitives.length > 0 && root.primitives[0].type === "startPoint"
                         if (!hasStart) {
                             var arr = JSON.parse(JSON.stringify(root.primitives))
                             arr.unshift({ type: "startPoint", primitive_id: 0,
@@ -534,14 +549,19 @@ Item {
                 }
             }
 
-            // ── Right panel: canvas + controls ───────────────────────────────────
+            // Vertical separator
+            Rectangle {
+                anchors { left: leftPanel.right; top: parent.top; bottom: parent.bottom }
+                width: 1; color: "#3A3D41"
+            }
+
+            // ── Right panel: canvas ─────────────────────────────────────────
             ColumnLayout {
                 anchors {
-                    left:   leftPanel.right
-                    right:  parent.right
-                    top:    parent.top
-                    bottom: parent.bottom
-                    leftMargin: 12
+                    left:   leftPanel.right; right:  parent.right
+                    top:    parent.top;      bottom: parent.bottom
+                    leftMargin: 14; rightMargin: 10
+                    topMargin: 8;   bottomMargin: 8
                 }
                 spacing: 6
 
@@ -561,8 +581,7 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         color: "transparent"
-                        border.color: "#cccccc"
-                        border.width: 1
+                        border.color: "#555"; border.width: 1
                     }
                 }
 
@@ -570,27 +589,9 @@ Item {
                     Layout.fillWidth: true
                     spacing: 6
 
-                    Button {
-                        text: "Zoom In"
-                        Layout.fillWidth: true
-                        implicitHeight: 36
-                        font.pixelSize: 13
-                        onClicked: profileCanvas.zoomIn()
-                    }
-                    Button {
-                        text: "Zoom Out"
-                        Layout.fillWidth: true
-                        implicitHeight: 36
-                        font.pixelSize: 13
-                        onClicked: profileCanvas.zoomOut()
-                    }
-                    Button {
-                        text: "Fit to Screen"
-                        Layout.fillWidth: true
-                        implicitHeight: 36
-                        font.pixelSize: 13
-                        onClicked: profileCanvas.fitToScreen()
-                    }
+                    Button { text: "Zoom In";       Layout.fillWidth: true; implicitHeight: 34; font.pixelSize: 13; onClicked: profileCanvas.zoomIn() }
+                    Button { text: "Zoom Out";      Layout.fillWidth: true; implicitHeight: 34; font.pixelSize: 13; onClicked: profileCanvas.zoomOut() }
+                    Button { text: "Fit to Screen"; Layout.fillWidth: true; implicitHeight: 34; font.pixelSize: 13; onClicked: profileCanvas.fitToScreen() }
                 }
             }
         }

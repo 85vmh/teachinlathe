@@ -801,3 +801,56 @@ class MyMainWindow(VCPMainWindow):
 
     def onGoToG30(self):
         issue_mdi("G30")
+
+    # ── Full-screen overlay ──────────────────────────────────────────────────────
+
+    def enterFullScreen(self, widget):
+        """Re-parent widget to the main window and stretch it to cover everything."""
+        self._enterFullScreenAt(widget, y_offset=0)
+
+    def enterContentFullScreen(self, widget):
+        """Re-parent widget below the AppShell title bar, leaving it visible."""
+        from PyQt5.QtCore import QPoint
+        shell = getattr(self, "appShellWidget", None)
+        title_bar = getattr(shell, "title_bar", None) if shell else None
+        y_offset = 0
+        if title_bar is not None:
+            try:
+                y_offset = shell.mapTo(self, QPoint(0, title_bar.height())).y()
+            except Exception:
+                y_offset = title_bar.height()
+        self._enterFullScreenAt(widget, y_offset=y_offset)
+
+    def _enterFullScreenAt(self, widget, y_offset=0):
+        if getattr(self, "_fullscreen_widget", None) is widget:
+            return
+        widget._fs_saved_parent   = widget.parent()
+        widget._fs_saved_geometry = widget.geometry()
+        widget.setParent(self)
+        widget.setGeometry(0, y_offset, self.width(), self.height() - y_offset)
+        widget.show()
+        widget.raise_()
+        self._fullscreen_widget  = widget
+        self._fullscreen_y_offset = y_offset
+
+    def exitFullScreen(self):
+        """Restore the full-screen widget back to its original place."""
+        widget = getattr(self, "_fullscreen_widget", None)
+        if widget is None:
+            return
+        self._fullscreen_widget  = None
+        self._fullscreen_y_offset = 0
+        saved_parent = getattr(widget, "_fs_saved_parent", None)
+        saved_geom   = getattr(widget, "_fs_saved_geometry", None)
+        if saved_parent is not None:
+            widget.setParent(saved_parent)
+        if saved_geom is not None:
+            widget.setGeometry(saved_geom)
+        widget.show()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        widget = getattr(self, "_fullscreen_widget", None)
+        if widget is not None:
+            y = getattr(self, "_fullscreen_y_offset", 0)
+            widget.setGeometry(0, y, self.width(), self.height() - y)
