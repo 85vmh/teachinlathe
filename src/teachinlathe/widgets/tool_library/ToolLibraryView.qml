@@ -21,7 +21,8 @@ Rectangle {
     // ── Flip helpers ──────────────────────────────────────────────
     function _startAdd() {
         root._editTool = null
-        editForm.populate(null)
+        var nextNo = toolLibraryViewModel ? toolLibraryViewModel.nextToolNo : 1
+        editForm.populate(null, nextNo)
         flipAnim.stop(); flipAnim.from = 0; flipAnim.to = 180; flipAnim.start()
     }
 
@@ -132,15 +133,13 @@ Rectangle {
                 }
 
                 // Tool list
-                ScrollView {
+                Item {
                     Layout.fillWidth: true; Layout.fillHeight: true
-                    clip: true
-                    ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-                    ScrollBar.vertical.width: 16
 
                     ListView {
                         id: listView
-                        width: parent.width; height: parent.height
+                        anchors.fill: parent
+                        clip: true
                         spacing: 5
                         model: {
                             if (!toolLibraryViewModel) return []
@@ -148,16 +147,46 @@ Rectangle {
                                    ? toolLibraryViewModel.recentTools
                                    : toolLibraryViewModel.tools
                         }
-                        boundsBehavior: Flickable.StopAtBounds
+
+                        ScrollBar.vertical: ScrollBar {
+                            policy: ScrollBar.AlwaysOn
+                            width: 16
+                        }
 
                         delegate: ToolCard {
                             toolData: modelData
-                            width: Math.min(800, ListView.view.width - 2)
-                            x: Math.max(0, (ListView.view.width - width) / 2)
+                            width: Math.min(800, ListView.view.width - 16 - 2)
+                            x: Math.max(0, (ListView.view.width - 16 - width) / 2)
 
                             onLoadRequested:   toolLibraryViewModel.loadTool(toolNo)
                             onEditRequested:   root._startEdit(toolData)
                             onDeleteRequested: { deleteDialog.toolNo = toolNo; deleteDialog.open() }
+                        }
+                    }
+
+                    // Top fade
+                    Rectangle {
+                        anchors { left: parent.left; right: parent.right; top: parent.top }
+                        height: 80
+                        visible: listView.contentY > 0
+                        z: 1
+                        gradient: Gradient {
+                            orientation: Gradient.Vertical
+                            GradientStop { position: 0.0; color: "#f5f5f5" }
+                            GradientStop { position: 1.0; color: "transparent" }
+                        }
+                    }
+
+                    // Bottom fade
+                    Rectangle {
+                        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                        height: 80
+                        visible: listView.contentY + listView.height < listView.contentHeight - 1
+                        z: 1
+                        gradient: Gradient {
+                            orientation: Gradient.Vertical
+                            GradientStop { position: 0.0; color: "transparent" }
+                            GradientStop { position: 1.0; color: "#f5f5f5" }
                         }
                     }
                 }

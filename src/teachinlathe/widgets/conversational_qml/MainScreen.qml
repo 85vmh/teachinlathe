@@ -254,10 +254,13 @@ Item {
                 }
 
                 // LIST
-                ListView {
-                    id: list
+                Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+
+                ListView {
+                    id: list
+                    anchors.fill: parent
                     clip: true
                     model: main.programsModel || programsModel
                     currentIndex: -1
@@ -537,6 +540,34 @@ Item {
                         }
                     }
                 }
+
+                // Top fade
+                Rectangle {
+                    anchors { left: parent.left; right: parent.right; top: parent.top }
+                    height: 100
+                    visible: list.contentY > 0
+                    z: 1
+                    gradient: Gradient {
+                        orientation: Gradient.Vertical
+                        GradientStop { position: 0.0; color: "#f5f5f5" }
+                        GradientStop { position: 1.0; color: "transparent" }
+                    }
+                }
+
+                // Bottom fade
+                Rectangle {
+                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                    height: 100
+                    visible: list.contentY + list.height < list.contentHeight - 1
+                    z: 1
+                    gradient: Gradient {
+                        orientation: Gradient.Vertical
+                        GradientStop { position: 0.0; color: "transparent" }
+                        GradientStop { position: 1.0; color: "#f5f5f5" }
+                    }
+                }
+
+                }  // Item wrapper
             }
         }
     }

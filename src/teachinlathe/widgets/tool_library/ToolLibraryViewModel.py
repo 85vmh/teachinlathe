@@ -83,6 +83,13 @@ class ToolLibraryViewModel(QObject):
             result.append(d)
         return result
 
+    @pyqtProperty(int, notify=toolsChanged)
+    def nextToolNo(self) -> int:
+        tools = self._repo.get_tools()
+        if not tools:
+            return 1
+        return max(t.t for t in tools) + 1
+
     # ── QML slots ────────────────────────────────────────────────────
 
     @pyqtSlot(int, result=bool)

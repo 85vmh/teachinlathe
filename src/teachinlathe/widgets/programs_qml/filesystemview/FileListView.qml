@@ -103,10 +103,13 @@ Item {
         }
 
         // ── File list ────────────────────────────────────────────────────────
-        ListView {
-            id: fileList
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
+
+        ListView {
+            id: fileList
+            anchors.fill: parent
             clip: true
             model: root.viewModel ? root.viewModel.entries : []
 
@@ -139,12 +142,33 @@ Item {
                         spacing: 8
                         clip: true
 
+                        // Up-arrow text for ".." entry; image icons for dirs and files
                         Text {
-                            text: modelData.isUp ? "↑" : (modelData.isDir ? "▸" : "·")
-                            color: modelData.isDir ? "#f59e0b" : "#1E88E5"
+                            visible: modelData.isUp
+                            text: "↑"
+                            color: "#f59e0b"
                             font.pixelSize: root.iconFontSize
-                            font.bold: modelData.isDir
+                            font.bold: true
                             Layout.alignment: Qt.AlignVCenter
+                            Layout.preferredWidth: 22
+                        }
+                        Image {
+                            visible: !modelData.isUp && modelData.isDir
+                            source: "../../../images/folder-icon.svg"
+                            sourceSize.width: 24; sourceSize.height: 24
+                            width: 22; height: 22
+                            fillMode: Image.PreserveAspectFit
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.preferredWidth: 22
+                        }
+                        Image {
+                            visible: !modelData.isUp && !modelData.isDir
+                            source: "../../../images/gcode.png"
+                            sourceSize.width: 24; sourceSize.height: 24
+                            width: 22; height: 22
+                            fillMode: Image.PreserveAspectFit
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.preferredWidth: 22
                         }
 
                         Text {
@@ -214,5 +238,33 @@ Item {
                 font.pixelSize: root.itemFontSize
             }
         }
+
+        // Top fade — appears when content is scrolled above the viewport
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: root.rowHeight
+            visible: fileList.contentY > 0
+            z: 1
+            gradient: Gradient {
+                orientation: Gradient.Vertical
+                GradientStop { position: 0.0; color: "#f5f5f5" }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
+
+        // Bottom fade — appears when content extends below the viewport
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: root.rowHeight
+            visible: fileList.contentY + fileList.height < fileList.contentHeight - 1
+            z: 1
+            gradient: Gradient {
+                orientation: Gradient.Vertical
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 1.0; color: "#f5f5f5" }
+            }
+        }
+
+        }  // Item wrapper
     }
 }

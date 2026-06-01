@@ -36,7 +36,8 @@ Item {
     ]
 
     // Call this to load a tool into the form (or null to reset for add mode).
-    function populate(data) {
+    // defaultToolNo is used when data is null to pre-fill the tool number field.
+    function populate(data, defaultToolNo) {
         toolData = data
         toolNoError.visible = false
         if (data) {
@@ -62,7 +63,7 @@ Item {
         } else {
             _currentOrientation  = 1
             _currentToolType     = "generic"
-            editToolNo.value     = null
+            editToolNo.value     = defaultToolNo !== undefined ? defaultToolNo : null
             editTipRadius.value  = 0.0
             editFrontAngle.value = 0.0
             editBackAngle.value  = 0.0
