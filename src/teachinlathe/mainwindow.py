@@ -22,7 +22,7 @@ from teachinlathe.widgets.manual_qml import ManualTurningViewModel
 from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLatheDroViewModel
 from teachinlathe.widgets.programs_qml.ProgramsQml import ProgramsQml
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
-from teachinlathe.widgets.tools_list_provider import ToolsListProvider
+from teachinlathe.widgets.tool_library.ToolLibraryViewModel import ToolLibraryViewModel
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
 from PyQt5.QtCore import Qt
@@ -195,7 +195,7 @@ class MyMainWindow(VCPMainWindow):
         self.addEditToolWidget.onSaved.connect(self.onToolAddEditSaved)
         self.addEditToolWidget.onCanceled.connect(self.onToolAddEditCanceled)
 
-        self.toolsListProvider = ToolsListProvider(self)
+        self.toolLibraryViewModel = ToolLibraryViewModel(self)
 
         QTimer.singleShot(0, self._initManualTurningRoot)
         QTimer.singleShot(0, self.afterUIInit)
@@ -264,7 +264,7 @@ class MyMainWindow(VCPMainWindow):
         ctx.setContextProperty("manualViewModel",     self.manualTurningViewModel)
         ctx.setContextProperty("manualInputBridge",   self.manualInputBridge)
         ctx.setContextProperty("teachInDroViewModel", self.teachInLatheDroViewModel)
-        ctx.setContextProperty("toolsProvider",       self.toolsListProvider)
+        ctx.setContextProperty("toolLibraryViewModel", self.toolLibraryViewModel)
         ctx.setContextProperty("appState",            self.appState)
         ctx.setContextProperty("cncStore",            self.appState.cncStore)
         ctx.setContextProperty("navigationStore",     self.appState.navigationStore)
@@ -312,12 +312,12 @@ class MyMainWindow(VCPMainWindow):
         self.manualToolsList = QQuickWidget(self.toolLibraryContainer)
         self.manualToolsList.setResizeMode(QQuickWidget.SizeRootObjectToView)
         self.manualToolsList.setGeometry(0, 0, self.toolLibraryContainer.width(), self.toolLibraryContainer.height())
-        self.manualToolsList.engine().rootContext().setContextProperty("toolsProvider", self.toolsListProvider)
+        self.manualToolsList.engine().rootContext().setContextProperty("toolLibraryViewModel", self.toolLibraryViewModel)
         self.manualToolsList.engine().rootContext().setContextProperty("appState", self.appState)
         self.manualToolsList.engine().rootContext().setContextProperty("cncStore", self.appState.cncStore)
         self.manualToolsList.engine().rootContext().setContextProperty("navigationStore", self.appState.navigationStore)
 
-        qml_path = os.path.join(os.path.dirname(__file__), "widgets", "ToolListView.qml")
+        qml_path = os.path.join(os.path.dirname(__file__), "widgets", "tool_library", "ToolLibraryView.qml")
         self.manualToolsList.setSource(QUrl.fromLocalFile(qml_path))
         self.manualToolsList.show()
 

@@ -1,0 +1,215 @@
+// ToolLibraryView.qml — tool list with flip-card Add / Edit form.
+//
+// Layout:
+//   Front face — header ("Tools" + "+ Add Tool") + scrollable ToolCard list
+//   Back face  — ToolEditForm (flips in on edit/add, flips out on save/cancel)
+//
+// Context property required: toolLibraryViewModel (ToolLibraryViewModel)
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+
+Rectangle {
+    id: root
+    color: "#787878"
+
+    signal openNumPadRequested(var field)
+
+    // ── Edit / Add state ──────────────────────────────────────────
+    property var _editTool: null    // null = add mode, tool dict = edit mode
+
+    // ── Flip helpers ──────────────────────────────────────────────
+    function _startAdd() {
+        root._editTool = null
+        editForm.populate(null)
+        flipAnim.stop(); flipAnim.from = 0; flipAnim.to = 180; flipAnim.start()
+    }
+
+    function _startEdit(toolData) {
+        root._editTool = toolData
+        editForm.populate(toolData)
+        flipAnim.stop(); flipAnim.from = 0; flipAnim.to = 180; flipAnim.start()
+    }
+
+    function _flipToFront() {
+        flipAnim.stop(); flipAnim.from = 180; flipAnim.to = 0; flipAnim.start()
+    }
+
+    // ── Flip animation ─────────────────────────────────────────────
+    NumberAnimation {
+        id: flipAnim
+        target: flipRot; property: "angle"
+        duration: 400; easing.type: Easing.InOutCubic
+    }
+
+    // ── Flip container ─────────────────────────────────────────────
+    Item {
+        id: flipper
+        anchors.fill: parent
+
+        transform: Rotation {
+            id: flipRot
+            axis { x: 0; y: 1; z: 0 }
+            origin.x: flipper.width  / 2
+            origin.y: flipper.height / 2
+            angle: 0
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // FRONT FACE — tool list
+        // ══════════════════════════════════════════════════════════
+        Item {
+            id: frontFace
+            anchors.fill: parent
+            visible: flipRot.angle < 90
+
+            property int activeTab: 0  // 0 = All tools, 1 = Recently used
+
+            // Light background for the front face
+            Rectangle { anchors.fill: parent; color: "#f5f5f5" }
+
+            ColumnLayout {
+                anchors.fill: parent; spacing: 0
+
+                // Header
+                Rectangle {
+                    Layout.fillWidth: true; height: 60; color: "#d6d6d6"
+
+                    // Title — absolutely centered over the full header width
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Tool Library"; color: "#222222"
+                        font.pixelSize: 18; font.bold: true
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 8
+                        anchors.rightMargin: 8
+                        spacing: 6
+
+                        // Tab: All tools
+                        Rectangle {
+                            width: 120; height: 46; radius: 8
+                            color: frontFace.activeTab === 0 ? "#f5f5f5" : "#c4c4c4"
+                            border.color: frontFace.activeTab === 0 ? "#999999" : "#b0b0b0"
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "All tools"; color: "#222222"
+                                font.pixelSize: 14; font.bold: frontFace.activeTab === 0
+                            }
+                            MouseArea { anchors.fill: parent; onClicked: frontFace.activeTab = 0 }
+                        }
+
+                        // Tab: Recently used
+                        Rectangle {
+                            width: 150; height: 46; radius: 8
+                            color: frontFace.activeTab === 1 ? "#f5f5f5" : "#c4c4c4"
+                            border.color: frontFace.activeTab === 1 ? "#999999" : "#b0b0b0"
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Recently used"; color: "#222222"
+                                font.pixelSize: 14; font.bold: frontFace.activeTab === 1
+                            }
+                            MouseArea { anchors.fill: parent; onClicked: frontFace.activeTab = 1 }
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        // Add Tool button
+                        Rectangle {
+                            width: 130; height: 46; radius: 8
+                            color: addMA.pressed ? "#145a30" : "#1e8449"
+
+                            Text { anchors.centerIn: parent; text: "+ Add Tool"; color: "white"; font.pixelSize: 14; font.bold: true }
+                            MouseArea { id: addMA; anchors.fill: parent; onClicked: root._startAdd() }
+                        }
+                    }
+                }
+
+                // Tool list
+                ScrollView {
+                    Layout.fillWidth: true; Layout.fillHeight: true
+                    clip: true
+                    ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+                    ScrollBar.vertical.width: 16
+
+                    ListView {
+                        id: listView
+                        width: parent.width; height: parent.height
+                        spacing: 5
+                        model: {
+                            if (!toolLibraryViewModel) return []
+                            return frontFace.activeTab === 1
+                                   ? toolLibraryViewModel.recentTools
+                                   : toolLibraryViewModel.tools
+                        }
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        delegate: ToolCard {
+                            toolData: modelData
+                            width: Math.min(800, ListView.view.width - 2)
+                            x: Math.max(0, (ListView.view.width - width) / 2)
+
+                            onLoadRequested:   toolLibraryViewModel.loadTool(toolNo)
+                            onEditRequested:   root._startEdit(toolData)
+                            onDeleteRequested: { deleteDialog.toolNo = toolNo; deleteDialog.open() }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // BACK FACE — Add / Edit form
+        // ══════════════════════════════════════════════════════════
+        Item {
+            id: backFace
+            anchors.fill: parent
+            visible: flipRot.angle >= 90
+
+            transform: Rotation {
+                axis { x: 0; y: 1; z: 0 }
+                origin.x: backFace.width  / 2
+                origin.y: backFace.height / 2
+                angle: 180
+            }
+
+            ToolEditForm {
+                id: editForm
+                anchors.fill: parent
+
+                onSaved: {
+                    toolLibraryViewModel.saveToolFull(formData.toolNo, formData)
+                    root._flipToFront()
+                }
+
+                onCancelled: root._flipToFront()
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+            }
+        }
+    }
+
+    // ── Delete confirmation dialog ─────────────────────────────────
+    Dialog {
+        id: deleteDialog
+        modal: true; title: "Confirm Delete"
+        standardButtons: Dialog.Yes | Dialog.No
+        property int toolNo: -1
+
+        onAccepted: {
+            if (toolNo >= 0) toolLibraryViewModel.deleteTool(toolNo)
+        }
+
+        contentItem: Text {
+            text: deleteDialog.toolNo >= 0
+                ? "Delete tool T" + deleteDialog.toolNo + "?"
+                : "Delete tool?"
+            wrapMode: Text.WordWrap; padding: 16
+        }
+    }
+}

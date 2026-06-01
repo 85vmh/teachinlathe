@@ -70,6 +70,38 @@ class ToolsListProvider(QObject):
             return
         issue_mdi("M61 Q%s G43" % int(tool_no))
 
+    @pyqtSlot(int, float, float, float, str, int)
+    def saveTool(self, tool_no, tip_radius, front_angle, back_angle, comment, orientation):
+        tool_no = int(tool_no)
+        tool_table = self._tooltable.getToolTable()
+        if tool_no not in tool_table:
+            return
+        tool_table[tool_no]['D'] = float(tip_radius)
+        tool_table[tool_no]['I'] = float(front_angle)
+        tool_table[tool_no]['J'] = float(back_angle)
+        tool_table[tool_no]['R'] = str(comment)
+        tool_table[tool_no]['Q'] = int(orientation)
+        self._tooltable.saveToolTable(tool_table, self._tooltable.COLUMN_LABELS)
+        self._update_tools(self._tooltable.getToolTable())
+
+    @pyqtSlot(int, float, float, float, str, int)
+    def addTool(self, tool_no, tip_radius, front_angle, back_angle, comment, orientation):
+        tool_no = int(tool_no)
+        tool_table = self._tooltable.getToolTable()
+        tool_table[tool_no] = {
+            'T': tool_no,
+            'X': 0.0, 'Y': 0.0, 'Z': 0.0,
+            'A': 0.0, 'B': 0.0, 'C': 0.0,
+            'U': 0.0, 'V': 0.0, 'W': 0.0,
+            'D': float(tip_radius),
+            'I': float(front_angle),
+            'J': float(back_angle),
+            'Q': int(orientation),
+            'R': str(comment),
+        }
+        self._tooltable.saveToolTable(tool_table, self._tooltable.COLUMN_LABELS)
+        self._update_tools(self._tooltable.getToolTable())
+
     @pyqtSlot(int)
     def deleteTool(self, tool_no):
         if tool_no is None:

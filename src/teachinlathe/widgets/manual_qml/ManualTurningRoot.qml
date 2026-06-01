@@ -1,12 +1,12 @@
 // ManualTurningRoot.qml — unified root for the Manual Turning tab.
 //
 // Layout (responsive):
-//   Left column (anchors to left of ToolListView):
+//   Left column (anchors to left of ToolLibraryView):
 //     • TeachInLatheDroRoot  — fixed height (droHeight)
 //     • LimitsPanel          — fills remaining vertical space
 //     • Section headers      — fixed height (sectionHeaderHeight)
 //     • Control panels       — fixed height (panelHeight)
-//   Right: ToolListView — fixed width (toolListWidth), full height
+//   Right: ToolLibraryView — fixed width (toolListWidth), full height
 //
 // Context properties required (set by mainwindow.py):
 //   manualViewModel, manualInputBridge, teachInDroViewModel,
@@ -14,7 +14,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import ".."   // widgets/ → ToolListView
+import "../tool_library"
 
 Item {
     id: root
@@ -51,12 +51,23 @@ Item {
     signal angleFeedToggled(bool enabled)
 
     // ── Tool list (right side, fixed width, full height) ─────────────
-    ToolListView {
+    ToolLibraryView {
         id: toolList
         anchors.right:  parent.right
         anchors.top:    parent.top
         anchors.bottom: parent.bottom
         width: root.toolListWidth
+        onOpenNumPadRequested: root.openNumPadRequested(field)
+    }
+
+    // ── Divider between manual area and tool list ─────────────────────
+    Rectangle {
+        id: toolDivider
+        anchors.right:  toolList.left
+        anchors.top:    parent.top
+        anchors.bottom: parent.bottom
+        width: 3
+        color: "#3a3a3a"
     }
 
     // ── Left column (fills space left of tool list) ───────────────────
@@ -64,7 +75,7 @@ Item {
         anchors.left:   parent.left
         anchors.top:    parent.top
         anchors.bottom: parent.bottom
-        anchors.right:  toolList.left
+        anchors.right:  toolDivider.left
         spacing: 0
 
         // DRO (fixed height — two axis readouts)
