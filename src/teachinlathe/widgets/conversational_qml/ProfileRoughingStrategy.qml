@@ -9,7 +9,7 @@ GroupBox {
     Layout.fillWidth: true
     font.pixelSize: 16
 
-    // "od" | "id"
+    // "od" | "id" — resolved automatically from the selected DefineProfile
     property string profiling_type: "od"
     // "axial" | "radial" | "diagonal_interior" | "diagonal_exterior"
     property string pass_type: "axial"
@@ -22,7 +22,6 @@ GroupBox {
         _loading = true
         profiling_type = (data && data.profiling_type) ? String(data.profiling_type) : "od"
         pass_type      = (data && data.pass_type)      ? String(data.pass_type)      : "axial"
-        tabBar.currentIndex = (profiling_type === "id") ? 1 : 0
         _loading = false
     }
 
@@ -42,68 +41,19 @@ GroupBox {
         anchors.fill: parent
         spacing: 10
 
-        TabBar {
-            id: tabBar
-            Layout.fillWidth: true
-            implicitHeight: 40
-            currentIndex: root.profiling_type === "id" ? 1 : 0
-
-            background: Rectangle {
-                color: "transparent"
-                border.color: "#bdbdbd"
-                border.width: 1
-                radius: 4
-            }
-
-            onCurrentIndexChanged: {
-                if (_loading) return
-                var newType = (currentIndex === 0) ? "od" : "id"
-                if (newType === root.profiling_type) return
-                root.profiling_type = newType
-                if (newType === "od" && pass_type !== "axial" && pass_type !== "radial")
-                    root.pass_type = "axial"
-                root.emitSave()
-            }
-
-            TabButton {
-                id: odTab
-                text: "Profile Turning (OD)"
+        // Read-only type display (auto-resolved from selected profile)
+        RowLayout {
+            spacing: 8
+            Label { text: "Profile Type:"; font.pixelSize: 15 }
+            Label {
+                text: root.profiling_type === "id" ? "ID (Boring)" : "OD (Turning)"
                 font.pixelSize: 15
-                height: 40
-                background: Rectangle {
-                    color: odTab.checked ? "#1E88E5" : "transparent"
-                    radius: 4
-                }
-                contentItem: Text {
-                    text: odTab.text
-                    font: odTab.font
-                    color: odTab.checked ? "white" : "#333333"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-
-            TabButton {
-                id: idTab
-                text: "Profile Roughing (ID)"
-                font.pixelSize: 15
-                height: 40
-                background: Rectangle {
-                    color: idTab.checked ? "#1E88E5" : "transparent"
-                    radius: 4
-                }
-                contentItem: Text {
-                    text: idTab.text
-                    font: idTab.font
-                    color: idTab.checked ? "white" : "#333333"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+                font.bold: true
+                color: root.profiling_type === "id" ? "#42A5F5" : "#66BB6A"
             }
         }
 
-        // 2×2 grid: col 0 = Axial/Radial, col 1 = 45° interior/exterior
-        // 45° buttons use opacity so space is always reserved → constant height for OD and ID
+        // Pass type selection — 2×2 grid; diagonal buttons only visible for ID
         GridLayout {
             columns: 2
             columnSpacing: 24

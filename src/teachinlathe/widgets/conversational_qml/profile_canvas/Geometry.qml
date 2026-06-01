@@ -321,11 +321,12 @@ QtObject {
         return { csZ: csZ, csX: csX, ceZ: ceZ, ceX: ceX }
     }
 
-    function buildRenderSegments(primitives) {
+    function buildRenderSegments(primitives, profileType) {
         var segs = []
         if (!primitives || primitives.length === 0) {
             return segs
         }
+        var isID = (String(profileType || "od").toLowerCase() === "id")
 
         var logZ = 0
         var logX = 0
@@ -341,7 +342,8 @@ QtObject {
                     var spNextH = halfXPrim(spNextPrim)
                     if (p.blend.type === "chamfer") {
                         var spcw = +(p.blend.chamfer_width || 0)
-                        var spcg = chamferGeomLine(logZ, spLX2 - spcw, logZ, spLX2, spNextH, spcw)
+                        var spEntryX = isID ? spLX2 + spcw : spLX2 - spcw
+                        var spcg = chamferGeomLine(logZ, spEntryX, logZ, spLX2, spNextH, spcw)
                         if (spcg) {
                             segs.push({ type: "move", z: spcg.csZ, x: spcg.csX * 2 })
                             segs.push({ type: "line", z: spcg.ceZ, x: spcg.ceX * 2 })
@@ -350,9 +352,10 @@ QtObject {
                         }
                     } else if (p.blend.type === "fillet") {
                         var spfr = +(p.blend.fillet_radius || 0)
+                        var spEntryXF = isID ? spLX2 + spfr : spLX2 - spfr
                         var spfg = (spNextPrim.type === "arcTo")
-                            ? filletLineArc(logZ, spLX2 - spfr, logZ, spLX2, spNextH, spfr)
-                            : filletGeom(logZ, spLX2 - spfr, logZ, spLX2, spNextH, spfr)
+                            ? filletLineArc(logZ, spEntryXF, logZ, spLX2, spNextH, spfr)
+                            : filletGeom(logZ, spEntryXF, logZ, spLX2, spNextH, spfr)
                         if (spfg) {
                             segs.push({ type: "move", z: spfg.t1z, x: spfg.t1x * 2 })
                             segs.push({

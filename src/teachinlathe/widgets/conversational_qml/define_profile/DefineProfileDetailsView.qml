@@ -13,9 +13,10 @@ Item {
     property int selectedPrimIndex:  -1
     property int selectedBlendIndex: -1
 
-    property int  profileId: 0
-    property bool _loading:  false
-    property var  primitives: []
+    property int    profileId:   0
+    property string profileType: "od"
+    property bool   _loading:    false
+    property var    primitives:  []
     property int  _pendingDeleteIndex: -1
 
     readonly property real _primGridWidth: 180
@@ -27,7 +28,8 @@ Item {
         _loading  = true
         opIndex   = index
         opData    = data || {}
-        profileId = opData.profile_id !== undefined ? Math.round(Number(opData.profile_id)) : 0
+        profileId   = opData.profile_id   !== undefined ? Math.round(Number(opData.profile_id)) : 0
+        profileType = opData.profile_type !== undefined ? String(opData.profile_type) : "od"
         primitives = JSON.parse(JSON.stringify(opData.profile_primitives || []))
         selectedPrimIndex  = -1
         selectedBlendIndex = -1
@@ -48,7 +50,8 @@ Item {
     function emitSave() {
         if (_loading) return
         var merged = root.mergeIntoOp({
-            profile_id: root.profileId,
+            profile_id:   root.profileId,
+            profile_type: root.profileType,
             profile_primitives: root.primitives
         })
         root.saveRequested({ index: root.opIndex, payload: merged })
@@ -346,9 +349,12 @@ Item {
         spacing: 16
 
         Label {
-            text: (opData && opData.type)
-                  ? ("Define Profile — Op #" + (opData.order !== undefined ? opData.order : "N/A"))
-                  : "Define Profile"
+            text: {
+                var typeStr = (root.profileType === "id") ? "ID" : "OD"
+                if (opData && opData.type)
+                    return "Define " + typeStr + " Profile — Op #" + (opData.order !== undefined ? opData.order : "N/A")
+                return "Define " + typeStr + " Profile"
+            }
             font.pixelSize: 18; font.bold: true
             bottomPadding: 4
         }
@@ -364,9 +370,9 @@ Item {
                 width: 480
                 spacing: 8
 
-                // Profile ID row
+                // Profile ID + Type row
                 RowLayout {
-                    spacing: 12
+                    spacing: 16
                     Label { text: "Profile ID"; font.pixelSize: 16 }
                     NumpadField {
                         Layout.preferredWidth: 80
@@ -377,6 +383,27 @@ Item {
                         hAlign: Text.AlignRight; fontPixelSize: 16
                         onOpenRequested: root.openNumPadRequested(field)
                         onValueCommitted: { root.profileId = Math.round(value); root.emitSave() }
+                    }
+
+                    Rectangle { width: 1; height: 24; color: "#555" }
+
+                    Label { text: "Type:"; font.pixelSize: 16 }
+
+                    ButtonGroup { id: profileTypeGroup }
+
+                    RadioButton {
+                        text: "OD"
+                        font.pixelSize: 16
+                        checked: root.profileType === "od"
+                        ButtonGroup.group: profileTypeGroup
+                        onToggled: if (checked) { root.profileType = "od"; root.emitSave() }
+                    }
+                    RadioButton {
+                        text: "ID"
+                        font.pixelSize: 16
+                        checked: root.profileType === "id"
+                        ButtonGroup.group: profileTypeGroup
+                        onToggled: if (checked) { root.profileType = "id"; root.emitSave() }
                     }
                 }
 
@@ -523,6 +550,7 @@ Item {
                     Layout.fillWidth:  true
                     Layout.fillHeight: true
                     primitives:         root.primitives
+                    profileType:        root.profileType
                     selectedPrimIndex:  root.selectedPrimIndex
                     selectedBlendIndex: root.selectedBlendIndex
                     onPrimitiveSelected: function(idx) {

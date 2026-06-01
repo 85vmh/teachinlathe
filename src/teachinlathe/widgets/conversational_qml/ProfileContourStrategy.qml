@@ -8,6 +8,7 @@ GroupBox {
     Layout.fillWidth: true
     font.pixelSize: 16
 
+    // "od" | "id" — resolved automatically from the selected DefineProfile
     property string profiling_type: "od"
     property bool _loading: false
 
@@ -28,34 +29,15 @@ GroupBox {
         })
     }
 
-    ButtonGroup {
-        id: contourGroup
-    }
-
-    ColumnLayout {
+    RowLayout {
         anchors.fill: parent
-        spacing: 12
-
-        RadioButton {
-            text: "OD Profile Contour"
-            font.pixelSize: 16
-            checked: root.profiling_type === "od"
-            ButtonGroup.group: contourGroup
-            onToggled: if (checked) {
-                root.profiling_type = "od"
-                root.emitSave()
-            }
-        }
-
-        RadioButton {
-            text: "ID Profile Contour"
-            font.pixelSize: 16
-            checked: root.profiling_type === "id"
-            ButtonGroup.group: contourGroup
-            onToggled: if (checked) {
-                root.profiling_type = "id"
-                root.emitSave()
-            }
+        spacing: 8
+        Label { text: "Profile Type:"; font.pixelSize: 15 }
+        Label {
+            text: root.profiling_type === "id" ? "ID (Boring)" : "OD (Turning)"
+            font.pixelSize: 15
+            font.bold: true
+            color: root.profiling_type === "id" ? "#42A5F5" : "#66BB6A"
         }
     }
 }

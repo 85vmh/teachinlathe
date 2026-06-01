@@ -30,10 +30,17 @@ def parse_profile_roughing_config(op) -> ProfileRoughingConfig:
     strategy = op.get("profile_roughing_strategy", {}) or {}
     stock = op.get("stock_to_leave", {}) or {}
 
-    try:
-        profiling_type = ProfilingType(str(strategy.get("profiling_type", "od")).lower())
-    except ValueError:
-        profiling_type = ProfilingType.OD
+    resolved = op.get("_resolved_profile") or {}
+    if resolved:
+        try:
+            profiling_type = ProfilingType(str(resolved.get("profile_type", "od")).lower())
+        except ValueError:
+            profiling_type = ProfilingType.OD
+    else:
+        try:
+            profiling_type = ProfilingType(str(strategy.get("profiling_type", "od")).lower())
+        except ValueError:
+            profiling_type = ProfilingType.OD
 
     try:
         pass_type = PassType(str(strategy.get("pass_type", "axial")).lower())
@@ -57,8 +64,9 @@ def parse_profile_roughing_config(op) -> ProfileRoughingConfig:
 def _resolve_profile(op):
     resolved = op.get("_resolved_profile") or {}
     primitives = resolved.get("profile_primitives", []) or []
+    profile_type = str(resolved.get("profile_type", "od")).lower()
     segments = build_profile_segments(primitives)
-    path = build_render_path(segments)
+    path = build_render_path(segments, profile_type)
     return segments, path
 
 

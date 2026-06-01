@@ -8,9 +8,10 @@ import "profile_canvas"
 Canvas {
     id: root
 
-    property var primitives:        []   // array of primitive objects from JSON
-    property int selectedPrimIndex:  -1  // index into primitives; -1 = none
-    property int selectedBlendIndex: -1  // index of primitive whose blend is selected; -1 = none
+    property var    primitives:        []    // array of primitive objects from JSON
+    property int    selectedPrimIndex:  -1  // index into primitives; -1 = none
+    property int    selectedBlendIndex: -1  // index of primitive whose blend is selected; -1 = none
+    property string profileType:       "od" // "od" or "id" — controls startPoint blend entry direction
 
     signal primitiveSelected(int index)
 
@@ -35,6 +36,7 @@ Canvas {
         if (!_manualView) Qt.callLater(fitToScreen)
         else              requestPaint()
     }
+    onProfileTypeChanged: { _rebuildRenderCache(); requestPaint() }
     onWidthChanged:  { if (!_manualView) fitToScreen() }
     onHeightChanged: { if (!_manualView) fitToScreen() }
     onSelectedPrimIndexChanged:  requestPaint()
@@ -101,7 +103,7 @@ Canvas {
     }
 
     function _rebuildRenderCache() {
-        _renderSegs = geom.buildRenderSegments(primitives)
+        _renderSegs = geom.buildRenderSegments(primitives, root.profileType)
     }
 
     // ── Actor orchestration ───────────────────────────────────────────────────
@@ -165,6 +167,7 @@ Canvas {
         primitives: root.primitives
         selectedPrimIndex: root.selectedPrimIndex
         selectedBlendIndex: root.selectedBlendIndex
+        profileType: root.profileType
         scale: root._scale
         cx: root._cx
         cy: root._cy

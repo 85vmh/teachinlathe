@@ -1,13 +1,14 @@
 import QtQuick 2.15
 
 QtObject {
-    property var primitives: []
-    property int selectedPrimIndex: -1
-    property int selectedBlendIndex: -1
-    property real scale: 1
-    property var cx
-    property var cy
-    property var geometry
+    property var    primitives: []
+    property int    selectedPrimIndex: -1
+    property int    selectedBlendIndex: -1
+    property string profileType: "od"
+    property real   scale: 1
+    property var    cx
+    property var    cy
+    property var    geometry
     property color highlightStrokeColor: "#E53935"
     property color highlightFillColor: "#E53935"
     property color highlightCenterColor: "#888888"
@@ -97,10 +98,12 @@ QtObject {
                 var spLogX = +(p.x_start || 0)
                 var spLX2 = spLogX / 2
                 var spNextPH = geometry.halfXPrim(bNextP)
+                var isID = String(profileType || "od").toLowerCase() === "id"
 
                 if (p.blend.type === "chamfer") {
                     var cw = +(p.blend.chamfer_width || 0)
-                    var cg = geometry.chamferGeomLine(spLogZ, spLX2 - cw, spLogZ, spLX2, spNextPH, cw)
+                    var spEntryXC = isID ? spLX2 + cw : spLX2 - cw
+                    var cg = geometry.chamferGeomLine(spLogZ, spEntryXC, spLogZ, spLX2, spNextPH, cw)
                     if (cg) {
                         ctx.beginPath()
                         ctx.moveTo(cx(cg.csZ), cy(cg.csX * 2))
@@ -117,9 +120,10 @@ QtObject {
 
                 } else if (p.blend.type === "fillet") {
                     var fr = +(p.blend.fillet_radius || 0)
+                    var spEntryXF = isID ? spLX2 + fr : spLX2 - fr
                     var fg = (bNextP && bNextP.type === "arcTo")
-                              ? geometry.filletLineArc(spLogZ, spLX2 - fr, spLogZ, spLX2, spNextPH, fr)
-                              : geometry.filletGeom(spLogZ, spLX2 - fr, spLogZ, spLX2, spNextPH, fr)
+                              ? geometry.filletLineArc(spLogZ, spEntryXF, spLogZ, spLX2, spNextPH, fr)
+                              : geometry.filletGeom(spLogZ, spEntryXF, spLogZ, spLX2, spNextPH, fr)
                     if (fg) {
                         var fccx = cx(fg.fcz)
                         var fccy = cy(fg.fcx * 2)

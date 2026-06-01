@@ -190,6 +190,17 @@ class ConversationalQml(QQuickWidget):
         # make sure you set self.current_program when you open ChildScreen
         return getattr(self, "current_program", None)
 
+    def _resolve_profile_type(self, profile_id):
+        """Return the ProfilingType of the DefineProfile with the given id, or None."""
+        from teachinlathe.conversational.data_types import DefineProfile
+        prog = self._get_current_program()
+        if not prog or not profile_id:
+            return None
+        for op in (getattr(prog, "operations", []) or []):
+            if isinstance(op, DefineProfile) and int(op.profile_id) == int(profile_id):
+                return op.profile_type
+        return None
+
     # ADD this helper in class ConversationalQml
     def _save_current_program(self):
         prog = self._get_current_program()
@@ -801,6 +812,10 @@ class ConversationalQml(QQuickWidget):
             apply_profile_roughing_strategy_update(op.profileRoughingStrategy, p.get("profile_roughing_strategy"))
             apply_stock_to_leave_update(op.stockToLeave, p.get("stock_to_leave"))
             apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
+            profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)
+            resolved_type = self._resolve_profile_type(profile_id)
+            if resolved_type is not None:
+                op.profileRoughingStrategy.profiling_type = resolved_type
             self._save_current_program()
         except Exception as e:
             print("[profileRoughing] update error:", e)
@@ -820,6 +835,10 @@ class ConversationalQml(QQuickWidget):
             apply_stock_to_leave_update(op.stockToLeave, p.get("stock_to_leave"))
             if "stock_to_leave_enabled" in p and p["stock_to_leave_enabled"] is not None:
                 op.stockToLeaveEnabled = bool(p["stock_to_leave_enabled"])
+            profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)
+            resolved_type = self._resolve_profile_type(profile_id)
+            if resolved_type is not None:
+                op.profileContourStrategy.profiling_type = resolved_type
             self._save_current_program()
         except Exception as e:
             print("[profileContour] update error:", e)

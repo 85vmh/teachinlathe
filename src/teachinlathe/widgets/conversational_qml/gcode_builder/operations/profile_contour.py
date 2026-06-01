@@ -20,10 +20,17 @@ def parse_profile_contour_config(op) -> ProfileContourConfig:
     strategy = op.get("profile_contour_strategy", {}) or {}
     stock = op.get("stock_to_leave", {}) or {}
 
-    try:
-        profiling_type = ProfilingType(str(strategy.get("profiling_type", "od")).lower())
-    except ValueError:
-        profiling_type = ProfilingType.OD
+    resolved = op.get("_resolved_profile") or {}
+    if resolved:
+        try:
+            profiling_type = ProfilingType(str(resolved.get("profile_type", "od")).lower())
+        except ValueError:
+            profiling_type = ProfilingType.OD
+    else:
+        try:
+            profiling_type = ProfilingType(str(strategy.get("profiling_type", "od")).lower())
+        except ValueError:
+            profiling_type = ProfilingType.OD
 
     stock_enabled = bool(op.get("stock_to_leave_enabled", False))
 
@@ -44,8 +51,9 @@ def parse_profile_contour_config(op) -> ProfileContourConfig:
 def _resolve_profile(op):
     resolved = op.get("_resolved_profile") or {}
     primitives = resolved.get("profile_primitives", []) or []
+    profile_type = str(resolved.get("profile_type", "od")).lower()
     segments = build_profile_segments(primitives)
-    path = build_render_path(segments)
+    path = build_render_path(segments, profile_type)
     return segments, path
 
 

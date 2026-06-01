@@ -356,10 +356,11 @@ def _half_x_seg(seg):
     return seg
 
 
-def build_render_path(segments):
+def build_render_path(segments, profile_type: str = "od"):
     if not segments:
         return []
 
+    is_id = str(profile_type or "od").lower() == "id"
     legacy_segments = [_as_legacy_segment(segment) for segment in segments]
     path = []
     logical_x = 0.0
@@ -376,7 +377,8 @@ def build_render_path(segments):
                 sz = logical_z
                 if blend_type == "chamfer":
                     cw = segment.get("blend_cw", 0.0)
-                    chamfer = _legacy_chamfer_line(sx_r - cw, sz, sx_r, sz, next_seg_h, cw)
+                    entry_x = sx_r + cw if is_id else sx_r - cw
+                    chamfer = _legacy_chamfer_line(entry_x, sz, sx_r, sz, next_seg_h, cw)
                     if chamfer:
                         cs_x, cs_z, ce_x, ce_z = chamfer
                         path.append(StartPoint(cs_x * 2, cs_z))
@@ -384,10 +386,11 @@ def build_render_path(segments):
                         continue
                 elif blend_type == "fillet":
                     fr = segment.get("blend_rf", 0.0)
+                    entry_x = sx_r + fr if is_id else sx_r - fr
                     if next_seg["type"] == "arcTo":
-                        fillet = _legacy_fillet_line_arc(sx_r - fr, sz, sx_r, sz, next_seg_h, fr)
+                        fillet = _legacy_fillet_line_arc(entry_x, sz, sx_r, sz, next_seg_h, fr)
                     else:
-                        fillet = _legacy_fillet_line_line(sx_r - fr, sz, sx_r, sz, next_seg_h, fr)
+                        fillet = _legacy_fillet_line_line(entry_x, sz, sx_r, sz, next_seg_h, fr)
                     if fillet:
                         t1x, t1z, t2x, t2z, fcx, fcz, acw = fillet
                         path.append(StartPoint(t1x * 2, t1z))

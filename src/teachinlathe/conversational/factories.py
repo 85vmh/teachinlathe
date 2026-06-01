@@ -158,7 +158,8 @@ def make_default_operation(op_type: str, order: int = 1):
         )
     if op_type == "defineProfile":
         return DefineProfile(
-            order=order, type=op_type, generate_gcode=False, is_optional_block=False, profile_id=1, profile_primitives=[]
+            order=order, type=op_type, generate_gcode=False, is_optional_block=False,
+            profile_id=1, profile_type=ProfilingType.OD, profile_primitives=[]
         )
     raise ValueError(f"Unknown operation type: {op_type!r}")
 

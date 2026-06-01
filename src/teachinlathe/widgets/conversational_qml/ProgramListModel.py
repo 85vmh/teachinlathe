@@ -119,7 +119,10 @@ class ProgramListModel(QAbstractListModel):
             return "Facing"
         if op_type == "defineProfile":
             profile_id = getattr(op, "profile_id", None)
-            return f"Define Profile (P{profile_id})" if profile_id is not None else "Define Profile"
+            profile_type = getattr(op, "profile_type", None)
+            pt = profile_type.value if hasattr(profile_type, "value") else str(profile_type or "od").lower()
+            type_str = "OD" if pt == "od" else "ID"
+            return f"Define {type_str} Profile (P{profile_id})" if profile_id is not None else f"Define {type_str} Profile"
         if op_type == "profiling":
             profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
             strategy = getattr(getattr(op, "profilingOptions", None), "strategy", None)

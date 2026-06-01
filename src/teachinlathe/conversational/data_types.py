@@ -878,6 +878,7 @@ class ArcTo(ProfilePrimitive):
 @dataclass
 class DefineProfile(Operation):
     profile_id:         int
+    profile_type:       ProfilingType
     profile_primitives: List[ProfilePrimitive]
 
     @staticmethod
@@ -889,12 +890,17 @@ class DefineProfile(Operation):
             if "primitive_id" not in p_data:
                 p_data["primitive_id"] = i + 1
             primitives.append(ProfilePrimitive.from_dict(p_data))
+        try:
+            profile_type = ProfilingType(str(data.get("profile_type", "od")).lower())
+        except ValueError:
+            profile_type = ProfilingType.OD
         return DefineProfile(
             order=int(data["order"]),
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
             profile_id=int(data.get("profile_id", 0)),
+            profile_type=profile_type,
             profile_primitives=primitives,
         )
 
@@ -902,6 +908,7 @@ class DefineProfile(Operation):
         base = super().to_dict()
         base.update({
             "profile_id":         int(self.profile_id),
+            "profile_type":       self.profile_type.value,
             "profile_primitives": [p.to_dict() for p in self.profile_primitives],
         })
         return base

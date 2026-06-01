@@ -11,7 +11,7 @@ def build_details_payload(obj):
     return obj.to_dict() if hasattr(obj, "to_dict") else None
 
 
-def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, strategy=None, profiling_type=None):
+def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, strategy=None, profiling_type=None, profile_type=None):
     op_type_value = (op_type or "").strip()
     if op_type_value == "changeTool":
         return f"Tool Change (T{tool_no})" if tool_no is not None else "Tool Change"
@@ -22,7 +22,9 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
     if op_type_value == "knurling":
         return "SinglePoint Knurling"
     if op_type_value == "defineProfile":
-        return f"Define Profile (P{profile_id})" if profile_id is not None else "Define Profile"
+        pt = profile_type.value if hasattr(profile_type, "value") else str(profile_type or "od").lower()
+        type_str = "OD" if pt == "od" else "ID"
+        return f"Define {type_str} Profile (P{profile_id})" if profile_id is not None else f"Define {type_str} Profile"
     if op_type_value == "profiling":
         strategy_value = strategy.value if hasattr(strategy, "value") else str(strategy or "").lower()
         prefix = "G71 " if strategy_value == "rough" else "G70 " if strategy_value == "finish" else ""
@@ -72,9 +74,10 @@ def build_operations_model(program):
             profiling_type = getattr(getattr(op, "profileContourStrategy", None), "profiling_type", None)
         if profiling_type is not None and hasattr(profiling_type, "value"):
             profiling_type = profiling_type.value
+        profile_type = getattr(op, "profile_type", None)
         item["display_type"] = display_name_for_op(
             item["type"], tool_no=tool_no, pitch=pitch, profile_id=profile_id,
-            strategy=strategy, profiling_type=profiling_type,
+            strategy=strategy, profiling_type=profiling_type, profile_type=profile_type,
         )
         out.append(item)
     return out
