@@ -17,10 +17,12 @@ def emit_roughing_contour_pass(
     if not path:
         return
     entry_x = path[0].x
+    entry_z = path[0].z
 
     lines.append(f"( Contour with StockToLeave[radial={fmt(ctx.stock_x)} axial={fmt(ctx.stock_z)}] )")
-    # lines.append(f"{pfx}G0 X{fmt(ctx.x_safe)} Z{fmt(ctx.z_start)}")
     lines.append(f"{pfx}G0 X{fmt(entry_x)} Z{fmt(ctx.z_start)}")
+    if abs(entry_z - ctx.z_start) > 1e-9:
+        lines.append(f"{pfx}G1 X{fmt(entry_x)} Z{fmt(entry_z)}")
     emit_toolpath(lines, pfx, path)
     lines.append(f"{pfx}G0 X{fmt(ctx.x_safe)}")
     lines.append(f"{pfx}G0 Z{fmt(ctx.z_start)}")

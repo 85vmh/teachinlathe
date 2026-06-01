@@ -795,6 +795,7 @@ class ProfilePrimitive:
 class StartPoint(ProfilePrimitive):
     x_start: float
     z_start: float
+    blend: ProfileBlend = field(default_factory=lambda: ProfileBlend(blend_type=BlendType.NONE))
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "StartPoint":
@@ -803,11 +804,12 @@ class StartPoint(ProfilePrimitive):
             primitive_type="startPoint",
             x_start=float(data.get("x_start", 0.0)),
             z_start=float(data.get("z_start", 0.0)),
+            blend=ProfileBlend.from_dict(data.get("blend", {})),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         d = super().to_dict()
-        d.update({"x_start": float(self.x_start), "z_start": float(self.z_start)})
+        d.update({"x_start": float(self.x_start), "z_start": float(self.z_start), "blend": self.blend.to_dict()})
         return d
 
 

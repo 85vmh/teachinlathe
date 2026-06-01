@@ -45,7 +45,7 @@ class RoughingContext:
     @property
     def geo_x_shift(self) -> float:
         """X shift applied to profile geometry queries (applies radial stock)."""
-        return self.stock_x_sign * self.stock_x
+        return self.stock_x_sign * self.stock_x * 2
 
     @property
     def geo_z_shift(self) -> float:
@@ -77,8 +77,8 @@ def make_od_context(config, x_min: float) -> RoughingContext:
         stock_x=config.stock_x,
         stock_z=config.stock_z,
         optional_prefix=config.optional_prefix,
-        x_safe=config.x_start + retract,
-        x_limit=x_min + config.stock_x,
+        x_safe=config.x_start + retract * 2,
+        x_limit=x_min + config.stock_x * 2,
         x_direction=-1,
         stock_x_sign=1,
     )
@@ -96,8 +96,8 @@ def make_id_context(config, x_max: float) -> RoughingContext:
         stock_x=config.stock_x,
         stock_z=config.stock_z,
         optional_prefix=config.optional_prefix,
-        x_safe=config.x_start - retract,
-        x_limit=x_max - config.stock_x,
+        x_safe=config.x_start - retract * 2,
+        x_limit=x_max - config.stock_x * 2,
         x_direction=1,
         stock_x_sign=-1,
     )

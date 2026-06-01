@@ -25,8 +25,9 @@ Canvas {
     Geometry { id: geom }
 
     // ── World → canvas ─────────────────────────────────────────────────────────
+    // wX is diameter; divide by 2 so 1 mm radius == 1 mm Z on screen.
     function _cx(wZ) { return _originX + wZ * _scale }
-    function _cy(wX) { return _originY + wX * _scale }
+    function _cy(wX) { return _originY + (wX / 2) * _scale }
 
     // ── Recompute + repaint on any relevant change ─────────────────────────────
     onPrimitivesChanged: {
@@ -69,8 +70,8 @@ Canvas {
 
         // Z: [zMin-M, zMax+M]
         var spanZ = Math.max(b.fZMax - b.fZMin + 2 * MARGIN, 1)
-        // X: [-M, xMax+M]  (center line = 0 is the logical top of the profile)
-        var spanX = Math.max(b.fXMax + 2 * MARGIN, 1)
+        // X: diameter → radius for display. fXMax is diameter; /2 gives max radius.
+        var spanX = Math.max(b.fXMax / 2 + 2 * MARGIN, 1)
 
         var scale = Math.min(width / spanZ, height / spanX)
 
@@ -201,7 +202,7 @@ Canvas {
                 var isClockwise = (p.direction === "cw")
                 var centerCanvasX = _cx(centerZ)
                 var centerCanvasY = _cy(centerX)
-                var radiusCanvas = arcRadius * _scale
+                var radiusCanvas = Math.sqrt(Math.pow(_cx(currentZ) - centerCanvasX, 2) + Math.pow(_cy(currentX) - centerCanvasY, 2))
                 var startAngle = Math.atan2(_cy(currentX) - centerCanvasY, _cx(currentZ) - centerCanvasX)
                 var endAngle = Math.atan2(_cy(arcEndX) - centerCanvasY, _cx(arcEndZ) - centerCanvasX)
                 if (geom.distToArc(px, py, centerCanvasX, centerCanvasY, radiusCanvas, startAngle, endAngle, !isClockwise) <= HIT) return i

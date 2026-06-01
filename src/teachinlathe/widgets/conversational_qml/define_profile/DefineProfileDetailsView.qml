@@ -427,6 +427,7 @@ Item {
                                     onLoaded: {
                                         item.primData   = md
                                         item.primIdx    = mi
+                                        item.primCount  = Qt.binding(function() { return root.primitives.length })
                                         item.isSelected = Qt.binding(function() {
                                             return root.selectedPrimIndex === mi
                                         })
@@ -451,7 +452,7 @@ Item {
                                     width: parent.width
                                     active:  md !== null && md !== undefined &&
                                              md.blend !== undefined && md.blend !== null &&
-                                             md.blend.type !== "none" && md.type !== "startPoint"
+                                             md.blend.type !== "none"
                                     visible: active
 
                                     sourceComponent: blendComp
@@ -494,7 +495,7 @@ Item {
                         if (!hasStart) {
                             var arr = JSON.parse(JSON.stringify(root.primitives))
                             arr.unshift({ type: "startPoint", primitive_id: 0,
-                                          x_start: 0, z_start: 0 })
+                                          x_start: 0, z_start: 0, blend: { type: "none" } })
                             root.primitives     = _renumber(arr)
                             root.selectedPrimIndex  = 0
                             root.selectedBlendIndex = -1

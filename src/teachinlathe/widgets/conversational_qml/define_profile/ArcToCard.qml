@@ -9,6 +9,7 @@ Rectangle {
 
     property var  primData:   ({})
     property int  primIdx:    0
+    property int  primCount:  0
     property bool isSelected: false
 
     readonly property string _blendType:
@@ -236,7 +237,7 @@ Rectangle {
 
         Rectangle {
             implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
-            enabled: root._blendType === "none"
+            enabled: root._blendType === "none" && root.primIdx < root.primCount - 1
             opacity: enabled ? 1.0 : 0.35
             color:   chamferMA.pressed ? clrBtnHover : "transparent"
             border.width: enabled ? 1 : 0
@@ -262,7 +263,7 @@ Rectangle {
 
         Rectangle {
             implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
-            enabled: root._blendType === "none"
+            enabled: root._blendType === "none" && root.primIdx < root.primCount - 1
             opacity: enabled ? 1.0 : 0.35
             color:   filletMA.pressed ? clrBtnHover : "transparent"
             border.width: enabled ? 1 : 0

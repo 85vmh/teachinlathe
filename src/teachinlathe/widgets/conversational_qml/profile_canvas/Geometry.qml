@@ -335,33 +335,67 @@ QtObject {
             if (p.type === "startPoint") {
                 logZ = +(p.z_start || 0)
                 logX = +(p.x_start || 0)
-                segs.push({ type: "move", z: logZ, x: logX })
+                var spNextPrim = _nextPrim(primitives, i)
+                if (p.blend && p.blend.type !== "none" && spNextPrim) {
+                    var spLX2 = logX / 2
+                    var spNextH = halfXPrim(spNextPrim)
+                    if (p.blend.type === "chamfer") {
+                        var spcw = +(p.blend.chamfer_width || 0)
+                        var spcg = chamferGeomLine(logZ, spLX2 - spcw, logZ, spLX2, spNextH, spcw)
+                        if (spcg) {
+                            segs.push({ type: "move", z: spcg.csZ, x: spcg.csX * 2 })
+                            segs.push({ type: "line", z: spcg.ceZ, x: spcg.ceX * 2 })
+                        } else {
+                            segs.push({ type: "move", z: logZ, x: logX })
+                        }
+                    } else if (p.blend.type === "fillet") {
+                        var spfr = +(p.blend.fillet_radius || 0)
+                        var spfg = (spNextPrim.type === "arcTo")
+                            ? filletLineArc(logZ, spLX2 - spfr, logZ, spLX2, spNextH, spfr)
+                            : filletGeom(logZ, spLX2 - spfr, logZ, spLX2, spNextH, spfr)
+                        if (spfg) {
+                            segs.push({ type: "move", z: spfg.t1z, x: spfg.t1x * 2 })
+                            segs.push({
+                                type: "arc",
+                                z: spfg.t2z, x: spfg.t2x * 2,
+                                zc: spfg.fcz, xc: spfg.fcx * 2,
+                                r: spfr,
+                                anticlockwise: spfg.anticlockwise
+                            })
+                        } else {
+                            segs.push({ type: "move", z: logZ, x: logX })
+                        }
+                    } else {
+                        segs.push({ type: "move", z: logZ, x: logX })
+                    }
+                } else {
+                    segs.push({ type: "move", z: logZ, x: logX })
+                }
             } else if (p.type === "lineTo") {
                 var ez = +(p.z_end || 0)
                 var ex = +(p.x_end || 0)
                 if (p.blend && p.blend.type === "chamfer") {
                     var cw = +(p.blend.chamfer_width || 0)
-                    var cg = chamferGeomLine(logZ, logX, ez, ex, _nextPrim(primitives, i), cw)
+                    var cg = chamferGeomLine(logZ, logX / 2, ez, ex / 2, halfXPrim(_nextPrim(primitives, i)), cw)
                     if (cg) {
-                        segs.push({ type: "line", z: cg.csZ, x: cg.csX })
-                        segs.push({ type: "line", z: cg.ceZ, x: cg.ceX })
+                        segs.push({ type: "line", z: cg.csZ, x: cg.csX * 2 })
+                        segs.push({ type: "line", z: cg.ceZ, x: cg.ceX * 2 })
                     } else {
                         segs.push({ type: "line", z: ez, x: ex })
                     }
                 } else if (p.blend && p.blend.type === "fillet") {
                     var fr = +(p.blend.fillet_radius || 0)
                     var nextPrim = _nextPrim(primitives, i)
+                    var nextPrimH = halfXPrim(nextPrim)
                     var fg = (nextPrim && nextPrim.type === "arcTo")
-                        ? filletLineArc(logZ, logX, ez, ex, nextPrim, fr)
-                        : filletGeom(logZ, logX, ez, ex, nextPrim, fr)
+                        ? filletLineArc(logZ, logX / 2, ez, ex / 2, nextPrimH, fr)
+                        : filletGeom(logZ, logX / 2, ez, ex / 2, nextPrimH, fr)
                     if (fg) {
-                        segs.push({ type: "line", z: fg.t1z, x: fg.t1x })
+                        segs.push({ type: "line", z: fg.t1z, x: fg.t1x * 2 })
                         segs.push({
                             type: "arc",
-                            z: fg.t2z,
-                            x: fg.t2x,
-                            zc: fg.fcz,
-                            xc: fg.fcx,
+                            z: fg.t2z, x: fg.t2x * 2,
+                            zc: fg.fcz, xc: fg.fcx * 2,
                             r: fr,
                             anticlockwise: fg.anticlockwise
                         })
@@ -382,60 +416,50 @@ QtObject {
                 var isCW = (p.direction === "cw")
 
                 if (p.blend && p.blend.type === "chamfer") {
-                    var acw = +(p.blend.chamfer_width || 0)
-                    var acg = chamferGeomArc(acz, acx, ar, isCW, aez, aex, _nextPrim(primitives, i), acw)
+                    var acw  = +(p.blend.chamfer_width || 0)
+                    var acx2c = acx / 2, aex2c = aex / 2
+                    var ar2c  = Math.sqrt((aex2c - acx2c) * (aex2c - acx2c) + (aez - acz) * (aez - acz))
+                    var acg = chamferGeomArc(acz, acx2c, ar2c, isCW, aez, aex2c, halfXPrim(_nextPrim(primitives, i)), acw)
                     if (acg) {
                         segs.push({
                             type: "arc",
-                            z: acg.csZ,
-                            x: acg.csX,
-                            zc: acz,
-                            xc: acx,
-                            r: ar,
+                            z: acg.csZ, x: acg.csX * 2,
+                            zc: acz, xc: acx, r: ar,
                             anticlockwise: !isCW
                         })
-                        segs.push({ type: "line", z: acg.ceZ, x: acg.ceX })
+                        segs.push({ type: "line", z: acg.ceZ, x: acg.ceX * 2 })
                     } else {
                         segs.push({
                             type: "arc",
-                            z: aez,
-                            x: aex,
-                            zc: acz,
-                            xc: acx,
-                            r: ar,
+                            z: aez, x: aex,
+                            zc: acz, xc: acx, r: ar,
                             anticlockwise: !isCW
                         })
                     }
                 } else if (p.blend && p.blend.type === "fillet") {
-                    var afr = +(p.blend.fillet_radius || 0)
-                    var afg = filletArcLine(acz, acx, ar, isCW, aez, aex, _nextPrim(primitives, i), afr)
+                    var afr  = +(p.blend.fillet_radius || 0)
+                    var acx2f = acx / 2, aex2f = aex / 2
+                    var ar2f  = Math.sqrt((aex2f - acx2f) * (aex2f - acx2f) + (aez - acz) * (aez - acz))
+                    var afg = filletArcLine(acz, acx2f, ar2f, isCW, aez, aex2f, halfXPrim(_nextPrim(primitives, i)), afr)
                     if (afg) {
                         segs.push({
                             type: "arc",
-                            z: afg.t1z,
-                            x: afg.t1x,
-                            zc: acz,
-                            xc: acx,
-                            r: ar,
+                            z: afg.t1z, x: afg.t1x * 2,
+                            zc: acz, xc: acx, r: ar,
                             anticlockwise: !isCW
                         })
                         segs.push({
                             type: "arc",
-                            z: afg.t2z,
-                            x: afg.t2x,
-                            zc: afg.fcz,
-                            xc: afg.fcx,
+                            z: afg.t2z, x: afg.t2x * 2,
+                            zc: afg.fcz, xc: afg.fcx * 2,
                             r: afr,
                             anticlockwise: afg.anticlockwise
                         })
                     } else {
                         segs.push({
                             type: "arc",
-                            z: aez,
-                            x: aex,
-                            zc: acz,
-                            xc: acx,
-                            r: ar,
+                            z: aez, x: aex,
+                            zc: acz, xc: acx, r: ar,
                             anticlockwise: !isCW
                         })
                     }
@@ -481,6 +505,27 @@ QtObject {
             return primitives[i + 1]
         }
         return null
+    }
+
+    // Returns a copy of primitive p with all X coordinates halved (diameter → radius).
+    // Used so blend geometry functions compute in isometric radius-Z space.
+    function halfXPrim(p) {
+        if (!p) return null
+        if (p.type === "lineTo") {
+            return { type: "lineTo", z_end: p.z_end, x_end: (+(p.x_end || 0)) / 2, blend: p.blend }
+        }
+        if (p.type === "arcTo") {
+            var xe2 = (+(p.x_end    || 0)) / 2
+            var xc2 = (+(p.x_center || 0)) / 2
+            var ze  = +(p.z_end     || 0)
+            var zc  = +(p.z_center  || 0)
+            return { type: "arcTo",
+                     z_end: ze, x_end: xe2,
+                     z_center: zc, x_center: xc2,
+                     arc_radius: Math.sqrt((xe2 - xc2) * (xe2 - xc2) + (ze - zc) * (ze - zc)),
+                     direction: p.direction, blend: p.blend }
+        }
+        return p
     }
 
     // ── Hit-test helpers (operate on canvas pixel coords) ─────────────────────

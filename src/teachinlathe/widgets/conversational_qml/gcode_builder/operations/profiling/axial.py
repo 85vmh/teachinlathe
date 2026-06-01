@@ -29,11 +29,13 @@ def emit_axial_roughing(lines: list, context: RoughingContext, path: list) -> No
         lines.append("( ProfileRoughing axial: nothing to cut – check x_start vs profile )")
         return
 
-    pass_count = max(1, math.ceil(abs(context.x_limit - context.x_start) / context.doc))
+    pass_count = max(1, math.ceil(abs(context.x_limit - context.x_start) / (context.doc * 2)))
     passes = []
     for n in range(pass_count):
-        raw_x = context.x_start + context.x_direction * (n + 1) * context.doc
+        raw_x = context.x_start + context.x_direction * (n + 1) * context.doc * 2
         cut_x = context.clamp_cut_x(raw_x)
+        if abs(cut_x - context.x_limit) < 1e-9:
+            continue  # at contour boundary; contour pass handles this
         cut_z = find_deepest_z_at_x_path(path, cut_x)
         if cut_z > context.z_start + 1e-9:
             continue
@@ -47,9 +49,9 @@ def emit_axial_roughing(lines: list, context: RoughingContext, path: list) -> No
 
     for cut_x, cut_z in passes:
         # Lead-in/lead-out move away from the cut in X and toward z_start in Z.
-        entry_x = cut_x - context.x_direction * context.retract
+        entry_x = cut_x - context.x_direction * context.retract * 2
         entry_z = context.z_start + context.retract
-        exit_x = cut_x - context.x_direction * context.retract
+        exit_x = cut_x - context.x_direction * context.retract * 2
         exit_z = cut_z + context.retract
 
         if context.x_direction < 0:

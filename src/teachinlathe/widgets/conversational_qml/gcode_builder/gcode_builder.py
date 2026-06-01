@@ -82,6 +82,7 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None):
     lines.append(f"( Program: {program_name} )")
     lines.append(f"( Creation Date: {_format_creation_date(datetime.now())} )")
     lines.append("G21  (mm)")
+    lines.append("G7   (diameter mode)")
     lines.append("G90  (absolute distance mode)")
     lines.append("G95  (feed per rev)")
     lines.append("G18  (ZX plane)")

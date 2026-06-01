@@ -9,18 +9,25 @@ Rectangle {
 
     property var  primData:   ({})
     property int  primIdx:    0
+    property int  primCount:  0
     property bool isSelected: false
+
+    readonly property string _blendType:
+        (primData && primData.blend && primData.blend.type) ? primData.blend.type : "none"
 
     signal primUpdated(int idx, var data)
     signal openNumPadRequested(var field)
     signal tapped()
 
     // ── Colors ────────────────────────────────────────────────────────────────
-    readonly property color clrCardBg:        "white"
-    readonly property color clrCardBgSel:     "#dbeafe"
-    readonly property color clrBorder:        "#cccccc"
-    readonly property color clrBorderSel:     "#3b82f6"
-    readonly property color clrSeparator:     "#d0d0d0"
+    readonly property color clrCardBg:            "white"
+    readonly property color clrCardBgSel:         "#dbeafe"
+    readonly property color clrBorder:            "#cccccc"
+    readonly property color clrBorderSel:         "#3b82f6"
+    readonly property color clrSeparator:         "#d0d0d0"
+    readonly property color clrBlendBtnHover:     "#e1f0ff"
+    readonly property color clrBlendBtnHoverBorder: "#8ec5ff"
+    readonly property color clrBtnBorder:         "#BDBDBD"
 
     // ── Sizes ─────────────────────────────────────────────────────────────────
     readonly property int szCardRadius:    4
@@ -36,6 +43,9 @@ Rectangle {
     readonly property int szInputWidth:    110
     readonly property int szSepInset:      4
     readonly property int szSepGap:        8
+    readonly property int szBtn:           40
+    readonly property int szBtnIcon:       28
+    readonly property int szBtnIconSrc:    112
 
     color:        isSelected ? clrCardBgSel : clrCardBg
     radius:       szCardRadius
@@ -113,6 +123,65 @@ Rectangle {
                 onValueCommitted: {
                     var d = JSON.parse(JSON.stringify(primData))
                     d.z_start = value
+                    root.primUpdated(primIdx, d)
+                }
+            }
+        }
+
+        Rectangle {
+            width: 1; Layout.fillHeight: true
+            Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
+            Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
+            color: clrSeparator
+        }
+
+        Rectangle {
+            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
+            enabled: root._blendType === "none" && root.primCount > 1
+            opacity: enabled ? 1.0 : 0.35
+            color:   spChamferMA.pressed ? clrBlendBtnHover : "transparent"
+            border.width: enabled ? 1 : 0
+            border.color: spChamferMA.pressed ? clrBlendBtnHoverBorder : clrBtnBorder
+            Layout.alignment: Qt.AlignVCenter
+            Image {
+                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
+                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
+                source: "../icons/chamfer.svg"
+                fillMode: Image.PreserveAspectFit; smooth: true
+            }
+            MouseArea {
+                id: spChamferMA; anchors.fill: parent; enabled: parent.enabled
+                onClicked: {
+                    var d = JSON.parse(JSON.stringify(primData))
+                    if (!d.blend) d.blend = {}
+                    d.blend.type = "chamfer"
+                    if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
+                    root.primUpdated(primIdx, d)
+                }
+            }
+        }
+
+        Rectangle {
+            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
+            enabled: root._blendType === "none" && root.primCount > 1
+            opacity: enabled ? 1.0 : 0.35
+            color:   spFilletMA.pressed ? clrBlendBtnHover : "transparent"
+            border.width: enabled ? 1 : 0
+            border.color: spFilletMA.pressed ? clrBlendBtnHoverBorder : clrBtnBorder
+            Layout.alignment: Qt.AlignVCenter
+            Image {
+                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
+                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
+                source: "../icons/fillet.svg"
+                fillMode: Image.PreserveAspectFit; smooth: true
+            }
+            MouseArea {
+                id: spFilletMA; anchors.fill: parent; enabled: parent.enabled
+                onClicked: {
+                    var d = JSON.parse(JSON.stringify(primData))
+                    if (!d.blend) d.blend = {}
+                    d.blend.type = "fillet"
+                    if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
                     root.primUpdated(primIdx, d)
                 }
             }

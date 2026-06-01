@@ -6,6 +6,9 @@ from dataclasses import dataclass
 class StartPoint:
     x: float
     z: float
+    blend_type: str = "none"
+    blend_width: float = 0.0
+    blend_radius: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -55,9 +58,13 @@ def build_profile_segments(primitives):
     for primitive in (primitives or []):
         primitive_type = primitive.get("type", "")
         if primitive_type == "startPoint":
+            blend = primitive.get("blend") or {}
             segments.append(StartPoint(
                 x=float(primitive.get("x_start", 0.0)),
                 z=float(primitive.get("z_start", 0.0)),
+                blend_type=blend.get("type", "none"),
+                blend_width=float(blend.get("chamfer_width", 0.0) or 0.0),
+                blend_radius=float(blend.get("fillet_radius", 0.0) or 0.0),
             ))
             continue
 
@@ -106,7 +113,12 @@ def profile_extents(segments):
 
 def _as_legacy_segment(segment):
     if isinstance(segment, StartPoint):
-        return {"type": "startPoint", "x": segment.x, "z": segment.z}
+        return {
+            "type": "startPoint", "x": segment.x, "z": segment.z,
+            "blend_type": segment.blend_type,
+            "blend_cw": segment.blend_width,
+            "blend_rf": segment.blend_radius,
+        }
     if isinstance(segment, ProfileLineSegment):
         return {
             "type": "lineTo",
@@ -326,6 +338,24 @@ def _legacy_chamfer_arc(center_x, center_z, radius, is_cw, end_x, end_z, next_se
     return chamfer_start_x, chamfer_start_z, chamfer_end_x, chamfer_end_z
 
 
+def _half_x_seg(seg):
+    """Return seg dict with all X fields halved (diameter → physical radius) for geometry calls."""
+    if seg is None:
+        return None
+    if seg["type"] == "lineTo":
+        return {**seg, "x_end": seg["x_end"] / 2}
+    if seg["type"] == "arcTo":
+        xeh = seg["x_end"] / 2
+        xch = seg["x_center"] / 2
+        return {
+            **seg,
+            "x_end": xeh,
+            "x_center": xch,
+            "arc_radius": math.sqrt((xeh - xch) ** 2 + (seg["z_end"] - seg["z_center"]) ** 2),
+        }
+    return seg
+
+
 def build_render_path(segments):
     if not segments:
         return []
@@ -338,6 +368,31 @@ def build_render_path(segments):
         if segment["type"] == "startPoint":
             logical_x = segment["x"]
             logical_z = segment["z"]
+            blend_type = segment.get("blend_type", "none")
+            next_seg = _legacy_next_segment(legacy_segments, index)
+            if blend_type != "none" and next_seg:
+                next_seg_h = _half_x_seg(next_seg)
+                sx_r = logical_x / 2
+                sz = logical_z
+                if blend_type == "chamfer":
+                    cw = segment.get("blend_cw", 0.0)
+                    chamfer = _legacy_chamfer_line(sx_r - cw, sz, sx_r, sz, next_seg_h, cw)
+                    if chamfer:
+                        cs_x, cs_z, ce_x, ce_z = chamfer
+                        path.append(StartPoint(cs_x * 2, cs_z))
+                        path.append(ToolpathLine(ce_x * 2, ce_z))
+                        continue
+                elif blend_type == "fillet":
+                    fr = segment.get("blend_rf", 0.0)
+                    if next_seg["type"] == "arcTo":
+                        fillet = _legacy_fillet_line_arc(sx_r - fr, sz, sx_r, sz, next_seg_h, fr)
+                    else:
+                        fillet = _legacy_fillet_line_line(sx_r - fr, sz, sx_r, sz, next_seg_h, fr)
+                    if fillet:
+                        t1x, t1z, t2x, t2z, fcx, fcz, acw = fillet
+                        path.append(StartPoint(t1x * 2, t1z))
+                        path.append(ToolpathArc(t2x * 2, t2z, fcx * 2, fcz, acw))
+                        continue
             path.append(StartPoint(logical_x, logical_z))
             continue
 
@@ -346,23 +401,32 @@ def build_render_path(segments):
             end_x = segment["x_end"]
             end_z = segment["z_end"]
             if segment.get("blend_type") == "chamfer":
-                chamfer = _legacy_chamfer_line(logical_x, logical_z, end_x, end_z, next_segment, segment.get("blend_cw", 0.0))
+                chamfer = _legacy_chamfer_line(
+                    logical_x / 2, logical_z, end_x / 2, end_z,
+                    _half_x_seg(next_segment), segment.get("blend_cw", 0.0),
+                )
                 if chamfer:
-                    start_x, start_z, chamfer_end_x, chamfer_end_z = chamfer
-                    path.append(ToolpathLine(start_x, start_z))
-                    path.append(ToolpathLine(chamfer_end_x, chamfer_end_z))
+                    sx, sz, cex, cez = chamfer
+                    path.append(ToolpathLine(sx * 2, sz))
+                    path.append(ToolpathLine(cex * 2, cez))
                 else:
                     path.append(ToolpathLine(end_x, end_z))
             elif segment.get("blend_type") == "fillet":
                 radius = segment.get("blend_rf", 0.0)
                 if next_segment and next_segment["type"] == "arcTo":
-                    fillet = _legacy_fillet_line_arc(logical_x, logical_z, end_x, end_z, next_segment, radius)
+                    fillet = _legacy_fillet_line_arc(
+                        logical_x / 2, logical_z, end_x / 2, end_z,
+                        _half_x_seg(next_segment), radius,
+                    )
                 else:
-                    fillet = _legacy_fillet_line_line(logical_x, logical_z, end_x, end_z, next_segment, radius)
+                    fillet = _legacy_fillet_line_line(
+                        logical_x / 2, logical_z, end_x / 2, end_z,
+                        _half_x_seg(next_segment), radius,
+                    )
                 if fillet:
-                    tangent1_x, tangent1_z, tangent2_x, tangent2_z, center_x, center_z, anticlockwise = fillet
-                    path.append(ToolpathLine(tangent1_x, tangent1_z))
-                    path.append(ToolpathArc(tangent2_x, tangent2_z, center_x, center_z, anticlockwise))
+                    t1x, t1z, t2x, t2z, cx, cz, acw = fillet
+                    path.append(ToolpathLine(t1x * 2, t1z))
+                    path.append(ToolpathArc(t2x * 2, t2z, cx * 2, cz, acw))
                 else:
                     path.append(ToolpathLine(end_x, end_z))
             else:
@@ -373,25 +437,36 @@ def build_render_path(segments):
 
         end_x = segment["x_end"]
         end_z = segment["z_end"]
+        cx_d = segment["x_center"]
+        cz = segment["z_center"]
         is_cw = segment["gcode_dir"] != 2
+        end_x_h = end_x / 2
+        cx_h = cx_d / 2
+        arc_r_h = math.sqrt((end_x_h - cx_h) ** 2 + (end_z - cz) ** 2)
         if segment.get("blend_type") == "chamfer":
-            chamfer = _legacy_chamfer_arc(segment["x_center"], segment["z_center"], segment["arc_radius"], is_cw, end_x, end_z, next_segment, segment.get("blend_cw", 0.0))
+            chamfer = _legacy_chamfer_arc(
+                cx_h, cz, arc_r_h, is_cw, end_x_h, end_z,
+                _half_x_seg(next_segment), segment.get("blend_cw", 0.0),
+            )
             if chamfer:
-                start_x, start_z, chamfer_end_x, chamfer_end_z = chamfer
-                path.append(ToolpathArc(start_x, start_z, segment["x_center"], segment["z_center"], not is_cw))
-                path.append(ToolpathLine(chamfer_end_x, chamfer_end_z))
+                sx, sz, cex, cez = chamfer
+                path.append(ToolpathArc(sx * 2, sz, cx_d, cz, not is_cw))
+                path.append(ToolpathLine(cex * 2, cez))
             else:
-                path.append(ToolpathArc(end_x, end_z, segment["x_center"], segment["z_center"], not is_cw))
+                path.append(ToolpathArc(end_x, end_z, cx_d, cz, not is_cw))
         elif segment.get("blend_type") == "fillet":
-            fillet = _legacy_fillet_arc_line(segment["x_center"], segment["z_center"], segment["arc_radius"], is_cw, end_x, end_z, next_segment, segment.get("blend_rf", 0.0))
+            fillet = _legacy_fillet_arc_line(
+                cx_h, cz, arc_r_h, is_cw, end_x_h, end_z,
+                _half_x_seg(next_segment), segment.get("blend_rf", 0.0),
+            )
             if fillet:
-                tangent1_x, tangent1_z, tangent2_x, tangent2_z, center_x, center_z, anticlockwise = fillet
-                path.append(ToolpathArc(tangent1_x, tangent1_z, segment["x_center"], segment["z_center"], not is_cw))
-                path.append(ToolpathArc(tangent2_x, tangent2_z, center_x, center_z, anticlockwise))
+                t1x, t1z, t2x, t2z, fcx, fcz, acw = fillet
+                path.append(ToolpathArc(t1x * 2, t1z, cx_d, cz, not is_cw))
+                path.append(ToolpathArc(t2x * 2, t2z, fcx * 2, fcz, acw))
             else:
-                path.append(ToolpathArc(end_x, end_z, segment["x_center"], segment["z_center"], not is_cw))
+                path.append(ToolpathArc(end_x, end_z, cx_d, cz, not is_cw))
         else:
-            path.append(ToolpathArc(end_x, end_z, segment["x_center"], segment["z_center"], not is_cw))
+            path.append(ToolpathArc(end_x, end_z, cx_d, cz, not is_cw))
         logical_x = end_x
         logical_z = end_z
     return path
@@ -421,20 +496,13 @@ def find_deepest_z_at_x_path(path, target_x, x_shift=0.0, z_shift=0.0):
             elif abs(target_x - current_x) < 1e-6:
                 candidates.append(min(current_z, end_z))
         else:
-            if x_min <= target_x <= x_max:
-                center_x = element.center_x + x_shift
-                center_z = element.center_z + z_shift
-                radius = math.sqrt((current_x - center_x) ** 2 + (current_z - center_z) ** 2)
-                delta_x = target_x - center_x
-                if abs(delta_x) <= radius:
-                    discriminant = radius ** 2 - delta_x ** 2
-                    z_plus = center_z + math.sqrt(discriminant)
-                    z_minus = center_z - math.sqrt(discriminant)
-                    z_min = min(current_z, end_z)
-                    z_max = max(current_z, end_z)
-                    for candidate_z in (z_plus, z_minus):
-                        if z_min - 1e-6 <= candidate_z <= z_max + 1e-6:
-                            candidates.append(candidate_z)
+            center_x = element.center_x + x_shift
+            center_z = element.center_z + z_shift
+            for z_candidate in _arc_x_intersections_z(
+                current_x, current_z, end_x, end_z,
+                center_x, center_z, element.anticlockwise, target_x,
+            ):
+                candidates.append(z_candidate)
 
         current_x, current_z = end_x, end_z
 
@@ -471,18 +539,13 @@ def find_profile_x_at_z(path, target_z, x_shift=0.0, z_shift=0.0):
             elif abs(target_z - current_z) < 1e-6:
                 candidates.append(max(current_x, end_x))
         else:  # ToolpathArc
-            if z_lo <= target_z <= z_hi:
-                cx = element.center_x + x_shift
-                cz = element.center_z + z_shift
-                r = math.sqrt((current_x - cx) ** 2 + (current_z - cz) ** 2)
-                dz = target_z - cz
-                if abs(dz) <= r:
-                    disc = r ** 2 - dz ** 2
-                    for candidate in (cx + math.sqrt(disc), cx - math.sqrt(disc)):
-                        x_lo = min(current_x, end_x)
-                        x_hi = max(current_x, end_x)
-                        if x_lo - 1e-6 <= candidate <= x_hi + 1e-6:
-                            candidates.append(candidate)
+            cx_s = element.center_x + x_shift
+            cz_s = element.center_z + z_shift
+            for x_candidate in _arc_z_intersections_x(
+                current_x, current_z, end_x, end_z,
+                cx_s, cz_s, element.anticlockwise, target_z,
+            ):
+                candidates.append(x_candidate)
 
         current_x, current_z = end_x, end_z
 
@@ -564,6 +627,44 @@ def _arc_x_intersection(sx, sz, ex, ez, cx, cz, anticlockwise, target_x):
         return None
     _, hit_x, hit_z = min(candidates, key=lambda item: item[0])
     return hit_x, hit_z
+
+
+def _arc_x_intersections_z(sx, sz, ex, ez, cx, cz, anticlockwise, target_x):
+    """Return all Z values where arc (sx,sz)->(ex,ez) crosses the vertical line x=target_x.
+    X coords are in diameter; geometry is computed in physical radius-Z space."""
+    sx_r, ex_r, cx_r, tx_r = sx / 2, ex / 2, cx / 2, target_x / 2
+    radius = math.hypot(sx_r - cx_r, sz - cz)
+    dx = tx_r - cx_r
+    if abs(dx) > radius + 1e-9:
+        return []
+    disc = max(0.0, radius * radius - dx * dx)
+    start_angle = math.atan2(sz - cz, sx_r - cx_r)
+    end_angle = math.atan2(ez - cz, ex_r - cx_r)
+    results = []
+    for z_candidate in (cz + math.sqrt(disc), cz - math.sqrt(disc)):
+        angle = math.atan2(z_candidate - cz, dx)
+        if _angle_on_arc(angle, start_angle, end_angle, anticlockwise):
+            results.append(z_candidate)
+    return results
+
+
+def _arc_z_intersections_x(sx, sz, ex, ez, cx, cz, anticlockwise, target_z):
+    """Return all X values (diameter) where arc (sx,sz)->(ex,ez) crosses z=target_z.
+    X coords are in diameter; geometry is computed in physical radius-Z space."""
+    sx_r, ex_r, cx_r = sx / 2, ex / 2, cx / 2
+    radius = math.hypot(sx_r - cx_r, sz - cz)
+    dz = target_z - cz
+    if abs(dz) > radius + 1e-9:
+        return []
+    disc = max(0.0, radius * radius - dz * dz)
+    start_angle = math.atan2(sz - cz, sx_r - cx_r)
+    end_angle = math.atan2(ez - cz, ex_r - cx_r)
+    results = []
+    for x_r_candidate in (cx_r + math.sqrt(disc), cx_r - math.sqrt(disc)):
+        angle = math.atan2(dz, x_r_candidate - cx_r)
+        if _angle_on_arc(angle, start_angle, end_angle, anticlockwise):
+            results.append(x_r_candidate * 2)
+    return results
 
 
 def build_shifted_path_clipped_to_x_boundary(path, offset_x, offset_z, x_boundary, keep_side):
@@ -659,12 +760,18 @@ def find_45deg_profile_intersection(path, start_x, start_z, dir_x, dir_z, x_shif
         else:
             cx = element.center_x + x_shift
             cz = element.center_z + z_shift
-            rel_x = start_x - cx
+            # Convert to radius space for correct arc geometry (X is in diameter)
+            sx_r = current_x / 2
+            ex_r = end_x / 2
+            cx_r = cx / 2
+            ray_sx_r = start_x / 2
+            ray_dx_r = dir_x / 2
+            rel_x_r = ray_sx_r - cx_r
             rel_z = start_z - cz
-            a = dir_x * dir_x + dir_z * dir_z
-            b = 2.0 * (rel_x * dir_x + rel_z * dir_z)
-            radius = math.hypot(current_x - cx, current_z - cz)
-            c = rel_x * rel_x + rel_z * rel_z - radius * radius
+            a = ray_dx_r * ray_dx_r + dir_z * dir_z
+            b = 2.0 * (rel_x_r * ray_dx_r + rel_z * dir_z)
+            radius = math.hypot(sx_r - cx_r, current_z - cz)
+            c = rel_x_r * rel_x_r + rel_z * rel_z - radius * radius
             disc = b * b - 4.0 * a * c
             if disc >= -1e-9:
                 disc = max(0.0, disc)
@@ -672,13 +779,13 @@ def find_45deg_profile_intersection(path, start_x, start_z, dir_x, dir_z, x_shif
                 for t in ((-b - root) / (2.0 * a), (-b + root) / (2.0 * a)):
                     if t < -1e-9:
                         continue
-                    hit_x = start_x + t * dir_x
+                    hit_x_r = ray_sx_r + t * ray_dx_r
                     hit_z = start_z + t * dir_z
-                    angle = math.atan2(hit_z - cz, hit_x - cx)
-                    start_angle = math.atan2(current_z - cz, current_x - cx)
-                    end_angle = math.atan2(end_z - cz, end_x - cx)
+                    angle = math.atan2(hit_z - cz, hit_x_r - cx_r)
+                    start_angle = math.atan2(current_z - cz, sx_r - cx_r)
+                    end_angle = math.atan2(end_z - cz, ex_r - cx_r)
                     if _angle_on_arc(angle, start_angle, end_angle, element.anticlockwise):
-                        candidates.append((max(0.0, t), hit_x, hit_z))
+                        candidates.append((max(0.0, t), hit_x_r * 2, hit_z))
 
         current_x, current_z = end_x, end_z
 

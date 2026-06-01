@@ -44,15 +44,17 @@ QtObject {
             }
         }
 
-        // X — left + right edges (blue)
+        // X — left + right edges (blue); data uses diameter, display uses radius.
+        // Use scale/2 for tick step selection (effective pixel/mm in diameter space).
         ctx.strokeStyle = xTickColor
         ctx.fillStyle = xTickColor
-        var xWMin = -originY / scale
-        var xWMax = (height - originY) / scale
-        var xt = Math.floor(xWMin / s.minor) * s.minor
-        for (var x = xt; x <= xWMax; x += s.minor) {
-            var tsx = geometry.tickStyle(x, s)
-            var canvasY = originY + x * scale
+        var sx = geometry.steps(scale / 2)
+        var xDiaMin = -originY * 2 / scale
+        var xDiaMax = (height - originY) * 2 / scale
+        var xt = Math.floor(xDiaMin / sx.minor) * sx.minor
+        for (var x = xt; x <= xDiaMax; x += sx.minor) {
+            var tsx = geometry.tickStyle(x, sx)
+            var canvasY = originY + (x / 2) * scale
             ctx.beginPath()
             ctx.moveTo(0, canvasY)
             ctx.lineTo(tsx.len, canvasY)

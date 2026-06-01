@@ -38,6 +38,8 @@ def emit_radial_roughing(lines: list, context: RoughingContext, path: list, z_cu
         cut_z = context.z_start - (n + 1) * context.doc
         if cut_z < z_cut_deepest:
             cut_z = z_cut_deepest
+        if abs(cut_z - z_cut_deepest) < 1e-9:
+            continue  # at contour depth; contour pass handles this
 
         cut_x = find_profile_x_at_z(path, cut_z)
 
@@ -46,9 +48,9 @@ def emit_radial_roughing(lines: list, context: RoughingContext, path: list, z_cu
             # cut_x is the offset-profile boundary (profile_x + stock_x).
             if cut_x >= context.x_start - 1e-9:
                 continue  # offset profile flush with x_start, nothing to remove
-            entry_x = context.x_start - context.x_direction * context.retract
+            entry_x = context.x_start - context.x_direction * context.retract * 2
             entry_z = cut_z + context.retract
-            exit_x = cut_x - context.x_direction * context.retract
+            exit_x = cut_x - context.x_direction * context.retract * 2
             exit_z = cut_z + context.retract
             lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
             lines.append(f"{prefix}G0 X{fmt(entry_x)}")
@@ -61,9 +63,9 @@ def emit_radial_roughing(lines: list, context: RoughingContext, path: list, z_cu
             # cut_x is the offset-profile boundary (profile_x - stock_x).
             if cut_x <= context.x_start + 1e-9:
                 continue  # offset profile flush with x_start at this depth
-            entry_x = context.x_start - context.x_direction * context.retract
+            entry_x = context.x_start - context.x_direction * context.retract * 2
             entry_z = cut_z + context.retract
-            exit_x = cut_x - context.x_direction * context.retract
+            exit_x = cut_x - context.x_direction * context.retract * 2
             exit_z = cut_z + context.retract
             lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
             lines.append(f"{prefix}G0 X{fmt(entry_x)}")

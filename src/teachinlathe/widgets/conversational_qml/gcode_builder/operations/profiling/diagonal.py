@@ -75,7 +75,7 @@ def emit_diagonal_roughing(
         f"context={context!r} path_len={len(path or [])} path={[_path_point(item) for item in (path or [])]}"
     )
 
-    max_span_x = abs(x_cut_limit - context.x_start)
+    max_span_x = abs(x_cut_limit - context.x_start) / 2
     max_span_z = abs(context.z_start - z_cut_deepest)
     max_span = max(max_span_x, max_span_z)
     _debug(f"spans max_span_x={max_span_x!r} max_span_z={max_span_z!r} max_span={max_span!r}")
@@ -93,10 +93,12 @@ def emit_diagonal_roughing(
 
     for n in range(pass_count):
         step = min((n + 1) * context.doc, max_span)
+        if abs(step - max_span) < 1e-9:
+            continue  # at contour boundary; contour pass handles this
         _debug(f"pass n={n} step={step!r}")
 
         # ---- corner B: profile side at z_start ----
-        corner_b_x = context.x_start + context.x_direction * step
+        corner_b_x = context.x_start + context.x_direction * step * 2
         corner_b_z = context.z_start
         _debug(f"corner_b x={corner_b_x!r} z={corner_b_z!r}")
 
@@ -108,7 +110,7 @@ def emit_diagonal_roughing(
             # clipped by profile: ray from corner_B in direction (-x_dir, -1)
             hit = find_45deg_profile_intersection(
                 path, corner_b_x, corner_b_z,
-                float(-context.x_direction), -1.0,
+                float(-context.x_direction) * 2, -1.0,
             )
             if hit is None:
                 _debug(
@@ -133,7 +135,7 @@ def emit_diagonal_roughing(
             # clipped by profile: ray from corner_A in direction (x_dir, +1)
             hit = find_45deg_profile_intersection(
                 path, corner_a_x, corner_a_z,
-                float(context.x_direction), 1.0,
+                float(context.x_direction) * 2, 1.0,
             )
             if hit is None:
                 _debug(
@@ -180,10 +182,10 @@ def emit_diagonal_roughing(
         if pass_type == PassType.DIAGONAL_INTERIOR:
             entry_x = cut_start_x
             entry_z = cut_start_z + context.retract
-            exit_x = cut_end_x - context.x_direction * context.retract
+            exit_x = cut_end_x - context.x_direction * context.retract * 2
             exit_z = cut_end_z
         else:
-            entry_x = cut_start_x - context.x_direction * context.retract
+            entry_x = cut_start_x - context.x_direction * context.retract * 2
             entry_z = cut_start_z
             exit_x = cut_end_x
             exit_z = cut_end_z + context.retract
