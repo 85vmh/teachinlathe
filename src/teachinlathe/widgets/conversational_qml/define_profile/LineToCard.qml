@@ -190,6 +190,34 @@ Rectangle {
             }
         }
 
+        Rectangle {
+            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
+            enabled: root._blendType === "none" && root.primIdx < root.primCount - 1
+            opacity: enabled ? 1.0 : 0.35
+            color:   undercutMA.pressed ? clrBlendBtnHover : "transparent"
+            border.width: enabled ? 1 : 0
+            border.color: undercutMA.pressed ? clrBlendBtnHoverBorder : clrBtnBorder
+            Layout.alignment: Qt.AlignVCenter
+            Image {
+                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
+                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
+                source: "../icons/undercut.svg"
+                fillMode: Image.PreserveAspectFit; smooth: true
+            }
+            MouseArea {
+                id: undercutMA; anchors.fill: parent; enabled: parent.enabled
+                onClicked: {
+                    var d = JSON.parse(JSON.stringify(primData))
+                    if (!d.blend) d.blend = {}
+                    d.blend.type = "undercut_din509"
+                    if (d.blend.undercut_radius === undefined) d.blend.undercut_radius = 0.4
+                    if (d.blend.undercut_depth === undefined) d.blend.undercut_depth = 0.4
+                    if (d.blend.undercut_length === undefined) d.blend.undercut_length = 2.5
+                    root.primUpdated(primIdx, d)
+                }
+            }
+        }
+
         Item { Layout.fillWidth: true }
 
         Rectangle {

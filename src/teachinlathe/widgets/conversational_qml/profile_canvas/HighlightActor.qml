@@ -187,6 +187,40 @@ QtObject {
                         ctx.arc(cx(fg.t2z), cy(fg.t2x * 2), endPointRadius, 0, Math.PI*2)
                         ctx.fill()
                     }
+
+                } else if (p.blend.type === "undercut_din509") {
+                    var undercutRadius = geometry.undercutBlendValue(p.blend, "undercut_radius", 0.4)
+                    var undercutDepth = geometry.undercutBlendValue(p.blend, "undercut_depth", 0.4)
+                    var undercutLength = geometry.undercutBlendValue(p.blend, "undercut_length", 2.5)
+                    var undercutGeom = geometry.undercutDin509Geom(logZ, logX / 2, ez, ex / 2, bNextPH, undercutRadius, undercutDepth, undercutLength)
+                    if (undercutGeom) {
+                        ctx.beginPath()
+                        ctx.moveTo(cx(undercutGeom.entryZ), cy(undercutGeom.entryX * 2))
+                        for (var undercutSegmentIndex = 0; undercutSegmentIndex < undercutGeom.segs.length; undercutSegmentIndex++) {
+                            var undercutSegment = undercutGeom.segs[undercutSegmentIndex]
+                            if (undercutSegment.type === "line") {
+                                ctx.lineTo(cx(undercutSegment.z), cy(undercutSegment.x * 2))
+                            } else {
+                                var undercutArcCenterCanvasX = cx(undercutSegment.cz)
+                                var undercutArcCenterCanvasY = cy(undercutSegment.cx * 2)
+                                // recompute radius from actual canvas coords of start point of this arc
+                                var prevZ = (undercutSegmentIndex === 0) ? undercutGeom.entryZ : undercutGeom.segs[undercutSegmentIndex - 1].z
+                                var prevX = (undercutSegmentIndex === 0) ? undercutGeom.entryX : undercutGeom.segs[undercutSegmentIndex - 1].x
+                                var undercutArcCanvasRadius = Math.sqrt(Math.pow(cx(prevZ) - undercutArcCenterCanvasX, 2) + Math.pow(cy(prevX * 2) - undercutArcCenterCanvasY, 2))
+                                var undercutArcStartAngle = Math.atan2(cy(prevX * 2) - undercutArcCenterCanvasY, cx(prevZ) - undercutArcCenterCanvasX)
+                                var undercutArcEndAngle = Math.atan2(cy(undercutSegment.x * 2) - undercutArcCenterCanvasY, cx(undercutSegment.z) - undercutArcCenterCanvasX)
+                                ctx.arc(undercutArcCenterCanvasX, undercutArcCenterCanvasY, undercutArcCanvasRadius, undercutArcStartAngle, undercutArcEndAngle, undercutSegment.anticlockwise)
+                            }
+                        }
+                        ctx.stroke()
+                        ctx.fillStyle = blendColor
+                        ctx.beginPath()
+                        ctx.arc(cx(undercutGeom.entryZ), cy(undercutGeom.entryX * 2), endPointRadius, 0, Math.PI*2)
+                        ctx.fill()
+                        ctx.beginPath()
+                        ctx.arc(cx(undercutGeom.exitZ), cy(undercutGeom.exitX * 2), endPointRadius, 0, Math.PI*2)
+                        ctx.fill()
+                    }
                 }
 
             } else if (p.type === "arcTo") {

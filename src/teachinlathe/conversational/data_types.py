@@ -34,6 +34,7 @@ class BlendType(Enum):
     NONE = "none"
     CHAMFER = "chamfer"
     FILLET = "fillet"
+    UNDERCUT_DIN509 = "undercut_din509"
 
 
 class PredefinedPosition(str, Enum):
@@ -750,6 +751,9 @@ class ProfileBlend:
     blend_type:    BlendType
     chamfer_width: float = 0.0
     fillet_radius: float = 0.0
+    undercut_radius: float = 0.4
+    undercut_depth:  float = 0.4
+    undercut_length: float = 2.5
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "ProfileBlend":
@@ -761,6 +765,9 @@ class ProfileBlend:
             blend_type=bt,
             chamfer_width=float(data.get("chamfer_width", 0.0)),
             fillet_radius=float(data.get("fillet_radius", 0.0)),
+            undercut_radius=float(data.get("undercut_radius", 0.4)),
+            undercut_depth=float(data.get("undercut_depth", 0.4)),
+            undercut_length=float(data.get("undercut_length", 2.5)),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -768,6 +775,9 @@ class ProfileBlend:
             "type":          self.blend_type.value,
             "chamfer_width": float(self.chamfer_width),
             "fillet_radius": float(self.fillet_radius),
+            "undercut_radius": float(self.undercut_radius),
+            "undercut_depth":  float(self.undercut_depth),
+            "undercut_length": float(self.undercut_length),
         }
 
 

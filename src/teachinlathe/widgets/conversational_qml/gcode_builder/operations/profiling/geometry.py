@@ -18,6 +18,9 @@ class ProfileLineSegment:
     blend_type: str = "none"
     blend_radius: float = 0.0
     blend_width: float = 0.0
+    undercut_radius: float = 0.4
+    undercut_depth: float = 0.4
+    undercut_length: float = 2.5
 
 
 @dataclass(frozen=True)
@@ -31,6 +34,9 @@ class ProfileArcSegment:
     blend_type: str = "none"
     blend_radius: float = 0.0
     blend_width: float = 0.0
+    undercut_radius: float = 0.4
+    undercut_depth: float = 0.4
+    undercut_length: float = 2.5
 
 
 @dataclass(frozen=True)
@@ -76,6 +82,9 @@ def build_profile_segments(primitives):
                 blend_type=blend.get("type", "none"),
                 blend_radius=float(blend.get("fillet_radius", 0.0) or 0.0),
                 blend_width=float(blend.get("chamfer_width", 0.0) or 0.0),
+                undercut_radius=float(blend.get("undercut_radius", 0.4) or 0.4),
+                undercut_depth=float(blend.get("undercut_depth", 0.4) or 0.4),
+                undercut_length=float(blend.get("undercut_length", 2.5) or 2.5),
             ))
             continue
 
@@ -94,6 +103,9 @@ def build_profile_segments(primitives):
                 blend_type=blend.get("type", "none"),
                 blend_radius=float(blend.get("fillet_radius", 0.0) or 0.0),
                 blend_width=float(blend.get("chamfer_width", 0.0) or 0.0),
+                undercut_radius=float(blend.get("undercut_radius", 0.4) or 0.4),
+                undercut_depth=float(blend.get("undercut_depth", 0.4) or 0.4),
+                undercut_length=float(blend.get("undercut_length", 2.5) or 2.5),
             ))
     return segments
 
@@ -127,6 +139,9 @@ def _as_legacy_segment(segment):
             "blend_type": segment.blend_type,
             "blend_rf": segment.blend_radius,
             "blend_cw": segment.blend_width,
+            "undercut_radius": segment.undercut_radius,
+            "undercut_depth": segment.undercut_depth,
+            "undercut_length": segment.undercut_length,
         }
     return {
         "type": "arcTo",
@@ -139,6 +154,9 @@ def _as_legacy_segment(segment):
         "blend_type": segment.blend_type,
         "blend_rf": segment.blend_radius,
         "blend_cw": segment.blend_width,
+        "undercut_radius": segment.undercut_radius,
+        "undercut_depth": segment.undercut_depth,
+        "undercut_length": segment.undercut_length,
     }
 
 
@@ -338,6 +356,96 @@ def _legacy_chamfer_arc(center_x, center_z, radius, is_cw, end_x, end_z, next_se
     return chamfer_start_x, chamfer_start_z, chamfer_end_x, chamfer_end_z
 
 
+def _legacy_undercut_din509_line(
+    start_x,
+    start_z,
+    corner_x,
+    corner_z,
+    next_segment,
+    undercut_radius,
+    undercut_depth,
+    undercut_length,
+):
+    if not next_segment or next_segment["type"] != "lineTo":
+        return None
+    if (
+        undercut_radius < 0.001
+        or undercut_depth < 0.001
+        or undercut_length < 0.001
+        or undercut_depth < undercut_radius
+    ):
+        return None
+
+    delta1_x = corner_x - start_x
+    delta1_z = corner_z - start_z
+    length1 = math.sqrt(delta1_x ** 2 + delta1_z ** 2)
+    if length1 < 0.001:
+        return None
+
+    delta2_x = next_segment["x_end"] - corner_x
+    delta2_z = next_segment["z_end"] - corner_z
+    length2 = math.sqrt(delta2_x ** 2 + delta2_z ** 2)
+    if length2 < 0.001:
+        return None
+
+    dir1_x = delta1_x / length1
+    dir1_z = delta1_z / length1
+    dir2_x = delta2_x / length2
+    dir2_z = delta2_z / length2
+
+    cross = dir1_z * dir2_x - dir1_x * dir2_z
+    dot = dir1_z * dir2_z + dir1_x * dir2_x
+    if abs(cross) < 0.001:
+        return None
+
+    ramp_len = undercut_depth / math.tan(math.radians(15.0))
+    depth_x = dir1_z
+    depth_z = -dir1_x
+    if depth_x * dir2_x + depth_z * dir2_z > 0:
+        depth_x = -depth_x
+        depth_z = -depth_z
+
+    floor_base_x = corner_x + undercut_depth * depth_x
+    floor_base_z = corner_z + undercut_depth * depth_z
+    to_corner_x = corner_x - floor_base_x
+    to_corner_z = corner_z - floor_base_z
+    floor_to_next_intersection = (to_corner_z * dir2_x - to_corner_x * dir2_z) / cross
+    join_x = floor_base_x + floor_to_next_intersection * dir1_x
+    join_z = floor_base_z + floor_to_next_intersection * dir1_z
+
+    tangent_len = undercut_radius * (1.0 - dot) / abs(cross)
+    min_length = ramp_len + tangent_len
+    effective_length = max(undercut_length, min_length)
+    flat_len = effective_length - min_length
+
+    arc_start_x = join_x - tangent_len * dir1_x
+    arc_start_z = join_z - tangent_len * dir1_z
+    ramp_start_x = arc_start_x - (flat_len + ramp_len) * dir1_x - undercut_depth * depth_x
+    ramp_start_z = arc_start_z - (flat_len + ramp_len) * dir1_z - undercut_depth * depth_z
+    ramp_end_x = ramp_start_x + ramp_len * dir1_x + undercut_depth * depth_x
+    ramp_end_z = ramp_start_z + ramp_len * dir1_z + undercut_depth * depth_z
+    exit_x = join_x + tangent_len * dir2_x
+    exit_z = join_z + tangent_len * dir2_z
+    normal_x = dir1_z if cross > 0 else -dir1_z
+    normal_z = -dir1_x if cross > 0 else dir1_x
+    arc_center_x = arc_start_x + undercut_radius * normal_x
+    arc_center_z = arc_start_z + undercut_radius * normal_z
+
+    return {
+        "entry_x": ramp_start_x,
+        "entry_z": ramp_start_z,
+        "ramp_end_x": ramp_end_x,
+        "ramp_end_z": ramp_end_z,
+        "arc_start_x": arc_start_x,
+        "arc_start_z": arc_start_z,
+        "arc_center_x": arc_center_x,
+        "arc_center_z": arc_center_z,
+        "exit_x": exit_x,
+        "exit_z": exit_z,
+        "anticlockwise": cross < 0,
+    }
+
+
 def _half_x_seg(seg):
     """Return seg dict with all X fields halved (diameter → physical radius) for geometry calls."""
     if seg is None:
@@ -403,6 +511,8 @@ def build_render_path(segments, profile_type: str = "od"):
         if segment["type"] == "lineTo":
             end_x = segment["x_end"]
             end_z = segment["z_end"]
+            logical_next_x = end_x
+            logical_next_z = end_z
             if segment.get("blend_type") == "chamfer":
                 chamfer = _legacy_chamfer_line(
                     logical_x / 2, logical_z, end_x / 2, end_z,
@@ -432,10 +542,34 @@ def build_render_path(segments, profile_type: str = "od"):
                     path.append(ToolpathArc(t2x * 2, t2z, cx * 2, cz, acw))
                 else:
                     path.append(ToolpathLine(end_x, end_z))
+            elif segment.get("blend_type") == "undercut_din509":
+                undercut = _legacy_undercut_din509_line(
+                    logical_x / 2, logical_z,
+                    end_x / 2, end_z,
+                    _half_x_seg(next_segment),
+                    segment.get("undercut_radius", 0.4),
+                    segment.get("undercut_depth", 0.4),
+                    segment.get("undercut_length", 2.5),
+                )
+                if undercut:
+                    path.append(ToolpathLine(undercut["entry_x"] * 2, undercut["entry_z"]))
+                    path.append(ToolpathLine(undercut["ramp_end_x"] * 2, undercut["ramp_end_z"]))
+                    path.append(ToolpathLine(undercut["arc_start_x"] * 2, undercut["arc_start_z"]))
+                    path.append(ToolpathArc(
+                        undercut["exit_x"] * 2,
+                        undercut["exit_z"],
+                        undercut["arc_center_x"] * 2,
+                        undercut["arc_center_z"],
+                        undercut["anticlockwise"],
+                    ))
+                    logical_next_x = undercut["exit_x"] * 2
+                    logical_next_z = undercut["exit_z"]
+                else:
+                    path.append(ToolpathLine(end_x, end_z))
             else:
                 path.append(ToolpathLine(end_x, end_z))
-            logical_x = end_x
-            logical_z = end_z
+            logical_x = logical_next_x
+            logical_z = logical_next_z
             continue
 
         end_x = segment["x_end"]

@@ -1,6 +1,11 @@
 import QtQuick 2.15
 
 QtObject {
+    function undercutBlendValue(blend, field, defaultValue) {
+        if (!blend) return defaultValue
+        return blend[field] !== undefined ? +(blend[field] || defaultValue) : defaultValue
+    }
+
     // Returns the geometric bounding box of all primitives:
     //   { fZMin, fZMax, fXMin, fXMax, vZMax, vXMax }
     // where vZMax/vXMax are the maximum positive vertex coords (used for arrow tips).
@@ -9,6 +14,7 @@ QtObject {
         if (!primitives || primitives.length === 0) return null
         var fZMin = 1e9, fZMax = -1e9, fXMin = 1e9, fXMax = -1e9
         var vZMax = 0, vXMax = 0
+        var prevZ = 0, prevX = 0
         for (var i = 0; i < primitives.length; i++) {
             var p = primitives[i]
             var vz, vx
@@ -26,8 +32,39 @@ QtObject {
             } else { continue }
             fZMin = Math.min(fZMin, vz); fZMax = Math.max(fZMax, vz)
             fXMin = Math.min(fXMin, vx); fXMax = Math.max(fXMax, vx)
+            if (p.type === "lineTo" && p.blend && p.blend.type === "undercut_din509") {
+                var undercutGeom = undercutDin509Geom(
+                    prevZ, prevX / 2,
+                    vz, vx / 2,
+                    halfXPrim(_nextPrim(primitives, i)),
+                    undercutBlendValue(p.blend, "undercut_radius", 0.4),
+                    undercutBlendValue(p.blend, "undercut_depth", 0.4),
+                    undercutBlendValue(p.blend, "undercut_length", 2.5)
+                )
+                if (undercutGeom) {
+                    fZMin = Math.min(fZMin, undercutGeom.entryZ)
+                    fZMax = Math.max(fZMax, undercutGeom.entryZ)
+                    fXMin = Math.min(fXMin, undercutGeom.entryX * 2)
+                    fXMax = Math.max(fXMax, undercutGeom.entryX * 2)
+                    for (var si = 0; si < undercutGeom.segs.length; si++) {
+                        var undercutSegment = undercutGeom.segs[si]
+                        if (undercutSegment.type === "arc") {
+                            fZMin = Math.min(fZMin, undercutSegment.cz - undercutSegment.r)
+                            fZMax = Math.max(fZMax, undercutSegment.cz + undercutSegment.r)
+                            fXMin = Math.min(fXMin, (undercutSegment.cx - undercutSegment.r) * 2)
+                            fXMax = Math.max(fXMax, (undercutSegment.cx + undercutSegment.r) * 2)
+                        }
+                        fZMin = Math.min(fZMin, undercutSegment.z)
+                        fZMax = Math.max(fZMax, undercutSegment.z)
+                        fXMin = Math.min(fXMin, undercutSegment.x * 2)
+                        fXMax = Math.max(fXMax, undercutSegment.x * 2)
+                    }
+                }
+            }
             if (vz > vZMax) vZMax = vz
             if (vx > vXMax) vXMax = vx
+            prevZ = vz
+            prevX = vx
         }
         if (fZMin === 1e9) return null
         return { fZMin: fZMin, fZMax: fZMax, fXMin: fXMin, fXMax: fXMax,
@@ -261,6 +298,82 @@ QtObject {
         }
     }
 
+    // DIN 509 Form E undercut between two perpendicular line segments.
+    // All coordinates in radius-Z space (NOT diameter).
+    // undercutRadius = entry radius, undercutDepth = radial depth, undercutLength = total axial width.
+    // Returns { entryZ, entryX, exitZ, exitX, segs:[…] } or null on failure.
+    //
+    // Local shape, matching the DIN E sketch:
+    //   15 degree ramp from the incoming axial line into the recessed floor
+    //   optional flat floor at the undercut depth, parallel to the incoming axial line
+    //   undercut radius tangent to the floor and the following radial line
+    function undercutDin509Geom(startZ, startX, cornerZ, cornerX, nextP, undercutRadius, undercutDepth, undercutLength) {
+        if (undercutRadius < 0.001 || undercutDepth < 0.001 || undercutLength < 0.001 || undercutDepth < undercutRadius) return null
+        if (!nextP || nextP.type !== "lineTo") return null
+
+        var sdz = cornerZ - startZ
+        var sdx = cornerX - startX
+        var slen = Math.sqrt(sdz * sdz + sdx * sdx)
+        if (slen < 0.001) return null
+
+        var ndz = +(nextP.z_end || 0) - cornerZ
+        var ndx = +(nextP.x_end || 0) - cornerX
+        var nlen = Math.sqrt(ndz * ndz + ndx * ndx)
+        if (nlen < 0.001) return null
+
+        var d1z = sdz / slen, d1x = sdx / slen
+        var d2z = ndz / nlen, d2x = ndx / nlen
+
+        var cross = d1z * d2x - d1x * d2z
+        var dot = d1z * d2z + d1x * d2x
+        if (Math.abs(cross) < 0.001) return null
+
+        var rampLen = undercutDepth / Math.tan(15.0 * Math.PI / 180.0)
+
+        var depthZ = -d1x
+        var depthX = d1z
+        if (depthZ * d2z + depthX * d2x > 0) {
+            depthZ = -depthZ
+            depthX = -depthX
+        }
+
+        var floorBaseZ = cornerZ + undercutDepth * depthZ
+        var floorBaseX = cornerX + undercutDepth * depthX
+        var toCornerZ = cornerZ - floorBaseZ
+        var toCornerX = cornerX - floorBaseX
+        var floorToNextIntersection = (toCornerZ * d2x - toCornerX * d2z) / cross
+        var joinZ = floorBaseZ + floorToNextIntersection * d1z
+        var joinX = floorBaseX + floorToNextIntersection * d1x
+
+        var tangentLen = undercutRadius * (1.0 - dot) / Math.abs(cross)
+        var minLength = rampLen + tangentLen
+        var effectiveLength = Math.max(undercutLength, minLength)
+        var flatLen = effectiveLength - minLength
+
+        var arcStartZ = joinZ - tangentLen * d1z
+        var arcStartX = joinX - tangentLen * d1x
+        var rampStartZ = arcStartZ - (flatLen + rampLen) * d1z - undercutDepth * depthZ
+        var rampStartX = arcStartX - (flatLen + rampLen) * d1x - undercutDepth * depthX
+        var rampEndZ = rampStartZ + rampLen * d1z + undercutDepth * depthZ
+        var rampEndX = rampStartX + rampLen * d1x + undercutDepth * depthX
+        var exitZ = joinZ + tangentLen * d2z
+        var exitX = joinX + tangentLen * d2x
+        var normalZ = (cross > 0) ? -d1x : d1x
+        var normalX = (cross > 0) ? d1z : -d1z
+        var arcCenterZ = arcStartZ + undercutRadius * normalZ
+        var arcCenterX = arcStartX + undercutRadius * normalX
+
+        return {
+            entryZ: rampStartZ, entryX: rampStartX,
+            exitZ:  exitZ, exitX: exitX,
+            segs: [
+                { type: "line", z: rampEndZ, x: rampEndX },
+                { type: "line", z: arcStartZ, x: arcStartX },
+                { type: "arc",  z: exitZ, x: exitX, cz: arcCenterZ, cx: arcCenterX, r: undercutRadius, anticlockwise: (cross < 0) }
+            ]
+        }
+    }
+
     function chamferGeomLine(logZ, logX, ez, ex, nextP, cw) {
         var sdz = ez - logZ
         var sdx = ex - logX
@@ -402,6 +515,30 @@ QtObject {
                             r: fr,
                             anticlockwise: fg.anticlockwise
                         })
+                    } else {
+                        segs.push({ type: "line", z: ez, x: ex })
+                    }
+                } else if (p.blend && p.blend.type === "undercut_din509") {
+                    var undercutRadius = undercutBlendValue(p.blend, "undercut_radius", 0.4)
+                    var undercutDepth = undercutBlendValue(p.blend, "undercut_depth", 0.4)
+                    var undercutLength = undercutBlendValue(p.blend, "undercut_length", 2.5)
+                    var nextPrimU = _nextPrim(primitives, i)
+                    var nextPrimUH = halfXPrim(nextPrimU)
+                    var undercutGeom = undercutDin509Geom(logZ, logX / 2, ez, ex / 2, nextPrimUH, undercutRadius, undercutDepth, undercutLength)
+                    if (undercutGeom) {
+                        segs.push({ type: "line", z: undercutGeom.entryZ, x: undercutGeom.entryX * 2 })
+                        for (var ui = 0; ui < undercutGeom.segs.length; ui++) {
+                            var undercutSegment = undercutGeom.segs[ui]
+                            if (undercutSegment.type === "line") {
+                                segs.push({ type: "line", z: undercutSegment.z, x: undercutSegment.x * 2 })
+                            } else {
+                                segs.push({ type: "arc", z: undercutSegment.z, x: undercutSegment.x * 2,
+                                            zc: undercutSegment.cz, xc: undercutSegment.cx * 2, r: undercutRadius,
+                                            anticlockwise: undercutSegment.anticlockwise })
+                            }
+                        }
+                        ez = undercutGeom.exitZ
+                        ex = undercutGeom.exitX * 2
                     } else {
                         segs.push({ type: "line", z: ez, x: ex })
                     }

@@ -18,6 +18,7 @@ Rectangle {
 
     readonly property string _blendType:
         (primData && primData.blend && primData.blend.type) ? primData.blend.type : "none"
+    readonly property bool _isUndercut: _blendType === "undercut_din509"
     readonly property real _blendValue: {
         if (!primData || !primData.blend) return 0
         if (primData.blend.type === "chamfer")
@@ -33,6 +34,18 @@ Rectangle {
         if (d.blend.type === "chamfer") d.blend.chamfer_width = v
         else if (d.blend.type === "fillet") d.blend.fillet_radius = v
         root.primUpdated(primIdx, d)
+    }
+
+    function _commitUndercutField(field, v) {
+        var d = JSON.parse(JSON.stringify(primData))
+        if (!d.blend) d.blend = { type: "undercut_din509" }
+        d.blend[field] = v
+        root.primUpdated(primIdx, d)
+    }
+
+    function _undercutValue(field, defaultValue) {
+        if (!primData || !primData.blend) return defaultValue
+        return primData.blend[field] !== undefined ? primData.blend[field] : defaultValue
     }
 
     color:        isSelected ? "#fef9c3" : "#f5f5f5"
@@ -77,7 +90,11 @@ Rectangle {
                 anchors.centerIn: parent
                 width: 40; height: 40
                 sourceSize.width: 40; sourceSize.height: 40
-                source: root._blendType === "chamfer" ? "../icons/chamfer.svg" : "../icons/fillet.svg"
+                source: root._blendType === "chamfer"
+                    ? "../icons/chamfer.svg"
+                    : root._blendType === "undercut_din509"
+                        ? "../icons/undercut.svg"
+                        : "../icons/fillet.svg"
                 fillMode: Image.PreserveAspectFit; smooth: true
             }
         }
@@ -89,7 +106,9 @@ Rectangle {
             color: "#d0d0d0"
         }
 
+        // Chamfer / fillet single-value row
         RowLayout {
+            visible: !root._isUndercut
             spacing: 8
             Layout.preferredWidth: 180
             Layout.maximumWidth:   180
@@ -110,6 +129,51 @@ Rectangle {
                 hAlign: Text.AlignRight; fontPixelSize: 14
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: root._commitBlend(value)
+            }
+        }
+
+        // Undercut DIN 509 Form E fields
+        GridLayout {
+            visible: root._isUndercut
+            columns: 2
+            rowSpacing: 4; columnSpacing: 6
+            Layout.preferredWidth: 200
+            Layout.maximumWidth:   200
+
+            Label { text: "Radius"; font.pixelSize: 13; Layout.fillWidth: true }
+            NumpadField {
+                Layout.preferredWidth: 100
+                settingName: "blend." + primIdx + ".undercut_radius"
+                validatorObject: dblVal
+                value: root._undercutValue("undercut_radius", 0.4)
+                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                hAlign: Text.AlignRight; fontPixelSize: 13
+                onOpenRequested: root.openNumPadRequested(field)
+                onValueCommitted: root._commitUndercutField("undercut_radius", value)
+            }
+
+            Label { text: "Depth"; font.pixelSize: 13; Layout.fillWidth: true }
+            NumpadField {
+                Layout.preferredWidth: 100
+                settingName: "blend." + primIdx + ".undercut_depth"
+                validatorObject: dblVal
+                value: root._undercutValue("undercut_depth", 0.4)
+                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                hAlign: Text.AlignRight; fontPixelSize: 13
+                onOpenRequested: root.openNumPadRequested(field)
+                onValueCommitted: root._commitUndercutField("undercut_depth", value)
+            }
+
+            Label { text: "Length"; font.pixelSize: 13; Layout.fillWidth: true }
+            NumpadField {
+                Layout.preferredWidth: 100
+                settingName: "blend." + primIdx + ".undercut_length"
+                validatorObject: dblVal
+                value: root._undercutValue("undercut_length", 2.5)
+                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                hAlign: Text.AlignRight; fontPixelSize: 13
+                onOpenRequested: root.openNumPadRequested(field)
+                onValueCommitted: root._commitUndercutField("undercut_length", value)
             }
         }
 

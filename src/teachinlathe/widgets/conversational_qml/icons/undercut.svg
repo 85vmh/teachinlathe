@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56">
+  <!-- horizontal line top (cylinder surface) -->
+  <line x1="4" y1="20" x2="28" y2="20" stroke="#555" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- entry radius going into undercut -->
+  <path d="M28,20 Q30,20 30,22" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- flat bottom of undercut -->
+  <line x1="30" y1="22" x2="30" y2="34" stroke="#555" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- exit radius coming back up -->
+  <path d="M30,34 Q30,36 32,36" stroke="#555" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- vertical line (shoulder/face) -->
+  <line x1="32" y1="36" x2="32" y2="52" stroke="#555" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- depth indicator dashed line -->
+  <line x1="4" y1="20" x2="4" y2="34" stroke="#aaa" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="4" y1="34" x2="30" y2="34" stroke="#aaa" stroke-width="1" stroke-dasharray="3,3"/>
+  <!-- dimension label -->
+  <text x="6" y="30" font-size="8" fill="#888" font-family="sans-serif">D</text>
+</svg>

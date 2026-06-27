@@ -57,13 +57,13 @@ def _resolve_profile(op):
     return segments, path
 
 
-def _profile_extents(segments):
+def _profile_extents(path):
     x_vals = []
-    for seg in segments:
-        if isinstance(seg, StartPoint):
-            x_vals.append(seg.x)
+    for element in path:
+        if isinstance(element, StartPoint):
+            x_vals.append(element.x)
         else:
-            x_vals.append(seg.end_x)
+            x_vals.append(element.end_x)
     x_min = min(x_vals) if x_vals else 0.0
     x_max = max(x_vals) if x_vals else 0.0
     return x_min, x_max
@@ -85,7 +85,7 @@ def generate_profile_contour_gcode(op):
         lines.append("( ERROR: Profile Contour -- no valid profile found )")
         return lines
 
-    x_min, x_max = _profile_extents(segments)
+    x_min, x_max = _profile_extents(path)
 
     if config.profiling_type == ProfilingType.OD:
         ctx = make_od_context(config, x_min)

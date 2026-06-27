@@ -70,16 +70,16 @@ def _resolve_profile(op):
     return segments, path
 
 
-def _profile_extents(segments):
-    """Return (x_min, x_max, z_min) across all segment endpoints."""
+def _profile_extents(path):
+    """Return (x_min, x_max, z_min) across all rendered path endpoints."""
     x_vals, z_vals = [], []
-    for seg in segments:
-        if isinstance(seg, StartPoint):
-            x_vals.append(seg.x)
-            z_vals.append(seg.z)
+    for element in path:
+        if isinstance(element, StartPoint):
+            x_vals.append(element.x)
+            z_vals.append(element.z)
         else:
-            x_vals.append(seg.end_x)
-            z_vals.append(seg.end_z)
+            x_vals.append(element.end_x)
+            z_vals.append(element.end_z)
     x_min = min(x_vals) if x_vals else 0.0
     x_max = max(x_vals) if x_vals else 0.0
     z_min = min(z_vals) if z_vals else 0.0
@@ -113,7 +113,7 @@ def generate_profile_roughing_gcode(op):
         lines.append("( ERROR: Profile Roughing -- no valid profile found )")
         return lines
 
-    x_min, x_max, _ = _profile_extents(segments)
+    x_min, x_max, _ = _profile_extents(path)
 
     if config.profiling_type == ProfilingType.OD:
         ctx = make_od_context(config, x_min)
