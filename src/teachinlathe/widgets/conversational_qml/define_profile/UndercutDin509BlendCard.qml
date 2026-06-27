@@ -1,4 +1,4 @@
-// StartPointCard.qml
+// UndercutDin509BlendCard.qml
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -9,27 +9,24 @@ Rectangle {
 
     property var  primData:   ({})
     property int  primIdx:    0
-    property int  primCount:  0
     property bool isSelected: false
-
-    readonly property string _blendType:
-        (primData && primData.blend && primData.blend.type) ? primData.blend.type : "none"
 
     signal primUpdated(int idx, var data)
     signal openNumPadRequested(var field)
     signal tapped()
+    signal blendClearRequested(int idx)
 
-    // ── Colors ────────────────────────────────────────────────────────────────
+    // Colors
     readonly property color clrCardBg:            "white"
     readonly property color clrCardBgSel:         "#dbeafe"
     readonly property color clrBorder:            "#cccccc"
     readonly property color clrBorderSel:         "#3b82f6"
     readonly property color clrSeparator:         "#d0d0d0"
-    readonly property color clrBlendBtnHover:     "#e1f0ff"
-    readonly property color clrBlendBtnHoverBorder: "#8ec5ff"
     readonly property color clrBtnBorder:         "#BDBDBD"
+    readonly property color clrDeleteHover:       "#ffebee"
+    readonly property color clrDeleteBorder:      "#C62828"
 
-    // ── Sizes ─────────────────────────────────────────────────────────────────
+    // Sizes
     readonly property int szCardRadius:    4
     readonly property int szCardPadding:   24
     readonly property int szMargin:        12
@@ -47,18 +44,30 @@ Rectangle {
     readonly property int szBtnIcon:       28
     readonly property int szBtnIconSrc:    112
 
+    function _commitUndercutField(field, v) {
+        var d = JSON.parse(JSON.stringify(primData))
+        if (!d.blend) d.blend = { type: "undercut_din509" }
+        d.blend[field] = v
+        root.primUpdated(primIdx, d)
+    }
+
+    function _undercutValue(field, defaultValue) {
+        if (!primData || !primData.blend) return defaultValue
+        return primData.blend[field] !== undefined ? primData.blend[field] : defaultValue
+    }
+
     color:        isSelected ? clrCardBgSel : clrCardBg
     radius:       szCardRadius
     border.color: isSelected ? clrBorderSel : clrBorder
     border.width: isSelected ? 2 : 1
-    height:       spRow.implicitHeight + szCardPadding
+    height:       blendRow.implicitHeight + szCardPadding
 
     TapHandler { onTapped: root.tapped() }
 
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
 
     RowLayout {
-        id: spRow
+        id: blendRow
         anchors { left: parent.left; right: parent.right; top: parent.top; margins: szMargin }
         spacing: szSpacing
 
@@ -77,7 +86,7 @@ Rectangle {
                 anchors.centerIn: parent
                 width: szIconSize; height: szIconSize
                 sourceSize.width: szIconSize; sourceSize.height: szIconSize
-                source: "../icons/target.svg"
+                source: "../icons/undercut.svg"
                 fillMode: Image.PreserveAspectFit; smooth: true
             }
         }
@@ -93,100 +102,70 @@ Rectangle {
             columns: 2
             rowSpacing: szGridRowGap; columnSpacing: szGridColGap
             Layout.preferredWidth: szGridWidth
-            Layout.maximumWidth:  szGridWidth
+            Layout.maximumWidth:   szGridWidth
 
-            Label { text: "X Start"; font.pixelSize: szFont; Layout.fillWidth: true }
+            Label { text: "Radius"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
                 Layout.preferredWidth: szInputWidth
-                settingName: "sp." + primIdx + ".x_start"
+                settingName: "blend." + primIdx + ".undercut_radius"
                 validatorObject: dblVal
-                value: primData.x_start !== undefined ? primData.x_start : 0
+                value: root._undercutValue("undercut_radius", 0.4)
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight; fontPixelSize: szFont
                 onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
-                    var d = JSON.parse(JSON.stringify(primData))
-                    d.x_start = value
-                    root.primUpdated(primIdx, d)
-                }
+                onValueCommitted: root._commitUndercutField("undercut_radius", value)
             }
 
-            Label { text: "Z Start"; font.pixelSize: szFont; Layout.fillWidth: true }
+            Label { text: "Depth"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
                 Layout.preferredWidth: szInputWidth
-                settingName: "sp." + primIdx + ".z_start"
+                settingName: "blend." + primIdx + ".undercut_depth"
                 validatorObject: dblVal
-                value: primData.z_start !== undefined ? primData.z_start : 0
+                value: root._undercutValue("undercut_depth", 0.4)
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight; fontPixelSize: szFont
                 onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
-                    var d = JSON.parse(JSON.stringify(primData))
-                    d.z_start = value
-                    root.primUpdated(primIdx, d)
-                }
+                onValueCommitted: root._commitUndercutField("undercut_depth", value)
+            }
+
+            Label { text: "Length"; font.pixelSize: szFont; Layout.fillWidth: true }
+            NumpadField {
+                Layout.preferredWidth: szInputWidth
+                settingName: "blend." + primIdx + ".undercut_length"
+                validatorObject: dblVal
+                value: root._undercutValue("undercut_length", 2.5)
+                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                hAlign: Text.AlignRight; fontPixelSize: szFont
+                onOpenRequested: root.openNumPadRequested(field)
+                onValueCommitted: root._commitUndercutField("undercut_length", value)
             }
         }
 
         Rectangle {
             width: 1; Layout.fillHeight: true
             Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
-            Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
+            Layout.leftMargin: szSepGap; Layout.rightMargin: 0
             color: clrSeparator
         }
 
-        Rectangle {
-            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
-            enabled: root._blendType === "none" && root.primCount > 1
-            opacity: enabled ? 1.0 : 0.35
-            color:   spChamferMA.pressed ? clrBlendBtnHover : "transparent"
-            border.width: enabled ? 1 : 0
-            border.color: spChamferMA.pressed ? clrBlendBtnHoverBorder : clrBtnBorder
-            Layout.alignment: Qt.AlignVCenter
-            Image {
-                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
-                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: "../icons/chamfer.svg"
-                fillMode: Image.PreserveAspectFit; smooth: true
-            }
-            MouseArea {
-                id: spChamferMA; anchors.fill: parent; enabled: parent.enabled
-                onClicked: {
-                    var d = JSON.parse(JSON.stringify(primData))
-                    if (!d.blend) d.blend = {}
-                    d.blend.type = "chamfer"
-                    if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
-                    root.primUpdated(primIdx, d)
-                }
-            }
-        }
-
-        Rectangle {
-            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
-            enabled: root._blendType === "none" && root.primCount > 1
-            opacity: enabled ? 1.0 : 0.35
-            color:   spFilletMA.pressed ? clrBlendBtnHover : "transparent"
-            border.width: enabled ? 1 : 0
-            border.color: spFilletMA.pressed ? clrBlendBtnHoverBorder : clrBtnBorder
-            Layout.alignment: Qt.AlignVCenter
-            Image {
-                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
-                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: "../icons/fillet.svg"
-                fillMode: Image.PreserveAspectFit; smooth: true
-            }
-            MouseArea {
-                id: spFilletMA; anchors.fill: parent; enabled: parent.enabled
-                onClicked: {
-                    var d = JSON.parse(JSON.stringify(primData))
-                    if (!d.blend) d.blend = {}
-                    d.blend.type = "fillet"
-                    if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
-                    root.primUpdated(primIdx, d)
-                }
-            }
-        }
-
         Item { Layout.fillWidth: true }
+
+        Rectangle {
+            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
+            color:   delMA.pressed ? clrDeleteHover : "transparent"
+            border.width: 1
+            border.color: delMA.pressed ? clrDeleteBorder : clrBtnBorder
+            Layout.alignment: Qt.AlignVCenter
+            Image {
+                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
+                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
+                source: "../icons/delete_icon.svg"
+                fillMode: Image.PreserveAspectFit; smooth: true
+            }
+            MouseArea {
+                id: delMA; anchors.fill: parent
+                onClicked: root.blendClearRequested(primIdx)
+            }
+        }
     }
 }

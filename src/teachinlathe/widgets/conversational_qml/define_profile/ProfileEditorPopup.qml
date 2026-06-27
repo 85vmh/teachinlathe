@@ -500,7 +500,12 @@ Popup {
                                              md.blend !== undefined && md.blend !== null &&
                                              md.blend.type !== "none"
                                     visible: active
-                                    sourceComponent: blendComp
+                                    sourceComponent: {
+                                        if (!md || !md.blend) return null
+                                        if (md.blend.type === "undercut_din509") return undercutDin509BlendComp
+                                        if (md.blend.type === "chamfer" || md.blend.type === "fillet") return chamferFilletBlendComp
+                                        return null
+                                    }
                                     onLoaded: {
                                         item.primData   = md
                                         item.primIdx    = mi
@@ -601,5 +606,6 @@ Popup {
     Component { id: startPointComp; StartPointCard {} }
     Component { id: lineToComp;     LineToCard {}     }
     Component { id: arcToComp;      ArcToCard {}      }
-    Component { id: blendComp;      BlendCard {}      }
+    Component { id: chamferFilletBlendComp; ChamferFilletBlendCard {} }
+    Component { id: undercutDin509BlendComp; UndercutDin509BlendCard {} }
 }

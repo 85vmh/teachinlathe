@@ -42,7 +42,7 @@ Rectangle {
     readonly property int szIconArea:      56
     readonly property int szIconSize:      56
     readonly property int szFont:          14
-    readonly property int szGridRowGap:    6
+    readonly property int szGridRowGap:    16
     readonly property int szGridColGap:    8
     readonly property int szGridWidth:     180
     readonly property int szInputWidth:    110
