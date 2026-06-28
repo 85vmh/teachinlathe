@@ -10,7 +10,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "../conversational_qml"
+import "../touchable_input"
 
 Item {
     id: root
@@ -263,7 +263,7 @@ Item {
                         NumpadField {
                             id: editTipRadius
                             Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                            settingName: "tool_edit.tip_radius"; fontPixelSize: 15
+                            settingName: "tool_library.tool_tip_radius"; fontPixelSize: 15
                             formatter: function(v) { return (v === null || v === undefined) ? "" : Number(v).toFixed(3) }
                             parser:    function(s) { var x = parseFloat(s); return isNaN(x) ? null : x }
                             onOpenRequested: root.openNumPadRequested(field)

@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
+import "../../touchable_input"
 
 Rectangle {
     id: root
@@ -100,6 +101,7 @@ Rectangle {
 
             Label { text: "X End"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
+                description: "Line End on X"
                 Layout.preferredWidth: szInputWidth
                 settingName: "lt." + primIdx + ".x_end"
                 validatorObject: dblVal
@@ -116,6 +118,7 @@ Rectangle {
 
             Label { text: "Z End"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
+                description: "Line End on Z"
                 Layout.preferredWidth: szInputWidth
                 settingName: "lt." + primIdx + ".z_end"
                 validatorObject: dblVal

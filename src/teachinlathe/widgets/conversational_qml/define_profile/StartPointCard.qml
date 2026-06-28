@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
+import "../../touchable_input"
 
 Rectangle {
     id: root
@@ -98,6 +99,7 @@ Rectangle {
             Label { text: "X Start"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
                 Layout.preferredWidth: szInputWidth
+                description: "StartPoint X Start"
                 settingName: "sp." + primIdx + ".x_start"
                 validatorObject: dblVal
                 value: primData.x_start !== undefined ? primData.x_start : 0
@@ -114,6 +116,7 @@ Rectangle {
             Label { text: "Z Start"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
                 Layout.preferredWidth: szInputWidth
+                description: "StartPoint Z Start"
                 settingName: "sp." + primIdx + ".z_start"
                 validatorObject: dblVal
                 value: primData.z_start !== undefined ? primData.z_start : 0

@@ -2,6 +2,8 @@ from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from qtpyvcp import SETTINGS
 from qtpyvcp.utilities.settings import setSetting
 
+from teachinlathe.data_source.numpad_settings import NumpadSettings
+
 
 class ManualTurningViewModel(QObject):
     spindleModeChanged = pyqtSignal()
@@ -13,12 +15,13 @@ class ManualTurningViewModel(QObject):
     def __init__(self, manual_lathe, parent=None):
         super().__init__(parent)
         self._manual_lathe = manual_lathe
+        self._numpad_settings = NumpadSettings.instance()
         self._spindle_mode = 0
         self._gear_suffix = "2"
         self._rpm_setting_name = ""
         self._max_rpm_setting_name = ""
-        self._css_setting_name = "smart_numpad.input-css"
-        self._feed_setting_name = "smart_numpad.input-feed"
+        self._css_setting_name = "spindle.css"
+        self._feed_setting_name = "turning.feed_rate"
         self._input_rpm = "1000"
         self._input_css = "200"
         self._input_max_rpm = "1500"
@@ -47,7 +50,11 @@ class ManualTurningViewModel(QObject):
         return default
 
     def _set_setting_backed_value(self, attr_name: str, setting_name: str, default):
-        value = self._setting_value(setting_name, default)
+        # RPM / feed / CSS / max-RPM are populated from numpad_settings.json
+        # (the persisted last_value), not from qtpyvcp anymore.
+        value = self._numpad_settings.current_value(setting_name)
+        if value is None:
+            value = default
         setattr(self, attr_name, str(value))
 
     def _store_setting(self, setting_name: str, value):
@@ -155,8 +162,8 @@ class ManualTurningViewModel(QObject):
         if suffix not in ("1", "2"):
             suffix = "2"
         self._gear_suffix = suffix
-        self._rpm_setting_name = f"smart_numpad.input-rpm-{suffix}"
-        self._max_rpm_setting_name = f"smart_numpad.input-css-max-rpm-{suffix}"
+        self._rpm_setting_name = f"spindle.rpm_{suffix}"
+        self._max_rpm_setting_name = f"spindle.css_max_rpm_{suffix}"
         self._set_setting_backed_value("_input_rpm", self._rpm_setting_name, self._input_rpm)
         self._set_setting_backed_value("_input_max_rpm", self._max_rpm_setting_name, self._input_max_rpm)
         self._manual_lathe.onInputRpmChanged(self._input_rpm)
@@ -165,15 +172,15 @@ class ManualTurningViewModel(QObject):
 
     @pyqtSlot(str)
     def setInputRpm(self, value):
+        # Persistence of the chosen value is handled by NumpadDialogViewModel
+        # (writes last_value into numpad_settings.json).
         self._input_rpm = str(value)
-        self._store_setting(self._rpm_setting_name, self._to_float(value, 0))
         self._manual_lathe.onInputRpmChanged(self._input_rpm)
         self.spindleValuesChanged.emit()
 
     @pyqtSlot(str)
     def setInputCss(self, value):
         self._input_css = str(value)
-        self._store_setting(self._css_setting_name, self._to_float(value, 0))
         self._manual_lathe.onInputCssChanged(self._input_css)
         self._update_actual_css()
         self.spindleValuesChanged.emit()
@@ -181,14 +188,12 @@ class ManualTurningViewModel(QObject):
     @pyqtSlot(str)
     def setInputMaxRpm(self, value):
         self._input_max_rpm = str(value)
-        self._store_setting(self._max_rpm_setting_name, self._to_float(value, 0))
         self._manual_lathe.onMaxSpindleRpmChanged(self._input_max_rpm)
         self.spindleValuesChanged.emit()
 
     @pyqtSlot(str)
     def setInputFeed(self, value):
         self._input_feed = str(value)
-        self._store_setting(self._feed_setting_name, self._to_float(value, 0))
         self._manual_lathe.onInputFeedChanged(self._input_feed)
         self._update_actual_feed()
         self.feedValuesChanged.emit()

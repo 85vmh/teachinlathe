@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "../conversational_qml"
+import "../touchable_input"
 
 Rectangle {
     id: root
@@ -9,6 +9,7 @@ Rectangle {
     property string title: ""
     property string value: "--none--"
     property string settingName: ""
+    property string description: ""
     property int status: 1
     property string toggleText: "Enable Limit"
     property bool toggleEnabled: false
@@ -57,6 +58,7 @@ Rectangle {
                 enabled: root.status === 1
                 value: root.value
                 settingName: root.settingName
+                description: root.description
                 fontPixelSize: 15
                 hAlign: Text.AlignRight
                 formatter: function(v) { return (v === null || v === undefined) ? "" : String(v) }

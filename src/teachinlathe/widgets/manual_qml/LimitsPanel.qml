@@ -10,7 +10,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "../conversational_qml"   // NumpadField
+import "../touchable_input"   // NumpadField
 
 Rectangle {
     id: root
@@ -21,6 +21,7 @@ Rectangle {
     radius: 8
 
     property var viewModel: teachInDroViewModel
+    signal openNumPadRequested(var field)
 
     ColumnLayout {
         anchors.fill: parent
@@ -94,11 +95,13 @@ Rectangle {
                     height: 36
                     value: root.viewModel ? root.viewModel.chuckValue : "--none--"
                     settingName: "smart_numpad.chuck-limit"
+                    description: "Chuck limit"
                     fontPixelSize: 15
                     hAlign: Text.AlignRight
                     formatter: function(v) { return (v === null || v === undefined) ? "" : String(v) }
                     parser: function(s) { return String(s) }
-                    onOpenRequested: if (root.viewModel) root.viewModel.openLimitField("chuck", field)
+                    onOpenRequested: root.openNumPadRequested(field)
+                    onValueCommitted: if (root.viewModel) root.viewModel.commitLimit("chuck", value)
                 }
             }
 
@@ -111,12 +114,13 @@ Rectangle {
                 title: "Tailstock Limit"
                 value: root.viewModel ? root.viewModel.tailstockValue : "--none--"
                 settingName: "smart_numpad.tailstock-limit"
+                description: "Tailstock limit"
                 status: root.viewModel ? root.viewModel.tailstockStatus : 1
                 toggleText: root.viewModel ? root.viewModel.tailstockToggleText : "Enable Limit"
                 toggleEnabled: root.viewModel ? root.viewModel.tailstockToggleEnabled : false
                 onTeachClicked: if (root.viewModel) root.viewModel.teachLimit("tailstock")
                 onToggleClicked: if (root.viewModel) root.viewModel.toggleLimit("tailstock")
-                onOpenNumPadRequested: if (root.viewModel) root.viewModel.openLimitField("tailstock", field)
+                onOpenNumPadRequested: root.openNumPadRequested(field)
                 onCommitted: if (root.viewModel) root.viewModel.commitLimit("tailstock", value)
             }
         }
@@ -207,12 +211,13 @@ Rectangle {
                 title: "Limit X-"
                 value: root.viewModel ? root.viewModel.xMinusValue : "--none--"
                 settingName: "smart_numpad.x-minus-limit"
+                description: "Tool limit on X-"
                 status: root.viewModel ? root.viewModel.xMinusStatus : 1
                 toggleText: root.viewModel ? root.viewModel.xMinusToggleText : "Enable Limit"
                 toggleEnabled: root.viewModel ? root.viewModel.xMinusToggleEnabled : false
                 onTeachClicked: if (root.viewModel) root.viewModel.teachLimit("xMinus")
                 onToggleClicked: if (root.viewModel) root.viewModel.toggleLimit("xMinus")
-                onOpenNumPadRequested: if (root.viewModel) root.viewModel.openLimitField("xMinus", field)
+                onOpenNumPadRequested: root.openNumPadRequested(field)
                 onCommitted: if (root.viewModel) root.viewModel.commitLimit("xMinus", value)
             }
 
@@ -224,12 +229,13 @@ Rectangle {
                 title: "Limit X+"
                 value: root.viewModel ? root.viewModel.xPlusValue : "--none--"
                 settingName: "smart_numpad.x-plus-limit"
+                description: "Tool limit on X+"
                 status: root.viewModel ? root.viewModel.xPlusStatus : 1
                 toggleText: root.viewModel ? root.viewModel.xPlusToggleText : "Enable Limit"
                 toggleEnabled: root.viewModel ? root.viewModel.xPlusToggleEnabled : false
                 onTeachClicked: if (root.viewModel) root.viewModel.teachLimit("xPlus")
                 onToggleClicked: if (root.viewModel) root.viewModel.toggleLimit("xPlus")
-                onOpenNumPadRequested: if (root.viewModel) root.viewModel.openLimitField("xPlus", field)
+                onOpenNumPadRequested: root.openNumPadRequested(field)
                 onCommitted: if (root.viewModel) root.viewModel.commitLimit("xPlus", value)
             }
 
@@ -241,12 +247,13 @@ Rectangle {
                 title: "Limit Z-"
                 value: root.viewModel ? root.viewModel.zMinusValue : "--none--"
                 settingName: "smart_numpad.z-minus-limit"
+                description: "Tool limit on Z-"
                 status: root.viewModel ? root.viewModel.zMinusStatus : 1
                 toggleText: root.viewModel ? root.viewModel.zMinusToggleText : "Enable Limit"
                 toggleEnabled: root.viewModel ? root.viewModel.zMinusToggleEnabled : false
                 onTeachClicked: if (root.viewModel) root.viewModel.teachLimit("zMinus")
                 onToggleClicked: if (root.viewModel) root.viewModel.toggleLimit("zMinus")
-                onOpenNumPadRequested: if (root.viewModel) root.viewModel.openLimitField("zMinus", field)
+                onOpenNumPadRequested: root.openNumPadRequested(field)
                 onCommitted: if (root.viewModel) root.viewModel.commitLimit("zMinus", value)
             }
 
@@ -258,12 +265,13 @@ Rectangle {
                 title: "Limit Z+"
                 value: root.viewModel ? root.viewModel.zPlusValue : "--none--"
                 settingName: "smart_numpad.z-plus-limit"
+                description: "Tool limit on Z+"
                 status: root.viewModel ? root.viewModel.zPlusStatus : 1
                 toggleText: root.viewModel ? root.viewModel.zPlusToggleText : "Enable Limit"
                 toggleEnabled: root.viewModel ? root.viewModel.zPlusToggleEnabled : false
                 onTeachClicked: if (root.viewModel) root.viewModel.teachLimit("zPlus")
                 onToggleClicked: if (root.viewModel) root.viewModel.toggleLimit("zPlus")
-                onOpenNumPadRequested: if (root.viewModel) root.viewModel.openLimitField("zPlus", field)
+                onOpenNumPadRequested: root.openNumPadRequested(field)
                 onCommitted: if (root.viewModel) root.viewModel.commitLimit("zPlus", value)
             }
         }

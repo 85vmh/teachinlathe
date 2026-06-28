@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
+import "../../touchable_input"
 
 Rectangle {
     id: root
@@ -118,7 +119,7 @@ Rectangle {
 
             NumpadField {
                 Layout.preferredWidth: szInputWidth
-                settingName: "blend." + primIdx + ".value"
+                settingName: root._blendType === "chamfer" ? "profiling.chamfer_width" : "profiling.fillet_radius"
                 validatorObject: dblVal
                 value: root._blendValue
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }

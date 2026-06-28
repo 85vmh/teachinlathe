@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
+import "../../touchable_input"
 
 Rectangle {
     id: root
@@ -149,6 +150,7 @@ Rectangle {
 
             Label { text: "Radius"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
+                description: "Arc radius"
                 Layout.preferredWidth: szInputWidth
                 settingName: "at." + primIdx + ".arc_radius"
                 validatorObject: dblVal
@@ -165,6 +167,7 @@ Rectangle {
 
             Label { text: "X Center"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
+                description: "Arc Center on X"
                 Layout.preferredWidth: szInputWidth
                 settingName: "at." + primIdx + ".x_center"
                 validatorObject: dblVal
@@ -181,6 +184,7 @@ Rectangle {
 
             Label { text: "Z Center"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
+                description: "Arc Center on Z"
                 Layout.preferredWidth: szInputWidth
                 settingName: "at." + primIdx + ".z_center"
                 validatorObject: dblVal
@@ -197,6 +201,7 @@ Rectangle {
 
             Label { text: "X End"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
+                description: "Arc End on X"
                 Layout.preferredWidth: szInputWidth
                 settingName: "at." + primIdx + ".x_end"
                 validatorObject: dblVal
@@ -213,6 +218,7 @@ Rectangle {
 
             Label { text: "Z End"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
+                description: "Arc End on Z"
                 Layout.preferredWidth: szInputWidth
                 settingName: "at." + primIdx + ".z_end"
                 validatorObject: dblVal

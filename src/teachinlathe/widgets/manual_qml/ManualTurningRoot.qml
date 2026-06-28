@@ -15,9 +15,18 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../tool_library"
+import "../touchable_input"   // SmartNumpadDialog, NumpadField
 
 Item {
     id: root
+
+    // Opens the QML numpad dialog for a NumpadField, using its optional
+    // `description` as the title override (falls back to numpad_settings.json).
+    function openNumpad(field) {
+        numpadDialog.openFor(field, field.settingName, field.description)
+    }
+
+    SmartNumpadDialog { id: numpadDialog }
 
     // ── Layout constants ──────────────────────────────────────────────
     readonly property int droHeight:             190
@@ -57,7 +66,7 @@ Item {
         anchors.top:    parent.top
         anchors.bottom: parent.bottom
         width: root.toolListWidth
-        onOpenNumPadRequested: root.openNumPadRequested(field)
+        onOpenNumPadRequested: root.openNumpad(field)
     }
 
     // ── Divider between manual area and tool list ─────────────────────
@@ -92,6 +101,7 @@ Item {
             Layout.rightMargin: 5
             Layout.topMargin: 4
             Layout.bottomMargin: 4
+            onOpenNumPadRequested: root.openNumpad(field)
         }
 
         // Section headers (fixed height)
@@ -156,7 +166,7 @@ Item {
                 x: 5; y: root.panelInnerPadding
                 width:  root.spindlePanelWidth
                 height: root.panelHeight - 2 * root.panelInnerPadding
-                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onOpenNumPadRequested: root.openNumpad(field)
             }
 
             ManualHandwheelsPanel {
@@ -192,7 +202,7 @@ Item {
                     x: root.joystickPanelWidth + 1; y: 1
                     width:  parent.width - root.joystickPanelWidth - 2
                     height: parent.height - 2
-                    onOpenNumPadRequested: root.openNumPadRequested(field)
+                    onOpenNumPadRequested: root.openNumpad(field)
                 }
             }
         }

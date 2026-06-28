@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "../conversational_qml"
+import "../touchable_input"
 
 RowLayout {
     id: root
@@ -37,13 +37,7 @@ RowLayout {
         hAlign: Text.AlignHCenter
         formatter: function(v) { return (v === null || v === undefined) ? "" : String(v) }
         parser: function(s) { return String(s) }
-        onOpenRequested: {
-            if (typeof manualInputBridge !== "undefined" && manualInputBridge) {
-                manualInputBridge.openField(field)
-            } else {
-                root.openNumPadRequested(field)
-            }
-        }
+        onOpenRequested: root.openNumPadRequested(field)
         onValueCommitted: root.committed(value)
     }
 

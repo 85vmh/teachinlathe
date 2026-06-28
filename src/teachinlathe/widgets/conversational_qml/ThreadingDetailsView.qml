@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
+import "../touchable_input"
 
 Item {
     id: root
@@ -167,7 +168,7 @@ Item {
                     Label { text: "Pitch"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                     NumpadField {
                         Layout.preferredWidth: 100
-                        settingName: "threading.pitch"
+                        settingName: "threading.metric_pitch"
                         validatorObject: dblVal
                         value: root.pitch
                         formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
@@ -181,7 +182,7 @@ Item {
                     Label { text: "Starts"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                     NumpadField {
                         Layout.preferredWidth: 100
-                        settingName: "threading.starts"
+                        settingName: "threading.starts_count"
                         validatorObject: intVal
                         value: root.starts
                         formatter: function(v) { return (v == null) ? "1" : String(Math.max(1, Math.round(Number(v)))) }
@@ -324,7 +325,7 @@ Item {
                         Label { text: "Initial DOC"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
                         NumpadField {
                             Layout.preferredWidth: 110
-                            settingName: "threading.initial_doc"
+                            settingName: "threading.first_pass_depth"
                             validatorObject: dblVal
                             value: root.initialDoc
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
@@ -341,7 +342,7 @@ Item {
                         Label { text: "Retract"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
                         NumpadField {
                             Layout.preferredWidth: 110
-                            settingName: "threading.retract"
+                            settingName: "threading.x_retract"
                             validatorObject: dblVal
                             value: root.retract
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
@@ -358,7 +359,7 @@ Item {
                         Label { text: "Compound Angle"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
                         NumpadField {
                             Layout.preferredWidth: 110
-                            settingName: "smart_numpad.quick-cycles-threading-compound-angle"
+                            settingName: "threading.compound_angle"
                             validatorObject: dblVal
                             value: root.compoundAngle
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }

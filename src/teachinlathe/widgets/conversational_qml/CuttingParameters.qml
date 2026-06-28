@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
+import "../touchable_input"
 
 GroupBox {
     id: root
@@ -74,7 +75,7 @@ GroupBox {
         NumpadField {
             Layout.preferredWidth: 100
             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-            settingName: "cut.feed_rate"
+            settingName: "turning.feed_rate"
             value: root.feed_rate
             validatorObject: dblVal
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
@@ -98,7 +99,7 @@ GroupBox {
         NumpadField {
             Layout.preferredWidth: 100
             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-            settingName: "cut.doc"
+            settingName: "turning.depth_of_cut"
             value: root.doc
             validatorObject: dblVal
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }

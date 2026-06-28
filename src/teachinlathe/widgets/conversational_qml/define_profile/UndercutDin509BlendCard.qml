@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
+import "../../touchable_input"
 
 Rectangle {
     id: root
@@ -106,6 +107,7 @@ Rectangle {
 
             Label { text: "Radius"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
+                description: "Undercut blend radius"
                 Layout.preferredWidth: szInputWidth
                 settingName: "blend." + primIdx + ".undercut_radius"
                 validatorObject: dblVal
@@ -118,6 +120,7 @@ Rectangle {
 
             Label { text: "Depth"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
+                description: "Undercut depth in mm/radius"
                 Layout.preferredWidth: szInputWidth
                 settingName: "blend." + primIdx + ".undercut_depth"
                 validatorObject: dblVal
@@ -130,6 +133,7 @@ Rectangle {
 
             Label { text: "Length"; font.pixelSize: szFont; Layout.fillWidth: true }
             NumpadField {
+                description: "Undercut overall length"
                 Layout.preferredWidth: szInputWidth
                 settingName: "blend." + primIdx + ".undercut_length"
                 validatorObject: dblVal

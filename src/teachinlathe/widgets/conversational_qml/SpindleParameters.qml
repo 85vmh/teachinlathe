@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
+import "../touchable_input"
 
 GroupBox {
     id: root
@@ -235,7 +236,7 @@ GroupBox {
                             NumpadField {
                                 Layout.preferredWidth: 100
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                                settingName: "spindle.css.value"
+                                settingName: "spindle.css"
                                 value: root.css_value
                                 validatorObject: DoubleValidator {
                                     notation: DoubleValidator.StandardNotation
@@ -262,7 +263,7 @@ GroupBox {
                             NumpadField {
                                 Layout.preferredWidth: 100
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                                settingName: "spindle.css.maxrpm"
+                                settingName: "spindle.max_rpm"
                                 value: root.css_max_rpm
                                 validatorObject: IntValidator {
                                 }

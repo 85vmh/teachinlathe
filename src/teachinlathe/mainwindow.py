@@ -3,7 +3,7 @@ import os
 from enum import Enum
 
 import linuxcnc
-from PyQt5.QtCore import Q_ARG, QMetaObject, QObject, QTimer, QUrl, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Q_ARG, QMetaObject, QObject, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor
 from PyQt5.QtQuickWidgets import QQuickWidget
 from qtpyvcp.actions.machine_actions import issue_mdi
@@ -20,6 +20,7 @@ from teachinlathe.widgets.FrameAnimator import FrameAnimator
 from teachinlathe.widgets.app_shell_widget import AppShellWidget
 from teachinlathe.widgets.manual_qml import ManualTurningViewModel
 from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLatheDroViewModel
+from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.widgets.programs_qml.ProgramsQml import ProgramsQml
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 from teachinlathe.widgets.tool_library.ToolLibraryViewModel import ToolLibraryViewModel
@@ -60,6 +61,35 @@ class ManualInputBridge(QObject):
     @pyqtSlot(QObject)
     def openField(self, field):
         self._window.openNumPad(field)
+
+
+class NumpadValueField(QObject):
+    """Adapter that lets the QML SmartNumpadDialog drive a one-shot value
+    callback (e.g. touch-off X/Z) using the same API as a QML NumpadField:
+    the dialog reads ``settingName``/``description`` and calls ``commit(value)``.
+    """
+
+    def __init__(self, setting_name, description, on_commit, parent=None):
+        super().__init__(parent)
+        self._setting_name = setting_name
+        self._description = description
+        self._on_commit = on_commit
+
+    @pyqtProperty(str, constant=True)
+    def settingName(self):
+        return self._setting_name
+
+    @pyqtProperty(str, constant=True)
+    def description(self):
+        return self._description
+
+    @pyqtSlot('QVariant')
+    def commit(self, value):
+        self._on_commit(value)
+
+    @pyqtSlot()
+    def defocus(self):
+        pass
 
 
 class ManualJoystickController(QObject):
@@ -250,6 +280,7 @@ class MyMainWindow(VCPMainWindow):
             return
 
         self.manualInputBridge = ManualInputBridge(self, self)
+        self.numpadDialogViewModel = NumpadDialogViewModel(self)
         self._active_numpad_field = None
 
         tab = self.manualTurningTab
@@ -263,6 +294,7 @@ class MyMainWindow(VCPMainWindow):
         ctx = self.manualTurningRootQml.engine().rootContext()
         ctx.setContextProperty("manualViewModel",     self.manualTurningViewModel)
         ctx.setContextProperty("manualInputBridge",   self.manualInputBridge)
+        ctx.setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
         ctx.setContextProperty("teachInDroViewModel", self.teachInLatheDroViewModel)
         ctx.setContextProperty("toolLibraryViewModel", self.toolLibraryViewModel)
         ctx.setContextProperty("appState",            self.appState)
@@ -772,15 +804,24 @@ class MyMainWindow(VCPMainWindow):
 
     def onXPrimaryDroClicked(self, value):
         print("onXPrimaryDroClicked", value)
-        dialog = SmartNumPadDialog("smart_numpad.x-offset", True)
-        dialog.valueSelected.connect(self.setXOffset)
-        dialog.exec_()
+        self._open_qml_numpad("smart_numpad.x-offset", "Measured diameter with current tool", self.setXOffset)
 
     def onZPrimaryDroClicked(self, value):
         print("onZPrimaryDroClicked", value)
-        dialog = SmartNumPadDialog("smart_numpad.z-offset", True)
-        dialog.valueSelected.connect(self.setZOffset)
-        dialog.exec_()
+        self._open_qml_numpad("smart_numpad.z-offset", "Distance to Z0 with current tool", self.setZOffset)
+
+    def _open_qml_numpad(self, setting_name, description, on_commit):
+        """Open the QML SmartNumpadDialog (hosted in ManualTurningRoot) for a
+        one-shot value, invoking *on_commit* with the entered value."""
+        root = getattr(self, "manualTurningRootQml", None)
+        root_item = root.rootObject() if root is not None else None
+        if root_item is None:
+            return
+        # Keep a reference so the adapter isn't garbage-collected mid-dialog.
+        self._numpad_value_field = NumpadValueField(setting_name, description, on_commit, self)
+        QMetaObject.invokeMethod(
+            root_item, "openNumpad", Qt.DirectConnection, Q_ARG("QVariant", self._numpad_value_field)
+        )
 
     def setXOffset(self, value):
         print("setXOffset", value)

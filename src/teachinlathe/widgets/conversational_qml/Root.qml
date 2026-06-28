@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import "../touchable_input"
 
 Item {
     id: root
@@ -13,6 +14,16 @@ Item {
     property var _pendingParams: null     // params to apply after Loader creates its item
 
     function canGoBack() { return history.length > 0 }
+
+    // Opens the QML numpad dialog for a NumpadField. Called from Python
+    // (ConversationalQml.onOpenNumPadRequested) when a field is tapped.
+    function openNumpad(field) {
+        if (!field)
+            return
+        numpadDialog.openFor(field, field.settingName, field.description)
+    }
+
+    SmartNumpadDialog { id: numpadDialog }
 
     // Push a new screen (store the current screen state in history)
     function loadScreen(url, params) {

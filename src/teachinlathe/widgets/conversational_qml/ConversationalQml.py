@@ -3,7 +3,7 @@ import json
 import time
 from datetime import datetime
 
-from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop, pyqtSignal
+from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop, Q_ARG, pyqtSignal
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import QProgressDialog, QApplication
@@ -45,6 +45,7 @@ from teachinlathe.conversational.updaters import (
 )
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
+from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
 
@@ -66,6 +67,10 @@ class ConversationalQml(QQuickWidget):
 
         self.model = ProgramListModel(programs)
         self.engine().rootContext().setContextProperty("programsModel", self.model)
+
+        # Conversational never persists last_value (only the manual tab does).
+        self.numpadDialogViewModel = NumpadDialogViewModel(self, persist=False)
+        self.engine().rootContext().setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
 
         root_path = os.path.join(self.base_dir, "Root.qml")
         self.statusChanged.connect(self.onStatusChanged)
@@ -958,11 +963,18 @@ class ConversationalQml(QQuickWidget):
         pass
 
     def onOpenNumPadRequested(self, field):
-        """Called from QML when a NumpadField was tapped."""
+        """Called from QML when a NumpadField was tapped.
+
+        Opens the QML SmartNumpadDialog (hosted in Root.qml). The dialog reads
+        its options/title from numpad_settings.json and writes the value back
+        into the field via field.commit().
+        """
         try:
-            self.openNumPad(field)
+            QMetaObject.invokeMethod(
+                self.root, "openNumpad", Qt.DirectConnection, Q_ARG("QVariant", field)
+            )
         except Exception as e:
-            print("openNumPad failed:", e)
+            print("openNumpad failed:", e)
 
     def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
         """Open SmartNumPadDialog and manage focus/highlight on the QML field."""

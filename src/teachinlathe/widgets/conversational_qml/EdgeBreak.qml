@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
+import "../touchable_input"
 
 GroupBox {
     id: root
@@ -74,7 +75,7 @@ GroupBox {
         NumpadField {
             Layout.preferredWidth: 100
             enabled: root.blend_type === "chamfer"
-            settingName: "edge_break.chamfer_width"
+            settingName: "profiling.chamfer_width"
             value: root.chamfer_width
             validatorObject: dblVal
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
@@ -101,7 +102,7 @@ GroupBox {
         NumpadField {
             Layout.preferredWidth: 100
             enabled: root.blend_type === "fillet"
-            settingName: "edge_break.fillet_radius"
+            settingName: "profiling.fillet_radius"
             value: root.fillet_radius
             validatorObject: dblVal
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }

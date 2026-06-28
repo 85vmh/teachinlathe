@@ -7,6 +7,9 @@ TextField {
 
     // -------- Public API --------
     property string settingName: ""
+    // Optional dialog title override. If set, the SmartNumpad dialog uses this
+    // instead of the description coming from numpad_settings.json.
+    property string description: ""
     property var    value: null
     property var    metadata: ({})
     property var    formatter: function(v) {
@@ -68,7 +71,8 @@ TextField {
             root.numpadActive = true
             var meta = Object.assign({}, root.metadata, {
                 fieldFontPx: root.fontPixelSize,
-                align: root.hAlign
+                align: root.hAlign,
+                description: root.description
             })
             root.openRequested(root, root.settingName, root.value, meta)
         }
