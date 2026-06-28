@@ -63,6 +63,7 @@ GroupBox {
 
         Label { text: "X Start"; font.pixelSize: 16 }
         NumpadField {
+            id: tf_x_start
             Layout.preferredWidth: 100
             settingName: "knurling.x_start"
             validatorObject: dblVal
@@ -73,10 +74,11 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.x_start = value; root.emitSave() }
         }
-        Button { text: "TeachIn"; onClicked: root.teachXRequested(root.opIndex) }
+        Button { text: "TeachIn"; onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2) }
 
         Label { text: "Z Start"; font.pixelSize: 16 }
         NumpadField {
+            id: tf_z_start
             Layout.preferredWidth: 100
             settingName: "knurling.z_start"
             validatorObject: dblVal
@@ -87,10 +89,11 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.z_start = value; root.emitSave() }
         }
-        Button { text: "TeachIn"; onClicked: root.teachZRequested(root.opIndex) }
+        Button { text: "TeachIn"; onClicked: tf_z_start.commit(positionsBridge.teachInZ()) }
 
         Label { text: "Z End"; font.pixelSize: 16 }
         NumpadField {
+            id: tf_z_end
             Layout.preferredWidth: 100
             settingName: "knurling.z_end"
             validatorObject: dblVal
@@ -101,6 +104,6 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.z_end = value; root.emitSave() }
         }
-        Button { text: "TeachIn"; onClicked: root.teachZRequested(root.opIndex) }
+        Button { text: "TeachIn"; onClicked: tf_z_end.commit(positionsBridge.teachInZ()) }
     }
 }

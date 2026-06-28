@@ -109,6 +109,7 @@ GroupBox {
                 font.pixelSize: 16
             }
             NumpadField {
+                id: tf_x_start
                 Layout.preferredWidth: 100
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                 settingName: "geometry.x_start"
@@ -123,7 +124,7 @@ GroupBox {
             Button {
                 text: "TeachIn"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                onClicked: root.teachXRequested(root.opIndex)
+                onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2)
             }
 
             Label {
@@ -132,6 +133,7 @@ GroupBox {
                 font.pixelSize: 16
             }
             NumpadField {
+                id: tf_second_feed_x_pos
                 Layout.preferredWidth: 100
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                 settingName: "geometry.x_start"
@@ -146,7 +148,7 @@ GroupBox {
             Button {
                 text: "TeachIn"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                onClicked: root.teachXRequested(root.opIndex)
+                onClicked: tf_second_feed_x_pos.commit(positionsBridge.teachInX() * 2)
             }
 
             Label {
@@ -155,6 +157,7 @@ GroupBox {
                 font.pixelSize: 16
             }
             NumpadField {
+                id: tf_x_end
                 Layout.preferredWidth: 100
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                 settingName: "geometry.x_end"
@@ -169,7 +172,7 @@ GroupBox {
             Button {
                 text: "TeachIn"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                onClicked: root.teachZRequested(root.opIndex)
+                onClicked: tf_x_end.commit(positionsBridge.teachInX() * 2)
             }
 
             Label {
@@ -178,6 +181,7 @@ GroupBox {
                 font.pixelSize: 16
             }
             NumpadField {
+                id: tf_z_pos
                 Layout.preferredWidth: 100
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                 settingName: "geometry.x_end"
@@ -192,7 +196,7 @@ GroupBox {
             Button {
                 text: "TeachIn"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                onClicked: root.teachZRequested(root.opIndex)
+                onClicked: tf_z_pos.commit(positionsBridge.teachInZ())
             }
 
         }

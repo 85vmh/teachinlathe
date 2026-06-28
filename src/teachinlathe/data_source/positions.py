@@ -64,6 +64,23 @@ class Positions:
             distanceToGo=dtg[anum],
         )
 
+    def teachInX(self, machineCoordinate: bool = False) -> float:
+        """Current X position to teach into a field.
+
+        Returns the work-coordinate (current G5x WCS) value by default, or the
+        machine-coordinate value when *machineCoordinate* is True. The value is
+        in radius (the lathe diameter doubling is a display concern applied by
+        the caller).
+        """
+        pos = self.getXPosition()
+        return pos.machinePosition if machineCoordinate else pos.g5xPosition
+
+    def teachInZ(self, machineCoordinate: bool = False) -> float:
+        """Current Z position to teach into a field (work coordinate by
+        default, machine coordinate when *machineCoordinate* is True)."""
+        pos = self.getZPosition()
+        return pos.machinePosition if machineCoordinate else pos.g5xPosition
+
     def notify(self, callback):
         """Register *callback* to be invoked whenever the positions update."""
         getattr(self._position, 'rel').notify(callback)

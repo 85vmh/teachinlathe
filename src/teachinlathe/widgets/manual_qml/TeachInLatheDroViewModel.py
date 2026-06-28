@@ -189,11 +189,11 @@ class TeachInLatheDroViewModel(QObject):
         self.limitsChanged.emit()
 
     def _teach_value_for_key(self, key):
-        factor = 2.0 if key.startswith("x") and self.isDiameterMode else 1.0
         if key.startswith("x"):
-            return factor * self.currentXAbsValue
+            factor = 2.0 if self.isDiameterMode else 1.0
+            return factor * self.positions.teachInX()
         if key.startswith("z") or key == "tailstock":
-            return self.currentZAbsValue
+            return self.positions.teachInZ()
         return 0
 
     @pyqtSlot(str, QObject)

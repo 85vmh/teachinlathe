@@ -116,6 +116,7 @@ GroupBox {
                 font.pixelSize: 16
             }
             NumpadField {
+                id: tf_x_start
                 Layout.preferredWidth: 100
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                 settingName: "pg.x_start"
@@ -132,7 +133,7 @@ GroupBox {
             Button {
                 text: "TeachIn"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                onClicked: root.teachXRequested(root.opIndex)
+                onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2)
             }
 
             // Row 2
@@ -142,6 +143,7 @@ GroupBox {
                 font.pixelSize: 16
             }
             NumpadField {
+                id: tf_z_start
                 Layout.preferredWidth: 100
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                 settingName: "pg.z_start"
@@ -158,7 +160,7 @@ GroupBox {
             Button {
                 text: "TeachIn"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                onClicked: root.teachZRequested(root.opIndex)
+                onClicked: tf_z_start.commit(positionsBridge.teachInZ())
             }
         }
     }

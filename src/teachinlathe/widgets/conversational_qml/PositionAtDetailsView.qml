@@ -145,6 +145,7 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                         }
                         NumpadField {
+                            id: tf_xPos
                             Layout.preferredWidth: 100
                             settingName: "positionat_x_pos"
                             validatorObject: dblVal
@@ -157,7 +158,7 @@ Item {
                         }
                         Button {
                             text: "TeachIn"
-                            onClicked: root.teachXRequested(root.opIndex)
+                            onClicked: tf_xPos.commit(positionsBridge.teachInX() * 2)
                         }
 
                         Label {
@@ -166,6 +167,7 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                         }
                         NumpadField {
+                            id: tf_zPos
                             Layout.preferredWidth: 100
                             settingName: "positionat_z_pos"
                             validatorObject: dblVal
@@ -178,7 +180,7 @@ Item {
                         }
                         Button {
                             text: "TeachIn"
-                            onClicked: root.teachZRequested(root.opIndex)
+                            onClicked: tf_zPos.commit(positionsBridge.teachInZ())
                         }
                     }
                 }

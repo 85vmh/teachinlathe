@@ -45,6 +45,7 @@ from teachinlathe.conversational.updaters import (
 )
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
+from teachinlathe.widgets.positions_bridge import PositionsBridge
 from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
@@ -71,6 +72,9 @@ class ConversationalQml(QQuickWidget):
         # Conversational never persists last_value (only the manual tab does).
         self.numpadDialogViewModel = NumpadDialogViewModel(self, persist=False)
         self.engine().rootContext().setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
+
+        self.positionsBridge = PositionsBridge(self)
+        self.engine().rootContext().setContextProperty("positionsBridge", self.positionsBridge)
 
         root_path = os.path.join(self.base_dir, "Root.qml")
         self.statusChanged.connect(self.onStatusChanged)

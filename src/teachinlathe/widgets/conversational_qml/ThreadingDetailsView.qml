@@ -227,6 +227,7 @@ Item {
                             Layout.minimumWidth: 90
                         }
                         NumpadField {
+                            id: tf_teachDiam
                             Layout.preferredWidth: 110
                             settingName: "threading.teach_diam"
                             validatorObject: dblVal
@@ -241,7 +242,7 @@ Item {
                                 root.emitSave()
                             }
                         }
-                        Button { text: "TeachIn"; onClicked: root.teachXRequested(root.opIndex) }
+                        Button { text: "TeachIn"; onClicked: tf_teachDiam.commit(positionsBridge.teachInX() * 2) }
 
                         // Row 2: Calculate diameter (Minor for OD, Major for ID)
                         Label {
@@ -282,6 +283,7 @@ Item {
 
                         Label { text: "Z Start"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                         NumpadField {
+                            id: tf_zStart
                             Layout.preferredWidth: 110
                             settingName: "threading.z_start"
                             validatorObject: dblVal
@@ -292,10 +294,11 @@ Item {
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.zStart = value; root.emitSave() }
                         }
-                        Button { text: "TeachIn"; onClicked: root.teachZRequested(root.opIndex) }
+                        Button { text: "TeachIn"; onClicked: tf_zStart.commit(positionsBridge.teachInZ()) }
 
                         Label { text: "Z End"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                         NumpadField {
+                            id: tf_zEnd
                             Layout.preferredWidth: 110
                             settingName: "threading.z_end"
                             validatorObject: dblVal
@@ -306,7 +309,7 @@ Item {
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.zEnd = value; root.emitSave() }
                         }
-                        Button { text: "TeachIn"; onClicked: root.teachZRequested(root.opIndex) }
+                        Button { text: "TeachIn"; onClicked: tf_zEnd.commit(positionsBridge.teachInZ()) }
                     }
                 }
             }
