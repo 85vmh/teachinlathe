@@ -3,14 +3,11 @@ from enum import Enum
 from PyQt5 import QtCore
 from PyQt5.QtCore import QMetaObject, QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from qtpyvcp.plugins import getPlugin
-from qtpyvcp.utilities.info import Info
-from qtpyvcp.widgets.base_widgets.dro_base_widget import Axis
 
+from teachinlathe.data_source.positions import Positions
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.machine_limits import MachineLimitsHandler
 from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
-
-INFO = Info()
 
 
 class LimitStatus(Enum):
@@ -44,7 +41,7 @@ class TeachInLatheDroViewModel(QObject):
         self.setDefaultMachineLimits(self.limitsHandler.getDefaultMachineLimits())
 
         self.status = getPlugin('status')
-        self.pos = getPlugin('position')
+        self.positions = Positions()
 
         self._mm_fmt = '%10.3f'
         self._in_fmt = '%9.4f'
@@ -59,7 +56,6 @@ class TeachInLatheDroViewModel(QObject):
         self.lastXAbsValue = 0
         self.isZAbs = True
         self.lastZAbsValue = 0
-        self.tool_rel_position = [0] * 9
         self._active_numpad_field = None
 
         self._x_primary_value = "+0000.000"
@@ -88,11 +84,8 @@ class TeachInLatheDroViewModel(QObject):
         self.toggle_enabled = {key: False for key in self.LIMIT_KEYS}
 
         self.status.program_units.notify(self.updateUnits, 'string')
-        getattr(self.pos, 'rel').notify(self.updateValues)
-        getattr(self.pos, 'abs').notify(self.onAbsPositionUpdated)
-        self.status.g5x_offset.signal.connect(self._updateToolRelativePos)
-        self.status.g92_offset.signal.connect(self._updateToolRelativePos)
-        self.status.tool_offset.signal.connect(self._updateToolRelativePos)
+        self.positions.notify(self.updateValues)
+        self.positions.notify(self.onAbsPositionUpdated)
         self.limitsHandler.onLimitsChanged.connect(self.onMachineLimitsChanged)
 
         self.updateUnits()
@@ -169,13 +162,6 @@ class TeachInLatheDroViewModel(QObject):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = limits.x_max_limit
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = limits.z_min_limit
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = limits.z_max_limit
-
-    def _updateToolRelativePos(self):
-        g5x_offset = self.status.stat.g5x_offset
-        g92_offset = self.status.stat.g92_offset
-        tool_offset = self.status.stat.tool_offset
-        for axis in INFO.AXIS_NUMBER_LIST:
-            self.tool_rel_position[axis] = g5x_offset[axis] + tool_offset[axis] + g92_offset[axis]
 
     def setChuckLimit(self, value):
         self.limit_values["chuck"] = self._format_limit(value)
@@ -297,22 +283,26 @@ class TeachInLatheDroViewModel(QObject):
 
     def xMinusLimitToggle(self):
         self._toggle_status("xMinus")
-        self.limitsHandler.setXMinusLimit(self.tool_rel_position[0] + self._limit_float("xMinus") / 2)
+        x_offset = self.positions.getXPosition().offset
+        self.limitsHandler.setXMinusLimit(x_offset + self._limit_float("xMinus") / 2)
         self.limitsHandler.setXMinusLimitActive(self.limit_status["xMinus"] is not LimitStatus.DISABLED)
 
     def xPlusLimitToggle(self):
         self._toggle_status("xPlus")
-        self.limitsHandler.setXPlusLimit(self.tool_rel_position[0] + self._limit_float("xPlus") / 2)
+        x_offset = self.positions.getXPosition().offset
+        self.limitsHandler.setXPlusLimit(x_offset + self._limit_float("xPlus") / 2)
         self.limitsHandler.setXPlusLimitActive(self.limit_status["xPlus"] is not LimitStatus.DISABLED)
 
     def zMinusLimitToggle(self):
         self._toggle_status("zMinus")
-        self.limitsHandler.setZMinusLimit(self.tool_rel_position[2] + self._limit_float("zMinus"))
+        z_offset = self.positions.getZPosition().offset
+        self.limitsHandler.setZMinusLimit(z_offset + self._limit_float("zMinus"))
         self.limitsHandler.setZMinusLimitActive(self.limit_status["zMinus"] is not LimitStatus.DISABLED)
 
     def zPlusLimitToggle(self):
         self._toggle_status("zPlus")
-        self.limitsHandler.setZPlusLimit(self.tool_rel_position[2] + self._limit_float("zPlus"))
+        z_offset = self.positions.getZPosition().offset
+        self.limitsHandler.setZPlusLimit(z_offset + self._limit_float("zPlus"))
         self.limitsHandler.setZPlusLimitActive(self.limit_status["zPlus"] is not LimitStatus.DISABLED)
 
     def tailstockLimitToggle(self):
@@ -332,10 +322,8 @@ class TeachInLatheDroViewModel(QObject):
         self.updateDro()
 
     def updateValues(self, pos=None):
-        if pos is None:
-            pos = getattr(self.pos, 'rel').getValue()
-        self.currentXAbsValue = pos[Axis.X]
-        self.currentZAbsValue = pos[Axis.Z]
+        self.currentXAbsValue = self.positions.getXPosition().g5xPosition
+        self.currentZAbsValue = self.positions.getZPosition().g5xPosition
         self.updateDro()
 
     @pyqtSlot()
@@ -390,10 +378,8 @@ class TeachInLatheDroViewModel(QObject):
     def onAbsPositionUpdated(self, pos=None):
         if self.previousMachineLimits == self.currentMachineLimits:
             return
-        if pos is None:
-            pos = getattr(self.pos, 'abs').getValue()
-        x_abs = pos[Axis.X]
-        z_abs = pos[Axis.Z]
+        x_abs = self.positions.getXPosition().machinePosition
+        z_abs = self.positions.getZPosition().machinePosition
         x_min_limit = self.currentMachineLimits.x_min_limit
         x_max_limit = self.currentMachineLimits.x_max_limit
         z_min_limit = self.currentMachineLimits.z_min_limit

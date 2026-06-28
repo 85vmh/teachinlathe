@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QWidget
 from teachinlathe.data import ProgramsViewModel
 from teachinlathe.widgets.gremlin.gremlin_widget import GremlinWidget
 from teachinlathe.widgets.programs_qml.filesystemview import FileSystemViewModel
+from teachinlathe.widgets.programs_qml.ProgramsDroViewModel import ProgramsDroViewModel
 from qtpyvcp.utilities import logger
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
@@ -52,9 +53,12 @@ class ProgramsQml(QQuickWidget):
         self.fs_viewmodel.selectionChanged.connect(self._emit_header_state_changed)
         self.fs_viewmodel.navigationChanged.connect(self._emit_header_state_changed)
 
+        self.dro_viewmodel = ProgramsDroViewModel(self)
+
         context = self.engine().rootContext()
         context.setContextProperty('programsViewModel', self.viewmodel)
         context.setContextProperty('fsViewModel', self.fs_viewmodel)
+        context.setContextProperty('programsDroViewModel', self.dro_viewmodel)
 
         self.statusChanged.connect(self._on_status_changed)
         self.setSource(QUrl.fromLocalFile(os.path.join(self._QML_DIR, 'ProgramsRoot.qml')))
