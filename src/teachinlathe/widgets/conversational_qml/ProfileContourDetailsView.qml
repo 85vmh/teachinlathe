@@ -22,7 +22,6 @@ Item {
         spindlePanel.applyData(opIndex, opData)
         cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
         profilingParamsPanel.applyData(opIndex, (opData.profiling_parameters || {}), opData)
-        profilingTypePanel.applyData(opData.profile_contour_strategy || {})
         stockToLeavePanel.applyData(opData.stock_to_leave || {}, !!opData.stock_to_leave_enabled)
     }
 
@@ -110,23 +109,6 @@ Item {
                     onOpenNumPadRequested: root.openNumPadRequested(field)
                     onSaveRequested: function(p) {
                         var merged = root.mergeIntoOp(p.payload || p)
-                        root.saveRequested({index: opIndex, payload: merged})
-                    }
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-                Layout.alignment: Qt.AlignTop
-                spacing: 20
-
-                ProfileContourStrategy {
-                    id: profilingTypePanel
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    onSaveRequested: function(p) {
-                        var merged = root.mergeIntoOp(p)
                         root.saveRequested({index: opIndex, payload: merged})
                     }
                 }
