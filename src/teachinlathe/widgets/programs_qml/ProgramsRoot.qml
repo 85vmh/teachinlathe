@@ -3,25 +3,26 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 Rectangle {
+    id: root
     color: "#f5f5f5"
+
+    // While running, the view is full screen (no app bar / bottom tabs) and the
+    // internal screen tabs are hidden — only the loaded-program content shows.
+    readonly property bool running: programsViewModel.screenIndex === ProgramsScreen.Running
 
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
-        ProgramsScreenTabs {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 58
-        }
-
         StackLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.leftMargin: 8
-            Layout.rightMargin: 8
-            Layout.topMargin: 8
-            Layout.bottomMargin: 8
-            currentIndex: programsViewModel.screenIndex
+            Layout.leftMargin: root.running ? 0 : 8
+            Layout.rightMargin: root.running ? 0 : 8
+            Layout.topMargin: root.running ? 0 : 8
+            Layout.bottomMargin: root.running ? 0 : 8
+            // Running reuses the loaded-program page (index clamped to Loaded).
+            currentIndex: root.running ? ProgramsScreen.Loaded : programsViewModel.screenIndex
 
             ProgramsFilesScreen {
                 Layout.fillWidth: true
@@ -36,5 +37,10 @@ Rectangle {
                 viewModel: programsViewModel
             }
         }
+    }
+
+    ProgramCompleteDialog {
+        id: completeDialog
+        objectName: "programCompleteDialog"
     }
 }

@@ -7,6 +7,10 @@ from teachinlathe.widgets.programs_qml.FileSystemBridge import FileSystemBridge,
 from .program_runtime import ProgramRuntimeStore
 from .program_stack import ProgramCallStackResolver
 from .programs_action_source import ProgramsActionSource
+from .programs_screen import ProgramsScreen
+from .run_time_tracker import RunTimeTracker, format_duration
+
+Screen = ProgramsScreen
 
 
 class ProgramsViewModel(QObject):
@@ -18,6 +22,11 @@ class ProgramsViewModel(QObject):
     dirtyChanged = pyqtSignal(bool)
     executionViewChanged = pyqtSignal()
     runningStateChanged = pyqtSignal()
+    # Full-screen run view transitions
+    enterRunFullScreenRequested = pyqtSignal()
+    exitRunFullScreenRequested = pyqtSignal()
+    # name, movement, toolchange, total (pre-formatted strings)
+    programCompleted = pyqtSignal(str, str, str, str)
     programLoadRequested = pyqtSignal(str)
     gremlinZoomInRequested = pyqtSignal()
     gremlinZoomOutRequested = pyqtSignal()
@@ -30,7 +39,10 @@ class ProgramsViewModel(QObject):
         self._runtime_store = ProgramRuntimeStore(self)
         self._call_stack_resolver = ProgramCallStackResolver(self)
         self._actions = ProgramsActionSource(self._runtime_store, self)
-        self._screen_index = 0
+        self._screen_index = Screen.Files
+        self._run_tracker = RunTimeTracker(self)
+        self._was_active = False
+        self._abort_requested = False
         self._execution_frames = []
         self._active_execution_file_path = ''
         self._active_execution_title = ''
@@ -47,6 +59,8 @@ class ProgramsViewModel(QObject):
         self._runtime_store.snapshotChanged.connect(self._on_runtime_snapshot_changed)
         self._runtime_store.machineFileChanged.connect(lambda _path: self.runningStateChanged.emit())
         self._actions.stateChanged.connect(self.runningStateChanged)
+        self._actions.stateChanged.connect(self._on_running_state_changed)
+        self._actions.abortTriggered.connect(self._on_abort_triggered)
 
         self._refresh_execution_view()
 
@@ -130,7 +144,7 @@ class ProgramsViewModel(QObject):
 
     @pyqtProperty(bool, notify=screenIndexChanged)
     def isGremlinScreen(self):
-        return self._screen_index == 1
+        return self._screen_index == Screen.Loaded
 
     @pyqtSlot(int)
     def navigateTo(self, screen):
@@ -138,11 +152,11 @@ class ProgramsViewModel(QObject):
 
     @pyqtSlot()
     def showFilesScreen(self):
-        self.navigateTo(0)
+        self.navigateTo(Screen.Files)
 
     @pyqtSlot()
     def showGremlinScreen(self):
-        self.navigateTo(1)
+        self.navigateTo(Screen.Loaded)
 
     @pyqtSlot(str, result='QVariantList')
     def getFiles(self, folder_name):
@@ -215,7 +229,7 @@ class ProgramsViewModel(QObject):
         self._bridge.saveCurrentFile(None)
         self.programLoadRequested.emit(file_path)
         load_or_reload_program(file_path)
-        self._bridge.navigateTo(1)
+        self._bridge.navigateTo(Screen.Loaded)
 
     @pyqtSlot()
     def zoomGremlinIn(self):
@@ -256,6 +270,44 @@ class ProgramsViewModel(QObject):
             return
         self._screen_index = screen
         self.screenIndexChanged.emit(self._screen_index)
+
+    # ── Running full-screen state machine ─────────────────────────────
+    def _on_abort_triggered(self):
+        self._abort_requested = True
+
+    def _on_running_state_changed(self):
+        active = self._actions.isActive
+        if active and not self._was_active:
+            self._abort_requested = False
+            self._run_tracker.start()
+            self._set_screen_index(Screen.Running)
+            self.enterRunFullScreenRequested.emit()
+        elif self._was_active and not active:
+            movement, toolchange, total = self._run_tracker.stop()
+            if self._abort_requested:
+                self._set_screen_index(Screen.Loaded)
+                self.exitRunFullScreenRequested.emit()
+            else:
+                name = os.path.basename(self.currentFilePath or '') or 'Program'
+                self.programCompleted.emit(
+                    name,
+                    format_duration(movement),
+                    format_duration(toolchange),
+                    format_duration(total),
+                )
+            self._abort_requested = False
+        self._was_active = active
+
+    @pyqtSlot()
+    def runDone(self):
+        """'Done' on the completion popup: leave full screen back to Loaded."""
+        self._set_screen_index(Screen.Loaded)
+        self.exitRunFullScreenRequested.emit()
+
+    @pyqtSlot()
+    def runAgain(self):
+        """'Run Again' on the completion popup: start the program once more."""
+        self._actions.triggerStart()
 
     def _is_showing_machine_file(self, machine_file=''):
         editor_path = os.path.abspath(self.currentFilePath) if self.currentFilePath else ''

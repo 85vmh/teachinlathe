@@ -73,10 +73,13 @@ class ProgramButtonState(QObject):
 
 class ProgramsActionSource(QObject):
     stateChanged = pyqtSignal()
+    abortTriggered = pyqtSignal()
 
     def __init__(self, runtime_store, parent=None):
         super().__init__(parent)
         self._runtime_store = runtime_store
+        self._is_running = False
+        self._is_active = False
         self._start = ProgramButtonState('Start Program', self)
         self._stop = ProgramButtonState('Stop Program', self)
         self._pause_resume = ProgramButtonState('Pause Program', self)
@@ -88,6 +91,14 @@ class ProgramsActionSource(QObject):
         runtime_store.snapshotChanged.connect(lambda _snapshot: self.refresh())
         self._bind_status_updates()
         self.refresh()
+
+    @pyqtProperty(bool, notify=stateChanged)
+    def isRunning(self):
+        return self._is_running
+
+    @pyqtProperty(bool, notify=stateChanged)
+    def isActive(self):
+        return self._is_active
 
     @pyqtProperty(QObject, constant=True)
     def startAction(self):
@@ -150,6 +161,10 @@ class ProgramsActionSource(QObject):
 
         start_enabled, start_tooltip = self._run_state(stat)
         running = state == linuxcnc.RCS_EXEC and not paused
+        self._is_running = running
+        # "active" = a program is in progress (running OR paused); used to drive
+        # the full-screen run view so a pause doesn't look like completion.
+        self._is_active = running or paused
         self._start.update(
             enabled=start_enabled,
             active=running,
@@ -275,6 +290,7 @@ class ProgramsActionSource(QObject):
     def triggerStop(self):
         if not self._stop.enabled:
             return
+        self.abortTriggered.emit()
         program_actions.abort()
         self.refresh()
 

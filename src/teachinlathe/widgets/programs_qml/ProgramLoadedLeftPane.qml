@@ -9,12 +9,24 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 4
+        spacing: 8
 
-        ProgramsDro {
+        RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 200
-            viewModel: root.viewModel
+            Layout.fillHeight: false
+            Layout.preferredHeight: 220
+            spacing: 8
+
+            ProgramsDro {
+                Layout.fillHeight: true
+                Layout.preferredWidth: 600
+                viewModel: root.viewModel
+            }
+
+            ProgramsToolFeedSpeed {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+            }
         }
 
         Rectangle {

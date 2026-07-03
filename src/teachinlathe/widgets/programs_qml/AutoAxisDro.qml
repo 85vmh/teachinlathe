@@ -20,6 +20,7 @@ RowLayout {
 
     Text {
         Layout.preferredWidth: root.axisLabelWidth
+        Layout.preferredHeight: root.valueBoxHeight
         text: root.axisLabel
         color: "#172033"
         font.pixelSize: root.axisLabelFontSize
@@ -27,45 +28,21 @@ RowLayout {
         verticalAlignment: Text.AlignVCenter
     }
 
-    Rectangle {
+    DroValueBox {
         Layout.preferredWidth: root.valueBoxWidth
         Layout.preferredHeight: root.valueBoxHeight
         radius: root.valueBoxRadius
-        color: "#f8fafc"
-        border.color: "#cbd5e1"
-        border.width: 1
-
-        Text {
-            anchors.fill: parent
-            anchors.leftMargin: root.valueHorizontalPadding
-            anchors.rightMargin: root.valueHorizontalPadding
-            text: Number(root.position).toFixed(3)
-            color: "#0f172a"
-            font.pixelSize: root.valueFontSize
-            font.family: "monospace"
-            horizontalAlignment: Text.AlignRight
-            verticalAlignment: Text.AlignVCenter
-        }
+        horizontalPadding: root.valueHorizontalPadding
+        fontSize: root.valueFontSize
+        text: Number(root.position).toFixed(3)
     }
 
-    Rectangle {
+    DroValueBox {
         Layout.preferredWidth: root.valueBoxWidth
         Layout.preferredHeight: root.valueBoxHeight
         radius: root.valueBoxRadius
-        color: "#f8fafc"
-        border.color: "#cbd5e1"
-        border.width: 1
-
-        Text {
-            anchors.fill: parent
-            anchors.leftMargin: root.valueHorizontalPadding
-            anchors.rightMargin: root.valueHorizontalPadding
-            text: Number(root.dtg).toFixed(3)
-            color: "#0f172a"
-            font.pixelSize: root.valueFontSize
-            font.family: "monospace"
-            horizontalAlignment: Text.AlignRight
-            verticalAlignment: Text.AlignVCenter
-        }
+        horizontalPadding: root.valueHorizontalPadding
+        fontSize: root.valueFontSize
+        text: Number(root.dtg).toFixed(3)
     }
 }

@@ -43,7 +43,7 @@ Rectangle {
                     MouseArea {
                         id: backArea
                         anchors.fill: parent
-                        onClicked: fsBridge.navigateTo(0)
+                        onClicked: fsBridge.navigateTo(ProgramsScreen.Files)
                     }
                 }
 

@@ -11,9 +11,9 @@ Rectangle {
     property int axisLabelFontSize: 60
     property int droValueFontSize: 40
     property int headerFontSize: 18
-    property int headerHeight: 24
-    property int rowSpacing: 12
-    property int columnSpacing: 6
+    property int headerHeight: 30
+    property int rowSpacing: 20
+    property int columnSpacing: 18
 
     color: "#eef2f7"
     border.color: "#cfd7e3"
@@ -21,7 +21,10 @@ Rectangle {
     radius: 4
 
     ColumnLayout {
-        anchors.centerIn: parent
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.leftMargin: 16
+        anchors.topMargin: 16
         spacing: root.columnSpacing
 
         RowLayout {

@@ -862,6 +862,10 @@ class MyMainWindow(VCPMainWindow):
                 y_offset = title_bar.height()
         self._enterFullScreenAt(widget, y_offset=y_offset)
 
+    def enterProgramRunFullScreen(self, widget):
+        """Full window (covers App Bar + bottom tab bar) for a running program."""
+        self._enterFullScreenAt(widget, y_offset=0)
+
     def _enterFullScreenAt(self, widget, y_offset=0):
         if getattr(self, "_fullscreen_widget", None) is widget:
             return
