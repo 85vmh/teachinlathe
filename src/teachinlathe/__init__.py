@@ -30,6 +30,9 @@ IN_DESIGNER = os.getenv('DESIGNER', False)
 def main(opts=None):
 
     QApplication.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings, True)
+    QApplication.setApplicationName('teachinlathe')
+    QApplication.setApplicationDisplayName('TeachInLathe')
+    QApplication.setDesktopFileName('teachinlathe')
 
     if opts is None:
         from qtpyvcp.utilities.opt_parser import parse_opts
@@ -37,9 +40,11 @@ def main(opts=None):
                           vcp_name='TeachInLathe',
                           vcp_version=__version__)
 
+    if not opts.get('command_line_args'):
+        opts.command_line_args = 'teachinlathe'
+
     qtpyvcp.run_vcp(opts, VCP_CONFIG_FILE)
 
 
 if __name__ == '__main__':
     main()
-

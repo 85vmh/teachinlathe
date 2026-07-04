@@ -144,7 +144,7 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#bdbdbd" }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
 
                         Label {
                             text: "Name"
@@ -159,7 +159,7 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#bdbdbd" }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
 
                         Label {
                             text: "Date Created"
@@ -192,7 +192,7 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#bdbdbd" }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
 
                         Label {
                             text: "Last Edited"
@@ -225,7 +225,7 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#bdbdbd" }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
 
                         Label {
                             text: "Program Operations"
@@ -237,7 +237,7 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#bdbdbd" }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
 
                         Label {
                             text: "Actions"

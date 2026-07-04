@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=TeachInLathe
+GenericName=CNC Lathe Controller
+Comment=LinuxCNC controller for TeachIn lathes
+Exec=teachinlathe
+Icon=teachinlathe
+Terminal=false
+Categories=Science;Engineering;
+StartupNotify=true
+StartupWMClass=teachinlathe

@@ -6,6 +6,7 @@ import linuxcnc
 from PyQt5.QtCore import Q_ARG, QMetaObject, QObject, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor
 from PyQt5.QtQuickWidgets import QQuickWidget
+from PyQt5.QtWidgets import QApplication
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities import logger
@@ -147,6 +148,12 @@ class MyMainWindow(VCPMainWindow):
 
     def __init__(self, *args, **kwargs):
         super(MyMainWindow, self).__init__(*args, **kwargs)
+        app = QApplication.instance()
+        if app is not None:
+            app.setApplicationName("TeachInLathe")
+            app.setApplicationDisplayName("TeachInLathe")
+            app.setDesktopFileName("teachinlathe")
+        self.setWindowTitle("TeachInLathe")
         self.setWindowFlag(Qt.FramelessWindowHint)
 
         self.mainSelectedTab = MainTabs.MANUAL_TURNING

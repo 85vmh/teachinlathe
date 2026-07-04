@@ -26,6 +26,7 @@ Rectangle {
 
     // Edit/Reorder mode toggle
     property bool editing: false
+    property int itemFontSize: 16
 
     property bool gcodeEnabled: !!(op && op.generate_gcode)
 
@@ -47,7 +48,7 @@ Rectangle {
     width: parent ? parent.width : 400
     height: 72
     radius: 0
-    color: isCurrentItem ? "#dbeafe" : (rowIndex % 2 === 0 ? "#fafafa" : "#f0f0f0")
+    color: isCurrentItem ? "#dbeafe" : (rowIndex % 2 === 0 ? "#f0f0f0" : "#e5e5e5")
     border.width: isCurrentItem ? 2 : 0
     border.color: isCurrentItem ? "#3b82f6" : "transparent"
 
@@ -115,6 +116,7 @@ Rectangle {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             Layout.alignment: Qt.AlignVCenter
+            font.pixelSize: root.itemFontSize
             color: root.gcodeEnabled ? "black" : "#c4c4c4"
         }
         Divider { }
@@ -152,6 +154,7 @@ Rectangle {
                 text: (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
+                font.pixelSize: root.itemFontSize
                 color: root.gcodeEnabled ? "black" : "#c4c4c4"
             }
         }

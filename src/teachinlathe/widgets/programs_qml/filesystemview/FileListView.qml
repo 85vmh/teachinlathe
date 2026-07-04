@@ -8,24 +8,28 @@ Item {
     property var viewModel
 
     // ── Dimensions ─────────────────────────────────────────────────────────
-    readonly property int rowHeight:       60
-    readonly property int headerHeight:    36
+    readonly property int rowHeight:       72
+    readonly property int headerHeight:    40
     readonly property int sizeColWidth:    96
     readonly property int modifiedColWidth: 160
     readonly property int nameLeftMargin:  10
+    readonly property int rowRightMargin:  18
     readonly property int colRightPad:     10
 
     // ── Fonts ───────────────────────────────────────────────────────────────
     readonly property int headerFontSize:  16
-    readonly property int itemFontSize:    14
-    readonly property int metaFontSize:    14
+    readonly property int itemFontSize:    16
+    readonly property int metaFontSize:    16
     readonly property int iconFontSize:    14
 
     // ── Colors ──────────────────────────────────────────────────────────────
-    readonly property color sepColor:  "#e0e0e0"
-    readonly property color rowEven:   "#ffffff"
-    readonly property color rowOdd:    "#f9f9f9"
-    readonly property color rowHover:  "#e8f4fd"
+    readonly property color sepColor:  "#cccccc"
+    readonly property color headerColor: "#d6d6d6"
+    readonly property color headerSepColor: "#cccccc"
+    readonly property color headerTextColor: "#202020"
+    readonly property color rowEven:   "#f0f0f0"
+    readonly property color rowOdd:    "#e5e5e5"
+    readonly property color rowHover:  "#dbeafe"
     readonly property color rowSelect: "#dbeafe"
 
     ColumnLayout {
@@ -35,13 +39,14 @@ Item {
         // ── Header ──────────────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: root.headerHeight
-            color: "#eeeeee"
+            Layout.preferredHeight: root.headerHeight
+            color: root.headerColor
+            radius: 4
 
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: root.nameLeftMargin
-                anchors.rightMargin: 0
+                anchors.rightMargin: root.rowRightMargin
                 spacing: 0
 
                 // Name
@@ -49,57 +54,62 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Text {
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.centerIn: parent
                         text: "Name" + (root.viewModel ? (root.viewModel.sortColumn === "name"
                               ? (root.viewModel.sortAscending ? " ↑" : " ↓") : "") : "")
-                        color: (root.viewModel ? root.viewModel.sortColumn === "name" : false)
-                               ? "#202020" : "#9e9e9e"
+                        color: root.headerTextColor
                         font.pixelSize: root.headerFontSize
-                        font.bold: root.viewModel ? root.viewModel.sortColumn === "name" : false
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
                     MouseArea { anchors.fill: parent; onClicked: if (root.viewModel) root.viewModel.setSortColumn("name") }
                 }
 
-                Rectangle { width: 1; Layout.fillHeight: true; color: root.sepColor }
+                Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.headerSepColor }
 
                 // Size
                 Item {
-                    width: root.sizeColWidth
+                    Layout.minimumWidth: root.sizeColWidth
+                    Layout.preferredWidth: root.sizeColWidth
+                    Layout.maximumWidth: root.sizeColWidth
                     Layout.fillHeight: true
                     Text {
                         anchors.centerIn: parent
                         text: "Size" + (root.viewModel ? (root.viewModel.sortColumn === "size"
                               ? (root.viewModel.sortAscending ? " ↑" : " ↓") : "") : "")
-                        color: (root.viewModel ? root.viewModel.sortColumn === "size" : false)
-                               ? "#202020" : "#9e9e9e"
+                        color: root.headerTextColor
                         font.pixelSize: root.headerFontSize
-                        font.bold: root.viewModel ? root.viewModel.sortColumn === "size" : false
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
                     MouseArea { anchors.fill: parent; onClicked: if (root.viewModel) root.viewModel.setSortColumn("size") }
                 }
 
-                Rectangle { width: 1; Layout.fillHeight: true; color: root.sepColor }
+                Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.headerSepColor }
 
                 // Modified
                 Item {
-                    width: root.modifiedColWidth
+                    Layout.minimumWidth: root.modifiedColWidth
+                    Layout.preferredWidth: root.modifiedColWidth
+                    Layout.maximumWidth: root.modifiedColWidth
                     Layout.fillHeight: true
                     Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.right: parent.right
-                        anchors.rightMargin: root.colRightPad
+                        anchors.centerIn: parent
                         text: "Modified" + (root.viewModel ? (root.viewModel.sortColumn === "modified"
                               ? (root.viewModel.sortAscending ? " ↑" : " ↓") : "") : "")
-                        color: (root.viewModel ? root.viewModel.sortColumn === "modified" : false)
-                               ? "#202020" : "#9e9e9e"
+                        color: root.headerTextColor
                         font.pixelSize: root.headerFontSize
-                        font.bold: root.viewModel ? root.viewModel.sortColumn === "modified" : false
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
                     MouseArea { anchors.fill: parent; onClicked: if (root.viewModel) root.viewModel.setSortColumn("modified") }
                 }
             }
 
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: root.sepColor }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: root.headerSepColor }
         }
 
         // ── File list ────────────────────────────────────────────────────────
@@ -127,12 +137,14 @@ Item {
                            : (rowArea.containsMouse
                               ? root.rowHover
                               : (index % 2 === 0 ? root.rowEven : root.rowOdd))
+                    border.width: modelData.isSelected ? 2 : 0
+                    border.color: modelData.isSelected ? "#3b82f6" : "transparent"
                 }
 
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: root.nameLeftMargin
-                    anchors.rightMargin: 0
+                    anchors.rightMargin: root.rowRightMargin
                     spacing: 0
 
                     // Name column
@@ -182,12 +194,14 @@ Item {
                         }
                     }
 
-                    Rectangle { width: 1; height: parent.height; color: root.sepColor }
+                    Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.sepColor }
 
                     // Size column — centered, same width as header cell
                     Item {
-                        width: root.sizeColWidth
-                        height: parent.height
+                        Layout.minimumWidth: root.sizeColWidth
+                        Layout.preferredWidth: root.sizeColWidth
+                        Layout.maximumWidth: root.sizeColWidth
+                        Layout.fillHeight: true
                         Text {
                             anchors.centerIn: parent
                             text: modelData.sizeDisplay
@@ -196,12 +210,14 @@ Item {
                         }
                     }
 
-                    Rectangle { width: 1; height: parent.height; color: root.sepColor }
+                    Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.sepColor }
 
                     // Modified column — right-aligned, same width as header cell
                     Item {
-                        width: root.modifiedColWidth
-                        height: parent.height
+                        Layout.minimumWidth: root.modifiedColWidth
+                        Layout.preferredWidth: root.modifiedColWidth
+                        Layout.maximumWidth: root.modifiedColWidth
+                        Layout.fillHeight: true
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.right: parent.right

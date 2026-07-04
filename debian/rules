@@ -12,9 +12,13 @@ override_dh_auto_test:
 	install -m 644 fonts/BebasKai.ttf debian/python3-teachinlathe/usr/share/fonts/truetype/
 
 	# create icons directory if it doesn't exist
-	mkdir -p debian/python3-teachinlathe/usr/share/icons/
+	mkdir -p debian/python3-teachinlathe/usr/share/icons/hicolor/scalable/apps/
 	# copy icons from source to icons directory
-		
+	install -m 644 src/teachinlathe/images/home_folder.svg debian/python3-teachinlathe/usr/share/icons/hicolor/scalable/apps/teachinlathe.svg
+
+	# install desktop launcher so desktop shells can associate the Qt window
+	mkdir -p debian/python3-teachinlathe/usr/share/applications/
+	install -m 644 debian/teachinlathe.desktop debian/python3-teachinlathe/usr/share/applications/teachinlathe.desktop
 
 	# create configs directory if it doesn't exist
 	mkdir -p debian/python3-teachinlathe/usr/share/configs/

@@ -448,83 +448,90 @@ Item {
                                 spacing: 4
 
                                 // Column header (dynamic last column)
-                                RowLayout {
+                                Rectangle {
                                     Layout.fillWidth: true
                                     Layout.minimumHeight: 40
                                     Layout.preferredHeight: 40
                                     Layout.maximumHeight: 40
-                                    spacing: 0
+                                    color: "#d6d6d6"
+                                    radius: 4
 
-                                    Label {
-                                        text: "Order"
-                                        font.pixelSize: operationEditor.opHeaderFontSize
-                                        font.bold: true
-                                        Layout.minimumWidth: colOpNumW
-                                        Layout.preferredWidth: colOpNumW
-                                        Layout.maximumWidth: colOpNumW
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        Layout.alignment: Qt.AlignVCenter
-                                    }
-                                    Divider {
-                                    }
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        spacing: 0
 
-                                    Label {
-                                        text: "Generate\nGCode"
-                                        font.pixelSize: operationEditor.opHeaderFontSize
-                                        font.bold: true
-                                        Layout.minimumWidth: colGenW
-                                        Layout.preferredWidth: colGenW
-                                        Layout.maximumWidth: colGenW
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        wrapMode: Text.WordWrap
-                                        maximumLineCount: 2
-                                        Layout.alignment: Qt.AlignVCenter
-                                    }
-                                    Divider {
-                                    }
+                                        Label {
+                                            text: "Order"
+                                            font.pixelSize: operationEditor.opHeaderFontSize
+                                            font.bold: true
+                                            color: "#202020"
+                                            Layout.minimumWidth: colOpNumW
+                                            Layout.preferredWidth: colOpNumW
+                                            Layout.maximumWidth: colOpNumW
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+                                        Divider { dividerColor: "#cccccc" }
 
-                                    Label {
-                                        text: "Operation Type"
-                                        font.pixelSize: operationEditor.opHeaderFontSize
-                                        font.bold: true
-                                        Layout.minimumWidth: colTypeW
-                                        Layout.fillWidth: true
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        elide: Text.ElideRight
-                                        Layout.alignment: Qt.AlignVCenter
-                                    }
-                                    Divider {
-                                    }
+                                        Label {
+                                            text: "Generate\nGCode"
+                                            font.pixelSize: operationEditor.opHeaderFontSize
+                                            font.bold: true
+                                            color: "#202020"
+                                            Layout.minimumWidth: colGenW
+                                            Layout.preferredWidth: colGenW
+                                            Layout.maximumWidth: colGenW
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            wrapMode: Text.WordWrap
+                                            maximumLineCount: 2
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+                                        Divider { dividerColor: "#cccccc" }
 
-                                    Label {
-                                        text: "Optional\nBlock"
-                                        font.pixelSize: operationEditor.opHeaderFontSize
-                                        font.bold: true
-                                        Layout.minimumWidth: colOptW
-                                        Layout.preferredWidth: colOptW
-                                        Layout.maximumWidth: colOptW
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        wrapMode: Text.WordWrap
-                                        maximumLineCount: 2
-                                        Layout.alignment: Qt.AlignVCenter
-                                    }
-                                    Divider {
-                                    }
+                                        Label {
+                                            text: "Operation Type"
+                                            font.pixelSize: operationEditor.opHeaderFontSize
+                                            font.bold: true
+                                            color: "#202020"
+                                            Layout.minimumWidth: colTypeW
+                                            Layout.fillWidth: true
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            elide: Text.ElideRight
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+                                        Divider { dividerColor: "#cccccc" }
 
-                                    Label {
-                                        text: operationEditor.reorderMode ? "Change\nOrder" : "Delete"
-                                        font.pixelSize: operationEditor.opHeaderFontSize
-                                        font.bold: true
-                                        Layout.minimumWidth: colDelW
-                                        Layout.preferredWidth: colDelW
-                                        Layout.maximumWidth: colDelW
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        Layout.alignment: Qt.AlignVCenter
+                                        Label {
+                                            text: "Optional\nBlock"
+                                            font.pixelSize: operationEditor.opHeaderFontSize
+                                            font.bold: true
+                                            color: "#202020"
+                                            Layout.minimumWidth: colOptW
+                                            Layout.preferredWidth: colOptW
+                                            Layout.maximumWidth: colOptW
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            wrapMode: Text.WordWrap
+                                            maximumLineCount: 2
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+                                        Divider { dividerColor: "#cccccc" }
+
+                                        Label {
+                                            text: operationEditor.reorderMode ? "Change\nOrder" : "Delete"
+                                            font.pixelSize: operationEditor.opHeaderFontSize
+                                            font.bold: true
+                                            color: "#202020"
+                                            Layout.minimumWidth: colDelW
+                                            Layout.preferredWidth: colDelW
+                                            Layout.maximumWidth: colDelW
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
                                     }
                                 }
 
