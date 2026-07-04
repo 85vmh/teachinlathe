@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import ".."
+import "../gcode_viewer"
 
 Item {
     id: root
@@ -224,7 +225,7 @@ Item {
                 }
 
                 // Code text
-                CodeViewer {
+                GCodeViewer {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     fileContent: root.fileContent

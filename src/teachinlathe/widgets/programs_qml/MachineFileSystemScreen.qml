@@ -1,7 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import ".."
+import "filesystemview"
+import "gcode_viewer"
 
 Item {
     id: root
@@ -18,9 +19,8 @@ Item {
             SplitView.minimumWidth: 200
         }
 
-        ProgramEditorPane {
+        GCodeViewerPane {
             viewModel: root.viewModel
-            mode: "files"
             SplitView.fillWidth: true
             SplitView.minimumWidth: 200
         }

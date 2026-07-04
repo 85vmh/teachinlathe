@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "filesystemview"
+import "program_loaded/running"
 
 Rectangle {
     id: root
@@ -25,14 +26,14 @@ Rectangle {
             // Running reuses the loaded-program page (index clamped to Loaded).
             currentIndex: root.running ? ProgramsScreen.Loaded : programsViewModel.screenIndex
 
-            ProgramsFileSystemScreen {
+            MachineFileSystemScreen {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 viewModel: programsViewModel
                 fileSystemViewModel: fsViewModel
             }
 
-            ProgramsGremlinScreen {
+            ProgramLoadedScreen {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 viewModel: programsViewModel

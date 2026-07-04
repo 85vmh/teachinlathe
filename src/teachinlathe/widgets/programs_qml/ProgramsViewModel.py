@@ -18,8 +18,6 @@ class ProgramsViewModel(QObject):
     currentFilePathChanged = pyqtSignal(str)
     currentFileContentChanged = pyqtSignal(str)
     currentFileDisplayPathChanged = pyqtSignal(str)
-    editModeChanged = pyqtSignal(bool)
-    dirtyChanged = pyqtSignal(bool)
     executionViewChanged = pyqtSignal()
     runningStateChanged = pyqtSignal()
     # Full-screen run view transitions
@@ -51,8 +49,6 @@ class ProgramsViewModel(QObject):
 
         self._bridge.filePathChanged.connect(self._on_file_path_changed)
         self._bridge.fileContentChanged.connect(self._on_file_content_changed)
-        self._bridge.editModeChanged.connect(self.editModeChanged)
-        self._bridge.dirtyChanged.connect(self._on_dirty_changed)
         self._bridge.screenChangeRequested.connect(self._set_screen_index)
         self._bridge.programLoadRequested.connect(self.programLoadRequested)
 
@@ -94,16 +90,7 @@ class ProgramsViewModel(QObject):
 
     @pyqtProperty(str, notify=currentFileDisplayPathChanged)
     def currentFileDisplayPath(self):
-        path = self.currentFilePath or 'No file loaded'
-        return f'* {path}' if self.dirty and path else path
-
-    @pyqtProperty(bool, notify=editModeChanged)
-    def editMode(self):
-        return self._bridge.editMode
-
-    @pyqtProperty(bool, notify=dirtyChanged)
-    def dirty(self):
-        return self._bridge.dirty
+        return self.currentFilePath or 'No file loaded'
 
     @pyqtProperty(bool, notify=executionViewChanged)
     def hasExecutionStack(self):
@@ -183,26 +170,6 @@ class ProgramsViewModel(QObject):
         self._bridge.attachHighlighter(quick_document)
 
     @pyqtSlot(str)
-    def updateCurrentContent(self, content):
-        self._bridge.updateCurrentContent(content)
-
-    @pyqtSlot(bool)
-    def setEditMode(self, editing):
-        self._bridge.setEditMode(editing)
-
-    @pyqtSlot()
-    def toggleEditMode(self):
-        self._bridge.setEditMode(not self._bridge.editMode)
-
-    @pyqtSlot(result=bool)
-    def saveCurrentFile(self):
-        return bool(self._bridge.saveCurrentFile(None))
-
-    @pyqtSlot(result=bool)
-    def saveCurrentFileAs(self):
-        return bool(self._bridge.saveCurrentFileAs(None))
-
-    @pyqtSlot(str)
     def openFileByAbsolutePath(self, path: str) -> None:
         """Load a file into LinuxCNC by absolute path — called from FileSystemViewModel."""
         self._bridge.openFileByAbsolutePath(path)
@@ -226,7 +193,6 @@ class ProgramsViewModel(QObject):
             self._bridge.openFile(folder_name, relative_path)
             return
 
-        self._bridge.saveCurrentFile(None)
         self.programLoadRequested.emit(file_path)
         load_or_reload_program(file_path)
         self._bridge.navigateTo(Screen.ProgramLoaded)
@@ -255,10 +221,6 @@ class ProgramsViewModel(QObject):
     def _on_file_content_changed(self, content):
         self.currentFileContentChanged.emit(content)
         self._refresh_execution_view()
-
-    def _on_dirty_changed(self, dirty):
-        self.dirtyChanged.emit(dirty)
-        self.currentFileDisplayPathChanged.emit(self.currentFileDisplayPath)
 
     def _on_runtime_snapshot_changed(self, _snapshot):
         self.runningStateChanged.emit()

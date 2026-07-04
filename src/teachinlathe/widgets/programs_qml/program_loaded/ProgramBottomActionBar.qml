@@ -1,6 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import ".."
+import "../../common"
 
 Rectangle {
     id: root
@@ -64,8 +66,8 @@ Rectangle {
     }
 
     readonly property string cycleStartButtonText:
-        cycleStartState === ProgramActionBar.Pause ? "Pause"
-      : cycleStartState === ProgramActionBar.Resume ? "Resume"
+        cycleStartState === ProgramBottomActionBar.Pause ? "Pause"
+      : cycleStartState === ProgramBottomActionBar.Resume ? "Resume"
       : "Cycle\nStart"
 
     // Side cells size to their content (max of both), so the left buttons always
@@ -74,23 +76,23 @@ Rectangle {
 
     function defaultCycleStartState() {
         if (!actions) {
-            return ProgramActionBar.CycleStart
+            return ProgramBottomActionBar.CycleStart
         }
 
         var actionText = actions.cycleStartAction.text
         if (actionText === "Pause") {
-            return ProgramActionBar.Pause
+            return ProgramBottomActionBar.Pause
         }
         if (actionText === "Resume") {
-            return ProgramActionBar.Resume
+            return ProgramBottomActionBar.Resume
         }
-        return ProgramActionBar.CycleStart
+        return ProgramBottomActionBar.CycleStart
     }
 
     function triggerCycleStartButton() {
-        if (cycleStartState === ProgramActionBar.Pause) {
+        if (cycleStartState === ProgramBottomActionBar.Pause) {
             pauseClicked()
-        } else if (cycleStartState === ProgramActionBar.Resume) {
+        } else if (cycleStartState === ProgramBottomActionBar.Resume) {
             resumeClicked()
         } else {
             cycleStartClicked()
@@ -141,7 +143,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            OverrideSelector {
+            RapidOverrideSelector {
                 anchors.centerIn: parent
                 label: "Rapid Override"
                 maxSpeed: root.maximumVelocity
@@ -162,7 +164,7 @@ Rectangle {
                 spacing: 16
 
                 // Cycle Abort — always visible in the full-screen running view
-                MachineButton {
+                MachineRoundButton {
                     visible: root.cycleAbortVisible
                     text: "Cycle\nAbort"
                     enabled: root.cycleAbortEnabled
@@ -176,7 +178,7 @@ Rectangle {
                 }
 
                 // Cycle Start / Pause / Resume
-                MachineButton {
+                MachineRoundButton {
                     text: root.cycleStartButtonText
                     enabled: root.cycleStartEnabled
                     active: root.cycleStartBlink

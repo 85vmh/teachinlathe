@@ -2,9 +2,8 @@ import os
 
 import linuxcnc
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, pyqtProperty
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-from teachinlathe.widgets.programs_qml.GCodeSyntaxHighlighter import GCodeSyntaxHighlighter
+from teachinlathe.widgets.programs_qml.gcode_viewer.GCodeSyntaxHighlighter import GCodeSyntaxHighlighter
 
 
 def load_or_reload_program(path: str) -> None:
@@ -43,9 +42,6 @@ class FileSystemBridge(QObject):
     fileContentChanged   = pyqtSignal(str,  arguments=['content'])
     filePathChanged      = pyqtSignal(str,  arguments=['path'])
     screenChangeRequested = pyqtSignal(int, arguments=['screen'])
-    editModeChanged      = pyqtSignal(bool, arguments=['editing'])
-    dirtyChanged         = pyqtSignal(bool, arguments=['dirty'])
-    folderFilesChanged   = pyqtSignal(str,  arguments=['folderName'])
     programLoadRequested = pyqtSignal(str,  arguments=['path'])
 
     GCODE_EXTENSIONS = ('.ngc', '.nc', '.gcode', '.G', '.NGC', '.NC')
@@ -62,9 +58,6 @@ class FileSystemBridge(QObject):
         self._syntax_highlighter = GCodeSyntaxHighlighter(self)
         self._current_file_path = ''
         self._current_content = ''
-        self._saved_content = ''
-        self._edit_mode = False
-        self._dirty = False
 
     # ------------------------------------------------------------------
     # Properties (read by QML)
@@ -77,18 +70,6 @@ class FileSystemBridge(QObject):
     @pyqtProperty(str, notify=filePathChanged)
     def currentFilePath(self):
         return self._current_file_path
-
-    @pyqtProperty(bool, notify=editModeChanged)
-    def editMode(self):
-        return self._edit_mode
-
-    @pyqtProperty(bool, notify=dirtyChanged)
-    def dirty(self):
-        return self._dirty
-
-    # ------------------------------------------------------------------
-    # Slots (called from QML)
-    # ------------------------------------------------------------------
 
     @pyqtSlot(str, result='QVariantList')
     def getFiles(self, folder_name):
@@ -172,49 +153,6 @@ class FileSystemBridge(QObject):
         self._syntax_highlighter.attach(quick_document)
 
     @pyqtSlot(str)
-    def updateCurrentContent(self, content):
-        if content == self._current_content:
-            return
-        self._current_content = content
-        self.fileContentChanged.emit(self._current_content)
-        self._set_dirty(self._current_content != self._saved_content)
-
-    @pyqtSlot(bool)
-    def setEditMode(self, editing):
-        if self._edit_mode == editing:
-            return
-        self._edit_mode = editing
-        self.editModeChanged.emit(self._edit_mode)
-
-    def saveCurrentFile(self, parent=None):
-        if not self._current_file_path:
-            return self.saveCurrentFileAs(parent)
-        if self._write_file(self._current_file_path):
-            self._saved_content = self._current_content
-            self._set_dirty(False)
-            return True
-        return False
-
-    def saveCurrentFileAs(self, parent=None):
-        initial_path = self._current_file_path or ''
-        file_path, _ = QFileDialog.getSaveFileName(
-            parent,
-            'Save G-code As',
-            initial_path,
-            'G-code Files (*.ngc *.nc *.gcode *.G *.NGC *.NC);;All Files (*)',
-        )
-        if not file_path:
-            return False
-        if self._write_file(file_path):
-            self._current_file_path = file_path
-            self._saved_content = self._current_content
-            self.filePathChanged.emit(self._current_file_path)
-            self._set_dirty(False)
-            self._notify_folder_change(file_path)
-            return True
-        return False
-
-    @pyqtSlot(str)
     def selectFileByAbsolutePath(self, path: str) -> None:
         """Select a file by its absolute path and display its content."""
         if not os.path.isfile(path):
@@ -234,37 +172,6 @@ class FileSystemBridge(QObject):
         load_or_reload_program(path)
         self._emit_content(path)
         self.screenChangeRequested.emit(1)
-
-    def attachHighlighterToDocument(self, text_document):
-        self._syntax_highlighter.attach_document(text_document)
-
-    def isMachineFileRunning(self):
-        if not self._current_file_path:
-            return False
-
-        try:
-            stat = linuxcnc.stat()
-            stat.poll()
-        except Exception:
-            return False
-
-        current_machine_file = os.path.abspath(stat.file) if stat.file else ''
-        current_view_file = os.path.abspath(self._current_file_path)
-        if not current_machine_file or current_machine_file != current_view_file:
-            return False
-
-        if getattr(stat, 'state', None) != linuxcnc.RCS_EXEC:
-            return False
-
-        exec_state = getattr(stat, 'exec_state', None)
-        idle_states = {
-            getattr(linuxcnc, 'EXEC_DONE', None),
-            getattr(linuxcnc, 'EXEC_WAITING_FOR_MOTION', None),
-            getattr(linuxcnc, 'EXEC_WAITING_FOR_MOTION_QUEUE', None),
-            getattr(linuxcnc, 'EXEC_WAITING_FOR_IO', None),
-            getattr(linuxcnc, 'EXEC_WAITING_FOR_MOTION_AND_IO', None),
-        }
-        return exec_state not in idle_states
 
     def refreshCurrentFile(self):
         if self._current_file_path:
@@ -293,20 +200,8 @@ class FileSystemBridge(QObject):
     def _prepare_for_file_change(self, filepath):
         if not filepath or not os.path.isfile(filepath):
             return False
-        if self._dirty:
-            answer = QMessageBox.question(
-                None,
-                'Unsaved changes',
-                'Discard unsaved changes?',
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No,
-            )
-            if answer != QMessageBox.Yes:
-                return False
         self._current_file_path = filepath
         self.filePathChanged.emit(self._current_file_path)
-        self._set_dirty(False)
-        self.setEditMode(False)
         return True
 
     def _emit_content(self, filepath):
@@ -316,32 +211,5 @@ class FileSystemBridge(QObject):
         except Exception:
             content = ''
         self._current_content = content
-        self._saved_content = content
         self.fileContentChanged.emit(self._current_content)
         self.filePathChanged.emit(self._current_file_path)
-        self._set_dirty(False)
-
-    def _write_file(self, filepath):
-        try:
-            with open(filepath, 'w', encoding='utf-8') as fh:
-                fh.write(self._current_content)
-        except Exception as exc:
-            QMessageBox.critical(None, 'Save failed', str(exc))
-            return False
-        self._notify_folder_change(filepath)
-        return True
-
-    def _notify_folder_change(self, filepath):
-        abs_path = os.path.abspath(filepath)
-        for name, folder_path in self._folders:
-            base = os.path.abspath(folder_path)
-            if abs_path == base or abs_path.startswith(base + os.sep):
-                self.folderFilesChanged.emit(name)
-                break
-
-    def _set_dirty(self, dirty):
-        dirty = bool(dirty)
-        if self._dirty == dirty:
-            return
-        self._dirty = dirty
-        self.dirtyChanged.emit(self._dirty)

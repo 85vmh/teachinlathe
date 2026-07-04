@@ -1,4 +1,4 @@
-// MachineButton.qml — round machine-style button with concave gradient
+// MachineRoundButton.qml — round machine-style button with concave gradient
 import QtQuick 2.15
 
 Item {

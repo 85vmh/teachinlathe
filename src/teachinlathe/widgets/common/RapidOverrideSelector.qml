@@ -1,4 +1,4 @@
-// OverrideSelector.qml — segmented button bar for feed/speed override
+// RapidOverrideSelector.qml — segmented button bar for feed/speed override
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 

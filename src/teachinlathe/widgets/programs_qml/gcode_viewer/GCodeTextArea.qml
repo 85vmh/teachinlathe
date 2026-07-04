@@ -5,14 +5,12 @@ Rectangle {
     id: root
     property var viewModel
     property string content: ""
-    property bool editable: false
     property int highlightLine: 0
     property color highlightColor: "#3A86FF"
     property int highlightWidth: 1
     property bool centerOnHighlight: false
     property int linesBelowHighlight: 0
     property string emptyText: ""
-    signal contentEdited(string text)
 
     color: "#ffffff"
 
@@ -149,26 +147,21 @@ Rectangle {
                     y: 10
                     width: Math.max(1, paintedWidth)
                     height: Math.max(1, paintedHeight)
-                    readOnly: !root.editable
+                    readOnly: true
                     text: root.content
                     color: "#2e2e2e"
                     textFormat: TextEdit.PlainText
                     font.family: "DejaVu Sans Mono"
                     font.pixelSize: 16
                     wrapMode: TextEdit.NoWrap
-                    selectByMouse: root.editable
+                    selectByMouse: false
                     selectionColor: "#264F78"
                     selectedTextColor: "#ffffff"
-                    cursorVisible: root.editable
-                    persistentSelection: root.editable
+                    cursorVisible: false
+                    persistentSelection: false
                     z: 1
 
-                    onTextChanged: {
-                        if (root.editable && text !== root.content) {
-                            root.contentEdited(text)
-                        }
-                        Qt.callLater(root.syncHighlight)
-                    }
+                    onTextChanged: Qt.callLater(root.syncHighlight)
                 }
 
                 Text {

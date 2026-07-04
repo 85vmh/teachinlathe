@@ -1,6 +1,8 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import ".."
+import "../.."
 
 Rectangle {
     id: root
@@ -63,7 +65,6 @@ Rectangle {
                         height: Math.max(root.height - 40, 260)
                         viewModel: root.viewModel
                         content: viewModel ? viewModel.activeExecutionContent : ""
-                        editable: false
                         highlightLine: viewModel ? viewModel.activeExecutionMotionLine : 0
                         highlightColor: "#3A86FF"
                         highlightWidth: 1
