@@ -41,7 +41,7 @@ OWORD_KEYWORD_PATTERN = re.compile(r"\b(?:SUB|ENDSUB|CALL)\b", re.IGNORECASE)
 WORD_PATTERN = re.compile(r"\b([A-Z])([+-]?(?:\d+(?:\.\d*)?|\.\d+))\b", re.IGNORECASE)
 NAMED_PARAMETER_PATTERN = re.compile(r"<[^>]+>")
 EXPRESSION_PATTERN = re.compile(r"\[[^\]]+\]")
-THEME_PATH = os.path.join(os.path.dirname(__file__), "gcode_syntax_theme.json")
+THEME_PATH = os.path.join(os.path.dirname(__file__), "../../../../configurations/gcode_syntax_theme.json")
 
 
 def _normalize_code(number_text):

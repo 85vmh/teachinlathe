@@ -114,7 +114,7 @@ Rectangle {
                 }
             }
 
-            DroValueBox {
+            OutlinedValue {
                 Layout.preferredWidth: root.valueBoxWidth
                 Layout.preferredHeight: root.inputHeight
                 Layout.alignment: Qt.AlignVCenter
@@ -164,7 +164,7 @@ Rectangle {
                 visible: !root.spindleIsCss
                 spacing: 8
 
-                DroValueBox {
+                OutlinedValue {
                     Layout.preferredWidth: root.valueBoxWidth
                     Layout.preferredHeight: root.inputHeight
                     fontSize: 25
@@ -189,7 +189,7 @@ Rectangle {
                 RowLayout {
                     spacing: 8
 
-                    DroValueBox {
+                    OutlinedValue {
                         Layout.preferredWidth: root.valueBoxWidth
                         Layout.preferredHeight: root.cssInputHeight
                         fontSize: 18
@@ -208,7 +208,7 @@ Rectangle {
                 RowLayout {
                     spacing: 8
 
-                    DroValueBox {
+                    OutlinedValue {
                         Layout.preferredWidth: root.valueBoxWidth
                         Layout.preferredHeight: root.cssInputHeight
                         fontSize: 18

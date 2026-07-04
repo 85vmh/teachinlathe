@@ -28,7 +28,7 @@ RowLayout {
         verticalAlignment: Text.AlignVCenter
     }
 
-    DroValueBox {
+    OutlinedValue {
         Layout.preferredWidth: root.valueBoxWidth
         Layout.preferredHeight: root.valueBoxHeight
         radius: root.valueBoxRadius
@@ -37,7 +37,7 @@ RowLayout {
         text: Number(root.position).toFixed(3)
     }
 
-    DroValueBox {
+    OutlinedValue {
         Layout.preferredWidth: root.valueBoxWidth
         Layout.preferredHeight: root.valueBoxHeight
         radius: root.valueBoxRadius

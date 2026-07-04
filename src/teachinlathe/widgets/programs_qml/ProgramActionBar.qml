@@ -4,14 +4,99 @@ import QtQuick.Layouts 1.15
 
 Rectangle {
     id: root
+
+    enum CycleStartState { CycleStart, Pause, Resume }
+
     property var viewModel
+
     readonly property var actions: viewModel ? viewModel.actions : null
     readonly property bool running: actions ? actions.isRunning : false
     // Full-screen (running) program view — Cycle Abort is shown the whole time here.
     readonly property bool fullScreen: viewModel ? viewModel.screenIndex === ProgramsScreen.Running : false
+
+    property bool breakOnM1Active: actions ? actions.optionalStopAction.checked : false
+    property bool breakOnM1Enabled: actions ? actions.optionalStopAction.enabled : false
+    property var breakOnM1Clicked: function() {
+        if (actions) {
+            actions.setOptionalStopEnabled(!root.breakOnM1Active)
+        }
+    }
+
+    property bool skipOptionalBlocksActive: actions ? actions.blockDeleteAction.checked : false
+    property bool skipOptionalBlocksEnabled: actions ? actions.blockDeleteAction.enabled : false
+    property var skipOptionalBlocksClicked: function() {
+        if (actions) {
+            actions.setBlockDeleteEnabled(!root.skipOptionalBlocksActive)
+        }
+    }
+
+    property real maximumVelocity: 6000
+    property int currentPercentage: 100
+    property var rapidPercentageSelected: function(value) {
+        root.currentPercentage = value
+    }
+
+    property bool cycleAbortVisible: root.fullScreen
+    property bool cycleAbortEnabled: actions ? actions.stopAction.enabled : false
+    property var cycleAbortClicked: function() {
+        if (actions) {
+            actions.triggerStop()
+        }
+    }
+
+    property int cycleStartState: defaultCycleStartState()
+    property bool cycleStartEnabled: actions ? actions.cycleStartAction.enabled : false
+    property bool cycleStartBlink: actions ? actions.cycleStartAction.active : false
+    property var cycleStartClicked: function() {
+        if (actions) {
+            actions.triggerStart()
+        }
+    }
+    property var pauseClicked: function() {
+        if (actions) {
+            actions.triggerPauseResume()
+        }
+    }
+    property var resumeClicked: function() {
+        if (actions) {
+            actions.triggerPauseResume()
+        }
+    }
+
+    readonly property string cycleStartButtonText:
+        cycleStartState === ProgramActionBar.Pause ? "Pause"
+      : cycleStartState === ProgramActionBar.Resume ? "Resume"
+      : "Cycle\nStart"
+
     // Side cells size to their content (max of both), so the left buttons always
     // fit; the middle cell fills the rest, keeping the override centered.
     readonly property real sideWidth: Math.max(leftRow.implicitWidth, rightRow.implicitWidth)
+
+    function defaultCycleStartState() {
+        if (!actions) {
+            return ProgramActionBar.CycleStart
+        }
+
+        var actionText = actions.cycleStartAction.text
+        if (actionText === "Pause") {
+            return ProgramActionBar.Pause
+        }
+        if (actionText === "Resume") {
+            return ProgramActionBar.Resume
+        }
+        return ProgramActionBar.CycleStart
+    }
+
+    function triggerCycleStartButton() {
+        if (cycleStartState === ProgramActionBar.Pause) {
+            pauseClicked()
+        } else if (cycleStartState === ProgramActionBar.Resume) {
+            resumeClicked()
+        } else {
+            cycleStartClicked()
+        }
+    }
+
     color: "#f5f5f5"
     border.color: "#cccccc"
     border.width: 1
@@ -37,16 +122,16 @@ Rectangle {
 
                 BottomActionButton {
                     text: "Break\non M1"
-                    enabled: actions ? actions.optionalStopAction.enabled : false
-                    checked: actions ? actions.optionalStopAction.checked : false
-                    onClicked: if (actions) actions.setOptionalStopEnabled(!actions.optionalStopAction.checked)
+                    enabled: root.breakOnM1Enabled
+                    checked: root.breakOnM1Active
+                    onClicked: root.breakOnM1Clicked()
                 }
 
                 BottomActionButton {
                     text: "Skip \/\nBlocks"
-                    enabled: actions ? actions.blockDeleteAction.enabled : false
-                    checked: actions ? actions.blockDeleteAction.checked : false
-                    onClicked: if (actions) actions.setBlockDeleteEnabled(!actions.blockDeleteAction.checked)
+                    enabled: root.skipOptionalBlocksEnabled
+                    checked: root.skipOptionalBlocksActive
+                    onClicked: root.skipOptionalBlocksClicked()
                 }
             }
         }
@@ -59,9 +144,9 @@ Rectangle {
             OverrideSelector {
                 anchors.centerIn: parent
                 label: "Rapid Override"
-                maxSpeed: 6000
-                value: 100
-                onSelected: function(v) { /* TODO: wire to HAL feed override pin */ }
+                maxSpeed: root.maximumVelocity
+                value: root.currentPercentage
+                onSelected: function(v) { root.rapidPercentageSelected(v) }
             }
         }
 
@@ -78,29 +163,29 @@ Rectangle {
 
                 // Cycle Abort — always visible in the full-screen running view
                 MachineButton {
-                    visible: root.fullScreen
+                    visible: root.cycleAbortVisible
                     text: "Cycle\nAbort"
-                    enabled: actions ? actions.stopAction.enabled : false
+                    enabled: root.cycleAbortEnabled
                     active: false
                     normalFillCenterColor: "#6a0000"
                     normalFillMidColor:    "#c62828"
                     normalFillRimColor:    "#ef9a9a"
                     activeFillCenterColor: "#c62828"
                     activeFillRimColor:    "#ef9a9a"
-                    onClicked: if (actions) actions.triggerStop()
+                    onClicked: root.cycleAbortClicked()
                 }
 
                 // Cycle Start / Pause / Resume
                 MachineButton {
-                    text:    actions ? actions.cycleStartAction.text    : "Cycle\nStart"
-                    enabled: actions ? actions.cycleStartAction.enabled : false
-                    active:  actions ? actions.cycleStartAction.active  : false
+                    text: root.cycleStartButtonText
+                    enabled: root.cycleStartEnabled
+                    active: root.cycleStartBlink
                     normalFillCenterColor: "#1a5e20"
                     normalFillMidColor:    "#2e7d32"
                     normalFillRimColor:    "#a5d6a7"
                     activeFillCenterColor: "#2e7d32"
                     activeFillRimColor:    "#81c784"
-                    onClicked: if (actions) actions.triggerCycleStart()
+                    onClicked: root.triggerCycleStartButton()
                 }
             }
         }
