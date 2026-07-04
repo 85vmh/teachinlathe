@@ -1,4 +1,3 @@
 from .program_runtime import ProgramExecutionFrame, ProgramRuntimeSnapshot, ProgramRuntimeStore
 from .program_stack import ProgramCallStackResolver, ProgramCallStackView, ProgramStackFrameView
-from .programs_viewmodel import ProgramsViewModel
 from .programs_action_source import ProgramButtonState, ProgramsActionSource

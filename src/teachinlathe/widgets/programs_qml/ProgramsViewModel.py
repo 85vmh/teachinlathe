@@ -4,11 +4,11 @@ from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.widgets.programs_qml.filesystemview.FileSystemBridge import FileSystemBridge, load_or_reload_program
 
-from .program_runtime import ProgramRuntimeStore
-from .program_stack import ProgramCallStackResolver
-from .programs_action_source import ProgramsActionSource
-from .programs_screen import ProgramsScreen
-from .run_time_tracker import RunTimeTracker, format_duration
+from teachinlathe.data.program_runtime import ProgramRuntimeStore
+from teachinlathe.data.program_stack import ProgramCallStackResolver
+from teachinlathe.data.programs_action_source import ProgramsActionSource
+from teachinlathe.data.programs_screen import ProgramsScreen
+from teachinlathe.data.run_time_tracker import RunTimeTracker, format_duration
 
 Screen = ProgramsScreen
 
@@ -39,7 +39,7 @@ class ProgramsViewModel(QObject):
         self._runtime_store = ProgramRuntimeStore(self)
         self._call_stack_resolver = ProgramCallStackResolver(self)
         self._actions = ProgramsActionSource(self._runtime_store, self)
-        self._screen_index = Screen.Files
+        self._screen_index = Screen.FileSystem
         self._run_tracker = RunTimeTracker(self)
         self._was_active = False
         self._abort_requested = False
@@ -144,7 +144,7 @@ class ProgramsViewModel(QObject):
 
     @pyqtProperty(bool, notify=screenIndexChanged)
     def isGremlinScreen(self):
-        return self._screen_index == Screen.Loaded
+        return self._screen_index == Screen.ProgramLoaded
 
     @pyqtSlot(int)
     def navigateTo(self, screen):
@@ -152,11 +152,11 @@ class ProgramsViewModel(QObject):
 
     @pyqtSlot()
     def showFilesScreen(self):
-        self.navigateTo(Screen.Files)
+        self.navigateTo(Screen.FileSystem)
 
     @pyqtSlot()
     def showGremlinScreen(self):
-        self.navigateTo(Screen.Loaded)
+        self.navigateTo(Screen.ProgramLoaded)
 
     @pyqtSlot(str, result='QVariantList')
     def getFiles(self, folder_name):
@@ -229,7 +229,7 @@ class ProgramsViewModel(QObject):
         self._bridge.saveCurrentFile(None)
         self.programLoadRequested.emit(file_path)
         load_or_reload_program(file_path)
-        self._bridge.navigateTo(Screen.Loaded)
+        self._bridge.navigateTo(Screen.ProgramLoaded)
 
     @pyqtSlot()
     def zoomGremlinIn(self):
@@ -280,12 +280,12 @@ class ProgramsViewModel(QObject):
         if active and not self._was_active:
             self._abort_requested = False
             self._run_tracker.start()
-            self._set_screen_index(Screen.Running)
+            self._set_screen_index(Screen.ProgramRunning)
             self.enterRunFullScreenRequested.emit()
         elif self._was_active and not active:
             movement, toolchange, total = self._run_tracker.stop()
             if self._abort_requested:
-                self._set_screen_index(Screen.Loaded)
+                self._set_screen_index(Screen.ProgramLoaded)
                 self.exitRunFullScreenRequested.emit()
             else:
                 name = os.path.basename(self.currentFilePath or '') or 'Program'
@@ -301,7 +301,7 @@ class ProgramsViewModel(QObject):
     @pyqtSlot()
     def runDone(self):
         """'Done' on the completion popup: leave full screen back to Loaded."""
-        self._set_screen_index(Screen.Loaded)
+        self._set_screen_index(Screen.ProgramLoaded)
         self.exitRunFullScreenRequested.emit()
 
     @pyqtSlot()

@@ -5,12 +5,13 @@ from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
-from teachinlathe.data import ProgramsViewModel
 from teachinlathe.data.programs_screen import ProgramsScreen, ProgramsScreenEnum
 from teachinlathe.widgets.gremlin.gremlin_widget import GremlinWidget
 from teachinlathe.widgets.programs_qml.filesystemview import FileSystemViewModel
 from teachinlathe.widgets.programs_qml.ProgramsDroViewModel import ProgramsDroViewModel
 from qtpyvcp.utilities import logger
+
+from teachinlathe.widgets.programs_qml.ProgramsViewModel import ProgramsViewModel
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
 
@@ -65,7 +66,7 @@ class ProgramsQml(QQuickWidget):
         context.setContextProperty('ProgramsScreen', self.programs_screen_enum)
 
         self.statusChanged.connect(self._on_status_changed)
-        self.setSource(QUrl.fromLocalFile(os.path.join(self._QML_DIR, 'ProgramsRoot.qml')))
+        self.setSource(QUrl.fromLocalFile(os.path.join(self._QML_DIR, 'ProgramsTabRoot.qml')))
 
         self.viewmodel.programLoadRequested.connect(self._prepareGremlinForLoad)
         self.viewmodel.enterRunFullScreenRequested.connect(self._enter_run_full_screen)
@@ -128,7 +129,7 @@ class ProgramsQml(QQuickWidget):
         left_actions = []
         right_actions = []
         title = 'Machine FileSystem'
-        if self.viewmodel.screenIndex != ProgramsScreen.Files:
+        if self.viewmodel.screenIndex != ProgramsScreen.FileSystem:
             left_actions.append({"id": "back", "text": "Back to FileSystem", "enabled": True})
             # Break-on-M1 / Skip-Blocks now live in the bottom ProgramActionBar (QML).
             title = f'Loaded Program [{self._current_program_name()}]'
@@ -248,7 +249,7 @@ class ProgramsQml(QQuickWidget):
         QTimer.singleShot(0, self._sync_gremlin_widget)
 
     def _sync_gremlin_widget(self):
-        if self.viewmodel.screenIndex not in (ProgramsScreen.Loaded, ProgramsScreen.Running) \
+        if self.viewmodel.screenIndex not in (ProgramsScreen.ProgramLoaded, ProgramsScreen.ProgramRunning) \
                 or self._gremlin_placeholder is None:
             self.gremlin.hide()
             self._hide_gremlin_overlay_controls()

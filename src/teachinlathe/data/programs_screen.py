@@ -12,9 +12,9 @@ from PyQt5.QtCore import QObject, pyqtProperty
 
 
 class ProgramsScreen(IntEnum):
-    Files = 0      # file system browser
-    Loaded = 1     # loaded program (DRO + gremlin + execution)
-    Running = 2    # program running, full screen
+    FileSystem = 0      # file system browser
+    ProgramLoaded = 1     # loaded program (DRO + gremlin + execution)
+    ProgramRunning = 2    # program running, full screen
 
 
 class ProgramsScreenEnum(QObject):
@@ -22,12 +22,12 @@ class ProgramsScreenEnum(QObject):
 
     @pyqtProperty(int, constant=True)
     def Files(self):
-        return int(ProgramsScreen.Files)
+        return int(ProgramsScreen.FileSystem)
 
     @pyqtProperty(int, constant=True)
     def Loaded(self):
-        return int(ProgramsScreen.Loaded)
+        return int(ProgramsScreen.ProgramLoaded)
 
     @pyqtProperty(int, constant=True)
     def Running(self):
-        return int(ProgramsScreen.Running)
+        return int(ProgramsScreen.ProgramRunning)

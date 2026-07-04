@@ -25,7 +25,7 @@ Rectangle {
             // Running reuses the loaded-program page (index clamped to Loaded).
             currentIndex: root.running ? ProgramsScreen.Loaded : programsViewModel.screenIndex
 
-            ProgramsFilesScreen {
+            ProgramsFileSystemScreen {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 viewModel: programsViewModel
