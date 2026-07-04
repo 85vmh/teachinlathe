@@ -23,7 +23,7 @@ Rectangle {
         LocationBar {
             viewModel: root.viewModel
             Layout.fillWidth: true
-            Layout.preferredHeight: 42
+            Layout.preferredHeight: 60
         }
 
         Rectangle {
