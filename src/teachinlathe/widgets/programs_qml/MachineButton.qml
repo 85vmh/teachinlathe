@@ -11,19 +11,31 @@ Item {
     // active = program is running (triggers brighter "lit" appearance)
     property bool active: false
 
-    // Normal concave gradient stops (center dark → rim lighter)
-    property string centerColor: "#1a5e20"
-    property string midColor:    "#2e7d32"
-    property string rimColor:    "#66bb6a"
+    // ── Colors ─────────────────────────────────────────────────────────
+    // Concave gradient fill — normal state (center dark → rim lighter)
+    property string normalFillCenterColor: "#1a5e20"
+    property string normalFillMidColor:    "#2e7d32"
+    property string normalFillRimColor:    "#66bb6a"
 
-    // Active/lit gradient stops (more uniform, brighter — "solid" look)
-    property string activeCenterColor: "#2e7d32"
-    property string activeRimColor:    "#81c784"
+    // Concave gradient fill — active/lit state (brighter, more uniform)
+    property string activeFillCenterColor: "#2e7d32"
+    property string activeFillRimColor:    "#81c784"
 
-    // Disabled gradient stops
-    property string disabledCenterColor: "#303030"
-    property string disabledMidColor:    "#555555"
-    property string disabledRimColor:    "#888888"
+    // Concave gradient fill — disabled state
+    property string disabledFillCenterColor: "#303030"
+    property string disabledFillMidColor:    "#555555"
+    property string disabledFillRimColor:    "#888888"
+
+    // Outer border ring
+    property string borderColor:         "#9e9e9e"
+    property string disabledBorderColor: "#606060"
+
+    // Label text
+    property string textColor:         "white"
+    property string disabledTextColor: "#777777"
+
+    // Darkening overlay painted while the button is pressed
+    property string pressedOverlayColor: "#50000000"
 
     signal clicked()
 
@@ -38,45 +50,45 @@ Item {
         Component.onCompleted: requestPaint()
 
         onPaint: {
-            var ctx = getContext("2d")
-            ctx.clearRect(0, 0, width, height)
+            var context = getContext("2d")
+            context.clearRect(0, 0, width, height)
 
-            var cx = width  / 2
-            var cy = height / 2
-            var borderW = 3
-            var outerR = Math.min(width, height) / 2 - 1   // stays inside item bounds
-            var innerR = outerR - borderW - 1               // fill surface inset from border
+            var centerX = width  / 2
+            var centerY = height / 2
+            var borderWidth = 1
+            var outerRadius = Math.min(width, height) / 2 - 1     // stays inside item bounds
+            var fillRadius = outerRadius - borderWidth - 1        // fill surface inset from border
 
             // ── grey border ring ──────────────────────────────────────
-            ctx.beginPath()
-            ctx.arc(cx, cy, outerR, 0, Math.PI * 2)
-            ctx.strokeStyle = root.enabled ? "#9e9e9e" : "#606060"
-            ctx.lineWidth = borderW
-            ctx.stroke()
+            context.beginPath()
+            context.arc(centerX, centerY, outerRadius, 0, Math.PI * 2)
+            context.strokeStyle = root.enabled ? root.borderColor : root.disabledBorderColor
+            context.lineWidth = borderWidth
+            context.stroke()
 
             // ── concave fill with radial gradient ─────────────────────
-            // Gradient: origin at center (focal=center), radius = innerR
-            // center → darker (shadow at bottom of bowl)
-            // rim    → lighter (edge catching light)
-            var grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, innerR)
+            // Gradient origin at the center (focal = center), radius = fillRadius
+            // center → darker (shadow at the bottom of the bowl)
+            // rim    → lighter (edge catching the light)
+            var fillGradient = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, fillRadius)
 
             if (!root.enabled) {
-                grd.addColorStop(0.0, root.disabledRimColor)
-                grd.addColorStop(0.6, root.disabledMidColor)
-                grd.addColorStop(1.0, root.disabledCenterColor)
+                fillGradient.addColorStop(0.0, root.disabledFillRimColor)
+                fillGradient.addColorStop(0.6, root.disabledFillMidColor)
+                fillGradient.addColorStop(1.0, root.disabledFillCenterColor)
             } else if (root.active) {
-                grd.addColorStop(0.0, root.activeRimColor)
-                grd.addColorStop(1.0, root.activeCenterColor)
+                fillGradient.addColorStop(0.0, root.activeFillRimColor)
+                fillGradient.addColorStop(1.0, root.activeFillCenterColor)
             } else {
-                grd.addColorStop(0.0, root.rimColor)
-                grd.addColorStop(0.55, root.midColor)
-                grd.addColorStop(1.0, root.centerColor)
+                fillGradient.addColorStop(0.0, root.normalFillRimColor)
+                fillGradient.addColorStop(0.55, root.normalFillMidColor)
+                fillGradient.addColorStop(1.0, root.normalFillCenterColor)
             }
 
-            ctx.beginPath()
-            ctx.arc(cx, cy, innerR, 0, Math.PI * 2)
-            ctx.fillStyle = grd
-            ctx.fill()
+            context.beginPath()
+            context.arc(centerX, centerY, fillRadius, 0, Math.PI * 2)
+            context.fillStyle = fillGradient
+            context.fill()
         }
     }
 
@@ -84,7 +96,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: width / 2
-        color: mouseArea.pressed && root.enabled ? "#50000000" : "transparent"
+        color: mouseArea.pressed && root.enabled ? root.pressedOverlayColor : "transparent"
     }
 
     Text {
@@ -94,7 +106,7 @@ Item {
         verticalAlignment: Text.AlignVCenter
         font.pixelSize: 12
         font.bold: true
-        color: root.enabled ? "white" : "#777777"
+        color: root.enabled ? root.textColor : root.disabledTextColor
         lineHeightMode: Text.FixedHeight
         lineHeight: 16
     }
