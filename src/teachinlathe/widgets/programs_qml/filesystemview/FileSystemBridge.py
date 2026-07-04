@@ -4,7 +4,7 @@ import linuxcnc
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, pyqtProperty
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-from .GCodeSyntaxHighlighter import GCodeSyntaxHighlighter
+from teachinlathe.widgets.programs_qml.GCodeSyntaxHighlighter import GCodeSyntaxHighlighter
 
 
 def load_or_reload_program(path: str) -> None:

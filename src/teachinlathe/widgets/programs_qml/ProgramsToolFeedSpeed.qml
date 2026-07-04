@@ -9,18 +9,32 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: root
 
+    enum MovementMode { Feed, Rapid }
+    enum SpindleMode { RPM, CSS }
+
     // --- Dummy data (to be replaced by a view model) -----------------------
     property int currentTool: 1
     property int nextTool: 5
+
+    // Movement: feed shows "F" (mm/rev), rapid shows "R" (mm/min).
+    property int movementMode: ProgramsToolFeedSpeed.MovementMode.Rapid
+    readonly property bool movementIsRapid: movementMode === ProgramsToolFeedSpeed.MovementMode.Rapid
 
     property real feedValue: 0.01
     property int feedOverride: 100
     property string feedUnits: "mm/rev"
 
+    property real rapidValue: 0
+    property int rapidOverride: 100
+    property string rapidUnits: "mm/min"
+
+    // Spindle: RPM shows a single box, CSS adds a surface-speed box.
+    property int spindleMode: ProgramsToolFeedSpeed.SpindleMode.RPM
+    readonly property bool spindleIsCss: spindleMode === ProgramsToolFeedSpeed.SpindleMode.CSS
+
     property int spindleOverride: 100
     property real spindleRpm: 1000
     property real cssValue: 200
-    property bool cssMode: false
 
     // --- Metrics (kept in sync with ProgramsDro so rows line up) -----------
     property int headerHeight: 30
@@ -73,7 +87,7 @@ Rectangle {
             }
         }
 
-        // ---- Feed row (aligns with the X axis row) ------------------------
+        // ---- Movement row: Feed / Rapid (aligns with the X axis row) ------
         RowLayout {
             Layout.preferredHeight: root.rowHeight
             spacing: 8
@@ -85,7 +99,7 @@ Rectangle {
 
                 Text {
                     Layout.fillWidth: true
-                    text: "F"
+                    text: root.movementIsRapid ? "R" : "F"
                     color: "#172033"
                     font.pixelSize: 40
                     horizontalAlignment: Text.AlignHCenter
@@ -94,7 +108,7 @@ Rectangle {
 
                 Text {
                     Layout.alignment: Qt.AlignRight | Qt.AlignBottom
-                    text: "(" + root.feedOverride + "%)"
+                    text: "(" + (root.movementIsRapid ? root.rapidOverride : root.feedOverride) + "%)"
                     color: "#475569"
                     font.pixelSize: 15
                 }
@@ -105,12 +119,12 @@ Rectangle {
                 Layout.preferredHeight: root.inputHeight
                 Layout.alignment: Qt.AlignVCenter
                 fontSize: 25
-                text: Number(root.feedValue).toFixed(2)
+                text: Number(root.movementIsRapid ? root.rapidValue : root.feedValue).toFixed(2)
             }
 
             Text {
                 Layout.preferredWidth: root.unitsWidth
-                text: root.feedUnits
+                text: root.movementIsRapid ? root.rapidUnits : root.feedUnits
                 color: "#475569"
                 font.pixelSize: 20
                 verticalAlignment: Text.AlignVCenter
@@ -147,7 +161,7 @@ Rectangle {
             // RPM mode — single box, same height as the feed box.
             RowLayout {
                 Layout.alignment: Qt.AlignVCenter
-                visible: !root.cssMode
+                visible: !root.spindleIsCss
                 spacing: 8
 
                 DroValueBox {
@@ -169,7 +183,7 @@ Rectangle {
             // CSS mode — two shorter boxes (RPM + surface speed), tighter spacing.
             ColumnLayout {
                 Layout.alignment: Qt.AlignVCenter
-                visible: root.cssMode
+                visible: root.spindleIsCss
                 spacing: root.cssSpacing
 
                 RowLayout {

@@ -1,6 +1,6 @@
 import os
 
-from .FileSystemBridge import load_or_reload_program
+from teachinlathe.widgets.programs_qml.filesystemview.FileSystemBridge import load_or_reload_program
 
 from PyQt5.QtCore import QRect, QSize, Qt
 from PyQt5.QtGui import QColor, QFont, QPainter, QTextBlockFormat, QTextCursor

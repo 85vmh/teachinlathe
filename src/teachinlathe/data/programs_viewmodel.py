@@ -2,7 +2,7 @@ import os
 
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
-from teachinlathe.widgets.programs_qml.FileSystemBridge import FileSystemBridge, load_or_reload_program
+from teachinlathe.widgets.programs_qml.filesystemview.FileSystemBridge import FileSystemBridge, load_or_reload_program
 
 from .program_runtime import ProgramRuntimeStore
 from .program_stack import ProgramCallStackResolver
