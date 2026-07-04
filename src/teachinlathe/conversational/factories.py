@@ -23,6 +23,7 @@ from teachinlathe.conversational.data_types import (
     Parting,
     PartingParameters,
     PassType,
+    ProfileBlend,
     ProfileContour,
     ProfileContourStrategy,
     ProfileRoughing,
@@ -157,7 +158,6 @@ def make_default_operation(op_type: str, order: int = 1):
             edgeBreak=EdgeBreak(blend_type=BlendType.NONE, chamfer_width=0.0, fillet_radius=0.0),
         )
     if op_type == "defineProfile":
-        from teachinlathe.conversational.data_types import StartPoint, ProfileBlend, BlendType
         default_start = StartPoint(primitive_id=1, primitive_type="startPoint",
                                    x_start=0.0, z_start=0.0,
                                    blend=ProfileBlend(blend_type=BlendType.NONE))

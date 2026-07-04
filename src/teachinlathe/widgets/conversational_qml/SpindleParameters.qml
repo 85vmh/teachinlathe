@@ -69,7 +69,7 @@ GroupBox {
     // ---------- layout ----------
     RowLayout {
         anchors.fill: parent
-        spacing: 60
+        spacing: 30
         Layout.alignment: Qt.AlignTop   // ensure whole block sticks to top
 
         // ------- Left column: Direction radios -------

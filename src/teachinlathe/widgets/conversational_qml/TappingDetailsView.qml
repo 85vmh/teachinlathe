@@ -41,7 +41,7 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
-        spacing: 10
+        spacing: 24
 
         Label {
             text: (opData && opData.type) ? ("Tapping — Op #" + (opData.order !== undefined ? opData.order : "N/A")) : "Tapping"
@@ -49,37 +49,109 @@ Item {
             font.bold: true
         }
 
-        SpindleParameters {
-                id: spindlePanel
-                Layout.preferredWidth: 500
-                Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function (p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
-        }
+        GridLayout {
+            id: detailsGrid
+            Layout.fillWidth: true
+            columns: 2
+            columnSpacing: 24
+            rowSpacing: 40
+            Layout.alignment: Qt.AlignTop
 
-        TappingParameters {
-                id: tappingParamsPanel
-                Layout.preferredWidth: 500
+            // Row 1, column 1
+            Item {
+                Layout.row: 0
+                Layout.column: 0
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: spindlePanel.implicitHeight
                 Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onTeachZRequested: root.teachZRequested(opIndex)
-                onSaveRequested: function (p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
-        }
 
-        M1Parameters {
-                id: m1Panel
-                Layout.preferredWidth: 500
-                Layout.alignment: Qt.AlignTop
-                onSaveRequested: function (payload) {
-                    var merged = root.mergeIntoOp(payload)
-                    root.saveRequested({index: opIndex, payload: merged})
+                SpindleParameters {
+                    id: spindlePanel
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    onOpenNumPadRequested: root.openNumPadRequested(field)
+                    onSaveRequested: function (p) {
+                        var merged = root.mergeIntoOp(p.payload || p)
+                        root.saveRequested({index: opIndex, payload: merged})
+                    }
                 }
             }
+
+            // Row 1, column 2 intentionally empty.
+            Item {
+                Layout.row: 0
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+            }
+
+            // Row 2, column 1
+            Item {
+                Layout.row: 1
+                Layout.column: 0
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: tappingParamsPanel.implicitHeight
+                Layout.alignment: Qt.AlignTop
+
+                TappingParameters {
+                    id: tappingParamsPanel
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    onOpenNumPadRequested: root.openNumPadRequested(field)
+                    onTeachZRequested: root.teachZRequested(opIndex)
+                    onSaveRequested: function (p) {
+                        var merged = root.mergeIntoOp(p.payload || p)
+                        root.saveRequested({index: opIndex, payload: merged})
+                    }
+                }
+            }
+
+            // Row 2, column 2 intentionally empty.
+            Item {
+                Layout.row: 1
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+            }
+
+            // Row 3, column 1
+            Item {
+                Layout.row: 2
+                Layout.column: 0
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: m1Panel.implicitHeight
+                Layout.alignment: Qt.AlignTop
+
+                M1Parameters {
+                    id: m1Panel
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    onSaveRequested: function (payload) {
+                        var merged = root.mergeIntoOp(payload)
+                        root.saveRequested({index: opIndex, payload: merged})
+                    }
+                }
+            }
+
+            // Row 3, column 2 intentionally empty.
+            Item {
+                Layout.row: 2
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+            }
+        }
     }
 }

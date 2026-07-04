@@ -40,7 +40,7 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
-        spacing: 10
+        spacing: 24
 
         Label {
             text: (opData && opData.type) ? ("Parting — Op #" + (opData.order !== undefined ? opData.order : "N/A")) : "Parting"
@@ -48,36 +48,109 @@ Item {
             font.bold: true
         }
 
-        SpindleParameters {
-                id: spindlePanel
-                Layout.preferredWidth: 500
-                Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function (p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
-        }
+        GridLayout {
+            id: detailsGrid
+            Layout.fillWidth: true
+            columns: 2
+            columnSpacing: 24
+            rowSpacing: 40
+            Layout.alignment: Qt.AlignTop
 
-        PartingParameters {
-                id: partingParamsPanel
-                Layout.preferredWidth: 500
+            // Row 1, column 1
+            Item {
+                Layout.row: 0
+                Layout.column: 0
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: spindlePanel.implicitHeight
                 Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function (p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
-        }
 
-        EdgeBreak {
-                id: edgeBreakPanel
-                Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function (p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
+                SpindleParameters {
+                    id: spindlePanel
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    onOpenNumPadRequested: root.openNumPadRequested(field)
+                    onSaveRequested: function (p) {
+                        var merged = root.mergeIntoOp(p.payload || p)
+                        root.saveRequested({index: opIndex, payload: merged})
+                    }
                 }
+            }
+
+            // Row 1, column 2 intentionally empty.
+            Item {
+                Layout.row: 0
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+            }
+
+            // Row 2, column 1
+            Item {
+                Layout.row: 1
+                Layout.column: 0
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: partingParamsPanel.implicitHeight
+                Layout.alignment: Qt.AlignTop
+
+                PartingParameters {
+                    id: partingParamsPanel
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    onOpenNumPadRequested: root.openNumPadRequested(field)
+                    onSaveRequested: function (p) {
+                        var merged = root.mergeIntoOp(p.payload || p)
+                        root.saveRequested({index: opIndex, payload: merged})
+                    }
+                }
+            }
+
+            // Row 2, column 2 intentionally empty.
+            Item {
+                Layout.row: 1
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+            }
+
+            // Row 3, column 1
+            Item {
+                Layout.row: 2
+                Layout.column: 0
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: edgeBreakPanel.implicitHeight
+                Layout.alignment: Qt.AlignTop
+
+                EdgeBreak {
+                    id: edgeBreakPanel
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    onOpenNumPadRequested: root.openNumPadRequested(field)
+                    onSaveRequested: function (p) {
+                        var merged = root.mergeIntoOp(p.payload || p)
+                        root.saveRequested({index: opIndex, payload: merged})
+                    }
+                }
+            }
+
+            // Row 3, column 2 intentionally empty.
+            Item {
+                Layout.row: 2
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 1
+            }
         }
     }
 }

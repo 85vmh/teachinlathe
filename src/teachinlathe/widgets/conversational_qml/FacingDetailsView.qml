@@ -1,4 +1,4 @@
-// FacingDetailsView.qml (rows top-aligned, no equal-height row stretching)
+// FacingDetailsView.qml
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -41,14 +41,14 @@ Item {
         return out
     }
 
-    // ===== Layout: column of rows (each row is top-aligned) =====
+    // ===== Layout: title + two-column parameter grid =====
     ColumnLayout {
         id: col
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: 10
-        spacing: 40
+        spacing: 24
 
         Label {
             text: (opData && opData.type) ? ("Facing — Op #" + (opData.order !== undefined ? opData.order : "N/A")) : "Facing"
@@ -56,17 +56,21 @@ Item {
             font.bold: true
         }
 
-        // Row 1: Spindle | Cutting (top-aligned)
-        RowLayout {
-            id: firstRow
+        GridLayout {
+            id: detailsGrid
             Layout.fillWidth: true
-            spacing: 30
+            columns: 2
+            columnSpacing: 30
+            rowSpacing: 40
             Layout.alignment: Qt.AlignTop
 
+            // Row 1, column 1
             SpindleParameters {
                 id: spindlePanel
+                Layout.row: 0
+                Layout.column: 0
                 Layout.fillWidth: true
-                Layout.preferredWidth: 6
+                Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function (p) {
@@ -75,10 +79,13 @@ Item {
                 }
             }
 
+            // Row 1, column 2
             CuttingParameters {
                 id: cuttingPanel
+                Layout.row: 0
+                Layout.column: 1
                 Layout.fillWidth: true
-                Layout.preferredWidth: 4
+                Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function (p) {
@@ -86,20 +93,14 @@ Item {
                     root.saveRequested({index: opIndex, payload: merged})
                 }
             }
-        }
 
-
-        // Row 2: Geometry | M1 (top-aligned)
-        RowLayout {
-            id: secondRow
-            Layout.fillWidth: true
-            spacing: 30
-            Layout.alignment: Qt.AlignTop
-
+            // Row 2, column 1
             CuttingGeometry {
                 id: geometryPanel
+                Layout.row: 1
+                Layout.column: 0
                 Layout.fillWidth: true
-                Layout.preferredWidth: 6
+                Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onTeachXRequested: root.teachXRequested(opIndex)
@@ -110,26 +111,56 @@ Item {
                 }
             }
 
+            // Row 2, column 2 intentionally empty.
+            Item {
+                Layout.row: 1
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+            }
+
+            // Row 3, column 1
             M1Parameters {
                 id: m1Panel
+                Layout.row: 2
+                Layout.column: 0
                 Layout.fillWidth: true
-                Layout.preferredWidth: 4
+                Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onSaveRequested: function (payload) {
                     var merged = root.mergeIntoOp(payload)
                     root.saveRequested({index: opIndex, payload: merged})
                 }
             }
-        }
 
-        // Row 3: Facing extras (full width)
-        FacingExtras {
-            id: extrasPanel
-            Layout.fillWidth: true
-            Layout.alignment: Qt.AlignTop
-            onSaveRequested: function (p) {
-                var merged = root.mergeIntoOp(p.payload || p)
-                root.saveRequested({index: opIndex, payload: merged})
+            // Row 3, column 2 intentionally empty.
+            Item {
+                Layout.row: 2
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+            }
+
+            // Row 4, column 1
+            FacingExtras {
+                id: extrasPanel
+                Layout.row: 3
+                Layout.column: 0
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                Layout.alignment: Qt.AlignTop
+                onSaveRequested: function (p) {
+                    var merged = root.mergeIntoOp(p.payload || p)
+                    root.saveRequested({index: opIndex, payload: merged})
+                }
+            }
+
+            // Row 4, column 2 intentionally empty.
+            Item {
+                Layout.row: 3
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
             }
         }
     }

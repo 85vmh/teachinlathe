@@ -38,7 +38,7 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
-        spacing: 20
+        spacing: 24
         Layout.alignment: Qt.AlignTop
 
         Label {
@@ -50,67 +50,71 @@ Item {
             Layout.alignment: Qt.AlignTop
         }
 
-        RowLayout {
+        GridLayout {
+            id: detailsGrid
             Layout.fillWidth: true
-            spacing: 30
+            columns: 2
+            columnSpacing: 30
+            rowSpacing: 40
             Layout.alignment: Qt.AlignTop
 
+            // Row 1, column 1
             SpindleParameters {
                 id: spindlePanel
-                Layout.fillWidth: true
-                Layout.preferredWidth: 6
-                Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
-            }
-
-            CuttingParameters {
-                id: cuttingPanel
-                Layout.fillWidth: true
-                Layout.preferredWidth: 4
-                Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
-            }
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 30
-            Layout.alignment: Qt.AlignTop
-
-            ColumnLayout {
+                Layout.row: 0
+                Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                spacing: 20
-
-                ProfilingParameters {
-                    id: profilingParamsPanel
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    onOpenNumPadRequested: root.openNumPadRequested(field)
-                    onSaveRequested: function(p) {
-                        var merged = root.mergeIntoOp(p.payload || p)
-                        root.saveRequested({index: opIndex, payload: merged})
-                    }
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onSaveRequested: function(p) {
+                    var merged = root.mergeIntoOp(p.payload || p)
+                    root.saveRequested({index: opIndex, payload: merged})
                 }
+            }
 
-                CheckableStockToLeave {
-                    id: stockToLeavePanel
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    onOpenNumPadRequested: root.openNumPadRequested(field)
-                    onSaveRequested: function(p) {
-                        var merged = root.mergeIntoOp(p.payload || p)
-                        root.saveRequested({index: opIndex, payload: merged})
-                    }
+            // Row 1, column 2
+            CuttingParameters {
+                id: cuttingPanel
+                Layout.row: 0
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                Layout.alignment: Qt.AlignTop
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onSaveRequested: function(p) {
+                    var merged = root.mergeIntoOp(p.payload || p)
+                    root.saveRequested({index: opIndex, payload: merged})
+                }
+            }
+
+            // Row 2, column 1
+            ProfilingParameters {
+                id: profilingParamsPanel
+                Layout.row: 1
+                Layout.column: 0
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                Layout.alignment: Qt.AlignTop
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onSaveRequested: function(p) {
+                    var merged = root.mergeIntoOp(p.payload || p)
+                    root.saveRequested({index: opIndex, payload: merged})
+                }
+            }
+
+            // Row 2, column 2
+            CheckableStockToLeave {
+                id: stockToLeavePanel
+                Layout.row: 1
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                Layout.alignment: Qt.AlignTop
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onSaveRequested: function(p) {
+                    var merged = root.mergeIntoOp(p.payload || p)
+                    root.saveRequested({index: opIndex, payload: merged})
                 }
             }
         }

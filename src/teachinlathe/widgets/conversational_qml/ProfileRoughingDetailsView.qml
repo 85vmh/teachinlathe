@@ -43,7 +43,7 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
-        spacing: 20
+        spacing: 24
         Layout.alignment: Qt.AlignTop
 
         Label {
@@ -55,16 +55,21 @@ Item {
             Layout.alignment: Qt.AlignTop
         }
 
-        // Row 1: Spindle | Cutting
-        RowLayout {
+        GridLayout {
+            id: detailsGrid
             Layout.fillWidth: true
-            spacing: 30
+            columns: 2
+            columnSpacing: 30
+            rowSpacing: 40
             Layout.alignment: Qt.AlignTop
 
+            // Row 1, column 1
             SpindleParameters {
                 id: spindlePanel
+                Layout.row: 0
+                Layout.column: 0
                 Layout.fillWidth: true
-                Layout.preferredWidth: 6
+                Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function(p) {
@@ -73,10 +78,13 @@ Item {
                 }
             }
 
+            // Row 1, column 2
             CuttingParameters {
                 id: cuttingPanel
+                Layout.row: 0
+                Layout.column: 1
                 Layout.fillWidth: true
-                Layout.preferredWidth: 4
+                Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function(p) {
@@ -84,72 +92,79 @@ Item {
                     root.saveRequested({index: opIndex, payload: merged})
                 }
             }
-        }
 
-        // Rows 2–3: two columns
-        //   Left:  ProfilingParameters (top) + StockToLeave (bottom)
-        //   Right: ProfileRoughingStrategy/ProfilingType (top) + M1Parameters (bottom)
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 30
-            Layout.alignment: Qt.AlignTop
-
-            // Left column
-            ColumnLayout {
+            // Row 2, column 1
+            ProfilingParameters {
+                id: profilingParamsPanel
+                Layout.row: 1
+                Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                spacing: 20
-
-                ProfilingParameters {
-                    id: profilingParamsPanel
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    onOpenNumPadRequested: root.openNumPadRequested(field)
-                    onSaveRequested: function(p) {
-                        var merged = root.mergeIntoOp(p.payload || p)
-                        root.saveRequested({index: opIndex, payload: merged})
-                    }
-                }
-
-                StockToLeave {
-                    id: stockToLeavePanel
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    onOpenNumPadRequested: root.openNumPadRequested(field)
-                    onSaveRequested: function(p) {
-                        var merged = root.mergeIntoOp(p.payload || p)
-                        root.saveRequested({index: opIndex, payload: merged})
-                    }
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onSaveRequested: function(p) {
+                    var merged = root.mergeIntoOp(p.payload || p)
+                    root.saveRequested({index: opIndex, payload: merged})
                 }
             }
 
-            // Right column
-            ColumnLayout {
+            // Row 2, column 2
+            StockToLeave {
+                id: stockToLeavePanel
+                Layout.row: 1
+                Layout.column: 1
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                spacing: 20
-
-                ProfileRoughingStrategy {
-                    id: profilingTypePanel
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    onSaveRequested: function(p) {
-                        var merged = root.mergeIntoOp(p)
-                        root.saveRequested({index: opIndex, payload: merged})
-                    }
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onSaveRequested: function(p) {
+                    var merged = root.mergeIntoOp(p.payload || p)
+                    root.saveRequested({index: opIndex, payload: merged})
                 }
+            }
 
-                M1Parameters {
-                    id: m1Panel
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    onSaveRequested: function(p) {
-                        var merged = root.mergeIntoOp(p)
-                        root.saveRequested({index: opIndex, payload: merged})
-                    }
+            // Row 3, column 1
+            ProfileRoughingStrategy {
+                id: profilingTypePanel
+                Layout.row: 2
+                Layout.column: 0
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                Layout.alignment: Qt.AlignTop
+                onSaveRequested: function(p) {
+                    var merged = root.mergeIntoOp(p)
+                    root.saveRequested({index: opIndex, payload: merged})
                 }
+            }
+
+            // Row 3, column 2 intentionally empty.
+            Item {
+                Layout.row: 2
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+            }
+
+            // Row 4, column 1
+            M1Parameters {
+                id: m1Panel
+                Layout.row: 3
+                Layout.column: 0
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                Layout.alignment: Qt.AlignTop
+                onSaveRequested: function(p) {
+                    var merged = root.mergeIntoOp(p)
+                    root.saveRequested({index: opIndex, payload: merged})
+                }
+            }
+
+            // Row 4, column 2 intentionally empty.
+            Item {
+                Layout.row: 3
+                Layout.column: 1
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
             }
         }
     }
