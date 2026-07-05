@@ -14,6 +14,7 @@ from qtpyvcp.utilities.info import Info
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
 from teachinlathe.app_state import AppState
+from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
 from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
@@ -150,10 +151,10 @@ class MyMainWindow(VCPMainWindow):
         super(MyMainWindow, self).__init__(*args, **kwargs)
         app = QApplication.instance()
         if app is not None:
-            app.setApplicationName("TeachInLathe")
-            app.setApplicationDisplayName("TeachInLathe")
-            app.setDesktopFileName("teachinlathe")
-        self.setWindowTitle("TeachInLathe")
+            app.setApplicationName(APPLICATION_DISPLAY_NAME)
+            app.setApplicationDisplayName(APPLICATION_DISPLAY_NAME)
+            app.setDesktopFileName(APPLICATION_ID)
+        self.setWindowTitle(APPLICATION_DISPLAY_NAME)
         self.setWindowFlag(Qt.FramelessWindowHint)
 
         self.mainSelectedTab = MainTabs.MANUAL_TURNING

@@ -9,3 +9,29 @@ Terminal=false
 Categories=Science;Engineering;
 StartupNotify=true
 StartupWMClass=teachinlathe
+X-GNOME-SingleWindow=true
+Actions=HalShow;HalMeter;HalScope;ClassicLadder;LcncStatus;Calibration;
+
+[Desktop Action HalShow]
+Name=Hal Show
+Exec=teachinlathe-tool halshow
+
+[Desktop Action HalMeter]
+Name=Hal Meter
+Exec=teachinlathe-tool halmeter
+
+[Desktop Action HalScope]
+Name=Hal Scope
+Exec=teachinlathe-tool halscope
+
+[Desktop Action ClassicLadder]
+Name=Classic Ladder
+Exec=teachinlathe-tool classicladder
+
+[Desktop Action LcncStatus]
+Name=LCNC Status
+Exec=teachinlathe-tool status
+
+[Desktop Action Calibration]
+Name=Calibration
+Exec=teachinlathe-tool calibration

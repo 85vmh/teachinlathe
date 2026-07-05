@@ -26,6 +26,7 @@ python3-xlib = "^0.15"
 
 [tool.poetry.scripts]
 teachinlathe = "teachinlathe:main"
+teachinlathe-tool = "teachinlathe.debug_tools:main"
 
 [tool.poetry.plugins]
 

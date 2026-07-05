@@ -23,6 +23,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 import qtpyvcp
 
+from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
+
 VCP_DIR = os.path.realpath(os.path.dirname(__file__))
 VCP_CONFIG_FILE = os.path.join(VCP_DIR, 'teachinlathe.yml')
 IN_DESIGNER = os.getenv('DESIGNER', False)
@@ -30,9 +32,9 @@ IN_DESIGNER = os.getenv('DESIGNER', False)
 def main(opts=None):
 
     QApplication.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings, True)
-    QApplication.setApplicationName('teachinlathe')
-    QApplication.setApplicationDisplayName('TeachInLathe')
-    QApplication.setDesktopFileName('teachinlathe')
+    QApplication.setApplicationName(APPLICATION_DISPLAY_NAME)
+    QApplication.setApplicationDisplayName(APPLICATION_DISPLAY_NAME)
+    QApplication.setDesktopFileName(APPLICATION_ID)
 
     if opts is None:
         from qtpyvcp.utilities.opt_parser import parse_opts

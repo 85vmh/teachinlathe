@@ -18,7 +18,7 @@ override_dh_auto_test:
 
 	# install desktop launcher so desktop shells can associate the Qt window
 	mkdir -p debian/python3-teachinlathe/usr/share/applications/
-	install -m 644 debian/teachinlathe.desktop debian/python3-teachinlathe/usr/share/applications/teachinlathe.desktop
+	install -m 644 debian/teachinlathe.desktop debian/python3-teachinlathe/usr/share/applications/org.teachinlathe.TeachInLathe.desktop
 
 	# create configs directory if it doesn't exist
 	mkdir -p debian/python3-teachinlathe/usr/share/configs/
