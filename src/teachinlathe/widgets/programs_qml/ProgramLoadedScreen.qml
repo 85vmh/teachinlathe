@@ -35,6 +35,7 @@ Item {
                     ProgramsToolFeedSpeed {
                         Layout.fillHeight: true
                         Layout.fillWidth: true
+                        viewModel: programsToolFeedSpeedViewModel
                     }
                 }
 

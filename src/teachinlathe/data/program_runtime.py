@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 
 import linuxcnc
 from PyQt5.QtCore import QObject, QTimer, pyqtSignal
-from qtpyvcp.plugins import getPlugin
 
 
 @dataclass(frozen=True)
@@ -32,15 +31,17 @@ class ProgramRuntimeSnapshot:
     g92_offset: tuple = field(default_factory=tuple)
     limit: tuple = field(default_factory=tuple)
     motion_mode: int = 0
+    motion_type: int = 0
     current_vel: float = 0.0
+    feedrate: float = 1.0
+    rapidrate: float = 1.0
+    spindle_override: float = 1.0
+    interpreter_settings: tuple = field(default_factory=tuple)
     linear_units: int = 0
 
     @property
     def preview_tool_signature(self):
         return self.tool_in_spindle, self.tool_offset
-
-
-STATUS = getPlugin('status')
 
 
 class ProgramRuntimeStore(QObject):
@@ -94,16 +95,12 @@ class ProgramRuntimeStore(QObject):
         return next_snapshot
 
     def _build_snapshot(self, stat):
-        status_file = getattr(getattr(STATUS, 'file', None), 'value', '') or ''
-        status_motion_line = getattr(getattr(STATUS, 'motion_line', None), 'value', 0)
-
-        machine_file_value = status_file or getattr(stat, 'file', '') or ''
+        machine_file_value = getattr(stat, 'file', '') or ''
         machine_file = os.path.abspath(machine_file_value) if machine_file_value else ''
-        motion_line_value = status_motion_line if status_motion_line is not None else getattr(stat, 'motion_line', 0)
 
         return ProgramRuntimeSnapshot(
             machine_file=machine_file,
-            motion_line=int(motion_line_value or 0),
+            motion_line=int(getattr(stat, 'motion_line', 0) or 0),
             call_level=int(getattr(stat, 'call_level', 0) or 0),
             call_stack=self._parse_call_stack(getattr(stat, 'call_stack', ())),
             state=int(getattr(stat, 'state', 0) or 0),
@@ -118,9 +115,23 @@ class ProgramRuntimeStore(QObject):
             g92_offset=tuple(getattr(stat, 'g92_offset', ()) or ()),
             limit=tuple(getattr(stat, 'limit', ()) or ()),
             motion_mode=int(getattr(stat, 'motion_mode', 0) or 0),
+            motion_type=int(getattr(stat, 'motion_type', 0) or 0),
             current_vel=float(getattr(stat, 'current_vel', 0.0) or 0.0),
+            feedrate=float(getattr(stat, 'feedrate', 1.0) or 0.0),
+            rapidrate=float(getattr(stat, 'rapidrate', 1.0) or 0.0),
+            spindle_override=self._spindle_override(stat),
+            interpreter_settings=tuple(getattr(stat, 'settings', ()) or ()),
             linear_units=int(getattr(stat, 'linear_units', 0) or 0),
         )
+
+    def _spindle_override(self, stat):
+        try:
+            spindle = getattr(stat, 'spindle', ()) or ()
+            if spindle and isinstance(spindle[0], dict):
+                return float(spindle[0].get('override', 1.0) or 0.0)
+        except Exception:
+            pass
+        return 1.0
 
     def _parse_call_stack(self, raw_stack):
         if not raw_stack:

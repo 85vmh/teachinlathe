@@ -3,38 +3,12 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 // Sits to the right of ProgramsDro, above the gremlin. Shows the current /
-// upcoming tool, the feed (with override) and the spindle (RPM, plus constant
-// surface speed when in CSS mode). Values are dummy for now — a single source
-// of truth will be wired in later.
+// upcoming tool, movement speed and spindle state. Calculations live in the
+// view model; this component only displays formatted values.
 Rectangle {
     id: root
 
-    enum MovementMode { Feed, Rapid }
-    enum SpindleMode { RPM, CSS }
-
-    // --- Dummy data (to be replaced by a view model) -----------------------
-    property int currentTool: 1
-    property int nextTool: 5
-
-    // Movement: feed shows "F" (mm/rev), rapid shows "R" (mm/min).
-    property int movementMode: ProgramsToolFeedSpeed.MovementMode.Rapid
-    readonly property bool movementIsRapid: movementMode === ProgramsToolFeedSpeed.MovementMode.Rapid
-
-    property real feedValue: 0.01
-    property int feedOverride: 100
-    property string feedUnits: "mm/rev"
-
-    property real rapidValue: 0
-    property int rapidOverride: 100
-    property string rapidUnits: "mm/min"
-
-    // Spindle: RPM shows a single box, CSS adds a surface-speed box.
-    property int spindleMode: ProgramsToolFeedSpeed.SpindleMode.RPM
-    readonly property bool spindleIsCss: spindleMode === ProgramsToolFeedSpeed.SpindleMode.CSS
-
-    property int spindleOverride: 100
-    property real spindleRpm: 1000
-    property real cssValue: 200
+    property var viewModel
 
     // --- Metrics (kept in sync with ProgramsDro so rows line up) -----------
     property int headerHeight: 30
@@ -65,7 +39,7 @@ Rectangle {
             spacing: 8
 
             Text {
-                text: "T" + root.currentTool
+                text: root.viewModel ? root.viewModel.currentToolText : "T0"
                 color: "#172033"
                 font.pixelSize: 26
                 verticalAlignment: Text.AlignVCenter
@@ -80,7 +54,7 @@ Rectangle {
             }
 
             Text {
-                text: "T" + root.nextTool
+                text: root.viewModel ? root.viewModel.nextToolText : "T-"
                 color: "#172033"
                 font.pixelSize: 26
                 verticalAlignment: Text.AlignVCenter
@@ -99,7 +73,7 @@ Rectangle {
 
                 Text {
                     Layout.fillWidth: true
-                    text: root.movementIsRapid ? "R" : "F"
+                    text: root.viewModel ? root.viewModel.movementLetter : "-"
                     color: "#172033"
                     font.pixelSize: 40
                     horizontalAlignment: Text.AlignHCenter
@@ -108,7 +82,7 @@ Rectangle {
 
                 Text {
                     Layout.alignment: Qt.AlignRight | Qt.AlignBottom
-                    text: "(" + (root.movementIsRapid ? root.rapidOverride : root.feedOverride) + "%)"
+                    text: "(" + (root.viewModel ? root.viewModel.movementOverridePercent : 0) + "%)"
                     color: "#475569"
                     font.pixelSize: 15
                 }
@@ -119,12 +93,12 @@ Rectangle {
                 Layout.preferredHeight: root.inputHeight
                 Layout.alignment: Qt.AlignVCenter
                 fontSize: 25
-                text: Number(root.movementIsRapid ? root.rapidValue : root.feedValue).toFixed(2)
+                text: root.viewModel ? root.viewModel.movementValueText : "0.00"
             }
 
             Text {
                 Layout.preferredWidth: root.unitsWidth
-                text: root.movementIsRapid ? root.rapidUnits : root.feedUnits
+                text: root.viewModel ? root.viewModel.movementUnitsText : "mm/rev"
                 color: "#475569"
                 font.pixelSize: 20
                 verticalAlignment: Text.AlignVCenter
@@ -152,7 +126,7 @@ Rectangle {
 
                 Text {
                     Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
-                    text: "(" + root.spindleOverride + "%)"
+                    text: "(" + (root.viewModel ? root.viewModel.spindleOverridePercent : 0) + "%)"
                     color: "#475569"
                     font.pixelSize: 15
                 }
@@ -161,14 +135,14 @@ Rectangle {
             // RPM mode — single box, same height as the feed box.
             RowLayout {
                 Layout.alignment: Qt.AlignVCenter
-                visible: !root.spindleIsCss
+                visible: !(root.viewModel && root.viewModel.spindleIsCss)
                 spacing: 8
 
                 OutlinedValue {
                     Layout.preferredWidth: root.valueBoxWidth
                     Layout.preferredHeight: root.inputHeight
                     fontSize: 25
-                    text: Number(root.spindleRpm).toFixed(0)
+                    text: root.viewModel ? root.viewModel.spindleRpmText : "0"
                 }
 
                 Text {
@@ -183,7 +157,7 @@ Rectangle {
             // CSS mode — two shorter boxes (RPM + surface speed), tighter spacing.
             ColumnLayout {
                 Layout.alignment: Qt.AlignVCenter
-                visible: root.spindleIsCss
+                visible: root.viewModel && root.viewModel.spindleIsCss
                 spacing: root.cssSpacing
 
                 RowLayout {
@@ -193,7 +167,7 @@ Rectangle {
                         Layout.preferredWidth: root.valueBoxWidth
                         Layout.preferredHeight: root.cssInputHeight
                         fontSize: 18
-                        text: Number(root.spindleRpm).toFixed(0)
+                        text: root.viewModel ? root.viewModel.spindleRpmText : "0"
                     }
 
                     Text {
@@ -212,7 +186,7 @@ Rectangle {
                         Layout.preferredWidth: root.valueBoxWidth
                         Layout.preferredHeight: root.cssInputHeight
                         fontSize: 18
-                        text: Number(root.cssValue).toFixed(0)
+                        text: root.viewModel ? root.viewModel.cssValueText : "0"
                     }
 
                     Text {

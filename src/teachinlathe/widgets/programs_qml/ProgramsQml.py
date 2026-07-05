@@ -9,6 +9,7 @@ from teachinlathe.data.programs_screen import ProgramsScreen, ProgramsScreenEnum
 from teachinlathe.widgets.gremlin.gremlin_widget import GremlinWidget
 from teachinlathe.widgets.programs_qml.filesystemview import FileSystemViewModel
 from teachinlathe.widgets.programs_qml.ProgramsDroViewModel import ProgramsDroViewModel
+from teachinlathe.widgets.programs_qml.ProgramsToolFeedSpeedViewModel import ProgramsToolFeedSpeedViewModel
 from qtpyvcp.utilities import logger
 
 from teachinlathe.widgets.programs_qml.ProgramsViewModel import ProgramsViewModel
@@ -57,12 +58,14 @@ class ProgramsQml(QQuickWidget):
         self.fs_viewmodel.navigationChanged.connect(self._emit_header_state_changed)
 
         self.dro_viewmodel = ProgramsDroViewModel(self)
+        self.tool_feed_speed_viewmodel = ProgramsToolFeedSpeedViewModel(self.viewmodel.runtime_store, self)
 
         context = self.engine().rootContext()
         self.programs_screen_enum = ProgramsScreenEnum(self)
         context.setContextProperty('programsViewModel', self.viewmodel)
         context.setContextProperty('fsViewModel', self.fs_viewmodel)
         context.setContextProperty('programsDroViewModel', self.dro_viewmodel)
+        context.setContextProperty('programsToolFeedSpeedViewModel', self.tool_feed_speed_viewmodel)
         context.setContextProperty('ProgramsScreen', self.programs_screen_enum)
 
         self.statusChanged.connect(self._on_status_changed)
