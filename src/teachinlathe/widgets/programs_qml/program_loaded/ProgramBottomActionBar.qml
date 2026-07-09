@@ -32,10 +32,12 @@ Rectangle {
         }
     }
 
-    property real maximumVelocity: 6000
-    property int currentPercentage: 100
+    property real maximumVelocity: actions ? actions.maximumRapidVelocity : 0
+    property int currentPercentage: actions ? actions.rapidOverridePercent : 100
     property var rapidPercentageSelected: function(value) {
-        root.currentPercentage = value
+        if (actions) {
+            actions.setRapidOverridePercent(value)
+        }
     }
 
     property bool cycleAbortVisible: root.fullScreen
@@ -48,7 +50,7 @@ Rectangle {
 
     property int cycleStartState: defaultCycleStartState()
     property bool cycleStartEnabled: actions ? actions.cycleStartAction.enabled : false
-    property bool cycleStartBlink: actions ? actions.cycleStartAction.active : false
+    property bool cycleStartBlink: actions ? actions.cycleStartLedActive : false
     property var cycleStartClicked: function() {
         if (actions) {
             actions.triggerStart()
@@ -66,8 +68,8 @@ Rectangle {
     }
 
     readonly property string cycleStartButtonText:
-        cycleStartState === ProgramBottomActionBar.Pause ? "Pause"
-      : cycleStartState === ProgramBottomActionBar.Resume ? "Resume"
+        cycleStartState === ProgramBottomActionBar.Pause ? "Feed\nHold"
+      : cycleStartState === ProgramBottomActionBar.Resume ? "Feed\nResume"
       : "Cycle\nStart"
 
     // Side cells size to their content (max of both), so the left buttons always
@@ -80,10 +82,10 @@ Rectangle {
         }
 
         var actionText = actions.cycleStartAction.text
-        if (actionText === "Pause") {
+        if (actionText === "Pause" || actionText === "Feed\nHold") {
             return ProgramBottomActionBar.Pause
         }
-        if (actionText === "Resume") {
+        if (actionText === "Resume" || actionText === "Feed\nResume") {
             return ProgramBottomActionBar.Resume
         }
         return ProgramBottomActionBar.CycleStart
@@ -148,6 +150,7 @@ Rectangle {
                 label: "Rapid Override"
                 maxSpeed: root.maximumVelocity
                 value: root.currentPercentage
+                updateValueOnClick: false
                 onSelected: function(v) { root.rapidPercentageSelected(v) }
             }
         }
@@ -182,11 +185,11 @@ Rectangle {
                     text: root.cycleStartButtonText
                     enabled: root.cycleStartEnabled
                     active: root.cycleStartBlink
-                    normalFillCenterColor: "#1a5e20"
-                    normalFillMidColor:    "#2e7d32"
-                    normalFillRimColor:    "#a5d6a7"
+                    normalFillCenterColor: "#0b3d12"
+                    normalFillMidColor:    "#1b5e20"
+                    normalFillRimColor:    "#2e7d32"
                     activeFillCenterColor: "#2e7d32"
-                    activeFillRimColor:    "#81c784"
+                    activeFillRimColor:    "#a5d6a7"
                     onClicked: root.triggerCycleStartButton()
                 }
             }

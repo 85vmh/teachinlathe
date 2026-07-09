@@ -107,6 +107,8 @@ Item {
         font.pixelSize: 12
         font.bold: true
         color: root.enabled ? root.textColor : root.disabledTextColor
+        style: Text.Outline
+        styleColor: "#90000000"
         lineHeightMode: Text.FixedHeight
         lineHeight: 16
     }

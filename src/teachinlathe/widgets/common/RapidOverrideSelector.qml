@@ -10,6 +10,7 @@ Item {
     property var steps: [25, 50, 75, 100]
     // When > 0, shows the effective speed next to the label (e.g. "Rapid Override (6000 mm/min)")
     property real maxSpeed: 0
+    property bool updateValueOnClick: true
 
     signal selected(int newValue)
 
@@ -119,7 +120,9 @@ Item {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                root.value = modelData
+                                if (root.updateValueOnClick) {
+                                    root.value = modelData
+                                }
                                 root.selected(modelData)
                             }
                         }

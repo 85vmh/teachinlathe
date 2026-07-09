@@ -1,9 +1,13 @@
+import os
+
 import linuxcnc
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from qtpyvcp.actions import program_actions
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
+
+from teachinlathe.lathe_hal_component import TeachInLatheComponent
 
 
 STATUS = getPlugin('status')
@@ -16,6 +20,20 @@ def _channel_value(name, default=None):
     if channel is None:
         return default
     return getattr(channel, 'value', default)
+
+
+def _machine_max_linear_velocity():
+    ini_path = os.getenv('INI_FILE_NAME')
+    if not ini_path:
+        return 0.0
+    ini_file = linuxcnc.ini(ini_path)
+    value = ini_file.find('TRAJ', 'MAX_LINEAR_VELOCITY')
+    if value is None:
+        return 0.0
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 class ProgramButtonState(QObject):
@@ -80,6 +98,7 @@ class ProgramsActionSource(QObject):
         self._runtime_store = runtime_store
         self._is_running = False
         self._is_active = False
+        self._cycle_start_led_active = False
         self._start = ProgramButtonState('Start Program', self)
         self._stop = ProgramButtonState('Stop Program', self)
         self._pause_resume = ProgramButtonState('Pause Program', self)
@@ -87,9 +106,11 @@ class ProgramsActionSource(QObject):
         self._optional_stop = ProgramButtonState('Break on M1', self)
         self._block_delete = ProgramButtonState('Skip "/" Blocks', self)
         self._mdi = ProgramButtonState('Run MDI', self)
+        self._maximum_rapid_velocity = _machine_max_linear_velocity() * 60.0
 
         runtime_store.snapshotChanged.connect(lambda _snapshot: self.refresh())
         self._bind_status_updates()
+        self._bind_hal_updates()
         self.refresh()
 
     @pyqtProperty(bool, notify=stateChanged)
@@ -99,6 +120,10 @@ class ProgramsActionSource(QObject):
     @pyqtProperty(bool, notify=stateChanged)
     def isActive(self):
         return self._is_active
+
+    @pyqtProperty(bool, notify=stateChanged)
+    def cycleStartLedActive(self):
+        return self._cycle_start_led_active
 
     @pyqtProperty(QObject, constant=True)
     def startAction(self):
@@ -128,6 +153,14 @@ class ProgramsActionSource(QObject):
     def mdiAction(self):
         return self._mdi
 
+    @pyqtProperty(int, notify=stateChanged)
+    def rapidOverridePercent(self):
+        return self._percent(getattr(self._runtime_store.snapshot, 'rapidrate', 1.0))
+
+    @pyqtProperty(float, notify=stateChanged)
+    def maximumRapidVelocity(self):
+        return self._maximum_rapid_velocity
+
     def _bind_status_updates(self):
         channels = (
             getattr(STATUS, 'estop', None),
@@ -141,6 +174,7 @@ class ProgramsActionSource(QObject):
             getattr(STATUS, 'block_delete', None),
             getattr(STATUS, 'optional_stop', None),
             getattr(STATUS, 'homed', None),
+            getattr(STATUS, 'rapidrate', None),
         )
         for channel in channels:
             if channel is None:
@@ -152,6 +186,22 @@ class ProgramsActionSource(QObject):
                     channel.notify(lambda *_args: self.refresh())
                 except Exception:
                     pass
+
+    def _bind_hal_updates(self):
+        try:
+            component = TeachInLatheComponent()
+            pin = component.comp.getPin(TeachInLatheComponent.PinCycleStartLed)
+            self._cycle_start_led_active = bool(pin.value)
+            component.comp.addListener(TeachInLatheComponent.PinCycleStartLed, self._on_cycle_start_led_changed)
+        except Exception:
+            self._cycle_start_led_active = False
+
+    def _on_cycle_start_led_changed(self, value):
+        active = bool(value)
+        if active == self._cycle_start_led_active:
+            return
+        self._cycle_start_led_active = active
+        self.stateChanged.emit()
 
     def refresh(self):
         snapshot = self._runtime_store.poll()
@@ -193,9 +243,9 @@ class ProgramsActionSource(QObject):
         # pauseResume takes priority: once a program is active (running or paused)
         # the button only ever shows Pause or Resume, never Cycle Start.
         if self._pause_resume.enabled and self._pause_resume.active:
-            cycle_text, cycle_enabled, cycle_active = 'Resume', True, False
+            cycle_text, cycle_enabled, cycle_active = 'Feed\nResume', True, False
         elif self._pause_resume.enabled:
-            cycle_text, cycle_enabled, cycle_active = 'Pause', True, True
+            cycle_text, cycle_enabled, cycle_active = 'Feed\nHold', True, True
         elif self._start.enabled:
             cycle_text, cycle_enabled, cycle_active = 'Cycle\nStart', True, False
         else:
@@ -316,7 +366,6 @@ class ProgramsActionSource(QObject):
         if not self._optional_stop.enabled:
             return
         CMD.set_optional_stop(bool(enabled))
-        CMD.wait_complete()
         self._runtime_store.poll()
         self.refresh()
 
@@ -325,7 +374,17 @@ class ProgramsActionSource(QObject):
         if not self._block_delete.enabled:
             return
         CMD.set_block_delete(bool(enabled))
-        CMD.wait_complete()
+        self._runtime_store.poll()
+        self.refresh()
+
+    @pyqtSlot(int)
+    def setRapidOverridePercent(self, value):
+        try:
+            percent = int(value)
+        except (TypeError, ValueError):
+            return
+        percent = max(0, min(100, percent))
+        CMD.rapidrate(float(percent) / 100.0)
         self._runtime_store.poll()
         self.refresh()
 
@@ -336,3 +395,9 @@ class ProgramsActionSource(QObject):
             return
         issue_mdi(command)
         self.refresh()
+
+    def _percent(self, value):
+        try:
+            return int(round(float(value or 0.0) * 100.0))
+        except (TypeError, ValueError):
+            return 0
