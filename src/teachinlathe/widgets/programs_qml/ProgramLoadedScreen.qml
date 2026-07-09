@@ -5,6 +5,7 @@ import "gcode_viewer"
 
 Item {
     id: root
+    objectName: "programLoadedScreen"
     property var viewModel
 
     SplitView {

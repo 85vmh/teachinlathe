@@ -37,6 +37,7 @@ class ProgramsQml(QQuickWidget):
 
         self._pending_fit_path = ''
         self._gremlin_placeholder = None
+        self._program_loaded_item = None
         self._root_item = None
         self._complete_dialog = None
 
@@ -125,6 +126,14 @@ class ProgramsQml(QQuickWidget):
         context.setContextProperty('cncStore', getattr(app_state, 'cncStore', None))
         context.setContextProperty('navigationStore', getattr(app_state, 'navigationStore', None))
 
+    def reactivate(self):
+        self.show()
+        self.raise_()
+        self.update()
+        self.repaint()
+        self._schedule_gremlin_sync()
+        QTimer.singleShot(50, self._sync_gremlin_widget)
+
     def _emit_header_state_changed(self):
         self.headerStateChanged.emit()
 
@@ -187,12 +196,19 @@ class ProgramsQml(QQuickWidget):
             return
 
         self._complete_dialog = self._root_item.findChild(QQuickItem, 'programCompleteDialog')
+        self._program_loaded_item = self._root_item.findChild(QQuickItem, 'programLoadedScreen')
 
         self._gremlin_placeholder = self._root_item.findChild(QQuickItem, 'gremlinViewport')
         if self._gremlin_placeholder is not None:
             for signal_name in ('xChanged', 'yChanged', 'widthChanged', 'heightChanged', 'visibleChanged'):
                 try:
                     getattr(self._gremlin_placeholder, signal_name).connect(self._schedule_gremlin_sync)
+                except Exception:
+                    pass
+        if self._program_loaded_item is not None:
+            for signal_name in ('visibleChanged', 'xChanged', 'yChanged', 'widthChanged', 'heightChanged'):
+                try:
+                    getattr(self._program_loaded_item, signal_name).connect(self._schedule_gremlin_sync)
                 except Exception:
                     pass
         self._schedule_gremlin_sync()
@@ -247,6 +263,8 @@ class ProgramsQml(QQuickWidget):
         if win is not None and hasattr(win, 'exitFullScreen'):
             win.exitFullScreen()
         self._schedule_gremlin_sync()
+        QTimer.singleShot(50, self._sync_gremlin_widget)
+        QTimer.singleShot(150, self._sync_gremlin_widget)
 
     def _schedule_gremlin_sync(self):
         QTimer.singleShot(0, self._sync_gremlin_widget)
@@ -259,6 +277,10 @@ class ProgramsQml(QQuickWidget):
             return
 
         item = self._gremlin_placeholder
+        if self._program_loaded_item is not None and not self._program_loaded_item.isVisible():
+            self.gremlin.hide()
+            self._hide_gremlin_overlay_controls()
+            return
         if item.width() <= 0 or item.height() <= 0 or not item.isVisible():
             self.gremlin.hide()
             self._hide_gremlin_overlay_controls()
@@ -270,6 +292,12 @@ class ProgramsQml(QQuickWidget):
         height = int(item.height())
         left = int(top_left.x())
         top = int(top_left.y())
+        parent = self.gremlin.parentWidget()
+        if parent is None or width <= 0 or height <= 0 or left < 0 or top < 0 \
+                or left + width > parent.width() or top + height > parent.height():
+            self.gremlin.hide()
+            self._hide_gremlin_overlay_controls()
+            return
 
         self.gremlin.setGeometry(left, top, width, height)
         self.gremlin.show()

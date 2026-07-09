@@ -594,9 +594,13 @@ class MyMainWindow(VCPMainWindow):
             return
         try:
             self.tabWidget.setCurrentIndex(MainTabs.PROGRAMS.value)
+            self.programsQmlWidget.viewmodel.showFilesScreen()
             self.programsQmlWidget.fs_viewmodel.showFileInGeneratedPrograms(
                 os.path.abspath(ngc_path)
             )
+            self.programsQmlWidget.reactivate()
+            QTimer.singleShot(0, self.programsQmlWidget.reactivate)
+            QTimer.singleShot(100, self.programsQmlWidget.reactivate)
         except Exception as e:
             print("showGeneratedProgram failed:", e)
 
@@ -900,6 +904,12 @@ class MyMainWindow(VCPMainWindow):
         if saved_geom is not None:
             widget.setGeometry(saved_geom)
         widget.show()
+        widget.raise_()
+        widget.update()
+        widget.repaint()
+        if hasattr(widget, "reactivate"):
+            QTimer.singleShot(0, widget.reactivate)
+            QTimer.singleShot(100, widget.reactivate)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
