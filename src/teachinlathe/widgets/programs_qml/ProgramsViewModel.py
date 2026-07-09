@@ -239,7 +239,8 @@ class ProgramsViewModel(QObject):
 
     def _on_running_state_changed(self):
         active = self._actions.isActive
-        if active and not self._was_active:
+        loaded = self._has_loaded_program_for_run()
+        if active and loaded and not self._was_active:
             self._abort_requested = False
             self._run_tracker.start()
             self._set_screen_index(Screen.ProgramRunning)
@@ -259,6 +260,16 @@ class ProgramsViewModel(QObject):
                 )
             self._abort_requested = False
         self._was_active = active
+
+    def _has_loaded_program_for_run(self):
+        snapshot = self._runtime_store.snapshot
+        if not snapshot.machine_file:
+            return False
+        if not os.path.isfile(snapshot.machine_file):
+            return False
+        if self.currentFilePath and self._is_showing_machine_file(snapshot.machine_file):
+            return True
+        return bool(self.currentFilePath and os.path.isfile(self.currentFilePath))
 
     @pyqtSlot()
     def runDone(self):
