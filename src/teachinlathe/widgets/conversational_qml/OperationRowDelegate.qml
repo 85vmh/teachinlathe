@@ -29,6 +29,13 @@ Rectangle {
     property int itemFontSize: 16
 
     property bool gcodeEnabled: !!(op && op.generate_gcode)
+    readonly property int operationLabelMinW: colOpNumW + colTypeW
+    readonly property string operationLabel: {
+        var order = (op && op.order !== undefined) ? op.order : (rowIndex + 1)
+        var orderText = order >= 1 && order <= 9 ? "0" + order : "" + order
+        var name = (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
+        return "[#" + orderText + "]    " + name
+    }
 
     // Icon sources / tints
     property url  deleteIconSource:   "icons/delete_icon.svg"
@@ -107,17 +114,21 @@ Rectangle {
         anchors.fill: parent
         spacing: 0
 
-        // Order
-        Label {
-            text: (op && op.order !== undefined) ? op.order : (rowIndex + 1)
-            Layout.minimumWidth: colOpNumW
-            Layout.preferredWidth: colOpNumW
-            Layout.maximumWidth: colOpNumW
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            Layout.alignment: Qt.AlignVCenter
-            font.pixelSize: root.itemFontSize
-            color: root.gcodeEnabled ? "black" : "#c4c4c4"
+        // Operation label combines order and operation name.
+        Item {
+            Layout.minimumWidth: root.operationLabelMinW
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Label {
+                id: typeLabel
+                anchors.fill: parent
+                anchors.leftMargin: 10
+                text: root.operationLabel
+                elide: Text.ElideRight
+                verticalAlignment: Text.AlignVCenter
+                font.pixelSize: root.itemFontSize
+                color: root.gcodeEnabled ? "black" : "#c4c4c4"
+            }
         }
         Divider { }
 
@@ -138,24 +149,6 @@ Rectangle {
                     optCell.enabled   = checked
                     root.generateToggled(rowIndex, checked)
                 }
-            }
-        }
-        Divider { }
-
-        // Operation Type (flex) + margin
-        Item {
-            Layout.minimumWidth: colTypeW
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Label {
-                id: typeLabel
-                anchors.fill: parent
-                anchors.leftMargin: 10
-                text: (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
-                elide: Text.ElideRight
-                verticalAlignment: Text.AlignVCenter
-                font.pixelSize: root.itemFontSize
-                color: root.gcodeEnabled ? "black" : "#c4c4c4"
             }
         }
         Divider { }

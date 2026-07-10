@@ -105,7 +105,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.bottomMargin: 36
+        anchors.bottomMargin: 60
 
         Rectangle {
             Layout.fillWidth: true
