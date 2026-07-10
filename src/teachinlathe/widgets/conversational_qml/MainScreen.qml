@@ -7,6 +7,11 @@ import "."
 Item {
     id: main
     objectName: "mainScreen"
+    Rectangle {
+        anchors.fill: parent
+        color: "#ffffff"
+        z: -1
+    }
 
     property var programsModel
     property bool showBack: false
@@ -105,12 +110,11 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.bottomMargin: 60
 
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: "#f5f5f5"
+            color: "#ffffff"
             radius: 6
             border.color: "#ccc"
             border.width: 1

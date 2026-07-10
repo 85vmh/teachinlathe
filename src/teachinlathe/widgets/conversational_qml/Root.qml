@@ -23,7 +23,16 @@ Item {
         numpadDialog.openFor(field, field.settingName, field.description)
     }
 
+    function showBuildGcodeProgress() {
+        buildGcodeProgressDialog.open()
+    }
+
+    function closeBuildGcodeProgress() {
+        buildGcodeProgressDialog.close()
+    }
+
     SmartNumpadDialog { id: numpadDialog }
+    BuildGcodeProgressDialog { id: buildGcodeProgressDialog }
 
     // Push a new screen (store the current screen state in history)
     function loadScreen(url, params) {

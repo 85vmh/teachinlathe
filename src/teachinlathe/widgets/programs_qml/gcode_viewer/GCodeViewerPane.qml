@@ -22,14 +22,18 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 0
+        spacing: 6
 
-        Loader {
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            sourceComponent: root.currentMode === GCodeViewerPane.ProgramWithStack
-                ? executionComponent
-                : viewerComponent
+
+            Loader {
+                anchors.fill: parent
+                sourceComponent: root.currentMode === GCodeViewerPane.ProgramWithStack
+                    ? executionComponent
+                    : viewerComponent
+            }
         }
 
         ProgramBottomActionBar {

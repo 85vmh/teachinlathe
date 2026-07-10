@@ -24,7 +24,7 @@ Rectangle {
     color: "#eef2f7"
     border.color: "#cfd7e3"
     border.width: 1
-    radius: 4
+    radius: 6
 
     ColumnLayout {
         anchors.left: parent.left

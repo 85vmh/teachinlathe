@@ -13,6 +13,12 @@ Item {
         anchors.fill: parent
         orientation: Qt.Horizontal
 
+        handle: Rectangle {
+            implicitWidth: 6
+            implicitHeight: 6
+            color: "#ffffff"
+        }
+
         FileSystemView {
             viewModel: root.fileSystemViewModel
             SplitView.preferredWidth: parent.width / 2

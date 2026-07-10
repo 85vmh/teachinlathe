@@ -19,7 +19,7 @@ from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.widgets.FrameAnimator import FrameAnimator
-from teachinlathe.widgets.app_shell_widget import AppShellWidget
+from teachinlathe.widgets.app_shell_qml import AppShellQmlWidget
 from teachinlathe.widgets.manual_qml import ManualTurningViewModel
 from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLatheDroViewModel
 from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
@@ -228,7 +228,7 @@ class MyMainWindow(VCPMainWindow):
         self.vtk.enable_panning(True)
 
         # self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
-        self.tabWidget.currentChanged.connect(self.onMainTabChanged)
+        # Runtime navigation is handled by the QML app shell content stack.
 
         self.addEditToolWidget.onSaved.connect(self.onToolAddEditSaved)
         self.addEditToolWidget.onCanceled.connect(self.onToolAddEditCanceled)
@@ -290,14 +290,14 @@ class MyMainWindow(VCPMainWindow):
         self.manualInputBridge = ManualInputBridge(self, self)
         self.numpadDialogViewModel = NumpadDialogViewModel(self)
         self._active_numpad_field = None
+        self._hideLegacyTabChildren(self.manualTurningTab)
 
-        tab = self.manualTurningTab
-        self.manualTurningRootQml = QQuickWidget(tab)
+        self.manualTurningRootQml = QQuickWidget(self.manualTurningTab)
         self.manualTurningRootQml.setResizeMode(QQuickWidget.SizeRootObjectToView)
         self.manualTurningRootQml.setClearColor(QColor("#efefef"))
-        self.manualTurningRootQml.setGeometry(0, 0, tab.width(), tab.height())
         self.manualTurningRootQml.setFocusPolicy(Qt.StrongFocus)
         self.manualTurningRootQml.setMouseTracking(True)
+        self._ensureTabFillLayout(self.manualTurningTab, self.manualTurningRootQml)
 
         ctx = self.manualTurningRootQml.engine().rootContext()
         ctx.setContextProperty("manualViewModel",     self.manualTurningViewModel)
@@ -503,16 +503,19 @@ class MyMainWindow(VCPMainWindow):
         self.programsQmlWidget = ProgramsQml(locations, self.programsQmlTab, json_folder_path=json_folder)
         self.programsQmlWidget.setAppState(self.appState)
         self.programsQmlWidget.viewmodel.programLoadRequested.connect(self.onProgramsQmlProgramLoadRequested)
+        self.programsQmlWidget.viewmodel.ensureProgramLoadedRequested.connect(self.onProgramsQmlEnsureProgramLoadedRequested)
         tab_layout.addWidget(self.programsQmlWidget)
 
     def _initAppShell(self):
         if hasattr(self, "appShellWidget") and self.appShellWidget is not None:
             return
 
-        from PyQt5.QtWidgets import QVBoxLayout
+        from PyQt5.QtWidgets import QStackedWidget, QVBoxLayout
 
         self.tabWidget.setTabBarAutoHide(True)
         self.tabWidget.tabBar().hide()
+        self._ensureTabFillLayout(self.conversationalTab, self.conversationalqml)
+        self._ensureTabFillLayout(self.manualTurningTab, self.manualTurningRootQml)
 
         if self.pageReady.layout() is None:
             layout = QVBoxLayout(self.pageReady)
@@ -521,11 +524,19 @@ class MyMainWindow(VCPMainWindow):
         else:
             layout = self.pageReady.layout()
 
+        self.appContentStack = QStackedWidget(self.pageReady)
+        self.appContentStack.setObjectName("appContentStack")
+        self.appContentStack.setContentsMargins(0, 0, 0, 0)
+        self.appContentStack.addWidget(self.manualTurningTab)
+        self.appContentStack.addWidget(self.conversationalTab)
+        self.appContentStack.addWidget(self.programsQmlTab)
+        self.appContentStack.currentChanged.connect(self.onMainTabChanged)
+
         feature_controllers = {
             "conversational": getattr(self, "conversationalqml", None),
             "programs": getattr(self, "programsQmlWidget", None),
         }
-        self.appShellWidget = AppShellWidget(self.tabWidget, self.appState, self.pageReady, feature_controllers=feature_controllers)
+        self.appShellWidget = AppShellQmlWidget(self.appContentStack, self.appState, self.pageReady, feature_controllers=feature_controllers)
         layout.addWidget(self.appShellWidget)
 
         tab_id = {
@@ -534,11 +545,33 @@ class MyMainWindow(VCPMainWindow):
             MainTabs.PROGRAMS.value: "programs",
             MainTabs.TOOLS_OFFSETS.value: "tools",
             MainTabs.MACHINE_SETTINGS.value: "settings",
-        }.get(self.tabWidget.currentIndex(), "manual")
+        }.get(self.appContentStack.currentIndex(), "manual")
         self.appState.activateTab(tab_id)
 
+    def _ensureTabFillLayout(self, tab, widget):
+        if tab is None or widget is None:
+            return
+        from PyQt5.QtWidgets import QSizePolicy, QVBoxLayout
+
+        widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        widget.setMinimumSize(0, 0)
+        layout = tab.layout()
+        if layout is None:
+            layout = QVBoxLayout(tab)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(0)
+        if layout.indexOf(widget) < 0:
+            layout.addWidget(widget)
+
+    def _hideLegacyTabChildren(self, tab):
+        if tab is None:
+            return
+        from PyQt5.QtWidgets import QWidget
+        for child in tab.findChildren(QWidget):
+            child.setVisible(False)
+
     def _syncEmbeddedQmlTabs(self):
-        current_index = self.tabWidget.currentIndex()
+        current_index = self.appContentStack.currentIndex() if hasattr(self, "appContentStack") else self.tabWidget.currentIndex()
         manual_active = current_index == MainTabs.MANUAL_TURNING.value
         conversational_active = current_index == MainTabs.CONVERSATIONAL.value
 
@@ -551,12 +584,15 @@ class MyMainWindow(VCPMainWindow):
             self.conversationalqml.setVisible(conversational_active)
             self.conversationalqml.update()
 
-        current_widget = self.tabWidget.currentWidget()
+        current_widget = self.appContentStack.currentWidget() if hasattr(self, "appContentStack") else self.tabWidget.currentWidget()
         if current_widget is not None:
             current_widget.raise_()
             current_widget.update()
             current_widget.repaint()
-        self.tabWidget.update()
+        if hasattr(self, "appContentStack"):
+            self.appContentStack.update()
+        else:
+            self.tabWidget.update()
 
     def onMainTabChanged(self, index):
         self.mainSelectedTab = MainTabs(index)
@@ -586,6 +622,9 @@ class MyMainWindow(VCPMainWindow):
     def onProgramsQmlProgramLoadRequested(self, _path):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
 
+    def onProgramsQmlEnsureProgramLoadedRequested(self):
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
+
     def backToPrograms(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
 
@@ -593,7 +632,7 @@ class MyMainWindow(VCPMainWindow):
         if not ngc_path:
             return
         try:
-            self.tabWidget.setCurrentIndex(MainTabs.PROGRAMS.value)
+            self.appState.activateTab("programs")
             self.programsQmlWidget.viewmodel.showFilesScreen()
             self.programsQmlWidget.fs_viewmodel.showFileInGeneratedPrograms(
                 os.path.abspath(ngc_path)
@@ -608,7 +647,7 @@ class MyMainWindow(VCPMainWindow):
         if not json_path or not os.path.isfile(json_path):
             return
         try:
-            self.tabWidget.setCurrentIndex(MainTabs.CONVERSATIONAL.value)
+            self.appState.activateTab("conversational")
             if hasattr(self, "conversationalqml"):
                 self.conversationalqml.openProgramFile(os.path.abspath(json_path))
         except Exception as e:

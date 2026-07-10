@@ -71,7 +71,7 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     color: "transparent"
-                    border.color: "#cccccc"; border.width: 1
+                    border.color: "#ccc"; border.width: 1
                 }
             }
 

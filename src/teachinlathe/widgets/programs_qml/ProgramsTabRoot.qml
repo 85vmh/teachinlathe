@@ -2,11 +2,10 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "filesystemview"
-import "program_loaded/running"
 
 Rectangle {
     id: root
-    color: "#f5f5f5"
+    color: "#ffffff"
 
     // While running, the view is full screen (no app bar / bottom tabs) and the
     // internal screen tabs are hidden — only the loaded-program content shows.
@@ -19,10 +18,10 @@ Rectangle {
         StackLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.leftMargin: root.running ? 0 : 8
-            Layout.rightMargin: root.running ? 0 : 8
-            Layout.topMargin: root.running ? 0 : 8
-            Layout.bottomMargin: root.running ? 0 : 8
+            Layout.leftMargin: 0
+            Layout.rightMargin: 0
+            Layout.topMargin: 0
+            Layout.bottomMargin: 0
             // Running reuses the loaded-program page (index clamped to Loaded).
             currentIndex: root.running ? ProgramsScreen.Loaded : programsViewModel.screenIndex
 
@@ -41,8 +40,4 @@ Rectangle {
         }
     }
 
-    ProgramCompleteDialog {
-        id: completeDialog
-        objectName: "programCompleteDialog"
-    }
 }

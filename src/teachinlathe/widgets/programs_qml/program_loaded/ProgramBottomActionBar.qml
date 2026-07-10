@@ -102,7 +102,8 @@ Rectangle {
     }
 
     color: "#f5f5f5"
-    border.color: "#cccccc"
+    radius: 6
+    border.color: "#ccc"
     border.width: 1
 
     RowLayout {

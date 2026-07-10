@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "gcode_viewer"
+import "program_loaded/running"
 
 Item {
     id: root
@@ -11,6 +12,12 @@ Item {
     SplitView {
         anchors.fill: parent
         orientation: Qt.Horizontal
+
+        handle: Rectangle {
+            implicitWidth: 6
+            implicitHeight: 6
+            color: "#ffffff"
+        }
 
         Rectangle {
             color: "#f5f5f5"
@@ -57,9 +64,16 @@ Item {
         }
 
         GCodeViewerPane {
+            id: gcodePane
             viewModel: root.viewModel
             SplitView.preferredWidth: root.width / 2
             SplitView.minimumWidth: 420
         }
+    }
+
+    ProgramCompleteDialog {
+        id: completeDialog
+        objectName: "programCompleteDialog"
+        dialogTarget: gcodePane
     }
 }

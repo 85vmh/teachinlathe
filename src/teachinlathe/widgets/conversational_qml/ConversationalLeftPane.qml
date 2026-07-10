@@ -149,7 +149,7 @@ Rectangle {
     color: "#ffffff"
     radius: 6
     border.color: "#ccc"
-    border.width: 0
+    border.width: 1
 
     ColumnLayout {
         anchors.fill: parent
@@ -162,7 +162,7 @@ Rectangle {
             Layout.fillHeight: true
             radius: 4
             color: "#f8f8f8"
-            border.width: 1
+            border.width: 0
             border.color: "#dddddd"
 
             ColumnLayout {

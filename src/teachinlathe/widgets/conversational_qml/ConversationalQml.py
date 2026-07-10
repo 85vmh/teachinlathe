@@ -6,7 +6,7 @@ from datetime import datetime
 from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop, Q_ARG, pyqtSignal
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
-from PyQt5.QtWidgets import QProgressDialog, QApplication
+from PyQt5.QtWidgets import QApplication
 
 from teachinlathe.conversational.data_types import Program, Workpiece, operation_types
 from teachinlathe.conversational.program_commands import (
@@ -360,13 +360,11 @@ class ConversationalQml(QQuickWidget):
         if not prog:
             print("[gcode] No current program selected.")
             return
-        progress = QProgressDialog("Generating G-Code...", None, 0, 0, self)
-        progress.setWindowTitle("Generate G-Code")
-        progress.setWindowModality(Qt.ApplicationModal)
-        progress.setCancelButton(None)
-        progress.setMinimumDuration(0)
-        progress.setAutoClose(False)
-        progress.show()
+        try:
+            if getattr(self, "root", None):
+                QMetaObject.invokeMethod(self.root, "showBuildGcodeProgress")
+        except Exception as e:
+            print("[gcode] show progress failed:", e)
         QApplication.processEvents()
 
         start = time.monotonic()
@@ -383,7 +381,11 @@ class ConversationalQml(QQuickWidget):
                 loop = QEventLoop()
                 QTimer.singleShot(int((duration - elapsed) * 1000), loop.quit)
                 loop.exec_()
-            progress.close()
+            try:
+                if getattr(self, "root", None):
+                    QMetaObject.invokeMethod(self.root, "closeBuildGcodeProgress")
+            except Exception as e:
+                print("[gcode] close progress failed:", e)
 
         if path:
             try:

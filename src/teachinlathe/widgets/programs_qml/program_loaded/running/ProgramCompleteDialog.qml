@@ -15,6 +15,13 @@ Item {
     property string movement: ""
     property string toolchange: ""
     property string total: ""
+    property Item dialogTarget: null
+
+    readonly property point _targetTopLeft: dialogTarget
+        ? dialogTarget.mapToItem(root, 0, 0)
+        : Qt.point(0, 0)
+    readonly property real _targetWidth: dialogTarget ? dialogTarget.width : root.width
+    readonly property real _targetHeight: dialogTarget ? dialogTarget.height : root.height
 
     function open() { root.visible = true }
     function close() { root.visible = false }
@@ -27,7 +34,8 @@ Item {
     }
 
     Rectangle {
-        anchors.centerIn: parent
+        x: root._targetTopLeft.x + (root._targetWidth - width) / 2
+        y: root._targetTopLeft.y + (root._targetHeight - height) / 2
         width: 460
         height: card.implicitHeight + 48
         radius: 10

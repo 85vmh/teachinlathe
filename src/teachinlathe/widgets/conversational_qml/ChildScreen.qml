@@ -93,13 +93,12 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.bottomMargin: 36
         spacing: 8
 
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 12
+            spacing: 6
 
             ConversationalLeftPane {
                 id: leftPane
@@ -140,7 +139,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 6.5
                 Layout.fillHeight: true
-                color: "#f5f5f5"
+                color: "#ffffff"
                 radius: 6
                 border.color: "#ccc"
                 border.width: 1

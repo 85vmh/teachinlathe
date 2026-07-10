@@ -328,6 +328,10 @@ class FileSystemViewModel(QObject):
 
     @pyqtSlot()
     def deleteSelected(self) -> None:
+        self.deleteSelectedConfirmed()
+
+    @pyqtSlot()
+    def deleteSelectedConfirmed(self) -> None:
         if not self._selected_path:
             return
         loc = self._current_location()
@@ -335,14 +339,6 @@ class FileSystemViewModel(QObject):
             return
         abs_path = self._resolve(loc.root_path, self._selected_path)
         if abs_path is None:
-            return
-        answer = QMessageBox.question(
-            None, "Delete",
-            f"Delete '{os.path.basename(abs_path)}'?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No,
-        )
-        if answer != QMessageBox.Yes:
             return
         try:
             if os.path.isfile(abs_path):

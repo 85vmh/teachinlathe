@@ -26,6 +26,7 @@ class ProgramsViewModel(QObject):
     # name, movement, toolchange, total (pre-formatted strings)
     programCompleted = pyqtSignal(str, str, str, str)
     programLoadRequested = pyqtSignal(str)
+    ensureProgramLoadedRequested = pyqtSignal()
     gremlinZoomInRequested = pyqtSignal()
     gremlinZoomOutRequested = pyqtSignal()
     gremlinClearRequested = pyqtSignal()
@@ -236,6 +237,9 @@ class ProgramsViewModel(QObject):
     # ── Running full-screen state machine ─────────────────────────────
     def _on_abort_triggered(self):
         self._abort_requested = True
+        if self._screen_index == Screen.ProgramRunning:
+            self._set_screen_index(Screen.ProgramLoaded)
+            self.exitRunFullScreenRequested.emit()
 
     def _on_running_state_changed(self):
         active = self._actions.isActive
@@ -248,8 +252,9 @@ class ProgramsViewModel(QObject):
         elif self._was_active and not active:
             movement, toolchange, total = self._run_tracker.stop()
             if self._abort_requested:
-                self._set_screen_index(Screen.ProgramLoaded)
-                self.exitRunFullScreenRequested.emit()
+                if self._screen_index == Screen.ProgramRunning:
+                    self._set_screen_index(Screen.ProgramLoaded)
+                    self.exitRunFullScreenRequested.emit()
             else:
                 name = os.path.basename(self.currentFilePath or '') or 'Program'
                 self.programCompleted.emit(
@@ -280,6 +285,7 @@ class ProgramsViewModel(QObject):
     @pyqtSlot()
     def runAgain(self):
         """'Run Again' on the completion popup: start the program once more."""
+        self.ensureProgramLoadedRequested.emit()
         self._actions.triggerStart()
 
     def _is_showing_machine_file(self, machine_file=''):

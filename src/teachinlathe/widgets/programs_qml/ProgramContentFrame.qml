@@ -20,8 +20,8 @@ Rectangle {
 
     color: "#f9f9f9"
     radius: 6
-    border.color: "#cccccc"
-    border.width: 2
+    border.color: "#ccc"
+    border.width: 1
 
     implicitHeight: headerText.implicitHeight + contentColumn.implicitHeight + 30
 

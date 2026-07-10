@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import ".."
+import "../../conversational_qml"
 
 // Row 4 — Context-sensitive action buttons + copy progress bar.
 //
@@ -13,9 +14,29 @@ import ".."
 Rectangle {
     id: root
     property var viewModel
+    readonly property string selectedName: {
+        var path = viewModel ? viewModel.selectedEntryPath : ""
+        if (!path)
+            return ""
+        var parts = String(path).replace(/\\/g, "/").split("/")
+        return parts.length ? parts[parts.length - 1] : path
+    }
 
     color: "#f5f5f5"
     implicitHeight: 60
+
+    ConfirmDialog {
+        id: deleteConfirmDialog
+        titleText: "Delete Program"
+        confirmText: "Delete"
+        messageText: root.selectedName
+            ? "Delete '" + root.selectedName + "'?"
+            : "Delete selected program?"
+        onConfirmed: {
+            if (root.viewModel)
+                root.viewModel.deleteSelectedConfirmed()
+        }
+    }
 
     // ---- Copy progress bar (top edge, shown while copying) ----
     Rectangle {
@@ -61,7 +82,7 @@ Rectangle {
             visible: root.viewModel ? !root.viewModel.isInMountedMedia : false
             enabled: root.viewModel ? root.viewModel.selectedEntryPath !== "" : false
             text: "Delete"
-            onClicked: if (root.viewModel) root.viewModel.deleteSelected()
+            onClicked: deleteConfirmDialog.open()
         }
 
     }

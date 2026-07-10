@@ -21,7 +21,7 @@ Item {
     // ---- layout -------------------------------------------------------
     RowLayout {
         anchors.fill: parent
-        spacing: 0
+        spacing: 6
 
         // ================================================================
         // LEFT PANEL — folder selector + file list
@@ -163,13 +163,6 @@ Item {
                     }
                 }
             }
-        }
-
-        // Divider
-        Rectangle {
-            Layout.preferredWidth: 1
-            Layout.fillHeight: true
-            color: "#404040"
         }
 
         // ================================================================
