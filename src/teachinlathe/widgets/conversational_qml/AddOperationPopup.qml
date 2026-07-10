@@ -11,7 +11,7 @@ Popup {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     anchors.centerIn: parent
 
-    contentWidth: 500
+    contentWidth: 660
     contentHeight: column.implicitHeight
     padding: 0
 
@@ -22,6 +22,9 @@ Popup {
     property int    currentOpIndex:   -1
     property string selectedType:     ""
     property int    buttonsPerRow:    4
+    readonly property int buttonHeight: 50
+    readonly property int buttonFontSize: 16
+    readonly property int buttonSpacing: 20
 
     onAboutToShow: { selectedType = "" }
 
@@ -49,7 +52,7 @@ Popup {
 
     contentItem: Column {
         id: column
-        spacing: 12
+        spacing: root.buttonSpacing
         width: root.contentWidth
         padding: 16
 
@@ -63,16 +66,16 @@ Popup {
         // Duplicate Selected Operation button (centered)
         Item {
             width: column.width - column.padding * 2
-            height: 40
+            height: root.buttonHeight
 
             Button {
                 id: duplicateBtn
                 anchors.centerIn: parent
                 readonly property bool isSelected: root.selectedType === "__duplicate__"
-                width: 240
-                height: 40
+                width: 320
+                height: root.buttonHeight
                 text: "Duplicate Selected Operation"
-                font.pixelSize: Theme.fontSizeNormal
+                font.pixelSize: root.buttonFontSize
 
                 background: Rectangle {
                     radius: 4
@@ -110,7 +113,7 @@ Popup {
         Flow {
             id: flowArea
             width: column.width - column.padding * 2
-            spacing: 8
+            spacing: root.buttonSpacing
 
             Repeater {
                 model: root.options
@@ -121,8 +124,8 @@ Popup {
                     readonly property bool isSelected: root.selectedType === modelData.type
 
                     width: itemWidth
-                    height: 40
-                    font.pixelSize: Theme.fontSizeNormal
+                    height: root.buttonHeight
+                    font.pixelSize: root.buttonFontSize
                     text: modelData.label
 
                     background: Rectangle {
@@ -167,15 +170,16 @@ Popup {
         // Footer row
         Item {
             width: column.width - column.padding * 2
-            height: 44
+            height: root.buttonHeight
 
             // Cancel — always left
             Button {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Cancel"
-                width: 100
-                height: 40
+                width: 120
+                height: root.buttonHeight
+                font.pixelSize: root.buttonFontSize
                 onClicked: root.close()
             }
 
@@ -183,13 +187,14 @@ Popup {
             Row {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                spacing: root.buttonSpacing
                 visible: root.operationsCount > 0
 
                 Button {
                     text: "Insert Above"
-                    width: 130
-                    height: 40
+                    width: 150
+                    height: root.buttonHeight
+                    font.pixelSize: root.buttonFontSize
                     enabled: root.selectedType !== ""
                     onClicked: {
                         var idx = Math.max(0, root.currentOpIndex)
@@ -200,8 +205,9 @@ Popup {
 
                 Button {
                     text: "Insert Below"
-                    width: 130
-                    height: 40
+                    width: 150
+                    height: root.buttonHeight
+                    font.pixelSize: root.buttonFontSize
                     enabled: root.selectedType !== ""
                     onClicked: {
                         root.operationChosen(root.selectedType, root.currentOpIndex + 1)

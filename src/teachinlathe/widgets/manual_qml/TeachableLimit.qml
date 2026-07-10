@@ -54,12 +54,10 @@ Rectangle {
             NumpadField {
                 id: limitInput
                 Layout.preferredWidth: 105
-                Layout.preferredHeight: 36
                 enabled: root.status === 1
                 value: root.value
                 settingName: root.settingName
                 description: root.description
-                fontPixelSize: 15
                 hAlign: Text.AlignRight
                 formatter: function(v) { return (v === null || v === undefined) ? "" : String(v) }
                 parser: function(s) { return String(s) }

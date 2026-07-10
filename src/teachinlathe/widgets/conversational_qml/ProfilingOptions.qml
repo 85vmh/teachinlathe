@@ -147,7 +147,6 @@ GroupBox {
                             validatorObject: DoubleValidator { notation: DoubleValidator.StandardNotation }
                             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            font.pixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.radial = value; root.emitSave() }
                         }
@@ -170,7 +169,6 @@ GroupBox {
                             validatorObject: DoubleValidator { notation: DoubleValidator.StandardNotation }
                             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            font.pixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.axial = value; root.emitSave() }
                         }
@@ -210,7 +208,6 @@ GroupBox {
                                 bottom: 1
                             }
                             hAlign: Text.AlignRight
-                            fontPixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: {
                                 root.finish_passes = Math.max(1, Math.round(value))
@@ -232,7 +229,6 @@ GroupBox {
                                 bottom: 0
                             }
                             hAlign: Text.AlignRight
-                            fontPixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: {
                                 root.spring_passes = Math.max(0, Math.round(value))

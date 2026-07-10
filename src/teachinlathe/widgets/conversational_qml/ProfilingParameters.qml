@@ -89,7 +89,6 @@ GroupBox {
                         return (v == null) ? "" : Number(v)
                     }
                     hAlign: Text.AlignRight
-                    fontPixelSize: 16
                     onOpenRequested: root.openNumPadRequested(field)
                     onValueCommitted: { root.profile_id = value; root.emitSave() }
                 }
@@ -126,7 +125,6 @@ GroupBox {
                     return (v == null) ? "" : Number(v).toFixed(3)
                 }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.x_start = value; root.emitSave() }
             }
@@ -153,7 +151,6 @@ GroupBox {
                     return (v == null) ? "" : Number(v).toFixed(3)
                 }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.z_start = value; root.emitSave() }
             }

@@ -80,7 +80,6 @@ GroupBox {
             validatorObject: dblVal
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            font.pixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.chamfer_width = value; root.emitSave() }
         }
@@ -107,7 +106,6 @@ GroupBox {
             validatorObject: dblVal
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            font.pixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.fillet_radius = value; root.emitSave() }
         }

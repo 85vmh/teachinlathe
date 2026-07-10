@@ -211,7 +211,6 @@ Item {
                             value: root.pitch
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            fontPixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.pitch = value; root.emitSave() }
                         }
@@ -225,7 +224,6 @@ Item {
                             value: root.starts
                             formatter: function(v) { return (v == null) ? "1" : String(Math.max(1, Math.round(Number(v)))) }
                             hAlign: Text.AlignRight
-                            fontPixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.starts = Math.max(1, Math.round(value)); root.emitSave() }
                         }
@@ -272,7 +270,6 @@ Item {
                             value: root.location === "OD" ? root.majorDiameter : root.minorDiameter
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            fontPixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: {
                                 if (root.location === "OD") root.majorDiameter = value
@@ -296,7 +293,6 @@ Item {
                             value: root.location === "OD" ? root.minorDiameter : root.majorDiameter
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            fontPixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: {
                                 if (root.location === "OD") root.minorDiameter = value
@@ -341,7 +337,6 @@ Item {
                             value: root.zStart
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            fontPixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.zStart = value; root.emitSave() }
                         }
@@ -356,7 +351,6 @@ Item {
                             value: root.zEnd
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            fontPixelSize: 16
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.zEnd = value; root.emitSave() }
                         }
@@ -396,7 +390,6 @@ Item {
                                 value: root.initialDoc
                                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                                 hAlign: Text.AlignRight
-                                fontPixelSize: 16
                                 onOpenRequested: root.openNumPadRequested(field)
                                 onValueCommitted: { root.initialDoc = value; root.emitSave() }
                             }
@@ -413,7 +406,6 @@ Item {
                                 value: root.retract
                                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                                 hAlign: Text.AlignRight
-                                fontPixelSize: 16
                                 onOpenRequested: root.openNumPadRequested(field)
                                 onValueCommitted: { root.retract = value; root.emitSave() }
                             }
@@ -430,7 +422,6 @@ Item {
                                 value: root.compoundAngle
                                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                                 hAlign: Text.AlignRight
-                                fontPixelSize: 16
                                 onOpenRequested: root.openNumPadRequested(field)
                                 onValueCommitted: { root.compoundAngle = value; root.emitSave() }
                             }
@@ -476,7 +467,6 @@ Item {
                                 value: root.springPasses
                                 formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
                                 hAlign: Text.AlignRight
-                                fontPixelSize: 16
                                 onOpenRequested: root.openNumPadRequested(field)
                                 onValueCommitted: { root.springPasses = Math.round(value); root.emitSave() }
                             }

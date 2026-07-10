@@ -24,6 +24,14 @@ Popup {
     property string valueType: ""
     property string mode: "numpad"          // "select" | "numpad"
     property string buffer: ""
+    readonly property int buttonHeight: mode === "numpad" ? 70 : 60
+    readonly property int buttonFontSize: mode === "numpad" ? 24 : 18
+    readonly property int buttonSpacing: 20
+    readonly property int buttonRadius: 8
+    readonly property color buttonBorderColor: "#9aa3b0"
+    readonly property color buttonBg: "#ffffff"
+    readonly property color buttonPressedBg: "#dbeafe"
+    readonly property color buttonDisabledBg: "#e1e5ea"
 
     modal: true
     focus: true
@@ -31,8 +39,8 @@ Popup {
     parent: Overlay.overlay
     x: parent ? (parent.width  - width)  / 2 : 0
     y: parent ? (parent.height - height) / 2 : 0
-    width: 600
-    height: mode === "select" ? 450 : 600
+    width: 500
+    height: 660
     leftPadding: 24
     rightPadding: 24
     topPadding: 24
@@ -86,7 +94,7 @@ Popup {
 
     // ── Content ───────────────────────────────────────────────────────
     contentItem: ColumnLayout {
-        spacing: 10
+        spacing: root.buttonSpacing
 
         Text {
             Layout.fillWidth: true
@@ -113,21 +121,25 @@ Popup {
                     id: optionsFlow
                     width: parent.width
 
-                    readonly property int cols: 5
-                    readonly property int btnW: 85
-                    // Distribute the leftover horizontal space equally between the
-                    // (cols - 1) gaps so a full row of 5 buttons is justified.
+                    readonly property int cols: 3
+                    readonly property int btnW: Math.floor((width - root.buttonSpacing * (cols - 1)) / cols)
                     columns: cols
-                    columnSpacing: cols > 1 ? Math.max(0, (width - cols * btnW) / (cols - 1)) : 0
-                    rowSpacing: 20
+                    columnSpacing: root.buttonSpacing
+                    rowSpacing: root.buttonSpacing
 
                     Repeater {
                         model: root.options
                         delegate: Button {
                             width: optionsFlow.btnW
-                            height: 50
+                            height: root.buttonHeight
                             text: String(modelData)
-                            font.pixelSize: 16
+                            font.pixelSize: root.buttonFontSize
+                            background: Rectangle {
+                                radius: root.buttonRadius
+                                color: parent.pressed ? root.buttonPressedBg : root.buttonBg
+                                border.color: root.buttonBorderColor
+                                border.width: 1
+                            }
                             onClicked: root._accept(modelData)
                         }
                     }
@@ -165,9 +177,15 @@ Popup {
             visible: root.mode === "select" && root.valueType !== "str"
             Layout.alignment: Qt.AlignHCenter
             implicitWidth: 266
-            implicitHeight: 46
+            implicitHeight: root.buttonHeight
             text: "Other values..."
-            font.pixelSize: 16
+            font.pixelSize: root.buttonFontSize
+            background: Rectangle {
+                radius: root.buttonRadius
+                color: parent.pressed ? root.buttonPressedBg : root.buttonBg
+                border.color: root.buttonBorderColor
+                border.width: 1
+            }
             onClicked: { root.buffer = ""; root.mode = "numpad" }
         }
 
@@ -176,11 +194,11 @@ Popup {
             visible: root.mode === "numpad"
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 10
+            spacing: root.buttonSpacing
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: root.buttonSpacing
 
                 Label {
                     id: display
@@ -201,43 +219,67 @@ Popup {
                 }
                 Button {
                     Layout.preferredWidth: 60
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: root.buttonHeight
                     text: "←"
-                    font.pixelSize: 18
+                    font.pixelSize: root.buttonFontSize
+                    background: Rectangle {
+                        radius: root.buttonRadius
+                        color: parent.pressed ? root.buttonPressedBg : root.buttonBg
+                        border.color: root.buttonBorderColor
+                        border.width: 1
+                    }
                     onClicked: root.buffer = root.buffer.slice(0, -1)
                 }
                 Button {
-                    Layout.preferredWidth: 60
-                    Layout.preferredHeight: 60
+                    Layout.preferredWidth: 80
+                    Layout.preferredHeight: root.buttonHeight
                     text: "Clear"
-                    font.pixelSize: 14
+                    font.pixelSize: root.buttonFontSize
+                    background: Rectangle {
+                        radius: root.buttonRadius
+                        color: parent.pressed ? root.buttonPressedBg : root.buttonBg
+                        border.color: root.buttonBorderColor
+                        border.width: 1
+                    }
                     onClicked: root.buffer = ""
                 }
             }
 
             GridLayout {
                 Layout.fillWidth: true
-                Layout.fillHeight: true
+                Layout.preferredHeight: 4 * root.buttonHeight + 3 * root.buttonSpacing
                 columns: 3
-                columnSpacing: 12
-                rowSpacing: 12
+                columnSpacing: root.buttonSpacing
+                rowSpacing: root.buttonSpacing
 
                 Repeater {
                     model: ["7", "8", "9", "4", "5", "6", "1", "2", "3"]
                     delegate: Button {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        Layout.preferredHeight: root.buttonHeight
                         text: modelData
-                        font.pixelSize: 20
+                        font.pixelSize: root.buttonFontSize
+                        background: Rectangle {
+                            radius: root.buttonRadius
+                            color: parent.pressed ? root.buttonPressedBg : root.buttonBg
+                            border.color: root.buttonBorderColor
+                            border.width: 1
+                        }
                         onClicked: root.buffer += modelData
                     }
                 }
 
                 Button {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.preferredHeight: root.buttonHeight
                     text: "±"
-                    font.pixelSize: 20
+                    font.pixelSize: root.buttonFontSize
+                    background: Rectangle {
+                        radius: root.buttonRadius
+                        color: parent.pressed ? root.buttonPressedBg : root.buttonBg
+                        border.color: root.buttonBorderColor
+                        border.width: 1
+                    }
                     onClicked: {
                         root.buffer = root.buffer.charAt(0) === "-"
                                     ? root.buffer.slice(1)
@@ -246,27 +288,49 @@ Popup {
                 }
                 Button {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.preferredHeight: root.buttonHeight
                     text: "0"
-                    font.pixelSize: 20
+                    font.pixelSize: root.buttonFontSize
+                    background: Rectangle {
+                        radius: root.buttonRadius
+                        color: parent.pressed ? root.buttonPressedBg : root.buttonBg
+                        border.color: root.buttonBorderColor
+                        border.width: 1
+                    }
                     onClicked: root.buffer += "0"
                 }
                 Button {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.preferredHeight: root.buttonHeight
                     text: "."
-                    font.pixelSize: 20
+                    font.pixelSize: root.buttonFontSize
                     enabled: root.buffer.indexOf(".") === -1
+                    background: Rectangle {
+                        radius: root.buttonRadius
+                        color: parent.enabled ? (parent.pressed ? root.buttonPressedBg : root.buttonBg) : root.buttonDisabledBg
+                        border.color: root.buttonBorderColor
+                        border.width: 1
+                    }
                     onClicked: root.buffer += "."
                 }
             }
 
+            Item {
+                Layout.fillHeight: true
+            }
+
             Button {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 56
+                Layout.preferredHeight: root.buttonHeight
                 text: "Input"
-                font.pixelSize: 18
+                font.pixelSize: root.buttonFontSize
                 enabled: root.buffer.length > 0 && root.buffer !== "-" && root.buffer !== "."
+                background: Rectangle {
+                    radius: root.buttonRadius
+                    color: parent.enabled ? (parent.pressed ? root.buttonPressedBg : root.buttonBg) : root.buttonDisabledBg
+                    border.color: root.buttonBorderColor
+                    border.width: 1
+                }
                 onClicked: root._accept(root.buffer)
             }
         }

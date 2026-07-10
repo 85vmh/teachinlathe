@@ -68,7 +68,6 @@ GroupBox {
             validatorObject: DoubleValidator { notation: DoubleValidator.StandardNotation }
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            font.pixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.radial = value; root.emitSave() }
         }
@@ -91,7 +90,6 @@ GroupBox {
             validatorObject: DoubleValidator { notation: DoubleValidator.StandardNotation }
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            font.pixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.axial = value; root.emitSave() }
         }

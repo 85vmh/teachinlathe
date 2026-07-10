@@ -90,7 +90,6 @@ GroupBox {
                 value: root.z_start
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.z_start = value; root.emitSave() }
             }
@@ -114,7 +113,6 @@ GroupBox {
                 value: root.z_end
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.z_end = value; root.emitSave() }
             }
@@ -138,7 +136,6 @@ GroupBox {
                 value: root.z_retract
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.z_retract = value; root.emitSave() }
             }
@@ -171,7 +168,6 @@ GroupBox {
                 value: root.peck_depth
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.peck_depth = value; root.emitSave() }
             }
@@ -195,7 +191,6 @@ GroupBox {
                 value: root.pitch
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.pitch = value; root.emitSave() }
             }

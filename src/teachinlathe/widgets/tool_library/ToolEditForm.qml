@@ -240,8 +240,8 @@ Item {
                         NumpadField {
                             id: editToolNo
                             visible: !root.toolData || !root.toolData.isCurrent
-                            Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                            settingName: "tool_edit.tool_no"; fontPixelSize: 15; hAlign: Text.AlignLeft
+                            Layout.preferredWidth: 100
+                            settingName: "tool_edit.tool_no"; hAlign: Text.AlignLeft
                             formatter: function(v) { return (v === null || v === undefined) ? "" : String(parseInt(v)) }
                             parser:    function(s) { var n = parseInt(s); return isNaN(n) ? null : n }
                             onOpenRequested: root.openNumPadRequested(field)
@@ -262,8 +262,8 @@ Item {
                         Text { text: "Tip Radius:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
                         NumpadField {
                             id: editTipRadius
-                            Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                            settingName: "tool_library.tool_tip_radius"; fontPixelSize: 15
+                            Layout.preferredWidth: 100
+                            settingName: "tool_library.tool_tip_radius"
                             formatter: function(v) { return (v === null || v === undefined) ? "" : Number(v).toFixed(3) }
                             parser:    function(s) { var x = parseFloat(s); return isNaN(x) ? null : x }
                             onOpenRequested: root.openNumPadRequested(field)
@@ -273,8 +273,8 @@ Item {
                         Text { text: "Front Angle:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
                         NumpadField {
                             id: editFrontAngle
-                            Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                            settingName: "tool_edit.front_angle"; fontPixelSize: 15
+                            Layout.preferredWidth: 100
+                            settingName: "tool_edit.front_angle"
                             formatter: function(v) { return (v === null || v === undefined) ? "" : String(Math.round(v)) + "°" }
                             parser:    function(s) { var x = parseFloat(s); return isNaN(x) ? null : x }
                             onOpenRequested: root.openNumPadRequested(field)
@@ -284,8 +284,8 @@ Item {
                         Text { text: "Back Angle:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
                         NumpadField {
                             id: editBackAngle
-                            Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                            settingName: "tool_edit.back_angle"; fontPixelSize: 15
+                            Layout.preferredWidth: 100
+                            settingName: "tool_edit.back_angle"
                             formatter: function(v) { return (v === null || v === undefined) ? "" : String(Math.round(v)) + "°" }
                             parser:    function(s) { var x = parseFloat(s); return isNaN(x) ? null : x }
                             onOpenRequested: root.openNumPadRequested(field)
@@ -356,8 +356,8 @@ Item {
                                 }
                                 NumpadField {
                                     visible: ["drill","reamer","tap","trepaning"].indexOf(root._currentToolType) >= 0
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    settingName: "tool_edit.diameter"; fontPixelSize: 15
+                                    Layout.preferredWidth: 100
+                                    settingName: "tool_edit.diameter"
                                     value:     extraDiameter.value
                                     formatter: extraDiameter.formatter
                                     parser:    extraDiameter.parser
@@ -372,8 +372,8 @@ Item {
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "tap"
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    settingName: "tool_edit.pitch"; fontPixelSize: 15
+                                    Layout.preferredWidth: 100
+                                    settingName: "tool_edit.pitch"
                                     value:     extraPitch.value
                                     formatter: extraPitch.formatter
                                     parser:    extraPitch.parser
@@ -401,8 +401,8 @@ Item {
                                 }
                                 NumpadField {
                                     visible: ["drill","reamer"].indexOf(root._currentToolType) >= 0
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    settingName: "tool_edit.length"; fontPixelSize: 15
+                                    Layout.preferredWidth: 100
+                                    settingName: "tool_edit.length"
                                     value:     extraLength.value
                                     formatter: extraLength.formatter
                                     parser:    extraLength.parser
@@ -417,8 +417,8 @@ Item {
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "boring_bar"
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    settingName: "tool_edit.min_diameter"; fontPixelSize: 15
+                                    Layout.preferredWidth: 100
+                                    settingName: "tool_edit.min_diameter"
                                     value:     extraMinDiam.value
                                     formatter: extraMinDiam.formatter
                                     parser:    extraMinDiam.parser
@@ -433,8 +433,8 @@ Item {
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "boring_bar"
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    settingName: "tool_edit.max_undercut"; fontPixelSize: 15
+                                    Layout.preferredWidth: 100
+                                    settingName: "tool_edit.max_undercut"
                                     value:     extraUndercut.value
                                     formatter: extraUndercut.formatter
                                     parser:    extraUndercut.parser
@@ -449,8 +449,8 @@ Item {
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "boring_bar"
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    settingName: "tool_edit.max_depth"; fontPixelSize: 15
+                                    Layout.preferredWidth: 100
+                                    settingName: "tool_edit.max_depth"
                                     value:     extraMaxDepth.value
                                     formatter: extraMaxDepth.formatter
                                     parser:    extraMaxDepth.parser
@@ -465,8 +465,8 @@ Item {
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "parting_blade"
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    settingName: "tool_edit.width"; fontPixelSize: 15
+                                    Layout.preferredWidth: 100
+                                    settingName: "tool_edit.width"
                                     value:     extraWidth.value
                                     formatter: extraWidth.formatter
                                     parser:    extraWidth.parser
@@ -481,8 +481,8 @@ Item {
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "parting_blade"
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    settingName: "tool_edit.max_depth_pb"; fontPixelSize: 15
+                                    Layout.preferredWidth: 100
+                                    settingName: "tool_edit.max_depth_pb"
                                     value:     extraMaxDepth.value
                                     formatter: extraMaxDepth.formatter
                                     parser:    extraMaxDepth.parser
@@ -497,8 +497,8 @@ Item {
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "parting_blade"
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    settingName: "tool_edit.left_radius"; fontPixelSize: 15
+                                    Layout.preferredWidth: 100
+                                    settingName: "tool_edit.left_radius"
                                     value:     extraLR.value
                                     formatter: extraLR.formatter
                                     parser:    extraLR.parser
@@ -513,8 +513,8 @@ Item {
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "parting_blade"
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    settingName: "tool_edit.right_radius"; fontPixelSize: 15
+                                    Layout.preferredWidth: 100
+                                    settingName: "tool_edit.right_radius"
                                     value:     extraRR.value
                                     formatter: extraRR.formatter
                                     parser:    extraRR.parser

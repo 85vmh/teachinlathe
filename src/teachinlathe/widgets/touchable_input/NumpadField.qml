@@ -22,7 +22,7 @@ TextField {
 
     // control vizual reutilizabil
     property int    hAlign: Text.AlignRight     // aliniere text
-    property int    fontPixelSize: 16           // mărimea textului din input
+    property int    fontPixelSize: 20           // mărimea textului din input
     property string placeholder: ""             // dacă vrei placeholder
 
     signal openRequested(var field, string settingName, var currentValue, var meta)
@@ -39,7 +39,9 @@ TextField {
     selectByMouse: false
 
     // Vizual
+    implicitHeight: 48
     horizontalAlignment: hAlign
+    verticalAlignment: Text.AlignVCenter
     font.pixelSize: fontPixelSize
     placeholderText: placeholder
 

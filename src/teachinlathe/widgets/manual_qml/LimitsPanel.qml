@@ -92,11 +92,9 @@ Rectangle {
                 NumpadField {
                     anchors.centerIn: parent
                     width: 106
-                    height: 36
                     value: root.viewModel ? root.viewModel.chuckValue : "--none--"
                     settingName: "smart_numpad.chuck-limit"
                     description: "Chuck limit"
-                    fontPixelSize: 15
                     hAlign: Text.AlignRight
                     formatter: function(v) { return (v === null || v === undefined) ? "" : String(v) }
                     parser: function(s) { return String(s) }

@@ -96,7 +96,6 @@ GroupBox {
                 value: root.x_clearance
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.x_clearance = value; root.emitSave() }
             }
@@ -117,7 +116,6 @@ GroupBox {
                 value: root.x_start
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.x_start = value; root.emitSave() }
             }
@@ -141,7 +139,6 @@ GroupBox {
                 value: root.second_feed_x_pos
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.second_feed_x_pos = value; root.emitSave() }
             }
@@ -165,7 +162,6 @@ GroupBox {
                 value: root.x_end
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.x_end = value; root.emitSave() }
             }
@@ -189,7 +185,6 @@ GroupBox {
                 value: root.z_pos
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.z_pos = value; root.emitSave() }
             }
@@ -223,7 +218,6 @@ GroupBox {
                 value: root.first_feed_rate
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.first_feed_rate = value; root.emitSave() }
             }
@@ -247,7 +241,6 @@ GroupBox {
                 value: root.second_feed_rate
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                fontPixelSize: 16
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.second_feed_rate = value; root.emitSave() }
             }

@@ -69,7 +69,6 @@ GroupBox {
             validatorObject: groovesVal
             formatter: function(v) { return (v == null) ? "" : String(Math.max(1, Math.round(Number(v)))) }
             hAlign: Text.AlignRight
-            fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.grooves_count = Math.max(1, Math.round(value)); root.emitSave() }
         }
@@ -83,7 +82,6 @@ GroupBox {
             validatorObject: dblVal
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.doc = value; root.emitSave() }
         }
@@ -97,7 +95,6 @@ GroupBox {
             validatorObject: dblVal
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.retract = value; root.emitSave() }
         }

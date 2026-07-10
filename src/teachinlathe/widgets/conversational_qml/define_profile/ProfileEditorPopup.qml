@@ -412,7 +412,7 @@ Popup {
                         validatorObject: intVal
                         value: root.profileId
                         formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
-                        hAlign: Text.AlignRight; fontPixelSize: 15
+                        hAlign: Text.AlignRight
                         onOpenRequested: root.openNumPadRequested(field)
                         onValueCommitted: { root.profileId = Math.round(value); root.emitSave() }
                     }

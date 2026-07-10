@@ -14,6 +14,7 @@ Canvas {
     property string profileType:       "od" // "od" or "id" — controls startPoint blend entry direction
 
     signal primitiveSelected(int index)
+    signal selectionCleared()
 
     // ── Private state ──────────────────────────────────────────────────────────
     property real _scale:   5.0
@@ -254,6 +255,7 @@ Canvas {
             if (_wasDrag) return
             var idx = root._hitTest(mouse.x, mouse.y)
             if (idx >= 0) root.primitiveSelected(idx)
+            else root.selectionCleared()
         }
 
         onDoubleClicked: function(mouse) {

@@ -80,7 +80,6 @@ GroupBox {
             validatorObject: dblVal
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.feed_rate = value; root.emitSave() }
         }
@@ -104,7 +103,6 @@ GroupBox {
             validatorObject: dblVal
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.doc = value; root.emitSave() }
         }
@@ -128,7 +126,6 @@ GroupBox {
             validatorObject: dblVal
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.retract = value; root.emitSave() }
         }

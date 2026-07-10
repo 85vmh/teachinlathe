@@ -68,9 +68,17 @@ Item {
         arr.splice(idx, 1)
         root.primitives = _renumber(arr)
         var newLen = root.primitives.length
-        root.selectedPrimIndex  = (newLen === 0) ? -1 : Math.min(idx, newLen - 1)
+        var nextIdx = (newLen === 0) ? -1 : Math.min(idx, newLen - 1)
+        root.selectedPrimIndex  = nextIdx
         root.selectedBlendIndex = -1
         root.emitSave()
+        if (nextIdx >= 0) {
+            Qt.callLater(function() {
+                Qt.callLater(function() {
+                    root._scrollTo(nextIdx, idx >= newLen)
+                })
+            })
+        }
     }
 
     function _refEndCoords(refIdx) {
@@ -103,6 +111,25 @@ Item {
         root.selectedPrimIndex  = actualIdx
         root.selectedBlendIndex = -1
         root.emitSave()
+        Qt.callLater(function() {
+            Qt.callLater(function() {
+                root._scrollTo(actualIdx, true)
+            })
+        })
+    }
+
+    function addPrimitiveAbove(primType) {
+        if (root.selectedPrimIndex <= 0) return
+        var ref = root._refEndCoords(root.selectedPrimIndex - 1)
+        root.primInserted(root.selectedPrimIndex, primType, ref.x, ref.z)
+    }
+
+    function addPrimitiveBelow(primType) {
+        var idx = root.selectedPrimIndex < 0
+                ? root.primitives.length
+                : root.selectedPrimIndex + 1
+        var ref = root._refEndCoords(root.selectedPrimIndex)
+        root.primInserted(idx, primType, ref.x, ref.z)
     }
 
     onSelectedPrimIndexChanged:  Qt.callLater(_scrollToSelected)
@@ -217,136 +244,6 @@ Item {
         }
     }
 
-    // ── Add primitive popup ─────────────────────────────────────────────────────
-    Popup {
-        id: addPrimPopup
-        parent: Overlay.overlay
-        modal: true; focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        anchors.centerIn: parent
-        contentWidth: 420
-        contentHeight: addCol.implicitHeight
-        padding: 0
-
-        property string selectedType: ""
-        onAboutToShow: selectedType = ""
-
-        background: Rectangle {
-            radius: 8; color: "#ffffff"
-            border.color: "#d6dce7"; border.width: 1
-        }
-
-        contentItem: Column {
-            id: addCol
-            spacing: 12
-            width: addPrimPopup.contentWidth
-            padding: 16
-
-            Text { text: "Add Primitive"; font.pointSize: 13; font.bold: true; color: "#1e2430" }
-
-            Row {
-                spacing: 8
-                Repeater {
-                    model: [{ label: "LineTo", type: "lineTo" }, { label: "ArcTo", type: "arcTo" }]
-                    delegate: Button {
-                        readonly property bool isSelected: addPrimPopup.selectedType === modelData.type
-                        width: 150; height: 44
-                        text: modelData.label
-                        font.pointSize: 11; font.family: "Noto Sans"
-                        background: Rectangle {
-                            radius: 6
-                            color: {
-                                if (isSelected)      return "#dbeafe"
-                                if (parent.pressed)  return "#e5edf9"
-                                if (parent.hovered)  return "#f0f4fc"
-                                return "#f5f7fb"
-                            }
-                            border.color: isSelected ? "#3b82f6" : "#c5d0df"; border.width: 1
-                        }
-                        contentItem: Text {
-                            text: parent.text; font: parent.font
-                            color: isSelected ? "#1e40af" : "#1e2430"
-                            horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                        }
-                        onClicked: addPrimPopup.selectedType =
-                            (addPrimPopup.selectedType === modelData.type) ? "" : modelData.type
-                    }
-                }
-            }
-
-            Rectangle { width: addPrimPopup.contentWidth - 32; height: 1; color: "#d6dce7" }
-
-            Item {
-                width: addPrimPopup.contentWidth - 32; height: 44
-
-                Button {
-                    anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                    text: "Cancel"; width: 100; height: 40
-                    font.pointSize: 11; font.family: "Noto Sans"
-                    background: Rectangle {
-                        radius: 6; color: parent.pressed ? "#e5edf9" : parent.hovered ? "#eef3fb" : "#f5f7fb"
-                        border.color: "#c5d0df"; border.width: 1
-                    }
-                    contentItem: Text {
-                        text: parent.text; font: parent.font; color: "#1e2430"
-                        horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                    }
-                    onClicked: addPrimPopup.close()
-                }
-
-                Row {
-                    anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                    spacing: 8
-
-                    Button {
-                        text: "Insert Above"; width: 130; height: 40
-                        font.pointSize: 11; font.family: "Noto Sans"
-                        enabled: addPrimPopup.selectedType !== "" && root.selectedPrimIndex > 0
-                        background: Rectangle {
-                            radius: 6; color: parent.pressed ? "#e5edf9" : parent.hovered ? "#eef3fb" : "#f5f7fb"
-                            border.color: "#c5d0df"; border.width: 1
-                            opacity: parent.enabled ? 1.0 : 0.5
-                        }
-                        contentItem: Text {
-                            text: parent.text; font: parent.font; color: "#1e2430"
-                            horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                            opacity: parent.enabled ? 1.0 : 0.5
-                        }
-                        onClicked: {
-                            var ref = root._refEndCoords(root.selectedPrimIndex - 1)
-                            root.primInserted(root.selectedPrimIndex, addPrimPopup.selectedType, ref.x, ref.z)
-                            addPrimPopup.close()
-                        }
-                    }
-
-                    Button {
-                        text: "Insert Below"; width: 130; height: 40
-                        font.pointSize: 11; font.family: "Noto Sans"
-                        enabled: addPrimPopup.selectedType !== ""
-                        background: Rectangle {
-                            radius: 6; color: parent.pressed ? "#e5edf9" : parent.hovered ? "#eef3fb" : "#f5f7fb"
-                            border.color: "#c5d0df"; border.width: 1
-                            opacity: parent.enabled ? 1.0 : 0.5
-                        }
-                        contentItem: Text {
-                            text: parent.text; font: parent.font; color: "#1e2430"
-                            horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                            opacity: parent.enabled ? 1.0 : 0.5
-                        }
-                        onClicked: {
-                            var idx = root.selectedPrimIndex < 0
-                                      ? root.primitives.length
-                                      : root.selectedPrimIndex + 1
-                            var ref = root._refEndCoords(root.selectedPrimIndex)
-                            root.primInserted(idx, addPrimPopup.selectedType, ref.x, ref.z)
-                            addPrimPopup.close()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     // ── Screen background ────────────────────────────────────────────────────────
     Rectangle {
         anchors.fill: parent
@@ -358,7 +255,7 @@ Item {
     Item {
         anchors.fill: parent
 
-        // ── Editor area: 30% list | 70% canvas ───────────────────────────────────
+        // ── Editor area: 35% list | 65% canvas ───────────────────────────────────
         Item {
             anchors.fill: parent
 
@@ -366,7 +263,7 @@ Item {
             Rectangle {
                 id: leftPanelBg
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                width: parent.width * 0.30
+                width: parent.width * 0.35
                 color: "#ffffff"
 
                 ColumnLayout {
@@ -377,9 +274,8 @@ Item {
                     // Profile ID + Type row
                     Item {
                         Layout.fillWidth: true
-                        Layout.topMargin: 10
+                        Layout.preferredHeight: 80
                         Layout.leftMargin: 12; Layout.rightMargin: 12
-                        height: 40
 
                         // Left half: Profile ID
                         RowLayout {
@@ -396,7 +292,7 @@ Item {
                                 validatorObject: intVal
                                 value: root.profileId
                                 formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
-                                hAlign: Text.AlignHCenter; fontPixelSize: 15
+                                hAlign: Text.AlignHCenter
                                 onOpenRequested: root.openNumPadRequested(field)
                                 onValueCommitted: { root.profileId = Math.round(value); root.emitSave() }
                             }
@@ -406,7 +302,7 @@ Item {
                             id: centerDivider
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.verticalCenter: parent.verticalCenter
-                            width: 1; height: 40; color: "#d6dce7"
+                            width: 1; height: 48; color: "#d6dce7"
                         }
 
                         // Right half: Type OD/ID
@@ -460,7 +356,7 @@ Item {
 
                         Column {
                             width: primScroll.availableWidth
-                            spacing: 6
+                            spacing: 8
                             topPadding: 4; bottomPadding: 8
 
                             Repeater {
@@ -471,7 +367,7 @@ Item {
                                     property var md: modelData
                                     property int mi: index
                                     width: parent ? parent.width : 0
-                                    spacing: 4
+                                    spacing: 8
 
                                     onMdChanged: {
                                         if (primLdr.item)  primLdr.item.primData  = md
@@ -571,34 +467,93 @@ Item {
 
                     } // Item wrapper for scroll + fades
 
-                    // Add New button
-                    Button {
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.bottomMargin: 10
-                        text: "Add New"
-                        implicitWidth: 130; implicitHeight: 40
-                        font.pointSize: 11; font.family: "Noto Sans"
-                        contentItem: Text {
-                            text: parent.text; font: parent.font; color: "#1e2430"
-                            horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                        }
-                        background: Rectangle {
-                            radius: 6
-                            color: parent.pressed ? "#e5edf9" : parent.hovered ? "#eef3fb" : "#f5f7fb"
-                            border.color: "#c5d0df"; border.width: 1
-                        }
-                        onClicked: {
-                            var hasStart = root.primitives.length > 0 && root.primitives[0].type === "startPoint"
-                            if (!hasStart) {
-                                var arr = JSON.parse(JSON.stringify(root.primitives))
-                                arr.unshift({ type: "startPoint", primitive_id: 0,
-                                              x_start: 0, z_start: 0, blend: { type: "none" } })
-                                root.primitives     = _renumber(arr)
-                                root.selectedPrimIndex  = 0
-                                root.selectedBlendIndex = -1
-                                root.emitSave()
-                            } else {
-                                addPrimPopup.open()
+                    Rectangle {
+                        Layout.fillWidth: true; height: 1
+                        color: "#e8ecf2"
+                        Layout.leftMargin: 4; Layout.rightMargin: 4
+                    }
+
+                    // Add primitive buttons
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 80
+
+                        RowLayout {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.verticalCenterOffset: -4
+                            anchors.leftMargin: 16
+                            anchors.rightMargin: 16
+                            spacing: 24
+
+                            Repeater {
+                                model: [
+                                    { label: "LineTo", direction: "Above", type: "lineTo", iconEnd: "../icons/move_up_icon.svg" },
+                                    { label: "ArcTo", direction: "Above", type: "arcTo", iconEnd: "../icons/move_up_icon.svg" },
+                                    { label: "LineTo", direction: "Below", type: "lineTo", iconEnd: "../icons/move_down_icon.svg" },
+                                    { label: "ArcTo", direction: "Below", type: "arcTo", iconEnd: "../icons/move_down_icon.svg" }
+                                ]
+
+                                delegate: Button {
+                                    id: addPrimitiveButton
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 60
+                                    enabled: modelData.direction === "Above" ? root.selectedPrimIndex > 0 : root.primitives.length > 0
+                                    font.pixelSize: 16
+                                    font.family: "Noto Sans"
+
+                                    contentItem: RowLayout {
+                                        spacing: 4
+
+                                        Image {
+                                            Layout.preferredWidth: 36
+                                            Layout.preferredHeight: 36
+                                            sourceSize.width: 36
+                                            sourceSize.height: 36
+                                            source: "../icons/add_op_icon.svg"
+                                            fillMode: Image.PreserveAspectFit
+                                            opacity: addPrimitiveButton.enabled ? 1.0 : 0.35
+                                        }
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: modelData.label
+                                            font: addPrimitiveButton.font
+                                            color: "#1e2430"
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            wrapMode: Text.WordWrap
+                                            maximumLineCount: 1
+                                            opacity: addPrimitiveButton.enabled ? 1.0 : 0.35
+                                        }
+
+                                        Image {
+                                            Layout.preferredWidth: 32
+                                            Layout.preferredHeight: 32
+                                            sourceSize.width: 32
+                                            sourceSize.height: 32
+                                            source: modelData.iconEnd
+                                            fillMode: Image.PreserveAspectFit
+                                            opacity: addPrimitiveButton.enabled ? 1.0 : 0.35
+                                        }
+                                    }
+
+                                    background: Rectangle {
+                                        radius: 6
+                                        color: parent.pressed ? "#e5edf9" : parent.hovered ? "#eef3fb" : "#f5f7fb"
+                                        border.color: "#c5d0df"
+                                        border.width: 1
+                                        opacity: parent.enabled ? 1.0 : 0.55
+                                    }
+
+                                    onClicked: {
+                                        if (modelData.direction === "Above")
+                                            root.addPrimitiveAbove(modelData.type)
+                                        else
+                                            root.addPrimitiveBelow(modelData.type)
+                                    }
+                                }
                             }
                         }
                     }
@@ -634,6 +589,10 @@ Item {
                         selectedBlendIndex: root.selectedBlendIndex
                         onPrimitiveSelected: function(idx) {
                             root.selectedPrimIndex  = idx
+                            root.selectedBlendIndex = -1
+                        }
+                        onSelectionCleared: {
+                            root.selectedPrimIndex = -1
                             root.selectedBlendIndex = -1
                         }
 

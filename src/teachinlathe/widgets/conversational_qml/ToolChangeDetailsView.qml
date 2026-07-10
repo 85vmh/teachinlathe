@@ -89,7 +89,6 @@ Item {
                     settingName: "toolchange_tool_no"
                     validatorObject: intVal
                     value: root.toolNo
-                    fontPixelSize: 16
                     formatter: function (v) {
                         return (v == null) ? "" : String(Math.floor(Number(v)))
                     }

@@ -202,7 +202,6 @@ GroupBox {
                                 validatorObject: IntValidator {
                                 }
                                 hAlign: Text.AlignRight
-                                fontPixelSize: 16
                                 onOpenRequested: root.openNumPadRequested(field)
                                 onValueCommitted: { root.rpm_value = value; root.emitSave() }
                             }
@@ -245,7 +244,6 @@ GroupBox {
                                     return (v == null) ? "" : Number(v).toFixed(1)
                                 }
                                 hAlign: Text.AlignRight
-                                font.pixelSize: 16
                                 onOpenRequested: root.openNumPadRequested(field)
                                 onValueCommitted: { root.css_value = value; root.emitSave() }
                             }
@@ -268,7 +266,6 @@ GroupBox {
                                 validatorObject: IntValidator {
                                 }
                                 hAlign: Text.AlignRight
-                                font.pixelSize: 16
                                 onOpenRequested: root.openNumPadRequested(field)
                                 onValueCommitted: { root.css_max_rpm = value; root.emitSave() }
                             }

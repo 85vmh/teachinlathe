@@ -70,7 +70,6 @@ GroupBox {
             value: root.x_start
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.x_start = value; root.emitSave() }
         }
@@ -85,7 +84,6 @@ GroupBox {
             value: root.z_start
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.z_start = value; root.emitSave() }
         }
@@ -100,7 +98,6 @@ GroupBox {
             value: root.z_end
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            fontPixelSize: 16
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.z_end = value; root.emitSave() }
         }

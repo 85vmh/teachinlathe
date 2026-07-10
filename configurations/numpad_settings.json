@@ -22,7 +22,7 @@
   "spindle.rpm_2": {
     "description": "Enter spindle target RPM (Gear 2)",
     "default_value": 1000,
-    "last_value": 900,
+    "last_value": 1000,
     "persistent": true,
     "options": [
       700,

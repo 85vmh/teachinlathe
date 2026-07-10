@@ -14,6 +14,7 @@ Item {
     property int activeOpIndex: -1
     property real _savedContentY: 0
     property bool _restoreScrollPending: false
+    property bool _scrollToLastPending: false
 
     onActiveOpIndexChanged: {
         opsList.currentIndex = activeOpIndex >= 0 ? activeOpIndex : -1
@@ -22,18 +23,35 @@ Item {
     onOperationsModelChanged: {
         var targetY = _restoreScrollPending ? _savedContentY : opsList.contentY
         Qt.callLater(function() {
-            if (_restoreScrollPending) {
+            if (_scrollToLastPending) {
+                _restoreScrollPending = false
+                _scrollToLastPending = false
+                opsList.currentIndex = activeOpIndex >= 0 ? activeOpIndex : -1
+                operationEditor._scrollOperationsToLast()
+            } else if (_restoreScrollPending) {
                 var maxY = Math.max(0, opsList.contentHeight - opsList.height)
                 opsList.contentY = Math.max(0, Math.min(targetY, maxY))
                 _restoreScrollPending = false
+                opsList.currentIndex = activeOpIndex >= 0 ? activeOpIndex : -1
+            } else {
+                opsList.currentIndex = activeOpIndex >= 0 ? activeOpIndex : -1
             }
-            opsList.currentIndex = activeOpIndex >= 0 ? activeOpIndex : -1
         })
     }
 
     function _saveScrollPosition() {
         _savedContentY = opsList.contentY
         _restoreScrollPending = true
+    }
+
+    function _scrollOperationsToLast() {
+        Qt.callLater(function() {
+            Qt.callLater(function() {
+                if (opsList.count <= 0)
+                    return
+                opsList.positionViewAtIndex(opsList.count - 1, ListView.End)
+            })
+        })
     }
 
     // Navigation
@@ -123,6 +141,8 @@ Item {
         onCancelled: operationEditor._pendingDeleteIndex = -1
         onConfirmed: {
             if (operationEditor._pendingDeleteIndex >= 0) {
+                operationEditor._scrollToLastPending =
+                    operationEditor._pendingDeleteIndex === operationEditor.operationsModel.length - 1
                 operationEditor.deleteOperationRequested(operationEditor._pendingDeleteIndex)
                 operationEditor._pendingDeleteIndex = -1
             }
@@ -152,6 +172,7 @@ Item {
         sourceComponent: AddOperationPopup {
             id: addPopup
             onOperationChosen: function(type, insertIndex) {
+                operationEditor._scrollToLastPending = true
                 operationEditor.addOperationTypeChosen(type, insertIndex)
             }
             onClosed: {
@@ -180,13 +201,16 @@ Item {
             property string text: ""
             property bool  enabled: true
             property bool  compact: false
+            property int buttonHeight: 36
+            property int iconSize: 20
+            property int fontPixelSize: Theme.fontSizeNormal
 
             signal clicked()
 
             // Padding + implicit sizing based on content
             readonly property int hp: 8       // left/right padding
             readonly property int vp: 6       // top/bottom padding
-            implicitHeight: 36
+            implicitHeight: buttonHeight
             implicitWidth: Math.max(90, Math.ceil(contentRow.implicitWidth) + hp * 2)
             Layout.preferredWidth: implicitWidth
             Layout.preferredHeight: implicitHeight
@@ -211,8 +235,8 @@ Item {
                 Item {
                     id: iconWrap
                     Layout.alignment: Qt.AlignVCenter
-                    Layout.preferredWidth: 20
-                    Layout.preferredHeight: 20
+                    Layout.preferredWidth: btn.iconSize
+                    Layout.preferredHeight: btn.iconSize
                     visible: btn.iconSource !== ""
 
                     Image {
@@ -238,6 +262,7 @@ Item {
                     color: btn.tint
                     Layout.alignment: Qt.AlignVCenter
                     verticalAlignment: Text.AlignVCenter
+                    font.pixelSize: btn.fontPixelSize
                     elide: Text.ElideRight
                 }
             }
@@ -290,6 +315,15 @@ Item {
         })
     }
 
+    function openAddOperationPopup() {
+        operationEditor.addOperationRequested()
+        if (addOpPopupLoader.active && addOpPopupLoader.item) {
+            addOpPopupLoader.item.close()
+            addOpPopupLoader.active = false
+        }
+        addOpPopupLoader.active = true
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.bottomMargin: 36
@@ -303,7 +337,7 @@ Item {
             // LEFT: program header + operations box
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredWidth: 3
+                Layout.preferredWidth: 3.5
                 Layout.fillHeight: true
                 color: "#ffffff"
                 radius: 6
@@ -378,31 +412,6 @@ Item {
                                     verticalAlignment: Text.AlignVCenter
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
-                                }
-
-                                // Add operation
-                                Loader {
-                                    id: addBtn
-                                    sourceComponent: iconTextButton
-                                    Layout.alignment: Qt.AlignVCenter
-                                    onLoaded: {
-                                        item.iconSource = "icons/add_op_icon.svg"
-                                        item.text = "Add New Operation"
-                                        item.tint = "#2E7D32"      // green
-                                        item.enabled = true
-                                        item.compact = false       // show text; set true only if you want icon-only
-                                        // make RowLayout honor the button width
-                                        addBtn.Layout.preferredWidth = 160
-                                        addBtn.Layout.preferredHeight = item.implicitHeight
-                                        item.clicked.connect(function () {
-                                            operationEditor.addOperationRequested()
-                                            if (addOpPopupLoader.active && addOpPopupLoader.item) {
-                                                addOpPopupLoader.item.close()
-                                                addOpPopupLoader.active = false
-                                            }
-                                            addOpPopupLoader.active = true
-                                        })
-                                    }
                                 }
 
                                 // Reorder toggle
@@ -535,60 +544,118 @@ Item {
                                     }
                                 }
 
-                                // LIST
-                                ListView {
-                                    id: opsList
+                                Item {
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
-                                    clip: true
-                                    model: operationEditor.operationsModel
-                                    currentIndex: -1
-                                    onCurrentIndexChanged: {
-                                        if (currentIndex >= 0) operationEditor.detailsRequested(currentIndex)
+
+                                    // LIST
+                                    ListView {
+                                        id: opsList
+                                        anchors.fill: parent
+                                        clip: true
+                                        model: operationEditor.operationsModel
+                                        currentIndex: -1
+                                        onCurrentIndexChanged: {
+                                            if (currentIndex >= 0) operationEditor.detailsRequested(currentIndex)
+                                        }
+
+                                        delegate: OperationRowDelegate {
+                                            width: ListView.view ? ListView.view.width : 400
+                                            rowIndex: index
+                                            op: modelData
+                                            isCurrentItem: ListView.isCurrentItem
+
+                                            colOpNumW: operationEditor.colOpNumW
+                                            colGenW: operationEditor.colGenW
+                                            colTypeW: operationEditor.colTypeW
+                                            colOptW: operationEditor.colOptW
+                                            colDelW: operationEditor.colDelW
+
+                                            editing: operationEditor.reorderMode
+
+                                            totalCount: opsList.count
+                                            isFirstItem: index === 0
+                                            isLastItem: index === (opsList.count - 1)
+
+                                            onGenerateToggled: function (i, checked) {
+                                                operationEditor._saveScrollPosition()
+                                                operationEditor.toggleGenerateGcode(i, checked)
+                                            }
+                                            onOptionalToggled: function (i, checked) {
+                                                operationEditor._saveScrollPosition()
+                                                operationEditor.toggleOptionalBlock(i, checked)
+                                            }
+                                            onDeleteClicked: function (i) {
+                                                operationEditor._pendingDeleteIndex = i
+                                                deleteConfirmDialog.open()
+                                            }
+                                            onMoveUpRequested: function (i) {
+                                                operationEditor.moveUpRequested(i)
+                                            }
+                                            onMoveDownRequested: function (i) {
+                                                operationEditor.moveDownRequested(i)
+                                            }
+                                            onRowTapped: function (i) {
+                                                opsList.currentIndex = i
+                                            }
+                                        }
                                     }
 
-                                    delegate: OperationRowDelegate {
-                                        width: ListView.view ? ListView.view.width : 400
-                                        rowIndex: index
-                                        op: modelData
-                                        isCurrentItem: ListView.isCurrentItem
+                                    Rectangle {
+                                        anchors { left: parent.left; right: parent.right; top: parent.top }
+                                        height: 40
+                                        visible: opsList.contentY > 0
+                                        z: 1
+                                        gradient: Gradient {
+                                            orientation: Gradient.Vertical
+                                            GradientStop { position: 0.0; color: "#f8f8f8" }
+                                            GradientStop { position: 1.0; color: "transparent" }
+                                        }
+                                    }
 
-                                        colOpNumW: operationEditor.colOpNumW
-                                        colGenW: operationEditor.colGenW
-                                        colTypeW: operationEditor.colTypeW
-                                        colOptW: operationEditor.colOptW
-                                        colDelW: operationEditor.colDelW
-
-                                        editing: operationEditor.reorderMode
-
-                                        totalCount: opsList.count
-                                        isFirstItem: index === 0
-                                        isLastItem: index === (opsList.count - 1)
-
-                                        onGenerateToggled: function (i, checked) {
-                                            operationEditor._saveScrollPosition()
-                                            operationEditor.toggleGenerateGcode(i, checked)
-                                        }
-                                        onOptionalToggled: function (i, checked) {
-                                            operationEditor._saveScrollPosition()
-                                            operationEditor.toggleOptionalBlock(i, checked)
-                                        }
-                                        onDeleteClicked: function (i) {
-                                            operationEditor._pendingDeleteIndex = i
-                                            deleteConfirmDialog.open()
-                                        }
-                                        onMoveUpRequested: function (i) {
-                                            operationEditor.moveUpRequested(i)
-                                        }
-                                        onMoveDownRequested: function (i) {
-                                            operationEditor.moveDownRequested(i)
-                                        }
-                                        onRowTapped: function (i) {
-                                            opsList.currentIndex = i
+                                    Rectangle {
+                                        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                                        height: 40
+                                        visible: opsList.contentY + opsList.height < opsList.contentHeight - 1
+                                        z: 1
+                                        gradient: Gradient {
+                                            orientation: Gradient.Vertical
+                                            GradientStop { position: 0.0; color: "transparent" }
+                                            GradientStop { position: 1.0; color: "#f8f8f8" }
                                         }
                                     }
                                 }
                             } // end list container
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 1
+                                color: "#e8ecf2"
+                            }
+
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 80
+
+                                Loader {
+                                    id: addBtn
+                                    anchors.centerIn: parent
+                                    sourceComponent: iconTextButton
+                                    width: item ? item.implicitWidth : 0
+                                    height: item ? item.implicitHeight : 0
+                                    onLoaded: {
+                                        item.iconSource = "icons/add_op_icon.svg"
+                                        item.text = "Add New Operation"
+                                        item.tint = "#2E7D32"
+                                        item.enabled = true
+                                        item.compact = false
+                                        item.buttonHeight = 60
+                                        item.iconSize = 36
+                                        item.fontPixelSize = 16
+                                        item.clicked.connect(operationEditor.openAddOperationPopup)
+                                    }
+                                }
+                            }
                         } // end operationsBox ColumnLayout
                     } // end operationsBox
                 } // end outer ColumnLayout
@@ -597,7 +664,7 @@ Item {
             // RIGHT: details
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredWidth: 7
+                Layout.preferredWidth: 6.5
                 Layout.fillHeight: true
                 color: "#f5f5f5"
                 radius: 6

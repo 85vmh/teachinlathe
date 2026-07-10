@@ -28,12 +28,10 @@ RowLayout {
     NumpadField {
         id: input
         Layout.preferredWidth: 78
-        Layout.preferredHeight: 40
         visible: root.editable
         enabled: root.editable
         value: root.value
         settingName: root.settingName
-        fontPixelSize: 17
         hAlign: Text.AlignHCenter
         formatter: function(v) { return (v === null || v === undefined) ? "" : String(v) }
         parser: function(s) { return String(s) }

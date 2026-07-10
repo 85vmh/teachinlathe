@@ -22,7 +22,7 @@ Rectangle {
     signal deleteRequested(int idx)
 
     // ── Colors ────────────────────────────────────────────────────────────────
-    readonly property color clrCardBg:            "white"
+    readonly property color clrCardBg:            "#f5f7fb"
     readonly property color clrCardBgSel:         "#dbeafe"
     readonly property color clrBorder:            "#cccccc"
     readonly property color clrBorderSel:         "#3b82f6"
@@ -34,21 +34,21 @@ Rectangle {
     readonly property color clrDeleteBorder:      "#C62828"
 
     // ── Sizes ─────────────────────────────────────────────────────────────────
-    readonly property int szCardRadius:    4
+    readonly property int szCardRadius:    8
     readonly property int szCardPadding:   24
     readonly property int szMargin:        12
-    readonly property int szSpacing:       4
+    readonly property int szSpacing:       8
     readonly property int szIconArea:      56
     readonly property int szIconSize:      56
-    readonly property int szFont:          14
-    readonly property int szGridRowGap:    16
+    readonly property int szFont:          16
+    readonly property int szGridRowGap:    20
     readonly property int szGridColGap:    8
-    readonly property int szGridWidth:     180
-    readonly property int szInputWidth:    110
+    readonly property int szGridWidth:     196
+    readonly property int szInputWidth:    120
     readonly property int szSepInset:      4
     readonly property int szSepGap:        8
-    readonly property int szBtn:           40
-    readonly property int szBtnIcon:       28
+    readonly property int szBtn:           50
+    readonly property int szBtnIcon:       36
     readonly property int szBtnIconSrc:    112
 
     color:        isSelected ? clrCardBgSel : clrCardBg
@@ -107,7 +107,7 @@ Rectangle {
                 validatorObject: dblVal
                 value: primData.x_end !== undefined ? primData.x_end : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                hAlign: Text.AlignRight; fontPixelSize: szFont
+                hAlign: Text.AlignRight
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: {
                     var d = JSON.parse(JSON.stringify(primData))
@@ -124,7 +124,7 @@ Rectangle {
                 validatorObject: dblVal
                 value: primData.z_end !== undefined ? primData.z_end : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                hAlign: Text.AlignRight; fontPixelSize: szFont
+                hAlign: Text.AlignRight
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: {
                     var d = JSON.parse(JSON.stringify(primData))
@@ -167,6 +167,10 @@ Rectangle {
             }
         }
 
+        Item {
+            Layout.preferredWidth: 8
+        }
+
         Rectangle {
             implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
             enabled: root._blendType === "none" && root.primIdx < root.primCount - 1
@@ -191,6 +195,10 @@ Rectangle {
                     root.primUpdated(primIdx, d)
                 }
             }
+        }
+
+        Item {
+            Layout.preferredWidth: 8
         }
 
         Rectangle {

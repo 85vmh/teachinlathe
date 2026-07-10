@@ -121,7 +121,6 @@ Item {
                     NumpadField {
                         Layout.preferredWidth: 140
                         settingName: "smart_numpad.header-datum"
-                        fontPixelSize: root.fieldFontSize
                         value: root.datum
                         onOpenRequested: root.openNumPadRequested(field)
                         onValueCommitted: { root.datum = Math.round(value); root.emitSave() }
@@ -170,7 +169,6 @@ Item {
                     NumpadField {
                         Layout.preferredWidth: 160
                         settingName: "smart_numpad.workpiece-external-dia"
-                        fontPixelSize: root.fieldFontSize
                         value: root.extDia
                         formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                         onOpenRequested: root.openNumPadRequested(field)
@@ -191,7 +189,6 @@ Item {
                     NumpadField {
                         Layout.preferredWidth: 160
                         settingName: "smart_numpad.workpiece-internal-dia"
-                        fontPixelSize: root.fieldFontSize
                         value: root.intDia
                         formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                         onOpenRequested: root.openNumPadRequested(field)
@@ -211,7 +208,6 @@ Item {
                     NumpadField {
                         Layout.preferredWidth: 160
                         settingName: "smart_numpad.workpiece-stickout"
-                        fontPixelSize: root.fieldFontSize
                         value: root.stickout
                         formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
                         onOpenRequested: root.openNumPadRequested(field)
