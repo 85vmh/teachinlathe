@@ -81,14 +81,24 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 48
                     font.pixelSize: 16
-                    onClicked: { programsViewModel.runDone(); root.close() }
+                    onClicked: {
+                        root.close()
+                        Qt.callLater(function() {
+                            programsViewModel.runDone()
+                        })
+                    }
                 }
                 Button {
                     text: "Run Again"
                     Layout.fillWidth: true
                     Layout.preferredHeight: 48
                     font.pixelSize: 16
-                    onClicked: { programsViewModel.runAgain(); root.close() }
+                    onClicked: {
+                        root.close()
+                        Qt.callLater(function() {
+                            programsViewModel.runAgain()
+                        })
+                    }
                 }
             }
         }

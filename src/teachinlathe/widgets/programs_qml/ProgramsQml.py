@@ -265,6 +265,9 @@ class ProgramsQml(QQuickWidget):
             dlg.setProperty('visible', True)  # open()
 
     def _exit_run_full_screen(self):
+        QTimer.singleShot(0, self._exit_run_full_screen_now)
+
+    def _exit_run_full_screen_now(self):
         self._hide_program_complete_dialog()
         win = self.window()
         self.gremlin.setParent(self._overlay_host)
