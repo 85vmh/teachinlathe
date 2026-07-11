@@ -74,6 +74,9 @@ Item {
     ProgramCompleteDialog {
         id: completeDialog
         objectName: "programCompleteDialog"
-        dialogTarget: gcodePane
+        dialogCenterX: gcodePane.width > 0
+            ? root.width - (gcodePane.width / 2)
+            : root.width * 0.75
+        dialogCenterY: root.height / 2
     }
 }

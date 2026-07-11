@@ -207,14 +207,16 @@ class ProgramsActionSource(QObject):
         snapshot = self._runtime_store.poll()
         stat = self._runtime_store.stat
         state = int(_channel_value('state', getattr(stat, 'state', 0)) or 0)
+        interp_state = int(_channel_value('interp_state', getattr(stat, 'interp_state', 0)) or 0)
         paused = bool(_channel_value('paused', getattr(stat, 'paused', False)))
 
         start_enabled, start_tooltip = self._run_state(stat)
-        running = state == linuxcnc.RCS_EXEC and not paused
+        interp_active = interp_state != linuxcnc.INTERP_IDLE
+        running = interp_active and not paused
         self._is_running = running
         # "active" = a program is in progress (running OR paused); used to drive
         # the full-screen run view so a pause doesn't look like completion.
-        self._is_active = running or paused
+        self._is_active = interp_active or paused
         self._start.update(
             enabled=start_enabled,
             active=running,
@@ -301,16 +303,19 @@ class ProgramsActionSource(QObject):
 
     def _abort_state(self, stat):
         state = int(_channel_value('state', getattr(stat, 'state', 0)) or 0)
-        if state in (linuxcnc.RCS_EXEC, linuxcnc.RCS_ERROR):
+        interp_state = int(_channel_value('interp_state', getattr(stat, 'interp_state', 0)) or 0)
+        if interp_state != linuxcnc.INTERP_IDLE or state in (linuxcnc.RCS_EXEC, linuxcnc.RCS_ERROR):
             return True, ''
         return False, 'Nothing to abort'
 
     def _pause_resume_state(self, stat):
         state = int(_channel_value('state', getattr(stat, 'state', 0)) or 0)
+        interp_state = int(_channel_value('interp_state', getattr(stat, 'interp_state', 0)) or 0)
         paused = bool(_channel_value('paused', getattr(stat, 'paused', False)))
-        if state == linuxcnc.RCS_EXEC and paused:
+        interp_active = interp_state != linuxcnc.INTERP_IDLE
+        if (interp_active or state == linuxcnc.RCS_EXEC) and paused:
             return True, 'Resume program execution', 'Resume Program', True
-        if state == linuxcnc.RCS_EXEC and not paused:
+        if interp_active or state == linuxcnc.RCS_EXEC:
             return True, 'Pause program execution', 'Pause Program', False
         return False, 'No program running to pause', 'Pause Program', False
 
