@@ -270,14 +270,20 @@ class ProgramsQml(QQuickWidget):
     def _exit_run_full_screen_now(self):
         self._hide_program_complete_dialog()
         win = self.window()
+        self.gremlin.hide()
+        self._hide_gremlin_overlay_controls()
+        if win is not None and hasattr(win, 'exitFullScreen'):
+            win.exitFullScreen()
+        QTimer.singleShot(100, self._restore_gremlin_overlay_after_full_screen)
+        QTimer.singleShot(250, self._sync_gremlin_widget)
+
+    def _restore_gremlin_overlay_after_full_screen(self):
+        self.gremlin.hide()
+        self._hide_gremlin_overlay_controls()
         self.gremlin.setParent(self._overlay_host)
         self._top_left_controls.setParent(self._overlay_host)
         self._clear_plot_button.setParent(self._overlay_host)
-        if win is not None and hasattr(win, 'exitFullScreen'):
-            win.exitFullScreen()
         self._schedule_gremlin_sync()
-        QTimer.singleShot(50, self._sync_gremlin_widget)
-        QTimer.singleShot(150, self._sync_gremlin_widget)
 
     def _schedule_gremlin_sync(self):
         QTimer.singleShot(0, self._sync_gremlin_widget)
