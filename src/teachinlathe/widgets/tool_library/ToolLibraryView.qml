@@ -11,9 +11,13 @@ import QtQuick.Layouts 1.15
 
 Rectangle {
     id: root
-    color: "#787878"
+    color: "#f5f5f5"
+    radius: 6
+    border.color: "#ccc"
+    border.width: 1
 
     signal openNumPadRequested(var field)
+    readonly property int toolListSpacing: 5
 
     // ── Edit / Add state ──────────────────────────────────────────
     property var _editTool: null    // null = add mode, tool dict = edit mode
@@ -47,6 +51,7 @@ Rectangle {
     Item {
         id: flipper
         anchors.fill: parent
+        anchors.margins: 1
 
         transform: Rotation {
             id: flipRot
@@ -140,7 +145,9 @@ Rectangle {
                         id: listView
                         anchors.fill: parent
                         clip: true
-                        spacing: 5
+                        spacing: root.toolListSpacing
+                        topMargin: root.toolListSpacing
+                        bottomMargin: root.toolListSpacing
                         model: {
                             if (!toolLibraryViewModel) return []
                             return frontFace.activeTab === 1
@@ -155,8 +162,8 @@ Rectangle {
 
                         delegate: ToolCard {
                             toolData: modelData
-                            width: Math.min(800, ListView.view.width - 16 - 2)
-                            x: Math.max(0, (ListView.view.width - 16 - width) / 2)
+                            width: Math.min(800, ListView.view.width - 16 - root.toolListSpacing * 2)
+                            x: root.toolListSpacing + Math.max(0, (ListView.view.width - 16 - root.toolListSpacing * 2 - width) / 2)
 
                             onLoadRequested:   toolLibraryViewModel.loadTool(toolNo)
                             onEditRequested:   root._startEdit(toolData)

@@ -100,21 +100,45 @@ class ProgramsQml(QQuickWidget):
             'QPushButton:hover { background: #652424; }'
         )
 
-        for label, handler in (
-            ('Zoom In', self._zoom_gremlin_in),
-            ('Zoom Out', self._zoom_gremlin_out),
-            ('Fit To Screen', self._fit_gremlin_to_window),
+        for label, handler, repeat in (
+            ('Zoom In', self._zoom_gremlin_in, True),
+            ('Zoom Out', self._zoom_gremlin_out, True),
+            ('Fit To Screen', self._fit_gremlin_to_window, False),
         ):
             button = QPushButton(label, self._top_left_controls)
             button.setStyleSheet(button_style)
             button.setFocusPolicy(Qt.NoFocus)
-            button.clicked.connect(handler)
+            if repeat:
+                self._connect_repeating_button(button, handler)
+            else:
+                button.clicked.connect(handler)
             self._top_left_layout.addWidget(button)
             self._overlay_buttons.append(button)
 
         self._clear_plot_button.setStyleSheet(clear_style)
         self._clear_plot_button.setFocusPolicy(Qt.NoFocus)
         self._clear_plot_button.clicked.connect(self._clear_gremlin_plot)
+
+    def _connect_repeating_button(self, button, handler):
+        repeat_timer = QTimer(button)
+        repeat_timer.setInterval(100)
+        repeat_timer.timeout.connect(handler)
+
+        hold_timer = QTimer(button)
+        hold_timer.setSingleShot(True)
+        hold_timer.setInterval(300)
+        hold_timer.timeout.connect(repeat_timer.start)
+
+        def start_repeating():
+            handler()
+            hold_timer.start()
+
+        def stop_repeating():
+            hold_timer.stop()
+            repeat_timer.stop()
+
+        button.pressed.connect(start_repeating)
+        button.released.connect(stop_repeating)
 
     def _hide_gremlin_overlay_controls(self):
         self._top_left_controls.hide()

@@ -17,7 +17,7 @@ Rectangle {
 
     signal teachClicked()
     signal toggleClicked()
-    signal openNumPadRequested(var field)
+    signal openNumPadRequested(Item field)
     signal committed(var value)
 
     readonly property color disabledColor: "#323232"
@@ -28,8 +28,8 @@ Rectangle {
 
     width: 205
     height: 118
-    radius: 8
-    color: "#e6e6e6"
+    radius: 6
+    color: "#f5f5f5"
     border.color: activeColor
     border.width: status === 1 ? 1 : 3
 

@@ -25,7 +25,7 @@ TextField {
     property int    fontPixelSize: 20           // mărimea textului din input
     property string placeholder: ""             // dacă vrei placeholder
 
-    signal openRequested(var field, string settingName, var currentValue, var meta)
+    signal openRequested(Item field, string settingName, var currentValue, var meta)
     signal valueCommitted(var value)
 
     // Guard

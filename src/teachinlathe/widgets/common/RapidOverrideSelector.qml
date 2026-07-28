@@ -11,6 +11,7 @@ Item {
     // When > 0, shows the effective speed next to the label (e.g. "Rapid Override (6000 mm/min)")
     property real maxSpeed: 0
     property bool updateValueOnClick: true
+    property bool fillAvailableWidth: false
 
     signal selected(int newValue)
 
@@ -18,6 +19,9 @@ Item {
 
     readonly property int barHeight: 42
     readonly property int labelHeight: label_text.implicitHeight
+    readonly property real effectiveSegmentWidth: root.steps.length > 0
+        ? (root.fillAvailableWidth ? Math.max(0, bar.width / root.steps.length) : root.segmentWidth)
+        : 0
 
     implicitWidth:  steps.length * segmentWidth
     implicitHeight: labelHeight + 4 + barHeight
@@ -50,7 +54,7 @@ Item {
         // ── segmented bar ─────────────────────────────────────────────
         Rectangle {
             id: bar
-            width: root.steps.length * root.segmentWidth
+            width: root.fillAvailableWidth ? parent.width : root.steps.length * root.segmentWidth
             height: root.barHeight
             radius: root.cornerRadius
             color: "transparent"
@@ -63,7 +67,7 @@ Item {
 
                     delegate: Item {
                         id: segmentItem
-                        width: root.segmentWidth
+                        width: root.effectiveSegmentWidth
                         height: bar.height
 
                         readonly property bool isFirst: index === 0

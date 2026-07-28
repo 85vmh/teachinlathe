@@ -2,6 +2,7 @@ from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from qtpyvcp import SETTINGS
 from qtpyvcp.utilities.settings import setSetting
 
+from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.data_source.numpad_settings import NumpadSettings
 
 
@@ -11,10 +12,12 @@ class ManualTurningViewModel(QObject):
     feedValuesChanged = pyqtSignal()
     rapidOverrideChanged = pyqtSignal()
     handwheelValuesChanged = pyqtSignal()
+    joystickStateChanged = pyqtSignal()
 
     def __init__(self, manual_lathe, parent=None):
         super().__init__(parent)
         self._manual_lathe = manual_lathe
+        self._lathe_component = TeachInLatheComponent()
         self._numpad_settings = NumpadSettings.instance()
         self._spindle_mode = 0
         self._gear_suffix = "2"
@@ -36,6 +39,10 @@ class ManualTurningViewModel(QObject):
         self._handwheels_allowed = True
         self._x_handwheel_enabled = True
         self._z_handwheel_enabled = True
+        self._joystick_state = 0
+        self._joystick_rapid = False
+        self._angle_feed_active = False
+        self._allows_joystick_touch = True
         self.setGearSuffix(self._gear_suffix)
         self._set_setting_backed_value("_input_css", self._css_setting_name, self._input_css)
         self._set_setting_backed_value("_input_feed", self._feed_setting_name, self._input_feed)
@@ -146,6 +153,26 @@ class ManualTurningViewModel(QObject):
     @pyqtProperty(bool, notify=handwheelValuesChanged)
     def zHandwheelEnabled(self):
         return self._z_handwheel_enabled
+
+    @pyqtProperty(int, notify=joystickStateChanged)
+    def joystickState(self):
+        return self._joystick_state
+
+    @pyqtProperty(bool, notify=joystickStateChanged)
+    def joystickRapid(self):
+        return self._joystick_rapid
+
+    @pyqtProperty(bool, notify=joystickStateChanged)
+    def angleFeedActive(self):
+        return self._angle_feed_active
+
+    @pyqtProperty(bool, notify=joystickStateChanged)
+    def allowsJoystickTouch(self):
+        return self._allows_joystick_touch
+
+    @pyqtProperty(float, notify=joystickStateChanged)
+    def joystickRotationTarget(self):
+        return 45.0 if self._angle_feed_active else 0.0
 
     @pyqtSlot(int)
     def setSpindleMode(self, mode):
@@ -258,3 +285,47 @@ class ManualTurningViewModel(QObject):
         self._x_handwheel_enabled = bool(x_enabled)
         self._z_handwheel_enabled = bool(z_enabled)
         self.handwheelValuesChanged.emit()
+
+    def _set_angle_feed_active(self, enabled):
+        enabled = bool(enabled)
+        if self._angle_feed_active == enabled:
+            return
+        self._angle_feed_active = enabled
+        self._manual_lathe.onTaperTurningChanged(enabled)
+        try:
+            self._lathe_component.comp.getPin(TeachInLatheComponent.PinIsAngleFeed).value = enabled
+        except Exception:
+            pass
+        self.joystickStateChanged.emit()
+
+    @pyqtSlot()
+    def toggleAngleFeedFromJoystick(self):
+        if not self._allows_joystick_touch:
+            return
+        self._set_angle_feed_active(not self._angle_feed_active)
+
+    @pyqtSlot(bool)
+    def setAngleFeedActive(self, enabled):
+        self._set_angle_feed_active(enabled)
+
+    @pyqtSlot()
+    def resetAngleFeed(self):
+        self._set_angle_feed_active(False)
+
+    def isAngleFeedActive(self):
+        return self._angle_feed_active
+
+    def setJoystickState(self, state):
+        value = state.value if hasattr(state, "value") else int(state or 0)
+        if self._joystick_state == value and self._allows_joystick_touch == (value == 0):
+            return
+        self._joystick_state = value
+        self._allows_joystick_touch = value == 0
+        self.joystickStateChanged.emit()
+
+    def setJoystickRapid(self, enabled):
+        enabled = bool(enabled)
+        if self._joystick_rapid == enabled:
+            return
+        self._joystick_rapid = enabled
+        self.joystickStateChanged.emit()

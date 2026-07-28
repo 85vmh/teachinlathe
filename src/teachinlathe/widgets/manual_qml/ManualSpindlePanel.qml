@@ -6,12 +6,12 @@ import "../conversational_qml"
 Rectangle {
     id: root
     property var viewModel: manualViewModel
-    signal openNumPadRequested(var field)
+    signal openNumPadRequested(Item field)
 
-    color: "#e6e6e6"
-    border.color: "#0a0a0a"
+    color: "#f5f5f5"
+    border.color: "#ccc"
     border.width: 1
-    radius: 8
+    radius: 6
 
     TabBar {
         id: tabBar
@@ -25,7 +25,7 @@ Rectangle {
         currentIndex: viewModel ? viewModel.spindleMode : 0
         onCurrentIndexChanged: if (viewModel) viewModel.setSpindleMode(currentIndex)
         background: Rectangle {
-            color: "#e6e6e6"
+            color: "#f5f5f5"
         }
 
         TabButton {
@@ -70,7 +70,7 @@ Rectangle {
         anchors.top: tabBar.bottom
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 1
-        color: "#e6e6e6"
+        color: "#f5f5f5"
 
         StackLayout {
             anchors.fill: parent

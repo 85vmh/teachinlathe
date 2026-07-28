@@ -97,46 +97,40 @@ class NumpadValueField(QObject):
 class ManualJoystickController(QObject):
     angleFeedToggled = pyqtSignal(bool)
 
-    def __init__(self, parent=None):
+    def __init__(self, viewmodel=None, parent=None):
         super().__init__(parent)
         self._root = None
+        self._viewmodel = viewmodel
 
     def attach(self, root):
         self._root = root
 
+    def setViewModel(self, viewmodel):
+        self._viewmodel = viewmodel
+
     @pyqtSlot(bool)
     def handleAngleFeedToggled(self, enabled):
+        if self._viewmodel is not None:
+            self._viewmodel.setAngleFeedActive(bool(enabled))
+            return
         self.angleFeedToggled.emit(bool(enabled))
 
-    def setTouchEnabled(self, enabled: bool):
-        if self._root is not None:
-            self._root.setProperty("allowsTouchInteraction", bool(enabled))
-
     def resetAngle(self):
-        if self._root is not None:
-            QMetaObject.invokeMethod(self._root, "resetAngle")
+        if self._viewmodel is not None:
+            self._viewmodel.resetAngleFeed()
 
     def isRotated(self):
-        if self._root is None:
-            return False
-        return bool(self._root.property("currentRotation"))
+        if self._viewmodel is not None:
+            return bool(self._viewmodel.isAngleFeedActive())
+        return False
 
     def setRapid(self, enabled: bool):
-        if self._root is not None:
-            self._root.setProperty("rapidMode", bool(enabled))
+        if self._viewmodel is not None:
+            self._viewmodel.setJoystickRapid(bool(enabled))
 
     def setJoystickState(self, state):
-        if self._root is None:
-            return
-        value = state.value if hasattr(state, "value") else int(state)
-        self._root.setProperty("joystickState", int(value))
-        self.setTouchEnabled(int(value) == 0)
-
-
-def getProgramFooter():
-    return (f"M5 (Stop the spindle)\n"
-            f"M2 (Stop the program)\n"
-            f"%")
+        if self._viewmodel is not None:
+            self._viewmodel.setJoystickState(state)
 
 
 class MyMainWindow(VCPMainWindow):
@@ -171,10 +165,10 @@ class MyMainWindow(VCPMainWindow):
         self.manualLathe = ManualLathe()
         self.manualTurningViewModel = ManualTurningViewModel(self.manualLathe, self)
         self.teachInLatheDroViewModel = TeachInLatheDroViewModel(self)
-        self.manualJoystickController = ManualJoystickController(self)
+        self.manualJoystickController = ManualJoystickController(self.manualTurningViewModel, self)
         self.latheJoystick = self.manualJoystickController
         self.manualLathe.setJoystickWidget(self.manualJoystickController)
-        self.manualJoystickController.angleFeedToggled.connect(self.angleFeedToggled)
+        self.manualTurningViewModel.joystickStateChanged.connect(self._on_manual_joystick_state_changed)
         self.feedAnimator = FrameAnimator(self.feedFrame)
 
         self.latheComponent = TeachInLatheComponent()
@@ -340,143 +334,16 @@ class MyMainWindow(VCPMainWindow):
         root = self.manualTurningRootQml.rootObject()
         if root is None:
             return
-        root.openNumPadRequested.connect(lambda field: self.openNumPad(field))
         root.xToggled.connect(self.onManualQmlXHandwheelToggled)
         root.zToggled.connect(self.onManualQmlZHandwheelToggled)
-        root.angleFeedToggled.connect(self.manualJoystickController.handleAngleFeedToggled)
         self.manualJoystickController.attach(root)
         self.latheJoystick = self.manualJoystickController
         self.manualLathe.setJoystickWidget(self.manualJoystickController)
-
-    def _initManualToolsList(self):
-        self.manualToolsList = QQuickWidget(self.toolLibraryContainer)
-        self.manualToolsList.setResizeMode(QQuickWidget.SizeRootObjectToView)
-        self.manualToolsList.setGeometry(0, 0, self.toolLibraryContainer.width(), self.toolLibraryContainer.height())
-        self.manualToolsList.engine().rootContext().setContextProperty("toolLibraryViewModel", self.toolLibraryViewModel)
-        self.manualToolsList.engine().rootContext().setContextProperty("appState", self.appState)
-        self.manualToolsList.engine().rootContext().setContextProperty("cncStore", self.appState.cncStore)
-        self.manualToolsList.engine().rootContext().setContextProperty("navigationStore", self.appState.navigationStore)
-
-        qml_path = os.path.join(os.path.dirname(__file__), "widgets", "tool_library", "ToolLibraryView.qml")
-        self.manualToolsList.setSource(QUrl.fromLocalFile(qml_path))
-        self.manualToolsList.show()
-
-    def _initTeachInLatheDroQml(self):
-        if hasattr(self, "teachInLatheDroQml"):
-            return
-        self.teachInLatheDroQml = QQuickWidget(self.manualTurningTab)
-        self.teachInLatheDroQml.setResizeMode(QQuickWidget.SizeRootObjectToView)
-        self.teachInLatheDroQml.setClearColor(QColor("#efefef"))
-        self.teachInLatheDroQml.setGeometry(0, 0, 1311, 696)
-        self.teachInLatheDroQml.engine().rootContext().setContextProperty(
-            "teachInDroViewModel",
-            self.teachInLatheDroViewModel,
-        )
-        qml_path = os.path.join(os.path.dirname(__file__), "widgets", "manual_qml", "TeachInLatheDroRoot.qml")
-        self.teachInLatheDroQml.setSource(QUrl.fromLocalFile(qml_path))
-        self.teachInLatheDroQml.show()
-        self.teachInLatheDroQml.raise_()
-
-    def _initManualTurningQml(self):
-        if hasattr(self, "manualSpindleQml"):
-            return
-
-        self.manualInputBridge = ManualInputBridge(self, self)
-        self._active_numpad_field = None
-
-        spindle_mode = self.manualTurningViewModel.spindleMode
-        jog_increment = self.manualTurningViewModel.jogIncrement
-        x_handwheel_enabled = self.manualTurningViewModel.xHandwheelEnabled
-        z_handwheel_enabled = self.manualTurningViewModel.zHandwheelEnabled
-
-        self.manualJoystickQml = self._create_manual_qml_widget(
-            self.feedFrame,
-            "ManualJoystickPanel.qml",
-            5,
-            5,
-            260,
-            230,
-        )
-        self.manualSpindleQml = self._create_manual_qml_widget(
-            self.spindleFrame,
-            "ManualSpindlePanel.qml",
-            5,
-            5,
-            286,
-            231,
-        )
-        self.manualFeedQml = self._create_manual_qml_widget(
-            self.feedFrame,
-            "ManualFeedPanel.qml",
-            270,
-            5,
-            276,
-            230,
-        )
-        self.manualHandwheelsQml = self._create_manual_qml_widget(
-            self.handwheelsFrame,
-            "ManualHandwheelsPanel.qml",
-            0,
-            0,
-            216,
-            241,
-        )
-        self._raise_manual_qml_widgets()
-
-        self.onSpindleFirstGearChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
-        self.manualTurningViewModel.setSpindleMode(spindle_mode)
-        self.manualTurningViewModel.setFeedOverride(self.current_feed_override)
-        self.manualTurningViewModel.setSpindleOverride(self.current_spindle_override)
-        self.manualTurningViewModel.setJogIncrement(jog_increment)
-        self.manualTurningViewModel.setHandwheelStates(x_handwheel_enabled, z_handwheel_enabled)
-        self.manualLathe.onInputCssChanged(self.manualTurningViewModel.inputCss)
-        self.manualLathe.onInputFeedChanged(self.manualTurningViewModel.inputFeed)
-        self.latheJoystick = self.manualJoystickController
-        self.manualLathe.setJoystickWidget(self.manualJoystickController)
-
-    def _create_manual_qml_widget(self, parent, qml_name, x, y, width, height):
-        widget = QQuickWidget(parent)
-        widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
-        widget.setClearColor(QColor("transparent"))
-        widget.setGeometry(x, y, width, height)
-        widget.setFocusPolicy(Qt.StrongFocus)
-        widget.setMouseTracking(True)
-        widget.engine().rootContext().setContextProperty("manualViewModel", self.manualTurningViewModel)
-        widget.engine().rootContext().setContextProperty("manualInputBridge", self.manualInputBridge)
-        widget.statusChanged.connect(lambda status, qml_widget=widget: self._on_manual_qml_status_changed(status, qml_widget))
-        qml_path = os.path.join(os.path.dirname(__file__), "widgets", "manual_qml", qml_name)
-        widget.setSource(QUrl.fromLocalFile(qml_path))
-        widget.show()
-        widget.raise_()
-        return widget
 
     def _raise_manual_qml_widgets(self):
         widget = getattr(self, "manualTurningRootQml", None)
         if widget is not None:
             widget.raise_()
-
-    def _on_manual_qml_status_changed(self, status, widget):
-        if status != QQuickWidget.Ready:
-            return
-        root = widget.rootObject()
-        if root is None:
-            return
-        root.setProperty("viewModel", self.manualTurningViewModel)
-        try:
-            root.openNumPadRequested.connect(lambda field: self.openNumPad(field))
-        except Exception:
-            pass
-        try:
-            root.xToggled.connect(self.onManualQmlXHandwheelToggled)
-            root.zToggled.connect(self.onManualQmlZHandwheelToggled)
-        except Exception:
-            pass
-        if root.objectName() == "manualJoystickPanel":
-            self.manualJoystickController.attach(root)
-            try:
-                root.angleFeedToggled.connect(self.manualJoystickController.handleAngleFeedToggled)
-            except Exception as e:
-                print("Manual QML joystick hook failed:", e)
 
     def _initProgramsQml(self):
         from PyQt5.QtWidgets import QWidget, QVBoxLayout
@@ -665,26 +532,25 @@ class MyMainWindow(VCPMainWindow):
         if self.mainSelectedTab == MainTabs.MANUAL_TURNING:
             if self.latheJoystick.isRotated() and value:
                 print("Set taper turning off when cycle stop pressed")
-                self.angleFeedToggled(False)
-                self.latheJoystick.resetAngle()
+                self.manualTurningViewModel.resetAngleFeed()
 
     def angleFeedToggled(self, value):
         print("angleFeedToggled", value)
-        self.manualLathe.onTaperTurningChanged(value)
-        self._raise_manual_qml_widgets()
-        if value:
+        self.manualTurningViewModel.setAngleFeedActive(bool(value))
+
+    def _on_manual_joystick_state_changed(self):
+        if self.manualTurningViewModel.angleFeedActive:
             self.feedAnimator.startAnimation()
         else:
             self.feedAnimator.stopAnimation()
+        self._raise_manual_qml_widgets()
         QTimer.singleShot(0, self._raise_manual_qml_widgets)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsAngleFeed).value = value
 
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)
         if self.latheJoystick.isRotated() and not value:
             print("Set taper turning off when stopping spindle")
-            self.angleFeedToggled(False)
-            self.latheJoystick.resetAngle()
+            self.manualTurningViewModel.resetAngleFeed()
 
     def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
         setting_name = getattr(fake_edit_text, 'settingName', None)
@@ -744,6 +610,10 @@ class MyMainWindow(VCPMainWindow):
             fake_edit_text.setProperty("text", str(value))
         except Exception as e:
             print("setSelectedValue failed:", e)
+
+    @pyqtSlot(QObject)
+    def _on_manual_open_numpad_requested(self, field):
+        self.openNumPad(field)
 
     def _handle_manual_numpad_value(self, setting_name, value):
         if not hasattr(self, "manualTurningViewModel"):

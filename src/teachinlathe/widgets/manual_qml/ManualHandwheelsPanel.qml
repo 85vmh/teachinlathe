@@ -9,10 +9,10 @@ Rectangle {
     signal xToggled(bool enabled)
     signal zToggled(bool enabled)
 
-    color: "#e6e6e6"
-    border.color: "#0a0a0a"
+    color: "#f5f5f5"
+    border.color: "#ccc"
     border.width: 1
-    radius: 8
+    radius: 6
 
     Text {
         x: 15

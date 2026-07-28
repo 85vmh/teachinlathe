@@ -15,13 +15,13 @@ import "../touchable_input"   // NumpadField
 Rectangle {
     id: root
 
-    color: "#e6e6e6"
-    border.color: "#0a0a0a"
+    color: "#f5f5f5"
+    border.color: "#ccc"
     border.width: 1
-    radius: 8
+    radius: 6
 
     property var viewModel: teachInDroViewModel
-    signal openNumPadRequested(var field)
+    signal openNumPadRequested(Item field)
 
     ColumnLayout {
         anchors.fill: parent
@@ -53,8 +53,8 @@ Rectangle {
                 width: machineLimitsText.implicitWidth + 24
                 height: machineLimitsText.implicitHeight + 12
                 radius: 6
-                color: "#e6e6e6"
-                border.color: "#323232"
+                color: "#f5f5f5"
+                border.color: "#ccc"
                 border.width: 1
 
                 Text {
@@ -75,9 +75,9 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 126
                 height: 56
-                radius: 8
-                color: "#e6e6e6"
-                border.color: "#323232"
+                radius: 6
+                color: "#f5f5f5"
+                border.color: "#ccc"
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -144,8 +144,8 @@ Rectangle {
                 width: toolLimitsText.implicitWidth + 24
                 height: toolLimitsText.implicitHeight + 12
                 radius: 6
-                color: "#e6e6e6"
-                border.color: "#323232"
+                color: "#f5f5f5"
+                border.color: "#ccc"
                 border.width: 1
 
                 Text {

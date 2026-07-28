@@ -4,7 +4,7 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: root
 
-    color: "#efefef"
+    color: "#ffffff"
 
     property var viewModel: teachInDroViewModel
 

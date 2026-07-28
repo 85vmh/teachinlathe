@@ -6,13 +6,13 @@ import "../common"
 Rectangle {
     id: root
     property var viewModel: manualViewModel
-    signal openNumPadRequested(var field)
+    signal openNumPadRequested(Item field)
 
-    color: "#e6e6e6"
+    color: "#f5f5f5"
 
     Rectangle {
         anchors.fill: parent
-        color: "#e6e6e6"
+        color: "#f5f5f5"
 
         ColumnLayout {
             anchors.fill: parent
@@ -39,11 +39,11 @@ Rectangle {
             Item { Layout.fillHeight: true }
 
             RapidOverrideSelector {
-                Layout.alignment: Qt.AlignHCenter
-                label: "Rapid Override"
+                Layout.fillWidth: true
+                label: "Rapid Speed"
                 maxSpeed: 6000
                 value: viewModel ? viewModel.rapidOverride : 50
-                segmentWidth: 64
+                fillAvailableWidth: true
                 onSelected: function(v) {
                     if (viewModel) viewModel.setRapidOverride(v)
                 }

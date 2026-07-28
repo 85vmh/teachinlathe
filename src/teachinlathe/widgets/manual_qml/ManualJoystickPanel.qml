@@ -6,13 +6,15 @@ Rectangle {
     objectName: "manualJoystickPanel"
     width: 260
     height: 230
-    color: "#e6e6e6"
+    color: "#f5f5f5"
 
-    property int joystickState: 0
-    property bool rapidMode: false
-    property bool allowsTouchInteraction: true
+    property var viewModel: null
+    property int joystickState: viewModel ? viewModel.joystickState : 0
+    property bool rapidMode: viewModel ? viewModel.joystickRapid : false
+    property bool allowsTouchInteraction: viewModel ? viewModel.allowsJoystickTouch : true
+    property bool angleFeedActive: viewModel ? viewModel.angleFeedActive : false
     property real currentRotation: 0
-    property real rotationTarget: 0
+    property real rotationTarget: angleFeedActive ? 45 : 0
     property bool rotationActive: false
 
     readonly property real canvasWidth: 250
@@ -33,31 +35,39 @@ Rectangle {
     readonly property color blackColor: "#323232"
     readonly property color dashedColor: "#c8c8c8"
 
-    signal angleFeedToggled(bool enabled)
+    signal angleFeedClicked()
+
+    onAngleFeedClicked: if (root.viewModel) root.viewModel.toggleAngleFeedFromJoystick()
 
     function setJoystickState(state) {
+        if (root.viewModel)
+            return
         root.joystickState = state
         root.allowsTouchInteraction = state === 0
     }
 
     function setRapid(enabled) {
+        if (root.viewModel)
+            return
         root.rapidMode = enabled
     }
 
     function setTouchEnabled(enabled) {
+        if (root.viewModel)
+            return
         root.allowsTouchInteraction = enabled
     }
 
     function resetAngle() {
-        root.currentRotation = 0
-        root.rotationTarget = 0
-        root.rotationActive = false
-        animationTimer.stop()
-        joystickCanvas.requestPaint()
+        if (root.viewModel) {
+            root.viewModel.resetAngleFeed()
+        } else {
+            root.angleFeedActive = false
+        }
     }
 
     function isRotated() {
-        return root.currentRotation !== 0
+        return root.angleFeedActive
     }
 
     function colorString(value) {
@@ -207,6 +217,12 @@ Rectangle {
     onJoystickStateChanged: joystickCanvas.requestPaint()
     onRapidModeChanged: joystickCanvas.requestPaint()
     onCurrentRotationChanged: joystickCanvas.requestPaint()
+    onRotationTargetChanged: {
+        if (root.currentRotation !== root.rotationTarget) {
+            root.rotationActive = true
+            animationTimer.start()
+        }
+    }
 
     Timer {
         id: animationTimer
@@ -314,10 +330,7 @@ Rectangle {
         z: 2
         onPressed: {
             if (root.allowsTouchInteraction && !root.rotationActive) {
-                root.rotationActive = true
-                root.rotationTarget = root.currentRotation > 0 ? 0 : 45
-                root.angleFeedToggled(root.rotationTarget === 45)
-                animationTimer.start()
+                root.angleFeedClicked()
             }
         }
     }

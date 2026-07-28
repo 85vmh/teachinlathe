@@ -34,8 +34,8 @@ RowLayout {
         Layout.preferredWidth: 132
         Layout.preferredHeight: 34
         visible: root.secondaryVisible
-        radius: 8
-        border.color: "#606061"
+        radius: 6
+        border.color: "#ccc"
         border.width: 1
         color: "#56babb"
 
@@ -60,8 +60,8 @@ RowLayout {
     Rectangle {
         Layout.preferredWidth: 316
         Layout.preferredHeight: 71
-        radius: 8
-        border.color: "#0a0a0a"
+        radius: 6
+        border.color: "#ccc"
         border.width: 1
         color: "#d9d9d9"
 

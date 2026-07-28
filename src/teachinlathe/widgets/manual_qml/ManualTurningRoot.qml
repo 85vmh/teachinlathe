@@ -20,191 +20,173 @@ import "../touchable_input"   // SmartNumpadDialog, NumpadField
 Item {
     id: root
 
+    Rectangle {
+        anchors.fill: parent
+        color: "#ffffff"
+        z: -1
+    }
+
     // Opens the QML numpad dialog for a NumpadField, using its optional
     // `description` as the title override (falls back to numpad_settings.json).
     function openNumpad(field) {
         numpadDialog.openFor(field, field.settingName, field.description)
     }
 
-    SmartNumpadDialog { id: numpadDialog }
+    SmartNumpadDialog {
+        id: numpadDialog
+    }
 
     // ── Layout constants ──────────────────────────────────────────────
-    readonly property int droHeight:             190
-    readonly property int sectionHeaderHeight:   39
-    readonly property int panelHeight:           241
-    readonly property int toolListWidth:         800
-    readonly property int panelMargin:           5
-    readonly property int panelInnerPadding:     4
-    readonly property int spindlePanelWidth:     286
-    readonly property int handwheelsPanelWidth:  216
-    readonly property int joystickPanelWidth:    260
-
-    // ── Joystick proxy properties ─────────────────────────────────────
-    property bool rapidMode:              false
-    property int  joystickState:          0
-    property bool allowsTouchInteraction: true
-
-    function resetAngle() { joystickPanel.resetAngle() }
-    function isRotated()  { return joystickPanel.isRotated() }
-
-    onJoystickStateChanged: {
-        joystickPanel.joystickState = joystickState
-        joystickPanel.allowsTouchInteraction = (joystickState === 0)
-    }
-    onRapidModeChanged: joystickPanel.rapidMode = rapidMode
+    readonly property int droHeight: 190
+    readonly property int sectionHeaderHeight: 39
+    readonly property int panelHeight: 241
+    readonly property int toolListWidth: 800
+    readonly property int panelMargin: 6
+    readonly property int panelInnerPadding: 6
+    readonly property int spindlePanelWidth: 286
+    readonly property int handwheelsPanelWidth: 216
+    readonly property int joystickPanelWidth: 260
 
     // ── Signals bubbled up from children ─────────────────────────────
-    signal openNumPadRequested(var field)
+    signal openNumPadRequested(Item field)
+
     signal xToggled(bool enabled)
+
     signal zToggled(bool enabled)
-    signal angleFeedToggled(bool enabled)
 
-    // ── Tool list (right side, fixed width, full height) ─────────────
-    ToolLibraryView {
-        id: toolList
-        anchors.right:  parent.right
-        anchors.top:    parent.top
-        anchors.bottom: parent.bottom
-        width: root.toolListWidth
-        onOpenNumPadRequested: root.openNumpad(field)
-    }
+    RowLayout {
+        anchors.fill: parent
+        spacing: 6
 
-    // ── Divider between manual area and tool list ─────────────────────
-    Rectangle {
-        id: toolDivider
-        anchors.right:  toolList.left
-        anchors.top:    parent.top
-        anchors.bottom: parent.bottom
-        width: 3
-        color: "#3a3a3a"
-    }
-
-    // ── Left column (fills space left of tool list) ───────────────────
-    ColumnLayout {
-        anchors.left:   parent.left
-        anchors.top:    parent.top
-        anchors.bottom: parent.bottom
-        anchors.right:  toolDivider.left
-        spacing: 0
-
-        // DRO (fixed height — two axis readouts)
-        TeachInLatheDroRoot {
-            Layout.fillWidth: true
-            Layout.preferredHeight: root.droHeight
-        }
-
-        // Limits (scalable — fills all remaining vertical space)
-        LimitsPanel {
+        // ── Left column ───────────────────────────────────────────────
+        ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.leftMargin: 5
-            Layout.rightMargin: 5
-            Layout.topMargin: 4
-            Layout.bottomMargin: 4
-            onOpenNumPadRequested: root.openNumpad(field)
-        }
+            spacing: 0
 
-        // Section headers (fixed height)
-        Item {
-            Layout.fillWidth: true
-            Layout.preferredHeight: root.sectionHeaderHeight
-
-            Rectangle {
-                anchors.fill: parent
-                color: "#efefef"
+            // DRO (fixed height — two axis readouts)
+            TeachInLatheDroRoot {
+                Layout.fillWidth: true
+                Layout.minimumHeight: root.droHeight
+                Layout.preferredHeight: root.droHeight
+                Layout.maximumHeight: root.droHeight
             }
 
-            // "Spindle" label
-            Text {
-                x: 70; y: 0; width: 106; height: parent.height
-                text: "Spindle"
-                font.pixelSize: 18; font.family: "Cantarell"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment:   Text.AlignVCenter
-            }
-            // Spindle override %
-            Text {
-                x: 185; y: 0; width: 71; height: parent.height
-                text: manualViewModel ? (manualViewModel.spindleOverridePercent + "%") : "0%"
-                font.pixelSize: 18; font.family: "Cantarell"
-                verticalAlignment: Text.AlignVCenter
-            }
-            // "Manual Feed" label
-            Text {
-                x: 340; y: 0; width: 156; height: parent.height
-                text: "Manual Feed"
-                font.pixelSize: 18; font.family: "Cantarell"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment:   Text.AlignVCenter
-            }
-            // "Automatic Feed" label
-            Text {
-                x: 680; y: 0; width: 181; height: parent.height
-                text: "Automatic Feed"
-                font.pixelSize: 18; font.family: "Cantarell"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment:   Text.AlignVCenter
-            }
-            // Feed override %
-            Text {
-                x: 875; y: 0; width: 76; height: parent.height
-                text: manualViewModel ? (manualViewModel.feedOverridePercent + "%") : "0%"
-                font.pixelSize: 18; font.family: "Cantarell"
-                verticalAlignment: Text.AlignVCenter
-            }
-        }
-
-        // Control panels (fixed height)
-        // Original geometry: spindleFrame x=5 w=296, handwheelsFrame x=310 w=216,
-        //                    joystick x=540 w=260, feedPanel x=810 w=fill
-        Item {
-            Layout.fillWidth: true
-            Layout.preferredHeight: root.panelHeight
-
-            ManualSpindlePanel {
-                id: spindlePanel
-                x: 5; y: root.panelInnerPadding
-                width:  root.spindlePanelWidth
-                height: root.panelHeight - 2 * root.panelInnerPadding
+            // Limits (scalable — fills all remaining vertical space)
+            LimitsPanel {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
                 onOpenNumPadRequested: root.openNumpad(field)
             }
 
-            ManualHandwheelsPanel {
-                id: handwheelsPanel
-                x: 310; y: root.panelInnerPadding
-                width:  root.handwheelsPanelWidth
-                height: root.panelHeight - 2 * root.panelInnerPadding
-                onXToggled: root.xToggled(enabled)
-                onZToggled: root.zToggled(enabled)
+            // Section headers (fixed height)
+            Item {
+                Layout.fillWidth: true
+                Layout.minimumHeight: root.sectionHeaderHeight
+                Layout.preferredHeight: root.sectionHeaderHeight
+                Layout.maximumHeight: root.sectionHeaderHeight
+
+                // "Spindle" label
+                Text {
+                    x: 70; y: 0; width: 106; height: parent.height
+                    text: "Spindle"
+                    font.pixelSize: 18; font.family: "Cantarell"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                // Spindle override %
+                Text {
+                    x: 185; y: 0; width: 71; height: parent.height
+                    text: manualViewModel ? (manualViewModel.spindleOverridePercent + "%") : "0%"
+                    font.pixelSize: 18; font.family: "Cantarell"
+                    verticalAlignment: Text.AlignVCenter
+                }
+                // "Manual Feed" label
+                Text {
+                    x: 340; y: 0; width: 156; height: parent.height
+                    text: "Manual Feed"
+                    font.pixelSize: 18; font.family: "Cantarell"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                // "Automatic Feed" label
+                Text {
+                    x: 680; y: 0; width: 181; height: parent.height
+                    text: "Automatic Feed"
+                    font.pixelSize: 18; font.family: "Cantarell"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                // Feed override %
+                Text {
+                    x: 875; y: 0; width: 76; height: parent.height
+                    text: manualViewModel ? (manualViewModel.feedOverridePercent + "%") : "0%"
+                    font.pixelSize: 18; font.family: "Cantarell"
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
 
-            // Joystick + Feed share a single bordered box
-            Rectangle {
-                x: 540; y: root.panelInnerPadding
-                width:  parent.width - 540 - root.panelMargin
-                height: root.panelHeight - 2 * root.panelInnerPadding
-                color: "#e6e6e6"
-                border.color: "#0a0a0a"
-                border.width: 1
-                radius: 8
+            // Control panels (fixed height)
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.minimumHeight: root.panelHeight
+                Layout.preferredHeight: root.panelHeight
+                Layout.maximumHeight: root.panelHeight
+                spacing: root.panelMargin
 
-                ManualJoystickPanel {
-                    id: joystickPanel
-                    objectName: "manualJoystickPanel"
-                    x: 1; y: 1
-                    width:  root.joystickPanelWidth
-                    height: parent.height - 2
-                    onAngleFeedToggled: root.angleFeedToggled(enabled)
-                }
-
-                ManualFeedPanel {
-                    id: feedPanel
-                    x: root.joystickPanelWidth + 1; y: 1
-                    width:  parent.width - root.joystickPanelWidth - 2
-                    height: parent.height - 2
+                ManualSpindlePanel {
+                    id: spindlePanel
+                    Layout.preferredWidth: root.spindlePanelWidth
+                    Layout.fillHeight: true
                     onOpenNumPadRequested: root.openNumpad(field)
                 }
+
+                ManualHandwheelsPanel {
+                    id: handwheelsPanel
+                    Layout.preferredWidth: root.handwheelsPanelWidth
+                    Layout.fillHeight: true
+                    onXToggled: root.xToggled(enabled)
+                    onZToggled: root.zToggled(enabled)
+                }
+
+                // Joystick + Feed share a single bordered box
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    color: "#f5f5f5"
+                    border.color: "#ccc"
+                    border.width: 1
+                    radius: 6
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        spacing: 0
+
+                        ManualJoystickPanel {
+                            id: joystickPanel
+                            objectName: "manualJoystickPanel"
+                            Layout.preferredWidth: root.joystickPanelWidth
+                            Layout.fillHeight: true
+                            viewModel: manualViewModel
+                        }
+
+                        ManualFeedPanel {
+                            id: feedPanel
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            onOpenNumPadRequested: root.openNumpad(field)
+                        }
+                    }
+                }
             }
+        }
+
+        ToolLibraryView {
+            id: toolList
+            Layout.preferredWidth: root.toolListWidth
+            Layout.fillHeight: true
+            onOpenNumPadRequested: root.openNumpad(field)
         }
     }
 }

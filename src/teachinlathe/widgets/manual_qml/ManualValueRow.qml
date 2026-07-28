@@ -11,7 +11,7 @@ RowLayout {
     property var value: ""
     property bool editable: true
 
-    signal openNumPadRequested(var field)
+    signal openNumPadRequested(Item field)
     signal committed(var value)
 
     spacing: 8

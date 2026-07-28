@@ -22,8 +22,10 @@ from .tool_repository import ToolRepository
 try:
     import linuxcnc as _lnc
     _CMD = _lnc.command()
+    _STAT = _lnc.stat()
 except Exception:
     _CMD = None
+    _STAT = None
 
 try:
     from qtpyvcp.utilities.info import Info as _Info
@@ -98,14 +100,27 @@ class ToolLibraryViewModel(QObject):
 
     @pyqtSlot(int)
     def loadTool(self, tool_no: int) -> None:
-        if _CMD is not None:
-            try:
-                _CMD.mode(_lnc.MODE_MDI)
-                _CMD.wait_complete()
-                _CMD.mdi(f"M61 Q{tool_no}")
-                _CMD.wait_complete()
-            except Exception:
-                pass
+        if _CMD is None or _STAT is None:
+            return
+
+        previous_mode = None
+        try:
+            _STAT.poll()
+            previous_mode = int(getattr(_STAT, "task_mode", _lnc.MODE_MANUAL))
+
+            _CMD.mode(_lnc.MODE_MDI)
+            _CMD.wait_complete()
+            _CMD.mdi(f"M61 Q{tool_no}")
+            _CMD.wait_complete()
+        except Exception:
+            pass
+        finally:
+            if previous_mode == _lnc.MODE_MANUAL:
+                try:
+                    _CMD.mode(_lnc.MODE_MANUAL)
+                    _CMD.wait_complete()
+                except Exception:
+                    pass
 
     @pyqtSlot(int)
     def deleteTool(self, tool_no: int) -> None:
