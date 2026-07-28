@@ -23,6 +23,14 @@ Rectangle {
     property var viewModel: teachInDroViewModel
     signal openNumPadRequested(Item field)
 
+    function formatLimitValue(v) {
+        if (v === null || v === undefined || v === "" || v === "--none--") {
+            return (v === null || v === undefined) ? "" : String(v)
+        }
+        var numberValue = Number(String(v).trim())
+        return isNaN(numberValue) ? String(v) : numberValue.toFixed(3)
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 1
@@ -96,10 +104,14 @@ Rectangle {
                     settingName: "smart_numpad.chuck-limit"
                     description: "Chuck limit"
                     hAlign: Text.AlignRight
-                    formatter: function(v) { return (v === null || v === undefined) ? "" : String(v) }
+                    formatter: root.formatLimitValue
                     parser: function(s) { return String(s) }
                     onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: if (root.viewModel) root.viewModel.commitLimit("chuck", value)
+                    onValueCommitted: {
+                        var formattedValue = root.formatLimitValue(value)
+                        value = formattedValue
+                        if (root.viewModel) root.viewModel.commitLimit("chuck", formattedValue)
+                    }
                 }
             }
 

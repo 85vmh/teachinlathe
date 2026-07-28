@@ -14,20 +14,37 @@ Rectangle {
     property string toggleText: "Enable Limit"
     property bool toggleEnabled: false
     property bool teachEnabled: true
+    property int minimumCardWidth: 220
+    property int buttonHeight: 48
+    property int contentMargin: 8
+    property int sectionSpacing: 8
 
     signal teachClicked()
     signal toggleClicked()
     signal openNumPadRequested(Item field)
-    signal committed(var value)
+    signal committed(string value)
 
     readonly property color disabledColor: "#323232"
     readonly property color enabledColor: "#1a5fb4"
     readonly property color pendingColor: "#ff8c00"
     readonly property color reachedColor: "#ff0000"
     readonly property color activeColor: status === 0 ? enabledColor : status === 2 ? pendingColor : status === 3 ? reachedColor : disabledColor
+    readonly property string limitName: title.indexOf("Limit ") === 0 ? title.substring(6) : title.replace(" Limit", "")
+    readonly property string limitActionText: toggleText.indexOf("Disable") === 0
+        ? "Disable " + limitName + " Limit"
+        : toggleText.indexOf("Pending") === 0
+            ? toggleText
+            : "Enable " + limitName + " Limit"
+    function formatLimitValue(v) {
+        if (v === null || v === undefined || v === "" || v === "--none--") {
+            return (v === null || v === undefined) ? "" : String(v)
+        }
+        var numberValue = Number(String(v).trim())
+        return isNaN(numberValue) ? String(v) : numberValue.toFixed(3)
+    }
 
-    width: 205
-    height: 118
+    width: Math.max(minimumCardWidth, toggleButton.implicitWidth + 32)
+    height: contentMargin * 2 + buttonHeight * 2 + sectionSpacing * 2 + 1
     radius: 6
     color: "#f5f5f5"
     border.color: activeColor
@@ -35,16 +52,25 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 8
-        spacing: 6
+        anchors.margins: root.contentMargin
+        spacing: 0
 
-        Text {
+        Button {
+            id: toggleButton
             Layout.fillWidth: true
-            text: root.title
-            color: root.activeColor
+            Layout.preferredHeight: root.buttonHeight
+            text: root.limitActionText
+            enabled: root.toggleEnabled
             font.pixelSize: 16
-            font.bold: true
-            horizontalAlignment: Text.AlignHCenter
+            onClicked: root.toggleClicked()
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.topMargin: root.sectionSpacing
+            Layout.bottomMargin: root.sectionSpacing
+            height: 1
+            color: "#ccc"
         }
 
         RowLayout {
@@ -53,35 +79,30 @@ Rectangle {
 
             NumpadField {
                 id: limitInput
-                Layout.preferredWidth: 105
+                Layout.preferredWidth: 110
                 enabled: root.status === 1
                 value: root.value
                 settingName: root.settingName
                 description: root.description
                 hAlign: Text.AlignRight
-                formatter: function(v) { return (v === null || v === undefined) ? "" : String(v) }
+                formatter: root.formatLimitValue
                 parser: function(s) { return String(s) }
                 onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: root.committed(value)
+                onValueCommitted: {
+                    var formattedValue = root.formatLimitValue(value)
+                    limitInput.value = formattedValue
+                    root.committed(formattedValue)
+                }
             }
 
             Button {
-                Layout.preferredWidth: 76
-                Layout.preferredHeight: 36
+                Layout.fillWidth: true
+                Layout.preferredHeight: root.buttonHeight
                 text: "TeachIn"
                 enabled: root.teachEnabled && root.status === 1
-                font.pixelSize: 13
+                font.pixelSize: 16
                 onClicked: root.teachClicked()
             }
-        }
-
-        Button {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 38
-            text: root.toggleText
-            enabled: root.toggleEnabled
-            font.pixelSize: 14
-            onClicked: root.toggleClicked()
         }
     }
 

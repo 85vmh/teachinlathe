@@ -44,6 +44,44 @@ TextField {
     verticalAlignment: Text.AlignVCenter
     font.pixelSize: fontPixelSize
     placeholderText: placeholder
+    color: "transparent"
+    selectedTextColor: "transparent"
+    selectionColor: "transparent"
+
+    Item {
+        id: contentClip
+        anchors.fill: parent
+        anchors.leftMargin: 8
+        anchors.rightMargin: 8
+        clip: true
+
+        readonly property bool textOverflows: displayText.paintedWidth > width
+
+        Text {
+            id: displayText
+            anchors.fill: parent
+            text: root.text.length > 0 ? root.text : root.placeholderText
+            color: root.text.length > 0 ? "#0f172a" : "#808080"
+            font: root.font
+            horizontalAlignment: contentClip.textOverflows ? Text.AlignLeft : root.hAlign
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideNone
+            clip: true
+        }
+
+        Rectangle {
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            width: 24
+            visible: root.text.length > 0 && contentClip.textOverflows
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 1.0; color: "#ffffff" }
+            }
+        }
+    }
 
     // Sync text <-> value
     Component.onCompleted: {

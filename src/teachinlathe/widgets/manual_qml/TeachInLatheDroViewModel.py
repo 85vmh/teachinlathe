@@ -224,7 +224,7 @@ class TeachInLatheDroViewModel(QObject):
             if self._active_numpad_field is field:
                 self._active_numpad_field = None
 
-    @pyqtSlot(str, object)
+    @pyqtSlot(str, str)
     def commitLimit(self, key, value):
         key = str(key)
         if key not in self.limit_values:
