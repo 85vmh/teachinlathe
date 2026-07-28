@@ -108,7 +108,7 @@
   "turning.feed_rate": {
     "description": "Enter turning feed per rev (Fz)",
     "default_value": 0.1,
-    "last_value": 0.2,
+    "last_value": 0.1,
     "persistent": true,
     "options": [
       0.02,

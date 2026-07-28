@@ -34,6 +34,7 @@ class ManualTurningViewModel(QObject):
         self._actual_css = "0"
         self._spindle_angle = 0.0
         self._spindle_running = False
+        self._feeding = False
         self._actual_feed = "0.00"
         self._spindle_override = 1.0
         self._feed_override = 1.0
@@ -162,6 +163,14 @@ class ManualTurningViewModel(QObject):
     @pyqtProperty(str, notify=feedValuesChanged)
     def actualFeed(self):
         return self._actual_feed
+
+    @pyqtProperty(bool, notify=feedValuesChanged)
+    def feeding(self):
+        return self._feeding
+
+    @pyqtProperty(str, notify=feedValuesChanged)
+    def feedPanelMode(self):
+        return "ReadOnly" if self._feeding else "Editable"
 
     @pyqtProperty(int, notify=rapidOverrideChanged)
     def rapidOverride(self):
@@ -314,6 +323,13 @@ class ManualTurningViewModel(QObject):
     def setFeedOverride(self, value):
         self._feed_override = self._to_float(value, 1.0)
         self._update_actual_feed()
+        self.feedValuesChanged.emit()
+
+    def setFeeding(self, feeding):
+        feeding = bool(feeding)
+        if self._feeding == feeding:
+            return
+        self._feeding = feeding
         self.feedValuesChanged.emit()
 
     def setJogIncrement(self, value):

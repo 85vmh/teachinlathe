@@ -6,6 +6,7 @@ import "../common"
 Rectangle {
     id: root
     property var viewModel: manualViewModel
+    readonly property bool readOnlyMode: viewModel ? viewModel.feedPanelMode === "ReadOnly" : false
     signal openNumPadRequested(Item field)
 
     color: "#f5f5f5"
@@ -24,16 +25,18 @@ Rectangle {
                 unit: "mm/rev"
                 settingName: viewModel ? viewModel.feedSettingName : ""
                 value: viewModel ? viewModel.inputFeed : "0.10"
-                editable: true
+                editable: !root.readOnlyMode
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onCommitted: if (viewModel) viewModel.setInputFeed(String(value))
             }
 
             ManualValueRow {
+                visible: root.readOnlyMode
                 label: "Actual feed:"
                 unit: "mm/rev"
                 value: viewModel ? viewModel.actualFeed : "0.00"
                 editable: false
+                valueBold: true
             }
 
             Item { Layout.fillHeight: true }

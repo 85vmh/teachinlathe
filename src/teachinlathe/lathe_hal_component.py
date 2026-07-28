@@ -23,6 +23,7 @@ class TeachInLatheComponent:
     PinJoystickZPlus = 'joystick.z-plus'
     PinJoystickZMinus = 'joystick.z-minus'
     PinJoystickRapid = 'joystick.rapid'
+    PinJoystickIsFeeding = 'joystick.is-feeding'
     PinFeedPerRevValue = 'joystick.feed-per-rev'
     PinIsAngleFeed = 'joystick.is-angle-feed'
     PinJogSpeedValue = 'joystick.jog-speed'
@@ -90,6 +91,7 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinJoystickZPlus, 'bit', 'in')
         self.comp.addPin(self.PinJoystickZMinus, 'bit', 'in')
         self.comp.addPin(self.PinJoystickRapid, 'bit', 'in')
+        self.comp.addPin(self.PinJoystickIsFeeding, 'bit', 'in')
         self.comp.addPin(self.PinSpindleCoveredOpened, 'bit', 'in')
         self.comp.addPin(self.PinSpindleSwitchRevIn, 'bit', 'in')
         self.comp.addPin(self.PinSpindleSwitchFwdIn, 'bit', 'in')

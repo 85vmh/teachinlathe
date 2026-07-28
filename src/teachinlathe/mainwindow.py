@@ -178,6 +178,7 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleOrientation, self.onSpindleOrientationChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStart, self.onCycleStartPressed)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStop, self.onCycleStopPressed)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickIsFeeding, self.onJoystickFeedingChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsFirstGear, self.onSpindleFirstGearChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsAllowed, self.onHandwheelAllowedChanged)
@@ -189,6 +190,9 @@ class MyMainWindow(VCPMainWindow):
         )
         self.manualTurningViewModel.setSpindleAngle(
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleOrientation).value
+        )
+        self.manualTurningViewModel.setFeeding(
+            self.latheComponent.comp.getPin(TeachInLatheComponent.PinJoystickIsFeeding).value
         )
 
         self.teachInLatheDroViewModel.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
@@ -562,6 +566,9 @@ class MyMainWindow(VCPMainWindow):
 
     def onSpindleOrientationChanged(self, value):
         self.manualTurningViewModel.setSpindleAngle(value)
+
+    def onJoystickFeedingChanged(self, value):
+        self.manualTurningViewModel.setFeeding(value)
 
     def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
         setting_name = getattr(fake_edit_text, 'settingName', None)

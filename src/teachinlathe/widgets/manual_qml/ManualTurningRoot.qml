@@ -20,9 +20,15 @@ import "../touchable_input"   // SmartNumpadDialog, NumpadField
 Item {
     id: root
 
+    // ── Color constants ───────────────────────────────────────────────
+    readonly property color pageBackgroundColor: "#ffffff"
+    readonly property color cardBackgroundColor: "#f5f5f5"
+    readonly property color cardBorderColor: "#ccc"
+    readonly property color angleFeedGlowColor: "#ff9800"
+
     Rectangle {
         anchors.fill: parent
-        color: "#ffffff"
+        color: root.pageBackgroundColor
         z: -1
     }
 
@@ -103,7 +109,7 @@ Item {
                 }
                 // "Manual Feed" label
                 Text {
-                    x: 340; y: 0; width: 156; height: parent.height
+                    x: 320; y: 0; width: 156; height: parent.height
                     text: "Handwheels"
                     font.pixelSize: 18; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
@@ -151,17 +157,128 @@ Item {
 
                 // Joystick + Feed share a single bordered box
                 Rectangle {
+                    id: joystickFeedFrame
+                    readonly property bool angleFeedActive: manualViewModel ? manualViewModel.angleFeedActive : false
+                    property color frameBorderColor: root.cardBorderColor
+                    property real glowOpacity: 0
+                    readonly property int glowDurationMs: 200
+                    readonly property int glowBorderWidth: 10
+                    readonly property int glowInset: 1
+                    readonly property real glowMaxOpacity: 0.7
+
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "#f5f5f5"
-                    border.color: "#ccc"
+                    color: root.cardBackgroundColor
+                    border.color: frameBorderColor
                     border.width: 1
                     radius: 6
 
+                    onAngleFeedActiveChanged: {
+                        if (!angleFeedActive) {
+                            frameBorderColor = root.cardBorderColor
+                            glowOpacity = 0
+                        }
+                    }
+
+                    SequentialAnimation {
+                        running: joystickFeedFrame.angleFeedActive
+                        loops: Animation.Infinite
+
+                        ParallelAnimation {
+                            ColorAnimation {
+                                target: joystickFeedFrame
+                                property: "frameBorderColor"
+                                to: root.angleFeedGlowColor
+                                duration: joystickFeedFrame.glowDurationMs
+                                easing.type: Easing.InOutQuad
+                            }
+                            NumberAnimation {
+                                target: joystickFeedFrame
+                                property: "glowOpacity"
+                                to: joystickFeedFrame.glowMaxOpacity
+                                duration: joystickFeedFrame.glowDurationMs
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+
+                        ParallelAnimation {
+                            ColorAnimation {
+                                target: joystickFeedFrame
+                                property: "frameBorderColor"
+                                to: root.cardBorderColor
+                                duration: joystickFeedFrame.glowDurationMs
+                                easing.type: Easing.InOutQuad
+                            }
+                            NumberAnimation {
+                                target: joystickFeedFrame
+                                property: "glowOpacity"
+                                to: 0
+                                duration: joystickFeedFrame.glowDurationMs
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: joystickFeedFrame.glowInset
+                        radius: Math.max(0, joystickFeedFrame.radius - joystickFeedFrame.glowInset)
+                        color: "transparent"
+                        opacity: joystickFeedFrame.glowOpacity
+                        z: 2
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            height: 18
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: root.angleFeedGlowColor }
+                                GradientStop { position: 1.0; color: "transparent" }
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            height: 18
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: "transparent" }
+                                GradientStop { position: 1.0; color: root.angleFeedGlowColor }
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: 18
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { position: 0.0; color: root.angleFeedGlowColor }
+                                GradientStop { position: 1.0; color: "transparent" }
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: 18
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { position: 0.0; color: "transparent" }
+                                GradientStop { position: 1.0; color: root.angleFeedGlowColor }
+                            }
+                        }
+                    }
+
                     RowLayout {
                         anchors.fill: parent
-                        anchors.margins: 1
+                        anchors.margins: joystickFeedFrame.glowBorderWidth
                         spacing: 0
+                        z: 1
 
                         ManualJoystickPanel {
                             id: joystickPanel

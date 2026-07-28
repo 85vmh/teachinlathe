@@ -14,39 +14,69 @@ Rectangle {
     border.width: 1
     radius: 6
 
-    Text {
-        x: 15
-        y: 10
-        width: 91
-        height: 36
-        text: "Increment:"
-        color: "#1e2430"
-        font.pixelSize: 17
-        verticalAlignment: Text.AlignVCenter
-    }
+    Item {
+        id: header
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 50
 
-    Text {
-        x: 110
-        y: 10
-        width: 56
-        height: 36
-        text: viewModel ? viewModel.jogIncrement : "0.001"
-        color: "#0f172a"
-        font.pixelSize: 16
-        font.family: "Noto Sans Mono"
-        horizontalAlignment: Text.AlignRight
-        verticalAlignment: Text.AlignVCenter
-    }
+        RowLayout {
+            visible: viewModel ? viewModel.handwheelsAllowed : true
+            anchors.fill: parent
+            anchors.leftMargin: 10
+            anchors.rightMargin: 10
+            spacing: 6
 
-    Text {
-        x: 170
-        y: 10
-        width: 36
-        height: 36
-        text: "mm"
-        color: "#1e2430"
-        font.pixelSize: 17
-        verticalAlignment: Text.AlignVCenter
+            Item { Layout.fillWidth: true }
+
+            Text {
+                text: "Increment:"
+                color: "#1e2430"
+                font.pixelSize: 17
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Text {
+                text: viewModel ? viewModel.jogIncrement : "0.001"
+                color: "#0f172a"
+                font.pixelSize: 17
+                font.bold: true
+                font.family: "Noto Sans Mono"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Text {
+                text: "mm"
+                color: "#1e2430"
+                font.pixelSize: 17
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Item { Layout.fillWidth: true }
+        }
+
+        Text {
+            visible: !(viewModel ? viewModel.handwheelsAllowed : true)
+            anchors.fill: parent
+            text: "Disabled"
+            color: "#ff9800"
+            font.pixelSize: 17
+            font.bold: false
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 1
+            color: "#ccc"
+        }
     }
 
     HandwheelToggle {
