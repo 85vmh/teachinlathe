@@ -10,6 +10,7 @@ RowLayout {
     property string settingName: ""
     property var value: ""
     property bool editable: true
+    property bool valueBold: false
 
     signal openNumPadRequested(Item field)
     signal committed(var value)
@@ -46,6 +47,7 @@ RowLayout {
         text: String(root.value)
         color: "#0f172a"
         font.pixelSize: 17
+        font.bold: root.valueBold
         font.family: "Noto Sans Mono"
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

@@ -89,7 +89,7 @@ Item {
                 // "Spindle" label
                 Text {
                     x: 70; y: 0; width: 106; height: parent.height
-                    text: "Spindle"
+                    text: manualViewModel ? manualViewModel.spindleTitle : "Spindle"
                     font.pixelSize: 18; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -104,7 +104,7 @@ Item {
                 // "Manual Feed" label
                 Text {
                     x: 340; y: 0; width: 156; height: parent.height
-                    text: "Manual Feed"
+                    text: "Handwheels"
                     font.pixelSize: 18; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -112,7 +112,7 @@ Item {
                 // "Automatic Feed" label
                 Text {
                     x: 680; y: 0; width: 181; height: parent.height
-                    text: "Automatic Feed"
+                    text: "Joystick Automatic Feed"
                     font.pixelSize: 18; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter

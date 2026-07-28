@@ -21,6 +21,7 @@ class ManualTurningViewModel(QObject):
         self._numpad_settings = NumpadSettings.instance()
         self._spindle_mode = 0
         self._gear_suffix = "2"
+        self._spindle_gear_number = 0
         self._rpm_setting_name = ""
         self._max_rpm_setting_name = ""
         self._css_setting_name = "spindle.css"
@@ -31,6 +32,8 @@ class ManualTurningViewModel(QObject):
         self._input_feed = "0.10"
         self._actual_rpm = "0"
         self._actual_css = "0"
+        self._spindle_angle = 0.0
+        self._spindle_running = False
         self._actual_feed = "0.00"
         self._spindle_override = 1.0
         self._feed_override = 1.0
@@ -126,6 +129,32 @@ class ManualTurningViewModel(QObject):
     def actualCss(self):
         return self._actual_css
 
+    @pyqtProperty(str, notify=spindleValuesChanged)
+    def spindleAngleText(self):
+        return f"{self._spindle_angle:.1f}°"
+
+    @pyqtProperty(bool, notify=spindleValuesChanged)
+    def spindleRunning(self):
+        return self._spindle_running
+
+    @pyqtProperty(str, notify=spindleValuesChanged)
+    def spindlePanelMode(self):
+        return "ReadOnly" if self._spindle_running else "Editable"
+
+    @pyqtProperty(str, notify=spindleValuesChanged)
+    def spindleModeLabel(self):
+        return "CSS" if self._spindle_mode == 1 else "RPM"
+
+    @pyqtProperty(int, notify=spindleValuesChanged)
+    def spindleGearNumber(self):
+        return self._spindle_gear_number
+
+    @pyqtProperty(str, notify=spindleValuesChanged)
+    def spindleTitle(self):
+        if self._spindle_gear_number == 0:
+            return "Spindle"
+        return f"Spindle [{self._spindle_gear_number}]"
+
     @pyqtProperty(str, notify=feedValuesChanged)
     def inputFeed(self):
         return self._input_feed
@@ -182,6 +211,7 @@ class ManualTurningViewModel(QObject):
         self._spindle_mode = mode
         self._manual_lathe.onSpindleModeChanged(mode)
         self.spindleModeChanged.emit()
+        self.spindleValuesChanged.emit()
 
     @pyqtSlot(str)
     def setGearSuffix(self, suffix):
@@ -189,6 +219,7 @@ class ManualTurningViewModel(QObject):
         if suffix not in ("1", "2"):
             suffix = "2"
         self._gear_suffix = suffix
+        self._spindle_gear_number = int(suffix)
         self._rpm_setting_name = f"spindle.rpm_{suffix}"
         self._max_rpm_setting_name = f"spindle.css_max_rpm_{suffix}"
         self._set_setting_backed_value("_input_rpm", self._rpm_setting_name, self._input_rpm)
@@ -250,6 +281,21 @@ class ManualTurningViewModel(QObject):
 
     def setActualRpm(self, value):
         self._actual_rpm = str(abs(int(value or 0)))
+        self.spindleValuesChanged.emit()
+
+    def setSpindleRunning(self, running):
+        running = bool(running)
+        if self._spindle_running == running:
+            return
+        self._spindle_running = running
+        self.spindleValuesChanged.emit()
+
+    def setSpindleAngle(self, angle):
+        angle = self._to_float(angle, 0.0)
+        angle = angle % 360.0
+        if abs(self._spindle_angle - angle) < 0.05:
+            return
+        self._spindle_angle = angle
         self.spindleValuesChanged.emit()
 
     @pyqtProperty(int, notify=spindleValuesChanged)

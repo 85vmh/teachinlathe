@@ -174,15 +174,22 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent = TeachInLatheComponent()
 
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsOn, self.onSpindleRunningChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleOrientation, self.onSpindleOrientationChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStart, self.onCycleStartPressed)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStop, self.onCycleStopPressed)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinIsSpindleStarted, self.onSpindleRunningChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsFirstGear, self.onSpindleFirstGearChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsAllowed, self.onHandwheelAllowedChanged)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = True
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = True
         self.onSpindleFirstGearChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
+        self.manualTurningViewModel.setSpindleRunning(
+            self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsOn).value
+        )
+        self.manualTurningViewModel.setSpindleAngle(
+            self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleOrientation).value
+        )
 
         self.teachInLatheDroViewModel.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
         self.teachInLatheDroViewModel.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
@@ -548,9 +555,13 @@ class MyMainWindow(VCPMainWindow):
 
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)
+        self.manualTurningViewModel.setSpindleRunning(value)
         if self.latheJoystick.isRotated() and not value:
             print("Set taper turning off when stopping spindle")
             self.manualTurningViewModel.resetAngleFeed()
+
+    def onSpindleOrientationChanged(self, value):
+        self.manualTurningViewModel.setSpindleAngle(value)
 
     def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
         setting_name = getattr(fake_edit_text, 'settingName', None)

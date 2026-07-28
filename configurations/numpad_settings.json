@@ -44,7 +44,7 @@
   "spindle.css": {
     "description": "Enter spindle target CSS",
     "default_value": 200,
-    "last_value": 150,
+    "last_value": 300,
     "persistent": true,
     "options": [
       50,
@@ -88,7 +88,7 @@
   "spindle.css_max_rpm_2": {
     "description": "Enter spindle Max RPM (Gear 2)",
     "default_value": 1500,
-    "last_value": 2250,
+    "last_value": 1000,
     "persistent": true,
     "options": [
       750,
