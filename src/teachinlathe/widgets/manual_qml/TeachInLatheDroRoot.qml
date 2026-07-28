@@ -36,5 +36,7 @@ Rectangle {
         onPrimaryClicked: if (root.viewModel) root.viewModel.zPrimaryClicked()
         onZeroClicked: if (root.viewModel) root.viewModel.zZeroClicked()
         onAbsRelClicked: if (root.viewModel) root.viewModel.zAbsRelClicked()
+        setDatumVisible: true
+        onSetDatumClicked: if (root.viewModel) root.viewModel.zSetDatumClicked()
     }
 }

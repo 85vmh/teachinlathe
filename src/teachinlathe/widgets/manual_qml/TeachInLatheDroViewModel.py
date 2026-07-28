@@ -2,6 +2,7 @@ from enum import Enum
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import QMetaObject, QObject, pyqtProperty, pyqtSignal, pyqtSlot
+from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
 
 from teachinlathe.data_source.positions import Positions
@@ -351,6 +352,20 @@ class TeachInLatheDroViewModel(QObject):
         if self.isZAbs:
             self.lastZAbsValue = 0
         self.updateDro()
+
+    @pyqtSlot()
+    def zSetDatumClicked(self):
+        issue_mdi(f"G10 L20 P{self._current_g5x_index()} Z0.0")
+
+    def _current_g5x_index(self):
+        try:
+            return int(self.status.stat.g5x_index)
+        except Exception:
+            pass
+        try:
+            return int(self.status.g5x_index.value)
+        except Exception:
+            return 1
 
     def updateDro(self):
         factor = 2.0 if self.isDiameterMode else 1.0
