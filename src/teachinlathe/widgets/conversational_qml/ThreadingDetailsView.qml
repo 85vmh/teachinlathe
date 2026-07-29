@@ -93,6 +93,20 @@ Item {
         root.saveRequested({ index: root.opIndex, payload: merged })
     }
 
+    function calculateThreadDiameter() {
+        if (typeof threadingDetailsViewModel === "undefined" || !threadingDetailsViewModel)
+            return
+        var result = threadingDetailsViewModel.calculateThreadDiameter(
+            root.location,
+            root.pitch,
+            root.majorDiameter,
+            root.minorDiameter
+        )
+        if (!result || !result.valid)
+            return
+        tf_calcDiam.commit(result.calculatedDiameter)
+    }
+
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
     IntValidator    { id: intVal; bottom: 1; top: 99 }
     IntValidator    { id: intValNonNeg; bottom: 0; top: 99 }
@@ -287,6 +301,7 @@ Item {
                             Layout.minimumWidth: 90
                         }
                         NumpadField {
+                            id: tf_calcDiam
                             Layout.preferredWidth: 110
                             settingName: "threading.calc_diam"
                             validatorObject: dblVal
@@ -300,7 +315,10 @@ Item {
                                 root.emitSave()
                             }
                         }
-                        Button { text: "Calculate" }
+                        Button {
+                            text: "Calculate"
+                            onClicked: root.calculateThreadDiameter()
+                        }
                     }
                 }
             }

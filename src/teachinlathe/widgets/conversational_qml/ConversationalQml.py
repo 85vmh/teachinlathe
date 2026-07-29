@@ -44,6 +44,7 @@ from teachinlathe.conversational.updaters import (
     apply_turnable_operation_update,
 )
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
+from teachinlathe.widgets.conversational_qml.ThreadingDetailsViewModel import ThreadingDetailsViewModel
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.positions_bridge import PositionsBridge
 from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
@@ -75,6 +76,9 @@ class ConversationalQml(QQuickWidget):
 
         self.positionsBridge = PositionsBridge(self)
         self.engine().rootContext().setContextProperty("positionsBridge", self.positionsBridge)
+
+        self.threadingDetailsViewModel = ThreadingDetailsViewModel(self)
+        self.engine().rootContext().setContextProperty("threadingDetailsViewModel", self.threadingDetailsViewModel)
 
         root_path = os.path.join(self.base_dir, "Root.qml")
         self.statusChanged.connect(self.onStatusChanged)

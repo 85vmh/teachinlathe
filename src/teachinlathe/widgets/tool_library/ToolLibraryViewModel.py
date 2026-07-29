@@ -115,23 +115,34 @@ class ToolLibraryViewModel(QObject):
     @pyqtSlot(int)
     def loadTool(self, tool_no: int) -> None:
         if tool_no == self._repo.current_tool_no:
+            print(f"[ToolLibraryViewModel] manual tool change skipped: T{tool_no} already current")
             return
         if self._is_feeding:
+            print(f"[ToolLibraryViewModel] manual tool change blocked while feeding: T{tool_no}")
             return
         if _CMD is None or _STAT is None:
+            print(f"[ToolLibraryViewModel] manual tool change unavailable: command/stat missing for T{tool_no}")
             return
 
         previous_mode = None
         try:
             _STAT.poll()
             previous_mode = int(getattr(_STAT, "task_mode", _lnc.MODE_MANUAL))
+            mdi_command = f"M61 Q{tool_no} G43"
+            print(f"[ToolLibraryViewModel] manual tool change MDI: {mdi_command}")
 
             _CMD.mode(_lnc.MODE_MDI)
             _CMD.wait_complete()
-            _CMD.mdi(f"M61 Q{tool_no}")
+            _CMD.mdi(mdi_command)
             _CMD.wait_complete()
-        except Exception:
-            pass
+            _STAT.poll()
+            # print(
+            #     "[ToolLibraryViewModel] manual tool change status: "
+            #     f"tool_in_spindle={getattr(_STAT, 'tool_in_spindle', None)} "
+            #     f"tool_offset={getattr(_STAT, 'tool_offset', None)}"
+            # )
+        except Exception as e:
+            print(f"[ToolLibraryViewModel] manual tool change failed for T{tool_no}: {e}")
         finally:
             if previous_mode == _lnc.MODE_MANUAL:
                 try:
