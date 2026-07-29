@@ -18,12 +18,28 @@ already offset by stock-to-leave and clipped to X Start.
 import math
 
 from ...config import fmt
+from ...helpers.m1 import inspect_position_int
 from .geometry import find_deepest_z_at_x_path
 from .context import RoughingContext
 
 
-def emit_axial_roughing(lines: list, context: RoughingContext, path: list) -> None:
+def _include_m1(m1_params) -> bool:
+    if not m1_params:
+        return False
+    if hasattr(m1_params, "include_m1"):
+        return bool(m1_params.include_m1)
+    return bool(m1_params.get("include_m1", False))
+
+
+def emit_axial_roughing(
+    lines: list,
+    context: RoughingContext,
+    path: list,
+    m1_params=None,
+    spindle_direction: int = 0,
+) -> None:
     prefix = context.optional_prefix
+    include_m1 = _include_m1(m1_params)
 
     if not context.has_radial_range():
         lines.append("( ProfileRoughing axial: nothing to cut – check x_start vs profile )")
@@ -61,7 +77,17 @@ def emit_axial_roughing(lines: list, context: RoughingContext, path: list) -> No
             lines.append(f"{prefix}G0 X{fmt(cut_x)} Z{fmt(context.z_start)}")
             lines.append(f"{prefix}G1 Z{fmt(cut_z)}")
             lines.append(f"{prefix}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
-            lines.append(f"(end of OD block)")
+            lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
+            lines.append("(End of OD pass)")
+            if include_m1:
+                lines.append(
+                    f"{prefix}o<m1_handling> call "
+                    f"[{inspect_position_int(m1_params)}] "
+                    f"[{fmt(exit_x)}] "
+                    f"[{fmt(entry_z)}] "
+                    f"[{spindle_direction}]"
+                )
+                lines.append("")
         else:
             # ID: 3-move approach to avoid crashing into bore wall.
             lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
@@ -69,7 +95,16 @@ def emit_axial_roughing(lines: list, context: RoughingContext, path: list) -> No
             lines.append(f"{prefix}G0 X{fmt(cut_x)} Z{fmt(context.z_start)}")
             lines.append(f"{prefix}G1 Z{fmt(cut_z)}")
             lines.append(f"{prefix}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
-            lines.append(f"(end of ID block)")
+            lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
+            lines.append("(End of ID pass)")
+            if include_m1:
+                lines.append(
+                    f"{prefix}o<m1_handling> call "
+                    f"[{inspect_position_int(m1_params)}] "
+                    f"[{fmt(exit_x)}] "
+                    f"[{fmt(entry_z)}] "
+                    f"[{spindle_direction}]"
+                )
+                lines.append("")
 
-    lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
     lines.append("")

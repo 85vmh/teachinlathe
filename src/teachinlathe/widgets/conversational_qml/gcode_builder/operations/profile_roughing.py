@@ -6,7 +6,6 @@ and PassType (AXIAL / RADIAL / DIAGONAL_*).
 
 from teachinlathe.conversational.data_types import PassType, ProfileRoughingConfig, ProfilingType
 
-from ..helpers.m1 import emit_m1_block
 from ..helpers.spindle import build_spindle_gcode
 from ..helpers.utils import get_float
 from .profiling.geometry import (
@@ -103,6 +102,7 @@ def generate_profile_roughing_gcode(op):
     config = parse_profile_roughing_config(op)
     spindle = op.get("spindle_parameters", {}) or {}
     m1_params = op.get("m1_parameters", {}) or {}
+    spindle_direction = int(spindle.get("direction", 0) or 0)
     segments, path = _resolve_profile(op)
 
     lines = []
@@ -138,15 +138,14 @@ def generate_profile_roughing_gcode(op):
     z_cut_deepest = _path_z_min(roughing_path)
 
     if config.pass_type == PassType.AXIAL:
-        emit_axial_roughing(lines, ctx, roughing_path)
+        emit_axial_roughing(lines, ctx, roughing_path, m1_params, spindle_direction)
 
     elif config.pass_type == PassType.RADIAL:
-        emit_radial_roughing(lines, ctx, roughing_path, z_cut_deepest)
+        emit_radial_roughing(lines, ctx, roughing_path, z_cut_deepest, m1_params, spindle_direction)
 
     elif config.pass_type in (PassType.DIAGONAL_INTERIOR, PassType.DIAGONAL_EXTERIOR):
         emit_diagonal_roughing(lines, ctx, roughing_path, ctx.x_limit, z_cut_deepest, config.pass_type)
 
     emit_roughing_contour_pass(lines, ctx, roughing_path)
 
-    lines.extend(emit_m1_block(m1_params, config.optional_prefix))
     return lines

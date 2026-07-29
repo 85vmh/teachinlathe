@@ -9,6 +9,26 @@ Rectangle {
     property var viewModel: teachInDroViewModel
 
     signal toastRequested(string message)
+    signal openNumPadRequested(var field)
+
+    QtObject {
+        id: zDatumField
+
+        property string settingName: "manual.z-set-datum"
+        property string description: "Set Z datum value"
+        property var value: 0.0
+
+        function commit(v) {
+            value = v
+            if (root.viewModel) {
+                root.viewModel.zSetDatumValueSelected(v)
+            }
+            return true
+        }
+
+        function defocus() {
+        }
+    }
 
     ManualModeAxisDro {
         id: xDro
@@ -40,12 +60,16 @@ Rectangle {
         onAbsRelClicked: if (root.viewModel) root.viewModel.zAbsRelClicked()
         setDatumVisible: true
         onSetDatumClicked: if (root.viewModel) root.viewModel.zSetDatumClicked()
+        onSetDatumLongPressed: if (root.viewModel) root.viewModel.zSetDatumLongPressed()
     }
 
     Connections {
         target: root.viewModel
         function onActionRejected(message) {
             root.toastRequested(message)
+        }
+        function onSetDatumValueInputRequested() {
+            root.openNumPadRequested(zDatumField)
         }
     }
 }

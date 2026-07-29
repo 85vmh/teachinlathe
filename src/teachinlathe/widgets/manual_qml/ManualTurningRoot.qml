@@ -78,6 +78,7 @@ Item {
                 Layout.preferredHeight: root.droHeight
                 Layout.maximumHeight: root.droHeight
                 onToastRequested: function(message) { root.toastRequested(message) }
+                onOpenNumPadRequested: function(field) { root.openNumpad(field) }
             }
 
             // Limits (scalable — fills all remaining vertical space)

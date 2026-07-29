@@ -15,6 +15,7 @@ Item {
     signal zeroClicked()
     signal absRelClicked()
     signal setDatumClicked()
+    signal setDatumLongPressed()
 
     width: 1090
     height: 82
@@ -159,6 +160,26 @@ Item {
         height: root.buttonSize
         text: "Set\nDatum"
         font.pixelSize: 16
-        onClicked: root.setDatumClicked()
+
+        property bool longPressTriggered: false
+
+        MouseArea {
+            id: datumPressArea
+            anchors.fill: parent
+            enabled: datumButton.enabled
+            pressAndHoldInterval: 1000
+
+            onPressed: datumButton.longPressTriggered = false
+            onPressAndHold: {
+                datumButton.longPressTriggered = true
+                root.setDatumLongPressed()
+            }
+            onReleased: {
+                if (!datumButton.longPressTriggered && containsMouse) {
+                    root.setDatumClicked()
+                }
+            }
+            onCanceled: datumButton.longPressTriggered = false
+        }
     }
 }
