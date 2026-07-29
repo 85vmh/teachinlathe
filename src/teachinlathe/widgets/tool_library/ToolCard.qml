@@ -1,6 +1,6 @@
 // ToolCard.qml — displays a single tool entry in the tool list.
 //
-// Properties:  toolData  — tool dict { t, x, z, d, q, i, j, r, isCurrent }
+// Properties:  toolData  — tool dict { t, x, z, d, q, i, j, r, isCurrent, isEnabled, actionsEnabled }
 // Signals:     editRequested(var toolData)
 //              deleteRequested(int toolNo)
 //              loadRequested(int toolNo)
@@ -12,6 +12,7 @@ Rectangle {
     id: root
 
     property var toolData: null
+    property bool actionsEnabled: false
 
     signal editRequested(var toolData)
     signal deleteRequested(int toolNo)
@@ -20,8 +21,10 @@ Rectangle {
     // ── Colors ────────────────────────────────────────────────────
     readonly property color clrBg:        "white"
     readonly property color clrBgSel:     "#dbeafe"
+    readonly property color clrBgDisabled:"#eeeeee"
     readonly property color clrBorder:    "#cccccc"
     readonly property color clrBorderSel: "#3b82f6"
+    readonly property color clrBorderDisabled: "#d6d6d6"
     readonly property color clrSep:       "#d0d0d0"
     readonly property color clrBtnBorder: "#BDBDBD"
     readonly property color clrDelHover:  "#ffebee"
@@ -37,8 +40,8 @@ Rectangle {
     readonly property int szIS: 112    // icon source size
 
     radius:       szR
-    color:        toolData && toolData.isCurrent ? clrBgSel     : clrBg
-    border.color: toolData && toolData.isCurrent ? clrBorderSel : clrBorder
+    color:        toolData && toolData.isCurrent ? clrBgSel : !enabled ? clrBgDisabled : clrBg
+    border.color: toolData && toolData.isCurrent ? clrBorderSel : !enabled ? clrBorderDisabled : clrBorder
     border.width: toolData && toolData.isCurrent ? 2 : 1
     height:       contentRow.implicitHeight + szM * 2
 
@@ -58,6 +61,7 @@ Rectangle {
     // Card tap → load tool
     MouseArea {
         anchors.fill: parent
+        enabled: root.enabled
         onClicked: if (root.toolData) root.loadRequested(root.toolData.t)
     }
 
@@ -66,6 +70,7 @@ Rectangle {
         id: contentRow
         anchors { left: parent.left; right: parent.right; top: parent.top; margins: root.szM }
         spacing: root.szSp
+        opacity: root.enabled ? 1.0 : 0.45
 
         // Tool number
         Text {
@@ -181,6 +186,8 @@ Rectangle {
             // Edit
             Rectangle {
                 implicitWidth: root.szBtn; implicitHeight: root.szBtn; radius: root.szR
+                enabled: root.actionsEnabled
+                opacity: enabled ? 1.0 : 0.35
                 color:        editMA.pressed ? "#e3f2fd" : "transparent"
                 border.width: 1
                 border.color: editMA.pressed ? "#1565c0" : root.clrBtnBorder
@@ -193,7 +200,7 @@ Rectangle {
                     fillMode: Image.PreserveAspectFit; smooth: true
                 }
                 MouseArea {
-                    id: editMA; anchors.fill: parent
+                    id: editMA; anchors.fill: parent; enabled: parent.enabled
                     onClicked: root.editRequested(root.toolData)
                 }
             }
@@ -204,7 +211,7 @@ Rectangle {
                 color:        delMA.pressed ? root.clrDelHover  : "transparent"
                 border.width: 1
                 border.color: delMA.pressed ? root.clrDelBorder : root.clrBtnBorder
-                enabled: toolData ? !toolData.isCurrent : false
+                enabled: toolData ? !toolData.isCurrent && root.actionsEnabled : false
                 opacity: enabled ? 1.0 : 0.35
 
                 Image {

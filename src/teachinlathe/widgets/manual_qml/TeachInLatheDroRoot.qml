@@ -8,6 +8,8 @@ Rectangle {
 
     property var viewModel: teachInDroViewModel
 
+    signal toastRequested(string message)
+
     ManualModeAxisDro {
         id: xDro
         x: 0
@@ -38,5 +40,12 @@ Rectangle {
         onAbsRelClicked: if (root.viewModel) root.viewModel.zAbsRelClicked()
         setDatumVisible: true
         onSetDatumClicked: if (root.viewModel) root.viewModel.zSetDatumClicked()
+    }
+
+    Connections {
+        target: root.viewModel
+        function onActionRejected(message) {
+            root.toastRequested(message)
+        }
     }
 }

@@ -347,9 +347,16 @@ class MyMainWindow(VCPMainWindow):
             return
         root.xToggled.connect(self.onManualQmlXHandwheelToggled)
         root.zToggled.connect(self.onManualQmlZHandwheelToggled)
+        root.toastRequested.connect(self._show_app_toast)
         self.manualJoystickController.attach(root)
         self.latheJoystick = self.manualJoystickController
         self.manualLathe.setJoystickWidget(self.manualJoystickController)
+
+    @pyqtSlot(str)
+    def _show_app_toast(self, message):
+        shell = getattr(self, "appShellWidget", None)
+        if shell is not None:
+            shell.showToast(message)
 
     def _raise_manual_qml_widgets(self):
         widget = getattr(self, "manualTurningRootQml", None)

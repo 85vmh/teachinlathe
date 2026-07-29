@@ -29,13 +29,13 @@ class ManualTurningViewModel(QObject):
         self._input_rpm = "1000"
         self._input_css = "200"
         self._input_max_rpm = "1500"
-        self._input_feed = "0.10"
+        self._input_feed = "0.1"
         self._actual_rpm = "0"
         self._actual_css = "0"
         self._spindle_angle = 0.0
         self._spindle_running = False
         self._feeding = False
-        self._actual_feed = "0.00"
+        self._actual_feed = "0.0"
         self._spindle_override = 1.0
         self._feed_override = 1.0
         self._rapid_override = int(self._setting_value("rapid_speeds.percentage", 50))
@@ -50,6 +50,8 @@ class ManualTurningViewModel(QObject):
         self.setGearSuffix(self._gear_suffix)
         self._set_setting_backed_value("_input_css", self._css_setting_name, self._input_css)
         self._set_setting_backed_value("_input_feed", self._feed_setting_name, self._input_feed)
+        self._input_feed = self._format_feed_value(self._input_feed)
+        self._update_actual_feed()
 
     def _setting_value(self, setting_name: str, default):
         try:
@@ -88,7 +90,17 @@ class ManualTurningViewModel(QObject):
 
     def _update_actual_feed(self):
         feed = self._to_float(self._input_feed, 0.0) * self._feed_override
-        self._actual_feed = f"{feed:.2f}"
+        self._actual_feed = self._format_feed_value(feed)
+
+    def _format_feed_value(self, value):
+        try:
+            number = float(value)
+        except Exception:
+            return str(value)
+        text = f"{number:.2f}".rstrip("0").rstrip(".")
+        if "." not in text:
+            text += ".0"
+        return text
 
     @pyqtProperty(int, notify=spindleModeChanged)
     def spindleMode(self):
@@ -260,7 +272,7 @@ class ManualTurningViewModel(QObject):
 
     @pyqtSlot(str)
     def setInputFeed(self, value):
-        self._input_feed = str(value)
+        self._input_feed = self._format_feed_value(value)
         self._manual_lathe.onInputFeedChanged(self._input_feed)
         self._update_actual_feed()
         self.feedValuesChanged.emit()

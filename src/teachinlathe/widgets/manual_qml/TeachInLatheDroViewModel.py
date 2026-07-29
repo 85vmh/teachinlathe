@@ -23,6 +23,7 @@ class TeachInLatheDroViewModel(QObject):
     zPrimaryDroClicked = pyqtSignal(float)
     droChanged = pyqtSignal()
     limitsChanged = pyqtSignal()
+    actionRejected = pyqtSignal(str)
 
     LIMIT_NONE = "--none--"
     LIMIT_KEYS = ("xMinus", "xPlus", "zMinus", "zPlus", "tailstock")
@@ -40,6 +41,7 @@ class TeachInLatheDroViewModel(QObject):
         self.limitsHandler = MachineLimitsHandler()
         self.latheComponent = TeachInLatheComponent()
         self.setDefaultMachineLimits(self.limitsHandler.getDefaultMachineLimits())
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickIsFeeding, self.onJoystickFeedingChanged)
 
         self.status = getPlugin('status')
         self.positions = Positions()
@@ -65,6 +67,7 @@ class TeachInLatheDroViewModel(QObject):
         self._z_primary_value = "+0000.000"
         self._z_secondary_value = "+0000.000"
         self._z_secondary_visible = False
+        self._is_feeding = bool(self.latheComponent.comp.getPin(TeachInLatheComponent.PinJoystickIsFeeding).value)
 
         self.limit_status = {
             "xMinus": LimitStatus.DISABLED,
@@ -174,10 +177,14 @@ class TeachInLatheDroViewModel(QObject):
 
     @pyqtSlot()
     def xPrimaryClicked(self):
+        if not self._can_run_primary_click():
+            return
         self.xPrimaryDroClicked.emit(float(self._x_primary_value))
 
     @pyqtSlot()
     def zPrimaryClicked(self):
+        if not self._can_run_primary_click():
+            return
         self.zPrimaryDroClicked.emit(float(self._z_primary_value))
 
     @pyqtSlot(str)
@@ -355,7 +362,24 @@ class TeachInLatheDroViewModel(QObject):
 
     @pyqtSlot()
     def zSetDatumClicked(self):
+        if not self._can_set_datum():
+            return
         issue_mdi(f"G10 L20 P{self._current_g5x_index()} Z0.0")
+
+    def _can_run_primary_click(self):
+        if self._is_feeding:
+            self.actionRejected.emit("Changing tool offsets not allowed when power feeding")
+            return False
+        return True
+
+    def _can_set_datum(self):
+        if self._is_feeding:
+            self.actionRejected.emit("SetDatum not allowed when power feeding")
+            return False
+        return True
+
+    def onJoystickFeedingChanged(self, value):
+        self._is_feeding = bool(value)
 
     def _current_g5x_index(self):
         try:

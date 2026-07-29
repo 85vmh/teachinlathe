@@ -161,7 +161,7 @@ class SpindleParameters:
             return None if v is None or (isinstance(v, str) and v.strip() == "") else int(v)
 
         return SpindleParameters(
-            direction=int(data.get("direction", 1)),
+            direction=int(data.get("direction", -1)),
             mode=SpindleMode(mode_str),
             rpm_value=as_opt_int(data.get("rpm_value")),
             css_value=as_opt_int(data.get("css_value")),

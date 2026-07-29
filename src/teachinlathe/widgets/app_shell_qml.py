@@ -1,6 +1,6 @@
 import os
 
-from PyQt5.QtCore import QObject, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QObject, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot, Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QWidget
@@ -15,6 +15,7 @@ class AppShellBridge(QObject):
     logsExpandedChanged = pyqtSignal()
     eventsChanged = pyqtSignal()
     statusSummaryChanged = pyqtSignal()
+    toastChanged = pyqtSignal()
 
     def __init__(self, app_state, feature_controllers=None, parent=None):
         super().__init__(parent)
@@ -26,6 +27,12 @@ class AppShellBridge(QObject):
         self._left_actions = []
         self._right_actions = []
         self._status_summary = ""
+        self._toast_text = ""
+        self._toast_visible = False
+        self._toast_timer = QTimer(self)
+        self._toast_timer.setSingleShot(True)
+        self._toast_timer.setInterval(3000)
+        self._toast_timer.timeout.connect(self._hide_toast)
 
         self._nav_store.currentTabChanged.connect(self._refresh)
         self._nav_store.currentTitleChanged.connect(self._refresh)
@@ -77,6 +84,14 @@ class AppShellBridge(QObject):
     def statusSummary(self):
         return self._status_summary
 
+    @pyqtProperty(str, notify=toastChanged)
+    def toastText(self):
+        return self._toast_text
+
+    @pyqtProperty(bool, notify=toastChanged)
+    def toastVisible(self):
+        return self._toast_visible
+
     @pyqtSlot(str)
     def activateTab(self, tab_id):
         self._app_state.activateTab(tab_id)
@@ -96,6 +111,19 @@ class AppShellBridge(QObject):
             return
         controller.triggerHeaderAction(action_id)
         self._refresh()
+
+    @pyqtSlot(str)
+    def showToast(self, message):
+        self._toast_text = str(message or "")
+        self._toast_visible = bool(self._toast_text)
+        self.toastChanged.emit()
+        self._toast_timer.start()
+
+    def _hide_toast(self):
+        if not self._toast_visible:
+            return
+        self._toast_visible = False
+        self.toastChanged.emit()
 
     def _refresh(self):
         current_tab = self._nav_store.currentTab
@@ -218,6 +246,15 @@ class AppShellQmlWidget(QWidget):
         self.bottom_bar.setFixedHeight(64)
         layout.addWidget(self.bottom_bar)
 
+        self.toast_overlay = self._create_qml_widget("AppShellToastOverlay.qml")
+        self.toast_overlay.setParent(self)
+        self.toast_overlay.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.toast_overlay.setAttribute(Qt.WA_AlwaysStackOnTop, True)
+        self.toast_overlay.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.toast_overlay.setClearColor(QColor(0, 0, 0, 0))
+        self.toast_overlay.setGeometry(0, 0, self.width(), self.height())
+        self.toast_overlay.raise_()
+
     def _create_qml_widget(self, file_name):
         widget = QQuickWidget(self)
         widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
@@ -229,6 +266,12 @@ class AppShellQmlWidget(QWidget):
         ctx.setContextProperty("navigationStore", self._app_state.navigationStore)
         widget.setSource(QUrl.fromLocalFile(os.path.join(self._qml_dir, file_name)))
         return widget
+
+    def showToast(self, message):
+        self._bridge.showToast(message)
+        if hasattr(self, "toast_overlay"):
+            self.toast_overlay.show()
+            self.toast_overlay.raise_()
 
     def _wire(self):
         self._content_stack.currentChanged.connect(self._sync_from_tab_index)
@@ -254,6 +297,9 @@ class AppShellQmlWidget(QWidget):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
+        if hasattr(self, "toast_overlay"):
+            self.toast_overlay.setGeometry(0, 0, self.width(), self.height())
+            self.toast_overlay.raise_()
         self._position_drawer_overlay()
 
     def _position_drawer_overlay(self):

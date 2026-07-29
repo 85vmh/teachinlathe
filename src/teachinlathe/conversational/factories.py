@@ -48,7 +48,7 @@ from teachinlathe.conversational.data_types import (
 
 
 def make_default_operation(op_type: str, order: int = 1):
-    spindle_rpm = SpindleParameters(direction=1, mode=SpindleMode.RPM, rpm_value=1000)
+    spindle_rpm = SpindleParameters(direction=-1, mode=SpindleMode.RPM, rpm_value=1000)
     m1_default = M1Parameters(include_m1=False, inspect_position=PredefinedPosition.G28, stop_spindle=False)
 
     if op_type == "changeTool":
@@ -129,7 +129,7 @@ def make_default_operation(op_type: str, order: int = 1):
     if op_type == "threading":
         return Threading(
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
-            spindleParameters=SpindleParameters(direction=1, mode=SpindleMode.RPM, rpm_value=500),
+            spindleParameters=SpindleParameters(direction=-1, mode=SpindleMode.RPM, rpm_value=500),
             location=ThreadLocation.OD, thread_type="metric", pitch=1.0, starts=1,
             major_diameter=0.0, minor_diameter=0.0, z_start=0.0, z_end=0.0,
             initial_doc=0.3, retract=1.0, spring_passes=0, depth_degression=1.0, taper_type=0, compound_angle=0.0,
@@ -144,14 +144,14 @@ def make_default_operation(op_type: str, order: int = 1):
     if op_type == "tapping":
         return Tapping(
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
-            spindleParameters=SpindleParameters(direction=1, mode=SpindleMode.RPM, rpm_value=500),
+            spindleParameters=SpindleParameters(direction=-1, mode=SpindleMode.RPM, rpm_value=500),
             tappingParameters=TappingParameters(zStart=0.0, zEnd=0.0, zRetract=5.0, peckDepth=0.0, pitch=1.0),
             m1Parameters=m1_default,
         )
     if op_type == "parting":
         return Parting(
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
-            spindleParameters=SpindleParameters(direction=1, mode=SpindleMode.RPM, rpm_value=500),
+            spindleParameters=SpindleParameters(direction=-1, mode=SpindleMode.RPM, rpm_value=500),
             partingParameters=PartingParameters(
                 xStart=0.0, xEnd=0.0, zPos=0.0, first_feed_rate=0.05, second_feed_rate=0.02, second_feed_x_pos=5.0, x_clearance=1.0
             ),

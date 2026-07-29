@@ -27,14 +27,14 @@ GroupBox {
     property int    rpm_value: 0
     property real   css_value: 0.0
     property int    css_max_rpm: 0
-    property int    directionCache: 1    // +1 = Forward (M3), -1 = Reverse (M4)
+    property int    directionCache: -1   // +1 = Forward (M3), -1 = Reverse (M4)
 
     function applyData(index, data) {
         opIndex = index
         opData = data || {}
 
         var sp = (opData.spindle_parameters || {})
-        directionCache = (sp.direction !== undefined) ? sp.direction : 1
+        directionCache = (sp.direction !== undefined) ? sp.direction : -1
 
         var hasRPM = (sp.rpm_value !== undefined && sp.rpm_value !== null)
         var hasCSS = (sp.css_value !== undefined && sp.css_max_speed !== undefined)

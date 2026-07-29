@@ -18,6 +18,7 @@ from .tool_entry import (
     SortBy, TapTool, ToolEntry, ToolType, TrepaningTool,
 )
 from .tool_repository import ToolRepository
+from teachinlathe.lathe_hal_component import TeachInLatheComponent
 
 try:
     import linuxcnc as _lnc
@@ -36,11 +37,24 @@ except Exception:
 
 class ToolLibraryViewModel(QObject):
     toolsChanged = pyqtSignal()
+    enabledStateChanged = pyqtSignal()
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._repo = ToolRepository(_TBL_PATH, parent=self)
         self._repo.toolsChanged.connect(self.toolsChanged)
+        self._is_feeding = False
+        self._lathe_component = TeachInLatheComponent()
+        self._lathe_component.comp.addListener(
+            TeachInLatheComponent.PinJoystickIsFeeding,
+            self.onJoystickFeedingChanged,
+        )
+        try:
+            self._is_feeding = bool(
+                self._lathe_component.comp.getPin(TeachInLatheComponent.PinJoystickIsFeeding).value
+            )
+        except Exception:
+            self._is_feeding = False
 
     # ── QML property ────────────────────────────────────────────────
 
@@ -49,9 +63,7 @@ class ToolLibraryViewModel(QObject):
         current = self._repo.current_tool_no
         result = []
         for tool in self._repo.get_tools():
-            d = tool.to_display_dict()
-            d["isCurrent"] = (tool.t == current)
-            result.append(d)
+            result.append(self._tool_display_dict(tool, current))
         return result
 
     @pyqtProperty("QVariantList", notify=toolsChanged)
@@ -80,9 +92,7 @@ class ToolLibraryViewModel(QObject):
         tools_to_show.sort(key=lambda t: t.t)
         result = []
         for tool in tools_to_show:
-            d = tool.to_display_dict()
-            d["isCurrent"] = (tool.t == current)
-            result.append(d)
+            result.append(self._tool_display_dict(tool, current))
         return result
 
     @pyqtProperty(int, notify=toolsChanged)
@@ -92,6 +102,10 @@ class ToolLibraryViewModel(QObject):
             return 1
         return max(t.t for t in tools) + 1
 
+    @pyqtProperty(bool, notify=enabledStateChanged)
+    def addToolEnabled(self) -> bool:
+        return not self._is_feeding
+
     # ── QML slots ────────────────────────────────────────────────────
 
     @pyqtSlot(int, result=bool)
@@ -100,6 +114,10 @@ class ToolLibraryViewModel(QObject):
 
     @pyqtSlot(int)
     def loadTool(self, tool_no: int) -> None:
+        if tool_no == self._repo.current_tool_no:
+            return
+        if self._is_feeding:
+            return
         if _CMD is None or _STAT is None:
             return
 
@@ -124,6 +142,8 @@ class ToolLibraryViewModel(QObject):
 
     @pyqtSlot(int)
     def deleteTool(self, tool_no: int) -> None:
+        if self._is_feeding:
+            return
         self._repo.delete_tool(tool_no)
 
     @pyqtSlot(int, float, float, float, str, int)
@@ -136,6 +156,8 @@ class ToolLibraryViewModel(QObject):
         comment: str,
         orientation: int,
     ) -> None:
+        if self._is_feeding:
+            return
         existing = self._repo.get_tool(tool_no)
         if existing is None:
             return
@@ -156,6 +178,8 @@ class ToolLibraryViewModel(QObject):
         comment: str,
         orientation: int,
     ) -> None:
+        if self._is_feeding:
+            return
         tool = ToolEntry(
             t=tool_no, p=tool_no,
             d=tip_radius, i=front_angle, j=back_angle,
@@ -165,10 +189,13 @@ class ToolLibraryViewModel(QObject):
 
     # ── Extended save — carries type-specific extras from QML ────────
 
-    @pyqtSlot(int, "QVariantMap")
-    def saveToolFull(self, tool_no: int, data: dict) -> None:
+    @pyqtSlot(int, "QVariantMap", result=bool)
+    def saveToolFull(self, tool_no: int, data: dict) -> bool:
         """Save a tool with full type information (orientation-7 subclasses)."""
         existing = self._repo.get_tool(tool_no)
+        if self._is_feeding:
+            return False
+
         base = existing if existing is not None else ToolEntry(t=tool_no, p=tool_no)
 
         # Copy common fields
@@ -201,3 +228,26 @@ class ToolLibraryViewModel(QObject):
             self._repo.edit_tool(promoted)
         else:
             self._repo.add_tool(promoted)
+        return True
+
+    def onJoystickFeedingChanged(self, value) -> None:
+        feeding = bool(value)
+        if feeding == self._is_feeding:
+            return
+        self._is_feeding = feeding
+        self.enabledStateChanged.emit()
+        self.toolsChanged.emit()
+
+    def _tool_display_dict(self, tool: ToolEntry, current_tool_no: int) -> dict:
+        is_current = tool.t == current_tool_no
+        d = tool.to_display_dict()
+        d["isCurrent"] = is_current
+        d["isEnabled"] = self._tool_enabled(is_current)
+        d["actionsEnabled"] = self._tool_actions_enabled()
+        return d
+
+    def _tool_enabled(self, is_current: bool) -> bool:
+        return is_current or not self._is_feeding
+
+    def _tool_actions_enabled(self) -> bool:
+        return not self._is_feeding

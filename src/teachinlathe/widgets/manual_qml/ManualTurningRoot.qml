@@ -55,6 +55,7 @@ Item {
 
     // ── Signals bubbled up from children ─────────────────────────────
     signal openNumPadRequested(Item field)
+    signal toastRequested(string message)
 
     signal xToggled(bool enabled)
 
@@ -76,6 +77,7 @@ Item {
                 Layout.minimumHeight: root.droHeight
                 Layout.preferredHeight: root.droHeight
                 Layout.maximumHeight: root.droHeight
+                onToastRequested: function(message) { root.toastRequested(message) }
             }
 
             // Limits (scalable — fills all remaining vertical space)

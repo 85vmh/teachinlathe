@@ -24,6 +24,8 @@ Rectangle {
 
     // ── Flip helpers ──────────────────────────────────────────────
     function _startAdd() {
+        if (!toolLibraryViewModel || !toolLibraryViewModel.addToolEnabled)
+            return
         root._editTool = null
         var nextNo = toolLibraryViewModel ? toolLibraryViewModel.nextToolNo : 1
         editForm.populate(null, nextNo)
@@ -31,6 +33,8 @@ Rectangle {
     }
 
     function _startEdit(toolData) {
+        if (!toolLibraryViewModel || !toolData || !toolData.actionsEnabled)
+            return
         root._editTool = toolData
         editForm.populate(toolData)
         flipAnim.stop(); flipAnim.from = 0; flipAnim.to = 180; flipAnim.start()
@@ -128,11 +132,14 @@ Rectangle {
 
                         // Add Tool button
                         Rectangle {
+                            id: addToolButton
                             width: 130; height: 46; radius: 8
-                            color: addMA.pressed ? "#145a30" : "#1e8449"
+                            enabled: toolLibraryViewModel ? toolLibraryViewModel.addToolEnabled : false
+                            opacity: enabled ? 1.0 : 0.45
+                            color: !enabled ? "#9e9e9e" : addMA.pressed ? "#145a30" : "#1e8449"
 
                             Text { anchors.centerIn: parent; text: "+ Add Tool"; color: "white"; font.pixelSize: 14; font.bold: true }
-                            MouseArea { id: addMA; anchors.fill: parent; onClicked: root._startAdd() }
+                            MouseArea { id: addMA; anchors.fill: parent; enabled: parent.enabled; onClicked: root._startAdd() }
                         }
                     }
                 }
@@ -162,12 +169,19 @@ Rectangle {
 
                         delegate: ToolCard {
                             toolData: modelData
+                            enabled: toolData ? toolData.isEnabled : false
+                            actionsEnabled: toolData ? toolData.actionsEnabled : false
                             width: Math.min(800, ListView.view.width - 16 - root.toolListSpacing * 2)
                             x: root.toolListSpacing + Math.max(0, (ListView.view.width - 16 - root.toolListSpacing * 2 - width) / 2)
 
                             onLoadRequested:   toolLibraryViewModel.loadTool(toolNo)
                             onEditRequested:   root._startEdit(toolData)
-                            onDeleteRequested: { deleteDialog.toolNo = toolNo; deleteDialog.open() }
+                            onDeleteRequested: {
+                                if (toolLibraryViewModel && toolData && toolData.actionsEnabled) {
+                                    deleteDialog.toolNo = toolNo
+                                    deleteDialog.open()
+                                }
+                            }
                         }
                     }
 
@@ -220,8 +234,9 @@ Rectangle {
                 anchors.fill: parent
 
                 onSaved: {
-                    toolLibraryViewModel.saveToolFull(formData.toolNo, formData)
-                    root._flipToFront()
+                    if (toolLibraryViewModel && toolLibraryViewModel.saveToolFull(formData.toolNo, formData)) {
+                        root._flipToFront()
+                    }
                 }
 
                 onCancelled: root._flipToFront()

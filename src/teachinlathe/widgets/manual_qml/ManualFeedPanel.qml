@@ -24,7 +24,7 @@ Rectangle {
                 label: "Set feed:"
                 unit: "mm/rev"
                 settingName: viewModel ? viewModel.feedSettingName : ""
-                value: viewModel ? viewModel.inputFeed : "0.10"
+                value: viewModel ? viewModel.inputFeed : "0.1"
                 editable: !root.readOnlyMode
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onCommitted: if (viewModel) viewModel.setInputFeed(String(value))
@@ -34,7 +34,7 @@ Rectangle {
                 visible: root.readOnlyMode
                 label: "Actual feed:"
                 unit: "mm/rev"
-                value: viewModel ? viewModel.actualFeed : "0.00"
+                value: viewModel ? viewModel.actualFeed : "0.0"
                 editable: false
                 valueBold: true
             }
