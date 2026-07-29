@@ -6,6 +6,7 @@ import "."
 Item {
     id: root
     anchors.fill: parent
+    implicitHeight: contentColumn.implicitHeight + 20
 
     property int opIndex: -1
     property var opData: null
@@ -41,6 +42,7 @@ Item {
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
 
     ColumnLayout {
+        id: contentColumn
         anchors.fill: parent
         anchors.margins: 10
         spacing: 24

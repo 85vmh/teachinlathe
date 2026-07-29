@@ -144,10 +144,34 @@ Item {
                 border.color: "#ccc"
                 border.width: 1
 
-                Loader {
-                    id: detailsLoader
+                Flickable {
+                    id: detailsFlick
                     anchors.fill: parent
-                    asynchronous: false
+                    anchors.margins: 1
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    contentWidth: width
+                    contentHeight: detailsContent.height
+                    ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+                    Item {
+                        id: detailsContent
+                        width: detailsFlick.width
+                        height: Math.max(
+                            detailsFlick.height,
+                            detailsLoader.item && detailsLoader.item.implicitHeight > 0
+                                ? detailsLoader.item.implicitHeight
+                                : detailsLoader.implicitHeight
+                        )
+
+                        Loader {
+                            id: detailsLoader
+                            width: parent.width
+                            height: parent.height
+                            asynchronous: false
+                            onSourceChanged: detailsFlick.contentY = 0
+                        }
+                    }
                 }
 
                 Connections {
