@@ -21,11 +21,11 @@ Item {
         radius: 6
         border.width: 1
         color: !root.enabled ? "#8ea99a"
-             : root.checked  ? (mouse.containsMouse ? "#684b0f" : "#7a5a12")
-             :                  (mouse.containsMouse ? "#25673a" : "#2d7d46")
+             : root.checked  ? (mouse.containsMouse ? "#25673a" : "#2d7d46")
+             :                  (mouse.containsMouse ? "#684b0f" : "#7a5a12")
         border.color: !root.enabled ? "#8ea99a"
-                    : root.checked  ? "#d7ba7d"
-                    :                  "#3fb950"
+                    : root.checked  ? "#3fb950"
+                    :                  "#d7ba7d"
 
         Text {
             id: label

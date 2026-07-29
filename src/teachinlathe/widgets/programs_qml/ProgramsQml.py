@@ -355,6 +355,21 @@ class ProgramsQml(QQuickWidget):
     def _prepareGremlinForLoad(self, path):
         self._pending_fit_path = os.path.abspath(path) if path else ''
         self._clear_gremlin_plot()
+        if self._pending_fit_path:
+            LOG.info('ProgramsQml: invalidating Gremlin preview for %s', self._pending_fit_path)
+            self.gremlin._current_file = ''
+            QTimer.singleShot(0, self._refresh_gremlin_preview_after_load)
+
+    def _refresh_gremlin_preview_after_load(self):
+        snapshot = self.viewmodel.runtime_store.snapshot
+        if self.viewmodel.actions.isActive or snapshot.call_level > 0:
+            LOG.info('ProgramsQml: skipped Gremlin preview refresh while program is active')
+            self._pending_fit_path = ''
+            return
+
+        self.gremlin.poll()
+        self._pending_fit_path = ''
+        QTimer.singleShot(150, self._fit_gremlin_to_window)
 
     def _fit_gremlin_to_window(self):
         LOG.info('ProgramsQml: fit-to-screen requested')

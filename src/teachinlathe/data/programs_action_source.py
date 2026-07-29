@@ -111,6 +111,7 @@ class ProgramsActionSource(QObject):
         runtime_store.snapshotChanged.connect(lambda _snapshot: self.refresh())
         self._bind_status_updates()
         self._bind_hal_updates()
+        self._reset_program_option_defaults()
         self.refresh()
 
     @pyqtProperty(bool, notify=stateChanged)
@@ -186,6 +187,13 @@ class ProgramsActionSource(QObject):
                     channel.notify(lambda *_args: self.refresh())
                 except Exception:
                     pass
+
+    def _reset_program_option_defaults(self):
+        try:
+            CMD.set_optional_stop(False)
+            CMD.set_block_delete(False)
+        except Exception as e:
+            print(f"[ProgramsActionSource] failed to reset optional stop/block delete defaults: {e}")
 
     def _bind_hal_updates(self):
         try:
