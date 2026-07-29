@@ -26,7 +26,8 @@ Rectangle {
             model: [
                 { id: "manual", label: "Manual Turning" },
                 { id: "conversational", label: "Conversational" },
-                { id: "programs", label: "Programs" }
+                { id: "programs", label: "Programs" },
+                { id: "settings", label: "Machine Settings" }
             ]
 
             delegate: Rectangle {

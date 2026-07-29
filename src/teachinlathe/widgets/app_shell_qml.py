@@ -177,12 +177,14 @@ class AppShellQmlWidget(QWidget):
         ("manual", "Manual Turning", 0),
         ("conversational", "Conversational", 1),
         ("programs", "Programs", 2),
+        ("settings", "Machine Settings", 4),
     ]
 
     INDEX_TO_TAB = {
         0: "manual",
         1: "conversational",
         2: "programs",
+        4: "settings",
     }
 
     TAB_TO_INDEX = {tab_id: index for tab_id, _label, index in TAB_CONFIG}

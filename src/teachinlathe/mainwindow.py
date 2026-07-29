@@ -415,6 +415,8 @@ class MyMainWindow(VCPMainWindow):
         self.appContentStack.addWidget(self.manualTurningTab)
         self.appContentStack.addWidget(self.conversationalTab)
         self.appContentStack.addWidget(self.programsQmlTab)
+        self.appContentStack.addWidget(self.toolsTab)
+        self.appContentStack.addWidget(self.settingsTab)
         self.appContentStack.currentChanged.connect(self.onMainTabChanged)
 
         feature_controllers = {
