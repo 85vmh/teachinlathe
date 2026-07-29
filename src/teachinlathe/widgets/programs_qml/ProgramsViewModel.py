@@ -47,6 +47,7 @@ class ProgramsViewModel(QObject):
         self._active_execution_title = ''
         self._active_execution_content = ''
         self._active_execution_motion_line = 0
+        self._is_execution_context_current_program = False
 
         self._bridge.filePathChanged.connect(self._on_file_path_changed)
         self._bridge.fileContentChanged.connect(self._on_file_content_changed)
@@ -293,6 +294,23 @@ class ProgramsViewModel(QObject):
         runtime_path = os.path.abspath(machine_file) if machine_file else ''
         return bool(editor_path and runtime_path and editor_path == runtime_path)
 
+    def _is_executing_current_program(self, snapshot):
+        if self._is_showing_machine_file(snapshot.machine_file):
+            return True
+
+        editor_path = os.path.abspath(self.currentFilePath) if self.currentFilePath else ''
+        if not editor_path:
+            return False
+
+        if self._actions.isActive and snapshot.call_level > 0 and snapshot.call_stack:
+            return True
+
+        return any(
+            os.path.abspath(frame.filename) == editor_path
+            for frame in snapshot.call_stack
+            if frame.filename
+        )
+
     def _refresh_execution_view(self):
         snapshot = self._runtime_store.snapshot
         frames = []
@@ -301,7 +319,8 @@ class ProgramsViewModel(QObject):
         active_content = ''
         active_motion_line = 0
 
-        if self._is_showing_machine_file(snapshot.machine_file) and snapshot.call_level > 0:
+        is_executing_current_program = self._is_executing_current_program(snapshot)
+        if is_executing_current_program and snapshot.call_level > 0:
             stack_view = self._call_stack_resolver.build_view(snapshot)
             if stack_view is not None:
                 for frame in stack_view.frames:
@@ -323,7 +342,7 @@ class ProgramsViewModel(QObject):
             active_content,
             active_motion_line,
             int(snapshot.motion_line or 0),
-            bool(self._is_showing_machine_file(snapshot.machine_file)),
+            bool(is_executing_current_program),
         )
         current_signature = (
             tuple((frame['filePath'], frame['lineNumber'], frame['lineText']) for frame in self._execution_frames),
@@ -331,7 +350,7 @@ class ProgramsViewModel(QObject):
             self._active_execution_content,
             self._active_execution_motion_line,
             self.mainHighlightLine,
-            bool(self.hasExecutionStack),
+            bool(self._is_execution_context_current_program),
         )
         if next_signature == current_signature:
             return
@@ -341,4 +360,5 @@ class ProgramsViewModel(QObject):
         self._active_execution_title = active_title
         self._active_execution_content = active_content
         self._active_execution_motion_line = active_motion_line
+        self._is_execution_context_current_program = is_executing_current_program
         self.executionViewChanged.emit()
