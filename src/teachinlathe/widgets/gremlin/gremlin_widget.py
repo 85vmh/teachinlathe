@@ -399,6 +399,7 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
             )
             machine_file = s.file
             task_mode = s.task_mode
+            call_level = int(getattr(s, 'call_level', 0) or 0)
             fingerprint = (
                 self.logger.npts,
                 self.soft_limits(),
@@ -412,7 +413,7 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
                 s.motion_mode,
                 s.current_vel,
             )
-            if machine_file and machine_file != self._current_file:
+            if machine_file and machine_file != self._current_file and call_level == 0:
                 self._reload_preview(machine_file, sync_task=False)
                 self._pending_default_view = True
                 return True
@@ -430,7 +431,7 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
             return True
 
         machine_file = snapshot.machine_file
-        if machine_file and machine_file != self._current_file:
+        if machine_file and machine_file != self._current_file and snapshot.call_level == 0:
             self._reload_preview(machine_file, sync_task=False)
             self._pending_default_view = True
             return True

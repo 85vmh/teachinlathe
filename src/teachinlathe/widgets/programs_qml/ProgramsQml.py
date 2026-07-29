@@ -256,11 +256,9 @@ class ProgramsQml(QQuickWidget):
         if win is None or not hasattr(win, 'enterProgramRunFullScreen'):
             return
         win.enterProgramRunFullScreen(self)
-        # The gremlin overlay + controls are siblings of this widget under the
-        # tab; move them onto the full-screen host so they stay on top.
-        self.gremlin.setParent(win)
-        self._top_left_controls.setParent(win)
-        self._clear_plot_button.setParent(win)
+        # The gremlin overlay + controls stay parented under _overlay_host;
+        # _sync_gremlin_widget() maps their geometry from this widget's
+        # coordinates each time, so no reparenting is needed here.
         self._schedule_gremlin_sync()
 
     def _hide_program_complete_dialog(self):
@@ -304,9 +302,6 @@ class ProgramsQml(QQuickWidget):
     def _restore_gremlin_overlay_after_full_screen(self):
         self.gremlin.hide()
         self._hide_gremlin_overlay_controls()
-        self.gremlin.setParent(self._overlay_host)
-        self._top_left_controls.setParent(self._overlay_host)
-        self._clear_plot_button.setParent(self._overlay_host)
         self._schedule_gremlin_sync()
 
     def _schedule_gremlin_sync(self):

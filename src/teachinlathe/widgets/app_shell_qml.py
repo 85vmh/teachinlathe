@@ -194,6 +194,8 @@ class AppShellQmlWidget(QWidget):
         self._nav_store = app_state.navigationStore
         self._bridge = AppShellBridge(app_state, feature_controllers or {}, self)
         self._qml_dir = os.path.join(os.path.dirname(__file__), "app_shell_qml")
+        self._chrome_top_hidden = False
+        self._chrome_bottom_hidden = False
 
         self._content_stack.setParent(None)
         if hasattr(self._content_stack, "tabBar"):
@@ -210,6 +212,29 @@ class AppShellQmlWidget(QWidget):
     @property
     def title_bar(self):
         return self.top_bar
+
+    @property
+    def content_stack(self):
+        return self._content_stack
+
+    def hideChrome(self, hide_top=True, hide_bottom=True):
+        """Hide the top and/or bottom bars in place, without reparenting the
+        current page. The QStackedWidget page keeps its normal parent and the
+        surrounding QVBoxLayout simply reclaims the space, which is much
+        cheaper than moving a page (and any native/GL child widgets it hosts,
+        e.g. the Gremlin backplot) to a different parent."""
+        self._chrome_top_hidden = hide_top
+        self._chrome_bottom_hidden = hide_bottom
+        self._apply_chrome_visibility()
+
+    def showChrome(self):
+        self._chrome_top_hidden = False
+        self._chrome_bottom_hidden = False
+        self._apply_chrome_visibility()
+
+    def _apply_chrome_visibility(self):
+        self.top_bar.setVisible(self._nav_store.headerVisible and not self._chrome_top_hidden)
+        self.bottom_bar.setVisible(not self._chrome_bottom_hidden)
 
     def _build_ui(self):
         layout = QVBoxLayout(self)
@@ -289,7 +314,7 @@ class AppShellQmlWidget(QWidget):
         if target_index is not None and self._content_stack.currentIndex() != target_index:
             self._content_stack.setCurrentIndex(target_index)
 
-        self.top_bar.setVisible(self._nav_store.headerVisible)
+        self._apply_chrome_visibility()
         self.drawer.setVisible(self._nav_store.logsExpanded)
         if self._nav_store.logsExpanded:
             self._position_drawer_overlay()

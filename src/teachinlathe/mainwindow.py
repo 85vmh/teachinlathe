@@ -792,62 +792,45 @@ class MyMainWindow(VCPMainWindow):
     # ── Full-screen overlay ──────────────────────────────────────────────────────
 
     def enterFullScreen(self, widget):
-        """Re-parent widget to the main window and stretch it to cover everything."""
-        self._enterFullScreenAt(widget, y_offset=0)
+        """Hide the whole chrome (top bar + bottom nav)."""
+        self._setFullScreen(widget, hide_top=True, hide_bottom=True)
 
     def enterContentFullScreen(self, widget):
-        """Re-parent widget below the AppShell title bar, leaving it visible."""
-        from PyQt5.QtCore import QPoint
-        shell = getattr(self, "appShellWidget", None)
-        title_bar = getattr(shell, "title_bar", None) if shell else None
-        y_offset = 0
-        if title_bar is not None:
-            try:
-                y_offset = shell.mapTo(self, QPoint(0, title_bar.height())).y()
-            except Exception:
-                y_offset = title_bar.height()
-        self._enterFullScreenAt(widget, y_offset=y_offset)
+        """Hide only the bottom nav; the AppShell title bar stays visible."""
+        self._setFullScreen(widget, hide_top=False, hide_bottom=True)
 
     def enterProgramRunFullScreen(self, widget):
         """Full window (covers App Bar + bottom tab bar) for a running program."""
-        self._enterFullScreenAt(widget, y_offset=0)
+        self._setFullScreen(widget, hide_top=True, hide_bottom=True)
 
-    def _enterFullScreenAt(self, widget, y_offset=0):
+    def _setFullScreen(self, widget, hide_top, hide_bottom):
+        # NOTE: we deliberately never reparent `widget` here. Reparenting a
+        # QQuickWidget (or a native/GL child widget it hosts, e.g. the Gremlin
+        # backplot) forces Qt to tear down and recreate its render context,
+        # which can block the UI thread for many seconds. Instead we just
+        # hide the AppShell's top/bottom bars in place; the widget keeps its
+        # normal spot in the QStackedWidget and the QVBoxLayout simply
+        # reclaims the space the bars vacated.
         if getattr(self, "_fullscreen_widget", None) is widget:
             return
-        widget._fs_saved_parent   = widget.parent()
-        widget._fs_saved_geometry = widget.geometry()
-        widget.setParent(self)
-        widget.setGeometry(0, y_offset, self.width(), self.height() - y_offset)
-        widget.show()
-        widget.raise_()
-        self._fullscreen_widget  = widget
-        self._fullscreen_y_offset = y_offset
+        self._fullscreen_widget = widget
+        shell = getattr(self, "appShellWidget", None)
+        if shell is None:
+            return
+        stack = getattr(shell, "content_stack", None)
+        if stack is not None and stack.indexOf(widget) != -1:
+            stack.setCurrentWidget(widget)
+        if hasattr(shell, "hideChrome"):
+            shell.hideChrome(hide_top=hide_top, hide_bottom=hide_bottom)
 
     def exitFullScreen(self):
-        """Restore the full-screen widget back to its original place."""
+        """Restore the AppShell chrome (top bar + bottom nav)."""
         widget = getattr(self, "_fullscreen_widget", None)
         if widget is None:
             return
-        self._fullscreen_widget  = None
-        self._fullscreen_y_offset = 0
-        saved_parent = getattr(widget, "_fs_saved_parent", None)
-        saved_geom   = getattr(widget, "_fs_saved_geometry", None)
-        if saved_parent is not None:
-            widget.setParent(saved_parent)
-        if saved_geom is not None:
-            widget.setGeometry(saved_geom)
-        widget.show()
-        widget.raise_()
-        widget.update()
-        widget.repaint()
+        self._fullscreen_widget = None
+        shell = getattr(self, "appShellWidget", None)
+        if shell is not None and hasattr(shell, "showChrome"):
+            shell.showChrome()
         if hasattr(widget, "reactivate"):
             QTimer.singleShot(0, widget.reactivate)
-            QTimer.singleShot(100, widget.reactivate)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        widget = getattr(self, "_fullscreen_widget", None)
-        if widget is not None:
-            y = getattr(self, "_fullscreen_y_offset", 0)
-            widget.setGeometry(0, y, self.width(), self.height() - y)
