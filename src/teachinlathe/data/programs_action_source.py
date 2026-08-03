@@ -92,6 +92,7 @@ class ProgramButtonState(QObject):
 class ProgramsActionSource(QObject):
     stateChanged = pyqtSignal()
     abortTriggered = pyqtSignal()
+    cycleStartObserved = pyqtSignal()
 
     def __init__(self, runtime_store, parent=None):
         super().__init__(parent)
@@ -209,6 +210,8 @@ class ProgramsActionSource(QObject):
         if active == self._cycle_start_led_active:
             return
         self._cycle_start_led_active = active
+        if active:
+            self.cycleStartObserved.emit()
         self.stateChanged.emit()
 
     def refresh(self):

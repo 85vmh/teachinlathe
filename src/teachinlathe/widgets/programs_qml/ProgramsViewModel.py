@@ -41,6 +41,7 @@ class ProgramsViewModel(QObject):
         self._screen_index = Screen.FileSystem
         self._run_tracker = RunTimeTracker(self)
         self._was_active = False
+        self._run_started = False
         self._abort_requested = False
         self._execution_frames = []
         self._active_execution_file_path = ''
@@ -59,6 +60,7 @@ class ProgramsViewModel(QObject):
         self._actions.stateChanged.connect(self.runningStateChanged)
         self._actions.stateChanged.connect(self._on_running_state_changed)
         self._actions.abortTriggered.connect(self._on_abort_triggered)
+        self._actions.cycleStartObserved.connect(self._on_cycle_start_observed)
 
         self._refresh_execution_view()
 
@@ -216,6 +218,8 @@ class ProgramsViewModel(QObject):
         self.gremlinFitRequested.emit()
 
     def _on_file_path_changed(self, path):
+        self._run_started = False
+        self._was_active = False
         self.currentFilePathChanged.emit(path)
         self.currentFileDisplayPathChanged.emit(self.currentFileDisplayPath)
         self._refresh_execution_view()
@@ -238,25 +242,32 @@ class ProgramsViewModel(QObject):
     # ── Running full-screen state machine ─────────────────────────────
     def _on_abort_triggered(self):
         self._abort_requested = True
+        self._run_started = False
         if self._screen_index == Screen.ProgramRunning:
             self._set_screen_index(Screen.ProgramLoaded)
             self.exitRunFullScreenRequested.emit()
 
+    def _on_cycle_start_observed(self):
+        if self._has_loaded_program_for_run():
+            self._run_started = True
+            self._on_running_state_changed()
+
     def _on_running_state_changed(self):
         active = self._actions.isActive
         loaded = self._has_loaded_program_for_run()
-        if active and loaded and not self._was_active:
+        tracking_active = active and loaded and self._run_started
+        if tracking_active and not self._was_active:
             self._abort_requested = False
             self._run_tracker.start()
             self._set_screen_index(Screen.ProgramRunning)
             self.enterRunFullScreenRequested.emit()
-        elif self._was_active and not active:
+        elif self._was_active and not tracking_active:
             movement, toolchange, total = self._run_tracker.stop()
             if self._abort_requested:
                 if self._screen_index == Screen.ProgramRunning:
                     self._set_screen_index(Screen.ProgramLoaded)
                     self.exitRunFullScreenRequested.emit()
-            else:
+            elif self._run_started:
                 name = os.path.basename(self.currentFilePath or '') or 'Program'
                 self.programCompleted.emit(
                     name,
@@ -264,8 +275,12 @@ class ProgramsViewModel(QObject):
                     format_duration(toolchange),
                     format_duration(total),
                 )
+            elif self._screen_index == Screen.ProgramRunning:
+                self._set_screen_index(Screen.ProgramLoaded)
+                self.exitRunFullScreenRequested.emit()
             self._abort_requested = False
-        self._was_active = active
+            self._run_started = False
+        self._was_active = tracking_active
 
     def _has_loaded_program_for_run(self):
         snapshot = self._runtime_store.snapshot

@@ -79,7 +79,7 @@ def test_g33_threading_generator_emits_basic_pass_geometry():
 
     assert lines == [
         "G97 M4 S500",
-        "(G33 roughing pass 1)",
+        "(roughing pass #1)",
         "G0 X21.000 Z0.000",
         "G0 X18.000",
         "G33 Z-12.000 K1.500 D0.000",
@@ -109,27 +109,27 @@ def test_g33_threading_generator_emits_m1_after_each_g33_for_each_start():
         "G33 Z-12.000 K3.000 D180.000",
     ]
     assert m1_lines == [
-        "o<m1_handling> call [1] [21.000] [-12.000] [-1]",
-        "o<m1_handling> call [1] [21.000] [-12.000] [-1]",
+        "o<m1_handling> call [1] [21.000] [0.000] [-1]",
+        "o<m1_handling> call [1] [21.000] [0.000] [-1]",
     ]
 
 
-def test_g33_threading_generator_completes_one_start_before_next_start():
+def test_g33_threading_generator_completes_each_depth_before_next_pass():
     generate_g33_threading_gcode = _load_g33_threading_module()
     lines = generate_g33_threading_gcode(_op(starts=2, initial_doc=0.8))
 
-    comments = [line for line in lines if line.startswith("(G33 ")]
+    comments = [line for line in lines if line.startswith("(roughing ")]
     g33_lines = [line for line in lines if line.startswith("G33 ")]
 
     assert comments == [
-        "(G33 roughing pass 1, start 1)",
-        "(G33 roughing pass 2, start 1)",
-        "(G33 roughing pass 1, start 2)",
-        "(G33 roughing pass 2, start 2)",
+        "(roughing pass #1, start 1)",
+        "(roughing pass #1, start 2)",
+        "(roughing pass #2, start 1)",
+        "(roughing pass #2, start 2)",
     ]
     assert g33_lines == [
         "G33 Z-12.000 K3.000 D0.000",
-        "G33 Z-12.000 K3.000 D0.000",
         "G33 Z-12.000 K3.000 D180.000",
+        "G33 Z-12.000 K3.000 D0.000",
         "G33 Z-12.000 K3.000 D180.000",
     ]

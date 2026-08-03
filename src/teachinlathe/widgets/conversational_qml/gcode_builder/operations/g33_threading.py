@@ -64,17 +64,17 @@ def generate_g33_threading_gcode(op: G33Threading):
     except Exception as exc:
         return lines + [f"( ERROR: G33 Threading -- {exc} )"]
 
-    for start_index in range(starts):
-        lead_angle_offset = lead_angle_step * start_index
-        for thread_pass in passes:
+    for thread_pass in passes:
+        for start_index in range(starts):
+            lead_angle_offset = lead_angle_step * start_index
             pass_comment = f"{thread_pass.type.value.lower()} pass #{thread_pass.index}"
             if starts > 1:
-                pass_comment = f"{pass_comment}, start {start_index + 1}"
+                pass_comment = f"{pass_comment}, start #{start_index + 1}"
             lines.append(f"{prefix}({pass_comment})")
             lines.append(f"{prefix}G0 X{fmt(safe_x)} Z{fmt(thread_pass.zStart)}")
             lines.append(f"{prefix}G0 X{fmt(thread_pass.x)}")
             lines.append(f"{prefix}G33 Z{fmt(thread_pass.zEnd)} K{fmt(thread_pass.pitch)} D{fmt(lead_angle_offset)}")
             lines.append(f"{prefix}G0 X{fmt(safe_x)}")
-            _emit_m1_handling(lines, prefix, op, safe_x, thread_pass.zEnd)
+            _emit_m1_handling(lines, prefix, op, safe_x, thread_pass.zStart)
 
     return lines

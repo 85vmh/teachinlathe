@@ -133,7 +133,7 @@ def make_default_operation(op_type: str, order: int = 1):
             spindleParameters=SpindleParameters(direction=-1, mode=SpindleMode.RPM, rpm_value=500),
             location=ThreadLocation.OD, thread_type="metric", pitch=1.0, starts=1,
             major_diameter=0.0, minor_diameter=0.0, z_start=0.0, z_end=0.0,
-            initial_doc=0.3, retract=1.0, spring_passes=0, depth_degression=1.0, taper_type=0, compound_angle=0.0,
+            initial_doc=0.3, retract=1.0, spring_passes=2, depth_degression=1.0, taper_type=0, compound_angle=29.0,
         )
     if op_type == "g33Threading":
         return G33Threading(
@@ -141,8 +141,8 @@ def make_default_operation(op_type: str, order: int = 1):
             spindleParameters=SpindleParameters(direction=-1, mode=SpindleMode.RPM, rpm_value=500),
             location=ThreadLocation.OD, thread_type="g33", pitch=1.0, starts=1,
             major_diameter=0.0, minor_diameter=0.0, z_start=0.0, z_end=0.0,
-            initial_doc=0.3, retract=1.0, spring_passes=0, minimum_radial_increment=0.0,
-            taper_type=0, compound_angle=0.0,
+            initial_doc=0.3, retract=1.0, spring_passes=2, minimum_radial_increment=0.0,
+            taper_type=0, compound_angle=29.0,
             m1Parameters=M1Parameters(include_m1=False, inspect_position=PredefinedPosition.G28, stop_spindle=False),
         )
     if op_type == "drilling":
