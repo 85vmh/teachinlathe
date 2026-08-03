@@ -84,6 +84,7 @@ def test_g33_threading_generator_emits_basic_pass_geometry():
         "G0 X18.000",
         "G33 Z-12.000 K1.500 D0.000",
         "G0 X21.000",
+        "G0 Z0.000",
     ]
 
 
@@ -122,10 +123,10 @@ def test_g33_threading_generator_completes_each_depth_before_next_pass():
     g33_lines = [line for line in lines if line.startswith("G33 ")]
 
     assert comments == [
-        "(roughing pass #1, start 1)",
-        "(roughing pass #1, start 2)",
-        "(roughing pass #2, start 1)",
-        "(roughing pass #2, start 2)",
+        "(roughing pass #1, start #1)",
+        "(roughing pass #1, start #2)",
+        "(roughing pass #2, start #1)",
+        "(roughing pass #2, start #2)",
     ]
     assert g33_lines == [
         "G33 Z-12.000 K3.000 D0.000",

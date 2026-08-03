@@ -12,14 +12,12 @@ G90 ; Absolute Distance
 M66 P0 L0 (samples motion.digital-in-00 into #5399, no wait)
 
 O900 if [#5399 EQ 1]
+	M5
 	O899 if [#<inspect_position> EQ 0]
 		G28
 	O899 else
 		G30
-	O899 endif			
-	
-	M5
-	;(DEBUG, inspecting, stopped the spindle)
+	O899 endif
 	#<resume_from_m1> = 1
 	M1
 O900 endif
@@ -42,7 +40,6 @@ O901 if [#<resume_from_m1> EQ 1]
 	
 	#<resume_from_m1> = 0
 	M0 (pause the program, requires another cycle start to continue)
-	;(DEBUG, continuing from where left off...)
 O901 endif
 
 O<m1_handling> endsub

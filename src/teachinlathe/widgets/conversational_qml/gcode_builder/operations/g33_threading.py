@@ -75,6 +75,7 @@ def generate_g33_threading_gcode(op: G33Threading):
             lines.append(f"{prefix}G0 X{fmt(thread_pass.x)}")
             lines.append(f"{prefix}G33 Z{fmt(thread_pass.zEnd)} K{fmt(thread_pass.pitch)} D{fmt(lead_angle_offset)}")
             lines.append(f"{prefix}G0 X{fmt(safe_x)}")
+            lines.append(f"{prefix}G0 Z{fmt(thread_pass.zStart)}")
             _emit_m1_handling(lines, prefix, op, safe_x, thread_pass.zStart)
 
     return lines
