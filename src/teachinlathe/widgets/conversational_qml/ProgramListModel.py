@@ -149,6 +149,9 @@ class ProgramListModel(QAbstractListModel):
         if op_type == "threading":
             pitch = getattr(op, "pitch", None)
             return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"
+        if op_type == "g33Threading":
+            pitch = getattr(op, "pitch", None)
+            return f"G33 Threading (P: {pitch})" if pitch is not None else "G33 Threading"
         if op_type == "drilling":
             return "Drilling"
         if op_type == "tapping":

@@ -11,6 +11,19 @@ Item {
 
     property int opIndex: -1
     property var opData: null
+    readonly property bool isG33Threading: opData && opData.type === "g33Threading"
+    readonly property string operationTitle: isG33Threading ? "G33 Threading" : "G76 Threading"
+    readonly property string defaultThreadType: isG33Threading ? "g33" : "metric"
+    readonly property string cuttingParamsSource: isG33Threading ? "G33CuttingParams.qml" : "G76CuttingParams.qml"
+    readonly property real finalRadialDepth: Math.abs(root.majorDiameter - root.minorDiameter) / 2.0
+    readonly property int roughingPassCount: (root.initialDoc > 0 && root.finalRadialDepth > 0)
+                                             ? Math.ceil(Math.pow(root.finalRadialDepth / root.initialDoc, 2))
+                                             : 0
+    readonly property string roughingPassCountText: root.starts > 1
+                                                   ? (root.starts + "x" + root.roughingPassCount + " passes")
+                                                   : (root.roughingPassCount + " passes")
+    readonly property bool showThreadLengthSummary: root.zStart !== root.zEnd
+    readonly property string threadHandText: root.zStart > root.zEnd ? "RH" : "LH"
 
     signal saveRequested(var updated)
     signal openNumPadRequested(var field)
@@ -59,6 +72,7 @@ Item {
         depthDegression = (opData.depth_degression !== undefined) ? Number(opData.depth_degression)    : 1.0
         taperType       = (opData.taper_type      !== undefined) ? Math.round(Number(opData.taper_type)) : 0
         compoundAngle   = (opData.compound_angle  !== undefined) ? Number(opData.compound_angle)         : 0.0
+        m1Panel.applyData(opData && opData.m1_parameters ? opData.m1_parameters : {})
         _loading = false
     }
 
@@ -76,7 +90,7 @@ Item {
         if (_loading) return
         var merged = root.mergeIntoOp({
             location:       root.location,
-            thread_type:    (opData && opData.thread_type) ? opData.thread_type : "metric",
+            thread_type:    (opData && opData.thread_type) ? opData.thread_type : root.defaultThreadType,
             pitch:          root.pitch,
             starts:         root.starts,
             major_diameter: root.majorDiameter,
@@ -86,10 +100,11 @@ Item {
             initial_doc:    root.initialDoc,
             retract:        root.retract,
             spring_passes:  root.springPasses,
-            depth_degression: root.depthDegression,
             taper_type:       root.taperType,
             compound_angle:   root.compoundAngle
         })
+        if (!root.isG33Threading)
+            merged.depth_degression = root.depthDegression
         root.saveRequested({ index: root.opIndex, payload: merged })
     }
 
@@ -107,6 +122,13 @@ Item {
         tf_calcDiam.commit(result.calculatedDiameter)
     }
 
+    function formatThreadLength() {
+        var length = Math.abs(root.zStart - root.zEnd)
+        if (Math.abs(length - Math.round(length)) < 0.0005)
+            return String(Math.round(length))
+        return Number(length).toFixed(3)
+    }
+
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
     IntValidator    { id: intVal; bottom: 1; top: 99 }
     IntValidator    { id: intValNonNeg; bottom: 0; top: 99 }
@@ -118,98 +140,42 @@ Item {
 
         Label {
             text: (opData && opData.type)
-                  ? ("Threading — Op #" + (opData.order !== undefined ? opData.order : "N/A"))
-                  : "Threading"
+                  ? (root.operationTitle + " - Op #" + (opData.order !== undefined ? opData.order : "N/A"))
+                  : root.operationTitle
             font.pixelSize: 18
             font.bold: true
         }
 
-        GridLayout {
-            id: detailsGrid
+        RowLayout {
+            id: detailsLayout
             Layout.fillWidth: true
-            columns: 2
-            columnSpacing: 24
-            rowSpacing: 40
+            spacing: 24
             Layout.alignment: Qt.AlignTop
 
-            // Row 1, column 1
-            Item {
-                Layout.row: 0
-                Layout.column: 0
+            ColumnLayout {
+                id: leftColumn
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: 1
-                Layout.preferredHeight: spindlePanel.implicitHeight
                 Layout.alignment: Qt.AlignTop
+                spacing: 40
 
                 SpindleParameters {
                     id: spindlePanel
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
                     onOpenNumPadRequested: root.openNumPadRequested(field)
                     onSaveRequested: function (p) {
                         var merged = root.mergeIntoOp(p.payload || p)
                         root.saveRequested({ index: opIndex, payload: merged })
                     }
                 }
-            }
-
-            // Row 1, column 2
-            Item {
-                Layout.row: 0
-                Layout.column: 1
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: threadLocationBox.implicitHeight
-                Layout.alignment: Qt.AlignTop
-
-                GroupBox {
-                    id: threadLocationBox
-                    title: "Thread Location"
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    font.pixelSize: 16
-
-                    ColumnLayout {
-                        spacing: 8
-                        ButtonGroup { id: locGroup }
-                        RadioButton {
-                            text: "External (OD)"
-                            font.pixelSize: 15
-                            checked: root.location === "OD"
-                            ButtonGroup.group: locGroup
-                            onToggled: if (checked) { root.location = "OD"; root.emitSave() }
-                        }
-                        RadioButton {
-                            text: "Internal (ID)"
-                            font.pixelSize: 15
-                            checked: root.location === "ID"
-                            ButtonGroup.group: locGroup
-                            onToggled: if (checked) { root.location = "ID"; root.emitSave() }
-                        }
-                    }
-                }
-            }
-
-            // Row 2, column 1
-            Item {
-                Layout.row: 1
-                Layout.column: 0
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: threadParametersBox.implicitHeight
-                Layout.alignment: Qt.AlignTop
 
                 GroupBox {
                     id: threadParametersBox
                     title: "Thread Parameters"
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
                     font.pixelSize: 16
 
                     GridLayout {
@@ -244,24 +210,151 @@ Item {
                         Item {}
                     }
                 }
+
+                GroupBox {
+                    id: zLimitsBox
+                    title: "Z Limits"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
+                    font.pixelSize: 16
+
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: 16
+
+                        GridLayout {
+                            columns: 3
+                            columnSpacing: 16
+                            rowSpacing: 16
+                            Layout.alignment: Qt.AlignVCenter
+
+                            Label { text: "Z Start"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
+                            NumpadField {
+                                id: tf_zStart
+                                Layout.preferredWidth: 110
+                                settingName: "threading.z_start"
+                                validatorObject: dblVal
+                                value: root.zStart
+                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                                hAlign: Text.AlignRight
+                                onOpenRequested: root.openNumPadRequested(field)
+                                onValueCommitted: { root.zStart = value; root.emitSave() }
+                            }
+                            Button { text: "TeachIn"; onClicked: tf_zStart.commit(positionsBridge.teachInZ()) }
+
+                            Label { text: "Z End"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
+                            NumpadField {
+                                id: tf_zEnd
+                                Layout.preferredWidth: 110
+                                settingName: "threading.z_end"
+                                validatorObject: dblVal
+                                value: root.zEnd
+                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                                hAlign: Text.AlignRight
+                                onOpenRequested: root.openNumPadRequested(field)
+                                onValueCommitted: { root.zEnd = value; root.emitSave() }
+                            }
+                            Button { text: "TeachIn"; onClicked: tf_zEnd.commit(positionsBridge.teachInZ()) }
+                        }
+
+                        Rectangle {
+                            visible: root.showThreadLengthSummary
+                            Layout.fillHeight: true
+                            Layout.minimumHeight: 64
+                            width: 1
+                            color: "#bdbdbd"
+                        }
+
+                        GridLayout {
+                            visible: root.showThreadLengthSummary
+                            Layout.alignment: Qt.AlignVCenter
+                            columns: 2
+                            columnSpacing: 8
+                            rowSpacing: 8
+
+                            Label {
+                                text: "Thread Type:"
+                                font.pixelSize: 16
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                            Label {
+                                text: root.threadHandText
+                                font.pixelSize: 16
+                                font.bold: true
+                                horizontalAlignment: Text.AlignRight
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
+                            }
+
+                            Label {
+                                text: "Thread Length:"
+                                font.pixelSize: 16
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                            Label {
+                                text: root.formatThreadLength() + "mm"
+                                font.pixelSize: 16
+                                horizontalAlignment: Text.AlignRight
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
+                            }
+                        }
+                    }
+                }
+
+                M1Parameters {
+                    id: m1Panel
+                    visible: root.isG33Threading
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    Layout.alignment: Qt.AlignTop
+                    onSaveRequested: function (payload) {
+                        var merged = root.mergeIntoOp(payload)
+                        root.saveRequested({ index: opIndex, payload: merged })
+                    }
+                }
             }
 
-            // Row 2, column 2
-            Item {
-                Layout.row: 1
-                Layout.column: 1
+            ColumnLayout {
+                id: rightColumn
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: 1
-                Layout.preferredHeight: diametersBox.implicitHeight
                 Layout.alignment: Qt.AlignTop
+                spacing: 40
+
+                GroupBox {
+                    id: threadLocationBox
+                    title: "Thread Location"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
+                    font.pixelSize: 16
+
+                    ColumnLayout {
+                        spacing: 8
+                        ButtonGroup { id: locGroup }
+                        RadioButton {
+                            text: "External (OD)"
+                            font.pixelSize: 15
+                            checked: root.location === "OD"
+                            ButtonGroup.group: locGroup
+                            onToggled: if (checked) { root.location = "OD"; root.emitSave() }
+                        }
+                        RadioButton {
+                            text: "Internal (ID)"
+                            font.pixelSize: 15
+                            checked: root.location === "ID"
+                            ButtonGroup.group: locGroup
+                            onToggled: if (checked) { root.location = "ID"; root.emitSave() }
+                        }
+                    }
+                }
 
                 GroupBox {
                     id: diametersBox
                     title: "Thread Diameters"
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
                     font.pixelSize: 16
 
                     GridLayout {
@@ -321,175 +414,19 @@ Item {
                         }
                     }
                 }
-            }
-
-            // Row 3, column 1
-            Item {
-                Layout.row: 2
-                Layout.column: 0
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: zLimitsBox.implicitHeight
-                Layout.alignment: Qt.AlignTop
-
-                GroupBox {
-                    id: zLimitsBox
-                    title: "Z Limits"
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    font.pixelSize: 16
-
-                    GridLayout {
-                        columns: 3
-                        columnSpacing: 16
-                        rowSpacing: 16
-
-                        Label { text: "Z Start"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
-                        NumpadField {
-                            id: tf_zStart
-                            Layout.preferredWidth: 110
-                            settingName: "threading.z_start"
-                            validatorObject: dblVal
-                            value: root.zStart
-                            formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                            hAlign: Text.AlignRight
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.zStart = value; root.emitSave() }
-                        }
-                        Button { text: "TeachIn"; onClicked: tf_zStart.commit(positionsBridge.teachInZ()) }
-
-                        Label { text: "Z End"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
-                        NumpadField {
-                            id: tf_zEnd
-                            Layout.preferredWidth: 110
-                            settingName: "threading.z_end"
-                            validatorObject: dblVal
-                            value: root.zEnd
-                            formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                            hAlign: Text.AlignRight
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.zEnd = value; root.emitSave() }
-                        }
-                        Button { text: "TeachIn"; onClicked: tf_zEnd.commit(positionsBridge.teachInZ()) }
-                    }
-                }
-            }
-
-            // Row 3, column 2
-            Item {
-                Layout.row: 2
-                Layout.column: 1
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: cuttingParamsBox.implicitHeight
-                Layout.alignment: Qt.AlignTop
 
                 GroupBox {
                     id: cuttingParamsBox
-                    title: "Cutting Params"
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
+                    title: "Cutting Parameters"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
                     font.pixelSize: 16
 
-                    ColumnLayout {
-                        spacing: 12
-
-                        RowLayout {
-                            spacing: 16
-                            Label { text: "Initial DOC"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "threading.first_pass_depth"
-                                validatorObject: dblVal
-                                value: root.initialDoc
-                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                                hAlign: Text.AlignRight
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.initialDoc = value; root.emitSave() }
-                            }
-                            Label { text: "(mm/diam)"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
-                        }
-
-                        RowLayout {
-                            spacing: 16
-                            Label { text: "Retract"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "threading.x_retract"
-                                validatorObject: dblVal
-                                value: root.retract
-                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                                hAlign: Text.AlignRight
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.retract = value; root.emitSave() }
-                            }
-                            Label { text: "(mm)"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
-                        }
-
-                        RowLayout {
-                            spacing: 16
-                            Label { text: "Compound Angle"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "threading.compound_angle"
-                                validatorObject: dblVal
-                                value: root.compoundAngle
-                                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                                hAlign: Text.AlignRight
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.compoundAngle = value; root.emitSave() }
-                            }
-                            Label { text: "(deg)"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
-                        }
-
-                        RowLayout {
-                            spacing: 16
-                            Label { text: "Depth Degression"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
-                            ComboBox {
-                                Layout.preferredWidth: 110
-                                model: root.depthOptions
-                                currentIndex: Math.max(0, root.depthOptions.indexOf(Number(root.depthDegression).toFixed(1)))
-                                font.pixelSize: 16
-                                onActivated: {
-                                    root.depthDegression = Number(root.depthOptions[index]);
-                                    root.emitSave();
-                                }
-                            }
-                            Item { Layout.fillWidth: true }
-                        }
-
-                        RowLayout {
-                            spacing: 16
-                            Label { text: "Thread Taper"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
-                            ComboBox {
-                                Layout.preferredWidth: 140
-                                model: ["None", "On entry", "On exit", "Both"]
-                                currentIndex: Math.max(0, Math.min(3, root.taperType))
-                                font.pixelSize: 16
-                                onActivated: { root.taperType = index; root.emitSave(); }
-                            }
-                            Item { Layout.fillWidth: true }
-                        }
-
-                        RowLayout {
-                            spacing: 16
-                            Label { text: "Spring Passes"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
-                            NumpadField {
-                                Layout.preferredWidth: 110
-                                settingName: "threading.spring_passes"
-                                validatorObject: intValNonNeg
-                                value: root.springPasses
-                                formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
-                                hAlign: Text.AlignRight
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.springPasses = Math.round(value); root.emitSave() }
-                            }
-                            Item { Layout.fillWidth: true }
-                        }
+                    contentItem: Loader {
+                        id: cuttingParamsLoader
+                        Layout.preferredHeight: item ? item.implicitHeight : 0
+                        source: root.cuttingParamsSource
+                        onLoaded: item.detailsRoot = root
                     }
                 }
             }

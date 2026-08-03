@@ -219,6 +219,29 @@ def apply_threading_update(op, payload):
     _set_attr_if_present(op, payload, "compound_angle", coerce=float)
 
 
+def apply_g33_threading_update(op, payload):
+    if op is None or not isinstance(payload, dict):
+        return
+    if "location" in payload and payload["location"] is not None:
+        try:
+            op.location = _coerce_enum(payload["location"], ThreadLocation, lambda v: str(v).upper())
+        except Exception:
+            pass
+    _set_attr_if_present(op, payload, "thread_type", coerce=str)
+    _set_attr_if_present(op, payload, "pitch", coerce=float)
+    _set_attr_if_present(op, payload, "starts", coerce=int)
+    _set_attr_if_present(op, payload, "major_diameter", coerce=float)
+    _set_attr_if_present(op, payload, "minor_diameter", coerce=float)
+    _set_attr_if_present(op, payload, "z_start", coerce=float)
+    _set_attr_if_present(op, payload, "z_end", coerce=float)
+    _set_attr_if_present(op, payload, "initial_doc", coerce=float)
+    _set_attr_if_present(op, payload, "retract", coerce=float)
+    _set_attr_if_present(op, payload, "spring_passes", coerce=int)
+    _set_attr_if_present(op, payload, "minimum_radial_increment", coerce=float)
+    _set_attr_if_present(op, payload, "taper_type", coerce=int)
+    _set_attr_if_present(op, payload, "compound_angle", coerce=float)
+
+
 def apply_define_profile_update(op, payload):
     if op is None or not isinstance(payload, dict):
         return

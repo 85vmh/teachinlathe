@@ -45,6 +45,7 @@ Popup {
         { label: "Profile Roughing", type: "profileRoughing"  },
         { label: "Profile Contour",  type: "profileContour"   },
         { label: "G76 Threading",    type: "threading"       },
+        { label: "G33 Threading",    type: "g33Threading"    },
         { label: "Drilling",         type: "drilling"        },
         { label: "Tapping",          type: "tapping"         },
         { label: "Parting",          type: "parting"         }

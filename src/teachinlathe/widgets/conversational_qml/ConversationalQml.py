@@ -27,6 +27,7 @@ from teachinlathe.conversational.updaters import (
     apply_define_profile_update,
     apply_drilling_update,
     apply_edge_break_update,
+    apply_g33_threading_update,
     apply_geometry_update,
     apply_knurling_cutting_update,
     apply_m1_update,
@@ -315,6 +316,8 @@ class ConversationalQml(QQuickWidget):
                 item.updateDrilling.connect(self.onUpdateDrilling)
             if hasattr(item, "updateThreading"):
                 item.updateThreading.connect(self.onUpdateThreading)
+            if hasattr(item, "updateG33Threading"):
+                item.updateG33Threading.connect(self.onUpdateG33Threading)
             if hasattr(item, "updateParting"):
                 item.updateParting.connect(self.onUpdateParting)
             if hasattr(item, "updateTapping"):
@@ -957,6 +960,22 @@ class ConversationalQml(QQuickWidget):
             self._save_current_program()
         except Exception as e:
             print("[threading] update error:", e)
+
+    def onUpdateG33Threading(self, index: int, payload):
+        """G33 threading autosave."""
+        try:
+            p = self._to_py(payload) or {}
+            op = self._get_current_op(index)
+            from teachinlathe.conversational.data_types import G33Threading
+            if not isinstance(op, G33Threading):
+                return
+
+            apply_turnable_operation_update(op, p)
+            apply_g33_threading_update(op, p)
+            apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
+            self._save_current_program()
+        except Exception as e:
+            print("[g33 threading] update error:", e)
 
     # Optional: handle teach buttons
     def onTeachX(self, index: int):

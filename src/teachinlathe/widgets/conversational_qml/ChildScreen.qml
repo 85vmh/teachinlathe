@@ -36,6 +36,7 @@ Item {
     signal addProfileContourRequested(int index)
     signal updateDrilling(int index, var payload)
     signal updateThreading(int index, var payload)
+    signal updateG33Threading(int index, var payload)
     signal updateParting(int index, var payload)
     signal updateTapping(int index, var payload)
     signal updateHeader(var payload)
@@ -76,6 +77,8 @@ Item {
         } else if (data.type === "drilling") {
             detailsLoader.source = "DrillingDetailsView.qml"
         } else if (data.type === "threading") {
+            detailsLoader.source = "ThreadingDetailsView.qml"
+        } else if (data.type === "g33Threading") {
             detailsLoader.source = "ThreadingDetailsView.qml"
         } else if (data.type === "parting") {
             detailsLoader.source = "PartingDetailsView.qml"
@@ -208,6 +211,8 @@ Item {
                             operationEditor.updateDrilling(updated.index, updated.payload)
                         else if (t === "threading")
                             operationEditor.updateThreading(updated.index, updated.payload)
+                        else if (t === "g33Threading")
+                            operationEditor.updateG33Threading(updated.index, updated.payload)
                         else if (t === "parting")
                             operationEditor.updateParting(updated.index, updated.payload)
                         else if (t === "tapping")

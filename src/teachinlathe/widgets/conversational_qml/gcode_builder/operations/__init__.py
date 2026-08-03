@@ -4,6 +4,7 @@ from .facing import generate_facing_gcode
 from .knurling import generate_knurling_gcode
 from .drilling import generate_drilling_gcode
 from .g7x_profiling import generate_profiling_gcode
+from .g33_threading import generate_g33_threading_gcode
 from .threading import generate_threading_gcode
 from .parting import generate_parting_gcode
 from .position_at import generate_position_at_gcode
@@ -22,6 +23,7 @@ OPERATION_GENERATORS = {
     "profileRoughing": generate_profile_roughing_gcode,
     "profileContour": generate_profile_contour_gcode,
     "threading": generate_threading_gcode,
+    "g33Threading": generate_g33_threading_gcode,
     "parting": generate_parting_gcode,
     "tapping": generate_tapping_gcode,
 }

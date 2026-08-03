@@ -30,6 +30,11 @@ class ThreadLocation(Enum):
     ID = "ID"
 
 
+class G33ThreadPassType(str, Enum):
+    ROUGHING = "ROUGHING"
+    SPRING = "SPRING"
+
+
 class BlendType(Enum):
     NONE = "none"
     CHAMFER = "chamfer"
@@ -1130,6 +1135,80 @@ class Threading(TurnableOperation):
         return self._add_spindle_to(base)
 
 
+@dataclass
+class G33Threading(TurnableOperation):
+    location: ThreadLocation
+    thread_type: str
+    pitch: float
+    starts: int
+    major_diameter: float
+    minor_diameter: float
+    z_start: float
+    z_end: float
+    initial_doc: float
+    retract: float
+    spring_passes: int
+    minimum_radial_increment: float
+    taper_type: int
+    compound_angle: float
+    m1Parameters: M1Parameters
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "G33Threading":
+        spindle = TurnableOperation._parse_spindle(data)
+        m1_parameters = M1Parameters.from_dict(
+            data.get("m1_parameters") or {"include_m1": False}
+        )
+        d = dict(data)
+        return G33Threading(
+            order=int(d["order"]),
+            type=d["type"],
+            generate_gcode=bool(d.get("generate_gcode", True)),
+            is_optional_block=bool(d.get("is_optional_block", False)),
+            spindleParameters=spindle,
+            location=_coerce_thread_location(d.get("location", "OD")),
+            thread_type=d.get("thread_type", "g33"),
+            pitch=float(d["pitch"]),
+            starts=int(d.get("starts", 1)),
+            major_diameter=float(d["major_diameter"]),
+            minor_diameter=float(d["minor_diameter"]),
+            z_start=float(d["z_start"]),
+            z_end=float(d["z_end"]),
+            initial_doc=float(d.get("initial_doc", 0.0)),
+            retract=float(d["retract"]),
+            spring_passes=int(d.get("spring_passes", 0)),
+            minimum_radial_increment=float(d.get("minimum_radial_increment", 0.0)),
+            taper_type=int(d.get("taper_type", 0)),
+            compound_angle=float(d.get("compound_angle", 0.0)),
+            m1Parameters=m1_parameters,
+        )
+
+    @property
+    def final_radial_depth(self) -> float:
+        return abs(float(self.major_diameter) - float(self.minor_diameter)) / 2.0
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        base.update({
+            "location": self.location.value,
+            "thread_type": self.thread_type,
+            "pitch": self.pitch,
+            "starts": self.starts,
+            "major_diameter": self.major_diameter,
+            "minor_diameter": self.minor_diameter,
+            "z_start": self.z_start,
+            "z_end": self.z_end,
+            "initial_doc": self.initial_doc,
+            "retract": self.retract,
+            "spring_passes": self.spring_passes,
+            "minimum_radial_increment": self.minimum_radial_increment,
+            "taper_type": self.taper_type,
+            "compound_angle": self.compound_angle,
+            "m1_parameters": self.m1Parameters.to_dict(),
+        })
+        return self._add_spindle_to(base)
+
+
 # -------------------------------- Drilling -----------------------------------
 
 @dataclass
@@ -1312,6 +1391,7 @@ operation_types: Dict[str, Type[Operation]] = {
     "profileRoughing": ProfileRoughing,
     "profileContour": ProfileContour,
     "threading": Threading,
+    "g33Threading": G33Threading,
     "drilling": Drilling,
     "tapping": Tapping,
     "parting": Parting
@@ -1327,6 +1407,7 @@ display_names: Dict[str, str] = {
     "profileRoughing": "Profile Roughing",
     "profileContour": "Profile Contour",
     "threading": "Threading",
+    "g33Threading": "G33 Threading",
     "drilling": "Drilling",
     "tapping": "Tapping",
     "parting": "Parting",

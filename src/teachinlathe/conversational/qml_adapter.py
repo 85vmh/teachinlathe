@@ -44,6 +44,8 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
         return f"{prefix} Profile Contour (P{profile_id})" if profile_id is not None else f"{prefix} Profile Contour"
     if op_type_value == "threading":
         return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"
+    if op_type_value == "g33Threading":
+        return f"G33 Threading (P: {pitch})" if pitch is not None else "G33 Threading"
     if op_type_value == "drilling":
         return "Drilling"
     if op_type_value == "tapping":
