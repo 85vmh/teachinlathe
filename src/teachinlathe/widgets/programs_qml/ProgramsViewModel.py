@@ -48,6 +48,7 @@ class ProgramsViewModel(QObject):
         self._active_execution_title = ''
         self._active_execution_content = ''
         self._active_execution_motion_line = 0
+        self._main_highlight_line = 0
         self._is_execution_context_current_program = False
 
         self._bridge.filePathChanged.connect(self._on_file_path_changed)
@@ -122,12 +123,7 @@ class ProgramsViewModel(QObject):
 
     @pyqtProperty(int, notify=executionViewChanged)
     def mainHighlightLine(self):
-        snapshot = self._runtime_store.snapshot
-        if self.hasExecutionStack:
-            return 0
-        if not self._is_showing_machine_file(snapshot.machine_file):
-            return 0
-        return int(snapshot.motion_line or 0)
+        return self._main_highlight_line
 
     @pyqtProperty(bool, notify=currentFilePathChanged)
     def hasCurrentFile(self):
@@ -351,12 +347,16 @@ class ProgramsViewModel(QObject):
                 active_content = stack_view.active_content
                 active_motion_line = int(stack_view.motion_line or 0)
 
+        main_highlight_line = 0
+        if not frames and self._is_showing_machine_file(snapshot.machine_file):
+            main_highlight_line = int(snapshot.motion_line or 0)
+
         next_signature = (
             tuple((frame['filePath'], frame['lineNumber'], frame['lineText']) for frame in frames),
             active_path,
             active_content,
             active_motion_line,
-            int(snapshot.motion_line or 0),
+            main_highlight_line,
             bool(is_executing_current_program),
         )
         current_signature = (
@@ -364,7 +364,7 @@ class ProgramsViewModel(QObject):
             self._active_execution_file_path,
             self._active_execution_content,
             self._active_execution_motion_line,
-            self.mainHighlightLine,
+            self._main_highlight_line,
             bool(self._is_execution_context_current_program),
         )
         if next_signature == current_signature:
@@ -375,5 +375,6 @@ class ProgramsViewModel(QObject):
         self._active_execution_title = active_title
         self._active_execution_content = active_content
         self._active_execution_motion_line = active_motion_line
+        self._main_highlight_line = main_highlight_line
         self._is_execution_context_current_program = is_executing_current_program
         self.executionViewChanged.emit()
