@@ -9,8 +9,8 @@
 //   Right: ToolLibraryView — fixed width (toolListWidth), full height
 //
 // Context properties required (set by mainwindow.py):
-//   manualViewModel, manualInputBridge, teachInDroViewModel,
-//   toolsProvider, appState, cncStore, navigationStore
+//   manualViewModel, teachInDroViewModel, toolsProvider, appState,
+//   cncStore, navigationStore
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15

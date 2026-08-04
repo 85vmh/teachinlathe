@@ -1,14 +1,12 @@
 from enum import Enum
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import QMetaObject, QObject, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
 
 from teachinlathe.data_source.positions import Positions
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.machine_limits import MachineLimitsHandler
-from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
 
 class LimitStatus(Enum):
@@ -60,8 +58,6 @@ class TeachInLatheDroViewModel(QObject):
         self.lastXAbsValue = 0
         self.isZAbs = True
         self.lastZAbsValue = 0
-        self._active_numpad_field = None
-
         self._x_primary_value = "+0000.000"
         self._x_secondary_value = "+0000.000"
         self._x_secondary_visible = False
@@ -205,33 +201,6 @@ class TeachInLatheDroViewModel(QObject):
             return self.positions.teachInZ()
         return 0
 
-    @pyqtSlot(str, QObject)
-    def openLimitField(self, key, field):
-        key = str(key)
-        setting_name = self.LIMIT_SETTING_NAMES.get(key, "")
-        if not setting_name:
-            return
-        previous_field = self._active_numpad_field
-        if previous_field is not None and previous_field is not field:
-            self._defocus_numpad_field(previous_field)
-        self._active_numpad_field = field
-        dialog = SmartNumPadDialog(setting_name, True)
-
-        def handle_value(value):
-            self.limit_values[key] = self._format_limit(value)
-            self._set_qml_field_value(field, self.limit_values[key])
-            if key != "chuck":
-                self.toggle_enabled[key] = True
-            self.limitsChanged.emit()
-
-        try:
-            dialog.valueSelected.connect(handle_value)
-            dialog.exec_()
-        finally:
-            self._defocus_numpad_field(field)
-            if self._active_numpad_field is field:
-                self._active_numpad_field = None
-
     @pyqtSlot(str, str)
     def commitLimit(self, key, value):
         key = str(key)
@@ -241,29 +210,6 @@ class TeachInLatheDroViewModel(QObject):
         if key != "chuck":
             self.toggle_enabled[key] = True
         self.limitsChanged.emit()
-
-    @staticmethod
-    def _set_qml_field_value(field, value):
-        try:
-            field.setProperty("value", value)
-            field.setProperty("text", str(value))
-        except Exception:
-            pass
-
-    @staticmethod
-    def _defocus_numpad_field(field):
-        if field is None:
-            return
-        try:
-            QMetaObject.invokeMethod(field, 'defocus', QtCore.Qt.DirectConnection)
-            return
-        except Exception:
-            pass
-        try:
-            field.setProperty("numpadActive", False)
-            field.setProperty("focus", False)
-        except Exception:
-            pass
 
     @pyqtSlot(str)
     def toggleLimit(self, key):

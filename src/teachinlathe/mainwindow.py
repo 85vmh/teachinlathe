@@ -24,7 +24,6 @@ from teachinlathe.widgets.manual_qml import ManualTurningViewModel
 from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLatheDroViewModel
 from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.widgets.programs_qml.ProgramsQml import ProgramsQml
-from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 from teachinlathe.widgets.tool_library.ToolLibraryViewModel import ToolLibraryViewModel
 
 LOG = logger.getLogger('qtpyvcp.' + __name__)
@@ -53,16 +52,6 @@ class MainTabs(Enum):
 class ProgramTabs(Enum):
     FILE_SYSTEM = 0
     PROGRAM_LOADED = 1
-
-
-class ManualInputBridge(QObject):
-    def __init__(self, window, parent=None):
-        super().__init__(parent)
-        self._window = window
-
-    @pyqtSlot(QObject)
-    def openField(self, field):
-        self._window.openNumPad(field)
 
 
 class NumpadValueField(QObject):
@@ -235,9 +224,6 @@ class MyMainWindow(VCPMainWindow):
         # self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
         # Runtime navigation is handled by the QML app shell content stack.
 
-        self.addEditToolWidget.onSaved.connect(self.onToolAddEditSaved)
-        self.addEditToolWidget.onCanceled.connect(self.onToolAddEditCanceled)
-
         self.toolLibraryViewModel = ToolLibraryViewModel(self)
 
         QTimer.singleShot(0, self._initManualTurningRoot)
@@ -267,14 +253,10 @@ class MyMainWindow(VCPMainWindow):
         self.latheToolTable.finishEditingTool()
 
     def onToolEditClicked(self, tool_data, tool_model, tool_no):
-        print("onToolEditClicked:", tool_no)
-        self.innerToolsAndOffsets.setCurrentIndex(1)  # Switch to the tool add/edit tab
-        self.addEditToolWidget.setEditToolData(tool_data, tool_model, tool_no)
+        print("Ignoring legacy tool edit signal:", tool_no)
 
     def onToolAddClicked(self, tool_data, tool_model):
-        print("onToolAddClicked")
-        self.innerToolsAndOffsets.setCurrentIndex(1)
-        self.addEditToolWidget.setAddToolData(tool_data, tool_model)
+        print("Ignoring legacy tool add signal")
 
     def onFixtureSelected(self, fixture):
         print("---Fixture selected: ", fixture)
@@ -292,9 +274,7 @@ class MyMainWindow(VCPMainWindow):
         if hasattr(self, "manualTurningRootQml"):
             return
 
-        self.manualInputBridge = ManualInputBridge(self, self)
         self.numpadDialogViewModel = NumpadDialogViewModel(self)
-        self._active_numpad_field = None
         self._hideLegacyTabChildren(self.manualTurningTab)
 
         self.manualTurningRootQml = QQuickWidget(self.manualTurningTab)
@@ -306,7 +286,6 @@ class MyMainWindow(VCPMainWindow):
 
         ctx = self.manualTurningRootQml.engine().rootContext()
         ctx.setContextProperty("manualViewModel",     self.manualTurningViewModel)
-        ctx.setContextProperty("manualInputBridge",   self.manualInputBridge)
         ctx.setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
         ctx.setContextProperty("teachInDroViewModel", self.teachInLatheDroViewModel)
         ctx.setContextProperty("toolLibraryViewModel", self.toolLibraryViewModel)
@@ -578,96 +557,6 @@ class MyMainWindow(VCPMainWindow):
 
     def onJoystickFeedingChanged(self, value):
         self.manualTurningViewModel.setFeeding(value)
-
-    def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
-        setting_name = getattr(fake_edit_text, 'settingName', None)
-        if setting_name is None:
-            try:
-                setting_name = fake_edit_text.property("settingName")
-            except Exception:
-                setting_name = None
-        if not setting_name:
-            self._defocus_numpad_field(fake_edit_text)
-            return
-        previous_field = getattr(self, "_active_numpad_field", None)
-        if previous_field is not None and previous_field is not fake_edit_text:
-            self._defocus_numpad_field(previous_field)
-        self._active_numpad_field = fake_edit_text
-        dialog = SmartNumPadDialog(setting_name)
-
-        def handle_value(value):
-            self._handle_manual_numpad_value(setting_name, value)
-            self.setSelectedValue(fake_edit_text, value)
-            if on_value_selected_callback:
-                on_value_selected_callback(value)
-
-        try:
-            dialog.valueSelected.connect(handle_value)
-            dialog.exec_()
-        finally:
-            self._defocus_numpad_field(fake_edit_text)
-            if getattr(self, "_active_numpad_field", None) is fake_edit_text:
-                self._active_numpad_field = None
-
-    @staticmethod
-    def setSelectedValue(fake_edit_text, value):
-        try:
-            fake_edit_text.setProperty("value", value)
-            fake_edit_text.setProperty("text", str(value))
-            return
-        except Exception:
-            pass
-        try:
-            if hasattr(fake_edit_text, 'commit'):
-                fake_edit_text.commit(value)
-                return
-        except Exception:
-            pass
-        try:
-            QMetaObject.invokeMethod(fake_edit_text, 'commit', Qt.DirectConnection, Q_ARG('QVariant', value))
-            return
-        except Exception:
-            pass
-        try:
-            fake_edit_text.setText(value)
-            return
-        except Exception:
-            pass
-        try:
-            fake_edit_text.setProperty("text", str(value))
-        except Exception as e:
-            print("setSelectedValue failed:", e)
-
-    @pyqtSlot(QObject)
-    def _on_manual_open_numpad_requested(self, field):
-        self.openNumPad(field)
-
-    def _handle_manual_numpad_value(self, setting_name, value):
-        if not hasattr(self, "manualTurningViewModel"):
-            return
-        if setting_name == self.manualTurningViewModel.feedSettingName:
-            self.manualTurningViewModel.setInputFeed(str(value))
-        elif setting_name == self.manualTurningViewModel.cssSettingName:
-            self.manualTurningViewModel.setInputCss(str(value))
-        elif setting_name == self.manualTurningViewModel.rpmSettingName:
-            self.manualTurningViewModel.setInputRpm(str(value))
-        elif setting_name == self.manualTurningViewModel.maxRpmSettingName:
-            self.manualTurningViewModel.setInputMaxRpm(str(value))
-
-    @staticmethod
-    def _defocus_numpad_field(field):
-        if field is None:
-            return
-        try:
-            QMetaObject.invokeMethod(field, 'defocus', Qt.DirectConnection)
-            return
-        except Exception:
-            pass
-        try:
-            field.setProperty("numpadActive", False)
-            field.setProperty("focus", False)
-        except Exception:
-            pass
 
     def onJogIncrementChanged(self, value):
         self.manualTurningViewModel.setJogIncrement(value)

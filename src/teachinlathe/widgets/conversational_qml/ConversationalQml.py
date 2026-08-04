@@ -49,7 +49,6 @@ from teachinlathe.widgets.conversational_qml.ThreadingDetailsViewModel import Th
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.positions_bridge import PositionsBridge
 from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
-from teachinlathe.widgets.smart_numpad_dialog import SmartNumPadDialog
 
 
 class ConversationalQml(QQuickWidget):
@@ -1004,78 +1003,6 @@ class ConversationalQml(QQuickWidget):
             )
         except Exception as e:
             print("openNumpad failed:", e)
-
-    def openNumPad(self, fake_edit_text, on_value_selected_callback=None):
-        """Open SmartNumPadDialog and manage focus/highlight on the QML field."""
-        setting_name = None
-        try:
-            setting_name = fake_edit_text.property("settingName")
-        except Exception:
-            pass
-        if setting_name is None:
-            setting_name = getattr(fake_edit_text, 'settingName', None)
-
-        try:
-            fake_edit_text.setProperty("focus", True)
-            try:
-                QMetaObject.invokeMethod(fake_edit_text, 'forceActiveFocus', Qt.QueuedConnection)
-            except Exception:
-                pass
-            fake_edit_text.setProperty("numpadActive", True)
-        except Exception:
-            pass
-
-        dialog = SmartNumPadDialog(setting_name)
-
-        def handle_value(value):
-            self.setSelectedValue(fake_edit_text, value)
-            if on_value_selected_callback:
-                on_value_selected_callback(value)
-
-        try:
-            dialog.valueSelected.connect(handle_value)
-            dialog.exec_()
-        finally:
-            try:
-                fake_edit_text.setProperty("numpadActive", False)
-            except Exception:
-                pass
-            try:
-                QMetaObject.invokeMethod(fake_edit_text, 'defocus', Qt.QueuedConnection)
-            except Exception:
-                try:
-                    fake_edit_text.setProperty("focus", False)
-                except Exception:
-                    pass
-
-    def setSelectedValue(self, field, value):
-        """Write a value back into a QML field.
-        Prefers a 'commit(value)' method (like NumpadField), else tries 'value', else 'text'."""
-        # 1) Try direct attribute call
-        try:
-            if hasattr(field, 'commit'):
-                field.commit(value)  # QML method exposed
-                return
-        except Exception:
-            pass
-        # 2) Try meta-object invoke
-        try:
-            QMetaObject.invokeMethod(field, 'commit', Qt.QueuedConnection, value)
-            return
-        except Exception:
-            pass
-        # 3) Try to set 'value' property
-        try:
-            if field.property("value") is not None:
-                field.setProperty("value", value)
-                return
-        except Exception:
-            pass
-        # 4) Fallback: set 'text'
-        try:
-            field.setProperty("text", str(value))
-        except Exception as e:
-            print("setSelectedValue fallback failed:", e)
 
     def onOpenProfileEditorRequested(self, op_index, op_data):
         try:

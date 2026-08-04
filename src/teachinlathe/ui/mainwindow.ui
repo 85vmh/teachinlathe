@@ -4261,18 +4261,7 @@ font: 14pt &quot;Cantarell&quot;;</string>
                </widget>
               </widget>
              </widget>
-             <widget class="QWidget" name="addEditTool">
-              <widget class="AddEditToolWidget" name="addEditToolWidget">
-               <property name="geometry">
-                <rect>
-                 <x>5</x>
-                 <y>5</y>
-                 <width>686</width>
-                 <height>951</height>
-                </rect>
-               </property>
-              </widget>
-             </widget>
+             <widget class="QWidget" name="addEditTool"/>
             </widget>
            </widget>
            <widget class="QWidget" name="settingsTab">
@@ -4644,11 +4633,6 @@ font: 12pt &quot;DejaVu Sans&quot;;
    <extends>QStackedWidget</extends>
    <header>qtpyvcp.widgets.containers.stack</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>AddEditToolWidget</class>
-   <extends>QWidget</extends>
-   <header>teachinlathe.widgets.add_edit_tool.add_edit_tool</header>
   </customwidget>
   <customwidget>
    <class>ConversationalQml</class>

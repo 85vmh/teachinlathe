@@ -265,7 +265,7 @@ class Ui_MainWindow(object):
         self.handwheelsFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.handwheelsFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.handwheelsFrame.setObjectName("handwheelsFrame")
-        self.quickcycles = QuickCycles(self.manualTurningTab)
+        self.quickcycles = QtWidgets.QWidget(self.manualTurningTab)
         self.quickcycles.setGeometry(QtCore.QRect(1445, 5, 371, 461))
         self.quickcycles.setObjectName("quickcycles")
         self.label_8 = QtWidgets.QLabel(self.manualTurningTab)
@@ -2004,9 +2004,6 @@ class Ui_MainWindow(object):
         self.innerToolsAndOffsets.addWidget(self.workOffsets)
         self.addEditTool = QtWidgets.QWidget()
         self.addEditTool.setObjectName("addEditTool")
-        self.addEditToolWidget = AddEditToolWidget(self.addEditTool)
-        self.addEditToolWidget.setGeometry(QtCore.QRect(5, 5, 686, 951))
-        self.addEditToolWidget.setObjectName("addEditToolWidget")
         self.innerToolsAndOffsets.addWidget(self.addEditTool)
         self.tabWidget.addTab(self.toolsTab, "")
         self.settingsTab = QtWidgets.QWidget()
@@ -2332,9 +2329,7 @@ from qtpyvcp.widgets.input_widgets.gcode_text_edit import GcodeTextEdit
 from qtpyvcp.widgets.input_widgets.mdientry_widget import MDIEntry
 from qtpyvcp.widgets.input_widgets.offset_table import OffsetTable
 from qtpyvcp.widgets.input_widgets.recent_file_combobox import RecentFileComboBox
-from teachinlathe.widgets.add_edit_tool.add_edit_tool import AddEditToolWidget
 from teachinlathe.widgets.conversational_qml.ConversationalQml import ConversationalQml
 from teachinlathe.widgets.lathe_fixtures.lathe_fixtures_cards import LatheFixturesCards
 from teachinlathe.widgets.lathe_tool_table import LatheToolTable
-from teachinlathe.widgets.quick_cycles.quick_cycles import QuickCycles
 import teachinlathe_rc

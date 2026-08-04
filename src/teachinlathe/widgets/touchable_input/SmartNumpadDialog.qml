@@ -1,4 +1,4 @@
-// SmartNumpadDialog.qml — QML replacement for the old QWidget SmartNumPadDialog.
+// SmartNumpadDialog.qml — QML numpad dialog.
 //
 // Driven by `numpadDialogViewModel` (context property). Open it with:
 //     dialog.openFor(field, settingName, descriptionOverride)
