@@ -67,10 +67,17 @@ class Workpiece:
     external_diameter: float
     internal_diameter: float
     stickout_length: float
+    stock_length: float = 0.0
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Workpiece":
-        return Workpiece(**data)
+        return Workpiece(
+            material=str(data.get("material", "")),
+            external_diameter=float(data.get("external_diameter", 0.0) or 0.0),
+            internal_diameter=float(data.get("internal_diameter", 0.0) or 0.0),
+            stickout_length=float(data.get("stickout_length", 0.0) or 0.0),
+            stock_length=float(data.get("stock_length", 0.0) or 0.0),
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -78,6 +85,7 @@ class Workpiece:
             "external_diameter": self.external_diameter,
             "internal_diameter": self.internal_diameter,
             "stickout_length": self.stickout_length,
+            "stock_length": self.stock_length,
         }
 
 

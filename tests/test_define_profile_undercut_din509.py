@@ -19,6 +19,7 @@ from teachinlathe.conversational.data_types import (  # noqa: E402
     ProfileBlend,
     ProfilingType,
     StartPoint,
+    Workpiece,
 )
 
 
@@ -212,6 +213,18 @@ def test_line_to_defaults_missing_input_to_xz_for_backward_compatibility():
     assert primitive.input == "xz"
     assert primitive.angle == pytest.approx(0.0)
     assert primitive.to_dict()["input"] == "xz"
+
+
+def test_workpiece_defaults_missing_stock_length_for_backward_compatibility():
+    workpiece = Workpiece.from_dict({
+        "material": "",
+        "external_diameter": 40.0,
+        "internal_diameter": 0.0,
+        "stickout_length": 80.0,
+    })
+
+    assert workpiece.stock_length == pytest.approx(0.0)
+    assert workpiece.to_dict()["stock_length"] == pytest.approx(0.0)
 
 
 def test_define_profile_resolves_angle_and_z_line_to_with_siemens_angle_convention():

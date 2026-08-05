@@ -192,6 +192,6 @@ def make_new_program(folder_path: str):
         last_edit=display_stamp,
         datum=1,
         units="mm",
-        workpiece=Workpiece(material="", external_diameter=0.0, internal_diameter=0.0, stickout_length=0.0),
+        workpiece=Workpiece(material="", external_diameter=0.0, internal_diameter=0.0, stickout_length=0.0, stock_length=0.0),
     )
     return Program(id=os.path.splitext(filename)[0], header=header, operations=[], filename=file_path)

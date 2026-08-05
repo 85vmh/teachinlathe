@@ -24,6 +24,7 @@ Popup {
     property string profileType:        "od"
     property bool   _loading:           false
     property var    primitives:         []
+    property var    workpiece:          ({})
     property int    selectedPrimIndex:  -1
     property int    selectedBlendIndex: -1
     property int    _pendingDeleteIndex: -1
@@ -39,6 +40,7 @@ Popup {
         profileId   = opData.profile_id   !== undefined ? Math.round(Number(opData.profile_id)) : 0
         profileType = opData.profile_type !== undefined ? String(opData.profile_type) : "od"
         primitives  = JSON.parse(JSON.stringify(opData.profile_primitives || []))
+        workpiece   = JSON.parse(JSON.stringify(opData.workpiece || {}))
         selectedPrimIndex  = -1
         selectedBlendIndex = -1
         _loading  = false
@@ -601,6 +603,7 @@ Popup {
                     Layout.fillHeight: true
                     primitives:         root.primitives
                     profileType:        root.profileType
+                    workpiece:          root.workpiece
                     selectedPrimIndex:  root.selectedPrimIndex
                     selectedBlendIndex: root.selectedBlendIndex
                     onPrimitiveSelected: function(idx) {

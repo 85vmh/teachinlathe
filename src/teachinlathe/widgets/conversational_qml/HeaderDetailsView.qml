@@ -30,6 +30,7 @@ Item {
     property real   extDia:       (programData && programData.header && programData.header.workpiece && programData.header.workpiece.external_diameter !== undefined) ? programData.header.workpiece.external_diameter : 0.0
     property real   intDia:       (programData && programData.header && programData.header.workpiece && programData.header.workpiece.internal_diameter !== undefined) ? programData.header.workpiece.internal_diameter : 0.0
     property real   stickout:     (programData && programData.header && programData.header.workpiece && programData.header.workpiece.stickout_length !== undefined) ? programData.header.workpiece.stickout_length : 0.0
+    property real   stockLength:  (programData && programData.header && programData.header.workpiece && programData.header.workpiece.stock_length !== undefined) ? programData.header.workpiece.stock_length : 0.0
 
     // --- Bridge signals (same pattern as other detail views) ---
     signal saveRequested(var updated)
@@ -47,9 +48,11 @@ Item {
             extDia   = (wp.external_diameter !== undefined) ? wp.external_diameter : 0.0
             intDia   = (wp.internal_diameter !== undefined) ? wp.internal_diameter : 0.0
             stickout = (wp.stickout_length  !== undefined) ? wp.stickout_length  : 0.0
+            stockLength = (wp.stock_length !== undefined) ? wp.stock_length : 0.0
         } else {
             material = ""
             extDia = intDia = stickout = 0.0
+            stockLength = 0.0
         }
     }
 
@@ -70,7 +73,8 @@ Item {
                     material: material,
                     external_diameter: extDia,
                     internal_diameter: intDia,
-                    stickout_length:  stickout
+                    stickout_length:  stickout,
+                    stock_length: stockLength
                 }
             }
         }
@@ -142,7 +146,7 @@ Item {
                         }
                     }
 
-                    Item { Layout.preferredHeight: 1 }
+                    Item { Layout.preferredHeight: root.rowGap }
                 }
             }
 
@@ -208,9 +212,25 @@ Item {
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.stickout = value; root.emitSave() }
                         }
+
+                        Label {
+                            text: "Stock Length"
+                            Layout.preferredWidth: root.labelWidth
+                            verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: root.fieldFontSize
+                        }
+                        NumpadField {
+                            Layout.preferredWidth: root.inputWidth
+                            settingName: "smart_numpad.workpiece-stock-length"
+                            description: "Stock Length"
+                            value: root.stockLength
+                            formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
+                            onOpenRequested: root.openNumPadRequested(field)
+                            onValueCommitted: { root.stockLength = value; root.emitSave() }
+                        }
                     }
 
-                    Item { Layout.preferredHeight: 1 }
+                    Item { Layout.preferredHeight: root.rowGap }
                 }
             }
         }

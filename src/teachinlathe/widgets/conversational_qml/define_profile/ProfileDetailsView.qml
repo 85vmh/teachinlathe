@@ -15,6 +15,7 @@ Item {
     property string profileType: "od"
     property bool   _loading:    false
     property var    primitives:  []
+    property var    workpiece:   ({})
 
     signal saveRequested(var updated)
     signal openNumPadRequested(var field)
@@ -27,6 +28,7 @@ Item {
         profileId   = opData.profile_id   !== undefined ? Math.round(Number(opData.profile_id)) : 0
         profileType = opData.profile_type !== undefined ? String(opData.profile_type) : "od"
         primitives  = JSON.parse(JSON.stringify(opData.profile_primitives || []))
+        workpiece   = JSON.parse(JSON.stringify(opData.workpiece || {}))
         _loading    = false
         profileCanvas.resetView()
     }
@@ -67,6 +69,7 @@ Item {
                 anchors.fill: parent
                 primitives:   root.primitives
                 profileType:  root.profileType
+                workpiece:    root.workpiece
 
                 Rectangle {
                     anchors.fill: parent

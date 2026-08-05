@@ -12,6 +12,7 @@ Canvas {
     property int    selectedPrimIndex:  -1  // index into primitives; -1 = none
     property int    selectedBlendIndex: -1  // index of primitive whose blend is selected; -1 = none
     property string profileType:       "od" // "od" or "id" — controls startPoint blend entry direction
+    property var    workpiece:         ({})
 
     signal primitiveSelected(int index)
     signal selectionCleared()
@@ -39,6 +40,10 @@ Canvas {
         else              requestPaint()
     }
     onProfileTypeChanged: { _rebuildRenderCache(); requestPaint() }
+    onWorkpieceChanged: {
+        if (!_manualView) Qt.callLater(fitToScreen)
+        else              requestPaint()
+    }
     onWidthChanged:  { if (!_manualView) fitToScreen() }
     onHeightChanged: { if (!_manualView) fitToScreen() }
     onSelectedPrimIndexChanged:  requestPaint()
@@ -70,6 +75,16 @@ Canvas {
         if (!primitives || primitives.length === 0 || width <= 0 || height <= 0) return
         var b = geom.computeBounds(_resolvedPrimitives)
         if (!b) return
+        var stockLength = workpiece && workpiece.stock_length !== undefined ? Number(workpiece.stock_length) : 0
+        var stockDiameter = workpiece && workpiece.external_diameter !== undefined ? Number(workpiece.external_diameter) : 0
+        if (stockLength > 0) {
+            b.fZMin = Math.min(b.fZMin, -stockLength)
+            b.fZMax = Math.max(b.fZMax, 0)
+        }
+        if (stockDiameter > 0) {
+            b.fXMin = Math.min(b.fXMin, 0)
+            b.fXMax = Math.max(b.fXMax, stockDiameter)
+        }
         var MARGIN = 10
 
         // Z: [zMin-M, zMax+M]
@@ -97,6 +112,7 @@ Canvas {
         backgroundActor.paint(ctx)
         gridActor.paint(ctx)
         ticksActor.paint(ctx)
+        stockActor.paint(ctx)
         centerLineActor.paint(ctx)
         axesActor.paint(ctx)
         originActor.paint(ctx)
@@ -155,6 +171,15 @@ Canvas {
         originX: root._originX
         originY: root._originY
         circleR: root._circleR
+    }
+
+    StockActor {
+        id: stockActor
+        workpiece: root.workpiece
+        renderSegs: root._renderSegs
+        profileType: root.profileType
+        cx: root._cx
+        cy: root._cy
     }
 
     PathActor {

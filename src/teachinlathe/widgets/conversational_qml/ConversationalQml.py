@@ -140,6 +140,17 @@ class ConversationalQml(QQuickWidget):
     def _emit_header_state_changed(self):
         self.headerStateChanged.emit()
 
+    def _attach_current_workpiece(self, payload):
+        if not isinstance(payload, dict) or payload.get("type") != "defineProfile":
+            return payload
+        program = self._get_current_program()
+        workpiece = getattr(getattr(program, "header", None), "workpiece", None) if program else None
+        if workpiece is not None and hasattr(workpiece, "to_dict"):
+            enriched = dict(payload)
+            enriched["workpiece"] = workpiece.to_dict()
+            return enriched
+        return payload
+
     def getHeaderState(self):
         title = "Conversational"
         left_actions = []
@@ -354,7 +365,7 @@ class ConversationalQml(QQuickWidget):
                 op_data = None
                 op = self._get_current_op(op_index)
                 if op is not None:
-                    op_data = build_details_payload(op)
+                    op_data = self._attach_current_workpiece(build_details_payload(op))
                 if op_data and hasattr(item, "applyData"):
                     QTimer.singleShot(0, lambda i=item, idx=op_index, d=op_data: i.applyData(idx, d))
         except Exception as e:
@@ -443,7 +454,7 @@ class ConversationalQml(QQuickWidget):
         op = self._get_current_op(index)
         if op is None:
             return
-        data = build_details_payload(op)
+        data = self._attach_current_workpiece(build_details_payload(op))
         if not data:
             return
         try:
@@ -560,7 +571,7 @@ class ConversationalQml(QQuickWidget):
             self._save_current_program()
             if op_type == "defineProfile":
                 op = self._get_current_op(idx)
-                op_data = build_details_payload(op) if op is not None else {}
+                op_data = self._attach_current_workpiece(build_details_payload(op)) if op is not None else {}
                 QTimer.singleShot(0, lambda i=idx, d=op_data: self.onOpenProfileEditorRequested(i, d))
         except Exception as e:
             print(f"[operations] Failed to create {op_type!r}: {e}")
@@ -732,7 +743,7 @@ class ConversationalQml(QQuickWidget):
                 wp = header.workpiece
                 if wp is None:
                     wp = Workpiece(material="", external_diameter=0.0,
-                                   internal_diameter=0.0, stickout_length=0.0)
+                                   internal_diameter=0.0, stickout_length=0.0, stock_length=0.0)
                 if "material" in wp_payload:
                     wp.material = str(wp_payload["material"])
                 if "external_diameter" in wp_payload:
@@ -748,6 +759,11 @@ class ConversationalQml(QQuickWidget):
                 if "stickout_length" in wp_payload:
                     try:
                         wp.stickout_length = float(wp_payload["stickout_length"])
+                    except Exception:
+                        pass
+                if "stock_length" in wp_payload:
+                    try:
+                        wp.stock_length = float(wp_payload["stock_length"])
                     except Exception:
                         pass
                 header.workpiece = wp
