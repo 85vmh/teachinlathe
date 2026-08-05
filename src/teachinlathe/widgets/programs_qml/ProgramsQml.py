@@ -166,7 +166,7 @@ class ProgramsQml(QQuickWidget):
         right_actions = []
         title = 'Machine FileSystem'
         if self.viewmodel.screenIndex != ProgramsScreen.FileSystem:
-            left_actions.append({"id": "back", "text": "Back to FileSystem", "enabled": True})
+            left_actions.append({"id": "back", "text": "← Back to FileSystem", "enabled": True})
             # Break-on-M1 / Skip-Blocks now live in the bottom ProgramActionBar (QML).
             title = f'Loaded Program [{self._current_program_name()}]'
         else:

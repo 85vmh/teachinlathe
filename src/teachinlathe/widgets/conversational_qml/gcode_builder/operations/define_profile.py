@@ -5,6 +5,24 @@ from teachinlathe.conversational.data_types import ArcTo, BlendType, DefineProfi
 from ..config import fmt as _f
 
 
+def _resolve_line_endpoint(primitive: LineTo, start_x: float, start_z: float):
+    mode = str(getattr(primitive, "input", "xz") or "xz").lower()
+    if mode not in ("xz", "ax", "az"):
+        mode = "xz"
+    end_x = float(primitive.x_end)
+    end_z = float(primitive.z_end)
+    if mode == "xz":
+        return end_x, end_z
+
+    angle_rad = math.radians(float(getattr(primitive, "angle", 0.0) or 0.0))
+    tangent = math.tan(angle_rad)
+    if mode == "az":
+        return float(start_x) + 2.0 * (end_z - float(start_z)) * tangent, end_z
+    if abs(tangent) < 1e-12:
+        return end_x, float(start_z)
+    radial_delta = (end_x - float(start_x)) / 2.0
+    return end_x, float(start_z) + radial_delta / tangent
+
 
 def _primitive_dir_to_gcode(direction_str):
     """Canvas ccw/cw mapping to lathe G2/G3 commands."""
@@ -93,7 +111,6 @@ def _undercut_din509_geometry(blend, prev_x, prev_z, end_x, end_z, next_x, next_
     }
 
 
-
 def generate_define_profile_gcode(op: DefineProfile):
     if not op.generate_gcode or not op.profile_primitives:
         return []
@@ -123,15 +140,17 @@ def generate_define_profile_gcode(op: DefineProfile):
     rest = op.profile_primitives[1:]
     for idx, primitive in enumerate(rest):
         if isinstance(primitive, LineTo):
+            end_x, end_z = _resolve_line_endpoint(primitive, cx, cz)
             blend_type = primitive.blend.blend_type
             if blend_type == BlendType.UNDERCUT_DIN509:
                 next_prim = rest[idx + 1] if idx + 1 < len(rest) else None
                 if next_prim is not None and isinstance(next_prim, LineTo):
+                    next_x, next_z = _resolve_line_endpoint(next_prim, end_x, end_z)
                     uc_geom = _undercut_din509_geometry(
                         primitive.blend,
                         cx, cz,
-                        primitive.x_end, primitive.z_end,
-                        next_prim.x_end, next_prim.z_end,
+                        end_x, end_z,
+                        next_x, next_z,
                     )
                     if uc_geom:
                         body_lines.extend(uc_geom["lines"])
@@ -142,8 +161,8 @@ def generate_define_profile_gcode(op: DefineProfile):
                 blend_suffix = f" A{_f(primitive.blend.fillet_radius)}"
             elif blend_type == BlendType.CHAMFER and primitive.blend.chamfer_width > 0:
                 blend_suffix = f" C{_f(primitive.blend.chamfer_width)}"
-            body_lines.append(f"G1 X{_f(primitive.x_end)} Z{_f(primitive.z_end)}{blend_suffix}")
-            cx, cz = primitive.x_end, primitive.z_end
+            body_lines.append(f"G1 X{_f(end_x)} Z{_f(end_z)}{blend_suffix}")
+            cx, cz = end_x, end_z
             continue
 
         if isinstance(primitive, ArcTo):

@@ -833,20 +833,36 @@ class LineTo(ProfilePrimitive):
     x_end: float
     z_end: float
     blend: ProfileBlend
+    angle: float = 0.0
+    input: str = "xz"
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "LineTo":
+        input_mode = str(data.get("input", "xz") or "xz").lower()
+        if input_mode not in ("xz", "ax", "az"):
+            input_mode = "xz"
         return LineTo(
             primitive_id=int(data.get("primitive_id", 0)),
             primitive_type="lineTo",
             x_end=float(data.get("x_end", 0.0)),
             z_end=float(data.get("z_end", 0.0)),
             blend=ProfileBlend.from_dict(data.get("blend", {})),
+            angle=float(data.get("angle", 0.0) or 0.0),
+            input=input_mode,
         )
 
     def to_dict(self) -> Dict[str, Any]:
         d = super().to_dict()
-        d.update({"x_end": float(self.x_end), "z_end": float(self.z_end), "blend": self.blend.to_dict()})
+        input_mode = str(self.input or "xz").lower()
+        if input_mode not in ("xz", "ax", "az"):
+            input_mode = "xz"
+        d.update({
+            "x_end": float(self.x_end),
+            "z_end": float(self.z_end),
+            "angle": float(self.angle),
+            "input": input_mode,
+            "blend": self.blend.to_dict(),
+        })
         return d
 
 

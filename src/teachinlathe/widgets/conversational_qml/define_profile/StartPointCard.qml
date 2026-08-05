@@ -105,10 +105,14 @@ Rectangle {
                 value: primData.x_start !== undefined ? primData.x_start : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
+                onOpenRequested: function(field) {
+                    root.tapped()
+                    root.openNumPadRequested(field)
+                }
+                onValueCommitted: function(committedValue) {
+                    root.tapped()
                     var d = JSON.parse(JSON.stringify(primData))
-                    d.x_start = value
+                    d.x_start = Number(committedValue)
                     root.primUpdated(primIdx, d)
                 }
             }
@@ -122,10 +126,14 @@ Rectangle {
                 value: primData.z_start !== undefined ? primData.z_start : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
+                onOpenRequested: function(field) {
+                    root.tapped()
+                    root.openNumPadRequested(field)
+                }
+                onValueCommitted: function(committedValue) {
+                    root.tapped()
                     var d = JSON.parse(JSON.stringify(primData))
-                    d.z_start = value
+                    d.z_start = Number(committedValue)
                     root.primUpdated(primIdx, d)
                 }
             }

@@ -21,6 +21,8 @@ class ProfileLineSegment:
     undercut_radius: float = 0.4
     undercut_depth: float = 0.4
     undercut_length: float = 2.5
+    angle: float = 0.0
+    input_mode: str = "xz"
 
 
 @dataclass(frozen=True)
@@ -59,15 +61,39 @@ def json_dir_to_gcode(direction_str):
     return 2 if str(direction_str).lower() == "ccw" else 3
 
 
+def resolve_line_endpoint(start_x, start_z, end_x, end_z, angle, input_mode):
+    """Resolve LineTo endpoint. X values are diameters; angle is from the Z axis."""
+    mode = str(input_mode or "xz").lower()
+    if mode not in ("xz", "ax", "az"):
+        mode = "xz"
+    end_x = float(end_x)
+    end_z = float(end_z)
+    if mode == "xz":
+        return end_x, end_z
+
+    angle_rad = math.radians(float(angle or 0.0))
+    tangent = math.tan(angle_rad)
+    if mode == "az":
+        return float(start_x) + 2.0 * (end_z - float(start_z)) * tangent, end_z
+    if abs(tangent) < 1e-12:
+        return end_x, float(start_z)
+    radial_delta = (end_x - float(start_x)) / 2.0
+    return end_x, float(start_z) + radial_delta / tangent
+
+
 def build_profile_segments(primitives):
     segments = []
+    current_x = 0.0
+    current_z = 0.0
     for primitive in (primitives or []):
         primitive_type = primitive.get("type", "")
         if primitive_type == "startPoint":
+            current_x = float(primitive.get("x_start", 0.0))
+            current_z = float(primitive.get("z_start", 0.0))
             blend = primitive.get("blend") or {}
             segments.append(StartPoint(
-                x=float(primitive.get("x_start", 0.0)),
-                z=float(primitive.get("z_start", 0.0)),
+                x=current_x,
+                z=current_z,
                 blend_type=blend.get("type", "none"),
                 blend_width=float(blend.get("chamfer_width", 0.0) or 0.0),
                 blend_radius=float(blend.get("fillet_radius", 0.0) or 0.0),
@@ -76,16 +102,25 @@ def build_profile_segments(primitives):
 
         blend = primitive.get("blend") or {}
         if primitive_type == "lineTo":
+            end_x, end_z = resolve_line_endpoint(
+                current_x, current_z,
+                primitive.get("x_end", 0.0), primitive.get("z_end", 0.0),
+                primitive.get("angle", 0.0), primitive.get("input", "xz"),
+            )
             segments.append(ProfileLineSegment(
-                end_x=float(primitive.get("x_end", 0.0)),
-                end_z=float(primitive.get("z_end", 0.0)),
+                end_x=end_x,
+                end_z=end_z,
                 blend_type=blend.get("type", "none"),
                 blend_radius=float(blend.get("fillet_radius", 0.0) or 0.0),
                 blend_width=float(blend.get("chamfer_width", 0.0) or 0.0),
                 undercut_radius=float(blend.get("undercut_radius", 0.4) or 0.4),
                 undercut_depth=float(blend.get("undercut_depth", 0.4) or 0.4),
                 undercut_length=float(blend.get("undercut_length", 2.5) or 2.5),
+                angle=float(primitive.get("angle", 0.0) or 0.0),
+                input_mode=str(primitive.get("input", "xz") or "xz").lower(),
             ))
+            current_x = end_x
+            current_z = end_z
             continue
 
         if primitive_type == "arcTo":
@@ -107,6 +142,8 @@ def build_profile_segments(primitives):
                 undercut_depth=float(blend.get("undercut_depth", 0.4) or 0.4),
                 undercut_length=float(blend.get("undercut_length", 2.5) or 2.5),
             ))
+            current_x = end_x
+            current_z = end_z
     return segments
 
 
@@ -142,6 +179,8 @@ def _as_legacy_segment(segment):
             "undercut_radius": segment.undercut_radius,
             "undercut_depth": segment.undercut_depth,
             "undercut_length": segment.undercut_length,
+            "angle": segment.angle,
+            "input": segment.input_mode,
         }
     return {
         "type": "arcTo",

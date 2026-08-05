@@ -169,7 +169,7 @@ class ConversationalQml(QQuickWidget):
             except Exception:
                 can_go_back = False
             if can_go_back:
-                left_actions.append({"id": "back", "text": "Back to Programs", "enabled": True})
+                left_actions.append({"id": "back", "text": "← Back to Programs", "enabled": True})
             operations = getattr(self.current_program, "operations", []) or []
             right_actions.append({"id": "build_gcode", "text": "Generate GCode", "enabled": bool(operations)})
         else:

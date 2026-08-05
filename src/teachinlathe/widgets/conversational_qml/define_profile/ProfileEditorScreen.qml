@@ -83,12 +83,38 @@ Item {
 
     function _refEndCoords(refIdx) {
         if (refIdx < 0 || refIdx >= root.primitives.length) return { x: 0, z: 0 }
-        var p = root.primitives[refIdx]
-        var rx = p.x_end   !== undefined ? p.x_end   :
-                 (p.x_start !== undefined ? p.x_start : 0)
-        var rz = p.z_end   !== undefined ? p.z_end   :
-                 (p.z_start !== undefined ? p.z_start : 0)
-        return { x: rx, z: rz }
+        var currentX = 0
+        var currentZ = 0
+        for (var i = 0; i <= refIdx; i++) {
+            var item = root.primitives[i]
+            if (!item) continue
+            if (item.type === "startPoint") {
+                currentX = item.x_start !== undefined ? Number(item.x_start) : 0
+                currentZ = item.z_start !== undefined ? Number(item.z_start) : 0
+            } else if (item.type === "lineTo") {
+                var mode = String(item.input !== undefined ? item.input : "xz").toLowerCase()
+                if (mode !== "xz" && mode !== "ax" && mode !== "az") mode = "xz"
+                var endX = item.x_end !== undefined ? Number(item.x_end) : 0
+                var endZ = item.z_end !== undefined ? Number(item.z_end) : 0
+                if (mode === "az") {
+                    var azTan = Math.tan((Number(item.angle || 0) * Math.PI) / 180.0)
+                    currentX = currentX + 2.0 * (endZ - currentZ) * azTan
+                    currentZ = endZ
+                } else if (mode === "ax") {
+                    var axTan = Math.tan((Number(item.angle || 0) * Math.PI) / 180.0)
+                    var radialDelta = (endX - currentX) / 2.0
+                    currentZ = Math.abs(axTan) < 1e-12 ? currentZ : currentZ + radialDelta / axTan
+                    currentX = endX
+                } else {
+                    currentX = endX
+                    currentZ = endZ
+                }
+            } else if (item.type === "arcTo") {
+                currentX = item.x_end !== undefined ? Number(item.x_end) : 0
+                currentZ = item.z_end !== undefined ? Number(item.z_end) : 0
+            }
+        }
+        return { x: currentX, z: currentZ }
     }
 
     function primInserted(insertIdx, primType, refX, refZ) {
@@ -97,7 +123,7 @@ Item {
         var rz = (refZ !== undefined) ? refZ : 0
         var newPrim
         if (primType === "lineTo") {
-            newPrim = { type: "lineTo", primitive_id: 0,
+            newPrim = { type: "lineTo", primitive_id: 0, input: "xz", angle: 0,
                         x_end: rx, z_end: rz, blend: { type: "none" } }
         } else {
             newPrim = { type: "arcTo", primitive_id: 0, direction: "cw", arc_radius: 10,

@@ -91,12 +91,36 @@ Popup {
 
     function _refEndCoords(refIdx) {
         if (refIdx < 0 || refIdx >= root.primitives.length) return { x: 0, z: 0 }
-        var p = root.primitives[refIdx]
-        var rx = p.x_end   !== undefined ? p.x_end   :
-                 (p.x_start !== undefined ? p.x_start : 0)
-        var rz = p.z_end   !== undefined ? p.z_end   :
-                 (p.z_start !== undefined ? p.z_start : 0)
-        return { x: rx, z: rz }
+        var currentX = 0
+        var currentZ = 0
+        for (var i = 0; i <= refIdx; i++) {
+            var p = root.primitives[i]
+            if (!p) continue
+            if (p.type === "startPoint") {
+                currentX = p.x_start !== undefined ? Number(p.x_start) : 0
+                currentZ = p.z_start !== undefined ? Number(p.z_start) : 0
+            } else if (p.type === "lineTo") {
+                var mode = String(p.input !== undefined ? p.input : "xz").toLowerCase()
+                if (mode !== "xz" && mode !== "ax" && mode !== "az") mode = "xz"
+                var endX = p.x_end !== undefined ? Number(p.x_end) : 0
+                var endZ = p.z_end !== undefined ? Number(p.z_end) : 0
+                var angleTan = Math.tan((Number(p.angle || 0) * Math.PI) / 180.0)
+                if (mode === "az") {
+                    currentX = currentX + 2.0 * (endZ - currentZ) * angleTan
+                    currentZ = endZ
+                } else if (mode === "ax") {
+                    currentZ = Math.abs(angleTan) < 1e-12 ? currentZ : currentZ + ((endX - currentX) / 2.0) / angleTan
+                    currentX = endX
+                } else {
+                    currentX = endX
+                    currentZ = endZ
+                }
+            } else if (p.type === "arcTo") {
+                currentX = p.x_end !== undefined ? Number(p.x_end) : 0
+                currentZ = p.z_end !== undefined ? Number(p.z_end) : 0
+            }
+        }
+        return { x: currentX, z: currentZ }
     }
 
     function primInserted(insertIdx, primType, refX, refZ) {
@@ -105,7 +129,7 @@ Popup {
         var rz = (refZ !== undefined) ? refZ : 0
         var newPrim
         if (primType === "lineTo") {
-            newPrim = { type: "lineTo", primitive_id: 0,
+            newPrim = { type: "lineTo", primitive_id: 0, input: "xz", angle: 0,
                         x_end: rx, z_end: rz, blend: { type: "none" } }
         } else {
             newPrim = { type: "arcTo", primitive_id: 0, direction: "cw", arc_radius: 10,

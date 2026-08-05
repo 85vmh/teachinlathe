@@ -21,6 +21,7 @@ Canvas {
     property real _originX: 0     // canvas px → world Z = 0
     property real _originY: 0     // canvas px → world X = 0
     property var  _renderSegs: [] // cached render segments in world coords
+    property var  _resolvedPrimitives: []
     property bool _manualView: false  // when true, primitive/size changes don't reset fit
 
     readonly property real _circleR: 8   // origin marker radius
@@ -67,7 +68,7 @@ Canvas {
     //         The non-constraining axis is centred in the remaining canvas space.
     function fitToScreen() {
         if (!primitives || primitives.length === 0 || width <= 0 || height <= 0) return
-        var b = geom.computeBounds(primitives)
+        var b = geom.computeBounds(_resolvedPrimitives)
         if (!b) return
         var MARGIN = 10
 
@@ -104,7 +105,8 @@ Canvas {
     }
 
     function _rebuildRenderCache() {
-        _renderSegs = geom.buildRenderSegments(primitives, root.profileType)
+        _resolvedPrimitives = geom.resolvePrimitives(primitives)
+        _renderSegs = geom.buildRenderSegments(_resolvedPrimitives, root.profileType)
     }
 
     // ── Actor orchestration ───────────────────────────────────────────────────
@@ -165,7 +167,7 @@ Canvas {
 
     HighlightActor {
         id: highlightActor
-        primitives: root.primitives
+        primitives: root._resolvedPrimitives
         selectedPrimIndex: root.selectedPrimIndex
         selectedBlendIndex: root.selectedBlendIndex
         profileType: root.profileType
@@ -177,12 +179,13 @@ Canvas {
 
     // ── Hit testing ────────────────────────────────────────────────────────────
     function _hitTest(px, py) {
-        if (!primitives || primitives.length === 0) return -1
+        var hitPrimitives = root._resolvedPrimitives
+        if (!hitPrimitives || hitPrimitives.length === 0) return -1
         var HIT = 10    // pixel tolerance
         var currentZ = 0
         var currentX = 0
-        for (var i = 0; i < primitives.length; i++) {
-            var p = primitives[i]
+        for (var i = 0; i < hitPrimitives.length; i++) {
+            var p = hitPrimitives[i]
             if (p.type === "startPoint") {
                 var startZ = +(p.z_start || 0)
                 var startX = +(p.x_start || 0)

@@ -15,6 +15,15 @@ Rectangle {
 
     readonly property string _blendType:
         (primData && primData.blend && primData.blend.type) ? primData.blend.type : "none"
+    readonly property string _inputMode: _normalizedInput()
+    readonly property string _firstFieldName:  _inputMode === "xz" ? "x_end" : "angle"
+    readonly property string _secondFieldName: _inputMode === "ax" ? "x_end" : "z_end"
+    readonly property string _firstLabel:      _inputMode === "xz" ? "X End" : "Angle"
+    readonly property string _secondLabel:     _inputMode === "ax" ? "X End" : "Z End"
+    readonly property string _firstDescription:
+        _firstFieldName === "angle" ? "Line Angle from Z Axis" : "Line End on X"
+    readonly property string _secondDescription:
+        _secondFieldName === "x_end" ? "Line End on X" : "Line End on Z"
 
     signal primUpdated(int idx, var data)
     signal openNumPadRequested(var field)
@@ -45,6 +54,8 @@ Rectangle {
     readonly property int szGridColGap:    8
     readonly property int szGridWidth:     196
     readonly property int szInputWidth:    120
+    readonly property int szTabHeight:     46
+    readonly property int szTabFont:       16
     readonly property int szSepInset:      4
     readonly property int szSepGap:        8
     readonly property int szBtn:           50
@@ -60,6 +71,47 @@ Rectangle {
     TapHandler { onTapped: root.tapped() }
 
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
+
+    function _normalizedInput() {
+        var mode = String(primData && primData.input !== undefined ? primData.input : "xz").toLowerCase()
+        return (mode === "ax" || mode === "az") ? mode : "xz"
+    }
+
+    function _fieldValue(fieldName) {
+        if (primData && primData[fieldName] !== undefined) return primData[fieldName]
+        return 0
+    }
+
+    function _settingName(fieldName) {
+        return "lt." + primIdx + "." + fieldName
+    }
+
+    function _copyPrimData() {
+        var d = JSON.parse(JSON.stringify(primData || {}))
+        d.type = d.type || "lineTo"
+        if (d.input === undefined) d.input = "xz"
+        if (d.angle === undefined) d.angle = 0
+        if (d.x_end === undefined) d.x_end = 0
+        if (d.z_end === undefined) d.z_end = 0
+        if (!d.blend) d.blend = { type: "none" }
+        return d
+    }
+
+    function _setInputMode(mode) {
+        mode = (mode === "ax" || mode === "az") ? mode : "xz"
+        if (mode === root._inputMode) return
+        var d = _copyPrimData()
+        d.input = mode
+        root.tapped()
+        root.primUpdated(primIdx, d)
+    }
+
+    function _updateField(fieldName, committedValue) {
+        var d = _copyPrimData()
+        d[fieldName] = Number(committedValue)
+        root.tapped()
+        root.primUpdated(primIdx, d)
+    }
 
     RowLayout {
         id: ltRow
@@ -93,46 +145,132 @@ Rectangle {
             color: clrSeparator
         }
 
-        GridLayout {
-            columns: 2
-            rowSpacing: szGridRowGap; columnSpacing: szGridColGap
-            Layout.preferredWidth: szGridWidth
-            Layout.maximumWidth:  szGridWidth
+        ColumnLayout {
+            spacing: szGridRowGap
+            Layout.fillWidth: true
 
-            Label { text: "X End"; font.pixelSize: szFont; Layout.fillWidth: true }
-            NumpadField {
-                description: "Line End on X"
-                Layout.preferredWidth: szInputWidth
-                settingName: "lt." + primIdx + ".x_end"
-                validatorObject: dblVal
-                value: primData.x_end !== undefined ? primData.x_end : 0
-                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
-                    var d = JSON.parse(JSON.stringify(primData))
-                    d.x_end = value
-                    root.primUpdated(primIdx, d)
+            Rectangle {
+                id: inputModeBar
+                Layout.fillWidth: true
+                Layout.preferredHeight: szTabHeight
+                radius: 8
+                color: "transparent"
+
+                Row {
+                    anchors.fill: parent
+
+                Repeater {
+                    model: [
+                        { label: "X & Z End",     mode: "xz" },
+                        { label: "Angle & X End",     mode: "ax" },
+                        { label: "Angle & Z End",     mode: "az" }
+                    ]
+                    delegate: Item {
+                        id: tabItem
+                        readonly property bool selected: root._inputMode === modelData.mode
+                        readonly property color tabColor: selected ? "#1f6feb" : "#ffffff"
+                        readonly property bool isFirst: index === 0
+                        readonly property bool isLast: index === 2
+                        width: inputModeBar.width / 3
+                        height: inputModeBar.height
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: (tabItem.isFirst || tabItem.isLast) ? inputModeBar.radius : 0
+                            color: tabItem.tabColor
+
+                            Rectangle {
+                                anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+                                width: inputModeBar.radius
+                                visible: tabItem.isFirst
+                                color: parent.color
+                            }
+
+                            Rectangle {
+                                anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                                width: inputModeBar.radius
+                                visible: tabItem.isLast
+                                color: parent.color
+                            }
+                        }
+
+                        Rectangle {
+                            visible: !tabItem.isLast
+                            anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+                            width: 1
+                            color: "#cbd5e1"
+                            z: 1
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData.label
+                            color: parent.selected ? "#ffffff" : "#1f2937"
+                            font.pixelSize: szTabFont
+                            font.bold: parent.selected
+                            z: 2
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root._setInputMode(modelData.mode)
+                        }
+                    }
+                }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: inputModeBar.radius
+                    color: "transparent"
+                    border.color: "#cbd5e1"
+                    border.width: 1
+                    z: 3
                 }
             }
 
-            Label { text: "Z End"; font.pixelSize: szFont; Layout.fillWidth: true }
-            NumpadField {
-                description: "Line End on Z"
-                Layout.preferredWidth: szInputWidth
-                settingName: "lt." + primIdx + ".z_end"
-                validatorObject: dblVal
-                value: primData.z_end !== undefined ? primData.z_end : 0
-                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
-                    var d = JSON.parse(JSON.stringify(primData))
-                    d.z_end = value
-                    root.primUpdated(primIdx, d)
+            RowLayout {
+                spacing: szSpacing
+                Layout.fillWidth: true
+
+            GridLayout {
+                columns: 2
+                rowSpacing: szGridRowGap; columnSpacing: szGridColGap
+                Layout.preferredWidth: szGridWidth
+                Layout.maximumWidth:  szGridWidth
+
+                Label { text: root._firstLabel; font.pixelSize: szFont; Layout.fillWidth: true }
+                NumpadField {
+                    description: root._firstDescription
+                    Layout.preferredWidth: szInputWidth
+                    settingName: root._settingName(root._firstFieldName)
+                    validatorObject: dblVal
+                    value: root._fieldValue(root._firstFieldName)
+                    formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                    hAlign: Text.AlignRight
+                    onOpenRequested: {
+                        root.tapped()
+                        root.openNumPadRequested(field)
+                    }
+                    onValueCommitted: root._updateField(root._firstFieldName, value)
+                }
+
+                Label { text: root._secondLabel; font.pixelSize: szFont; Layout.fillWidth: true }
+                NumpadField {
+                    description: root._secondDescription
+                    Layout.preferredWidth: szInputWidth
+                    settingName: root._settingName(root._secondFieldName)
+                    validatorObject: dblVal
+                    value: root._fieldValue(root._secondFieldName)
+                    formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+                    hAlign: Text.AlignRight
+                    onOpenRequested: {
+                        root.tapped()
+                        root.openNumPadRequested(field)
+                    }
+                    onValueCommitted: root._updateField(root._secondFieldName, value)
                 }
             }
-        }
 
         Rectangle {
             width: 1; Layout.fillHeight: true
@@ -230,6 +368,15 @@ Rectangle {
         }
 
         Item { Layout.fillWidth: true }
+            }
+        }
+
+        Rectangle {
+            width: 1; Layout.fillHeight: true
+            Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
+            Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
+            color: clrSeparator
+        }
 
         Rectangle {
             implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius

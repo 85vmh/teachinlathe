@@ -139,6 +139,13 @@ Rectangle {
         Item { Layout.fillWidth: true }
 
         Rectangle {
+            width: 1; Layout.fillHeight: true
+            Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
+            Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
+            color: clrSeparator
+        }
+
+        Rectangle {
             implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
             color:   delMA.pressed ? clrDeleteHover : "transparent"
             border.width: 1

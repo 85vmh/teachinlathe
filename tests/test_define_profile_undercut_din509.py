@@ -198,3 +198,114 @@ def test_profiling_din509_undercut_arc_is_tangent_to_obtuse_next_line():
 
     assert start_radius_x * incoming_floor_dir_x + start_radius_z * incoming_floor_dir_z == pytest.approx(0.0)
     assert end_radius_x * next_dir_x + end_radius_z * next_dir_z == pytest.approx(0.0)
+
+
+def test_line_to_defaults_missing_input_to_xz_for_backward_compatibility():
+    primitive = LineTo.from_dict({
+        "type": "lineTo",
+        "primitive_id": 4,
+        "x_end": 12.0,
+        "z_end": -8.0,
+        "blend": {"type": "none"},
+    })
+
+    assert primitive.input == "xz"
+    assert primitive.angle == pytest.approx(0.0)
+    assert primitive.to_dict()["input"] == "xz"
+
+
+def test_define_profile_resolves_angle_and_z_line_to_with_siemens_angle_convention():
+    generate_define_profile_gcode = _load_define_profile_module()
+    op = DefineProfile(
+        order=1,
+        type="defineProfile",
+        generate_gcode=True,
+        is_optional_block=False,
+        profile_id=8,
+        profile_type=ProfilingType.OD,
+        profile_primitives=[
+            StartPoint(
+                primitive_id=1,
+                primitive_type="startPoint",
+                x_start=10.0,
+                z_start=0.0,
+            ),
+            LineTo(
+                primitive_id=2,
+                primitive_type="lineTo",
+                x_end=0.0,
+                z_end=10.0,
+                angle=45.0,
+                input="az",
+                blend=ProfileBlend(blend_type=BlendType.NONE),
+            ),
+        ],
+    )
+
+    assert generate_define_profile_gcode(op) == [
+        "O8 SUB",
+        "\tG0 X10.000 Z0.000",
+        "\tG1 X30.000 Z10.000",
+        "O8 ENDSUB",
+    ]
+
+
+def test_define_profile_resolves_angle_and_x_line_to_with_siemens_angle_convention():
+    generate_define_profile_gcode = _load_define_profile_module()
+    op = DefineProfile(
+        order=1,
+        type="defineProfile",
+        generate_gcode=True,
+        is_optional_block=False,
+        profile_id=9,
+        profile_type=ProfilingType.OD,
+        profile_primitives=[
+            StartPoint(
+                primitive_id=1,
+                primitive_type="startPoint",
+                x_start=10.0,
+                z_start=0.0,
+            ),
+            LineTo(
+                primitive_id=2,
+                primitive_type="lineTo",
+                x_end=30.0,
+                z_end=0.0,
+                angle=45.0,
+                input="ax",
+                blend=ProfileBlend(blend_type=BlendType.NONE),
+            ),
+        ],
+    )
+
+    assert generate_define_profile_gcode(op) == [
+        "O9 SUB",
+        "\tG0 X10.000 Z0.000",
+        "\tG1 X30.000 Z10.000",
+        "O9 ENDSUB",
+    ]
+
+
+def test_profiling_geometry_resolves_angle_line_to_endpoint():
+    geometry = _load_profiling_geometry_module()
+    primitives = [
+        {
+            "type": "startPoint",
+            "x_start": 10.0,
+            "z_start": 0.0,
+            "blend": {"type": "none"},
+        },
+        {
+            "type": "lineTo",
+            "x_end": 0.0,
+            "z_end": 10.0,
+            "angle": 45.0,
+            "input": "az",
+            "blend": {"type": "none"},
+        },
+    ]
+
+    segments = geometry.build_profile_segments(primitives)
+
+    assert segments[1].end_x == pytest.approx(30.0)
+    assert segments[1].end_z == pytest.approx(10.0)

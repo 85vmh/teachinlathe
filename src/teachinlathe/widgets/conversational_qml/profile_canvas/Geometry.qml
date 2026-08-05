@@ -1,6 +1,51 @@
 import QtQuick 2.15
 
 QtObject {
+    function resolveLineEndpoint(startX, startZ, p) {
+        var mode = String((p && p.input !== undefined) ? p.input : "xz").toLowerCase()
+        if (mode !== "xz" && mode !== "ax" && mode !== "az") mode = "xz"
+        var endX = +(p.x_end || 0)
+        var endZ = +(p.z_end || 0)
+        if (mode === "xz") {
+            return { x: endX, z: endZ }
+        }
+
+        var angleRad = +(p.angle || 0) * Math.PI / 180.0
+        var tangent = Math.tan(angleRad)
+        if (mode === "az") {
+            return { x: +startX + 2.0 * (endZ - +startZ) * tangent, z: endZ }
+        }
+        if (Math.abs(tangent) < 1e-12) {
+            return { x: endX, z: +startZ }
+        }
+        var radialDelta = (endX - +startX) / 2.0
+        return { x: endX, z: +startZ + radialDelta / tangent }
+    }
+
+    function resolvePrimitives(primitives) {
+        var out = []
+        var currentX = 0.0
+        var currentZ = 0.0
+        for (var i = 0; i < (primitives || []).length; i++) {
+            var p = JSON.parse(JSON.stringify(primitives[i]))
+            if (p.type === "startPoint") {
+                currentX = +(p.x_start || 0)
+                currentZ = +(p.z_start || 0)
+            } else if (p.type === "lineTo") {
+                var endpoint = resolveLineEndpoint(currentX, currentZ, p)
+                p.x_end = endpoint.x
+                p.z_end = endpoint.z
+                currentX = endpoint.x
+                currentZ = endpoint.z
+            } else if (p.type === "arcTo") {
+                currentX = +(p.x_end || 0)
+                currentZ = +(p.z_end || 0)
+            }
+            out.push(p)
+        }
+        return out
+    }
+
     function undercutBlendValue(blend, field, defaultValue) {
         if (!blend) return defaultValue
         return blend[field] !== undefined ? +(blend[field] || defaultValue) : defaultValue
