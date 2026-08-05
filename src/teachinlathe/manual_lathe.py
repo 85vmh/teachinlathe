@@ -15,8 +15,6 @@ from teachinlathe.widgets.manual_qml.joystick_state import JoystickState
 LINUXCNC_CMD = linuxcnc.command()
 INFO = Info()
 STATUS = getPlugin('status')
-POSITION = getPlugin('position')
-
 
 class JoystickDirection(Enum):
     NONE = auto()
@@ -53,36 +51,6 @@ def isSpindleOn():
     return STAT.spindle[0]['direction'] != 0
 
 
-class UserMessage(Enum):
-    CANNOT_FEED_WITH_SPINDLE_OFF = ('Cannot feed with spindle off',)
-    JOYSTICK_RESET_REQUIRED = ('Joystick reset required',)
-
-    def __init__(self, message):
-        self.message = message
-
-
-class MessageStack:
-    def __init__(self):
-        self.stack = deque()
-
-    def push(self, message):
-        self.stack.append(message)
-
-    def pop(self):
-        if self.stack:
-            return self.stack.pop()
-        return None
-
-    def clear(self):
-        self.stack.clear()
-
-    def is_empty(self):
-        return len(self.stack) == 0
-
-    def __repr__(self):
-        return repr(self.stack)
-
-
 def canHandleManualOperations():
     STAT.poll()
     return (STAT.task_state == linuxcnc.STATE_ON and
@@ -93,7 +61,6 @@ def canHandleManualOperations():
 class ManualLathe:
     _instance = None
     latheComponent = TeachInLatheComponent()
-    messageStack = MessageStack()
     spindleRpm = 300
     spindleCss = 200
     maxSpindleRpm = 2000
@@ -133,16 +100,6 @@ class ManualLathe:
 
     def setJoystickWidget(self, joystickWidget):
         self.joystickWidget = joystickWidget
-
-    def getProgramHeader(self):
-        spindle_cmd = f"G97 M4 S{self.spindleRpm} (Spindle RPM Mode)" \
-            if self.spindleMode == SpindleMode.Rpm \
-            else f"G96 M4 S{self.spindleCss} D{self.maxSpindleRpm} (Spindle CSS Mode)"
-
-        return (f"(Using Spindle & Feed settings from manual mode)\n"
-                f"{spindle_cmd}\n"
-                f"G95 F{self.feedPerRev} (Feed per rev)\n"
-                )
 
     def onSpindleModeChanged(self, value=0):
         self.spindleMode = SpindleMode(value)
