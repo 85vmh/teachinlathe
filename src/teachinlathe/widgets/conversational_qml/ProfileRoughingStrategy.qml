@@ -59,7 +59,7 @@ GroupBox {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.WordWrap
-            text: "Select a ProfileID from a Define Profile operation defined above the current operation."
+            text: "Select a ProfileID from a Define Profile operation\ndefined above the current operation."
             font.pixelSize: 15
             font.bold: true
             color: "#ff9800"

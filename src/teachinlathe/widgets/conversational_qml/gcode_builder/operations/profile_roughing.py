@@ -21,6 +21,15 @@ from .profiling.diagonal import emit_diagonal_roughing
 from .profiling.radial import emit_radial_roughing
 
 
+def _pass_type_label(pass_type: PassType) -> str:
+    return {
+        PassType.AXIAL: "Axial Passes",
+        PassType.RADIAL: "Radial Passes",
+        PassType.DIAGONAL_INTERIOR: "45° Passes toward interior",
+        PassType.DIAGONAL_EXTERIOR: "45° Passes toward exterior",
+    }.get(pass_type, str(pass_type.value if hasattr(pass_type, "value") else pass_type))
+
+
 def parse_profile_roughing_config(op) -> ProfileRoughingConfig:
     if hasattr(op, "to_dict"):
         op = op.to_dict()
@@ -108,6 +117,7 @@ def generate_profile_roughing_gcode(op):
     lines = []
     lines.extend(build_spindle_gcode(spindle, config.optional_prefix))
     lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
+    lines.append("")
 
     if not segments or not isinstance(segments[0], StartPoint):
         lines.append("( ERROR: Profile Roughing -- no valid profile found )")
@@ -136,6 +146,8 @@ def generate_profile_roughing_gcode(op):
 
     # z_cut_deepest is used by radial and diagonal strategies.
     z_cut_deepest = _path_z_min(roughing_path)
+
+    lines.append(f"(----------Profiling Type: {_pass_type_label(config.pass_type)}----------)")
 
     if config.pass_type == PassType.AXIAL:
         emit_axial_roughing(lines, ctx, roughing_path, m1_params, spindle_direction)

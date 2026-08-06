@@ -20,6 +20,7 @@ def generate_profiling_gcode(op: Profiling):
     lines = []
     lines.extend(build_spindle_gcode(spindle, line_prefix))
     lines.append(f"{line_prefix}G95 F{cutting.feedRate}")
+    lines.append("")
 
     if options.strategy == Strategy.FINISH:
         passes = finish_passes + spring_passes

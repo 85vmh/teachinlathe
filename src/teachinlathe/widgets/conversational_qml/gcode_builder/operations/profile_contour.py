@@ -80,6 +80,7 @@ def generate_profile_contour_gcode(op):
     lines = []
     lines.extend(build_spindle_gcode(spindle, config.optional_prefix))
     lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
+    lines.append("")
 
     if not segments or not isinstance(segments[0], StartPoint):
         lines.append("( ERROR: Profile Contour -- no valid profile found )")

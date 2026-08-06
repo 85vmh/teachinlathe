@@ -37,11 +37,12 @@ def _load_diagonal_modules():
         sys.modules["x.operations.profiling.geometry"].StartPoint,
         sys.modules["x.operations.profiling.geometry"].ToolpathArc,
         sys.modules["x.operations.profiling.geometry"].ToolpathLine,
+        sys.modules["x.operations.profiling.geometry"].build_shifted_path_clipped_to_x_boundary,
     )
 
 
 def _debug_case():
-    RoughingContext, emit_diagonal_roughing, StartPoint, ToolpathArc, ToolpathLine = _load_diagonal_modules()
+    RoughingContext, emit_diagonal_roughing, StartPoint, ToolpathArc, ToolpathLine, _ = _load_diagonal_modules()
     context = RoughingContext(
         x_start=15.0,
         z_start=0.0,
@@ -86,6 +87,43 @@ def _debug_case():
     return context, emit_diagonal_roughing, path
 
 
+def test_profile_diagonal_interior_clipped_arcs_remain_valid_in_diameter_mode():
+    (
+        _RoughingContext,
+        _emit_diagonal_roughing,
+        StartPoint,
+        ToolpathArc,
+        ToolpathLine,
+        build_shifted_path_clipped_to_x_boundary,
+    ) = _load_diagonal_modules()
+
+    path = [
+        StartPoint(17.0, 0.0),
+        ToolpathArc(15.006896551724137, -0.9172413793103448, 17.0, -1.0, False),
+        ToolpathLine(15.0, -10.0),
+        ToolpathArc(11.0, -12.0, 11.0, -10.0, True),
+        ToolpathLine(10.0, -12.0),
+        ToolpathArc(8.0, -13.0, 10.0, -13.0, False),
+        ToolpathLine(8.0, -15.0),
+    ]
+
+    clipped = build_shifted_path_clipped_to_x_boundary(
+        path,
+        offset_x=-1.0,
+        offset_z=0.2,
+        x_boundary=8.0,
+        keep_side="gte",
+    )
+
+    current_x, current_z = clipped[0].x, clipped[0].z
+    for element in clipped[1:]:
+        if isinstance(element, ToolpathArc):
+            start_radius = ((current_x - element.center_x) / 2.0) ** 2 + (current_z - element.center_z) ** 2
+            end_radius = ((element.end_x - element.center_x) / 2.0) ** 2 + (element.end_z - element.center_z) ** 2
+            assert abs(start_radius - end_radius) < 1e-4
+        current_x, current_z = element.end_x, element.end_z
+
+
 def test_profile_diagonal_interior_logged_case_writes_gcode(capsys):
     context, emit_diagonal_roughing, path = _debug_case()
 
@@ -101,11 +139,11 @@ def test_profile_diagonal_interior_logged_case_writes_gcode(capsys):
 
     assert lines
     assert lines[1:6] == [
-        "G0 X16.000 Z0.300",
+        "G0 X17.000 Z0.300",
         "G1 Z0.000",
         "G1 X15.000 Z-1.000",
-        "G1 X14.700",
-        "G0 X16.000 Z0.300",
+        "G1 X14.400",
+        "G0 X17.000 Z0.300",
     ]
     with capsys.disabled():
         print("\n--- generated diagonal interior gcode ---")
@@ -127,11 +165,11 @@ def test_profile_diagonal_exterior_logged_case_writes_gcode(capsys):
 
     assert lines
     assert lines[1:6] == [
-        "G0 X14.700 Z-1.000",
+        "G0 X14.400 Z-1.000",
         "G1 X15.000",
-        "G1 X16.000 Z0.000",
+        "G1 X17.000 Z0.000",
         "G1 Z0.300",
-        "G0 X14.700 Z-1.000",
+        "G0 X14.400 Z-1.000",
     ]
     with capsys.disabled():
         print("\n--- generated diagonal exterior gcode ---")

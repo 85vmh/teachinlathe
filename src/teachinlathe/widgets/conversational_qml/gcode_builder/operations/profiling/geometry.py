@@ -785,17 +785,23 @@ def _line_x_intersection(sx, sz, ex, ez, target_x):
 
 
 def _arc_x_intersection(sx, sz, ex, ez, cx, cz, anticlockwise, target_x):
-    radius = math.hypot(sx - cx, sz - cz)
-    dx = target_x - cx
+    """Return first arc intersection with vertical X line.
+
+    X coordinates are diameters in the generated lathe profile, so arc geometry
+    must be solved in physical radius-Z space and converted back to diameter.
+    """
+    sx_r, ex_r, cx_r, target_x_r = sx / 2, ex / 2, cx / 2, target_x / 2
+    radius = math.hypot(sx_r - cx_r, sz - cz)
+    dx = target_x_r - cx_r
     if abs(dx) > radius + 1e-9:
         return None
 
     disc = max(0.0, radius * radius - dx * dx)
-    start_angle = math.atan2(sz - cz, sx - cx)
-    end_angle = math.atan2(ez - cz, ex - cx)
+    start_angle = math.atan2(sz - cz, sx_r - cx_r)
+    end_angle = math.atan2(ez - cz, ex_r - cx_r)
     candidates = []
     for z in (cz + math.sqrt(disc), cz - math.sqrt(disc)):
-        angle = math.atan2(z - cz, target_x - cx)
+        angle = math.atan2(z - cz, dx)
         if _angle_on_arc(angle, start_angle, end_angle, anticlockwise):
             candidates.append((_arc_angle_progress(angle, start_angle, end_angle, anticlockwise), target_x, z))
 

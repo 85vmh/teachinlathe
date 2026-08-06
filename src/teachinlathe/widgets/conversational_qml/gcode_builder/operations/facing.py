@@ -17,6 +17,7 @@ def generate_facing_gcode(op: Facing, datum: int = 1):
     lines = []
     lines.extend(build_spindle_gcode(spindle, line_prefix))
     lines.append(f"{line_prefix}G95 F{cutting.feedRate}")
+    lines.append("")
     lines.append(
         f"{line_prefix}o<facing> call "
         f"[{fmt(geometry.xStart)}] "
