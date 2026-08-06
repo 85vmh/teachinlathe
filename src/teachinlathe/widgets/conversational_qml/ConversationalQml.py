@@ -3,7 +3,7 @@ import json
 import time
 from datetime import datetime
 
-from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop, Q_ARG, pyqtSignal
+from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop, Q_ARG, pyqtSignal, pyqtSlot
 from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import QApplication
@@ -69,6 +69,7 @@ class ConversationalQml(QQuickWidget):
 
         self.model = ProgramListModel(programs)
         self.engine().rootContext().setContextProperty("programsModel", self.model)
+        self.engine().rootContext().setContextProperty("conversationalQml", self)
 
         # Conversational never persists last_value (only the manual tab does).
         self.numpadDialogViewModel = NumpadDialogViewModel(self, persist=False)
@@ -218,16 +219,26 @@ class ConversationalQml(QQuickWidget):
         # make sure you set self.current_program when you open ChildScreen
         return getattr(self, "current_program", None)
 
-    def _resolve_profile_type(self, profile_id):
+    def _resolve_profile_type(self, profile_id, before_index=None):
         """Return the ProfilingType of the DefineProfile with the given id, or None."""
         from teachinlathe.conversational.data_types import DefineProfile
         prog = self._get_current_program()
         if not prog or not profile_id:
             return None
-        for op in (getattr(prog, "operations", []) or []):
+        operations = getattr(prog, "operations", []) or []
+        if before_index is not None and before_index >= 0:
+            operations = operations[:before_index]
+        for op in operations:
             if isinstance(op, DefineProfile) and int(op.profile_id) == int(profile_id):
                 return op.profile_type
         return None
+
+    @pyqtSlot(int, int, result=str)
+    def resolveProfileType(self, profile_id, before_index):
+        resolved_type = self._resolve_profile_type(profile_id, before_index)
+        if resolved_type is None:
+            return ""
+        return resolved_type.value if hasattr(resolved_type, "value") else str(resolved_type).lower()
 
     # ADD this helper in class ConversationalQml
     def _save_current_program(self):
@@ -870,7 +881,7 @@ class ConversationalQml(QQuickWidget):
             apply_stock_to_leave_update(op.stockToLeave, p.get("stock_to_leave"))
             apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
             profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)
-            resolved_type = self._resolve_profile_type(profile_id)
+            resolved_type = self._resolve_profile_type(profile_id, index)
             if resolved_type is not None:
                 op.profileRoughingStrategy.profiling_type = resolved_type
             self._save_current_program()
@@ -893,7 +904,7 @@ class ConversationalQml(QQuickWidget):
             if "stock_to_leave_enabled" in p and p["stock_to_leave_enabled"] is not None:
                 op.stockToLeaveEnabled = bool(p["stock_to_leave_enabled"])
             profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)
-            resolved_type = self._resolve_profile_type(profile_id)
+            resolved_type = self._resolve_profile_type(profile_id, index)
             if resolved_type is not None:
                 op.profileContourStrategy.profiling_type = resolved_type
             self._save_current_program()

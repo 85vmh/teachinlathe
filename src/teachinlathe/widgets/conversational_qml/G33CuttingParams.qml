@@ -83,41 +83,6 @@ ColumnLayout {
 
     RowLayout {
         spacing: 16
-        Label { text: "Thread Taper"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
-        ComboBox {
-            Layout.preferredWidth: 165
-            Layout.preferredHeight: 48
-            font.pixelSize: 20
-            model: ["None", "On entry", "On exit", "Both"]
-            currentIndex: detailsRoot ? Math.max(0, Math.min(3, detailsRoot.taperType)) : 0
-            contentItem: Text {
-                leftPadding: 8
-                rightPadding: 8
-                text: parent.displayText
-                font: parent.font
-                color: "#0f172a"
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-                elide: Text.ElideRight
-            }
-            delegate: ItemDelegate {
-                width: parent.width
-                height: 48
-                text: modelData
-                font.pixelSize: 20
-            }
-            onActivated: {
-                if (detailsRoot) {
-                    detailsRoot.taperType = index
-                    detailsRoot.emitSave()
-                }
-            }
-        }
-        Item { Layout.fillWidth: true }
-    }
-
-    RowLayout {
-        spacing: 16
         Label { text: "Spring Passes"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
         NumpadField {
             Layout.preferredWidth: 110

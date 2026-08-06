@@ -91,27 +91,5 @@ GroupBox {
             }
         }
 
-        // --- horizontal separator ---
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: "#bdbdbd"
-        }
-
-        // --- Stop spindle ---
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 20
-
-            CheckBox {
-                id: stopSpin
-                text: "Stop spindle"
-                font.pixelSize: 16
-                enabled: includeBox.checked && !root.readOnly
-                opacity: includeBox.checked ? 1.0 : 0.5
-                checked: root.stop_spindle
-                onToggled: { root.stop_spindle = checked; root.emitSave() }
-            }
-        }
     }
 }

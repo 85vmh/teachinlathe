@@ -5,12 +5,18 @@ import QtQuick.Layouts 1.15
 
 GroupBox {
     id: root
-    title: "Profiling Type"
+    title: root.hasResolvedProfile ? ("Profiling Type: " + root.profilingTypeLabel) : "Profiling Type"
     Layout.fillWidth: true
     font.pixelSize: 16
 
     // "od" | "id" — resolved automatically from the selected DefineProfile
     property string profiling_type: "od"
+    property int profile_id: 0
+    property int op_index: -1
+    property bool profile_found: false
+    readonly property bool hasProfileId: profile_id > 0
+    readonly property bool hasResolvedProfile: hasProfileId && profile_found
+    readonly property string profilingTypeLabel: root.profiling_type === "id" ? "ID (Boring)" : "OD (Turning)"
     // "axial" | "radial" | "diagonal_interior" | "diagonal_exterior"
     property string pass_type: "axial"
 
@@ -18,9 +24,15 @@ GroupBox {
 
     signal saveRequested(var payload)
 
-    function applyData(data) {
+    function applyData(data, profileId, opIndex) {
         _loading = true
-        profiling_type = (data && data.profiling_type) ? String(data.profiling_type) : "od"
+        profile_id = parseInt(profileId !== undefined ? profileId : 0)
+        op_index = parseInt(opIndex !== undefined ? opIndex : -1)
+        var resolvedType = (root.hasProfileId && typeof conversationalQml !== "undefined")
+                         ? conversationalQml.resolveProfileType(profile_id, op_index)
+                         : ""
+        profile_found = resolvedType !== ""
+        profiling_type = profile_found ? resolvedType : ((data && data.profiling_type) ? String(data.profiling_type) : "od")
         pass_type      = (data && data.pass_type)      ? String(data.pass_type)      : "axial"
         _loading = false
     }
@@ -41,16 +53,17 @@ GroupBox {
         anchors.fill: parent
         spacing: 10
 
-        // Read-only type display (auto-resolved from selected profile)
-        RowLayout {
-            spacing: 8
-            Label { text: "Profile Type:"; font.pixelSize: 15 }
-            Label {
-                text: root.profiling_type === "id" ? "ID (Boring)" : "OD (Turning)"
-                font.pixelSize: 15
-                font.bold: true
-                color: root.profiling_type === "id" ? "#42A5F5" : "#66BB6A"
-            }
+        Label {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 92
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            wrapMode: Text.WordWrap
+            text: "Select a ProfileID from a Define Profile operation defined above the current operation."
+            font.pixelSize: 15
+            font.bold: true
+            color: "#ff9800"
+            visible: !root.hasResolvedProfile
         }
 
         // Pass type selection — 2×2 grid; diagonal buttons only visible for ID
@@ -58,6 +71,7 @@ GroupBox {
             columns: 2
             columnSpacing: 24
             rowSpacing: 6
+            visible: root.hasResolvedProfile
 
             RadioButton {
                 text: "Axial Passes"

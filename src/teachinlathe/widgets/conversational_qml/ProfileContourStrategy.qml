@@ -4,19 +4,31 @@ import QtQuick.Layouts 1.15
 
 GroupBox {
     id: root
-    title: "Profiling Type"
+    title: root.hasResolvedProfile ? ("Profiling Type: " + root.profilingTypeLabel) : "Profiling Type"
     Layout.fillWidth: true
     font.pixelSize: 16
 
     // "od" | "id" — resolved automatically from the selected DefineProfile
     property string profiling_type: "od"
+    property int profile_id: 0
+    property int op_index: -1
+    property bool profile_found: false
+    readonly property bool hasProfileId: profile_id > 0
+    readonly property bool hasResolvedProfile: hasProfileId && profile_found
+    readonly property string profilingTypeLabel: root.profiling_type === "id" ? "ID (Boring)" : "OD (Turning)"
     property bool _loading: false
 
     signal saveRequested(var payload)
 
-    function applyData(data) {
+    function applyData(data, profileId, opIndex) {
         _loading = true
-        profiling_type = (data && data.profiling_type) ? String(data.profiling_type) : "od"
+        profile_id = parseInt(profileId !== undefined ? profileId : 0)
+        op_index = parseInt(opIndex !== undefined ? opIndex : -1)
+        var resolvedType = (root.hasProfileId && typeof conversationalQml !== "undefined")
+                         ? conversationalQml.resolveProfileType(profile_id, op_index)
+                         : ""
+        profile_found = resolvedType !== ""
+        profiling_type = profile_found ? resolvedType : ((data && data.profiling_type) ? String(data.profiling_type) : "od")
         _loading = false
     }
 
@@ -29,15 +41,15 @@ GroupBox {
         })
     }
 
-    RowLayout {
+    Label {
         anchors.fill: parent
-        spacing: 8
-        Label { text: "Profile Type:"; font.pixelSize: 15 }
-        Label {
-            text: root.profiling_type === "id" ? "ID (Boring)" : "OD (Turning)"
-            font.pixelSize: 15
-            font.bold: true
-            color: root.profiling_type === "id" ? "#42A5F5" : "#66BB6A"
-        }
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        wrapMode: Text.WordWrap
+        text: "Select a ProfileID from a Define Profile operation defined above the current operation."
+        font.pixelSize: 15
+        font.bold: true
+        color: "#ff9800"
+        visible: !root.hasResolvedProfile
     }
 }

@@ -23,7 +23,13 @@ Item {
         spindlePanel.applyData(opIndex, opData)
         cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
         profilingParamsPanel.applyData(opIndex, (opData.profiling_parameters || {}), opData)
-        profilingTypePanel.applyData(opData.profile_roughing_strategy || {})
+        profilingTypePanel.applyData(
+            opData.profile_roughing_strategy || {},
+            (opData.profiling_parameters && opData.profiling_parameters.profile_id !== undefined)
+                ? opData.profiling_parameters.profile_id
+                : 0,
+            opIndex
+        )
         stockToLeavePanel.applyData(opData.stock_to_leave || {})
         m1Panel.applyData(opData.m1_parameters || {})
     }
@@ -106,6 +112,13 @@ Item {
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function(p) {
                     var merged = root.mergeIntoOp(p.payload || p)
+                    profilingTypePanel.applyData(
+                        merged.profile_roughing_strategy || {},
+                        (merged.profiling_parameters && merged.profiling_parameters.profile_id !== undefined)
+                            ? merged.profiling_parameters.profile_id
+                            : 0,
+                        opIndex
+                    )
                     root.saveRequested({index: opIndex, payload: merged})
                 }
             }
