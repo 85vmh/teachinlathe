@@ -8,6 +8,9 @@ Rectangle {
     border.color: "#2b3440"
     border.width: 1
 
+    readonly property string statusSummary: appShellBridge ? appShellBridge.statusSummary : ""
+    readonly property var events: appShellBridge ? appShellBridge.events : []
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 16
@@ -28,12 +31,12 @@ Rectangle {
 
             Button {
                 text: "Clear"
-                onClicked: appShellBridge.clearEvents()
+                onClicked: if (appShellBridge) appShellBridge.clearEvents()
             }
         }
 
         Text {
-            text: appShellBridge.statusSummary
+            text: root.statusSummary
             color: "#9fb0c7"
             font.pixelSize: 13
             wrapMode: Text.WordWrap
@@ -44,7 +47,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            model: appShellBridge.events
+            model: root.events
 
             delegate: Text {
                 width: ListView.view ? ListView.view.width : 400

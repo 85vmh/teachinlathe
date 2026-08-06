@@ -101,8 +101,6 @@ class ConversationalQml(QQuickWidget):
                 print("Failed to load Root.qml")
                 return
 
-            print("----Model count:", self.model.rowCount())
-
             main_url = QUrl.fromLocalFile(os.path.join(self.base_dir, "MainScreen.qml")).toString()
             self.root.loadScreen(main_url, {"programsModel": self.model, "showBack": False, "selectedProgramId": ""})
 

@@ -8,6 +8,10 @@ Rectangle {
     border.color: "#d6dce7"
     border.width: 0
 
+    readonly property var leftActions: appShellBridge ? appShellBridge.leftActions : []
+    readonly property var rightActions: appShellBridge ? appShellBridge.rightActions : []
+    readonly property string titleText: appShellBridge ? appShellBridge.title : ""
+
     Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
@@ -24,12 +28,12 @@ Rectangle {
         spacing: 10
 
         Repeater {
-            model: appShellBridge.leftActions
+            model: root.leftActions
             delegate: ShellActionButton {
                 text: modelData.text || ""
                 enabled: modelData.enabled !== false
                 secondary: modelData.id === "back" || modelData.id === "edit_program"
-                onClicked: appShellBridge.triggerHeaderAction(modelData.id || "")
+                onClicked: if (appShellBridge) appShellBridge.triggerHeaderAction(modelData.id || "")
             }
         }
     }
@@ -37,7 +41,7 @@ Rectangle {
     Text {
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.42, 720)
-        text: appShellBridge.title
+        text: root.titleText
         color: "#1e2430"
         font.pixelSize: 23
         font.bold: true
@@ -55,13 +59,13 @@ Rectangle {
         spacing: 10
 
         Repeater {
-            model: appShellBridge.rightActions
+            model: root.rightActions
             delegate: ShellActionButton {
                 text: modelData.text || ""
                 enabled: modelData.enabled !== false
                 checked: !!modelData.checked
                 checkable: !!modelData.checked
-                onClicked: appShellBridge.triggerHeaderAction(modelData.id || "")
+                onClicked: if (appShellBridge) appShellBridge.triggerHeaderAction(modelData.id || "")
             }
         }
     }

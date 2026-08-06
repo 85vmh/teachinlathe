@@ -249,6 +249,10 @@ Rectangle {
     Dialog {
         id: deleteDialog
         modal: true; title: "Confirm Delete"
+        implicitWidth: 360
+        implicitHeight: contentItem.implicitHeight + 96
+        x: Math.round((root.width - width) / 2)
+        y: Math.round((root.height - height) / 2)
         standardButtons: Dialog.Yes | Dialog.No
         property int toolNo: -1
 
@@ -257,6 +261,7 @@ Rectangle {
         }
 
         contentItem: Text {
+            width: 320
             text: deleteDialog.toolNo >= 0
                 ? "Delete tool T" + deleteDialog.toolNo + "?"
                 : "Delete tool?"

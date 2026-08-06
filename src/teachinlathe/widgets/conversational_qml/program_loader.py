@@ -17,7 +17,6 @@ def load_programs_from_folder(folder_path: str) -> List[Program]:
     for filename in sorted(os.listdir(folder_path)):
         if filename.endswith(".json"):
             file_path = os.path.join(folder_path, filename)
-            print(f"---Loading program from {file_path}")
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
