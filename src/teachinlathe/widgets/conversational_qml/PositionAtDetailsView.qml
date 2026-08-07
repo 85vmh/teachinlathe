@@ -83,7 +83,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                spacing: 12
+                spacing: 24
 
                 CheckBox {
                     text: "Stop spindle before positioning"
@@ -99,12 +99,7 @@ Item {
                     title: "Position At"
                     font.pixelSize: 16
                     Layout.fillWidth: true
-                    Layout.preferredHeight: positionGrid.implicitHeight + topPadding + bottomPadding + 28
                     Layout.alignment: Qt.AlignTop
-                    topPadding: 10
-                    bottomPadding: 10
-                    leftPadding: 10
-                    rightPadding: 10
 
                     GridLayout {
                         id: positionGrid
@@ -117,8 +112,8 @@ Item {
                         columnSpacing: 20
 
                         Label {
-                            text: "X pos"
-                            Layout.preferredWidth: 60
+                            text: "X Coordinate"
+                            Layout.preferredWidth: 100
                             verticalAlignment: Text.AlignVCenter
                         }
                         NumpadField {
@@ -139,8 +134,8 @@ Item {
                         }
 
                         Label {
-                            text: "Z pos"
-                            Layout.preferredWidth: 60
+                            text: "Z Coordinate"
+                            Layout.preferredWidth: 100
                             verticalAlignment: Text.AlignVCenter
                         }
                         NumpadField {
@@ -159,6 +154,10 @@ Item {
                             text: "TeachIn"
                             onClicked: tf_zPos.commit(positionsBridge.teachInZ())
                         }
+
+                        Item { Layout.preferredHeight: 1 }
+                        Item { Layout.preferredHeight: 1 }
+                        Item { Layout.preferredHeight: 1 }
                     }
                 }
 
