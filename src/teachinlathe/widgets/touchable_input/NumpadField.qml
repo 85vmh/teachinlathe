@@ -19,6 +19,7 @@ TextField {
         var x = parseFloat(s); return isNaN(x) ? null : x
     }
     property var    validatorObject: null
+    property bool   seedNumpadFromValue: false
 
     // control vizual reutilizabil
     property int    hAlign: Text.AlignRight     // aliniere text

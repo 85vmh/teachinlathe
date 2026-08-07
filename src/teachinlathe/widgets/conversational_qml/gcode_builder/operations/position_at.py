@@ -1,4 +1,4 @@
-from teachinlathe.conversational.data_types import CoordinateType, MoveSequence, PositionAt
+from teachinlathe.conversational.data_types import MoveSequence, PositionAt
 
 
 def _fmt(value):
@@ -10,10 +10,7 @@ def generate_position_at_gcode(op: PositionAt):
     details = op.position_details
     lines = []
 
-    if details.coordinate_type == CoordinateType.RELATIVE:
-        lines.append(f"{line_prefix}G91")
-    else:
-        lines.append(f"{line_prefix}G90")
+    lines.append(f"{line_prefix}G90")
 
     if details.move_sequence == MoveSequence.XZ:
         lines.append(f"{line_prefix}G0 X{_fmt(details.x_pos)}")
@@ -23,8 +20,5 @@ def generate_position_at_gcode(op: PositionAt):
         lines.append(f"{line_prefix}G0 X{_fmt(details.x_pos)}")
     else:
         lines.append(f"{line_prefix}G0 X{_fmt(details.x_pos)} Z{_fmt(details.z_pos)}")
-
-    if details.coordinate_type == CoordinateType.RELATIVE:
-        lines.append(f"{line_prefix}G90")
 
     return lines

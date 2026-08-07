@@ -102,6 +102,7 @@ Rectangle {
                 description: "StartPoint X Start"
                 settingName: "sp." + primIdx + ".x_start"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: primData.x_start !== undefined ? primData.x_start : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
@@ -123,6 +124,7 @@ Rectangle {
                 description: "StartPoint Z Start"
                 settingName: "sp." + primIdx + ".z_start"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: primData.z_start !== undefined ? primData.z_start : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight

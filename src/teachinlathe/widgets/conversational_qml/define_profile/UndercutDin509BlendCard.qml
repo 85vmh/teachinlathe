@@ -111,6 +111,7 @@ Rectangle {
                 Layout.preferredWidth: szInputWidth
                 settingName: "blend." + primIdx + ".undercut_radius"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: root._undercutValue("undercut_radius", 0.4)
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
@@ -124,6 +125,7 @@ Rectangle {
                 Layout.preferredWidth: szInputWidth
                 settingName: "blend." + primIdx + ".undercut_depth"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: root._undercutValue("undercut_depth", 0.4)
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
@@ -137,6 +139,7 @@ Rectangle {
                 Layout.preferredWidth: szInputWidth
                 settingName: "blend." + primIdx + ".undercut_length"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: root._undercutValue("undercut_length", 2.5)
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight

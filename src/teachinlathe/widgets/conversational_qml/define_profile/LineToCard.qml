@@ -245,6 +245,7 @@ Rectangle {
                     Layout.preferredWidth: szInputWidth
                     settingName: root._settingName(root._firstFieldName)
                     validatorObject: dblVal
+                    seedNumpadFromValue: true
                     value: root._fieldValue(root._firstFieldName)
                     formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                     hAlign: Text.AlignRight
@@ -261,6 +262,7 @@ Rectangle {
                     Layout.preferredWidth: szInputWidth
                     settingName: root._settingName(root._secondFieldName)
                     validatorObject: dblVal
+                    seedNumpadFromValue: true
                     value: root._fieldValue(root._secondFieldName)
                     formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                     hAlign: Text.AlignRight

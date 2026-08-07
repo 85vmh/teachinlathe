@@ -154,6 +154,7 @@ Rectangle {
                 Layout.preferredWidth: szInputWidth
                 settingName: "at." + primIdx + ".arc_radius"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: primData.arc_radius !== undefined ? primData.arc_radius : 10
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
@@ -171,6 +172,7 @@ Rectangle {
                 Layout.preferredWidth: szInputWidth
                 settingName: "at." + primIdx + ".x_center"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: primData.x_center !== undefined ? primData.x_center : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
@@ -188,6 +190,7 @@ Rectangle {
                 Layout.preferredWidth: szInputWidth
                 settingName: "at." + primIdx + ".z_center"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: primData.z_center !== undefined ? primData.z_center : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
@@ -205,6 +208,7 @@ Rectangle {
                 Layout.preferredWidth: szInputWidth
                 settingName: "at." + primIdx + ".x_end"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: primData.x_end !== undefined ? primData.x_end : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
@@ -222,6 +226,7 @@ Rectangle {
                 Layout.preferredWidth: szInputWidth
                 settingName: "at." + primIdx + ".z_end"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: primData.z_end !== undefined ? primData.z_end : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight

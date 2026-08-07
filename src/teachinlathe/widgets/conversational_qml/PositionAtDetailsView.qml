@@ -85,52 +85,7 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 24
-
-                    Label {
-                        text: "Coordinate Type"
-                        font.pixelSize: 16
-                        Layout.alignment: Qt.AlignCenter
-                    }
-
-                    ColumnLayout {
-                        spacing: 20
-                        Layout.alignment: Qt.AlignCenter
-
-                        ButtonGroup {
-                            id: coordGroup
-                        }
-
-                        RadioButton {
-                            text: "Relative"
-                            checked: root.coordType === "relative"
-                            ButtonGroup.group: coordGroup
-                            onToggled: if (checked) {
-                                root.coordType = "relative"
-                                root.emitSave()
-                            }
-                        }
-                        RadioButton {
-                            text: "Absolute"
-                            checked: root.coordType === "absolute"
-                            ButtonGroup.group: coordGroup
-                            onToggled: if (checked) {
-                                root.coordType = "absolute"
-                                root.emitSave()
-                            }
-                        }
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    Rectangle {
-                        width: 1
-                        Layout.alignment: Qt.AlignCenter
-                        color: "#cccccc"
-                        Layout.fillHeight: true
-                    }
-
-                    Item { Layout.fillWidth: true }
+                    spacing: 0
 
                     GridLayout {
                         columns: 3

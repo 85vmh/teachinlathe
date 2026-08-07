@@ -71,9 +71,22 @@ Popup {
                       : (cfg.description || "")
         root.titleText = title.length > 0 ? title : "Enter value"
 
-        root.buffer = ""
+        root.buffer = root._initialBufferFor(field)
         root.mode = root.hasOptions ? "select" : "numpad"
         root.open()
+    }
+
+    function _initialBufferFor(field) {
+        if (!field || !field.seedNumpadFromValue)
+            return ""
+        var value = field.value
+        if (value === null || value === undefined || value === "")
+            return ""
+        var text = field.formatter ? String(field.formatter(value)) : String(value)
+        var numericValue = Number(text)
+        if (!isFinite(numericValue) || numericValue === 0)
+            return ""
+        return text
     }
 
     function _accept(value) {

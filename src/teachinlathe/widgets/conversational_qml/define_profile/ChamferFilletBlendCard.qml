@@ -121,6 +121,7 @@ Rectangle {
                 Layout.preferredWidth: szInputWidth
                 settingName: root._blendType === "chamfer" ? "profiling.chamfer_width" : "profiling.fillet_radius"
                 validatorObject: dblVal
+                seedNumpadFromValue: true
                 value: root._blendValue
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
