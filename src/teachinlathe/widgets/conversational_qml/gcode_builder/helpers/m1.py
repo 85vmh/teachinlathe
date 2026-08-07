@@ -19,6 +19,10 @@ def inspect_position_int(m1_params) -> int:
     return 0 if pos == PredefinedPosition.G28 else 1
 
 
+def _code_comment(prefix, code, comment):
+    word = f"{prefix}{code}"
+    return f"{word}{' ' * max(1, 5 - len(word))}({comment})"
+
 
 def emit_m1_block(m1_params, prefix: str) -> list:
     """Build M1 pause-to-inspect G-code lines.
@@ -39,7 +43,7 @@ def emit_m1_block(m1_params, prefix: str) -> list:
 
     lines = []
     if stop_spindle:
-        lines.append(f"{prefix}M5")
+        lines.append(_code_comment(prefix, "M5", "stop the spindle"))
     lines.append(f"{prefix}{pos.value}")
     lines.append(f"{prefix}M1")
     lines.append("")

@@ -4,7 +4,6 @@ from datetime import datetime
 from teachinlathe.conversational.data_types import (
     BlendType,
     ChangeTool,
-    CoordinateType,
     CuttingParameters,
     Drilling,
     DrillingParameters,
@@ -73,8 +72,9 @@ def make_default_operation(op_type: str, order: int = 1):
             position_details=PositionDetails(
                 x_pos=0.0,
                 z_pos=0.0,
-                coordinate_type=CoordinateType.ABSOLUTE,
                 move_sequence=MoveSequence.XZ,
+                stop_spindle_before_positioning=False,
+                include_m0=False,
             ),
         )
     if op_type == "facing":

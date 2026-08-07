@@ -28,6 +28,10 @@ def _format_comment(text: str) -> str:
     return f"( {clean} )"
 
 
+def _code_comment(code: str, comment: str) -> str:
+    return f"{code}{' ' * max(1, 5 - len(code))}({comment})"
+
+
 
 def _define_profile_needs_subroutine(profile_id, operations):
     if not profile_id:
@@ -150,7 +154,7 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None):
         lines.append("")
     lines.append("")
     lines.append("G28  (rapid move to predefined position)")
-    lines.append("M30")
+    lines.append(_code_comment("M30", "end program"))
 
     with open(ngc_path, "w", encoding="utf-8") as handle:
         handle.write("\n".join(lines))

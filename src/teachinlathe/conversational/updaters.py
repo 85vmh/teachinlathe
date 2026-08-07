@@ -1,6 +1,5 @@
 from teachinlathe.conversational.data_types import (
     BlendType,
-    CoordinateType,
     MoveSequence,
     PassType,
     PredefinedPosition,
@@ -272,11 +271,6 @@ def apply_position_details_update(details, payload):
         return
     _set_attr_if_present(details, payload, "x_pos", coerce=float)
     _set_attr_if_present(details, payload, "z_pos", coerce=float)
-    if "coordinate_type" in payload and payload["coordinate_type"] is not None:
-        try:
-            details.coordinate_type = _coerce_enum(payload["coordinate_type"], CoordinateType, lambda v: str(v).lower())
-        except Exception:
-            pass
     if "move_sequence" in payload and payload["move_sequence"] is not None:
         try:
             raw = str(payload["move_sequence"]).lower()
@@ -285,6 +279,10 @@ def apply_position_details_update(details, payload):
             details.move_sequence = _coerce_enum(raw, MoveSequence)
         except Exception:
             pass
+    if "stop_spindle_before_positioning" in payload:
+        details.stop_spindle_before_positioning = bool(payload.get("stop_spindle_before_positioning", False))
+    if "include_m0" in payload:
+        details.include_m0 = bool(payload.get("include_m0", False))
 
 
 def apply_predefined_position_update(op, payload, key="toolchange_position"):

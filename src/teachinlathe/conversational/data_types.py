@@ -218,18 +218,11 @@ class TurnableOperation(Operation):
 class PositionDetails:
     x_pos: float
     z_pos: float
-    coordinate_type: CoordinateType
     move_sequence: MoveSequence
+    stop_spindle_before_positioning: bool = False
+    include_m0: bool = False
 
     def __post_init__(self):
-        # Coerce strings to enums (defensive)
-        if isinstance(self.coordinate_type, str):
-            val = self.coordinate_type.strip().lower()
-            self.coordinate_type = {
-                "relative": CoordinateType.RELATIVE,
-                "absolute": CoordinateType.ABSOLUTE
-            }.get(val, CoordinateType.ABSOLUTE)
-
         if isinstance(self.move_sequence, str):
             val = self.move_sequence.strip().lower()
             self.move_sequence = {
@@ -250,13 +243,15 @@ class PositionDetails:
             # defaults (tolerant)
             x_pos = float(data.get("x_pos", 0.0))
             z_pos = float(data.get("z_pos", 0.0))
-            coordinate_type = data.get("coordinate_type", "absolute")
             move_sequence = data.get("move_sequence", "xz")
+            stop_spindle_before_positioning = bool(data.get("stop_spindle_before_positioning", False))
+            include_m0 = bool(data.get("include_m0", False))
             return PositionDetails(
                 x_pos=x_pos,
                 z_pos=z_pos,
-                coordinate_type=coordinate_type,
                 move_sequence=move_sequence,
+                stop_spindle_before_positioning=stop_spindle_before_positioning,
+                include_m0=include_m0,
             )
         raise TypeError("PositionDetails.coerce expects dict or PositionDetails")
 
@@ -268,8 +263,9 @@ class PositionDetails:
         return {
             "x_pos": float(self.x_pos),
             "z_pos": float(self.z_pos),
-            "coordinate_type": self.coordinate_type.value,
             "move_sequence": self.move_sequence.value,
+            "stop_spindle_before_positioning": bool(self.stop_spindle_before_positioning),
+            "include_m0": bool(self.include_m0),
         }
 
 

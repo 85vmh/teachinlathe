@@ -20,8 +20,9 @@ Item {
 
     property real xPos: 0.0
     property real zPos: 0.0
-    property string coordType: "absolute"
     property string moveSeq: "xz"
+    property bool stopSpindleBeforePositioning: false
+    property bool includeM0: false
 
     function applyData(index, data) {
         _loading = true
@@ -31,8 +32,9 @@ Item {
         var det = (opData.position_details || {})
         xPos = (det.x_pos !== undefined) ? det.x_pos : 0.0
         zPos = (det.z_pos !== undefined) ? det.z_pos : 0.0
-        coordType = det.coordinate_type || "absolute"
         moveSeq = det.move_sequence || "xz"
+        stopSpindleBeforePositioning = !!det.stop_spindle_before_positioning
+        includeM0 = !!det.include_m0
         _loading = false
     }
 
@@ -48,8 +50,9 @@ Item {
                 position_details: {
                     x_pos: xPos,
                     z_pos: zPos,
-                    coordinate_type: coordType,
-                    move_sequence: moveSeq
+                    move_sequence: moveSeq,
+                    stop_spindle_before_positioning: stopSpindleBeforePositioning,
+                    include_m0: includeM0
                 }
             }
         })
@@ -76,23 +79,42 @@ Item {
             spacing: 30
             Layout.alignment: Qt.AlignTop
 
-            GroupBox {
-                title: "Position At"
-                font.pixelSize: 16
+            ColumnLayout {
                 Layout.fillWidth: true
-                Layout.preferredWidth: 6
+                Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
+                spacing: 12
 
-                RowLayout {
+                CheckBox {
+                    text: "Stop spindle before positioning"
+                    checked: root.stopSpindleBeforePositioning
+                    font.pixelSize: 16
+                    onToggled: {
+                        root.stopSpindleBeforePositioning = checked
+                        root.emitSave()
+                    }
+                }
+
+                GroupBox {
+                    title: "Position At"
+                    font.pixelSize: 16
                     Layout.fillWidth: true
-                    spacing: 0
+                    Layout.preferredHeight: positionGrid.implicitHeight + topPadding + bottomPadding + 28
+                    Layout.alignment: Qt.AlignTop
+                    topPadding: 10
+                    bottomPadding: 10
+                    leftPadding: 10
+                    rightPadding: 10
 
                     GridLayout {
+                        id: positionGrid
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.topMargin: 10
                         columns: 3
                         rowSpacing: 20
                         columnSpacing: 20
-                        Layout.alignment: Qt.AlignRight
-                        Layout.fillWidth: true
 
                         Label {
                             text: "X pos"
@@ -139,13 +161,23 @@ Item {
                         }
                     }
                 }
+
+                CheckBox {
+                    text: "Pause program after positioning"
+                    checked: root.includeM0
+                    font.pixelSize: 16
+                    onToggled: {
+                        root.includeM0 = checked
+                        root.emitSave()
+                    }
+                }
             }
 
             GroupBox {
                 title: "Move Sequence"
                 font.pixelSize: 16
                 Layout.fillWidth: true
-                Layout.preferredWidth: 4
+                Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
 
                 ColumnLayout {
