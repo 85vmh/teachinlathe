@@ -24,6 +24,7 @@ class TeachInLatheComponent:
     PinJoystickZMinus = 'joystick.z-minus'
     PinJoystickRapid = 'joystick.rapid'
     PinJoystickIsFeeding = 'joystick.is-feeding'
+    PinJoystickResetRequired = 'joystick.reset-required'
     PinFeedPerRevValue = 'joystick.feed-per-rev'
     PinIsAngleFeed = 'joystick.is-angle-feed'
     PinJogSpeedValue = 'joystick.jog-speed'
@@ -38,6 +39,7 @@ class TeachInLatheComponent:
     PinSpindleSwitchFwdIn = 'spindle.switch-fwd-in'
     PinSpindleActualRpm = 'spindle.actual-rpm'
     PinSpindleIsOn = 'spindle.is-on'
+    PinSpindleResetRequired = 'spindle.reset-required'
     PinSpindleOrientation = 'spindle.orientation'
     PinSpindleIsFirstGear = 'spindle.is-first-gear'
     PinHandwheelsJogIncrement = 'handwheels.jog-increment'
@@ -92,11 +94,13 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinJoystickZMinus, 'bit', 'in')
         self.comp.addPin(self.PinJoystickRapid, 'bit', 'in')
         self.comp.addPin(self.PinJoystickIsFeeding, 'bit', 'in')
+        self.comp.addPin(self.PinJoystickResetRequired, 'bit', 'in')
         self.comp.addPin(self.PinSpindleCoveredOpened, 'bit', 'in')
         self.comp.addPin(self.PinSpindleSwitchRevIn, 'bit', 'in')
         self.comp.addPin(self.PinSpindleSwitchFwdIn, 'bit', 'in')
         self.comp.addPin(self.PinSpindleActualRpm, 'float', 'in')
         self.comp.addPin(self.PinSpindleIsOn, 'bit', 'in')
+        self.comp.addPin(self.PinSpindleResetRequired, 'bit', 'in')
         self.comp.addPin(self.PinSpindleOrientation, 'float', 'in')
         self.comp.addPin(self.PinSpindleIsFirstGear, 'bit', 'in')
         self.comp.addPin(self.PinButtonCycleStart, 'bit', 'in')

@@ -164,10 +164,13 @@ class MyMainWindow(VCPMainWindow):
 
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsOn, self.onSpindleRunningChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleCoveredOpened, self.onSpindleCoverOpenedChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleResetRequired, self.onSpindleResetRequiredChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleOrientation, self.onSpindleOrientationChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStart, self.onCycleStartPressed)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStop, self.onCycleStopPressed)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickIsFeeding, self.onJoystickFeedingChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickResetRequired, self.onJoystickResetRequiredChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsFirstGear, self.onSpindleFirstGearChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsAllowed, self.onHandwheelAllowedChanged)
@@ -177,11 +180,20 @@ class MyMainWindow(VCPMainWindow):
         self.manualTurningViewModel.setSpindleRunning(
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsOn).value
         )
+        self.manualTurningViewModel.setSpindleCoverOpened(
+            self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleCoveredOpened).value
+        )
+        self.manualTurningViewModel.setSpindleResetRequired(
+            self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleResetRequired).value
+        )
         self.manualTurningViewModel.setSpindleAngle(
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleOrientation).value
         )
         self.manualTurningViewModel.setFeeding(
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinJoystickIsFeeding).value
+        )
+        self.manualTurningViewModel.setJoystickResetRequired(
+            self.latheComponent.comp.getPin(TeachInLatheComponent.PinJoystickResetRequired).value
         )
 
         self.teachInLatheDroViewModel.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
@@ -552,11 +564,20 @@ class MyMainWindow(VCPMainWindow):
             print("Set taper turning off when stopping spindle")
             self.manualTurningViewModel.resetAngleFeed()
 
+    def onSpindleCoverOpenedChanged(self, value):
+        self.manualTurningViewModel.setSpindleCoverOpened(value)
+
+    def onSpindleResetRequiredChanged(self, value):
+        self.manualTurningViewModel.setSpindleResetRequired(value)
+
     def onSpindleOrientationChanged(self, value):
         self.manualTurningViewModel.setSpindleAngle(value)
 
     def onJoystickFeedingChanged(self, value):
         self.manualTurningViewModel.setFeeding(value)
+
+    def onJoystickResetRequiredChanged(self, value):
+        self.manualTurningViewModel.setJoystickResetRequired(value)
 
     def onJogIncrementChanged(self, value):
         self.manualTurningViewModel.setJogIncrement(value)

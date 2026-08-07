@@ -34,7 +34,10 @@ class ManualTurningViewModel(QObject):
         self._actual_css = "0"
         self._spindle_angle = 0.0
         self._spindle_running = False
+        self._spindle_cover_opened = False
+        self._spindle_reset_required = False
         self._feeding = False
+        self._joystick_reset_required = False
         self._actual_feed = "0.0"
         self._spindle_override = 1.0
         self._feed_override = 1.0
@@ -150,9 +153,39 @@ class ManualTurningViewModel(QObject):
     def spindleRunning(self):
         return self._spindle_running
 
+    @pyqtProperty(bool, notify=spindleValuesChanged)
+    def spindleCoverOpened(self):
+        return self._spindle_cover_opened
+
+    @pyqtProperty(bool, notify=spindleValuesChanged)
+    def spindleResetRequired(self):
+        return self._spindle_reset_required
+
     @pyqtProperty(str, notify=spindleValuesChanged)
     def spindlePanelMode(self):
-        return "ReadOnly" if self._spindle_running else "Editable"
+        if not self._spindle_running:
+            return "Editable"
+        if self._spindle_cover_opened:
+            return "CoverOpened"
+        if self._spindle_reset_required:
+            return "ResetRequired"
+        return "ReadOnly"
+
+    @pyqtProperty(str, notify=spindleValuesChanged)
+    def spindlePanelMessageTitle(self):
+        if self.spindlePanelMode == "CoverOpened":
+            return "Spindle cover opened!"
+        if self.spindlePanelMode == "ResetRequired":
+            return "Spindle reset required!"
+        return ""
+
+    @pyqtProperty(str, notify=spindleValuesChanged)
+    def spindlePanelMessageBody(self):
+        if self.spindlePanelMode == "CoverOpened":
+            return "Close the spindle cover to continue."
+        if self.spindlePanelMode == "ResetRequired":
+            return "Return the spindle lever to neutral position."
+        return ""
 
     @pyqtProperty(str, notify=spindleValuesChanged)
     def spindleModeLabel(self):
@@ -180,9 +213,27 @@ class ManualTurningViewModel(QObject):
     def feeding(self):
         return self._feeding
 
+    @pyqtProperty(bool, notify=feedValuesChanged)
+    def joystickResetRequired(self):
+        return self._joystick_reset_required
+
     @pyqtProperty(str, notify=feedValuesChanged)
     def feedPanelMode(self):
+        if self._joystick_reset_required:
+            return "ResetRequired"
         return "ReadOnly" if self._feeding else "Editable"
+
+    @pyqtProperty(str, notify=feedValuesChanged)
+    def feedPanelMessageTitle(self):
+        if self.feedPanelMode == "ResetRequired":
+            return "Joystick reset required!"
+        return ""
+
+    @pyqtProperty(str, notify=feedValuesChanged)
+    def feedPanelMessageBody(self):
+        if self.feedPanelMode == "ResetRequired":
+            return "Return the joystick to neutral position."
+        return ""
 
     @pyqtProperty(int, notify=rapidOverrideChanged)
     def rapidOverride(self):
@@ -311,6 +362,20 @@ class ManualTurningViewModel(QObject):
         self._spindle_running = running
         self.spindleValuesChanged.emit()
 
+    def setSpindleCoverOpened(self, opened):
+        opened = bool(opened)
+        if self._spindle_cover_opened == opened:
+            return
+        self._spindle_cover_opened = opened
+        self.spindleValuesChanged.emit()
+
+    def setSpindleResetRequired(self, required):
+        required = bool(required)
+        if self._spindle_reset_required == required:
+            return
+        self._spindle_reset_required = required
+        self.spindleValuesChanged.emit()
+
     def setSpindleAngle(self, angle):
         angle = self._to_float(angle, 0.0)
         angle = angle % 360.0
@@ -342,6 +407,13 @@ class ManualTurningViewModel(QObject):
         if self._feeding == feeding:
             return
         self._feeding = feeding
+        self.feedValuesChanged.emit()
+
+    def setJoystickResetRequired(self, required):
+        required = bool(required)
+        if self._joystick_reset_required == required:
+            return
+        self._joystick_reset_required = required
         self.feedValuesChanged.emit()
 
     def setJogIncrement(self, value):

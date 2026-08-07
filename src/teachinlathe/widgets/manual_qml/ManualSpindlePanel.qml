@@ -6,10 +6,33 @@ import "../conversational_qml"
 Rectangle {
     id: root
     property var viewModel: manualViewModel
-    readonly property bool readOnlyMode: viewModel ? viewModel.spindlePanelMode === "ReadOnly" : false
+    readonly property string panelMode: viewModel ? viewModel.spindlePanelMode : "Editable"
+    readonly property bool editableMode: panelMode === "Editable"
+    readonly property bool runningMode: panelMode === "ReadOnly"
+    readonly property bool readOnlyMode: !editableMode
     readonly property int selectedSpindleMode: viewModel ? viewModel.spindleMode : 0
     readonly property int headerHeight: 50
+    readonly property color warningColor: "#ff9800"
+    readonly property color warningBaseColor: "#1e2430"
+    readonly property int warningPulseDurationMs: 200
+    property color warningTitleColor: warningBaseColor
     signal openNumPadRequested(Item field)
+
+    function contentIndex() {
+        if (root.editableMode) {
+            return root.selectedSpindleMode
+        }
+        if (root.runningMode) {
+            return root.selectedSpindleMode + 2
+        }
+        return 4
+    }
+
+    onPanelModeChanged: {
+        if (root.panelMode === "CoverOpened" || root.panelMode === "ResetRequired") {
+            root.warningTitleColor = root.warningBaseColor
+        }
+    }
 
     color: "#f5f5f5"
     border.color: "#ccc"
@@ -124,7 +147,7 @@ Rectangle {
             anchors.topMargin: 10
             anchors.bottom: root.readOnlyMode ? parent.bottom : spindleAngleFooter.top
             anchors.bottomMargin: root.readOnlyMode ? 10 : 0
-            currentIndex: root.readOnlyMode ? root.selectedSpindleMode + 2 : root.selectedSpindleMode
+            currentIndex: root.contentIndex()
 
             Item {
                 ColumnLayout {
@@ -221,11 +244,64 @@ Rectangle {
                     valueBold: true
                 }
             }
+
+            Item {
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 10
+
+                    Item { Layout.fillHeight: true }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: viewModel ? viewModel.spindlePanelMessageTitle : ""
+                        color: root.warningTitleColor
+                        font.pixelSize: 20
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: viewModel ? viewModel.spindlePanelMessageBody : ""
+                        color: "#1e2430"
+                        font.pixelSize: 18
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Item { Layout.fillHeight: true }
+                }
+            }
+        }
+
+        SequentialAnimation {
+            running: root.panelMode === "CoverOpened" || root.panelMode === "ResetRequired"
+            loops: Animation.Infinite
+
+            ColorAnimation {
+                target: root
+                property: "warningTitleColor"
+                to: root.warningColor
+                duration: root.warningPulseDurationMs
+                easing.type: Easing.InOutQuad
+            }
+
+            ColorAnimation {
+                target: root
+                property: "warningTitleColor"
+                to: root.warningBaseColor
+                duration: root.warningPulseDurationMs
+                easing.type: Easing.InOutQuad
+            }
         }
 
         Item {
             id: spindleAngleFooter
-            visible: !root.readOnlyMode
+            visible: root.editableMode
             anchors.left: parent.left
             anchors.leftMargin: 10
             anchors.right: parent.right
