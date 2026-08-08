@@ -1,0 +1,148 @@
+{
+  "spindle.rpm_1": {
+    "description": "Enter spindle RPM for gear 1",
+    "value_type": "int",
+    "default_value": 300,
+    "last_value": 300,
+    "min_value": 10,
+    "max_value": 625,
+    "options": [
+      50,
+      100,
+      150,
+      200,
+      250,
+      300,
+      350,
+      400,
+      450,
+      500,
+      550,
+      600,
+      625
+    ]
+  },
+  "spindle.rpm_2": {
+    "description": "Enter spindle RPM for gear 2",
+    "value_type": "int",
+    "default_value": 1000,
+    "last_value": 800,
+    "min_value": 100,
+    "max_value": 2500,
+    "options": [
+      400,
+      500,
+      600,
+      700,
+      800,
+      900,
+      1000,
+      1250,
+      1500,
+      1750,
+      2000,
+      2250,
+      2500
+    ]
+  },
+  "spindle.css": {
+    "description": "Enter constant surface speed",
+    "value_type": "int",
+    "default_value": 120,
+    "last_value": 120,
+    "min_value": 20,
+    "max_value": 300,
+    "options": [
+      40,
+      60,
+      80,
+      90,
+      100,
+      110,
+      120,
+      130,
+      140,
+      150,
+      160,
+      180,
+      200,
+      220,
+      250,
+      300
+    ]
+  },
+  "spindle.css_max_rpm_1": {
+    "description": "Enter max spindle RPM for gear 1",
+    "value_type": "int",
+    "default_value": 400,
+    "last_value": 625,
+    "min_value": 50,
+    "max_value": 625,
+    "options": [
+      200,
+      315,
+      400,
+      500,
+      625
+    ]
+  },
+  "spindle.css_max_rpm_2": {
+    "description": "Enter max spindle RPM for gear 2",
+    "value_type": "int",
+    "default_value": 1000,
+    "last_value": 1000,
+    "min_value": 100,
+    "max_value": 2500,
+    "options": [
+      500,
+      630,
+      800,
+      1000,
+      1250,
+      1500,
+      1600,
+      2000,
+      2500
+    ]
+  },
+  "turning.feed_rate": {
+    "description": "Enter feed rate",
+    "value_type": "float",
+    "default_value": 0.2,
+    "last_value": 0.2,
+    "min_value": 0.05,
+    "max_value": 3,
+    "options": [
+      0.05,
+      0.075,
+      0.1,
+      0.12,
+      0.15,
+      0.18,
+      0.2,
+      0.25,
+      0.3,
+      0.4,
+      0.5,
+      1,
+      1.5
+    ]
+  },
+  "drilling.feed_rate": {
+    "description": "Enter drilling feed rate",
+    "value_type": "float",
+    "default_value": 0.05,
+    "min_value": 0.01,
+    "max_value": 0.5,
+    "options": [
+      0.02,
+      0.03,
+      0.04,
+      0.05,
+      0.06,
+      0.08,
+      0.1,
+      0.12
+    ]
+  }
+}
