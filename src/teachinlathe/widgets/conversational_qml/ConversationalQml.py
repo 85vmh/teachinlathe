@@ -25,6 +25,7 @@ from teachinlathe.conversational.qml_adapter import build_details_payload, build
 from teachinlathe.conversational.updaters import (
     apply_cutting_update,
     apply_define_profile_update,
+    apply_define_radial_profile_update,
     apply_drilling_update,
     apply_edge_break_update,
     apply_g33_threading_update,
@@ -315,6 +316,8 @@ class ConversationalQml(QQuickWidget):
                 item.updatePositionAt.connect(self.onUpdatePositionAt)
             if hasattr(item, "updateDefineProfile"):
                 item.updateDefineProfile.connect(self.onUpdateDefineProfile)
+            if hasattr(item, "updateDefineRadialProfile"):
+                item.updateDefineRadialProfile.connect(self.onUpdateDefineRadialProfile)
             if hasattr(item, "teachXRequested"):
                 item.teachXRequested.connect(self.onTeachX)
             if hasattr(item, "teachZRequested"):
@@ -363,13 +366,15 @@ class ConversationalQml(QQuickWidget):
                 item.addOperationTypeChosen.connect(self.onAddOperationTypeChosen)
             if hasattr(item, "openProfileEditorRequested"):
                 item.openProfileEditorRequested.connect(self.onOpenProfileEditorRequested)
+            if hasattr(item, "openRadialProfileEditorRequested"):
+                item.openRadialProfileEditorRequested.connect(self.onOpenRadialProfileEditorRequested)
             print("Screen signals connected.")
             if obj_name == "childScreen":
                 if self.current_op_index == -1:
                     QTimer.singleShot(0, lambda it=item: self.onDetailsRequested(it, -1))
                 else:
                     QTimer.singleShot(0, lambda it=item, idx=self.current_op_index: self.onDetailsRequested(it, idx))
-            if obj_name == "profileEditorScreen":
+            if obj_name in ("profileEditorScreen", "radialProfileEditorScreen"):
                 op_index = self.current_op_index
                 op_data = None
                 op = self._get_current_op(op_index)
@@ -582,6 +587,10 @@ class ConversationalQml(QQuickWidget):
                 op = self._get_current_op(idx)
                 op_data = self._attach_current_workpiece(build_details_payload(op)) if op is not None else {}
                 QTimer.singleShot(0, lambda i=idx, d=op_data: self.onOpenProfileEditorRequested(i, d))
+            elif op_type == "defineRadialProfile":
+                op = self._get_current_op(idx)
+                op_data = self._attach_current_workpiece(build_details_payload(op)) if op is not None else {}
+                QTimer.singleShot(0, lambda i=idx, d=op_data: self.onOpenRadialProfileEditorRequested(i, d))
         except Exception as e:
             print(f"[operations] Failed to create {op_type!r}: {e}")
 
@@ -795,6 +804,19 @@ class ConversationalQml(QQuickWidget):
             self._save_current_program()
         except Exception as e:
             print("[defineProfile] update error:", e)
+
+    def onUpdateDefineRadialProfile(self, index: int, payload):
+        """Define Radial Profile autosave."""
+        try:
+            p = self._to_py(payload) or {}
+            op = self._get_current_op(index)
+            from teachinlathe.conversational.data_types import DefineRadialProfile
+            if not isinstance(op, DefineRadialProfile):
+                return
+            apply_define_radial_profile_update(op, p)
+            self._save_current_program()
+        except Exception as e:
+            print("[defineRadialProfile] update error:", e)
 
     def onUpdateToolChange(self, index: int, payload):
         payload = self._to_py(payload) or {}
@@ -1064,6 +1086,39 @@ class ConversationalQml(QQuickWidget):
             self._in_profile_editor_full_screen = True
         editor_url = QUrl.fromLocalFile(
             os.path.join(self.base_dir, "define_profile", "ProfileEditorScreen.qml")
+        ).toString()
+        self.root.loadScreen(editor_url, {})
+
+    def onOpenRadialProfileEditorRequested(self, op_index, op_data):
+        try:
+            op_index = int(op_index)
+        except (TypeError, ValueError):
+            op_index = self.current_op_index
+        self.current_op_index = op_index
+        try:
+            current_params = self.root._currentParams
+            if isinstance(current_params, dict):
+                current_params["activeOpIndex"] = op_index
+                self.root._currentParams = current_params
+        except Exception:
+            pass
+        try:
+            op_data_py = self._to_py(op_data) if op_data else {}
+            op_order = op_data_py.get("order", "")
+            self._profile_editor_title = (
+                f"Define Radial Profile Op #{op_order}" if op_order else "Define Radial Profile"
+            )
+        except Exception:
+            self._profile_editor_title = "Define Radial Profile"
+        self._profile_editor_active = True
+        self._emit_header_state_changed()
+
+        main_window = self.window()
+        if hasattr(main_window, "enterContentFullScreen"):
+            main_window.enterContentFullScreen(self)
+            self._in_profile_editor_full_screen = True
+        editor_url = QUrl.fromLocalFile(
+            os.path.join(self.base_dir, "define_radial_profile", "RadialProfileEditorScreen.qml")
         ).toString()
         self.root.loadScreen(editor_url, {})
 

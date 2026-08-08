@@ -140,6 +140,10 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None):
                 lines.append("; The drawn profile is represented in the custom profiling section.")
                 lines.append("")
                 continue
+        if op.type == "defineRadialProfile":
+            lines.append("; The radial profile is represented in the conversational JSON.")
+            lines.append("")
+            continue
 
         generator = OPERATION_GENERATORS.get(op.type)
         if generator:

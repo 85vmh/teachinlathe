@@ -688,6 +688,20 @@ class MyMainWindow(VCPMainWindow):
     def setZOffset(self, value):
         print("setZOffset", value)
         issue_mdi('o<touch_off_z> call [{}]'.format(value).strip())
+        try:
+            if self.toolLibraryViewModel.currentToolRequiresBladeZ0Reference():
+                blade_width = self.toolLibraryViewModel.currentToolBladeWidth()
+                root = getattr(self, "manualTurningRootQml", None)
+                root_item = root.rootObject() if root is not None else None
+                if root_item is not None:
+                    QMetaObject.invokeMethod(
+                        root_item,
+                        "openBladeZ0ReferenceDialog",
+                        Qt.DirectConnection,
+                        Q_ARG("QVariant", blade_width),
+                    )
+        except Exception as e:
+            print("openBladeZ0ReferenceDialog failed:", e)
 
     def onSetG28(self):
         issue_mdi("G28.1")

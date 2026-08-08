@@ -44,6 +44,7 @@ from teachinlathe.conversational.data_types import (
     Threading,
     Workpiece,
     DefineProfile,
+    DefineRadialProfile,
 )
 
 
@@ -76,6 +77,39 @@ def make_default_operation(op_type: str, order: int = 1):
                 stop_spindle_before_positioning=False,
                 include_m0=False,
             ),
+        )
+    if op_type == "defineRadialProfile":
+        return DefineRadialProfile(
+            order=order,
+            type=op_type,
+            generate_gcode=True,
+            is_optional_block=False,
+            profile_id=1,
+            profile_type=ProfilingType.OD,
+            profile_primitives=[
+                {
+                    "primitive_id": 1,
+                    "type": "groove",
+                    "right_flank": {
+                        "x_start": 30.0,
+                        "z_start": 0.0,
+                        "angle": 0.0,
+                        "start_blend": {"type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
+                    },
+                    "bottom": {
+                        "x_end_right": 20.0,
+                        "x_end_left": 20.0,
+                        "blend_right": {"type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
+                        "blend_left": {"type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
+                    },
+                    "left_flank": {
+                        "x_start": 30.0,
+                        "z_start": -5.0,
+                        "angle": 0.0,
+                        "start_blend": {"type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
+                    },
+                }
+            ],
         )
     if op_type == "facing":
         return Facing(

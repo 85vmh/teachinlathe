@@ -38,8 +38,91 @@ Item {
         numpadDialog.openFor(field, field.settingName, field.description)
     }
 
+    function openBladeZ0ReferenceDialog(bladeWidth) {
+        bladeZ0ReferenceDialog.bladeWidth = Number(bladeWidth || 0)
+        bladeZ0ReferenceDialog.open()
+    }
+
+    function formatBladeWidth(value) {
+        var width = Number(value || 0)
+        return Math.abs(width * 10 - Math.round(width * 10)) < 0.0001
+            ? String(Number(width.toFixed(1)))
+            : width.toFixed(1)
+    }
+
     SmartNumpadDialog {
         id: numpadDialog
+    }
+
+    Dialog {
+        id: bladeZ0ReferenceDialog
+        modal: true
+        closePolicy: Popup.NoAutoClose
+        title: "Blade Z0 Reference"
+        font.pixelSize: 20
+        property real bladeWidth: 0
+        implicitWidth: 520
+        implicitHeight: contentColumn.implicitHeight + 96
+        x: Math.round((root.width - width) / 2)
+        y: Math.round((root.height - height) / 2)
+
+        function choose(reference) {
+            if (toolLibraryViewModel)
+                toolLibraryViewModel.saveCurrentToolBladeZ0Reference(reference)
+            close()
+        }
+
+        contentItem: Item {
+            implicitWidth: 480
+            implicitHeight: contentColumn.implicitHeight + 36
+
+            ColumnLayout {
+                id: contentColumn
+                anchors.fill: parent
+                anchors.margins: 18
+                spacing: 18
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "Where is the Z0 relative to the " + root.formatBladeWidth(bladeZ0ReferenceDialog.bladeWidth) + "mm thick blade?"
+                    font.pixelSize: 18
+                    font.bold: true
+                    color: "#1e2430"
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 24
+
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 64
+                        text: "Left Side"
+                        font.pixelSize: 16
+                        font.bold: true
+                        onClicked: bladeZ0ReferenceDialog.choose("left")
+                    }
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 64
+                        text: "Center"
+                        font.pixelSize: 16
+                        font.bold: true
+                        onClicked: bladeZ0ReferenceDialog.choose("center")
+                    }
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 64
+                        text: "Right Side"
+                        font.pixelSize: 16
+                        font.bold: true
+                        onClicked: bladeZ0ReferenceDialog.choose("right")
+                    }
+                }
+            }
+        }
     }
 
     // ── Layout constants ──────────────────────────────────────────────

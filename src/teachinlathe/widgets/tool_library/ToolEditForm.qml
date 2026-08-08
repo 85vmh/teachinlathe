@@ -18,6 +18,7 @@ Item {
     property var toolData: null
     property int _currentOrientation: 1
     property string _currentToolType: "generic"
+    property string _bladeZ0Reference: "center"
 
     signal saved(var formData)
     signal cancelled()
@@ -26,6 +27,9 @@ Item {
     readonly property var _toolTypes6: [
         { key: "generic",       label: "Generic"       },
         { key: "parting_blade", label: "Parting Blade" },
+    ]
+    readonly property var _toolTypes8: [
+        { key: "grooving_blade", label: "Grooving Blade" },
     ]
     readonly property var _toolTypes7: [
         { key: "drill",         label: "Drill"          },
@@ -43,6 +47,10 @@ Item {
         if (data) {
             _currentOrientation  = Math.max(1, Math.min(9, parseInt(data.q) || 1))
             _currentToolType     = data.tool_type || "generic"
+            if (_currentOrientation === 8)
+                _currentToolType = "grooving_blade"
+            else if (_currentOrientation === 6 && ["generic", "parting_blade"].indexOf(_currentToolType) < 0)
+                _currentToolType = "parting_blade"
             editToolNo.value     = data.t
             editTipRadius.value  = data.d
             editFrontAngle.value = data.i
@@ -59,10 +67,12 @@ Item {
             if (data.width     !== undefined)  extraWidth.value     = data.width
             if (data.left_radius  !== undefined) extraLR.value     = data.left_radius
             if (data.right_radius !== undefined) extraRR.value     = data.right_radius
+            _bladeZ0Reference = data.z0_reference !== undefined ? String(data.z0_reference) : "center"
             if (data.material  !== undefined)  extraMaterial.text  = data.material || ""
         } else {
             _currentOrientation  = 1
             _currentToolType     = "generic"
+            _bladeZ0Reference    = "center"
             editToolNo.value     = defaultToolNo !== undefined ? defaultToolNo : null
             editTipRadius.value  = 0.0
             editFrontAngle.value = 0.0
@@ -83,6 +93,11 @@ Item {
         extraLR.value        = 0.0
         extraRR.value        = 0.0
         extraMaterial.text   = ""
+        _bladeZ0Reference    = "center"
+    }
+
+    function _isBladeType(ttype) {
+        return ttype === "parting_blade" || ttype === "grooving_blade"
     }
 
     // Build the formData object for the saved() signal
@@ -102,7 +117,9 @@ Item {
         if (toolNo < 0) return null
 
         var orient = root._currentOrientation
-        var ttype = (orient === 6 || orient === 7) ? root._currentToolType : "generic"
+        var ttype = (orient === 6 || orient === 7 || orient === 8) ? root._currentToolType : "generic"
+        if (orient === 8)
+            ttype = "grooving_blade"
 
         var d = {
             toolNo:      toolNo,
@@ -128,11 +145,12 @@ Item {
             d.max_depth    = extraMaxDepth.value !== null ? extraMaxDepth.value : 0.0
         } else if (ttype === "trepaning") {
             d.diameter = extraDiameter.value !== null ? extraDiameter.value : 0.0
-        } else if (ttype === "parting_blade") {
+        } else if (root._isBladeType(ttype)) {
             d.width        = extraWidth.value    !== null ? extraWidth.value    : 0.0
             d.max_depth    = extraMaxDepth.value !== null ? extraMaxDepth.value : 0.0
             d.left_radius  = extraLR.value       !== null ? extraLR.value       : 0.0
             d.right_radius = extraRR.value       !== null ? extraRR.value       : 0.0
+            d.z0_reference = root._bladeZ0Reference
         }
         return d
     }
@@ -300,18 +318,18 @@ Item {
                         }
                     }
 
-                    // ── Type selector + extras (orientations 6 and 7) ──
+                    // ── Type selector + extras (orientations 6, 7 and 8) ──
                     Item {
                         Layout.fillWidth: true
                         Layout.topMargin: 12
                         implicitHeight: typeBlock.visible ? typeBlock.implicitHeight : 0
-                        visible: root._currentOrientation === 6 || root._currentOrientation === 7
+                        visible: root._currentOrientation === 6 || root._currentOrientation === 7 || root._currentOrientation === 8
 
                         ColumnLayout {
                             id: typeBlock
                             anchors { left: parent.left; right: parent.right; leftMargin: 4 }
                             spacing: 10
-                            visible: root._currentOrientation === 6 || root._currentOrientation === 7
+                            visible: root._currentOrientation === 6 || root._currentOrientation === 7 || root._currentOrientation === 8
 
                             Rectangle { Layout.fillWidth: true; height: 1; color: "#bbbbbb" }
 
@@ -321,7 +339,7 @@ Item {
                                 Text { text: "Type:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
 
                                 Repeater {
-                                    model: root._currentOrientation === 6 ? root._toolTypes6 : root._toolTypes7
+                                    model: root._currentOrientation === 6 ? root._toolTypes6 : root._currentOrientation === 8 ? root._toolTypes8 : root._toolTypes7
                                     delegate: Rectangle {
                                         implicitWidth:  typeLabel.implicitWidth + 20
                                         implicitHeight: 34
@@ -458,13 +476,13 @@ Item {
                                     onOpenRequested: root.openNumPadRequested(field)
                                 }
 
-                                // Width — parting blade
+                                // Width — blade
                                 Text {
-                                    visible: root._currentToolType === "parting_blade"
+                                    visible: root._isBladeType(root._currentToolType)
                                     text: "Width:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
-                                    visible: root._currentToolType === "parting_blade"
+                                    visible: root._isBladeType(root._currentToolType)
                                     Layout.preferredWidth: 100
                                     settingName: "tool_edit.width"
                                     value:     extraWidth.value
@@ -474,13 +492,13 @@ Item {
                                     onOpenRequested: root.openNumPadRequested(field)
                                 }
 
-                                // Max Depth — parting blade
+                                // Max Depth — blade
                                 Text {
-                                    visible: root._currentToolType === "parting_blade"
+                                    visible: root._isBladeType(root._currentToolType)
                                     text: "Max Depth:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
-                                    visible: root._currentToolType === "parting_blade"
+                                    visible: root._isBladeType(root._currentToolType)
                                     Layout.preferredWidth: 100
                                     settingName: "tool_edit.max_depth_pb"
                                     value:     extraMaxDepth.value
@@ -490,13 +508,13 @@ Item {
                                     onOpenRequested: root.openNumPadRequested(field)
                                 }
 
-                                // Left Radius — parting blade
+                                // Left Radius — blade
                                 Text {
-                                    visible: root._currentToolType === "parting_blade"
+                                    visible: root._isBladeType(root._currentToolType)
                                     text: "Left Radius:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
-                                    visible: root._currentToolType === "parting_blade"
+                                    visible: root._isBladeType(root._currentToolType)
                                     Layout.preferredWidth: 100
                                     settingName: "tool_edit.left_radius"
                                     value:     extraLR.value
@@ -506,13 +524,13 @@ Item {
                                     onOpenRequested: root.openNumPadRequested(field)
                                 }
 
-                                // Right Radius — parting blade
+                                // Right Radius — blade
                                 Text {
-                                    visible: root._currentToolType === "parting_blade"
+                                    visible: root._isBladeType(root._currentToolType)
                                     text: "Right Radius:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
-                                    visible: root._currentToolType === "parting_blade"
+                                    visible: root._isBladeType(root._currentToolType)
                                     Layout.preferredWidth: 100
                                     settingName: "tool_edit.right_radius"
                                     value:     extraRR.value
@@ -520,6 +538,34 @@ Item {
                                     parser:    extraRR.parser
                                     onValueChanged: { if (extraRR.value !== value) extraRR.value = value }
                                     onOpenRequested: root.openNumPadRequested(field)
+                                }
+
+                                Text {
+                                    visible: root._isBladeType(root._currentToolType)
+                                    text: "Z0 Reference:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                }
+                                RowLayout {
+                                    visible: root._isBladeType(root._currentToolType)
+                                    spacing: 8
+                                    ButtonGroup { id: z0ReferenceGroup }
+                                    RadioButton {
+                                        text: "Left Side"
+                                        checked: root._bladeZ0Reference === "left"
+                                        ButtonGroup.group: z0ReferenceGroup
+                                        onToggled: if (checked) root._bladeZ0Reference = "left"
+                                    }
+                                    RadioButton {
+                                        text: "Center"
+                                        checked: root._bladeZ0Reference === "center"
+                                        ButtonGroup.group: z0ReferenceGroup
+                                        onToggled: if (checked) root._bladeZ0Reference = "center"
+                                    }
+                                    RadioButton {
+                                        text: "Right Side"
+                                        checked: root._bladeZ0Reference === "right"
+                                        ButtonGroup.group: z0ReferenceGroup
+                                        onToggled: if (checked) root._bladeZ0Reference = "right"
+                                    }
                                 }
                             }
                         }
@@ -564,11 +610,14 @@ Item {
                                         root._currentOrientation = modelData
                                         var valid6 = ["generic", "parting_blade"]
                                         var valid7 = ["drill", "reamer", "tap", "boring_bar", "trepaning"]
+                                        var valid8 = ["grooving_blade"]
                                         if (modelData === 6 && valid6.indexOf(root._currentToolType) < 0)
-                                            root._currentToolType = "generic"
+                                            root._currentToolType = "parting_blade"
                                         else if (modelData === 7 && valid7.indexOf(root._currentToolType) < 0)
                                             root._currentToolType = "drill"
-                                        else if (modelData !== 6 && modelData !== 7)
+                                        else if (modelData === 8 && valid8.indexOf(root._currentToolType) < 0)
+                                            root._currentToolType = "grooving_blade"
+                                        else if (modelData !== 6 && modelData !== 7 && modelData !== 8)
                                             root._currentToolType = "generic"
                                     }
                                 }

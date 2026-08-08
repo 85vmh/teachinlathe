@@ -19,6 +19,7 @@ class ToolType(str, Enum):
     BORING_BAR    = "boring_bar"
     TREPANING     = "trepaning"
     PARTING_BLADE = "parting_blade"
+    GROOVING_BLADE = "grooving_blade"
 
 
 class SortBy(Enum):
@@ -220,6 +221,7 @@ class PartingBladeTool(ToolEntry):
     max_depth:    float = 0.0
     left_radius:  float = 0.0
     right_radius: float = 0.0
+    z0_reference: str = "center"
 
     @property
     def tool_type(self) -> ToolType:
@@ -230,6 +232,7 @@ class PartingBladeTool(ToolEntry):
         d.update({
             "width": self.width, "max_depth": self.max_depth,
             "left_radius": self.left_radius, "right_radius": self.right_radius,
+            "z0_reference": self.z0_reference,
         })
         return d
 
@@ -238,8 +241,16 @@ class PartingBladeTool(ToolEntry):
         d.update({
             "width": self.width, "max_depth": self.max_depth,
             "left_radius": self.left_radius, "right_radius": self.right_radius,
+            "z0_reference": self.z0_reference,
         })
         return d
+
+
+@dataclass
+class GroovingBladeTool(PartingBladeTool):
+    @property
+    def tool_type(self) -> ToolType:
+        return ToolType.GROOVING_BLADE
 
 
 # ---------------------------------------------------------------------------
@@ -254,6 +265,7 @@ _TYPE_CLASS = {
     ToolType.BORING_BAR:    BoringBarTool,
     ToolType.TREPANING:     TrepaningTool,
     ToolType.PARTING_BLADE: PartingBladeTool,
+    ToolType.GROOVING_BLADE: GroovingBladeTool,
 }
 
 #: Extra fields expected by each subclass (used by the factory to copy them)
@@ -263,7 +275,8 @@ _EXTRA_FIELDS = {
     ToolType.TAP:           ("diameter", "pitch"),
     ToolType.BORING_BAR:    ("min_diameter", "max_undercut", "max_depth"),
     ToolType.TREPANING:     ("diameter",),
-    ToolType.PARTING_BLADE: ("width", "max_depth", "left_radius", "right_radius"),
+    ToolType.PARTING_BLADE: ("width", "max_depth", "left_radius", "right_radius", "z0_reference"),
+    ToolType.GROOVING_BLADE: ("width", "max_depth", "left_radius", "right_radius", "z0_reference"),
 }
 
 
@@ -274,5 +287,8 @@ def make_tool(base: ToolEntry, tool_type: ToolType, extras: dict) -> ToolEntry:
         return base
     base_fields = {f.name: getattr(base, f.name) for f in dataclasses.fields(ToolEntry)}
     extra_keys   = _EXTRA_FIELDS.get(tool_type, ())
-    extra_values = {k: extras.get(k, 0.0 if k != "material" else "") for k in extra_keys}
+    extra_values = {
+        k: extras.get(k, "center" if k == "z0_reference" else 0.0 if k != "material" else "")
+        for k in extra_keys
+    }
     return cls(**base_fields, **extra_values)

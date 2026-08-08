@@ -41,6 +41,7 @@ Popup {
         { label: "Facing",           type: "facing"          },
         { label: "G33 Knurling",     type: "knurling"        },
         { label: "Define Profile",   type: "defineProfile"   },
+        { label: "Define Radial Profile", type: "defineRadialProfile" },
         { label: "G7x Cut Profile",  type: "profiling"       },
         { label: "Profile Roughing", type: "profileRoughing"  },
         { label: "Profile Contour",  type: "profileContour"   },

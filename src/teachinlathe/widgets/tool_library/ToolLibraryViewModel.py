@@ -14,7 +14,7 @@ from typing import List
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from .tool_entry import (
-    BoringBarTool, DrillTool, PartingBladeTool, ReamerTool,
+    BoringBarTool, DrillTool, GroovingBladeTool, PartingBladeTool, ReamerTool,
     SortBy, TapTool, ToolEntry, ToolType, TrepaningTool,
 )
 from .tool_repository import ToolRepository
@@ -221,6 +221,8 @@ class ToolLibraryViewModel(QObject):
             tool_type = ToolType(tool_type_str)
         except ValueError:
             tool_type = ToolType.GENERIC
+        if base.q == 8 and tool_type == ToolType.PARTING_BLADE:
+            tool_type = ToolType.GROOVING_BLADE
 
         from .tool_entry import make_tool
         promoted = make_tool(base, tool_type, data)
@@ -240,6 +242,52 @@ class ToolLibraryViewModel(QObject):
         else:
             self._repo.add_tool(promoted)
         return True
+
+    @pyqtSlot(result=bool)
+    def currentToolRequiresBladeZ0Reference(self) -> bool:
+        tool = self._current_tool()
+        if tool is None:
+            return False
+        return int(getattr(tool, "q", 0)) in (6, 8)
+
+    @pyqtSlot(result=float)
+    def currentToolBladeWidth(self) -> float:
+        tool = self._current_tool()
+        if tool is None:
+            return 0.0
+        return float(getattr(tool, "width", 0.0) or 0.0)
+
+    @pyqtSlot(str)
+    def saveCurrentToolBladeZ0Reference(self, reference: str) -> None:
+        value = str(reference or "center").lower()
+        if value not in ("left", "center", "right"):
+            value = "center"
+        tool = self._current_tool()
+        if tool is None or int(getattr(tool, "q", 0)) not in (6, 8):
+            return
+        tool_type = ToolType.GROOVING_BLADE if int(tool.q) == 8 else ToolType.PARTING_BLADE
+        data = tool.to_display_dict()
+        data.update({
+            "toolType": tool_type.value,
+            "z0_reference": value,
+            "width": data.get("width", 0.0),
+            "max_depth": data.get("max_depth", 0.0),
+            "left_radius": data.get("left_radius", 0.0),
+            "right_radius": data.get("right_radius", 0.0),
+        })
+        from .tool_entry import make_tool
+        promoted = make_tool(tool, tool_type, data)
+        self._repo.edit_tool(promoted)
+
+    def _current_tool(self) -> ToolEntry | None:
+        current_tool_no = self._repo.current_tool_no
+        if _STAT is not None:
+            try:
+                _STAT.poll()
+                current_tool_no = int(getattr(_STAT, "tool_in_spindle", current_tool_no))
+            except Exception:
+                pass
+        return self._repo.get_tool(current_tool_no)
 
     def onJoystickFeedingChanged(self, value) -> None:
         feeding = bool(value)

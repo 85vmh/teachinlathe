@@ -1,5 +1,6 @@
 from teachinlathe.conversational.data_types import (
     BlendType,
+    DefineRadialProfile,
     MoveSequence,
     PassType,
     PredefinedPosition,
@@ -263,6 +264,26 @@ def apply_define_profile_update(op, payload):
                 primitives.append(ProfilePrimitive.from_dict(p_data))
             except Exception:
                 pass
+        op.profile_primitives = primitives
+
+
+def apply_define_radial_profile_update(op, payload):
+    if op is None or not isinstance(payload, dict):
+        return
+    apply_operation_update(op, payload)
+    _set_attr_if_present(op, payload, "profile_id", coerce=int)
+    if "profile_type" in payload and payload["profile_type"] is not None:
+        try:
+            op.profile_type = _coerce_enum(payload["profile_type"], ProfilingType, lambda v: str(v).lower())
+        except Exception:
+            pass
+    primitives_payload = payload.get("profile_primitives")
+    if isinstance(primitives_payload, list):
+        primitives = []
+        for i, primitive in enumerate(primitives_payload, start=1):
+            if not isinstance(primitive, dict):
+                continue
+            primitives.append(DefineRadialProfile._ordered_primitive(primitive, i))
         op.profile_primitives = primitives
 
 

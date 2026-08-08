@@ -949,6 +949,75 @@ class DefineProfile(Operation):
         return base
 
 
+@dataclass
+class DefineRadialProfile(Operation):
+    profile_id: int
+    profile_type: ProfilingType
+    profile_primitives: List[Dict[str, Any]]
+
+    @staticmethod
+    def _ordered_primitive(primitive: Dict[str, Any], primitive_id: int) -> Dict[str, Any]:
+        p_data = dict(primitive)
+        p_data.setdefault("primitive_id", primitive_id)
+        p_type = p_data.get("type")
+        if p_type == "groove":
+            ordered = {
+                "primitive_id": p_data.get("primitive_id"),
+                "type": p_type,
+            }
+            for key in ("right_flank", "bottom", "left_flank"):
+                if key in p_data:
+                    ordered[key] = p_data[key]
+            for key, value in p_data.items():
+                if key not in ordered:
+                    ordered[key] = value
+            return ordered
+        ordered = {
+            "primitive_id": p_data.get("primitive_id"),
+            "type": p_type,
+        }
+        for key, value in p_data.items():
+            if key not in ordered:
+                ordered[key] = value
+        return ordered
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "DefineRadialProfile":
+        raw = data.get("profile_primitives", [])
+        primitives = []
+        for i, primitive in enumerate(raw, start=1):
+            if not isinstance(primitive, dict):
+                continue
+            primitives.append(DefineRadialProfile._ordered_primitive(primitive, i))
+        try:
+            profile_type = ProfilingType(str(data.get("profile_type", "od")).lower())
+        except ValueError:
+            profile_type = ProfilingType.OD
+        return DefineRadialProfile(
+            order=int(data["order"]),
+            type=data["type"],
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            profile_id=int(data.get("profile_id", 0)),
+            profile_type=profile_type,
+            profile_primitives=primitives,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        primitives = []
+        for i, primitive in enumerate(self.profile_primitives or [], start=1):
+            if not isinstance(primitive, dict):
+                continue
+            primitives.append(self._ordered_primitive(primitive, i))
+        base.update({
+            "profile_id": int(self.profile_id),
+            "profile_type": self.profile_type.value,
+            "profile_primitives": primitives,
+        })
+        return base
+
+
 # ------------------------------- Profiling -----------------------------------
 
 
@@ -1407,6 +1476,7 @@ operation_types: Dict[str, Type[Operation]] = {
     "facing": Facing,
     "knurling": Knurling,
     "defineProfile": DefineProfile,
+    "defineRadialProfile": DefineRadialProfile,
     "profiling": Profiling,
     "profileRoughing": ProfileRoughing,
     "profileContour": ProfileContour,
@@ -1423,6 +1493,7 @@ display_names: Dict[str, str] = {
     "facing": "Facing",
     "knurling": "SinglePoint Knurling",
     "defineProfile": "Define Profile",
+    "defineRadialProfile": "Define Radial Profile",
     "profiling": "Profiling",
     "profileRoughing": "Profile Roughing",
     "profileContour": "Profile Contour",

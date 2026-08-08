@@ -27,7 +27,9 @@ Item {
     signal updateToolChange(int index, var payload)
     signal updatePositionAt(int index, var payload)
     signal updateDefineProfile(int index, var payload)
+    signal updateDefineRadialProfile(int index, var payload)
     signal openProfileEditorRequested(int opIndex, var opData)
+    signal openRadialProfileEditorRequested(int opIndex, var opData)
     signal updateFacing(int index, var payload)
     signal updateKnurling(int index, var payload)
     signal updateProfiling(int index, var payload)
@@ -74,6 +76,8 @@ Item {
             detailsLoader.source = "ProfileContourDetailsView.qml"
         } else if (data.type === "defineProfile") {
             detailsLoader.source = "define_profile/ProfileDetailsView.qml"
+        } else if (data.type === "defineRadialProfile") {
+            detailsLoader.source = "define_radial_profile/RadialProfileDetailsView.qml"
         } else if (data.type === "drilling") {
             detailsLoader.source = "DrillingDetailsView.qml"
         } else if (data.type === "threading") {
@@ -197,6 +201,8 @@ Item {
                             operationEditor.updatePositionAt(updated.index, updated.payload)
                         else if (t === "defineProfile" && operationEditor.updateDefineProfile)
                             operationEditor.updateDefineProfile(updated.index, updated.payload)
+                        else if (t === "defineRadialProfile" && operationEditor.updateDefineRadialProfile)
+                            operationEditor.updateDefineRadialProfile(updated.index, updated.payload)
                         else if (t === "facing" && operationEditor.updateFacing)
                             operationEditor.updateFacing(updated.index, updated.payload)
                         else if (t === "knurling" && operationEditor.updateKnurling)
@@ -245,6 +251,10 @@ Item {
 
                     function onOpenProfileEditorRequested(opIdx, opData) {
                         operationEditor.openProfileEditorRequested(opIdx, opData)
+                    }
+
+                    function onOpenRadialProfileEditorRequested(opIdx, opData) {
+                        operationEditor.openRadialProfileEditorRequested(opIdx, opData)
                     }
                 }
             }

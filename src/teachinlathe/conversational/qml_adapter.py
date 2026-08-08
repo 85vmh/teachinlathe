@@ -25,6 +25,8 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
         pt = profile_type.value if hasattr(profile_type, "value") else str(profile_type or "od").lower()
         type_str = "OD" if pt == "od" else "ID"
         return f"Define {type_str} Profile (P{profile_id})" if profile_id is not None else f"Define {type_str} Profile"
+    if op_type_value == "defineRadialProfile":
+        return f"Define Radial Profile (P{profile_id})" if profile_id is not None else "Define Radial Profile"
     if op_type_value == "profiling":
         strategy_value = strategy.value if hasattr(strategy, "value") else str(strategy or "").lower()
         prefix = "G71 " if strategy_value == "rough" else "G70 " if strategy_value == "finish" else ""
