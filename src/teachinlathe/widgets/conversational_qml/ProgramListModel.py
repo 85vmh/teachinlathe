@@ -146,6 +146,12 @@ class ProgramListModel(QAbstractListModel):
             pt = profiling_type.value if hasattr(profiling_type, "value") else str(profiling_type or "od").lower()
             prefix = "OD" if pt == "od" else "ID"
             return f"{prefix} Profile Contour (P{profile_id})" if profile_id is not None else f"{prefix} Profile Contour"
+        if op_type == "grooveRoughing":
+            profile_id = getattr(getattr(op, "roughingParameters", None), "profile_id", None)
+            return f"Groove Roughing (P{profile_id})" if profile_id is not None else "Groove Roughing"
+        if op_type == "grooveFinishing":
+            profile_id = getattr(getattr(op, "finishingParameters", None), "profile_id", None)
+            return f"Groove Finishing (P{profile_id})" if profile_id is not None else "Groove Finishing"
         if op_type == "threading":
             pitch = getattr(op, "pitch", None)
             return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"

@@ -10,6 +10,8 @@ from .parting import generate_parting_gcode
 from .position_at import generate_position_at_gcode
 from .profile_contour import generate_profile_contour_gcode
 from .profile_roughing import generate_profile_roughing_gcode
+from .groove_roughing import generate_groove_roughing_gcode
+from .groove_finishing import generate_groove_finishing_gcode
 from .tapping import generate_tapping_gcode
 
 OPERATION_GENERATORS = {
@@ -22,6 +24,8 @@ OPERATION_GENERATORS = {
     "profiling": generate_profiling_gcode,
     "profileRoughing": generate_profile_roughing_gcode,
     "profileContour": generate_profile_contour_gcode,
+    "grooveRoughing": generate_groove_roughing_gcode,
+    "grooveFinishing": generate_groove_finishing_gcode,
     "threading": generate_threading_gcode,
     "g33Threading": generate_g33_threading_gcode,
     "parting": generate_parting_gcode,

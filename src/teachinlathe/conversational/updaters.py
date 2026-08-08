@@ -1,6 +1,8 @@
 from teachinlathe.conversational.data_types import (
     BlendType,
     DefineRadialProfile,
+    GrooveFinishingStrategy,
+    GrooveRoughingStrategy,
     MoveSequence,
     PassType,
     PredefinedPosition,
@@ -85,6 +87,22 @@ def apply_knurling_cutting_update(cutting, payload):
     _set_attr_if_present(cutting, payload, "doc", coerce=float)
     _set_attr_if_present(cutting, payload, "retract", coerce=float)
     _set_attr_if_present(cutting, payload, "grooves_count", attr="groovesCount", coerce=int)
+
+
+def apply_groove_roughing_cutting_update(cutting, payload):
+    if cutting is None or not isinstance(payload, dict):
+        return
+    _set_attr_if_present(cutting, payload, "feed_rate", attr="feedRate", coerce=float)
+    _set_attr_if_present(cutting, payload, "peck_depth", attr="peckDepth", coerce=float)
+    _set_attr_if_present(cutting, payload, "retract", coerce=float)
+    _set_attr_if_present(cutting, payload, "dwell_time", attr="dwellTime", coerce=float)
+
+
+def apply_groove_finishing_cutting_update(cutting, payload):
+    if cutting is None or not isinstance(payload, dict):
+        return
+    _set_attr_if_present(cutting, payload, "feed_rate", attr="feedRate", coerce=float)
+    _set_attr_if_present(cutting, payload, "retract", coerce=float)
 
 
 def apply_geometry_update(geometry, payload):
@@ -173,6 +191,30 @@ def apply_profile_contour_strategy_update(strategy, payload):
     if "profiling_type" in payload and payload["profiling_type"] is not None:
         try:
             strategy.profiling_type = _coerce_enum(payload["profiling_type"], ProfilingType, lambda v: str(v).lower())
+        except Exception:
+            pass
+
+
+def apply_groove_roughing_parameters_update(params, payload):
+    if params is None or not isinstance(payload, dict):
+        return
+    _set_attr_if_present(params, payload, "profile_id", coerce=int)
+    if "strategy" in payload and payload["strategy"] is not None:
+        try:
+            params.strategy = _coerce_enum(payload["strategy"], GrooveRoughingStrategy, lambda v: str(v).lower())
+        except Exception:
+            pass
+    _set_attr_if_present(params, payload, "initial_offset", coerce=float)
+    _set_attr_if_present(params, payload, "afterwards_offset", coerce=float)
+
+
+def apply_groove_finishing_parameters_update(params, payload):
+    if params is None or not isinstance(payload, dict):
+        return
+    _set_attr_if_present(params, payload, "profile_id", coerce=int)
+    if "strategy" in payload and payload["strategy"] is not None:
+        try:
+            params.strategy = _coerce_enum(payload["strategy"], GrooveFinishingStrategy, lambda v: str(v).lower())
         except Exception:
             pass
 

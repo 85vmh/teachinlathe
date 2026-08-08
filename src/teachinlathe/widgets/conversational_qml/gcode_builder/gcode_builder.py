@@ -2,8 +2,11 @@ import json
 import os
 from datetime import datetime
 
-from teachinlathe.conversational.data_types import DefineProfile, Program
+from teachinlathe.conversational.data_types import DefineProfile, DefineRadialProfile, Program
 from teachinlathe.conversational.qml_adapter import display_name_for_op
+from teachinlathe.widgets.tool_library.tool_entry import ToolType, make_tool
+from teachinlathe.widgets.tool_library.tool_extras_store import ToolExtrasStore
+from teachinlathe.widgets.tool_library.tool_table_file import parse_tbl
 
 from .operations import OPERATION_GENERATORS
 
@@ -62,6 +65,59 @@ def _resolve_profile_operation(profile_id, operations, before_index=None):
     return None
 
 
+def _resolve_radial_profile_operation(profile_id, operations, before_index=None):
+    if not profile_id:
+        return None
+    search_ops = operations
+    if before_index is not None and before_index >= 0:
+        search_ops = operations[:before_index]
+    for op in search_ops:
+        if isinstance(op, DefineRadialProfile) and int(op.profile_id) == profile_id:
+            return op
+    return None
+
+
+def _resolve_previous_tool_change(operations, before_index=None):
+    search_ops = operations
+    if before_index is not None and before_index >= 0:
+        search_ops = operations[:before_index]
+    for op in reversed(search_ops):
+        if getattr(op, "type", None) == "changeTool":
+            return op
+    return None
+
+
+def _tool_table_path():
+    try:
+        from qtpyvcp.utilities.info import Info
+        return Info().getToolTableFile()
+    except Exception:
+        return ""
+
+
+def _resolve_tool_payload(tool_no, fallback_orientation=0):
+    if not tool_no:
+        return {}
+    path = _tool_table_path()
+    if not path or not os.path.isfile(path):
+        return {"t": int(tool_no), "q": int(fallback_orientation or 0)}
+    try:
+        extras_store = ToolExtrasStore(path)
+        for base in parse_tbl(path):
+            if int(base.t) != int(tool_no):
+                continue
+            extras = extras_store.get(base.t)
+            try:
+                tool_type = ToolType(extras.get("tool_type", ToolType.GENERIC.value))
+            except ValueError:
+                tool_type = ToolType.GENERIC
+            tool = make_tool(base, tool_type, extras)
+            return tool.to_display_dict()
+    except Exception as exc:
+        print(f"[gcode_builder] tool lookup failed for T{tool_no}: {exc}")
+    return {"t": int(tool_no), "q": int(fallback_orientation or 0)}
+
+
 
 def _build_operation_payload(op, program, op_index=None):
     payload = op.to_dict()
@@ -69,6 +125,20 @@ def _build_operation_payload(op, program, op_index=None):
         profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)
         profile_op = _resolve_profile_operation(profile_id, program.operations, op_index)
         payload["_resolved_profile"] = profile_op.to_dict() if profile_op else {}
+    if op.type in ("grooveRoughing", "grooveFinishing"):
+        if op.type == "grooveFinishing":
+            profile_id = int(getattr(op.finishingParameters, "profile_id", 0) or 0)
+        else:
+            profile_id = int(getattr(op.roughingParameters, "profile_id", 0) or 0)
+        profile_op = _resolve_radial_profile_operation(profile_id, program.operations, op_index)
+        payload["_resolved_radial_profile"] = profile_op.to_dict() if profile_op else {}
+        tool_change = _resolve_previous_tool_change(program.operations, op_index)
+        if tool_change is not None:
+            payload["_resolved_tool_change"] = tool_change.to_dict()
+            payload["_resolved_tool"] = _resolve_tool_payload(
+                getattr(tool_change, "tool_no", 0),
+                getattr(tool_change, "tool_orientation", 0),
+            )
     return payload
 
 
@@ -77,6 +147,10 @@ def _display_name_for_operation(op):
     tool_no = getattr(op, "tool_no", None)
     pitch = getattr(op, "pitch", None)
     profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
+    if profile_id is None:
+        profile_id = getattr(getattr(op, "roughingParameters", None), "profile_id", None)
+    if profile_id is None:
+        profile_id = getattr(getattr(op, "finishingParameters", None), "profile_id", None)
     if profile_id is None:
         profile_id = getattr(op, "profile_id", None)
     strategy = getattr(getattr(op, "profilingOptions", None), "strategy", None)
@@ -147,7 +221,7 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None):
 
         generator = OPERATION_GENERATORS.get(op.type)
         if generator:
-            if op.type in ("profileRoughing", "profileContour"):
+            if op.type in ("profileRoughing", "profileContour", "grooveRoughing", "grooveFinishing"):
                 lines.extend(generator(_build_operation_payload(op, program, index - 1)))
             elif op.type == "facing":
                 lines.extend(generator(op, datum=datum))

@@ -30,6 +30,10 @@ from teachinlathe.conversational.updaters import (
     apply_edge_break_update,
     apply_g33_threading_update,
     apply_geometry_update,
+    apply_groove_finishing_cutting_update,
+    apply_groove_finishing_parameters_update,
+    apply_groove_roughing_cutting_update,
+    apply_groove_roughing_parameters_update,
     apply_knurling_cutting_update,
     apply_m1_update,
     apply_operation_update,
@@ -332,6 +336,10 @@ class ConversationalQml(QQuickWidget):
                 item.updateProfileRoughing.connect(self.onUpdateProfileRoughing)
             if hasattr(item, "updateProfileContour"):
                 item.updateProfileContour.connect(self.onUpdateProfileContour)
+            if hasattr(item, "updateGrooveRoughing"):
+                item.updateGrooveRoughing.connect(self.onUpdateGrooveRoughing)
+            if hasattr(item, "updateGrooveFinishing"):
+                item.updateGrooveFinishing.connect(self.onUpdateGrooveFinishing)
             if hasattr(item, "addProfileContourRequested"):
                 item.addProfileContourRequested.connect(self.onAddProfileContourRequested)
             if hasattr(item, "updateDrilling"):
@@ -930,6 +938,40 @@ class ConversationalQml(QQuickWidget):
             self._save_current_program()
         except Exception as e:
             print("[profileContour] update error:", e)
+
+    def onUpdateGrooveRoughing(self, index: int, payload):
+        """Groove Roughing autosave."""
+        try:
+            p = self._to_py(payload) or {}
+            op = self._get_current_op(index)
+            from teachinlathe.conversational.data_types import GrooveRoughing
+            if not isinstance(op, GrooveRoughing):
+                return
+            apply_turnable_operation_update(op, p)
+            apply_groove_roughing_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
+            apply_groove_roughing_parameters_update(op.roughingParameters, p.get("roughing_parameters"))
+            apply_stock_to_leave_update(op.stockToLeave, p.get("stock_to_leave"))
+            if "stock_to_leave_enabled" in p and p["stock_to_leave_enabled"] is not None:
+                op.stockToLeaveEnabled = bool(p["stock_to_leave_enabled"])
+            apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
+            self._save_current_program()
+        except Exception as e:
+            print("[grooveRoughing] update error:", e)
+
+    def onUpdateGrooveFinishing(self, index: int, payload):
+        """Groove Finishing autosave."""
+        try:
+            p = self._to_py(payload) or {}
+            op = self._get_current_op(index)
+            from teachinlathe.conversational.data_types import GrooveFinishing
+            if not isinstance(op, GrooveFinishing):
+                return
+            apply_turnable_operation_update(op, p)
+            apply_groove_finishing_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
+            apply_groove_finishing_parameters_update(op.finishingParameters, p.get("finishing_parameters"))
+            self._save_current_program()
+        except Exception as e:
+            print("[grooveFinishing] update error:", e)
 
     def onAddProfileContourRequested(self, index: int):
         try:

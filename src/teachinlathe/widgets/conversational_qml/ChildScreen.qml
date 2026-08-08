@@ -35,6 +35,8 @@ Item {
     signal updateProfiling(int index, var payload)
     signal updateProfileRoughing(int index, var payload)
     signal updateProfileContour(int index, var payload)
+    signal updateGrooveRoughing(int index, var payload)
+    signal updateGrooveFinishing(int index, var payload)
     signal addProfileContourRequested(int index)
     signal updateDrilling(int index, var payload)
     signal updateThreading(int index, var payload)
@@ -74,6 +76,10 @@ Item {
             detailsLoader.source = "ProfileRoughingDetailsView.qml"
         } else if (data.type === "profileContour") {
             detailsLoader.source = "ProfileContourDetailsView.qml"
+        } else if (data.type === "grooveRoughing") {
+            detailsLoader.source = "GrooveRoughingDetailsView.qml"
+        } else if (data.type === "grooveFinishing") {
+            detailsLoader.source = "GrooveFinishingDetailsView.qml"
         } else if (data.type === "defineProfile") {
             detailsLoader.source = "define_profile/ProfileDetailsView.qml"
         } else if (data.type === "defineRadialProfile") {
@@ -213,6 +219,10 @@ Item {
                             operationEditor.updateProfileRoughing(updated.index, updated.payload)
                         else if (t === "profileContour" && operationEditor.updateProfileContour)
                             operationEditor.updateProfileContour(updated.index, updated.payload)
+                        else if (t === "grooveRoughing" && operationEditor.updateGrooveRoughing)
+                            operationEditor.updateGrooveRoughing(updated.index, updated.payload)
+                        else if (t === "grooveFinishing" && operationEditor.updateGrooveFinishing)
+                            operationEditor.updateGrooveFinishing(updated.index, updated.payload)
                         else if (t === "drilling" && operationEditor.updateDrilling)
                             operationEditor.updateDrilling(updated.index, updated.payload)
                         else if (t === "threading")

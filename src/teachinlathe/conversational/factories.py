@@ -11,6 +11,14 @@ from teachinlathe.conversational.data_types import (
     Facing,
     G33Threading,
     GeometryParameters,
+    GrooveFinishing,
+    GrooveFinishingCuttingParameters,
+    GrooveFinishingParameters,
+    GrooveFinishingStrategy,
+    GrooveRoughing,
+    GrooveRoughingCuttingParameters,
+    GrooveRoughingParameters,
+    GrooveRoughingStrategy,
     Header,
     Knurling,
     KnurlingCuttingParameters,
@@ -160,6 +168,33 @@ def make_default_operation(op_type: str, order: int = 1):
             profileContourStrategy=ProfileContourStrategy(profiling_type=ProfilingType.OD),
             stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
             stockToLeaveEnabled=False,
+        )
+    if op_type == "grooveRoughing":
+        return GrooveRoughing(
+            order=order, type=op_type, generate_gcode=True, is_optional_block=False,
+            spindleParameters=spindle_rpm,
+            cuttingParameters=GrooveRoughingCuttingParameters(
+                feedRate=0.1, peckDepth=3.0, retract=1.0, dwellTime=0.5
+            ),
+            roughingParameters=GrooveRoughingParameters(
+                profile_id=1,
+                strategy=GrooveRoughingStrategy.START_CENTER,
+                initial_offset=1.5,
+                afterwards_offset=1.0,
+            ),
+            stockToLeave=StockToLeave(stockToLeaveX=0.5, stockToLeaveZ=0.2),
+            stockToLeaveEnabled=False,
+            m1Parameters=M1Parameters(include_m1=False, inspect_position=PredefinedPosition.G28, stop_spindle=False),
+        )
+    if op_type == "grooveFinishing":
+        return GrooveFinishing(
+            order=order, type=op_type, generate_gcode=True, is_optional_block=False,
+            spindleParameters=spindle_rpm,
+            cuttingParameters=GrooveFinishingCuttingParameters(feedRate=0.1, retract=1.0),
+            finishingParameters=GrooveFinishingParameters(
+                profile_id=1,
+                strategy=GrooveFinishingStrategy.TOWARDS_CENTER,
+            ),
         )
     if op_type == "threading":
         return Threading(

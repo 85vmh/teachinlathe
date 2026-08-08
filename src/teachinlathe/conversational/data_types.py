@@ -59,6 +59,18 @@ class PassType(str, Enum):
     DIAGONAL_EXTERIOR = "diagonal_exterior"
 
 
+class GrooveRoughingStrategy(str, Enum):
+    START_RIGHT = "start_right"
+    START_LEFT = "start_left"
+    START_CENTER = "start_center"
+
+
+class GrooveFinishingStrategy(str, Enum):
+    TOWARDS_LEFT = "towards_left"
+    TOWARDS_RIGHT = "towards_right"
+    TOWARDS_CENTER = "towards_center"
+
+
 # ------------------------------ Core header ----------------------------------
 
 @dataclass
@@ -407,6 +419,50 @@ class KnurlingCuttingParameters:
             "doc": float(self.doc),
             "retract": float(self.retract),
             "grooves_count": int(self.groovesCount),
+        }
+
+
+@dataclass
+class GrooveRoughingCuttingParameters:
+    feedRate: float
+    peckDepth: float
+    retract: float
+    dwellTime: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "GrooveRoughingCuttingParameters":
+        return GrooveRoughingCuttingParameters(
+            feedRate=float(data.get("feed_rate", 0.0) or 0.0),
+            peckDepth=float(data.get("peck_depth", 0.0) or 0.0),
+            retract=float(data.get("retract", 0.0) or 0.0),
+            dwellTime=float(data.get("dwell_time", 0.0) or 0.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "feed_rate": float(self.feedRate),
+            "peck_depth": float(self.peckDepth),
+            "retract": float(self.retract),
+            "dwell_time": float(self.dwellTime),
+        }
+
+
+@dataclass
+class GrooveFinishingCuttingParameters:
+    feedRate: float
+    retract: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "GrooveFinishingCuttingParameters":
+        return GrooveFinishingCuttingParameters(
+            feedRate=float(data.get("feed_rate", 0.0) or 0.0),
+            retract=float(data.get("retract", 0.0) or 0.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "feed_rate": float(self.feedRate),
+            "retract": float(self.retract),
         }
 
 
@@ -1143,6 +1199,131 @@ class ProfileContour(TurnableOperation):
         return base
 
 
+@dataclass
+class GrooveRoughingParameters:
+    profile_id: int
+    strategy: GrooveRoughingStrategy
+    initial_offset: float
+    afterwards_offset: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "GrooveRoughingParameters":
+        try:
+            strategy = GrooveRoughingStrategy(str(data.get("strategy", "start_center")).lower())
+        except ValueError:
+            strategy = GrooveRoughingStrategy.START_CENTER
+        return GrooveRoughingParameters(
+            profile_id=int(data.get("profile_id", 0) or 0),
+            strategy=strategy,
+            initial_offset=float(data.get("initial_offset", 0.0) or 0.0),
+            afterwards_offset=float(data.get("afterwards_offset", 0.0) or 0.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "profile_id": int(self.profile_id),
+            "strategy": self.strategy.value,
+            "initial_offset": float(self.initial_offset),
+            "afterwards_offset": float(self.afterwards_offset),
+        }
+
+
+@dataclass
+class GrooveRoughing(TurnableOperation):
+    cuttingParameters: GrooveRoughingCuttingParameters
+    roughingParameters: GrooveRoughingParameters
+    stockToLeave: StockToLeave
+    stockToLeaveEnabled: bool
+    m1Parameters: M1Parameters
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "GrooveRoughing":
+        spindle_parameters = TurnableOperation._parse_spindle(data)
+        cutting_parameters = GrooveRoughingCuttingParameters.from_dict(data.get("cutting_parameters", {}))
+        roughing_parameters = GrooveRoughingParameters.from_dict(data.get("roughing_parameters", {}))
+        stock_to_leave = StockToLeave.from_dict(data.get("stock_to_leave", {}))
+        m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
+
+        return cls(
+            order=int(data["order"]),
+            type=data["type"],
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            spindleParameters=spindle_parameters,
+            cuttingParameters=cutting_parameters,
+            roughingParameters=roughing_parameters,
+            stockToLeave=stock_to_leave,
+            stockToLeaveEnabled=bool(data.get("stock_to_leave_enabled", False)),
+            m1Parameters=m1_parameters,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        self._add_spindle_to(base)
+        base.update({
+            "cutting_parameters": self.cuttingParameters.to_dict(),
+            "roughing_parameters": self.roughingParameters.to_dict(),
+            "stock_to_leave": self.stockToLeave.to_dict(),
+            "stock_to_leave_enabled": bool(self.stockToLeaveEnabled),
+            "m1_parameters": self.m1Parameters.to_dict(),
+        })
+        return base
+
+
+@dataclass
+class GrooveFinishingParameters:
+    profile_id: int
+    strategy: GrooveFinishingStrategy
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "GrooveFinishingParameters":
+        try:
+            strategy = GrooveFinishingStrategy(str(data.get("strategy", "towards_center")).lower())
+        except ValueError:
+            strategy = GrooveFinishingStrategy.TOWARDS_CENTER
+        return GrooveFinishingParameters(
+            profile_id=int(data.get("profile_id", 0) or 0),
+            strategy=strategy,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "profile_id": int(self.profile_id),
+            "strategy": self.strategy.value,
+        }
+
+
+@dataclass
+class GrooveFinishing(TurnableOperation):
+    cuttingParameters: GrooveFinishingCuttingParameters
+    finishingParameters: GrooveFinishingParameters
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "GrooveFinishing":
+        spindle_parameters = TurnableOperation._parse_spindle(data)
+        cutting_parameters = GrooveFinishingCuttingParameters.from_dict(data.get("cutting_parameters", {}))
+        finishing_parameters = GrooveFinishingParameters.from_dict(data.get("finishing_parameters", {}))
+
+        return cls(
+            order=int(data["order"]),
+            type=data["type"],
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            spindleParameters=spindle_parameters,
+            cuttingParameters=cutting_parameters,
+            finishingParameters=finishing_parameters,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        self._add_spindle_to(base)
+        base.update({
+            "cutting_parameters": self.cuttingParameters.to_dict(),
+            "finishing_parameters": self.finishingParameters.to_dict(),
+        })
+        return base
+
+
 # ------------------------------- Threading -----------------------------------
 
 
@@ -1480,6 +1661,8 @@ operation_types: Dict[str, Type[Operation]] = {
     "profiling": Profiling,
     "profileRoughing": ProfileRoughing,
     "profileContour": ProfileContour,
+    "grooveRoughing": GrooveRoughing,
+    "grooveFinishing": GrooveFinishing,
     "threading": Threading,
     "g33Threading": G33Threading,
     "drilling": Drilling,
@@ -1497,6 +1680,8 @@ display_names: Dict[str, str] = {
     "profiling": "Profiling",
     "profileRoughing": "Profile Roughing",
     "profileContour": "Profile Contour",
+    "grooveRoughing": "Groove Roughing",
+    "grooveFinishing": "Groove Finishing",
     "threading": "Threading",
     "g33Threading": "G33 Threading",
     "drilling": "Drilling",
