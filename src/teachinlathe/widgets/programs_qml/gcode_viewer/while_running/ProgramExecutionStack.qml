@@ -65,10 +65,10 @@ Rectangle {
                         height: Math.max(root.height - 40, 260)
                         viewModel: root.viewModel
                         content: viewModel ? viewModel.activeExecutionContent : ""
-                        highlightLine: viewModel ? viewModel.activeExecutionMotionLine : 0
+                        highlightLine: viewModel && viewModel.executionHighlightVisible ? viewModel.activeExecutionMotionLine : 0
                         highlightColor: "#3A86FF"
                         highlightWidth: 1
-                        centerOnHighlight: true
+                        centerOnHighlight: !!viewModel && viewModel.executionHighlightVisible
                         emptyText: ""
                     }
                 }

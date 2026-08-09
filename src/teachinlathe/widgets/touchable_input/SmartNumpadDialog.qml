@@ -24,6 +24,7 @@ Popup {
     property string valueType: ""
     property string mode: "numpad"          // "select" | "numpad"
     property string buffer: ""
+    property bool   bufferSelected: false
     readonly property int buttonHeight: mode === "numpad" ? 70 : 60
     readonly property int buttonFontSize: mode === "numpad" ? 24 : 18
     readonly property int buttonSpacing: 20
@@ -72,12 +73,13 @@ Popup {
         root.titleText = title.length > 0 ? title : "Enter value"
 
         root.buffer = root._initialBufferFor(field)
+        root.bufferSelected = root.buffer.length > 0
         root.mode = root.hasOptions ? "select" : "numpad"
         root.open()
     }
 
     function _initialBufferFor(field) {
-        if (!field || !field.seedNumpadFromValue)
+        if (!field)
             return ""
         var value = field.value
         if (value === null || value === undefined || value === "")
@@ -87,6 +89,40 @@ Popup {
         if (!isFinite(numericValue) || numericValue === 0)
             return ""
         return text
+    }
+
+    function _appendToken(token) {
+        if (root.bufferSelected) {
+            root.buffer = token === "." ? "0." : String(token)
+            root.bufferSelected = false
+            return
+        }
+        root.buffer += String(token)
+    }
+
+    function _backspace() {
+        if (root.bufferSelected) {
+            root.buffer = ""
+            root.bufferSelected = false
+            return
+        }
+        root.buffer = root.buffer.slice(0, -1)
+    }
+
+    function _clearBuffer() {
+        root.buffer = ""
+        root.bufferSelected = false
+    }
+
+    function _toggleSign() {
+        if (root.buffer.length === 0) {
+            root.buffer = "-"
+            root.bufferSelected = false
+            return
+        }
+        root.buffer = root.buffer.charAt(0) === "-"
+                    ? root.buffer.slice(1)
+                    : "-" + root.buffer
     }
 
     function _accept(value) {
@@ -199,7 +235,10 @@ Popup {
                 border.color: root.buttonBorderColor
                 border.width: 1
             }
-            onClicked: { root.buffer = ""; root.mode = "numpad" }
+            onClicked: {
+                root.bufferSelected = root.buffer.length > 0
+                root.mode = "numpad"
+            }
         }
 
         // ── NUMPAD mode ────────────────────────────────────────────────
@@ -223,10 +262,10 @@ Popup {
                     padding: 10
                     font.pixelSize: 24
                     font.family: "Noto Sans Mono"
-                    color: "#141414"
+                    color: root.bufferSelected ? "#ffffff" : "#141414"
                     background: Rectangle {
-                        color: "#f6f5f4"
-                        border.color: "#77767b"
+                        color: root.bufferSelected ? "#2a7bff" : "#f6f5f4"
+                        border.color: root.bufferSelected ? "#1d4ed8" : "#77767b"
                         radius: 5
                     }
                 }
@@ -241,7 +280,7 @@ Popup {
                         border.color: root.buttonBorderColor
                         border.width: 1
                     }
-                    onClicked: root.buffer = root.buffer.slice(0, -1)
+                    onClicked: root._backspace()
                 }
                 Button {
                     Layout.preferredWidth: 80
@@ -254,7 +293,7 @@ Popup {
                         border.color: root.buttonBorderColor
                         border.width: 1
                     }
-                    onClicked: root.buffer = ""
+                    onClicked: root._clearBuffer()
                 }
             }
 
@@ -278,7 +317,7 @@ Popup {
                             border.color: root.buttonBorderColor
                             border.width: 1
                         }
-                        onClicked: root.buffer += modelData
+                        onClicked: root._appendToken(modelData)
                     }
                 }
 
@@ -293,11 +332,7 @@ Popup {
                         border.color: root.buttonBorderColor
                         border.width: 1
                     }
-                    onClicked: {
-                        root.buffer = root.buffer.charAt(0) === "-"
-                                    ? root.buffer.slice(1)
-                                    : "-" + root.buffer
-                    }
+                    onClicked: root._toggleSign()
                 }
                 Button {
                     Layout.fillWidth: true
@@ -310,21 +345,21 @@ Popup {
                         border.color: root.buttonBorderColor
                         border.width: 1
                     }
-                    onClicked: root.buffer += "0"
+                    onClicked: root._appendToken("0")
                 }
                 Button {
                     Layout.fillWidth: true
                     Layout.preferredHeight: root.buttonHeight
                     text: "."
                     font.pixelSize: root.buttonFontSize
-                    enabled: root.buffer.indexOf(".") === -1
+                    enabled: root.bufferSelected || root.buffer.indexOf(".") === -1
                     background: Rectangle {
                         radius: root.buttonRadius
                         color: parent.enabled ? (parent.pressed ? root.buttonPressedBg : root.buttonBg) : root.buttonDisabledBg
                         border.color: root.buttonBorderColor
                         border.width: 1
                     }
-                    onClicked: root.buffer += "."
+                    onClicked: root._appendToken(".")
                 }
             }
 

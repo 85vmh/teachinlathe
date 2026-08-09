@@ -6,6 +6,7 @@ import QtQuick.Layouts 1.15
 Item {
     id: root
     anchors.fill: parent
+    implicitHeight: contentColumn.implicitHeight + 24
 
     // API & data
     property int  opIndex: -1
@@ -38,6 +39,7 @@ Item {
     }
 
     ColumnLayout {
+        id: contentColumn
         anchors.fill: parent
         anchors.margins: 12
         spacing: 24

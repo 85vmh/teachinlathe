@@ -231,6 +231,8 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None):
             lines.append(f"( TODO: gcode generator for type={op.type} )")
         lines.append("")
     lines.append("")
+    lines.append(_code_comment("M5", "stop the spindle"))
+    lines.append("")
     lines.append("G28  (rapid move to predefined position)")
     lines.append(_code_comment("M30", "end program"))
 

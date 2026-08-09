@@ -125,6 +125,10 @@ class ProgramsViewModel(QObject):
     def mainHighlightLine(self):
         return self._main_highlight_line
 
+    @pyqtProperty(bool, notify=runningStateChanged)
+    def executionHighlightVisible(self):
+        return self._execution_highlight_visible()
+
     @pyqtProperty(bool, notify=currentFilePathChanged)
     def hasCurrentFile(self):
         return bool(self.currentFilePath)
@@ -277,6 +281,10 @@ class ProgramsViewModel(QObject):
             self._abort_requested = False
             self._run_started = False
         self._was_active = tracking_active
+        self._refresh_execution_view()
+
+    def _execution_highlight_visible(self):
+        return bool(self._actions.isActive)
 
     def _has_loaded_program_for_run(self):
         snapshot = self._runtime_store.snapshot
@@ -348,7 +356,7 @@ class ProgramsViewModel(QObject):
                 active_motion_line = int(stack_view.motion_line or 0)
 
         main_highlight_line = 0
-        if not frames and self._is_showing_machine_file(snapshot.machine_file):
+        if self._execution_highlight_visible() and not frames and self._is_showing_machine_file(snapshot.machine_file):
             main_highlight_line = int(snapshot.motion_line or 0)
 
         next_signature = (
