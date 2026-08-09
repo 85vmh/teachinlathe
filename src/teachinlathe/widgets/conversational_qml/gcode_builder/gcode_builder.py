@@ -2,7 +2,12 @@ import json
 import os
 from datetime import datetime
 
-from teachinlathe.conversational.data_types import DefineProfile, DefineRadialProfile, Program
+from teachinlathe.conversational.data_types import (
+    AfterLastOperation,
+    DefineProfile,
+    DefineRadialProfile,
+    Program,
+)
 from teachinlathe.conversational.qml_adapter import display_name_for_op
 from teachinlathe.widgets.tool_library.tool_entry import ToolType, make_tool
 from teachinlathe.widgets.tool_library.tool_extras_store import ToolExtrasStore
@@ -10,6 +15,17 @@ from teachinlathe.widgets.tool_library.tool_table_file import parse_tbl
 
 from .operations import OPERATION_GENERATORS
 
+
+
+def _after_last_operation(header):
+    """What the program does after the last operation, tolerating a raw string."""
+    value = getattr(header, "after_last_operation", AfterLastOperation.DO_NOTHING)
+    if isinstance(value, AfterLastOperation):
+        return value
+    try:
+        return AfterLastOperation(str(value).lower())
+    except ValueError:
+        return AfterLastOperation.DO_NOTHING
 
 
 def _safe_program_name(program):
@@ -172,11 +188,16 @@ def _display_name_for_operation(op):
 
 
 
-def build_ngc_from_program(program: Program, output_dir=None, output_path=None):
+def build_ngc_from_program(program: Program, output_dir=None, output_path=None, source_json=None):
     if not isinstance(program, Program):
         raise TypeError("build_ngc_from_program expects a parsed Program")
 
-    program_name = os.path.basename(getattr(program, "filename", "") or "") or getattr(program.header, "name", program.id)
+    # The ( Program: <file>.json ) comment is what the Programs screen reads to
+    # re-open a generated .ngc for editing, so it must name the JSON sitting in
+    # the export folder. Callers that export a copy pass it as source_json;
+    # program.filename stays pointed at the authoritative program file.
+    source_name = source_json or getattr(program, "filename", "") or ""
+    program_name = os.path.basename(source_name) or getattr(program.header, "name", program.id)
     safe_name = _safe_program_name(program)
 
     if output_path:
@@ -233,7 +254,9 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None):
     lines.append("")
     lines.append(_code_comment("M5", "stop the spindle"))
     lines.append("")
-    lines.append("G28  (rapid move to predefined position)")
+    after_last = _after_last_operation(program.header)
+    if after_last.gcode:
+        lines.append(_code_comment(after_last.gcode, "rapid move to predefined position"))
     lines.append(_code_comment("M30", "end program"))
 
     with open(ngc_path, "w", encoding="utf-8") as handle:

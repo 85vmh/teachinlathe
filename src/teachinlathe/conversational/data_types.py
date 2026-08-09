@@ -47,6 +47,17 @@ class PredefinedPosition(str, Enum):
     G30 = "G30"
 
 
+class AfterLastOperation(str, Enum):
+    DO_NOTHING = "do_nothing"
+    G28 = "g28"
+    G30 = "g30"
+
+    @property
+    def gcode(self) -> str:
+        """Word emitted before M30; empty when nothing should be done."""
+        return "" if self is AfterLastOperation.DO_NOTHING else self.value.upper()
+
+
 class ProfilingType(str, Enum):
     OD = "od"
     ID = "id"
@@ -109,19 +120,26 @@ class Header:
     datum: int
     units: str
     workpiece: Workpiece
+    after_last_operation: AfterLastOperation = AfterLastOperation.DO_NOTHING
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Header":
         created_date = data.get("created_date")
         if created_date is None:
             created_date = data.get("last_edit", "")
+        try:
+            after_last = AfterLastOperation(
+                str(data.get("after_last_operation", AfterLastOperation.DO_NOTHING.value)).lower())
+        except ValueError:
+            after_last = AfterLastOperation.DO_NOTHING
         return Header(
             name=data["name"],
             created_date=str(created_date),
             last_edit=data["last_edit"],
             datum=data["datum"],
             units=data["units"],
-            workpiece=Workpiece.from_dict(data["workpiece"])
+            workpiece=Workpiece.from_dict(data["workpiece"]),
+            after_last_operation=after_last
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -131,6 +149,7 @@ class Header:
             "last_edit": self.last_edit,
             "datum": self.datum,
             "units": self.units,
+            "after_last_operation": self.after_last_operation.value,
             "workpiece": self.workpiece.to_dict()
         }
 

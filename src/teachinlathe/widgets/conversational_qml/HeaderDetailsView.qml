@@ -24,6 +24,8 @@ Item {
     // --- Header fields (editable) ---
     property string programName:  (programData && programData.header && programData.header.name) ? programData.header.name : ""
     property int    datum:        (programData && programData.header && programData.header.datum !== undefined) ? programData.header.datum : 0
+    // One of "do_nothing" | "g28" | "g30" — mirrors AfterLastOperation in data_types.py
+    property string afterLastOperation: (programData && programData.header && programData.header.after_last_operation) ? programData.header.after_last_operation : "do_nothing"
 
     // Workpiece
     property string material:     (programData && programData.header && programData.header.workpiece && programData.header.workpiece.material) ? programData.header.workpiece.material : ""
@@ -41,6 +43,7 @@ Item {
         programData = program || {}
         programName = (programData.header && programData.header.name) ? programData.header.name : ""
         datum       = (programData.header && programData.header.datum !== undefined) ? programData.header.datum : 0
+        afterLastOperation = (programData.header && programData.header.after_last_operation) ? programData.header.after_last_operation : "do_nothing"
 
         if (programData.header && programData.header.workpiece) {
             var wp = programData.header.workpiece
@@ -69,6 +72,7 @@ Item {
                 // last_edit is set server-side; omit or leave as previous
                 datum: datum,
                 units: "mm",
+                after_last_operation: afterLastOperation,
                 workpiece: {
                     material: material,
                     external_diameter: extDia,
@@ -97,56 +101,97 @@ Item {
             spacing: 30
             Layout.alignment: Qt.AlignTop
 
-            GroupBox {
-                title: "Program Details"
+            ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                font.pixelSize: root.fieldFontSize
+                spacing: 20
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 10
-                    spacing: root.rowGap
+                GroupBox {
+                    title: "Program Details"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
+                    font.pixelSize: root.fieldFontSize
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: root.columnGap
-                        Label {
-                            text: "Program name"
-                            Layout.preferredWidth: root.labelWidth
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: root.fieldFontSize
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 10
+                        spacing: root.rowGap
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: root.columnGap
+                            Label {
+                                text: "Program name"
+                                Layout.preferredWidth: root.labelWidth
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: root.fieldFontSize
+                            }
+                            TextField {
+                                Layout.preferredWidth: root.programNameWidth
+                                Layout.preferredHeight: root.inputHeight
+                                font.pixelSize: root.inputFontSize
+                                text: root.programName
+                                onTextChanged: { root.programName = text; root.emitSave() }
+                            }
                         }
-                        TextField {
-                            Layout.preferredWidth: root.programNameWidth
-                            Layout.preferredHeight: root.inputHeight
-                            font.pixelSize: root.inputFontSize
-                            text: root.programName
-                            onTextChanged: { root.programName = text; root.emitSave() }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: root.columnGap
+
+                            Label {
+                                text: "Datum"
+                                Layout.preferredWidth: root.labelWidth
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: root.fieldFontSize
+                            }
+                            NumpadField {
+                                Layout.preferredWidth: root.inputWidth
+                                settingName: "smart_numpad.header-datum"
+                                value: root.datum
+                                onOpenRequested: root.openNumPadRequested(field)
+                                onValueCommitted: { root.datum = Math.round(value); root.emitSave() }
+                            }
                         }
+
+                        Item { Layout.preferredHeight: root.rowGap }
                     }
+                }
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: root.columnGap
+                GroupBox {
+                    title: "After the last operation:"
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
+                    font.pixelSize: root.fieldFontSize
 
-                        Label {
-                            text: "Datum"
-                            Layout.preferredWidth: root.labelWidth
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: root.fieldFontSize
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 10
+                        spacing: 16
+
+                        ButtonGroup { id: afterLastGroup }
+
+                        Repeater {
+                            model: [
+                                { value: "do_nothing", label: "Do nothing" },
+                                { value: "g28",        label: "Go to G28" },
+                                { value: "g30",        label: "Go to G30" }
+                            ]
+                            RadioButton {
+                                text: modelData.label
+                                font.pixelSize: root.fieldFontSize
+                                ButtonGroup.group: afterLastGroup
+                                checked: root.afterLastOperation === modelData.value
+                                onToggled: if (checked && root.afterLastOperation !== modelData.value) {
+                                    root.afterLastOperation = modelData.value
+                                    root.emitSave()
+                                }
+                            }
                         }
-                        NumpadField {
-                            Layout.preferredWidth: root.inputWidth
-                            settingName: "smart_numpad.header-datum"
-                            value: root.datum
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.datum = Math.round(value); root.emitSave() }
-                        }
+
+                        Item { Layout.preferredHeight: 8 }
                     }
-
-                    Item { Layout.preferredHeight: root.rowGap }
                 }
             }
 

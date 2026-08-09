@@ -8,7 +8,12 @@ from PyQt5.QtQuick import QQuickItem
 from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import QApplication
 
-from teachinlathe.conversational.data_types import Program, Workpiece, operation_types
+from teachinlathe.conversational.data_types import (
+    AfterLastOperation,
+    Program,
+    Workpiece,
+    operation_types,
+)
 from teachinlathe.conversational.program_commands import (
     add_profiling_finish,
     create_new_program,
@@ -455,9 +460,16 @@ class ConversationalQml(QQuickWidget):
         os.makedirs(os.path.dirname(json_path), exist_ok=True)
         with open(json_path, "w", encoding="utf-8") as handle:
             handle.write(program.to_json())
-        program.filename = json_path
 
-        return build_ngc_from_program(program, output_dir=gcode_dir)
+        # Deliberately not touching program.filename: that is the authoritative
+        # path in folder_path, the only place load_programs_from_folder() reads
+        # at startup. Repointing it here sent every later autosave into the
+        # export folder, so edits made after generating G-code disappeared on
+        # restart. The exported copy is passed as source_json instead, so the
+        # .ngc still carries the ( Program: <file>.json ) comment that the
+        # Programs screen reads to enable Edit.
+
+        return build_ngc_from_program(program, output_dir=gcode_dir, source_json=json_path)
 
     def onDetailsRequested(self, screen_item, index: int):
         self.current_op_index = index
@@ -763,6 +775,12 @@ class ConversationalQml(QQuickWidget):
                     pass
             if "last_edit" in hdr and hdr["last_edit"] is not None:
                 header.last_edit = str(hdr["last_edit"])
+            if hdr.get("after_last_operation") is not None:
+                try:
+                    header.after_last_operation = AfterLastOperation(
+                        str(hdr["after_last_operation"]).lower())
+                except ValueError:
+                    pass
 
             wp_payload = hdr.get("workpiece")
             if isinstance(wp_payload, dict):
