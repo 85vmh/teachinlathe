@@ -2,7 +2,6 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import ".."
-import "../../common"
 
 Rectangle {
     id: root
@@ -29,14 +28,6 @@ Rectangle {
     property var skipOptionalBlocksClicked: function() {
         if (actions) {
             actions.setBlockDeleteEnabled(!root.skipOptionalBlocksActive)
-        }
-    }
-
-    property real maximumVelocity: actions ? actions.maximumRapidVelocity : 0
-    property int currentPercentage: actions ? actions.rapidOverridePercent : 100
-    property var rapidPercentageSelected: function(value) {
-        if (actions) {
-            actions.setRapidOverridePercent(value)
         }
     }
 
@@ -72,8 +63,8 @@ Rectangle {
       : cycleStartState === ProgramBottomActionBar.Resume ? "Feed\nResume"
       : "Cycle\nStart"
 
-    // Side cells size to their content (max of both), so the left buttons always
-    // fit; the middle cell fills the rest, keeping the override centered.
+    // Side cells size to their content (max of both), so the left/right button
+    // groups keep a balanced footprint.
     readonly property real sideWidth: Math.max(leftRow.implicitWidth, rightRow.implicitWidth)
 
     function defaultCycleStartState() {
@@ -141,20 +132,7 @@ Rectangle {
             }
         }
 
-        // ── Middle cell: Rapid Override (centered) ────────────────────
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-
-            RapidOverrideSelector {
-                anchors.centerIn: parent
-                label: "Rapid Override"
-                maxSpeed: root.maximumVelocity
-                value: root.currentPercentage
-                updateValueOnClick: false
-                onSelected: function(v) { root.rapidPercentageSelected(v) }
-            }
-        }
+        Item { Layout.fillWidth: true }
 
         // ── Right cell: Cycle Start (+ Cycle Abort while running) ─────
         Item {

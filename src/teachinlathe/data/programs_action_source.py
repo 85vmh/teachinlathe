@@ -1,5 +1,3 @@
-import os
-
 import linuxcnc
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
@@ -20,20 +18,6 @@ def _channel_value(name, default=None):
     if channel is None:
         return default
     return getattr(channel, 'value', default)
-
-
-def _machine_max_linear_velocity():
-    ini_path = os.getenv('INI_FILE_NAME')
-    if not ini_path:
-        return 0.0
-    ini_file = linuxcnc.ini(ini_path)
-    value = ini_file.find('TRAJ', 'MAX_LINEAR_VELOCITY')
-    if value is None:
-        return 0.0
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return 0.0
 
 
 class ProgramButtonState(QObject):
@@ -107,7 +91,6 @@ class ProgramsActionSource(QObject):
         self._optional_stop = ProgramButtonState('Break on M1', self)
         self._block_delete = ProgramButtonState('Skip "/" Blocks', self)
         self._mdi = ProgramButtonState('Run MDI', self)
-        self._maximum_rapid_velocity = _machine_max_linear_velocity() * 60.0
 
         runtime_store.snapshotChanged.connect(lambda _snapshot: self.refresh())
         self._bind_status_updates()
@@ -155,14 +138,6 @@ class ProgramsActionSource(QObject):
     def mdiAction(self):
         return self._mdi
 
-    @pyqtProperty(int, notify=stateChanged)
-    def rapidOverridePercent(self):
-        return self._percent(getattr(self._runtime_store.snapshot, 'rapidrate', 1.0))
-
-    @pyqtProperty(float, notify=stateChanged)
-    def maximumRapidVelocity(self):
-        return self._maximum_rapid_velocity
-
     def _bind_status_updates(self):
         channels = (
             getattr(STATUS, 'estop', None),
@@ -176,7 +151,6 @@ class ProgramsActionSource(QObject):
             getattr(STATUS, 'block_delete', None),
             getattr(STATUS, 'optional_stop', None),
             getattr(STATUS, 'homed', None),
-            getattr(STATUS, 'rapidrate', None),
         )
         for channel in channels:
             if channel is None:
@@ -393,17 +367,6 @@ class ProgramsActionSource(QObject):
         self._runtime_store.poll()
         self.refresh()
 
-    @pyqtSlot(int)
-    def setRapidOverridePercent(self, value):
-        try:
-            percent = int(value)
-        except (TypeError, ValueError):
-            return
-        percent = max(0, min(100, percent))
-        CMD.rapidrate(float(percent) / 100.0)
-        self._runtime_store.poll()
-        self.refresh()
-
     @pyqtSlot(str)
     def submitMdi(self, command):
         command = (command or '').strip()
@@ -411,9 +374,3 @@ class ProgramsActionSource(QObject):
             return
         issue_mdi(command)
         self.refresh()
-
-    def _percent(self, value):
-        try:
-            return int(round(float(value or 0.0) * 100.0))
-        except (TypeError, ValueError):
-            return 0
