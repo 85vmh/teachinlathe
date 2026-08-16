@@ -634,8 +634,8 @@ class MyMainWindow(VCPMainWindow):
 
     def onStateChanged(self, state):
         if state == linuxcnc.RCS_DONE and self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value == True:
-            print("----Loaded program has finished")
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = False
+            print("----Loaded program has finished, NOT setting ProgramLoaded pin to false")
+            #self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = False
 
     def onHandwheelAllowedChanged(self, allowed: bool):
         print(f"Handwheel allowed changed to: {allowed}")
