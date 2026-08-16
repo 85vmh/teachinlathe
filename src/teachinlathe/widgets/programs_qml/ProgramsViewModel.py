@@ -8,7 +8,8 @@ from teachinlathe.data.program_runtime import ProgramRuntimeStore
 from teachinlathe.data.program_stack import ProgramCallStackResolver
 from teachinlathe.data.programs_action_source import ProgramsActionSource
 from teachinlathe.data.programs_screen import ProgramsScreen
-from teachinlathe.data.run_time_tracker import RunTimeTracker, format_duration
+from teachinlathe.data.run_time_tracker import RunTimeTracker
+from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.widgets.programs_qml.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
 
 Screen = ProgramsScreen
@@ -21,11 +22,11 @@ class ProgramsViewModel(QObject):
     currentFileDisplayPathChanged = pyqtSignal(str)
     executionViewChanged = pyqtSignal()
     runningStateChanged = pyqtSignal()
+    programCompletedStateChanged = pyqtSignal()
     # Full-screen run view transitions
     enterRunFullScreenRequested = pyqtSignal()
     exitRunFullScreenRequested = pyqtSignal()
-    # name, movement, toolchange, total (pre-formatted strings)
-    programCompleted = pyqtSignal(str, str, str, str)
+    switchToManualRequested = pyqtSignal()
     programLoadRequested = pyqtSignal(str)
     ensureProgramLoadedRequested = pyqtSignal()
     gremlinZoomInRequested = pyqtSignal()
@@ -42,6 +43,9 @@ class ProgramsViewModel(QObject):
         self._tool_change = ProgramsToolChangeViewModel(self)
         self._screen_index = Screen.FileSystem
         self._run_tracker = RunTimeTracker(self)
+        self._component = TeachInLatheComponent()
+        self._program_completed = False
+        self._program_completed_name = ""
         self._was_active = False
         self._run_started = False
         self._abort_requested = False
@@ -65,6 +69,8 @@ class ProgramsViewModel(QObject):
         self._actions.abortTriggered.connect(self._on_abort_triggered)
         self._actions.cycleStartObserved.connect(self._on_cycle_start_observed)
 
+        self._bind_program_completion_hal()
+        self._sync_program_completed_from_hal()
         self._refresh_execution_view()
 
     @property
@@ -102,6 +108,14 @@ class ProgramsViewModel(QObject):
     @pyqtProperty(str, notify=currentFileDisplayPathChanged)
     def currentFileDisplayPath(self):
         return self.currentFilePath or 'No file loaded'
+
+    @pyqtProperty(bool, notify=programCompletedStateChanged)
+    def programCompletedVisible(self):
+        return self._program_completed
+
+    @pyqtProperty(str, notify=programCompletedStateChanged)
+    def programCompletedName(self):
+        return self._program_completed_name
 
     @pyqtProperty(bool, notify=executionViewChanged)
     def hasExecutionStack(self):
@@ -226,6 +240,7 @@ class ProgramsViewModel(QObject):
     def _on_file_path_changed(self, path):
         self._run_started = False
         self._was_active = False
+        self._sync_program_completed_from_hal()
         self.currentFilePathChanged.emit(path)
         self.currentFileDisplayPathChanged.emit(self.currentFileDisplayPath)
         self._refresh_execution_view()
@@ -246,6 +261,18 @@ class ProgramsViewModel(QObject):
         self.screenIndexChanged.emit(self._screen_index)
 
     # ── Running full-screen state machine ─────────────────────────────
+    def _bind_program_completion_hal(self):
+        comp = self._component.comp
+        for pin_name, callback in (
+            (TeachInLatheComponent.PinProgramCompleted, self._on_program_completed_changed),
+            (TeachInLatheComponent.PinButtonCycleStart, self._on_cycle_start_button_changed),
+            (TeachInLatheComponent.PinProgramAborted, self._on_program_aborted_changed),
+        ):
+            try:
+                comp.addListener(pin_name, callback)
+            except Exception as e:
+                print(f"[ProgramsViewModel] failed to bind HAL pin {pin_name}: {e}")
+
     def _on_abort_triggered(self):
         self._abort_requested = True
         self._run_started = False
@@ -268,19 +295,15 @@ class ProgramsViewModel(QObject):
             self._set_screen_index(Screen.ProgramRunning)
             self.enterRunFullScreenRequested.emit()
         elif self._was_active and not tracking_active:
-            movement, toolchange, total = self._run_tracker.stop()
+            self._run_tracker.stop()
             if self._abort_requested:
                 if self._screen_index == Screen.ProgramRunning:
                     self._set_screen_index(Screen.ProgramLoaded)
                     self.exitRunFullScreenRequested.emit()
             elif self._run_started:
                 name = os.path.basename(self.currentFilePath or '') or 'Program'
-                self.programCompleted.emit(
-                    name,
-                    format_duration(movement),
-                    format_duration(toolchange),
-                    format_duration(total),
-                )
+                self._set_program_completed_name(name)
+                self._sync_program_completed_from_hal()
             elif self._screen_index == Screen.ProgramRunning:
                 self._set_screen_index(Screen.ProgramLoaded)
                 self.exitRunFullScreenRequested.emit()
@@ -303,16 +326,78 @@ class ProgramsViewModel(QObject):
         return bool(self.currentFilePath and os.path.isfile(self.currentFilePath))
 
     @pyqtSlot()
-    def runDone(self):
-        """'Done' on the completion popup: leave full screen back to Loaded."""
-        self._set_screen_index(Screen.ProgramLoaded)
-        self.exitRunFullScreenRequested.emit()
+    def triggerCycleStart(self):
+        if self._program_completed:
+            self._run_completed_program_again()
+            return
+        self._actions.triggerStart()
 
     @pyqtSlot()
-    def runAgain(self):
-        """'Run Again' on the completion popup: start the program once more."""
+    def triggerCycleAbort(self):
+        if self._program_completed:
+            return
+        self._actions.triggerStop()
+
+    def _on_cycle_start_button_changed(self, value=False):
+        pressed = self._read_bool_pin(TeachInLatheComponent.PinButtonCycleStart, bool(value))
+        if not pressed or not self._program_completed:
+            return
+        self._run_completed_program_again()
+
+    def _on_program_completed_changed(self, value=False):
+        completed = self._read_bool_pin(TeachInLatheComponent.PinProgramCompleted, bool(value))
+        if completed and not self._program_completed_name:
+            self._set_program_completed_name(os.path.basename(self.currentFilePath or '') or 'Program')
+        self._set_program_completed_state(completed)
+
+    def _on_program_aborted_changed(self, value=False):
+        aborted = self._read_bool_pin(TeachInLatheComponent.PinProgramAborted, bool(value))
+        if not aborted:
+            return
+        self._close_completed_program_screen()
+
+    def _run_completed_program_again(self):
+        self._set_program_completed_state(False)
+        self._set_screen_index(Screen.ProgramRunning)
         self.ensureProgramLoadedRequested.emit()
         self._actions.triggerStart()
+
+    def _close_completed_program_screen(self):
+        self._set_program_completed_state(False)
+        self._run_started = False
+        self._was_active = False
+        self._set_screen_index(Screen.FileSystem)
+        self.exitRunFullScreenRequested.emit()
+        self.switchToManualRequested.emit()
+
+    def _sync_program_completed_from_hal(self):
+        completed = self._read_bool_pin(TeachInLatheComponent.PinProgramCompleted, self._program_completed)
+        self._set_program_completed_state(completed)
+
+    def _set_program_completed_name(self, name):
+        name = str(name or "Program")
+        if self._program_completed_name != name:
+            self._program_completed_name = name
+            self.programCompletedStateChanged.emit()
+
+    def _set_program_completed_state(self, completed):
+        completed = bool(completed)
+        name_changed = False
+        if not completed and self._program_completed_name:
+            self._program_completed_name = ""
+            name_changed = True
+        if self._program_completed == completed:
+            if name_changed:
+                self.programCompletedStateChanged.emit()
+            return
+        self._program_completed = completed
+        self.programCompletedStateChanged.emit()
+
+    def _read_bool_pin(self, pin_name, default=False):
+        try:
+            return bool(self._component.comp.getPin(pin_name).value)
+        except Exception:
+            return bool(default)
 
     def _is_showing_machine_file(self, machine_file=''):
         editor_path = os.path.abspath(self.currentFilePath) if self.currentFilePath else ''

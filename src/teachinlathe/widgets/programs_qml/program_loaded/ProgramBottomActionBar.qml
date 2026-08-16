@@ -12,6 +12,7 @@ Rectangle {
 
     readonly property var actions: viewModel ? viewModel.actions : null
     readonly property bool running: actions ? actions.isRunning : false
+    readonly property bool programCompleted: viewModel ? viewModel.programCompletedVisible : false
     // Full-screen (running) program view — Cycle Abort is shown the whole time here.
     readonly property bool fullScreen: viewModel ? viewModel.screenIndex === ProgramsScreen.Running : false
 
@@ -32,19 +33,19 @@ Rectangle {
     }
 
     property bool cycleAbortVisible: root.fullScreen
-    property bool cycleAbortEnabled: actions ? actions.stopAction.enabled : false
+    property bool cycleAbortEnabled: root.programCompleted || (actions ? actions.stopAction.enabled : false)
     property var cycleAbortClicked: function() {
-        if (actions) {
-            actions.triggerStop()
+        if (viewModel) {
+            viewModel.triggerCycleAbort()
         }
     }
 
     property int cycleStartState: defaultCycleStartState()
-    property bool cycleStartEnabled: actions ? actions.cycleStartAction.enabled : false
+    property bool cycleStartEnabled: root.programCompleted || (actions ? actions.cycleStartAction.enabled : false)
     property bool cycleStartBlink: actions ? actions.cycleStartLedActive : false
     property var cycleStartClicked: function() {
-        if (actions) {
-            actions.triggerStart()
+        if (viewModel) {
+            viewModel.triggerCycleStart()
         }
     }
     property var pauseClicked: function() {

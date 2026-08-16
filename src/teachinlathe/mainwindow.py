@@ -380,6 +380,7 @@ class MyMainWindow(VCPMainWindow):
         self.programsQmlWidget.setAppState(self.appState)
         self.programsQmlWidget.viewmodel.programLoadRequested.connect(self.onProgramsQmlProgramLoadRequested)
         self.programsQmlWidget.viewmodel.ensureProgramLoadedRequested.connect(self.onProgramsQmlEnsureProgramLoadedRequested)
+        self.programsQmlWidget.viewmodel.switchToManualRequested.connect(self.onProgramsQmlSwitchToManualRequested)
         tab_layout.addWidget(self.programsQmlWidget)
 
     def _initAppShell(self):
@@ -502,6 +503,13 @@ class MyMainWindow(VCPMainWindow):
 
     def onProgramsQmlEnsureProgramLoadedRequested(self):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
+
+    def onProgramsQmlSwitchToManualRequested(self):
+        self.appState.activateTab("manual")
+        if hasattr(self, "appContentStack"):
+            self.appContentStack.setCurrentIndex(MainTabs.MANUAL_TURNING.value)
+        else:
+            self.tabWidget.setCurrentIndex(MainTabs.MANUAL_TURNING.value)
 
     def backToPrograms(self):
         self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)

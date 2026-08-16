@@ -15,7 +15,7 @@ except Exception:
 
 class ProgramsToolChangeViewModel(QObject):
     stateChanged = pyqtSignal()
-    toolChangedPulsed = pyqtSignal()
+    toolChangedPulsed = pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -113,6 +113,22 @@ class ProgramsToolChangeViewModel(QObject):
         self._cancel_ui_pressed = False
         self._refresh_outputs()
 
+    @pyqtSlot()
+    def refreshFromHal(self):
+        requested = self._read_bool_pin(TeachInLatheComponent.PinToolChangeRequest, self._requested)
+        tool_no = self._read_int_pin(TeachInLatheComponent.PinToolChangeToolNo, self._tool_no)
+        changed = requested != self._requested or tool_no != self._tool_no
+        self._requested = requested
+        self._tool_no = tool_no
+        if not requested:
+            self._confirm_ui_pressed = False
+            self._confirm_button_pressed = False
+            self._cancel_ui_pressed = False
+            self._cancel_button_pressed = False
+        self._refresh_outputs(emit=False)
+        if changed:
+            self.stateChanged.emit()
+
     def _bind_hal(self):
         comp = self._component.comp
         for pin_name, callback in (
@@ -127,19 +143,12 @@ class ProgramsToolChangeViewModel(QObject):
                 print(f"[ProgramsToolChangeViewModel] failed to bind HAL pin {pin_name}: {e}")
 
     def _read_initial_hal_state(self):
-        comp = self._component.comp
-        try:
-            self._requested = bool(comp.getPin(TeachInLatheComponent.PinToolChangeRequest).value)
-        except Exception:
-            self._requested = False
-        try:
-            self._tool_no = int(comp.getPin(TeachInLatheComponent.PinToolChangeToolNo).value or 0)
-        except Exception:
-            self._tool_no = 0
+        self._requested = self._read_bool_pin(TeachInLatheComponent.PinToolChangeRequest, False)
+        self._tool_no = self._read_int_pin(TeachInLatheComponent.PinToolChangeToolNo, 0)
         self._refresh_outputs(emit=False)
 
     def _on_requested_changed(self, value=False):
-        requested = bool(value)
+        requested = self._read_bool_pin(TeachInLatheComponent.PinToolChangeRequest, bool(value))
         if requested == self._requested:
             return
         self._requested = requested
@@ -151,10 +160,7 @@ class ProgramsToolChangeViewModel(QObject):
         self._refresh_outputs()
 
     def _on_tool_no_changed(self, value=0):
-        try:
-            tool_no = int(value or 0)
-        except (TypeError, ValueError):
-            tool_no = 0
+        tool_no = self._read_int_pin(TeachInLatheComponent.PinToolChangeToolNo, value)
         if tool_no == self._tool_no:
             return
         self._tool_no = tool_no
@@ -189,7 +195,7 @@ class ProgramsToolChangeViewModel(QObject):
         )
         self._response_output = response_output
         if response_pulsed:
-            self.toolChangedPulsed.emit()
+            self.toolChangedPulsed.emit(self._tool_no)
         if emit:
             self.stateChanged.emit()
 
@@ -198,6 +204,22 @@ class ProgramsToolChangeViewModel(QObject):
             self._component.comp.getPin(pin_name).value = bool(value)
         except Exception as e:
             print(f"[ProgramsToolChangeViewModel] failed to set HAL pin {pin_name}: {e}")
+
+    def _read_bool_pin(self, pin_name, default=False):
+        try:
+            return bool(self._component.comp.getPin(pin_name).value)
+        except Exception:
+            return bool(default)
+
+    def _read_int_pin(self, pin_name, default=0):
+        try:
+            value = self._component.comp.getPin(pin_name).value
+        except Exception:
+            value = default
+        try:
+            return int(value or 0)
+        except (TypeError, ValueError):
+            return 0
 
     @staticmethod
     def _format_number(value):

@@ -3,28 +3,48 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "gcode_viewer"
 import "program_loaded"
-import "program_loaded/running"
 
 Item {
     id: root
     objectName: "programLoadedScreen"
     property var viewModel
-    property bool toolChangeToastVisible: false
+    property bool toolChangedToastVisible: false
+    property string toolChangedToastMessage: ""
 
     function toolChangeViewModel() {
         return root.viewModel ? root.viewModel.toolChange : null
     }
 
-    function toolChangeMessage() {
-        var toolChange = root.toolChangeViewModel()
-        var toolNo = toolChange && toolChange.toolNo > 0 ? toolChange.toolNo : "?"
-        return "Tool " + toolNo + " loaded, press <font color=\"#22c55e\"><b>CycleStart</b></font> to resume the program"
+    function escapeHtml(value) {
+        return String(value === undefined || value === null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;")
     }
 
-    function showToolChangeToast() {
-        root.toolChangeToastVisible = true
-        toolChangeToastTimer.restart()
+    function refreshToolChangeFromHal() {
+        var toolChange = root.toolChangeViewModel()
+        if (toolChange)
+            toolChange.refreshFromHal()
     }
+
+    function toolChangedMessage(toolNo) {
+        var displayToolNo = toolNo > 0 ? toolNo : "?"
+        return "<div align=\"center\"><b>Tool " + displayToolNo + " loaded</b><br/><br/>"
+            + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to resume the program</div>"
+    }
+
+    function showToolChangedToast(toolNo) {
+        root.toolChangedToastMessage = root.toolChangedMessage(toolNo)
+        root.toolChangedToastVisible = true
+        toolChangedToastTimer.restart()
+    }
+
+    Component.onCompleted: root.refreshToolChangeFromHal()
+    onVisibleChanged: if (visible) root.refreshToolChangeFromHal()
+    onViewModelChanged: root.refreshToolChangeFromHal()
 
     SplitView {
         anchors.fill: parent
@@ -88,15 +108,6 @@ Item {
         }
     }
 
-    ProgramCompleteDialog {
-        id: completeDialog
-        objectName: "programCompleteDialog"
-        dialogCenterX: gcodePane.width > 0
-            ? root.width - (gcodePane.width / 2)
-            : root.width * 0.75
-        dialogCenterY: root.height / 2
-    }
-
     ToolChangeDialog {
         anchors.fill: parent
         viewModel: root.viewModel ? root.viewModel.toolChange : null
@@ -108,33 +119,61 @@ Item {
 
     Connections {
         target: root.toolChangeViewModel()
-        function onToolChangedPulsed() { root.showToolChangeToast() }
+        function onToolChangedPulsed(toolNo) { root.showToolChangedToast(toolNo) }
     }
 
     Timer {
-        id: toolChangeToastTimer
+        id: toolChangedToastTimer
         interval: 5000
         repeat: false
-        onTriggered: root.toolChangeToastVisible = false
+        onTriggered: root.toolChangedToastVisible = false
     }
 
     Rectangle {
-        id: toolChangeToast
-        visible: root.toolChangeToastVisible
+        id: toolChangedToast
+        visible: root.toolChangedToastVisible
         z: 1200
         x: gcodePane.x + Math.max(0, (gcodePane.width - width) / 2)
         y: Math.max(0, root.height - 200 - height)
-        width: Math.min(gcodePane.width, toolChangeToastText.implicitWidth + 100)
-        height: toolChangeToastText.implicitHeight + 50
+        width: Math.min(gcodePane.width, toolChangedToastText.implicitWidth + 100)
+        height: toolChangedToastText.implicitHeight + 50
         radius: 8
         color: "#cc303030"
 
         Text {
-            id: toolChangeToastText
+            id: toolChangedToastText
             anchors.centerIn: parent
             width: parent.width - 32
-            text: root.toolChangeMessage()
+            text: root.toolChangedToastMessage
             textFormat: Text.RichText
+            color: "#ffffff"
+            font.pixelSize: 18
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            wrapMode: Text.WordWrap
+        }
+    }
+
+    Rectangle {
+        id: programCompletedToast
+        visible: root.viewModel ? root.viewModel.programCompletedVisible : false
+        z: 1300
+        x: gcodePane.x + Math.max(0, (gcodePane.width - width) / 2)
+        y: Math.max(0, root.height - 220 - height)
+        width: Math.min(gcodePane.width, programCompletedToastText.implicitWidth + 100)
+        height: programCompletedToastText.implicitHeight + 50
+        radius: 8
+        color: "#cc303030"
+
+        Text {
+            id: programCompletedToastText
+            anchors.centerIn: parent
+            width: parent.width - 32
+            textFormat: Text.RichText
+            text: "<div align=\"center\"><b>Program Completed</b><br/>"
+                + "[" + root.escapeHtml(root.viewModel ? root.viewModel.programCompletedName : "") + "]<br/><br/>"
+                + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to run again the same program.<br/>"
+                + "Press <font color=\"#ef4444\"><b>Cycle Abort</b></font> to close this screen.</div>"
             color: "#ffffff"
             font.pixelSize: 18
             horizontalAlignment: Text.AlignHCenter

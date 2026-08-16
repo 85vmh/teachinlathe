@@ -39,7 +39,6 @@ class ProgramsQml(QQuickWidget):
         self._gremlin_placeholder = None
         self._program_loaded_item = None
         self._root_item = None
-        self._complete_dialog = None
 
         self._overlay_host = gremlin_parent
         self._top_left_controls = QWidget(self._overlay_host)
@@ -75,7 +74,6 @@ class ProgramsQml(QQuickWidget):
         self.viewmodel.programLoadRequested.connect(self._prepareGremlinForLoad)
         self.viewmodel.enterRunFullScreenRequested.connect(self._enter_run_full_screen)
         self.viewmodel.exitRunFullScreenRequested.connect(self._exit_run_full_screen)
-        self.viewmodel.programCompleted.connect(self._on_program_completed)
         self.viewmodel.screenIndexChanged.connect(lambda _index: QTimer.singleShot(0, self._sync_gremlin_widget))
         self.viewmodel.screenIndexChanged.connect(lambda _index: self._emit_header_state_changed())
         self.viewmodel.currentFilePathChanged.connect(lambda _path: self._emit_header_state_changed())
@@ -219,7 +217,6 @@ class ProgramsQml(QQuickWidget):
         if not self._root_item:
             return
 
-        self._complete_dialog = self._root_item.findChild(QQuickItem, 'programCompleteDialog')
         self._program_loaded_item = self._root_item.findChild(QQuickItem, 'programLoadedScreen')
 
         self._gremlin_placeholder = self._root_item.findChild(QQuickItem, 'gremlinViewport')
@@ -251,7 +248,6 @@ class ProgramsQml(QQuickWidget):
         self._hide_gremlin_overlay_controls()
 
     def _enter_run_full_screen(self):
-        self._hide_program_complete_dialog()
         win = self.window()
         if win is None or not hasattr(win, 'enterProgramRunFullScreen'):
             return
@@ -261,36 +257,10 @@ class ProgramsQml(QQuickWidget):
         # coordinates each time, so no reparenting is needed here.
         self._schedule_gremlin_sync()
 
-    def _hide_program_complete_dialog(self):
-        dlg = getattr(self, '_complete_dialog', None)
-        if dlg is None and self._root_item is not None:
-            dlg = self._root_item.findChild(QQuickItem, 'programCompleteDialog')
-            self._complete_dialog = dlg
-        if dlg is not None:
-            dlg.setProperty('visible', False)
-
-    def _on_program_completed(self, name, movement, toolchange, total):
-        # The gremlin is a native widget overlaid on top of the QQuickWidget, so
-        # hide it while the QML completion dialog is shown. It is re-shown by the
-        # gremlin sync when re-running (Run Again) or leaving full screen (Done).
-        self.gremlin.hide()
-        self._hide_gremlin_overlay_controls()
-        dlg = getattr(self, '_complete_dialog', None)
-        if dlg is None and self._root_item is not None:
-            dlg = self._root_item.findChild(QQuickItem, 'programCompleteDialog')
-            self._complete_dialog = dlg
-        if dlg is not None:
-            dlg.setProperty('programName', name)
-            dlg.setProperty('movement', movement)
-            dlg.setProperty('toolchange', toolchange)
-            dlg.setProperty('total', total)
-            dlg.setProperty('visible', True)  # open()
-
     def _exit_run_full_screen(self):
         QTimer.singleShot(0, self._exit_run_full_screen_now)
 
     def _exit_run_full_screen_now(self):
-        self._hide_program_complete_dialog()
         win = self.window()
         self.gremlin.hide()
         self._hide_gremlin_overlay_controls()
