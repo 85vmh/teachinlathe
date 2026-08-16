@@ -51,6 +51,7 @@ class TeachInLatheComponent:
     PinToolChangeToolNo = 'tool-change.number'
     PinToolChangeRequest = 'tool-change.change'
     PinToolChangeResponse = 'tool-change.changed'
+    PinToolChangeCanceled = 'tool-change.canceled'
     PinAxisLimitXMin = 'axis-limits.x-min'
     PinAxisLimitXMax = 'axis-limits.x-max'
     PinAxisLimitZMin = 'axis-limits.z-min'
@@ -105,6 +106,10 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinSpindleIsFirstGear, 'bit', 'in')
         self.comp.addPin(self.PinButtonCycleStart, 'bit', 'in')
         self.comp.addPin(self.PinButtonCycleStop, 'bit', 'in')
+        self.comp.addPin(self.PinToolChangeToolNo, 's32', 'in')
+        self.comp.addPin(self.PinToolChangeRequest, 'bit', 'in')
+        self.comp.addPin(self.PinToolChangeResponse, 'bit', 'out')
+        self.comp.addPin(self.PinToolChangeCanceled, 'bit', 'out')
         self.comp.addPin(self.PinAxisLimitXMin, 'float', 'in')
         self.comp.addPin(self.PinAxisLimitXMax, 'float', 'in')
         self.comp.addPin(self.PinAxisLimitZMin, 'float', 'in')
@@ -114,4 +119,6 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinProgramLoaded, 'bit', 'out')
         self.comp.addPin(self.PinCycleStartLed, 'bit', 'in')
         self.comp.ready()
+        self.comp.getPin(self.PinToolChangeResponse).value = False
+        self.comp.getPin(self.PinToolChangeCanceled).value = False
         print("HalComponent instance is created")

@@ -9,6 +9,7 @@ from teachinlathe.data.program_stack import ProgramCallStackResolver
 from teachinlathe.data.programs_action_source import ProgramsActionSource
 from teachinlathe.data.programs_screen import ProgramsScreen
 from teachinlathe.data.run_time_tracker import RunTimeTracker, format_duration
+from teachinlathe.widgets.programs_qml.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
 
 Screen = ProgramsScreen
 
@@ -38,6 +39,7 @@ class ProgramsViewModel(QObject):
         self._runtime_store = ProgramRuntimeStore(self)
         self._call_stack_resolver = ProgramCallStackResolver(self)
         self._actions = ProgramsActionSource(self._runtime_store, self)
+        self._tool_change = ProgramsToolChangeViewModel(self)
         self._screen_index = Screen.FileSystem
         self._run_tracker = RunTimeTracker(self)
         self._was_active = False
@@ -76,6 +78,10 @@ class ProgramsViewModel(QObject):
     @pyqtProperty(QObject, constant=True)
     def actions(self):
         return self._actions
+
+    @pyqtProperty(QObject, constant=True)
+    def toolChange(self):
+        return self._tool_change
 
     @pyqtProperty('QVariantList', constant=True)
     def folderNames(self):
