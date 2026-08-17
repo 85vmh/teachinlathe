@@ -163,7 +163,7 @@ Item {
         width: Math.min(gcodePane.width, programCompletedToastText.implicitWidth + 100)
         height: programCompletedToastText.implicitHeight + 50
         radius: 8
-        color: "#cc303030"
+        color: "#ff303030"
 
         Text {
             id: programCompletedToastText
@@ -171,8 +171,8 @@ Item {
             width: parent.width - 32
             textFormat: Text.RichText
             text: "<div align=\"center\"><b>Program Completed</b><br/>"
-                + "[" + root.escapeHtml(root.viewModel ? root.viewModel.programCompletedName : "") + "]<br/><br/>"
-                + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to run again the same program.<br/>"
+                + "[" + root.escapeHtml(root.viewModel ? root.viewModel.programCompletedName : "") + "]<br/><br/><br/><br/>"
+                + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to run again the same program.<br/><br/>"
                 + "Press <font color=\"#ef4444\"><b>Cycle Abort</b></font> to close this screen.</div>"
             color: "#ffffff"
             font.pixelSize: 18
