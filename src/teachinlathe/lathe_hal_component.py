@@ -33,6 +33,7 @@ class TeachInLatheComponent:
     PinProgramLoaded = 'app-status.program-loaded'
     PinProgramCompleted = 'app-status.program-completed'
     PinProgramAborted = 'app-status.program-aborted'
+    PinDevMode = 'app-status.dev-mode'
     PinButtonCycleStart = 'button.cycle-start'
     PinCycleStartLed = 'app-status.cycle-start-led'
     PinButtonCycleStop = 'button.cycle-stop'
@@ -121,6 +122,7 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinProgramLoaded, 'bit', 'out')
         self.comp.addPin(self.PinProgramCompleted, 'bit', 'in')
         self.comp.addPin(self.PinProgramAborted, 'bit', 'in')
+        self.comp.addPin(self.PinDevMode, 'bit', 'in')
         self.comp.addPin(self.PinCycleStartLed, 'bit', 'in')
         self.comp.ready()
         self.comp.getPin(self.PinToolChangeResponse).value = False

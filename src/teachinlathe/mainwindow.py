@@ -15,6 +15,7 @@ from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
 from teachinlathe.app_state import AppState
 from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
+from teachinlathe.dev_panel import DevPanelWindow
 from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
@@ -161,6 +162,7 @@ class MyMainWindow(VCPMainWindow):
         self.feedAnimator = FrameAnimator(self.feedFrame)
 
         self.latheComponent = TeachInLatheComponent()
+        self.devPanelWindow = None
 
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsOn, self.onSpindleRunningChanged)
@@ -174,6 +176,7 @@ class MyMainWindow(VCPMainWindow):
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsFirstGear, self.onSpindleFirstGearChanged)
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsAllowed, self.onHandwheelAllowedChanged)
+        self.latheComponent.comp.addListener(TeachInLatheComponent.PinDevMode, self.onDevModeChanged)
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = True
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = True
         self.onSpindleFirstGearChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
@@ -195,6 +198,7 @@ class MyMainWindow(VCPMainWindow):
         self.manualTurningViewModel.setJoystickResetRequired(
             self.latheComponent.comp.getPin(TeachInLatheComponent.PinJoystickResetRequired).value
         )
+        self.onDevModeChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinDevMode).value)
 
         self.teachInLatheDroViewModel.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
         self.teachInLatheDroViewModel.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
@@ -545,6 +549,16 @@ class MyMainWindow(VCPMainWindow):
 
     def onCycleStartPressed(self):
         pass
+
+    def onDevModeChanged(self, value):
+        if value:
+            if self.devPanelWindow is None:
+                self.devPanelWindow = DevPanelWindow(self)
+            self.devPanelWindow.show()
+            self.devPanelWindow.raise_()
+            return
+        if self.devPanelWindow is not None:
+            self.devPanelWindow.hide()
 
     def onCycleStopPressed(self, value):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = False
