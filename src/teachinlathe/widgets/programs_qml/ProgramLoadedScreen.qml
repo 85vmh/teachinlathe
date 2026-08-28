@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "gcode_viewer"
 import "program_loaded"
+import "toolpath"
 
 Item {
     id: root
@@ -87,14 +88,18 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "#0f0f0f"
-                    border.color: "#252525"
+                    color: "#f5f5f5"
+                    border.color: "#d6d6d6"
                     border.width: 1
 
-                    Item {
-                        id: viewport
-                        objectName: "gremlinViewport"
+                    ToolpathCanvas {
                         anchors.fill: parent
+                        batches: toolpathModel ? toolpathModel.batches : []
+                        extents: toolpathModel ? toolpathModel.extents : ({})
+                        workpiece: toolpathModel ? toolpathModel.workpiece : ({})
+                        stockProfile: toolpathModel ? toolpathModel.stockProfile : []
+                        errorText: toolpathModel ? toolpathModel.error : ""
+                        loading: toolpathModel ? toolpathModel.loading : false
                     }
                 }
             }
