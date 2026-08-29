@@ -1,0 +1,9 @@
+module Inserts
+TurningInsertBase 1.0 TurningInsertBase.qml
+CCMT 1.0 CCMT.qml
+DCMT 1.0 DCMT.qml
+VBMT 1.0 VBMT.qml
+TCMT 1.0 TCMT.qml
+WNMG 1.0 WNMG.qml
+SNMG 1.0 SNMG.qml
+RCMT 1.0 RCMT.qml
