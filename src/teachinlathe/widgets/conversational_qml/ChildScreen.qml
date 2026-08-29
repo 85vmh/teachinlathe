@@ -46,6 +46,7 @@ Item {
     signal updateHeader(var payload)
     signal addProfilingFinishRequested(int index)
     signal openNumPadRequested(var field)
+    signal openKeyboardRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
     signal addOperationRequested()
@@ -247,6 +248,10 @@ Item {
 
                     function onOpenNumPadRequested(field) {
                         operationEditor.openNumPadRequested(field)
+                    }
+
+                    function onOpenKeyboardRequested(field) {
+                        operationEditor.openKeyboardRequested(field)
                     }
 
                     function onAddFinishRequested(i) {

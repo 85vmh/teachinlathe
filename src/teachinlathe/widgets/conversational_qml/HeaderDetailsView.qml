@@ -37,6 +37,7 @@ Item {
     // --- Bridge signals (same pattern as other detail views) ---
     signal saveRequested(var updated)
     signal openNumPadRequested(var field)
+    signal openKeyboardRequested(var field)
 
     // Populate from Program object
     function applyProgram(program) {
@@ -127,12 +128,18 @@ Item {
                                 verticalAlignment: Text.AlignVCenter
                                 font.pixelSize: root.fieldFontSize
                             }
-                            TextField {
+                            KeyboardField {
                                 Layout.preferredWidth: root.programNameWidth
                                 Layout.preferredHeight: root.inputHeight
                                 font.pixelSize: root.inputFontSize
+                                titleText: "Program name"
                                 text: root.programName
-                                onTextChanged: { root.programName = text; root.emitSave() }
+                                commitUpdatesText: false
+                                onOpenRequested: root.openKeyboardRequested(field)
+                                onValueCommitted: {
+                                    root.programName = value
+                                    root.emitSave()
+                                }
                             }
                         }
 

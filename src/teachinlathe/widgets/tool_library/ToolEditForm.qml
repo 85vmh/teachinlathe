@@ -5,6 +5,7 @@
 //                                        orientation, toolType, <type-specific extras> }
 //              cancelled()
 //              openNumPadRequested(var field)
+//              openKeyboardRequested(var field)
 //
 // Call populate(data) explicitly to load data into fields.
 import QtQuick 2.15
@@ -23,6 +24,7 @@ Item {
     signal saved(var formData)
     signal cancelled()
     signal openNumPadRequested(var field)
+    signal openKeyboardRequested(var field)
 
     readonly property var _toolTypes6: [
         { key: "generic",       label: "Generic"       },
@@ -311,10 +313,12 @@ Item {
 
                         // Comment
                         Text { text: "Comment:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
-                        TextField {
+                        KeyboardField {
                             id: editComment
                             Layout.preferredWidth: 280; Layout.preferredHeight: 44
                             font.pixelSize: 15; placeholderText: "Description..."
+                            titleText: "Comment"
+                            onOpenRequested: root.openKeyboardRequested(field)
                         }
                     }
 

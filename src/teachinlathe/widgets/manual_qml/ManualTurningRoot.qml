@@ -25,6 +25,7 @@ Item {
     readonly property color cardBackgroundColor: "#f5f5f5"
     readonly property color cardBorderColor: "#ccc"
     readonly property color angleFeedGlowColor: "#ff9800"
+    property var _pendingKeyboardField: null
 
     Rectangle {
         anchors.fill: parent
@@ -36,6 +37,18 @@ Item {
     // `description` as the title override (falls back to numpad_settings.json).
     function openNumpad(field) {
         numpadDialog.openFor(field, field.settingName, field.description)
+    }
+
+    function openKeyboard(field) {
+        if (!field)
+            return
+        root._pendingKeyboardField = field
+        if (!keyboardDialogLoader.active)
+            keyboardDialogLoader.active = true
+        if (keyboardDialogLoader.item) {
+            keyboardDialogLoader.item.openFor(field, field.titleText)
+            root._pendingKeyboardField = null
+        }
     }
 
     function openBladeZ0ReferenceDialog(bladeWidth) {
@@ -52,6 +65,19 @@ Item {
 
     SmartNumpadDialog {
         id: numpadDialog
+    }
+
+    Loader {
+        id: keyboardDialogLoader
+        active: false
+        source: "../touchable_input/QwertyKeyboardDialog.qml"
+
+        onLoaded: {
+            if (item && root._pendingKeyboardField) {
+                item.openFor(root._pendingKeyboardField, root._pendingKeyboardField.titleText)
+                root._pendingKeyboardField = null
+            }
+        }
     }
 
     Dialog {
@@ -390,6 +416,7 @@ Item {
             Layout.preferredWidth: root.toolListWidth
             Layout.fillHeight: true
             onOpenNumPadRequested: root.openNumpad(field)
+            onOpenKeyboardRequested: root.openKeyboard(field)
         }
     }
 }

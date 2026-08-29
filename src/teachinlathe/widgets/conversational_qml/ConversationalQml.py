@@ -359,6 +359,8 @@ class ConversationalQml(QQuickWidget):
                 item.updateTapping.connect(self.onUpdateTapping)
             if hasattr(item, "openNumPadRequested"):
                 item.openNumPadRequested.connect(self.onOpenNumPadRequested)
+            if hasattr(item, "openKeyboardRequested"):
+                item.openKeyboardRequested.connect(self.onOpenKeyboardRequested)
             if hasattr(item, "generateGcodeRequested"):
                 item.generateGcodeRequested.connect(self.onGenerateGcodeRequested)
             if hasattr(item, "updateHeader"):
@@ -1110,6 +1112,15 @@ class ConversationalQml(QQuickWidget):
             )
         except Exception as e:
             print("openNumpad failed:", e)
+
+    def onOpenKeyboardRequested(self, field):
+        """Called from QML when a KeyboardField was tapped."""
+        try:
+            QMetaObject.invokeMethod(
+                self.root, "openKeyboard", Qt.DirectConnection, Q_ARG("QVariant", field)
+            )
+        except Exception as e:
+            print("openKeyboard failed:", e)
 
     def onOpenProfileEditorRequested(self, op_index, op_data):
         try:

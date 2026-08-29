@@ -17,6 +17,7 @@ Rectangle {
     border.width: 1
 
     signal openNumPadRequested(var field)
+    signal openKeyboardRequested(var field)
     readonly property int toolListSpacing: 5
 
     // ── Edit / Add state ──────────────────────────────────────────
@@ -241,6 +242,7 @@ Rectangle {
 
                 onCancelled: root._flipToFront()
                 onOpenNumPadRequested: root.openNumPadRequested(field)
+                onOpenKeyboardRequested: root.openKeyboardRequested(field)
             }
         }
     }

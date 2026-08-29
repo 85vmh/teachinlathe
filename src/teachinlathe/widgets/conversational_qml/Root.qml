@@ -12,6 +12,7 @@ Item {
     property string currentSource: ""
     property var _currentParams: ({})     // last applied params for currentSource
     property var _pendingParams: null     // params to apply after Loader creates its item
+    property var _pendingKeyboardField: null
 
     function canGoBack() { return history.length > 0 }
 
@@ -23,6 +24,18 @@ Item {
         numpadDialog.openFor(field, field.settingName, field.description)
     }
 
+    function openKeyboard(field) {
+        if (!field)
+            return
+        root._pendingKeyboardField = field
+        if (!keyboardDialogLoader.active)
+            keyboardDialogLoader.active = true
+        if (keyboardDialogLoader.item) {
+            keyboardDialogLoader.item.openFor(field, field.titleText)
+            root._pendingKeyboardField = null
+        }
+    }
+
     function showBuildGcodeProgress() {
         buildGcodeProgressDialog.open()
     }
@@ -32,6 +45,18 @@ Item {
     }
 
     SmartNumpadDialog { id: numpadDialog }
+    Loader {
+        id: keyboardDialogLoader
+        active: false
+        source: "../touchable_input/QwertyKeyboardDialog.qml"
+
+        onLoaded: {
+            if (item && root._pendingKeyboardField) {
+                item.openFor(root._pendingKeyboardField, root._pendingKeyboardField.titleText)
+                root._pendingKeyboardField = null
+            }
+        }
+    }
     BuildGcodeProgressDialog { id: buildGcodeProgressDialog }
 
     // Push a new screen (store the current screen state in history)
