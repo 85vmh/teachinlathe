@@ -13,6 +13,7 @@ Canvas {
     property int    selectedBlendIndex: -1  // index of primitive whose blend is selected; -1 = none
     property string profileType:       "od" // "od" or "id" — controls startPoint blend entry direction
     property var    workpiece:         ({})
+    property bool   mirrorAcrossCenterline: false
 
     signal primitiveSelected(int index)
     signal selectionCleared()
@@ -48,6 +49,10 @@ Canvas {
     onHeightChanged: { if (!_manualView) fitToScreen() }
     onSelectedPrimIndexChanged:  requestPaint()
     onSelectedBlendIndexChanged: requestPaint()
+    onMirrorAcrossCenterlineChanged: {
+        if (!_manualView) Qt.callLater(fitToScreen)
+        else              requestPaint()
+    }
 
     // ── Reset view to fit (public, call when entering the screen) ─────────────
     function resetView() { _manualView = false; Qt.callLater(fitToScreen) }
@@ -87,10 +92,13 @@ Canvas {
         }
         var MARGIN = 10
 
+        var displayXMin = root.mirrorAcrossCenterline ? -Math.max(Math.abs(b.fXMin), Math.abs(b.fXMax)) / 2 : 0
+        var displayXMax = root.mirrorAcrossCenterline ?  Math.max(Math.abs(b.fXMin), Math.abs(b.fXMax)) / 2 : b.fXMax / 2
+
         // Z: [zMin-M, zMax+M]
         var spanZ = Math.max(b.fZMax - b.fZMin + 2 * MARGIN, 1)
-        // X: diameter → radius for display. fXMax is diameter; /2 gives max radius.
-        var spanX = Math.max(b.fXMax / 2 + 2 * MARGIN, 1)
+        // X is diameter in profile primitives; canvas uses radius units for display.
+        var spanX = Math.max(displayXMax - displayXMin + 2 * MARGIN, 1)
 
         var scale = Math.min(width / spanZ, height / spanX)
 
@@ -100,7 +108,7 @@ Canvas {
 
         _scale   = scale
         _originX = leftOffset + (MARGIN - b.fZMin) * scale
-        _originY = topOffset  + MARGIN * scale   // canvas Y when world X = 0
+        _originY = topOffset  + (MARGIN - displayXMin) * scale
         _manualView = false
         requestPaint()
     }
@@ -188,6 +196,7 @@ Canvas {
         scale: root._scale
         cx: root._cx
         cy: root._cy
+        mirrorAcrossCenterline: root.mirrorAcrossCenterline
     }
 
     HighlightActor {

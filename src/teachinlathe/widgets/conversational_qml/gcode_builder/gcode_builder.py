@@ -230,7 +230,7 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None, 
         op_display = _display_name_for_operation(op)
         lines.append(_format_comment(f"----------Operation #{index}: {op_display}----------") + "\n")
 
-        if op.type == "defineProfile":
+        if op.type in ("defineProfile", "importDxfProfile"):
             if not _define_profile_needs_subroutine(int(op.profile_id or 0), operations):
                 lines.append("; The drawn profile is represented in the custom profiling section.")
                 lines.append("")

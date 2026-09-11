@@ -81,7 +81,7 @@ Item {
             detailsLoader.source = "GrooveRoughingDetailsView.qml"
         } else if (data.type === "grooveFinishing") {
             detailsLoader.source = "GrooveFinishingDetailsView.qml"
-        } else if (data.type === "defineProfile") {
+        } else if (data.type === "defineProfile" || data.type === "importDxfProfile") {
             detailsLoader.source = "define_profile/ProfileDetailsView.qml"
         } else if (data.type === "defineRadialProfile") {
             detailsLoader.source = "define_radial_profile/RadialProfileDetailsView.qml"
@@ -206,7 +206,7 @@ Item {
                             operationEditor.updateToolChange(updated.index, updated.payload)
                         else if (t === "positionAt" && operationEditor.updatePositionAt)
                             operationEditor.updatePositionAt(updated.index, updated.payload)
-                        else if (t === "defineProfile" && operationEditor.updateDefineProfile)
+                        else if ((t === "defineProfile" || t === "importDxfProfile") && operationEditor.updateDefineProfile)
                             operationEditor.updateDefineProfile(updated.index, updated.payload)
                         else if (t === "defineRadialProfile" && operationEditor.updateDefineRadialProfile)
                             operationEditor.updateDefineRadialProfile(updated.index, updated.payload)

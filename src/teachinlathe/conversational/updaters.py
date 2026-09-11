@@ -288,6 +288,7 @@ def apply_define_profile_update(op, payload):
     if op is None or not isinstance(payload, dict):
         return
     apply_operation_update(op, payload)
+    _set_attr_if_present(op, payload, "dxfFilePath", coerce=str)
     _set_attr_if_present(op, payload, "profile_id", coerce=int)
     if "profile_type" in payload and payload["profile_type"] is not None:
         try:

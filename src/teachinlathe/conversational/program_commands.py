@@ -15,7 +15,7 @@ def renumber_operations(operations):
 
 def insert_default_operation(program, op_type: str, insert_index: int):
     new_op = make_default_operation(op_type)
-    if op_type == "defineProfile":
+    if op_type in ("defineProfile", "importDxfProfile"):
         from teachinlathe.conversational.data_types import DefineProfile
         existing_ids = [op.profile_id for op in program.operations if isinstance(op, DefineProfile)]
         new_op.profile_id = (max(existing_ids) + 1) if existing_ids else 1

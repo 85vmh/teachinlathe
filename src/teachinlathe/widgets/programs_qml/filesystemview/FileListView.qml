@@ -128,6 +128,8 @@ Item {
             delegate: Item {
                 width: ListView.view.width
                 height: root.rowHeight
+                readonly property bool hasFolderCount: modelData.folderFileCountDisplay !== undefined
+                                                       && modelData.folderFileCountDisplay !== ""
 
                 // Alternating background
                 Rectangle {
@@ -184,9 +186,21 @@ Item {
                         }
 
                         Text {
-                            Layout.fillWidth: true
+                            Layout.fillWidth: !hasFolderCount
+                            Layout.preferredWidth: hasFolderCount ? Math.min(implicitWidth, parent.width * 0.58) : -1
                             text: modelData.name
                             color: modelData.isDir ? "#4f4f4f" : "#202020"
+                            font.pixelSize: root.itemFontSize
+                            font.family: "DejaVu Sans Mono"
+                            elide: Text.ElideRight
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            visible: hasFolderCount
+                            text: modelData.folderFileCountDisplay || ""
+                            color: "#6b7280"
                             font.pixelSize: root.itemFontSize
                             font.family: "DejaVu Sans Mono"
                             elide: Text.ElideRight

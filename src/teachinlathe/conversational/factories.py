@@ -52,6 +52,7 @@ from teachinlathe.conversational.data_types import (
     Threading,
     Workpiece,
     DefineProfile,
+    ImportDxfProfile,
     DefineRadialProfile,
 )
 
@@ -237,13 +238,16 @@ def make_default_operation(op_type: str, order: int = 1):
             ),
             edgeBreak=EdgeBreak(blend_type=BlendType.NONE, chamfer_width=0.0, fillet_radius=0.0),
         )
-    if op_type == "defineProfile":
+    if op_type in ("defineProfile", "importDxfProfile"):
         default_start = StartPoint(primitive_id=1, primitive_type="startPoint",
                                    x_start=0.0, z_start=0.0,
                                    blend=ProfileBlend(blend_type=BlendType.NONE))
-        return DefineProfile(
+        profile_cls = ImportDxfProfile if op_type == "importDxfProfile" else DefineProfile
+        extra = {"dxfFilePath": ""} if op_type == "importDxfProfile" else {}
+        return profile_cls(
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
-            profile_id=1, profile_type=ProfilingType.OD, profile_primitives=[default_start]
+            profile_id=1, profile_type=ProfilingType.OD, profile_primitives=[default_start],
+            **extra,
         )
     raise ValueError(f"Unknown operation type: {op_type!r}")
 

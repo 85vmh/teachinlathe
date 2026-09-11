@@ -91,7 +91,17 @@ class FileSystemViewModel(QObject):
     fileSelected = pyqtSignal(str, arguments=["absolutePath"])
     fileOpenRequested = pyqtSignal(str, arguments=["absolutePath"])
 
-    def __init__(self, locations: list, parent=None, json_folder_path: str = ""):
+    def __init__(
+        self,
+        locations: list,
+        parent=None,
+        json_folder_path: str = "",
+        file_extensions: tuple[str, ...] | None = None,
+        file_filter_label: str = "NGC",
+        allow_file_filter_toggle: bool = True,
+        mounted_media_exclusive: bool = False,
+        show_recursive_folder_file_counts: bool = False,
+    ):
         """
         Parameters
         ----------
@@ -107,6 +117,11 @@ class FileSystemViewModel(QObject):
         self._selected_path: str = ""
         self._show_folders: bool = True
         self._ngc_only: bool = True
+        self._file_extensions = tuple(ext.lower() for ext in (file_extensions or GCODE_EXTENSIONS))
+        self._file_filter_label = file_filter_label or "Files"
+        self._allow_file_filter_toggle = bool(allow_file_filter_toggle)
+        self._mounted_media_exclusive = bool(mounted_media_exclusive)
+        self._show_recursive_folder_file_counts = bool(show_recursive_folder_file_counts)
         self._sort_col: str = "modified"
         self._sort_asc: bool = False
         self._is_copying: bool = False
@@ -119,6 +134,8 @@ class FileSystemViewModel(QObject):
         self._usb_monitor.driveDisconnected.connect(self._on_drive_disconnected)
         for name, path in self._usb_monitor.mounted_drives:
             self._mounted.append(FileSystemLocation(name, path, LocationType.MOUNTED_MEDIA))
+        if self._mounted_media_exclusive and self._mounted:
+            self._current_name = self._mounted[0].name
 
         self._dir_watcher = QFileSystemWatcher(self)
         self._dir_watcher.directoryChanged.connect(lambda _: self.entriesChanged.emit())
@@ -132,14 +149,15 @@ class FileSystemViewModel(QObject):
     def locations(self) -> list:
         at_root = self._current_path == ""
         result = []
-        for loc in self._static:
-            result.append({
-                "name": loc.name,
-                "type": loc.location_type.value,
-                "isAvailable": os.path.isdir(loc.root_path),
-                "isSelected": at_root and loc.name == self._current_name,
-                "isMountedMedia": False,
-            })
+        if not (self._mounted_media_exclusive and self._mounted):
+            for loc in self._static:
+                result.append({
+                    "name": loc.name,
+                    "type": loc.location_type.value,
+                    "isAvailable": os.path.isdir(loc.root_path),
+                    "isSelected": at_root and loc.name == self._current_name,
+                    "isMountedMedia": False,
+                })
         for loc in self._mounted:
             result.append({
                 "name": loc.name,
@@ -172,6 +190,10 @@ class FileSystemViewModel(QObject):
     @pyqtProperty(str, notify=selectionChanged)
     def selectedEntryPath(self) -> str:
         return self._selected_path
+
+    @pyqtProperty(str, notify=selectionChanged)
+    def selectedAbsolutePath(self) -> str:
+        return self._selected_absolute_path() or ""
 
     @pyqtProperty(bool, notify=selectionChanged)
     def selectedIsFile(self) -> bool:
@@ -216,6 +238,14 @@ class FileSystemViewModel(QObject):
     @pyqtProperty(bool, notify=filterChanged)
     def ngcOnly(self) -> bool:
         return self._ngc_only
+
+    @pyqtProperty(str, notify=filterChanged)
+    def fileFilterLabel(self) -> str:
+        return self._file_filter_label
+
+    @pyqtProperty(bool, notify=filterChanged)
+    def allowFileFilterToggle(self) -> bool:
+        return self._allow_file_filter_toggle
 
     @pyqtProperty(str, notify=filterChanged)
     def sortColumn(self) -> str:
@@ -391,6 +421,8 @@ class FileSystemViewModel(QObject):
 
     @pyqtSlot(bool)
     def setNgcOnly(self, ngc_only: bool) -> None:
+        if not self._allow_file_filter_toggle:
+            return
         if self._ngc_only == ngc_only:
             return
         self._ngc_only = ngc_only
@@ -525,12 +557,36 @@ class FileSystemViewModel(QObject):
             for name in os.listdir(abs_dir):
                 full = os.path.join(abs_dir, name)
                 if os.path.isdir(full) or (
-                    os.path.isfile(full) and name.endswith(GCODE_EXTENSIONS)
+                    os.path.isfile(full) and name.lower().endswith(self._file_extensions)
                 ):
                     count += 1
         except OSError:
             pass
         return count
+
+    def _count_matching_files_recursive(self, abs_dir: str) -> int:
+        count = 0
+        for root, dirs, files in os.walk(abs_dir):
+            dirs[:] = [name for name in dirs if not name.startswith(".")]
+            for name in files:
+                if name.startswith("."):
+                    continue
+                if name.lower().endswith(self._file_extensions):
+                    count += 1
+        return count
+
+    def _folder_file_count_display(self, entry: FileSystemEntry) -> str:
+        if (
+            not self._show_recursive_folder_file_counts
+            or entry.is_up
+            or not entry.is_dir
+        ):
+            return ""
+        count = self._count_matching_files_recursive(entry.absolute_path)
+        ext_label = self._file_extensions[0] if len(self._file_extensions) == 1 else "matching"
+        if count <= 0:
+            return f"[no {ext_label} files]"
+        return f"[has {count} {ext_label} file{'s' if count != 1 else ''}]"
 
     def _scan(self, abs_dir: str) -> list:
         raw: list[FileSystemEntry] = []
@@ -561,7 +617,7 @@ class FileSystemViewModel(QObject):
                     modified_timestamp=st.st_mtime,
                 ))
             elif os.path.isfile(full):
-                if self._ngc_only and not name.endswith(GCODE_EXTENSIONS):
+                if self._ngc_only and not name.lower().endswith(self._file_extensions):
                     continue
                 raw.append(FileSystemEntry(
                     name=name,
@@ -621,6 +677,7 @@ class FileSystemViewModel(QObject):
             "isDir": e.is_dir,
             "isUp": e.is_up,
             "sizeDisplay": _format_size(e),
+            "folderFileCountDisplay": self._folder_file_count_display(e),
             "modifiedDisplay": _format_modified(e),
             "modifiedTimestamp": e.modified_timestamp,
             "isSelected": (not e.is_up) and e.relative_path == self._selected_path,
@@ -630,17 +687,34 @@ class FileSystemViewModel(QObject):
         if any(l.name == name for l in self._mounted):
             return
         self._mounted.append(FileSystemLocation(name, path, LocationType.MOUNTED_MEDIA))
+        if self._mounted_media_exclusive:
+            self._current_name = name
+            self._current_path = ""
+            self._selected_path = ""
+            self._watch_current()
+            self.navigationChanged.emit()
+            self.entriesChanged.emit()
+            self.selectionChanged.emit()
         self.locationsChanged.emit()
 
     def _on_drive_disconnected(self, name: str, _path: str) -> None:
         self._mounted = [l for l in self._mounted if l.name != name]
-        if self._current_name == name and self._static:
+        if self._mounted_media_exclusive and self._mounted:
+            self._current_name = self._mounted[0].name
+            self._current_path = ""
+            self._selected_path = ""
+            self._watch_current()
+            self.navigationChanged.emit()
+            self.entriesChanged.emit()
+            self.selectionChanged.emit()
+        elif self._current_name == name and self._static:
             self._current_name = self._static[0].name
             self._current_path = ""
             self._selected_path = ""
             self._watch_current()
             self.navigationChanged.emit()
             self.entriesChanged.emit()
+            self.selectionChanged.emit()
         self.locationsChanged.emit()
 
     def _on_copy_progress(self, p: float) -> None:

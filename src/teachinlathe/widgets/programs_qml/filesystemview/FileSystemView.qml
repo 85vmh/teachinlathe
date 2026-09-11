@@ -6,6 +6,7 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: root
     property var viewModel
+    property bool showActionBar: true
 
     color: "#f5f5f5"
     radius: 6
@@ -61,8 +62,9 @@ Rectangle {
         // Row 4 — Context-sensitive actions + copy progress
         ActionBar {
             viewModel: root.viewModel
+            visible: root.showActionBar
             Layout.fillWidth: true
-            height: 60
+            Layout.preferredHeight: root.showActionBar ? 60 : 0
         }
     }
 }

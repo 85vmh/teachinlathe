@@ -21,10 +21,11 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
         return "Facing"
     if op_type_value == "knurling":
         return "SinglePoint Knurling"
-    if op_type_value == "defineProfile":
+    if op_type_value in ("defineProfile", "importDxfProfile"):
         pt = profile_type.value if hasattr(profile_type, "value") else str(profile_type or "od").lower()
         type_str = "OD" if pt == "od" else "ID"
-        return f"Define {type_str} Profile (P{profile_id})" if profile_id is not None else f"Define {type_str} Profile"
+        prefix = "Import DXF" if op_type_value == "importDxfProfile" else "Define"
+        return f"{prefix} {type_str} Profile (P{profile_id})" if profile_id is not None else f"{prefix} {type_str} Profile"
     if op_type_value == "defineRadialProfile":
         return f"Define Radial Profile (P{profile_id})" if profile_id is not None else "Define Radial Profile"
     if op_type_value == "profiling":

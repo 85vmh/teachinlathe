@@ -23,6 +23,7 @@ include = [
 python = "^3.11"
 #qtpyvcp = "^4.0.85"
 python3-xlib = "^0.15"
+ezdxf = "^1.4.4"
 
 
 [tool.poetry.scripts]

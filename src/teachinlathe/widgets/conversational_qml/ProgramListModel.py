@@ -117,12 +117,13 @@ class ProgramListModel(QAbstractListModel):
             return "Position At"
         if op_type == "facing":
             return "Facing"
-        if op_type == "defineProfile":
+        if op_type in ("defineProfile", "importDxfProfile"):
             profile_id = getattr(op, "profile_id", None)
             profile_type = getattr(op, "profile_type", None)
             pt = profile_type.value if hasattr(profile_type, "value") else str(profile_type or "od").lower()
             type_str = "OD" if pt == "od" else "ID"
-            return f"Define {type_str} Profile (P{profile_id})" if profile_id is not None else f"Define {type_str} Profile"
+            prefix = "Import DXF" if op_type == "importDxfProfile" else "Define"
+            return f"{prefix} {type_str} Profile (P{profile_id})" if profile_id is not None else f"{prefix} {type_str} Profile"
         if op_type == "profiling":
             profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
             strategy = getattr(getattr(op, "profilingOptions", None), "strategy", None)

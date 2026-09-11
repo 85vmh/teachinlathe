@@ -11,7 +11,7 @@ Popup {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     anchors.centerIn: parent
 
-    contentWidth: 660
+    contentWidth: 1000
     contentHeight: column.implicitHeight
     padding: 0
 
@@ -22,9 +22,10 @@ Popup {
     property int    currentOpIndex:   -1
     property string selectedType:     ""
     property int    buttonsPerRow:    4
-    readonly property int buttonHeight: 50
+    readonly property int buttonWidth: 180
+    readonly property int buttonHeight: 70
     readonly property int buttonFontSize: 16
-    readonly property int buttonSpacing: 20
+    readonly property int buttonSpacing: 40
 
     onAboutToShow: { selectedType = "" }
 
@@ -41,6 +42,7 @@ Popup {
         { label: "Facing",           type: "facing"          },
         { label: "G33 Knurling",     type: "knurling"        },
         { label: "Define Profile",   type: "defineProfile"   },
+        { label: "Import DXF Profile", type: "importDxfProfile" },
         { label: "Define Radial Profile", type: "defineRadialProfile" },
         { label: "G7x Cut Profile",  type: "profiling"       },
         { label: "Profile Roughing", type: "profileRoughing"  },
@@ -76,7 +78,7 @@ Popup {
                 id: duplicateBtn
                 anchors.centerIn: parent
                 readonly property bool isSelected: root.selectedType === "__duplicate__"
-                width: 320
+                width: root.buttonWidth * 2 + root.buttonSpacing
                 height: root.buttonHeight
                 text: "Duplicate Selected Operation"
                 font.pixelSize: root.buttonFontSize
@@ -122,12 +124,9 @@ Popup {
             Repeater {
                 model: root.options
                 delegate: Button {
-                    readonly property int itemWidth: Math.floor(
-                        (flowArea.width - flowArea.spacing * (root.buttonsPerRow - 1)) / root.buttonsPerRow
-                    )
                     readonly property bool isSelected: root.selectedType === modelData.type
 
-                    width: itemWidth
+                    width: root.buttonWidth
                     height: root.buttonHeight
                     font.pixelSize: root.buttonFontSize
                     text: modelData.label
@@ -181,7 +180,7 @@ Popup {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Cancel"
-                width: 120
+                width: root.buttonWidth
                 height: root.buttonHeight
                 font.pixelSize: root.buttonFontSize
                 onClicked: root.close()
@@ -196,7 +195,7 @@ Popup {
 
                 Button {
                     text: "Insert Above"
-                    width: 150
+                    width: root.buttonWidth
                     height: root.buttonHeight
                     font.pixelSize: root.buttonFontSize
                     enabled: root.selectedType !== ""
@@ -209,7 +208,7 @@ Popup {
 
                 Button {
                     text: "Insert Below"
-                    width: 150
+                    width: root.buttonWidth
                     height: root.buttonHeight
                     font.pixelSize: root.buttonFontSize
                     enabled: root.selectedType !== ""

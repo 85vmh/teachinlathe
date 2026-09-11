@@ -1025,6 +1025,41 @@ class DefineProfile(Operation):
 
 
 @dataclass
+class ImportDxfProfile(DefineProfile):
+    dxfFilePath: str = ""
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "ImportDxfProfile":
+        raw = data.get("profile_primitives", [])
+        primitives = []
+        for i, p in enumerate(raw):
+            p_data = dict(p)
+            if "primitive_id" not in p_data:
+                p_data["primitive_id"] = i + 1
+            primitives.append(ProfilePrimitive.from_dict(p_data))
+        try:
+            profile_type = ProfilingType(str(data.get("profile_type", "od")).lower())
+        except ValueError:
+            profile_type = ProfilingType.OD
+        return ImportDxfProfile(
+            order=int(data["order"]),
+            type=data.get("type", "importDxfProfile"),
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            profile_id=int(data.get("profile_id", 0)),
+            profile_type=profile_type,
+            profile_primitives=primitives,
+            dxfFilePath=str(data.get("dxfFilePath", "")),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        base["type"] = "importDxfProfile"
+        base["dxfFilePath"] = self.dxfFilePath
+        return base
+
+
+@dataclass
 class DefineRadialProfile(Operation):
     profile_id: int
     profile_type: ProfilingType
@@ -1676,6 +1711,7 @@ operation_types: Dict[str, Type[Operation]] = {
     "facing": Facing,
     "knurling": Knurling,
     "defineProfile": DefineProfile,
+    "importDxfProfile": ImportDxfProfile,
     "defineRadialProfile": DefineRadialProfile,
     "profiling": Profiling,
     "profileRoughing": ProfileRoughing,
@@ -1695,6 +1731,7 @@ display_names: Dict[str, str] = {
     "facing": "Facing",
     "knurling": "SinglePoint Knurling",
     "defineProfile": "Define Profile",
+    "importDxfProfile": "Import DXF Profile",
     "defineRadialProfile": "Define Radial Profile",
     "profiling": "Profiling",
     "profileRoughing": "Profile Roughing",

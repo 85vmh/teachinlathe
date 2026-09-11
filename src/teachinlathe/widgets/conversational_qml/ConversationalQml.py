@@ -57,8 +57,12 @@ from teachinlathe.conversational.updaters import (
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
 from teachinlathe.widgets.conversational_qml.ThreadingDetailsViewModel import ThreadingDetailsViewModel
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
+from teachinlathe.widgets.programs_qml.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.widgets.positions_bridge import PositionsBridge
 from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
+
+
+DXF_PROFILE_FOLDER = "/home/cnc/Work/teachinlathe/dxf_profiles"
 
 
 class ConversationalQml(QQuickWidget):
@@ -73,6 +77,7 @@ class ConversationalQml(QQuickWidget):
         self.current_op_index = -1
         self.child_screen_item = None
         self._app_state = None
+        self._dxf_import_flow_active = False
 
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         programs = load_programs_from_folder(self.folder_path)
@@ -90,6 +95,22 @@ class ConversationalQml(QQuickWidget):
 
         self.threadingDetailsViewModel = ThreadingDetailsViewModel(self)
         self.engine().rootContext().setContextProperty("threadingDetailsViewModel", self.threadingDetailsViewModel)
+
+        os.makedirs(DXF_PROFILE_FOLDER, exist_ok=True)
+        self.dxfProfileFileSystemViewModel = FileSystemViewModel(
+            [FileSystemLocation("DXF Profiles", DXF_PROFILE_FOLDER, LocationType.HOME)],
+            self,
+            file_extensions=(".dxf",),
+            file_filter_label="DXF",
+            allow_file_filter_toggle=False,
+            mounted_media_exclusive=True,
+            show_recursive_folder_file_counts=True,
+        )
+        self.dxfProfileFileSystemViewModel.selectionChanged.connect(self._emit_header_state_changed)
+        self.engine().rootContext().setContextProperty(
+            "dxfProfileFileSystemViewModel",
+            self.dxfProfileFileSystemViewModel,
+        )
 
         root_path = os.path.join(self.base_dir, "Root.qml")
         self.statusChanged.connect(self.onStatusChanged)
@@ -150,7 +171,7 @@ class ConversationalQml(QQuickWidget):
         self.headerStateChanged.emit()
 
     def _attach_current_workpiece(self, payload):
-        if not isinstance(payload, dict) or payload.get("type") != "defineProfile":
+        if not isinstance(payload, dict) or payload.get("type") not in ("defineProfile", "importDxfProfile"):
             return payload
         program = self._get_current_program()
         workpiece = getattr(getattr(program, "header", None), "workpiece", None) if program else None
@@ -175,7 +196,15 @@ class ConversationalQml(QQuickWidget):
         if getattr(self, "_profile_editor_active", False):
             title = getattr(self, "_profile_editor_title", "Define Profile")
             left_actions.append({"id": "back", "text": "← Back", "enabled": True})
-            right_actions.append({"id": "done", "text": "Done", "enabled": True})
+            if object_name == "importDxfProfileScreen":
+                import_enabled = False
+                try:
+                    import_enabled = bool(item.property("selectedPath"))
+                except Exception:
+                    import_enabled = False
+                right_actions.append({"id": "import_dxf", "text": "Import DXF", "enabled": import_enabled})
+            else:
+                right_actions.append({"id": "done", "text": "Done", "enabled": True})
         elif object_name == "childScreen":
             program_name = ""
             try:
@@ -203,8 +232,20 @@ class ConversationalQml(QQuickWidget):
         }
 
     def triggerHeaderAction(self, action_id):
-        if action_id in ("back", "done"):
+        if action_id == "back":
             self.goBack()
+        elif action_id == "done":
+            if self._current_editor_returns_to_dxf_import():
+                self._close_profile_editor_flow()
+            else:
+                self.goBack()
+        elif action_id == "import_dxf":
+            item = self._current_loader_item()
+            if item is not None:
+                try:
+                    QMetaObject.invokeMethod(item, "importSelectedDxf", Qt.DirectConnection)
+                except Exception as e:
+                    print("importSelectedDxf failed:", e)
         elif action_id == "create_new":
             self.addNewProgram()
         elif action_id == "build_gcode":
@@ -247,6 +288,34 @@ class ConversationalQml(QQuickWidget):
         if resolved_type is None:
             return ""
         return resolved_type.value if hasattr(resolved_type, "value") else str(resolved_type).lower()
+
+    @pyqtSlot(str, result="QVariant")
+    def previewDxfProfile(self, dxf_file_path):
+        try:
+            from teachinlathe.conversational.data_types import DefineProfile
+            from teachinlathe.conversational.dxf_profile_importer import read_dxf_profile
+
+            op = self._get_current_op(getattr(self, "current_op_index", -1))
+            if not isinstance(op, DefineProfile):
+                return {"ok": False, "error": "No DXF profile operation is active."}
+            profile_type = getattr(op, "profile_type", "od")
+            profile_type_value = profile_type.value if hasattr(profile_type, "value") else str(profile_type or "od")
+            payload = read_dxf_profile(
+                str(dxf_file_path),
+                profile_id=int(getattr(op, "profile_id", 1) or 1),
+                profile_type=profile_type_value,
+                order=int(getattr(op, "order", 1) or 1),
+                operation_type="importDxfProfile",
+                dxf_file_path=str(dxf_file_path),
+            )
+            return {
+                "ok": True,
+                "error": "",
+                "profileType": payload.get("profile_type", profile_type_value),
+                "primitives": payload.get("profile_primitives", []),
+            }
+        except Exception as e:
+            return {"ok": False, "error": str(e), "profileType": "od", "primitives": []}
 
     # ADD this helper in class ConversationalQml
     def _save_current_program(self):
@@ -365,6 +434,8 @@ class ConversationalQml(QQuickWidget):
                 item.generateGcodeRequested.connect(self.onGenerateGcodeRequested)
             if hasattr(item, "updateHeader"):
                 item.updateHeader.connect(self.onUpdateHeader)
+            if hasattr(item, "headerRefreshRequested"):
+                item.headerRefreshRequested.connect(self._emit_header_state_changed)
             if hasattr(item, "addOperationRequested"):
                 item.addOperationRequested.connect(self.onAddOperationRequested)
             if hasattr(item, "addProfilingFinishRequested"):
@@ -383,13 +454,15 @@ class ConversationalQml(QQuickWidget):
                 item.openProfileEditorRequested.connect(self.onOpenProfileEditorRequested)
             if hasattr(item, "openRadialProfileEditorRequested"):
                 item.openRadialProfileEditorRequested.connect(self.onOpenRadialProfileEditorRequested)
+            if hasattr(item, "importDxfProfileRequested"):
+                item.importDxfProfileRequested.connect(self.onImportDxfProfileRequested)
             print("Screen signals connected.")
             if obj_name == "childScreen":
                 if self.current_op_index == -1:
                     QTimer.singleShot(0, lambda it=item: self.onDetailsRequested(it, -1))
                 else:
                     QTimer.singleShot(0, lambda it=item, idx=self.current_op_index: self.onDetailsRequested(it, idx))
-            if obj_name in ("profileEditorScreen", "radialProfileEditorScreen"):
+            if obj_name in ("profileEditorScreen", "radialProfileEditorScreen", "importDxfProfileScreen"):
                 op_index = self.current_op_index
                 op_data = None
                 op = self._get_current_op(op_index)
@@ -609,6 +682,10 @@ class ConversationalQml(QQuickWidget):
                 op = self._get_current_op(idx)
                 op_data = self._attach_current_workpiece(build_details_payload(op)) if op is not None else {}
                 QTimer.singleShot(0, lambda i=idx, d=op_data: self.onOpenProfileEditorRequested(i, d))
+            elif op_type == "importDxfProfile":
+                op = self._get_current_op(idx)
+                op_data = self._attach_current_workpiece(build_details_payload(op)) if op is not None else {}
+                QTimer.singleShot(0, lambda i=idx, d=op_data: self.onOpenDxfProfileImportRequested(i, d))
             elif op_type == "defineRadialProfile":
                 op = self._get_current_op(idx)
                 op_data = self._attach_current_workpiece(build_details_payload(op)) if op is not None else {}
@@ -1122,6 +1199,105 @@ class ConversationalQml(QQuickWidget):
         except Exception as e:
             print("openKeyboard failed:", e)
 
+    def onOpenDxfProfileImportRequested(self, op_index, op_data):
+        try:
+            op_index = int(op_index)
+        except (TypeError, ValueError):
+            op_index = self.current_op_index
+        self.current_op_index = op_index
+        try:
+            self._dxf_import_base_history = list(self._to_py(self.root.property("history")) or [])
+        except Exception:
+            self._dxf_import_base_history = []
+        self._dxf_import_flow_active = True
+        try:
+            current_params = self.root._currentParams
+            if isinstance(current_params, dict):
+                current_params["activeOpIndex"] = op_index
+                self.root._currentParams = current_params
+        except Exception:
+            pass
+        self._profile_editor_title = "Import DXF Profile"
+        self._profile_editor_active = True
+        self._emit_header_state_changed()
+
+        main_window = self.window()
+        if hasattr(main_window, "enterContentFullScreen"):
+            main_window.enterContentFullScreen(self)
+            self._in_profile_editor_full_screen = True
+        import_url = QUrl.fromLocalFile(
+            os.path.join(self.base_dir, "import_dxf_profile", "ImportDxfProfileScreen.qml")
+        ).toString()
+        self.root.loadScreen(import_url, {})
+
+    def onImportDxfProfileRequested(self, op_index, dxf_file_path):
+        try:
+            op_index = int(op_index)
+        except (TypeError, ValueError):
+            op_index = self.current_op_index
+
+        item = self._current_loader_item()
+        op = self._get_current_op(op_index)
+        if op is None:
+            return
+
+        try:
+            from teachinlathe.conversational.data_types import DefineProfile
+            from teachinlathe.conversational.dxf_profile_importer import read_dxf_profile
+            if not isinstance(op, DefineProfile):
+                return
+            profile_type = getattr(op, "profile_type", "od")
+            profile_type_value = profile_type.value if hasattr(profile_type, "value") else str(profile_type or "od")
+            payload = read_dxf_profile(
+                str(dxf_file_path),
+                profile_id=int(getattr(op, "profile_id", 1) or 1),
+                profile_type=profile_type_value,
+                order=int(getattr(op, "order", 1) or 1),
+                operation_type="importDxfProfile",
+                dxf_file_path=str(dxf_file_path),
+            )
+            apply_define_profile_update(op, payload)
+            if hasattr(op, "dxfFilePath"):
+                op.dxfFilePath = str(dxf_file_path)
+            self.current_op_index = op_index
+            self._save_current_program()
+            self._open_profile_editor_screen(op_index)
+        except Exception as e:
+            message = str(e)
+            print("[importDxfProfile] import error:", message)
+            try:
+                if item is not None and hasattr(item, "setError"):
+                    item.setError(message)
+            except Exception:
+                pass
+
+    def _open_profile_editor_screen(self, op_index, replace_current=False):
+        op = self._get_current_op(op_index)
+        op_data = self._attach_current_workpiece(build_details_payload(op)) if op is not None else {}
+        try:
+            profile_type = str(op_data.get("profile_type", "od")).lower()
+            op_order = op_data.get("order", "")
+            type_str = "ID" if profile_type == "id" else "OD"
+            self._profile_editor_title = (
+                f"Define {type_str} Profile Op #{op_order}" if op_order else f"Define {type_str} Profile"
+            )
+        except Exception:
+            self._profile_editor_title = "Define Profile"
+        self._profile_editor_active = True
+        self._emit_header_state_changed()
+
+        main_window = self.window()
+        if hasattr(main_window, "enterContentFullScreen"):
+            main_window.enterContentFullScreen(self)
+            self._in_profile_editor_full_screen = True
+        editor_url = QUrl.fromLocalFile(
+            os.path.join(self.base_dir, "define_profile", "ProfileEditorScreen.qml")
+        ).toString()
+        if replace_current and hasattr(self.root, "replaceScreen"):
+            self.root.replaceScreen(editor_url, {})
+        else:
+            self.root.loadScreen(editor_url, {})
+
     def onOpenProfileEditorRequested(self, op_index, op_data):
         try:
             op_index = int(op_index)
@@ -1136,29 +1312,7 @@ class ConversationalQml(QQuickWidget):
                 self.root._currentParams = current_params
         except Exception:
             pass
-        # Build header title for AppShell title bar
-        try:
-            op_data_py = self._to_py(op_data) if op_data else {}
-            profile_type = str(op_data_py.get("profile_type", "od")).lower()
-            op_order = op_data_py.get("order", "")
-            type_str = "ID" if profile_type == "id" else "OD"
-            self._profile_editor_title = (
-                f"Define {type_str} Profile Op #{op_order}" if op_order else f"Define {type_str} Profile"
-            )
-        except Exception:
-            self._profile_editor_title = "Define Profile"
-        self._profile_editor_active = True
-        self._emit_header_state_changed()
-
-        # Stretch this QQuickWidget below the AppShell title bar
-        main_window = self.window()
-        if hasattr(main_window, "enterContentFullScreen"):
-            main_window.enterContentFullScreen(self)
-            self._in_profile_editor_full_screen = True
-        editor_url = QUrl.fromLocalFile(
-            os.path.join(self.base_dir, "define_profile", "ProfileEditorScreen.qml")
-        ).toString()
-        self.root.loadScreen(editor_url, {})
+        self._open_profile_editor_screen(op_index)
 
     def onOpenRadialProfileEditorRequested(self, op_index, op_data):
         try:
@@ -1193,10 +1347,111 @@ class ConversationalQml(QQuickWidget):
         ).toString()
         self.root.loadScreen(editor_url, {})
 
+    def _current_screen_object_name(self):
+        try:
+            item = self._current_loader_item()
+            return item.property("objectName") if item is not None else None
+        except Exception:
+            return None
+
+    def _back_target_url(self):
+        try:
+            history = self._to_py(self.root.property("history"))
+            if history:
+                back_target = history[-1]
+                if isinstance(back_target, dict):
+                    return str(back_target.get("url", ""))
+        except Exception:
+            pass
+        return ""
+
+    def _current_editor_returns_to_dxf_import(self):
+        return (
+            getattr(self, "_in_profile_editor_full_screen", False)
+            and getattr(self, "_dxf_import_flow_active", False)
+            and self._current_screen_object_name() == "profileEditorScreen"
+        )
+
+    def _restore_child_screen_selection(self):
+        cs = None
+        try:
+            item = self._current_loader_item()
+            if item is not None and item.property("objectName") == "childScreen":
+                cs = item
+                self.child_screen_item = item
+        except Exception:
+            cs = None
+        if cs is None:
+            cs = getattr(self, "child_screen_item", None)
+        if cs is None:
+            return
+        try:
+            prog = self._get_current_program()
+            if prog:
+                cs.setProperty("operationsModel", build_operations_model(prog))
+            cs.setProperty("activeOpIndex", self.current_op_index)
+            self.onDetailsRequested(cs, self.current_op_index)
+        except RuntimeError:
+            self.child_screen_item = None
+
+    def _child_screen_url(self):
+        return QUrl.fromLocalFile(os.path.join(self.base_dir, "ChildScreen.qml")).toString()
+
+    def _child_screen_params(self):
+        program = self._get_current_program()
+        if program is None:
+            return {}
+        return {
+            "showBack": True,
+            "selectedProgram": build_selected_program_summary(program),
+            "operationsModel": build_operations_model(program),
+            "activeOpIndex": self.current_op_index,
+        }
+
+    def _replace_root_screen(self, url, params):
+        try:
+            self.root.replaceScreen(url, params)
+            return True
+        except Exception:
+            pass
+        try:
+            loader = self.root.findChild(QQuickItem, "loader") or self.root.findChild(QObject, "loader")
+            if loader is None:
+                return False
+            self.root.setProperty("currentSource", url)
+            self.root.setProperty("_currentParams", params or {})
+            self.root.setProperty("_pendingParams", params or {})
+            loader.setProperty("source", QUrl(url))
+            return True
+        except Exception as e:
+            print("[root] replace screen failed:", e)
+            return False
+
+    def _close_profile_editor_flow(self):
+        self._in_profile_editor_full_screen = False
+        self._profile_editor_active = False
+        self._dxf_import_flow_active = False
+        self._emit_header_state_changed()
+        main_window = self.window()
+        if hasattr(main_window, "exitFullScreen"):
+            main_window.exitFullScreen()
+        try:
+            self.root.setProperty("history", list(getattr(self, "_dxf_import_base_history", [])))
+        except Exception:
+            pass
+        child_url = self._child_screen_url()
+        child_params = self._child_screen_params()
+        if not self._replace_root_screen(child_url, child_params):
+            print("[importDxfProfile] close flow failed")
+        QTimer.singleShot(0, self._restore_child_screen_selection)
+        QTimer.singleShot(0, self._emit_header_state_changed)
+
     def goBack(self):
         print("back button clicked")
         returning_from_editor = getattr(self, "_in_profile_editor_full_screen", False)
-        if returning_from_editor:
+        returning_to_dxf_import = self._current_editor_returns_to_dxf_import()
+
+        if returning_from_editor and not returning_to_dxf_import:
             self._in_profile_editor_full_screen = False
             self._profile_editor_active = False
             self._emit_header_state_changed()
@@ -1204,15 +1459,12 @@ class ConversationalQml(QQuickWidget):
             if hasattr(main_window, "exitFullScreen"):
                 main_window.exitFullScreen()
         self.root.goBack()
-        if returning_from_editor:
-            def _restore_selection():
-                cs = getattr(self, "child_screen_item", None)
-                if cs is None:
-                    return
-                prog = self._get_current_program()
-                if prog:
-                    cs.setProperty("operationsModel", build_operations_model(prog))
-                cs.setProperty("activeOpIndex", self.current_op_index)
-                self.onDetailsRequested(cs, self.current_op_index)
-            QTimer.singleShot(0, _restore_selection)
+        if returning_to_dxf_import:
+            self._profile_editor_title = "Import DXF Profile"
+            self._profile_editor_active = True
+            self._in_profile_editor_full_screen = True
+        elif self._current_screen_object_name() == "importDxfProfileScreen":
+            self._dxf_import_flow_active = False
+        elif returning_from_editor:
+            QTimer.singleShot(0, self._restore_child_screen_selection)
         QTimer.singleShot(0, self._emit_header_state_changed)

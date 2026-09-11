@@ -141,18 +141,20 @@ Rectangle {
                 color: root.viewModel && root.viewModel.ngcOnly ? "#dbeafe" : "#f0f0f0"
                 border.color: root.viewModel && root.viewModel.ngcOnly ? "#1E88E5" : "#cccccc"
                 border.width: 1
+                opacity: root.viewModel && root.viewModel.allowFileFilterToggle ? 1.0 : 0.65
 
                 Text {
                     id: filterNgcText
                     anchors.centerIn: parent
-                    text: root.viewModel && root.viewModel.ngcOnly ? "NGC" : "All"
+                    text: root.viewModel && root.viewModel.ngcOnly ? root.viewModel.fileFilterLabel : "All"
                     color: root.viewModel && root.viewModel.ngcOnly ? "#1565C0" : "#4f4f4f"
                     font.pixelSize: 11
                 }
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: if (root.viewModel) root.viewModel.setNgcOnly(!root.viewModel.ngcOnly)
+                    enabled: root.viewModel ? root.viewModel.allowFileFilterToggle : false
+                    onClicked: root.viewModel.setNgcOnly(!root.viewModel.ngcOnly)
                 }
             }
         }

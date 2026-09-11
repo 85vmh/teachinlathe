@@ -18,6 +18,7 @@ OPERATION_GENERATORS = {
     "changeTool": generate_change_tool_gcode,
     "positionAt": generate_position_at_gcode,
     "defineProfile": generate_define_profile_gcode,
+    "importDxfProfile": generate_define_profile_gcode,
     "facing": generate_facing_gcode,
     "knurling": generate_knurling_gcode,
     "drilling": generate_drilling_gcode,
