@@ -21,8 +21,9 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.11"
-python3-xlib = "^0.15"
 ezdxf = "^1.4.4"
+# PyQt5 and the LinuxCNC modules (linuxcnc, hal, gcode, qt5_graphics) are
+# system packages, not wheels: see debian/control for the full runtime list.
 
 
 [tool.poetry.scripts]

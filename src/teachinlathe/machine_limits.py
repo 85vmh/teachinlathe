@@ -1,4 +1,4 @@
-from qtpy.QtCore import Signal, QObject
+from PyQt5.QtCore import QObject, pyqtSignal
 from teachinlathe.repositories import AxisLimits, ini_repository
 
 INI = ini_repository()
@@ -21,7 +21,7 @@ class MachineLimits:
 
 class MachineLimitsHandler(QObject):
     _instance = None
-    onLimitsChanged = Signal(object)
+    onLimitsChanged = pyqtSignal(object)
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
