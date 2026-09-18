@@ -2,10 +2,10 @@ from enum import Enum
 
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from qtpyvcp.actions.machine_actions import issue_mdi
-from qtpyvcp.plugins import getPlugin
+from teachinlathe.repositories.status_repository import status_repository
 
-from teachinlathe.data_source.positions import Positions
-from teachinlathe.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.repositories.positions_repository import Positions
+from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.machine_limits import MachineLimitsHandler
 
 
@@ -42,7 +42,7 @@ class TeachInLatheDroViewModel(QObject):
         self.setDefaultMachineLimits(self.limitsHandler.getDefaultMachineLimits())
         self.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickIsFeeding, self.onJoystickFeedingChanged)
 
-        self.status = getPlugin('status')
+        self.status = status_repository()
         self.positions = Positions()
 
         self._mm_fmt = '%10.3f'

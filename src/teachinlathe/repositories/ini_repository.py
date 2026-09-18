@@ -22,6 +22,9 @@ log = logging.getLogger(__name__)
 
 NC_FILES_FALLBACK = "~/linuxcnc/nc_files"
 
+#: Axis letters in the order LinuxCNC reports positions in.
+AXIS_LETTERS = "xyzabcuvw"
+
 
 class AxisLimits(NamedTuple):
     """Soft limits of one axis, in machine units.
@@ -131,6 +134,55 @@ class IniRepository:
         dirs.extend(_normalize(p, self._config_dir)
                     for p in paths.strip(":").split(":") if p)
         return dirs
+
+    @property
+    def coordinates(self) -> str:
+        """``[TRAJ] COORDINATES`` as a lowercase letter string, e.g. ``"xz"``."""
+        raw = self.find("TRAJ", "COORDINATES") or ""
+        raw = raw.replace(" ", "").lower()
+        if not raw:
+            log.warning("no [TRAJ] COORDINATES in the INI file, assuming 'xyz'")
+            return "xyz"
+        return raw
+
+    @property
+    def axis_letters(self) -> list[str]:
+        """The machine's axis letters, in order, without duplicates.
+
+        A gantry names one axis twice in COORDINATES (``xyyz``); it is still
+        one axis, so it appears once here.
+        """
+        seen = []
+        for letter in self.coordinates:
+            if letter in AXIS_LETTERS and letter not in seen:
+                seen.append(letter)
+        return seen
+
+    @property
+    def axis_numbers(self) -> list[int]:
+        """The machine's axis indices into a nine-axis position tuple."""
+        return [AXIS_LETTERS.index(letter) for letter in self.axis_letters]
+
+    @property
+    def is_metric(self) -> bool:
+        """Whether the machine's native linear unit is the millimetre."""
+        units = self.find("TRAJ", "LINEAR_UNITS") or self.find("AXIS_X", "UNITS")
+        return (units or "").strip().lower() in ("mm", "metric")
+
+    @property
+    def no_force_homing(self) -> bool:
+        """``[TRAJ] NO_FORCE_HOMING``: whether MDI/AUTO are allowed unhomed."""
+        return (self.find("TRAJ", "NO_FORCE_HOMING") or "").strip() == "1"
+
+    @property
+    def position_feedback_is_actual(self) -> bool:
+        """Whether the DRO should show actual rather than commanded position.
+
+        ``[DISPLAY] POSITION_FEEDBACK``: absent or ``0`` or ``ACTUAL`` means
+        actual, anything else (``COMMANDED``) means commanded.
+        """
+        feedback = (self.find("DISPLAY", "POSITION_FEEDBACK") or "").strip()
+        return feedback == "" or feedback == "0" or feedback.lower() == "actual"
 
     def axis_limits(self, axis: str) -> Optional[AxisLimits]:
         """Soft limits of *axis* (a letter), or None when the INI omits them."""

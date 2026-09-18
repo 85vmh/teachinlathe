@@ -2,7 +2,7 @@ from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from qtpyvcp import SETTINGS
 from qtpyvcp.utilities.settings import setSetting
 
-from teachinlathe.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.data_source.numpad_settings import NumpadSettings
 
 

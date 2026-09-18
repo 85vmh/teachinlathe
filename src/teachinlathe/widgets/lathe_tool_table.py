@@ -6,6 +6,7 @@ from qtpy.QtGui import QStandardItemModel, QColor, QBrush, QPen
 from qtpy.QtWidgets import QTableView, QMessageBox
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
+from teachinlathe.repositories.status_repository import status_repository
 from qtpyvcp.utilities.logger import getLogger
 
 LOG = getLogger(__name__)
@@ -230,7 +231,7 @@ class ToolModel(QStandardItemModel):
     def __init__(self, parent=None):
         super(ToolModel, self).__init__(parent)
 
-        self.status = getPlugin('status')
+        self.status = status_repository()
         self.stat = self.status.stat
         self.tt = getPlugin('tooltable')
         self.edited_tool_no = None

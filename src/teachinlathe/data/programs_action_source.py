@@ -3,12 +3,12 @@ from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from qtpyvcp.actions import program_actions
 from qtpyvcp.actions.machine_actions import issue_mdi
-from qtpyvcp.plugins import getPlugin
+from teachinlathe.repositories.status_repository import status_repository
 
-from teachinlathe.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 
 
-STATUS = getPlugin('status')
+STATUS = status_repository()
 STAT = STATUS.stat
 CMD = linuxcnc.command()
 

@@ -18,7 +18,7 @@ from .tool_entry import (
     SortBy, TapTool, ToolEntry, ToolType, TrepaningTool,
 )
 from .tool_repository import ToolRepository
-from teachinlathe.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 
 try:
     import linuxcnc as _lnc

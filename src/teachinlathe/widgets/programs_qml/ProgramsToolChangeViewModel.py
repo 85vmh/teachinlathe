@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
-from teachinlathe.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.widgets.tool_library.tool_entry import ToolType
 from teachinlathe.widgets.tool_library.tool_repository import ToolRepository
 

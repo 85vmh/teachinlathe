@@ -9,7 +9,7 @@ from teachinlathe.data.program_stack import ProgramCallStackResolver
 from teachinlathe.data.programs_action_source import ProgramsActionSource
 from teachinlathe.data.programs_screen import ProgramsScreen
 from teachinlathe.data.run_time_tracker import RunTimeTracker
-from teachinlathe.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.widgets.programs_qml.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
 
 Screen = ProgramsScreen

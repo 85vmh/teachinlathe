@@ -1,7 +1,7 @@
 import random
 import string
 
-from qtpyvcp import hal
+from teachinlathe.repositories.hal_repository import hal_component
 from qtpyvcp.actions.machine_actions import issue_mdi
 
 from teachinlathe import IN_DESIGNER
@@ -79,9 +79,9 @@ class TeachInLatheComponent:
     def _initialize(self):
         if IN_DESIGNER:
             random_suffix = generate_random_string(5)
-            self.comp = hal.component('Designer' + random_suffix)
+            self.comp = hal_component('Designer' + random_suffix)
         else:
-            self.comp = hal.component('TeachInLathe')
+            self.comp = hal_component('TeachInLathe')
 
         self.comp.addPin(self.PinHandwheelsJogIncrement, 'float', 'in')
         self.comp.addPin(self.PinHandwheelsAllowed, 'bit', 'in')

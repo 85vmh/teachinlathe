@@ -9,6 +9,26 @@ so it stays testable without a ``QApplication`` and independent of any VCP
 framework.
 """
 
+from .hal_repository import (
+    HalComponent, HalPin, hal_component, set_poll_interval, unload_all,
+)
 from .ini_repository import AxisLimits, IniRepository, ini_repository
+from .positions_repository import Axis, Position, Positions
+from .status_repository import StatusChannel, StatusRepository, status_repository
 
-__all__ = ["AxisLimits", "IniRepository", "ini_repository"]
+__all__ = [
+    "Axis",
+    "AxisLimits",
+    "HalComponent",
+    "HalPin",
+    "IniRepository",
+    "Position",
+    "Positions",
+    "StatusChannel",
+    "StatusRepository",
+    "hal_component",
+    "ini_repository",
+    "set_poll_interval",
+    "status_repository",
+    "unload_all",
+]

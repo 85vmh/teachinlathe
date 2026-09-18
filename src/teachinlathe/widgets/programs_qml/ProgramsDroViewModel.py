@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal
 
-from teachinlathe.data_source.positions import Positions
+from teachinlathe.repositories.positions_repository import Positions
 
 
 class ProgramsDroViewModel(QObject):

@@ -9,6 +9,7 @@ from PyQt5.QtQuickWidgets import QQuickWidget
 from PyQt5.QtWidgets import QApplication
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
+from teachinlathe.repositories.status_repository import status_repository
 from qtpyvcp.utilities import logger
 from teachinlathe.repositories import ini_repository
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
@@ -17,7 +18,7 @@ from teachinlathe.app_state import AppState
 from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
 from teachinlathe.dev_panel import DevPanelWindow
 from teachinlathe.fixtures import LatheFixturesRepository
-from teachinlathe.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.widgets.FrameAnimator import FrameAnimator
 from teachinlathe.widgets.app_shell_qml import AppShellQmlWidget
@@ -31,7 +32,7 @@ LOG = logger.getLogger('qtpyvcp.' + __name__)
 from PyQt5.QtCore import Qt
 
 INI = ini_repository()
-STATUS = getPlugin('status')
+STATUS = status_repository()
 TOOLTABLE = getPlugin('tooltable')
 LINUXCNC_CMD = linuxcnc.command()
 STAT = linuxcnc.stat()

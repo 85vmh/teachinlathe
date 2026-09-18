@@ -5,7 +5,7 @@ import os
 from PyQt5.QtCore import QObject, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
 from PyQt5.QtQml import QQmlApplicationEngine
 
-from qtpyvcp import hal
+from teachinlathe.repositories.hal_repository import hal_component
 
 
 class DevPanelViewModel(QObject):
@@ -82,7 +82,7 @@ class DevPanelViewModel(QObject):
             self.setBit(pin_name, pin_name == selected)
 
     def _build_hal_component(self):
-        self.comp = hal.component(self.COMPONENT_NAME)
+        self.comp = hal_component(self.COMPONENT_NAME)
         for pin_name in self.BIT_OUTPUTS:
             self.comp.addPin(pin_name, "bit", "out")
         for pin_name in self.FLOAT_OUTPUTS:

@@ -3,9 +3,9 @@ from datetime import datetime
 
 from PyQt5.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 from qtpyvcp.actions.machine_actions import issue_mdi
-from qtpyvcp.plugins import getPlugin
+from teachinlathe.repositories.status_repository import status_repository
 
-STATUS = getPlugin('status')
+STATUS = status_repository()
 
 
 class DomainStore(QObject):
