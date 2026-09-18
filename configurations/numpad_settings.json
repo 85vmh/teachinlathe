@@ -26,7 +26,7 @@
     "description": "Enter spindle RPM for gear 2",
     "value_type": "int",
     "default_value": 1000,
-    "last_value": 1250,
+    "last_value": 2500,
     "min_value": 100,
     "max_value": 2500,
     "options": [
@@ -49,7 +49,7 @@
     "description": "Enter constant surface speed",
     "value_type": "int",
     "default_value": 120,
-    "last_value": 120,
+    "last_value": 100,
     "min_value": 20,
     "max_value": 300,
     "options": [
@@ -90,7 +90,7 @@
     "description": "Enter max spindle RPM for gear 2",
     "value_type": "int",
     "default_value": 1000,
-    "last_value": 1000,
+    "last_value": 1250,
     "min_value": 100,
     "max_value": 2500,
     "options": [

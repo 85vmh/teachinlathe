@@ -279,7 +279,7 @@ Item {
     }
 
     // ── Full layout ──────────────────────────────────────────────────────────────
-    // No title bar here — AppShellWidget title bar is used (Back/Done driven via headerState)
+    // No title bar here — the AppShell QML title bar is used (Back/Done driven via headerState)
     Item {
         anchors.fill: parent
 

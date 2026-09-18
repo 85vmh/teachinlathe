@@ -28,11 +28,9 @@ except Exception:
     _CMD = None
     _STAT = None
 
-try:
-    from qtpyvcp.utilities.info import Info as _Info
-    _TBL_PATH: str = _Info().getToolTableFile()
-except Exception:
-    _TBL_PATH = ""
+from teachinlathe.repositories import ini_repository
+
+_TBL_PATH: str = ini_repository().tool_table_file
 
 
 class ToolLibraryViewModel(QObject):

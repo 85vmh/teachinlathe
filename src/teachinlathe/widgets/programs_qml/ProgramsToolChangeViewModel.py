@@ -6,11 +6,9 @@ from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.widgets.tool_library.tool_entry import ToolType
 from teachinlathe.widgets.tool_library.tool_repository import ToolRepository
 
-try:
-    from qtpyvcp.utilities.info import Info as _Info
-    _TBL_PATH: str = _Info().getToolTableFile()
-except Exception:
-    _TBL_PATH = ""
+from teachinlathe.repositories import ini_repository
+
+_TBL_PATH: str = ini_repository().tool_table_file
 
 
 class ProgramsToolChangeViewModel(QObject):

@@ -104,11 +104,8 @@ def _resolve_previous_tool_change(operations, before_index=None):
 
 
 def _tool_table_path():
-    try:
-        from qtpyvcp.utilities.info import Info
-        return Info().getToolTableFile()
-    except Exception:
-        return ""
+    from teachinlathe.repositories import ini_repository
+    return ini_repository().tool_table_file
 
 
 def _resolve_tool_payload(tool_no, fallback_orientation=0):

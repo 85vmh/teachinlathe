@@ -1,9 +1,9 @@
 from qtpy.QtCore import Signal, QObject
-from qtpyvcp.utilities.info import Info
+from teachinlathe.repositories import AxisLimits, ini_repository
 
 from teachinlathe import IN_DESIGNER
 
-INFO = Info()
+INI = ini_repository()
 
 
 class MachineLimits:
@@ -35,11 +35,11 @@ class MachineLimitsHandler(QObject):
         if not self._is_initialized:
             super().__init__()  # Initialize the QObject base class
             if IN_DESIGNER:
-                _x_bounds = (0.0, 0.0)
-                _z_bounds = (0.0, 0.0)
+                _x_bounds = AxisLimits(0.0, 0.0)
+                _z_bounds = AxisLimits(0.0, 0.0)
             else:
-                _x_bounds = INFO.getAxisMinMax('X')[0]
-                _z_bounds = INFO.getAxisMinMax('Z')[0]
+                _x_bounds = INI.axis_limits('X') or AxisLimits(0.0, 0.0)
+                _z_bounds = INI.axis_limits('Z') or AxisLimits(0.0, 0.0)
 
             self._is_initialized = True
 
@@ -57,10 +57,10 @@ class MachineLimitsHandler(QObject):
             self._custom_z_minus_limit = None
             self._custom_z_plus_limit = None
 
-            self._default_x_minus_limit = _x_bounds[0]
-            self._default_x_plus_limit = _x_bounds[1]
-            self._default_z_minus_limit = _z_bounds[0]
-            self._default_z_plus_limit = _z_bounds[1]
+            self._default_x_minus_limit = _x_bounds.min
+            self._default_x_plus_limit = _x_bounds.max
+            self._default_z_minus_limit = _z_bounds.min
+            self._default_z_plus_limit = _z_bounds.max
 
     def getDefaultMachineLimits(self):
         return MachineLimits(self._default_x_minus_limit,

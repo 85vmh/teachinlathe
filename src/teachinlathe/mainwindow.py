@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication
 from qtpyvcp.actions.machine_actions import issue_mdi
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.utilities import logger
-from qtpyvcp.utilities.info import Info
+from teachinlathe.repositories import ini_repository
 from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
 from teachinlathe.app_state import AppState
@@ -30,12 +30,12 @@ from teachinlathe.widgets.tool_library.ToolLibraryViewModel import ToolLibraryVi
 LOG = logger.getLogger('qtpyvcp.' + __name__)
 from PyQt5.QtCore import Qt
 
-INFO = Info()
+INI = ini_repository()
 STATUS = getPlugin('status')
 TOOLTABLE = getPlugin('tooltable')
 LINUXCNC_CMD = linuxcnc.command()
 STAT = linuxcnc.stat()
-PROGRAM_PREFIX = INFO.getProgramPrefix()
+PROGRAM_PREFIX = INI.program_prefix
 # Base folder for conversational outputs (user-configurable).
 CONVERSATIONAL_OUTPUT_BASE = PROGRAM_PREFIX
 CONVERSATIONAL_GCODE_BASE = CONVERSATIONAL_OUTPUT_BASE

@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass
 
 from PyQt5.QtCore import QObject
-from qtpyvcp.utilities.info import Info
+from teachinlathe.repositories import ini_repository
 
 from .program_runtime import ProgramRuntimeSnapshot
 
@@ -29,7 +29,7 @@ class ProgramCallStackView:
 class ProgramCallStackResolver(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._info = Info()
+        self._ini = ini_repository()
         self._file_cache = {}
 
     def build_view(self, snapshot: ProgramRuntimeSnapshot):
@@ -108,7 +108,7 @@ class ProgramCallStackResolver(QObject):
             return '', ''
 
         search_dirs = []
-        for search_dir in self._info.getSubroutineSearchDirs():
+        for search_dir in self._ini.subroutine_search_dirs:
             if not search_dir:
                 continue
             normalized_dir = os.path.abspath(os.path.expanduser(search_dir))

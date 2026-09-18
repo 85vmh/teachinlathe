@@ -4,16 +4,13 @@ from enum import Enum, auto
 
 import linuxcnc
 from qtpyvcp import SETTINGS
-from qtpyvcp.actions.machine_actions import jog
 from qtpyvcp.plugins import getPlugin
 from qtpyvcp.plugins.status import STAT
-from qtpyvcp.utilities.info import Info
 
 from teachinlathe.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.widgets.manual_qml.joystick_state import JoystickState
 
 LINUXCNC_CMD = linuxcnc.command()
-INFO = Info()
 STATUS = getPlugin('status')
 
 class JoystickDirection(Enum):

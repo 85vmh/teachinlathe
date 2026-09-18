@@ -9,10 +9,8 @@ requires changes in as few places as possible.
 from dataclasses import dataclass
 
 from qtpyvcp.plugins import getPlugin
-from qtpyvcp.utilities.info import Info
 from qtpyvcp.widgets.base_widgets.dro_base_widget import Axis
 
-INFO = Info()
 
 
 @dataclass
