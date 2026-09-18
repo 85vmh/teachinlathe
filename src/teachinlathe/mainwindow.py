@@ -1,4 +1,5 @@
 # Setup logging
+import logging
 import os
 from enum import Enum
 
@@ -6,13 +7,12 @@ import linuxcnc
 from PyQt5.QtCore import Q_ARG, QMetaObject, QObject, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor
 from PyQt5.QtQuickWidgets import QQuickWidget
-from PyQt5.QtWidgets import QApplication
-from qtpyvcp.actions.machine_actions import issue_mdi
-from qtpyvcp.plugins import getPlugin
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QStackedWidget,
+                             QVBoxLayout, QWidget)
+from teachinlathe.repositories.command_repository import issue_mdi
+from teachinlathe.repositories.machine_repository import machine_repository
 from teachinlathe.repositories.status_repository import status_repository
-from qtpyvcp.utilities import logger
 from teachinlathe.repositories import ini_repository
-from qtpyvcp.widgets.form_widgets.main_window import VCPMainWindow
 
 from teachinlathe.app_state import AppState
 from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
@@ -20,20 +20,22 @@ from teachinlathe.dev_panel import DevPanelWindow
 from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
-from teachinlathe.widgets.FrameAnimator import FrameAnimator
 from teachinlathe.widgets.app_shell_qml import AppShellQmlWidget
+from teachinlathe.widgets.conversational_qml.ConversationalQml import ConversationalQml
+from teachinlathe.widgets.machine_qml.FixturesViewModel import FixturesViewModel
+from teachinlathe.widgets.machine_qml.MachineViewModel import MachineViewModel
 from teachinlathe.widgets.manual_qml import ManualTurningViewModel
 from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLatheDroViewModel
 from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.widgets.programs_qml.ProgramsQml import ProgramsQml
 from teachinlathe.widgets.tool_library.ToolLibraryViewModel import ToolLibraryViewModel
 
-LOG = logger.getLogger('qtpyvcp.' + __name__)
+LOG = logging.getLogger(__name__)
 from PyQt5.QtCore import Qt
 
 INI = ini_repository()
 STATUS = status_repository()
-TOOLTABLE = getPlugin('tooltable')
+MACHINE = machine_repository()
 LINUXCNC_CMD = linuxcnc.command()
 STAT = linuxcnc.stat()
 PROGRAM_PREFIX = INI.program_prefix
@@ -44,11 +46,16 @@ CONVERSATIONAL_JSON_BASE = CONVERSATIONAL_OUTPUT_BASE
 
 
 class MainTabs(Enum):
+    """Pages of the app content stack, in the order the shell lists them.
+
+    There is no tools page: the shell's bottom bar offers four tabs, and the
+    tool library lives inside the manual screen.
+    """
+
     MANUAL_TURNING = 0
     CONVERSATIONAL = 1
     PROGRAMS = 2
-    TOOLS_OFFSETS = 3
-    MACHINE_SETTINGS = 4
+    MACHINE_SETTINGS = 3
 
 
 class ProgramTabs(Enum):
@@ -124,8 +131,37 @@ class ManualJoystickController(QObject):
             self._viewmodel.setJoystickState(state)
 
 
-class MyMainWindow(VCPMainWindow):
-    """Main window class for the VCP."""
+class MyMainWindow(QMainWindow):
+    """The application window.
+
+    The widget tree used to come from mainwindow.ui. It is four empty pages
+    now - every screen is QML - so it is built here instead, which removes the
+    .ui file and the third-party widgets it carried with it.
+    """
+
+    def _buildWindow(self):
+        """The whole widget tree: two pages, one of which holds four more."""
+        self.stackedWidget = QStackedWidget(self)
+        self.stackedWidget.setObjectName("stackedWidget")
+        self.setCentralWidget(self.stackedWidget)
+
+        # Shown until the machine is out of E-stop, powered and homed.
+        self.pageNotReady = QWidget(self.stackedWidget)
+        self.pageNotReady.setObjectName("pageNotReady")
+        self.stackedWidget.addWidget(self.pageNotReady)
+
+        # Everything else lives under here, behind the QML app shell.
+        self.pageReady = QWidget(self.stackedWidget)
+        self.pageReady.setObjectName("pageReady")
+        self.stackedWidget.addWidget(self.pageReady)
+
+        # One page per tab the shell's bottom bar offers, in MainTabs order.
+        self.manualTurningTab = QWidget()
+        self.manualTurningTab.setObjectName("manualTurningTab")
+        self.conversationalTab = QWidget()
+        self.conversationalTab.setObjectName("conversationalTab")
+        self.settingsTab = QWidget()
+        self.settingsTab.setObjectName("settingsTab")
 
     def getSpindleModeIndex(self):
         if hasattr(self, "manualTurningViewModel"):
@@ -141,6 +177,9 @@ class MyMainWindow(VCPMainWindow):
             app.setDesktopFileName(APPLICATION_ID)
         self.setWindowTitle(APPLICATION_DISPLAY_NAME)
         self.setWindowFlag(Qt.FramelessWindowHint)
+
+        self._buildWindow()
+        self.conversationalqml = ConversationalQml(self.conversationalTab)
 
         self.mainSelectedTab = MainTabs.MANUAL_TURNING
         self.lastSpindleRpm = 0
@@ -160,7 +199,6 @@ class MyMainWindow(VCPMainWindow):
         self.latheJoystick = self.manualJoystickController
         self.manualLathe.setJoystickWidget(self.manualJoystickController)
         self.manualTurningViewModel.joystickStateChanged.connect(self._on_manual_joystick_state_changed)
-        self.feedAnimator = FrameAnimator(self.feedFrame)
 
         self.latheComponent = TeachInLatheComponent()
         self.devPanelWindow = None
@@ -216,8 +254,6 @@ class MyMainWindow(VCPMainWindow):
         STATUS.task_mode.signal.connect(self.onTaskModeChanged)
         STATUS.state.signal.connect(self.onStateChanged)
 
-        self.latheToolTable.toolEditClicked.connect(self.onToolEditClicked)
-        self.latheToolTable.toolAddClicked.connect(self.onToolAddClicked)
 
         self.handle_spindle_mode(self.getSpindleModeIndex)
 
@@ -227,18 +263,9 @@ class MyMainWindow(VCPMainWindow):
         self.debounce_timer.timeout.connect(self.onRpmDebounced)
         self.debounce_timer.start()
 
-        self.btnLoadProgram.clicked.connect(self.loadProgram)
-        self.btnBackToPrograms.clicked.connect(self.backToPrograms)
 
-        self.btnSetG28.clicked.connect(self.onSetG28)
-        self.btnGoToG28.clicked.connect(self.onGoToG28)
-        self.btnSetG30.clicked.connect(self.onSetG30)
-        self.btnGoToG30.clicked.connect(self.onGoToG30)
 
-        self.vtk.setViewXZ2()
-        self.vtk.enable_panning(True)
 
-        # self.removableComboBox.currentDeviceEjectable.connect(self.handleUsbPresent)
         # Runtime navigation is handled by the QML app shell content stack.
 
         self.toolLibraryViewModel = ToolLibraryViewModel(self)
@@ -247,8 +274,8 @@ class MyMainWindow(VCPMainWindow):
         QTimer.singleShot(0, self.afterUIInit)
         QTimer.singleShot(0, self._initProgramsQml)
         QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
+        QTimer.singleShot(0, self._initMachineScreens)
         QTimer.singleShot(0, self._initAppShell)
-        self.latheFixtures.onFixtureSelected.connect(self.onFixtureSelected)
         try:
             self.conversationalqml.setAppState(self.appState)
         except Exception as e:
@@ -256,28 +283,8 @@ class MyMainWindow(VCPMainWindow):
 
         initial_fixture = self.fixture_repository.getCurrentFixture()
         if initial_fixture:
-            print("Setup initial fixture: ", initial_fixture)
-            self.onFixtureSelected(initial_fixture)
-
-    def onToolAddEditSaved(self):
-        print("onToolAddEditSaved")
-        self.innerToolsAndOffsets.setCurrentIndex(0)  # Switch to the offsets tab
-        self.latheToolTable.finishEditingTool()
-
-    def onToolAddEditCanceled(self):
-        print("onToolAddEditCanceled")
-        self.innerToolsAndOffsets.setCurrentIndex(0)  # Switch to the offsets tab
-        self.latheToolTable.finishEditingTool()
-
-    def onToolEditClicked(self, tool_data, tool_model, tool_no):
-        print("Ignoring legacy tool edit signal:", tool_no)
-
-    def onToolAddClicked(self, tool_data, tool_model):
-        print("Ignoring legacy tool add signal")
-
-    def onFixtureSelected(self, fixture):
-        print("---Fixture selected: ", fixture)
-        self.teachInLatheDroViewModel.setChuckLimit(fixture.z_minus_limit)
+            LOG.info("initial fixture: %s", initial_fixture.description)
+            self.onChuckLimitChanged(initial_fixture.z_minus_limit)
 
     def afterUIInit(self):
         # set the current values
@@ -292,7 +299,6 @@ class MyMainWindow(VCPMainWindow):
             return
 
         self.numpadDialogViewModel = NumpadDialogViewModel(self)
-        self._hideLegacyTabChildren(self.manualTurningTab)
 
         self.manualTurningRootQml = QQuickWidget(self.manualTurningTab)
         self.manualTurningRootQml.setResizeMode(QQuickWidget.SizeRootObjectToView)
@@ -316,10 +322,6 @@ class MyMainWindow(VCPMainWindow):
         self.manualTurningRootQml.setSource(QUrl.fromLocalFile(qml_path))
         self.manualTurningRootQml.show()
         self.manualTurningRootQml.raise_()
-
-        # Hide legacy widgets now superseded by the QML root
-        if hasattr(self, "toolLibraryContainer"):
-            self.toolLibraryContainer.setVisible(False)
 
         # Restore persisted state into ViewModel
         self.onSpindleFirstGearChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
@@ -373,10 +375,8 @@ class MyMainWindow(VCPMainWindow):
             FileSystemLocation("SyncThing Programs",  os.path.expanduser("~/Sync"),        LocationType.SYNCTHING),
             FileSystemLocation("Home",                os.path.expanduser("~"),             LocationType.HOME),
         ]
-        # Replace the legacy Programs tab (index 2) with the new Programs QML widget.
-        self.tabWidget.removeTab(MainTabs.PROGRAMS.value)
         self.programsQmlTab = QWidget()
-        self.tabWidget.insertTab(MainTabs.PROGRAMS.value, self.programsQmlTab, "Programs")
+        self.programsQmlTab.setObjectName("programsQmlTab")
 
         tab_layout = QVBoxLayout(self.programsQmlTab)
         tab_layout.setContentsMargins(0, 0, 0, 0)
@@ -386,6 +386,11 @@ class MyMainWindow(VCPMainWindow):
         self.programsQmlWidget.viewmodel.programLoadRequested.connect(self.onProgramsQmlProgramLoadRequested)
         self.programsQmlWidget.viewmodel.ensureProgramLoadedRequested.connect(self.onProgramsQmlEnsureProgramLoadedRequested)
         self.programsQmlWidget.viewmodel.switchToManualRequested.connect(self.onProgramsQmlSwitchToManualRequested)
+        # A failed file operation is reported the way the rest of the app
+        # reports one: a toast, plus an entry in the events drawer.
+        fs = self.programsQmlWidget.fs_viewmodel
+        fs.deleteFailed.connect(lambda msg: self._show_app_toast("Delete failed: %s" % msg))
+        fs.copyFailed.connect(lambda msg: self._show_app_toast("Copy failed: %s" % msg))
         tab_layout.addWidget(self.programsQmlWidget)
 
     def _initAppShell(self):
@@ -394,8 +399,6 @@ class MyMainWindow(VCPMainWindow):
 
         from PyQt5.QtWidgets import QStackedWidget, QVBoxLayout
 
-        self.tabWidget.setTabBarAutoHide(True)
-        self.tabWidget.tabBar().hide()
         self._ensureTabFillLayout(self.conversationalTab, self.conversationalqml)
         self._ensureTabFillLayout(self.manualTurningTab, self.manualTurningRootQml)
 
@@ -412,7 +415,6 @@ class MyMainWindow(VCPMainWindow):
         self.appContentStack.addWidget(self.manualTurningTab)
         self.appContentStack.addWidget(self.conversationalTab)
         self.appContentStack.addWidget(self.programsQmlTab)
-        self.appContentStack.addWidget(self.toolsTab)
         self.appContentStack.addWidget(self.settingsTab)
         self.appContentStack.currentChanged.connect(self.onMainTabChanged)
 
@@ -427,10 +429,62 @@ class MyMainWindow(VCPMainWindow):
             MainTabs.MANUAL_TURNING.value: "manual",
             MainTabs.CONVERSATIONAL.value: "conversational",
             MainTabs.PROGRAMS.value: "programs",
-            MainTabs.TOOLS_OFFSETS.value: "tools",
             MainTabs.MACHINE_SETTINGS.value: "settings",
         }.get(self.appContentStack.currentIndex(), "manual")
         self.appState.activateTab(tab_id)
+
+    # ── QML machine screens ─────────────────────────────────────────────────────
+
+    MACHINE_QML_DIR = os.path.join(os.path.dirname(__file__), "widgets", "machine_qml")
+
+    def _makeMachineQmlWidget(self, file_name, parent):
+        """A QQuickWidget showing one of the machine_qml screens."""
+        widget = QQuickWidget(parent)
+        widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        widget.setClearColor(QColor("#f4f6f9"))
+        ctx = widget.rootContext()
+        ctx.setContextProperty("machineViewModel", self.machineViewModel)
+        ctx.setContextProperty("fixturesViewModel", self.fixturesViewModel)
+        widget.setSource(QUrl.fromLocalFile(os.path.join(self.MACHINE_QML_DIR, file_name)))
+        for error in widget.errors():
+            LOG.error("QML error in %s: %s", file_name, error.toString())
+        root = widget.rootObject()
+        if root is not None:
+            root.setProperty("viewModel", self.machineViewModel)
+            root.setProperty("fixturesViewModel", self.fixturesViewModel)
+        return widget, root
+
+    def _initMachineScreens(self):
+        """Replace the .ui's pageNotReady and settingsTab with QML."""
+        self.machineViewModel = MachineViewModel(self)
+        self.fixturesViewModel = FixturesViewModel(self)
+        self.fixturesViewModel.chuckLimitChanged.connect(self.onChuckLimitChanged)
+
+        self.notReadyQml, _ = self._makeMachineQmlWidget(
+            "NotReadyScreen.qml", self.pageNotReady)
+        self._ensureTabFillLayout(self.pageNotReady, self.notReadyQml)
+
+        self.settingsQml, settings_root = self._makeMachineQmlWidget(
+            "MachineSettingsScreen.qml", self.settingsTab)
+        if settings_root is not None:
+            settings_root.setG28.connect(self.onSetG28)
+            settings_root.goToG28.connect(self.onGoToG28)
+            settings_root.setG30.connect(self.onSetG30)
+            settings_root.goToG30.connect(self.onGoToG30)
+        self._ensureTabFillLayout(self.settingsTab, self.settingsQml)
+
+        # The .ui switched between the two pages with a data-bound rule; the
+        # same rule lives in MachineViewModel.machineReady now.
+        self.machineViewModel.stateChanged.connect(self._refreshReadyPage)
+        self._refreshReadyPage()
+
+    def _refreshReadyPage(self):
+        ready = 1 if self.machineViewModel.machineReady else 0
+        if self.stackedWidget.currentIndex() != ready:
+            self.stackedWidget.setCurrentIndex(ready)
+
+    def onChuckLimitChanged(self, z_minus_limit):
+        self.teachInLatheDroViewModel.setChuckLimit(float(z_minus_limit))
 
     def _ensureTabFillLayout(self, tab, widget):
         if tab is None or widget is None:
@@ -447,15 +501,9 @@ class MyMainWindow(VCPMainWindow):
         if layout.indexOf(widget) < 0:
             layout.addWidget(widget)
 
-    def _hideLegacyTabChildren(self, tab):
-        if tab is None:
-            return
-        from PyQt5.QtWidgets import QWidget
-        for child in tab.findChildren(QWidget):
-            child.setVisible(False)
 
     def _syncEmbeddedQmlTabs(self):
-        current_index = self.appContentStack.currentIndex() if hasattr(self, "appContentStack") else self.tabWidget.currentIndex()
+        current_index = self.appContentStack.currentIndex() if hasattr(self, "appContentStack") else 0
         manual_active = current_index == MainTabs.MANUAL_TURNING.value
         conversational_active = current_index == MainTabs.CONVERSATIONAL.value
 
@@ -468,15 +516,13 @@ class MyMainWindow(VCPMainWindow):
             self.conversationalqml.setVisible(conversational_active)
             self.conversationalqml.update()
 
-        current_widget = self.appContentStack.currentWidget() if hasattr(self, "appContentStack") else self.tabWidget.currentWidget()
+        current_widget = self.appContentStack.currentWidget() if hasattr(self, "appContentStack") else None
         if current_widget is not None:
             current_widget.raise_()
             current_widget.update()
             current_widget.repaint()
         if hasattr(self, "appContentStack"):
             self.appContentStack.update()
-        else:
-            self.tabWidget.update()
 
     def onMainTabChanged(self, index):
         self.mainSelectedTab = MainTabs(index)
@@ -487,7 +533,6 @@ class MyMainWindow(VCPMainWindow):
             MainTabs.MANUAL_TURNING.value: "manual",
             MainTabs.CONVERSATIONAL.value: "conversational",
             MainTabs.PROGRAMS.value: "programs",
-            MainTabs.TOOLS_OFFSETS.value: "tools",
             MainTabs.MACHINE_SETTINGS.value: "settings",
         }.get(index, "manual")
         self.appState.activateTab(tab_id)
@@ -495,13 +540,8 @@ class MyMainWindow(VCPMainWindow):
         QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
         QTimer.singleShot(0, self._initAppShell)
 
-    # def handleUsbPresent(self, value):
-    #     self.filesystemTabs.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value if value else ProgramTabs.PROGRAM_LOADED.value)
-
     def loadProgram(self):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
-        self.stackedProgramsTab.setCurrentIndex(ProgramTabs.PROGRAM_LOADED.value)
-        self.vtk.clearLivePlot()
 
     def onProgramsQmlProgramLoadRequested(self, _path):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
@@ -513,11 +553,6 @@ class MyMainWindow(VCPMainWindow):
         self.appState.activateTab("manual")
         if hasattr(self, "appContentStack"):
             self.appContentStack.setCurrentIndex(MainTabs.MANUAL_TURNING.value)
-        else:
-            self.tabWidget.setCurrentIndex(MainTabs.MANUAL_TURNING.value)
-
-    def backToPrograms(self):
-        self.stackedProgramsTab.setCurrentIndex(ProgramTabs.FILE_SYSTEM.value)
 
     def showGeneratedProgram(self, ngc_path: str):
         if not ngc_path:
@@ -573,10 +608,6 @@ class MyMainWindow(VCPMainWindow):
         self.manualTurningViewModel.setAngleFeedActive(bool(value))
 
     def _on_manual_joystick_state_changed(self):
-        if self.manualTurningViewModel.angleFeedActive:
-            self.feedAnimator.startAnimation()
-        else:
-            self.feedAnimator.stopAnimation()
         self._raise_manual_qml_widgets()
         QTimer.singleShot(0, self._raise_manual_qml_widgets)
 

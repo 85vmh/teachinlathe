@@ -1,7 +1,7 @@
 """
 GremlinWidget — LinuxCNC Gremlin-based G-code backplot widget for TeachInLathe.
 
-Drop-in replacement for QtPyVCP's VTKBackPlot. Wraps LinuxCNC's Lcnc_3dGraphics
+Wraps LinuxCNC's Lcnc_3dGraphics
 (qt5_graphics.py) which is a QOpenGLWidget that renders G-code tool paths using
 OpenGL, with live back-plotting during program execution.
 
@@ -15,8 +15,8 @@ Dependencies (all system-installed by LinuxCNC):
     - OpenGL          (python3-opengl)
 """
 
-from qtpyvcp.utilities import logger
-LOG = logger.getLogger('qtpyvcp.' + __name__)
+import logging
+LOG = logging.getLogger(__name__)
 
 try:
     from qt5_graphics import Lcnc_3dGraphics

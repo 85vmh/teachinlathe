@@ -1,7 +1,6 @@
 """Read-only access to the machine's INI file.
 
-Replaces ``qtpyvcp.utilities.info.Info``. Only the entries this application
-actually reads are exposed; the generic ``find``/``file_path`` helpers are
+Only the entries this application actually reads are exposed; the generic ``find``/``file_path`` helpers are
 there so a new entry does not need a new dependency.
 
 The INI is static configuration, read once at startup, so this class is
@@ -39,9 +38,8 @@ class AxisLimits(NamedTuple):
 def _normalize(path: Optional[str], base: Optional[str]) -> str:
     """Expand and absolutise *path*, resolving a relative one against *base*.
 
-    Mirrors qtpyvcp's ``normalizePath``/``getFilePath``: ``~`` and ``$VARS``
-    are expanded, a relative path is joined onto *base*, and the result is
-    passed through ``realpath``.
+    ``~`` and ``$VARS`` are expanded, a relative path is joined onto *base*,
+    and the result is passed through ``realpath``.
     """
     if not path or not isinstance(path, str):
         return ""
@@ -62,8 +60,8 @@ class IniRepository:
         try:
             self._ini = linuxcnc.ini(self._ini_path)
         except Exception:
-            # A bad path is what running in Designer, or outside a LinuxCNC
-            # session, looks like. Every accessor then returns its fallback.
+            # A bad path is what running outside a LinuxCNC session looks
+            # like. Every accessor then returns its fallback.
             log.warning("could not read INI file '%s'; using defaults", self._ini_path)
             self._ini = None
 
@@ -183,6 +181,26 @@ class IniRepository:
         """
         feedback = (self.find("DISPLAY", "POSITION_FEEDBACK") or "").strip()
         return feedback == "" or feedback == "0" or feedback.lower() == "actual"
+
+    @property
+    def default_jog_velocity(self) -> float:
+        """``[DISPLAY] DEFAULT_LINEAR_VELOCITY``, in units per *minute*.
+
+        The INI states it per second; every front-end shows it per minute.
+        """
+        return self._float("DISPLAY", "DEFAULT_LINEAR_VELOCITY", 3.0) * 60.0
+
+    @property
+    def max_jog_velocity(self) -> float:
+        """``[DISPLAY] MAX_LINEAR_VELOCITY``, in units per minute."""
+        return self._float("DISPLAY", "MAX_LINEAR_VELOCITY", 10.0) * 60.0
+
+    def _float(self, section: str, option: str, default: float) -> float:
+        raw = self.find(section, option)
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return default
 
     def axis_limits(self, axis: str) -> Optional[AxisLimits]:
         """Soft limits of *axis* (a letter), or None when the INI omits them."""

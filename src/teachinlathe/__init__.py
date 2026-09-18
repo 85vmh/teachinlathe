@@ -1,52 +1,134 @@
 #!/usr/bin/env python
 
-"""Main entry point for TeachInLathe.
+"""TeachInLathe - a LinuxCNC control panel for TeachIn lathes.
 
-This module contains the code necessary to be able to launch QControl
-directly from the command line, without using qtpyvcp. It handles
-parsing command line args and starting the main application.
+Launched from the LinuxCNC config's ``[DISPLAY] DISPLAY`` line, or by hand::
 
-Example:
-    Assuming the dir this file is located in is on the PATH, you can
-    launch TeachInLathe by saying::
+    $ teachinlathe --ini=/path/to/config.ini
 
-        $ teachinlathe --ini=/path/to/config.ini [options ...]
-
-    Run with the --help option to print a full list of options.
-
+The INI path is also read from ``$INI_FILE_NAME``, which LinuxCNC sets for
+whatever it starts, so the argument is only needed when running it directly.
 """
 
 __version__ = '0.0.1'
 
+import argparse
+import logging
 import os
-from PyQt5.QtCore import Qt
+import signal
+import sys
+
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QApplication
-import qtpyvcp
 
 from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
+from teachinlathe.logging_setup import configure as configure_logging
 
-VCP_DIR = os.path.realpath(os.path.dirname(__file__))
-VCP_CONFIG_FILE = os.path.join(VCP_DIR, 'teachinlathe.yml')
-IN_DESIGNER = os.getenv('DESIGNER', False)
+log = logging.getLogger(__name__)
 
-def main(opts=None):
+
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(
+        prog='teachinlathe', description=__doc__.splitlines()[0])
+    parser.add_argument('--ini', metavar='PATH',
+                        help='the LinuxCNC INI file (default: $INI_FILE_NAME)')
+    parser.add_argument('--log-level', default='DEBUG',
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                        help='how much to log (default: DEBUG)')
+    parser.add_argument('--log-file', metavar='PATH',
+                        help='where to log (default: ~/teachinlathe.log)')
+    parser.add_argument('--fullscreen', action='store_true',
+                        help='start full screen rather than maximised')
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s ' + __version__)
+    # LinuxCNC appends its own arguments to the DISPLAY line; ignore what we
+    # do not recognise rather than refusing to start because of it.
+    args, unknown = parser.parse_known_args(argv)
+    if unknown:
+        log.debug("ignoring unrecognised arguments: %s", " ".join(unknown))
+    return args
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    configure_logging(level=args.log_level, log_file=args.log_file)
+
+    if args.ini:
+        os.environ['INI_FILE_NAME'] = os.path.abspath(args.ini)
+    if not os.environ.get('INI_FILE_NAME'):
+        log.error("no INI file: pass --ini or set INI_FILE_NAME")
+        return 2
+    os.environ.setdefault('CONFIG_DIR',
+                          os.path.dirname(os.environ['INI_FILE_NAME']))
+
+    log.info("starting %s %s with %s", APPLICATION_DISPLAY_NAME, __version__,
+             os.environ['INI_FILE_NAME'])
 
     QApplication.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings, True)
-    QApplication.setApplicationName(APPLICATION_DISPLAY_NAME)
-    QApplication.setApplicationDisplayName(APPLICATION_DISPLAY_NAME)
-    QApplication.setDesktopFileName(APPLICATION_ID)
+    app = QApplication(sys.argv if argv is None else [sys.argv[0]])
+    app.setApplicationName(APPLICATION_DISPLAY_NAME)
+    app.setApplicationDisplayName(APPLICATION_DISPLAY_NAME)
+    app.setApplicationVersion(__version__)
+    app.setDesktopFileName(APPLICATION_ID)
 
-    if opts is None:
-        from qtpyvcp.utilities.opt_parser import parse_opts
-        opts = parse_opts(vcp_cmd='teachinlathe',
-                          vcp_name='TeachInLathe',
-                          vcp_version=__version__)
+    # Ctrl-C and `kill` should close the window, not tear the process down
+    # under a running event loop: shutting down cleanly is what unloads the
+    # HAL component, and a component that outlives its process blocks the
+    # next start. The timer exists only so the interpreter gets a slice in
+    # which to run the handler; Qt would otherwise sit in select().
+    stopping = []
 
-    if not opts.get('command_line_args'):
-        opts.command_line_args = 'teachinlathe'
+    def shutdown(signum, _frame):
+        log.info("caught %s, closing", signal.Signals(signum).name)
+        stopping.append(signum)
+        # quit() does nothing before exec_() has been reached, so a signal
+        # during start-up would otherwise be swallowed and the window would
+        # come up anyway. The flag is checked below.
+        app.quit()
 
-    qtpyvcp.run_vcp(opts, VCP_CONFIG_FILE)
+    def install_signal_handlers():
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            signal.signal(sig, shutdown)
+
+    install_signal_handlers()
+
+    wake = QTimer()
+    wake.start(200)
+    wake.timeout.connect(lambda: None)
+
+    from teachinlathe.mainwindow import MyMainWindow
+
+    if stopping:
+        log.info("interrupted while starting up")
+        return 0
+
+    window = MyMainWindow()
+
+    # Again, on purpose. Creating a HAL component replaces the SIGTERM
+    # handler with the one that raises KeyboardInterrupt - LinuxCNC's binding
+    # does that so a userspace component dies when told to - and the window
+    # creates ours. Left alone, `kill` would tear the process down mid-loop
+    # and leave the HAL component registered, blocking the next start.
+    install_signal_handlers()
+
+    if args.fullscreen:
+        window.showFullScreen()
+    else:
+        window.showMaximized()
+
+    if stopping:
+        log.info("interrupted while starting up")
+        return 0
+
+    try:
+        return app.exec_()
+    except KeyboardInterrupt:
+        # Only reachable if the interpreter takes the signal between the
+        # handler running and the loop noticing; exiting quietly is the whole
+        # point of handling it.
+        log.info("interrupted")
+        return 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

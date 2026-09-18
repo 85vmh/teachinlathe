@@ -1,6 +1,6 @@
 """Userspace HAL components, as Qt objects.
 
-Replaces ``qtpyvcp.hal``. A :class:`HalComponent` owns its pins; a
+A :class:`HalComponent` owns its pins; a
 :class:`HalPin` exposes the HAL value as a Python property and emits
 ``valueChanged`` when it moves.
 
@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import atexit
 import logging
-import signal
+import sys
 from typing import Callable, Dict, Iterator, Optional
 
 import _hal
@@ -241,44 +241,40 @@ def set_poll_interval(milliseconds: int) -> None:
 def unload_all() -> None:
     """Unload every component this process created.
 
-    Registered with :mod:`atexit` as well as on SIGTERM/SIGINT, because a
-    component that outlives its process stays registered in HAL's shared
-    memory: the next run then dies on "duplicate component name" and the
-    stale one has to be cleared by hand. An unhandled exception is a normal
-    interpreter exit, which no signal handler sees.
+    Registered with :mod:`atexit`, because a component that outlives its
+    process stays registered in HAL's shared memory: the next run then dies on
+    "duplicate component name" and the stale one has to be cleared by hand.
+
+    Signals are deliberately not handled here. Installing a handler is a
+    change to process-global state, and a library module that does it on
+    import fights whoever else wants it - which is how Ctrl-C ended up
+    unloading HAL and then raising KeyboardInterrupt through the event loop.
+    The application installs its own, and this runs on the way out either way.
     """
     for comp in list(COMPONENTS.values()):
+        # Unload first, then say so. At interpreter shutdown a log handler can
+        # raise - it may be writing to something Qt has already deleted - and
+        # a component that is not unloaded blocks the next start, while a
+        # message that is not printed costs nothing.
+        name = comp.name
         try:
-            log.info("unloading HAL component: %s", comp.name)
             comp.exit()
+        except Exception as error:
+            _report("error unloading HAL component %s: %s" % (name, error))
+            continue
+        _report("unloaded HAL component: %s" % name)
+
+
+def _report(message: str) -> None:
+    """Log *message*, falling back to stderr if logging itself is gone."""
+    try:
+        log.info(message)
+    except Exception:
+        try:
+            print(message, file=sys.stderr)
         except Exception:
-            log.exception("error unloading HAL component %s", comp.name)
+            pass
 
 
-def _unload_all(signum, frame):
-    """Unload every component, then let the previous handler run.
-
-    qtpyvcp installed this per component, so with more than one component the
-    last one registered was the only one unloaded. Every component is unloaded
-    here instead.
-    """
-    unload_all()
-
-    previous = _PREVIOUS_HANDLERS.get(signum)
-    if callable(previous):
-        previous(signum, frame)
-    elif previous == signal.SIG_DFL:
-        signal.signal(signum, signal.SIG_DFL)
-        signal.raise_signal(signum)
-
-
-_PREVIOUS_HANDLERS = {}
 
 atexit.register(unload_all)
-
-for _sig in (signal.SIGTERM, signal.SIGINT):
-    try:
-        _PREVIOUS_HANDLERS[_sig] = signal.signal(_sig, _unload_all)
-    except (ValueError, OSError):
-        # Not the main thread, or a platform without the signal.
-        pass

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-TeachInLathe is a **QtPyVCP-based Virtual Control Panel (VCP)** for LinuxCNC CNC lathes. It provides both manual machine control (jogging, spindle) and a conversational programming interface where operators define machining operations through forms rather than hand-coded G-code. The conversational UI is built with QML.
+TeachInLathe is a **PyQt5-based Virtual Control Panel (VCP)** for LinuxCNC CNC lathes. It provides both manual machine control (jogging, spindle) and a conversational programming interface where operators define machining operations through forms rather than hand-coded G-code. The conversational UI is built with QML.
 
 ## Commands
 
@@ -25,13 +25,11 @@ There is no test suite and no linter configured for this project.
 
 ### Technology Stack
 - **Python 3.11**, **PyQt5**, **QML** (Qt declarative UI)
-- **QtPyVCP** — the VCP plugin framework that bootstraps the application
 - **LinuxCNC HAL** — hardware abstraction layer for machine I/O pins
 
 ### Application Layers
 
 ```
-teachinlathe.yml          → QtPyVCP config (window, plugins, widgets)
 mainwindow.py             → Top-level window; wires all tabs together
 lathe_hal_component.py    → Singleton; owns all HAL pin definitions
 manual_lathe.py           → Manual jog/spindle logic

@@ -1,18 +1,4 @@
-import random
-import string
-
 from teachinlathe.repositories.hal_repository import hal_component
-from qtpyvcp.actions.machine_actions import issue_mdi
-
-from teachinlathe import IN_DESIGNER
-
-
-def generate_random_string(chars_length):
-    # Define the characters to use: uppercase, lowercase, and digits
-    characters = string.ascii_letters + string.digits
-    # Generate a random string of the specified length
-    random_string = ''.join(random.choice(characters) for _ in range(chars_length))
-    return random_string
 
 
 class TeachInLatheComponent:
@@ -69,19 +55,20 @@ class TeachInLatheComponent:
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialize()
+            instance = super().__new__(cls)
+            # Only kept once it is actually usable. Setting _instance first
+            # and then failing in _initialize left a singleton with no .comp,
+            # so the clear HAL error ("duplicate component name") turned into
+            # an AttributeError at some unrelated later point.
+            instance._initialize()
+            cls._instance = instance
         return cls._instance
 
     def __init__(self):
         pass  # Initialization logic moved to __new__
 
     def _initialize(self):
-        if IN_DESIGNER:
-            random_suffix = generate_random_string(5)
-            self.comp = hal_component('Designer' + random_suffix)
-        else:
-            self.comp = hal_component('TeachInLathe')
+        self.comp = hal_component('TeachInLathe')
 
         self.comp.addPin(self.PinHandwheelsJogIncrement, 'float', 'in')
         self.comp.addPin(self.PinHandwheelsAllowed, 'bit', 'in')

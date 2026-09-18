@@ -1,9 +1,19 @@
 o<touch_off_x> sub
+    (Sets the X tool offset from a measured DIAMETER passed in as #1.)
+    (G7 is asserted explicitly: the interpreter starts in G8, and every)
+    (interpreter re-init puts it back there, so the mode cannot be assumed.)
+
     #<x_offset_touch_position> = #1
+    #<was_diameter_mode> = #<_lathe_diameter_mode>
 
     G40 (cancel tool radius compensation)
+    G7  (diameter mode)
     G10 L10 P #5400 X [#<x_offset_touch_position>]  (5400 = tool number)
     T #5400 G43 (enable tool length offset)
+
+    o<restore_x_mode> if [#<was_diameter_mode> EQ 0]
+        G8 (leave the mode as it was found)
+    o<restore_x_mode> endif
 o<touch_off_x> endsub
 
 M2 (end program)

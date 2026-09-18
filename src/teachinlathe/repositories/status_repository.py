@@ -1,7 +1,6 @@
 """The LinuxCNC status channel, polled and published as Qt signals.
 
-Replaces ``qtpyvcp.plugins.status``. One :class:`linuxcnc.stat` is polled on a
-single timer; every field read through this repository is a
+One :class:`linuxcnc.stat` is polled on a single timer; every field read through this repository is a
 :class:`StatusChannel` that emits ``valueChanged`` when - and only when - the
 field actually moves.
 
@@ -91,12 +90,12 @@ class StatusChannel(QObject):
         else:
             self.valueChanged.connect(slot)
 
-    #: qtpyvcp spelled the same thing two ways; both are in use.
+    #: The same thing under its older name; both spellings are in use.
     onValueChanged = notify
 
     @property
     def signal(self):
-        """The change signal under qtpyvcp's name for it.
+        """The change signal under its older name.
 
         Kept, like :meth:`notify`, so call sites did not all have to be
         rewritten at once; ``valueChanged`` is this repository's own spelling.
@@ -165,6 +164,7 @@ class ItemStatus(QObject):
         self._index = index
         self._channels: Dict[str, StatusChannel] = {}
         self._groups: Dict[str, tuple] = {}
+        self._poll_failing = False
         for key, value in values.items():
             chan = StatusChannel("{}[{}].{}".format(field, index, key),
                                  value, parent=self)
@@ -211,6 +211,7 @@ class StatusRepository(QObject):
         self._no_force_homing = self._ini.no_force_homing
         self._channels: Dict[str, StatusChannel] = {}
         self._groups: Dict[str, tuple] = {}
+        self._poll_failing = False
 
         self._timer = QTimer(self)
         self._timer.setInterval(cycle_time_ms)
@@ -301,16 +302,29 @@ class StatusRepository(QObject):
         try:
             self._stat.poll()
         except Exception:
-            log.exception("linuxcnc.stat.poll() failed")
+            # Reported once, not on every tick: with no machine behind the
+            # status buffer this runs several times a second, and a traceback
+            # each time buries the log and the in-app event list.
+            if not self._poll_failing:
+                self._poll_failing = True
+                log.exception("linuxcnc.stat.poll() failed; "
+                              "status is stale until it recovers")
             return
 
-        for name, chan in self._channels.items():
+        if self._poll_failing:
+            self._poll_failing = False
+            log.info("linuxcnc.stat.poll() recovered")
+
+        # Snapshots, not live views: a listener woken by one channel may ask
+        # for another that does not exist yet, and creating it mid-iteration
+        # would otherwise blow up the whole poll.
+        for name, chan in list(self._channels.items()):
             try:
                 chan.setValue(self._read(name))
             except Exception:
                 log.exception("could not update status channel %s", name)
 
-        for field, items in self._groups.items():
+        for field, items in list(self._groups.items()):
             raw = getattr(self._stat, field, ()) or ()
             for index, item in enumerate(items):
                 try:

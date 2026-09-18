@@ -1,7 +1,6 @@
 """Axis positions in the three frames the UI shows.
 
-Replaces ``qtpyvcp.plugins.positions``. The arithmetic is the same one every
-LinuxCNC front-end does, stated once here:
+The arithmetic is the same one every LinuxCNC front-end does, stated once here:
 
 * **abs** - the machine position, straight off the status channel. Actual or
   commanded, per ``[DISPLAY] POSITION_FEEDBACK``.

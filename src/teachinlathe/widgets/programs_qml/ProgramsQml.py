@@ -1,3 +1,4 @@
+import logging
 import os
 
 from PyQt5.QtCore import QPoint, QPointF, QTimer, QUrl, pyqtSignal, Qt
@@ -10,11 +11,10 @@ from teachinlathe.widgets.gremlin.gremlin_widget import GremlinWidget
 from teachinlathe.widgets.programs_qml.filesystemview import FileSystemViewModel
 from teachinlathe.widgets.programs_qml.ProgramsDroViewModel import ProgramsDroViewModel
 from teachinlathe.widgets.programs_qml.ProgramsToolFeedSpeedViewModel import ProgramsToolFeedSpeedViewModel
-from qtpyvcp.utilities import logger
 
 from teachinlathe.widgets.programs_qml.ProgramsViewModel import ProgramsViewModel
 
-LOG = logger.getLogger('qtpyvcp.' + __name__)
+LOG = logging.getLogger(__name__)
 
 
 class ProgramsQml(QQuickWidget):

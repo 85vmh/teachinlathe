@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from PyQt5.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
-from qtpyvcp.actions.machine_actions import issue_mdi
+from teachinlathe.repositories.command_repository import issue_mdi
 from teachinlathe.repositories.status_repository import status_repository
 
 STATUS = status_repository()
@@ -79,17 +79,33 @@ class NavigationStore(QObject):
 
 
 class StoreLogHandler(logging.Handler):
+    """Feeds log records into the in-app event list.
+
+    This sits on the *root* logger, so it outlives the store it writes to:
+    at shutdown Qt deletes the C++ side of the store while the handler is
+    still installed, and anything logged after that - including the HAL
+    component being unloaded - would raise out of the logging call and take
+    the unload with it. It detaches itself instead.
+    """
+
     def __init__(self, cnc_store):
         super().__init__()
         self._cnc_store = cnc_store
         self.setFormatter(logging.Formatter('%(message)s'))
 
     def emit(self, record):
+        if self._cnc_store is None:
+            return
         try:
             message = self.format(record)
         except Exception:
             message = record.getMessage()
-        self._cnc_store.addEvent(record.levelname, record.name, message)
+        try:
+            self._cnc_store.addEvent(record.levelname, record.name, message)
+        except RuntimeError:
+            # The store's C++ object is gone; stop trying for good.
+            self._cnc_store = None
+            logging.getLogger().removeHandler(self)
 
 
 class CncStore(QObject):

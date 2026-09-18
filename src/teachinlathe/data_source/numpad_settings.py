@@ -3,8 +3,8 @@
 Loads ``configurations/numpad_settings.json`` and exposes, per ``settingName``:
 the predefined values, description, limits and the persisted ``last_value``.
 
-This module has **no** qtpyvcp dependency on purpose - the numpad config used
-to live in the qtpyvcp settings (yml) and is now decoupled into plain JSON.
+The numpad config used to live in the application settings (yml) and is now
+decoupled into plain JSON, with no dependency on any settings framework.
 
 Only entries that declare a ``last_value`` field are persisted: when the user
 picks a value for such a key it is written back to the JSON so the field is

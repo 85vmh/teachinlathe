@@ -1,7 +1,7 @@
 from enum import Enum
 
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
-from qtpyvcp.actions.machine_actions import issue_mdi
+from teachinlathe.repositories.command_repository import issue_mdi
 from teachinlathe.repositories.status_repository import status_repository
 
 from teachinlathe.repositories.positions_repository import Positions

@@ -1,9 +1,9 @@
 """Tests for PositionsRepository.
 
-The core of it is a differential test: qtpyvcp's position arithmetic is
-restated here verbatim as a reference and the two are compared over randomised
-machine states. If the repository ever drifts from what the DRO used to show,
-this fails.
+The core of it is a differential test: the position arithmetic the DRO has
+always shown is restated here verbatim as a reference and the two are compared
+over randomised machine states. If the repository ever drifts from what the DRO
+used to show, this fails.
 """
 
 import math
@@ -59,8 +59,8 @@ class FakeIni:
         self.no_force_homing = False
 
 
-def qtpyvcp_reference(stat, axis_numbers, machine_units, report_actual):
-    """qtpyvcp's Position._update, restated. The behaviour being preserved."""
+def reference_positions(stat, axis_numbers, machine_units, report_actual):
+    """The original ``Position._update``, restated. The behaviour preserved."""
     pos = stat.actual_position if report_actual else stat.position
     dtg = stat.dtg
     g5x_offset = stat.g5x_offset
@@ -110,7 +110,7 @@ def nine(rng, scale=100.0):
 
 
 @pytest.mark.parametrize("seed", range(40))
-def test_matches_qtpyvcp_arithmetic(qt_app, seed):
+def test_matches_reference_arithmetic(qt_app, seed):
     rng = random.Random(seed)
     metric = rng.choice([True, False])
     actual = rng.choice([True, False])
@@ -126,7 +126,7 @@ def test_matches_qtpyvcp_arithmetic(qt_app, seed):
     ini = FakeIni(metric=metric, actual=actual, axes=axes)
     positions, _ = build(qt_app, stat, ini)
 
-    want = qtpyvcp_reference(stat, list(axes), UNITS_MM if metric else UNITS_INCH, actual)
+    want = reference_positions(stat, list(axes), UNITS_MM if metric else UNITS_INCH, actual)
     got = (positions.abs, positions.rel, positions.dtg)
 
     for frame, (w, g) in enumerate(zip(want, got)):

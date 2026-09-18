@@ -1,8 +1,8 @@
 import linuxcnc
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
-from qtpyvcp.actions import program_actions
-from qtpyvcp.actions.machine_actions import issue_mdi
+from teachinlathe.repositories.command_repository import command_repository, issue_mdi
+from teachinlathe.repositories.program_repository import program_repository
 from teachinlathe.repositories.status_repository import status_repository
 
 from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
@@ -10,7 +10,6 @@ from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 
 STATUS = status_repository()
 STAT = STATUS.stat
-CMD = linuxcnc.command()
 
 
 def _channel_value(name, default=None):
@@ -165,8 +164,8 @@ class ProgramsActionSource(QObject):
 
     def _reset_program_option_defaults(self):
         try:
-            CMD.set_optional_stop(False)
-            CMD.set_block_delete(False)
+            program_repository().set_optional_stop(False)
+            program_repository().set_block_delete(False)
         except Exception as e:
             print(f"[ProgramsActionSource] failed to reset optional stop/block delete defaults: {e}")
 
@@ -315,15 +314,14 @@ class ProgramsActionSource(QObject):
         return False, 'Machine must be ON to set Block Del'
 
     def _mdi_state(self, stat):
-        if stat.task_state == linuxcnc.STATE_ON and STATUS.allHomed() and stat.interp_state == linuxcnc.INTERP_IDLE:
-            return True, ''
-        return False, "Can't issue MDI unless machine is ON, HOMED and IDLE"
+        # The repository owns this rule, so the button and the command agree.
+        return command_repository().can_issue_mdi()
 
     @pyqtSlot()
     def triggerStart(self):
         if not self._start.enabled:
             return
-        program_actions.run()
+        program_repository().run()
         self.refresh()
 
     @pyqtSlot()
@@ -331,7 +329,7 @@ class ProgramsActionSource(QObject):
         if not self._stop.enabled:
             return
         self.abortTriggered.emit()
-        program_actions.abort()
+        program_repository().abort()
         self.refresh()
 
     @pyqtSlot()
@@ -339,9 +337,9 @@ class ProgramsActionSource(QObject):
         if not self._pause_resume.enabled:
             return
         if self._pause_resume.active:
-            program_actions.resume()
+            program_repository().resume()
         else:
-            program_actions.pause()
+            program_repository().pause()
         self.refresh()
 
     @pyqtSlot()
@@ -355,7 +353,7 @@ class ProgramsActionSource(QObject):
     def setOptionalStopEnabled(self, enabled):
         if not self._optional_stop.enabled:
             return
-        CMD.set_optional_stop(bool(enabled))
+        program_repository().set_optional_stop(enabled)
         self._runtime_store.poll()
         self.refresh()
 
@@ -363,7 +361,7 @@ class ProgramsActionSource(QObject):
     def setBlockDeleteEnabled(self, enabled):
         if not self._block_delete.enabled:
             return
-        CMD.set_block_delete(bool(enabled))
+        program_repository().set_block_delete(enabled)
         self._runtime_store.poll()
         self.refresh()
 

@@ -21,7 +21,6 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.11"
-#qtpyvcp = "^4.0.85"
 python3-xlib = "^0.15"
 ezdxf = "^1.4.4"
 
@@ -29,14 +28,6 @@ ezdxf = "^1.4.4"
 [tool.poetry.scripts]
 teachinlathe = "teachinlathe:main"
 teachinlathe-tool = "teachinlathe.debug_tools:main"
-
-[tool.poetry.plugins]
-
-[tool.poetry.plugins."qtpyvcp.vcp"]
-teachinlathe = "teachinlathe"
-
-[tool.poetry.plugins."qtpyvcp.widgets"]
-teachin_lathe_widgets = "teachinlathe.widgets"
 
 [tool.versioneer]
 VCS = "git"

@@ -1,8 +1,6 @@
 from qtpy.QtCore import Signal, QObject
 from teachinlathe.repositories import AxisLimits, ini_repository
 
-from teachinlathe import IN_DESIGNER
-
 INI = ini_repository()
 
 
@@ -34,12 +32,9 @@ class MachineLimitsHandler(QObject):
     def __init__(self):
         if not self._is_initialized:
             super().__init__()  # Initialize the QObject base class
-            if IN_DESIGNER:
-                _x_bounds = AxisLimits(0.0, 0.0)
-                _z_bounds = AxisLimits(0.0, 0.0)
-            else:
-                _x_bounds = INI.axis_limits('X') or AxisLimits(0.0, 0.0)
-                _z_bounds = INI.axis_limits('Z') or AxisLimits(0.0, 0.0)
+            # An INI without limits (no machine, or a bad path) reads as zero.
+            _x_bounds = INI.axis_limits('X') or AxisLimits(0.0, 0.0)
+            _z_bounds = INI.axis_limits('Z') or AxisLimits(0.0, 0.0)
 
             self._is_initialized = True
 

@@ -1,31 +1,15 @@
 import os
 
-import linuxcnc
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, pyqtProperty
 
 from teachinlathe.widgets.programs_qml.gcode_viewer.GCodeSyntaxHighlighter import GCodeSyntaxHighlighter
 
 
 def load_or_reload_program(path: str) -> None:
-    from qtpyvcp.actions.program_actions import load as load_program
-    from qtpyvcp.actions.program_actions import reload as reload_program
+    """Open *path*, reloading in place when it is already the open program."""
+    from teachinlathe.repositories.program_repository import program_repository
 
-    if not path or not os.path.isfile(path):
-        return
-
-    requested_path = os.path.abspath(path)
-    stat = linuxcnc.stat()
-    try:
-        stat.poll()
-    except Exception:
-        load_program(requested_path)
-        return
-
-    current_path = os.path.abspath(stat.file) if getattr(stat, "file", None) else ""
-    if current_path and requested_path == current_path:
-        reload_program()
-    else:
-        load_program(requested_path)
+    program_repository().load_or_reload(path)
 
 
 class FileSystemBridge(QObject):

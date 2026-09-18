@@ -1,6 +1,5 @@
 from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
-from qtpyvcp import SETTINGS
-from qtpyvcp.utilities.settings import setSetting
+from teachinlathe.repositories.settings_repository import settings_repository
 
 from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.data_source.numpad_settings import NumpadSettings
@@ -57,17 +56,11 @@ class ManualTurningViewModel(QObject):
         self._update_actual_feed()
 
     def _setting_value(self, setting_name: str, default):
-        try:
-            setting = SETTINGS.get(setting_name)
-            if setting is not None:
-                return setting.getValue()
-        except Exception:
-            pass
-        return default
+        return settings_repository().get(setting_name, default)
 
     def _set_setting_backed_value(self, attr_name: str, setting_name: str, default):
         # RPM / feed / CSS / max-RPM are populated from numpad_settings.json
-        # (the persisted last_value), not from qtpyvcp anymore.
+        # (the persisted last_value), not from the settings file.
         value = self._numpad_settings.current_value(setting_name)
         if value is None:
             value = default
@@ -76,10 +69,7 @@ class ManualTurningViewModel(QObject):
     def _store_setting(self, setting_name: str, value):
         if not setting_name:
             return
-        try:
-            setSetting(setting_name, value)
-        except Exception:
-            pass
+        settings_repository().set(setting_name, value)
 
     def _to_float(self, value, default=0.0):
         try:

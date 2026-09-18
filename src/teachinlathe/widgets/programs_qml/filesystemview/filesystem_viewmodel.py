@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import shutil
@@ -5,12 +6,13 @@ from PyQt5.QtCore import (
     QFileSystemWatcher, QObject, QThread,
     pyqtProperty, pyqtSignal, pyqtSlot,
 )
-from PyQt5.QtWidgets import QMessageBox
 
 from teachinlathe.date_utils import format_recent_timestamp
 
 from .data_types import FileSystemEntry, FileSystemLocation, LocationType
 from .usb_monitor import UsbDriveMonitor
+
+LOG = logging.getLogger(__name__)
 
 GCODE_EXTENSIONS = ('.ngc', '.nc', '.gcode', '.G', '.NGC', '.NC')
 PROGRAM_HEADER_RE = re.compile(r"^\s*\(\s*Program:\s*(?P<program>.*?)\s*\)\s*$")
@@ -88,6 +90,7 @@ class FileSystemViewModel(QObject):
     copyProgressChanged = pyqtSignal(float, arguments=["progress"])
     copyCompleted = pyqtSignal(str, arguments=["destinationPath"])
     copyFailed = pyqtSignal(str, arguments=["errorMessage"])
+    deleteFailed = pyqtSignal(str, arguments=["errorMessage"])
     fileSelected = pyqtSignal(str, arguments=["absolutePath"])
     fileOpenRequested = pyqtSignal(str, arguments=["absolutePath"])
 
@@ -376,7 +379,8 @@ class FileSystemViewModel(QObject):
             else:
                 shutil.rmtree(abs_path)
         except Exception as exc:
-            QMessageBox.critical(None, "Delete failed", str(exc))
+            LOG.error("failed to delete %s: %s", abs_path, exc)
+            self.deleteFailed.emit(str(exc))
             return
         self._selected_path = ""
         self.selectionChanged.emit()
@@ -745,5 +749,5 @@ class FileSystemViewModel(QObject):
         self._copy_progress = 0.0
         self._copy_worker = None
         self.copyProgressChanged.emit(0.0)
+        LOG.error("copy to USB failed: %s", msg)
         self.copyFailed.emit(msg)
-        QMessageBox.critical(None, "Copy failed", msg)

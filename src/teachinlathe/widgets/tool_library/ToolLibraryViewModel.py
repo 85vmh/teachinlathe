@@ -4,7 +4,7 @@ Exposes:
   • tools   QVariantList of display dicts (read-only, reactive)
   • loadTool / deleteTool / saveTool / addTool  slots callable from QML
 
-The tbl_path is resolved from LinuxCNC INI via qtpyvcp Info utility.
+The tbl_path is resolved from the LinuxCNC INI through IniRepository.
 """
 from __future__ import annotations
 

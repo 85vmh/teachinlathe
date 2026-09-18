@@ -177,15 +177,13 @@ class AppShellQmlWidget(QWidget):
         ("manual", "Manual Turning", 0),
         ("conversational", "Conversational", 1),
         ("programs", "Programs", 2),
-        ("settings", "Machine Settings", 4),
+        ("settings", "Machine Settings", 3),
     ]
 
-    INDEX_TO_TAB = {
-        0: "manual",
-        1: "conversational",
-        2: "programs",
-        4: "settings",
-    }
+    # Both directions are derived from TAB_CONFIG: the two used to be spelled
+    # out separately, and a stale index in one of them left a tab selectable
+    # in the bottom bar but never shown.
+    INDEX_TO_TAB = {index: tab_id for tab_id, _label, index in TAB_CONFIG}
 
     TAB_TO_INDEX = {tab_id: index for tab_id, _label, index in TAB_CONFIG}
 

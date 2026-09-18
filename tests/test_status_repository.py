@@ -1,5 +1,6 @@
 """Tests for StatusRepository, driven by a fake linuxcnc.stat."""
 
+import logging
 import sys
 from pathlib import Path
 
@@ -249,7 +250,7 @@ def test_signal_is_an_alias_for_valueChanged(repo):
     stat = grouped_stat()
     r = repo(stat)
     seen = []
-    # qtpyvcp's spelling, still used by mainwindow
+    # the older spelling, still used by mainwindow
     r.task_mode.signal.connect(seen.append)
     r.spindle[0].override.signal.connect(lambda v: seen.append(("s", v)))
 
@@ -331,3 +332,80 @@ def test_every_slot_shape_can_share_one_channel(repo):
 
     assert (listener.no_arg, listener.one_arg) == (1, [7])
     assert (listener.optional, listener.varargs) == ([7], [(7,)])
+
+
+# --- a failing poll is reported once, not on every tick ---------------------
+
+class BrokenStat(FakeStat):
+    def __init__(self, **fields):
+        super().__init__(**fields)
+        self.failing = True
+
+    def poll(self):
+        self.polls += 1
+        if self.failing:
+            raise RuntimeError("emcStatusBuffer invalid err=3")
+
+
+def test_a_failing_poll_is_logged_once_and_again_on_recovery(repo, caplog):
+    stat = BrokenStat(task_mode=1)
+    r = repo(stat)
+
+    with caplog.at_level(logging.ERROR,
+                         logger="teachinlathe.repositories.status_repository"):
+        for _ in range(10):
+            r.poll()
+
+    errors = [rec for rec in caplog.records if rec.levelno >= logging.ERROR]
+    assert len(errors) == 1, "a poll failing every tick must not log every tick"
+    assert stat.polls == 10, "it must keep trying"
+
+
+def test_recovery_is_reported_and_then_it_stays_quiet(repo, caplog):
+    stat = BrokenStat(task_mode=1)
+    r = repo(stat)
+    logger_name = "teachinlathe.repositories.status_repository"
+
+    with caplog.at_level(logging.INFO, logger=logger_name):
+        r.poll()
+        r.poll()
+        stat.failing = False
+        r.poll()
+        r.poll()
+        r.poll()
+
+    messages = [rec.getMessage() for rec in caplog.records]
+    assert sum("recovered" in m for m in messages) == 1
+
+
+def test_channels_keep_updating_after_a_recovery(repo):
+    stat = BrokenStat(task_mode=1)
+    r = repo(stat)
+    seen = []
+    r.task_mode.notify(seen.append)
+
+    r.poll()                      # fails, nothing changes
+    assert seen == []
+
+    stat.failing = False
+    stat.task_mode = 6
+    r.poll()
+    assert seen == [6]
+
+
+def test_a_listener_may_ask_for_a_new_channel_while_polling(repo):
+    """A slot woken by one channel often reads another; the first time it
+    does, that channel is created - during the poll loop."""
+    stat = FakeStat(task_mode=1, tool_in_spindle=0, enabled=True)
+    r = repo(stat)
+    seen = []
+
+    def on_change(value):
+        # 'enabled' has no channel yet: this creates one, mid-poll.
+        seen.append((value, r.enabled.value))
+
+    r.tool_in_spindle.notify(on_change)
+    stat.tool_in_spindle = 3
+    r.poll()
+
+    assert seen == [(3, True)]

@@ -1,4 +1,4 @@
-"""Pure .tbl parser / serialiser — no QtPyVCP dependency.
+"""Pure .tbl parser / serialiser — plain Python, no Qt.
 
 LinuxCNC tool table format (one tool per line):
   T<n> P<pocket> X<x> Y<y> Z<z> A<a> B<b> C<c> U<u> V<v> W<w>
