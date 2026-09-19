@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
+import theme 1.0
 
 Popup {
     id: root
@@ -23,17 +24,17 @@ Popup {
     property string selectedType:     ""
     property int    buttonsPerRow:    4
     readonly property int buttonWidth: 180
-    readonly property int buttonHeight: 70
+    readonly property int buttonHeight: Theme.buttonHeightTouch
     readonly property int buttonFontSize: 16
     readonly property int buttonSpacing: 40
 
     onAboutToShow: { selectedType = "" }
 
     background: Rectangle {
-        radius: 10
-        color: "#202225"
-        border.color: "#3A3D41"
-        border.width: 1
+        radius: Theme.radiusXLarge
+        color: Theme.surfaceSunken
+        border.color: Theme.dialogBorder
+        border.width: Theme.hairline
     }
 
     property var options: [
@@ -64,9 +65,9 @@ Popup {
 
         Text {
             text: "Add Operation"
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             font.bold: true
-            color: "white"
+            color: Theme.foreground
         }
 
         // Duplicate Selected Operation button (centered)
@@ -84,20 +85,21 @@ Popup {
                 font.pixelSize: root.buttonFontSize
 
                 background: Rectangle {
-                    radius: 4
+                    radius: Theme.radiusSmall
                     color: {
-                        if (duplicateBtn.isSelected) return "#1E88E5"
-                        if (duplicateBtn.pressed)    return "#3A4A5A"
-                        if (duplicateBtn.hovered)    return "#2A3540"
-                        return "#2D3035"
+                        if (duplicateBtn.isSelected) return Theme.selection
+                        if (duplicateBtn.pressed)    return Theme.accentSoft
+                        if (duplicateBtn.hovered)    return Theme.hover
+                        return Theme.surface
                     }
-                    border.color: duplicateBtn.isSelected ? "#1565C0" : "#4A4D52"
-                    border.width: 1
+                    border.color: duplicateBtn.isSelected ? Theme.accentStrong
+                                                          : Theme.dialogBorder
+                    border.width: Theme.hairline
                 }
                 contentItem: Text {
                     text: duplicateBtn.text
                     font: duplicateBtn.font
-                    color: "white"
+                    color: Theme.foreground
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -111,8 +113,8 @@ Popup {
         // Separator between Duplicate button and operation type buttons
         Rectangle {
             width: column.width - column.padding * 2
-            height: 1
-            color: "#3A3D41"
+            height: Theme.hairline
+            color: Theme.separator
         }
 
         // Operation type buttons
@@ -132,20 +134,21 @@ Popup {
                     text: modelData.label
 
                     background: Rectangle {
-                        radius: 4
+                        radius: Theme.radiusSmall
                         color: {
-                            if (isSelected)       return "#1E88E5"
-                            if (parent.pressed)   return "#3A4A5A"
-                            if (parent.hovered)   return "#2A3540"
-                            return "#2D3035"
+                            if (isSelected)       return Theme.selection
+                            if (parent.pressed)   return Theme.accentSoft
+                            if (parent.hovered)   return Theme.hover
+                            return Theme.surface
                         }
-                        border.color: isSelected ? "#1565C0" : "#4A4D52"
-                        border.width: 1
+                        border.color: isSelected ? Theme.accentStrong
+                                                 : Theme.dialogBorder
+                        border.width: Theme.hairline
                     }
                     contentItem: Text {
                         text: parent.text
                         font: parent.font
-                        color: "white"
+                        color: Theme.foreground
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -166,8 +169,8 @@ Popup {
 
         Rectangle {
             width: column.width - column.padding * 2
-            height: 1
-            color: "#3A3D41"
+            height: Theme.hairline
+            color: Theme.separator
         }
 
         // Footer row

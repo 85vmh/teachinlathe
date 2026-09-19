@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../touchable_input"
+import theme 1.0
 
 RowLayout {
     id: root
@@ -15,13 +16,13 @@ RowLayout {
     signal openNumPadRequested(Item field)
     signal committed(var value)
 
-    spacing: 8
+    spacing: Theme.spacingSmall
 
     Text {
         Layout.preferredWidth: 104
         text: root.label
-        color: "#1e2430"
-        font.pixelSize: 17
+        color: Theme.foreground
+        font.pixelSize: Theme.fontLarge
         horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter
     }
@@ -42,11 +43,11 @@ RowLayout {
 
     Text {
         Layout.preferredWidth: 78
-        Layout.preferredHeight: 40
+        Layout.preferredHeight: Theme.buttonHeight
         visible: !root.editable
         text: String(root.value)
-        color: "#0f172a"
-        font.pixelSize: 17
+        color: Theme.foregroundStrong
+        font.pixelSize: Theme.fontLarge
         font.bold: root.valueBold
         font.family: "Noto Sans Mono"
         horizontalAlignment: Text.AlignHCenter
@@ -56,8 +57,8 @@ RowLayout {
     Text {
         Layout.preferredWidth: 66
         text: root.unit
-        color: "#1e2430"
-        font.pixelSize: 16
+        color: Theme.foreground
+        font.pixelSize: Theme.fontBody
         verticalAlignment: Text.AlignVCenter
     }
 

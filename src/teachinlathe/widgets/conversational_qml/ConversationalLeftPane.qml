@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
+import theme 1.0
 
 Rectangle {
     id: root
@@ -146,10 +147,10 @@ Rectangle {
     Layout.fillWidth: true
     Layout.preferredWidth: 3.5
     Layout.fillHeight: true
-    color: "#ffffff"
-    radius: 6
-    border.color: "#ccc"
-    border.width: 1
+    color: Theme.surface
+    radius: Theme.radius
+    border.color: Theme.outline
+    border.width: Theme.hairline
 
     ColumnLayout {
         anchors.fill: parent
@@ -160,10 +161,10 @@ Rectangle {
             id: operationsBox
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: 4
-            color: "#f8f8f8"
+            radius: Theme.radiusSmall
+            color: Theme.surfaceAlt
             border.width: 0
-            border.color: "#dddddd"
+            border.color: Theme.outlineDisabled
 
             ColumnLayout {
                 anchors.fill: parent
@@ -254,33 +255,33 @@ Rectangle {
 
                     Rectangle {
                         anchors { left: parent.left; right: parent.right; top: parent.top }
-                        height: 40
+                        height: Theme.buttonHeight
                         visible: opsList.contentY > 0
                         z: 1
                         gradient: Gradient {
                             orientation: Gradient.Vertical
-                            GradientStop { position: 0.0; color: "#f8f8f8" }
+                            GradientStop { position: 0.0; color: Theme.surfaceAlt }
                             GradientStop { position: 1.0; color: "transparent" }
                         }
                     }
 
                     Rectangle {
                         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                        height: 40
+                        height: Theme.buttonHeight
                         visible: opsList.contentY + opsList.height < opsList.contentHeight - 1
                         z: 1
                         gradient: Gradient {
                             orientation: Gradient.Vertical
                             GradientStop { position: 0.0; color: "transparent" }
-                            GradientStop { position: 1.0; color: "#f8f8f8" }
+                            GradientStop { position: 1.0; color: Theme.surfaceAlt }
                         }
                     }
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 1
-                    color: "#e8ecf2"
+                    Layout.preferredHeight: Theme.hairline
+                    color: Theme.surfaceAlt
                 }
 
                 Item {
@@ -291,9 +292,9 @@ Rectangle {
                         anchors.centerIn: parent
                         iconSource: "icons/add_op_icon.svg"
                         text: "Add New Operation"
-                        tint: "#2E7D32"
+                        tint: Theme.success
                         compact: false
-                        buttonHeight: 50
+                        buttonHeight: Theme.buttonHeightLarge
                         iconSize: 36
                         fontPixelSize: 15
                         onClicked: root.openAddOperationPopup()
@@ -304,11 +305,11 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         iconSource: "icons/reorder_icon.svg"
                         text: "Reorder"
-                        tint: root.reorderMode ? "#1E88E5" : "#4F4F4F"
+                        tint: root.reorderMode ? "#1E88E5" : Theme.foregroundMuted
                         compact: false
                         iconOnRight: true
                         enabled: root.operationsModel.length > 1
-                        buttonHeight: 50
+                        buttonHeight: Theme.buttonHeightLarge
                         iconSize: 36
                         fontPixelSize: 15
                         onClicked: {

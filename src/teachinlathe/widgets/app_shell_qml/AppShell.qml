@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 /*
  * The application chrome: title bar, the content area, the bottom tab bar,
@@ -24,7 +25,7 @@ Item {
     property bool chromeTopHidden: false
     property bool chromeBottomHidden: false
 
-    readonly property int barHeight: 64
+    readonly property int barHeight: Theme.barHeight
     readonly property int contentPadding: 6
 
     function hideChrome(hideTop, hideBottom) {
@@ -53,7 +54,7 @@ Item {
             id: contentHost
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: "#ffffff"
+            color: Theme.surface
 
             Item {
                 id: contentArea

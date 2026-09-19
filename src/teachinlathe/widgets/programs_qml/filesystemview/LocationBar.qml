@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 // Row 1 — Horizontal location selector.
 // Buttons are equally wide, mutually exclusive. A button is highlighted only
@@ -10,7 +11,7 @@ Rectangle {
 
     readonly property var locs: viewModel ? viewModel.locations : []
 
-    color: "#f0f0f0"
+    color: Theme.surfaceSunken
     implicitHeight: 60
 
     function iconForLocation(locationType) {
@@ -44,8 +45,8 @@ Rectangle {
                 Rectangle {
                     anchors.fill: parent
                     color: modelData.isSelected
-                           ? "#dbeafe"
-                           : (locArea.containsMouse && modelData.isAvailable ? "#e8e8e8" : "transparent")
+                           ? Theme.selection
+                           : (locArea.containsMouse && modelData.isAvailable ? Theme.outlineDisabled : "transparent")
 
                     // Bottom accent line — marks the selected location
                     Rectangle {
@@ -81,9 +82,9 @@ Rectangle {
                             width: parent.width
                             text: modelData.name
                             color: !modelData.isAvailable
-                                   ? "#9e9e9e"
-                                   : (modelData.isSelected ? "#1565C0" : "#4f4f4f")
-                            font.pixelSize: 12
+                                   ? Theme.outlineEmphasis
+                                   : (modelData.isSelected ? Theme.accentStrong : Theme.foregroundMuted)
+                            font.pixelSize: Theme.fontXSmall
                             font.bold: modelData.isSelected
                             elide: Text.ElideRight
                             horizontalAlignment: Text.AlignHCenter
@@ -107,8 +108,8 @@ Rectangle {
                     anchors.bottom: parent.bottom
                     anchors.topMargin: 8
                     anchors.bottomMargin: 8
-                    width: 1
-                    color: "#cccccc"
+                    width: Theme.hairline
+                    color: Theme.outline
                     visible: index < root.locs.length - 1
                 }
             }
@@ -119,7 +120,7 @@ Rectangle {
     Rectangle {
         anchors.bottom: parent.bottom
         width: parent.width
-        height: 1
-        color: "#dddddd"
+        height: Theme.hairline
+        color: Theme.outlineDisabled
     }
 }

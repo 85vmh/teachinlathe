@@ -4,12 +4,13 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
     title: "Stock to Leave"
     Layout.fillWidth: true
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     property real radial: 0.0
     property real axial: 0.0
@@ -44,7 +45,7 @@ GroupBox {
         Label {
             text: "Radial"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
         }
         NumpadField {
             Layout.preferredWidth: 100
@@ -60,13 +61,13 @@ GroupBox {
         Label {
             text: "(mm)"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
         }
 
         Label {
             text: "Axial"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
         }
         NumpadField {
             Layout.preferredWidth: 100
@@ -82,7 +83,7 @@ GroupBox {
         Label {
             text: "(mm)"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
         }
     }
 }

@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import theme 1.0
 
 QtObject {
     property real originX: 0
@@ -10,8 +11,8 @@ QtObject {
     property real arrowHeadLen:  14    // arrowhead depth (along axis)
     property real arrowHeadWidth: 7    // arrowhead half-width (perpendicular)
 
-    property color zAxisColor:    "#2E7D32"
-    property color xAxisColor:    "#1565C0"
+    property color zAxisColor:    Theme.success
+    property color xAxisColor:    Theme.accentStrong
     property color zeroLineColor: "#999999"
     property real axisLineWidth:  1.5
     property real zeroLineWidth:  0.8

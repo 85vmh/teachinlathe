@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
+import theme 1.0
 
 GroupBox {
     id: root
@@ -10,7 +11,7 @@ GroupBox {
     Layout.fillWidth: true
     Layout.minimumWidth: 420
     Layout.preferredWidth: 560
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     /* --- Public API --- */
     property var    m1Data: null
@@ -63,8 +64,8 @@ GroupBox {
         // --- horizontal separator ---
         Rectangle {
             Layout.fillWidth: true
-            height: 1
-            color: "#bdbdbd"
+            height: Theme.hairline
+            color: Theme.outlineStrong
         }
 
         // --- Inspect position radio buttons ---
@@ -77,7 +78,7 @@ GroupBox {
             RadioButton {
                 id: rbG28
                 text: "Position stored in G28"
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
                 checked: root.inspect_position === "G28"
                 onToggled: if (checked) { root.inspect_position = "G28"; root.emitSave() }
             }
@@ -85,7 +86,7 @@ GroupBox {
             RadioButton {
                 id: rbG30
                 text: "Position stored in G30"
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
                 checked: root.inspect_position === "G30"
                 onToggled: if (checked) { root.inspect_position = "G30"; root.emitSave() }
             }

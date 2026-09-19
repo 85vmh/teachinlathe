@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 // Main filesystem browser panel — 4-row layout.
 // Receives a FileSystemViewModel exposed from Python as 'viewModel'.
@@ -8,10 +9,10 @@ Rectangle {
     property var viewModel
     property bool showActionBar: true
 
-    color: "#f5f5f5"
-    radius: 6
-    border.color: "#ccc"
-    border.width: 1
+    color: Theme.surfaceSunken
+    radius: Theme.radius
+    border.color: Theme.outline
+    border.width: Theme.hairline
 
     ColumnLayout {
         anchors.fill: parent
@@ -29,8 +30,8 @@ Rectangle {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 1
-            color: "#dddddd"
+            height: Theme.hairline
+            color: Theme.outlineDisabled
         }
 
         // Row 2 — FolderUp + Breadcrumb + Filter toggles
@@ -42,8 +43,8 @@ Rectangle {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 1
-            color: "#e0e0e0"
+            height: Theme.hairline
+            color: Theme.outlineDisabled
         }
 
         // Row 3 — Sortable file list
@@ -55,8 +56,8 @@ Rectangle {
 
         Rectangle {
             Layout.fillWidth: true
-            height: 1
-            color: "#e0e0e0"
+            height: Theme.hairline
+            color: Theme.outlineDisabled
         }
 
         // Row 4 — Context-sensitive actions + copy progress

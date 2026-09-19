@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
 import "../../touchable_input"
+import theme 1.0
 
 Item {
     id: root
@@ -213,17 +214,17 @@ Item {
         padding: 0
 
         background: Rectangle {
-            radius: 8; color: "#ffffff"
-            border.color: "#d6dce7"; border.width: 1
+            radius: Theme.radiusLarge; color: Theme.surface
+            border.color: Theme.separator; border.width: Theme.hairline
         }
 
         contentItem: Column {
             id: delCol
-            spacing: 12
+            spacing: Theme.spacing
             width: deleteConfirmPopup.contentWidth
             padding: 16
 
-            Text { text: "Delete Primitive"; font.pointSize: 13; font.bold: true; color: "#1e2430" }
+            Text { text: "Delete Primitive"; font.pointSize: 13; font.bold: true; color: Theme.foreground }
 
             Text {
                 width: deleteConfirmPopup.contentWidth - 32
@@ -238,29 +239,29 @@ Item {
                 font.pointSize: 11; color: "#4a5568"; wrapMode: Text.WordWrap
             }
 
-            Rectangle { width: deleteConfirmPopup.contentWidth - 32; height: 1; color: "#d6dce7" }
+            Rectangle { width: deleteConfirmPopup.contentWidth - 32; height: 1; color: Theme.separator }
 
             Item {
                 width: deleteConfirmPopup.contentWidth - 32; height: 44
 
                 Button {
                     anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                    text: "Cancel"; width: 100; height: 40
+                    text: "Cancel"; width: 100; height: Theme.buttonHeight
                     font.pointSize: 11; font.family: "Noto Sans"
                     onClicked: { root._pendingDeleteIndex = -1; deleteConfirmPopup.close() }
                 }
 
                 Button {
                     anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                    text: "Delete"; width: 120; height: 40
+                    text: "Delete"; width: 120; height: Theme.buttonHeight
                     contentItem: Text {
                         text: parent.text; color: "white"
                         font.pointSize: 11; font.family: "Noto Sans"
                         horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        radius: 6; color: parent.pressed ? "#B71C1C" : "#C62828"
-                        border.color: "#e53935"; border.width: 1
+                        radius: Theme.radius; color: parent.pressed ? Theme.dangerPressed : Theme.danger
+                        border.color: "#e53935"; border.width: Theme.hairline
                     }
                     onClicked: {
                         if (root._pendingDeleteIndex > 0) root.primDeleted(root._pendingDeleteIndex)
@@ -275,7 +276,7 @@ Item {
     // ── Screen background ────────────────────────────────────────────────────────
     Rectangle {
         anchors.fill: parent
-        color: "#f5f7fb"
+        color: Theme.surfaceAlt
     }
 
     // ── Full layout ──────────────────────────────────────────────────────────────
@@ -292,12 +293,12 @@ Item {
                 id: leftPanelBg
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
                 width: parent.width * 0.35
-                color: "#ffffff"
+                color: Theme.surface
 
                 ColumnLayout {
                     id: leftPanel
                     anchors.fill: parent
-                    spacing: 8
+                    spacing: Theme.spacingSmall
 
                     // Profile ID + Type row
                     Item {
@@ -308,11 +309,11 @@ Item {
                         // Left half: Profile ID
                         RowLayout {
                             anchors { left: parent.left; right: centerDivider.left; top: parent.top; bottom: parent.bottom }
-                            spacing: 8
+                            spacing: Theme.spacingSmall
                             Label {
                                 text: "Profile ID:"
                                 font.pointSize: 11; font.family: "Noto Sans"
-                                color: "#1e2430"
+                                color: Theme.foreground
                             }
                             NumpadField {
                                 Layout.preferredWidth: 70
@@ -330,18 +331,18 @@ Item {
                             id: centerDivider
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.verticalCenter: parent.verticalCenter
-                            width: 1; height: 48; color: "#d6dce7"
+                            width: Theme.hairline; height: Theme.inputHeight; color: Theme.separator
                         }
 
                         // Right half: Type OD/ID
                         RowLayout {
                             anchors { left: centerDivider.right; right: parent.right; top: parent.top; bottom: parent.bottom }
-                            spacing: 8
+                            spacing: Theme.spacingSmall
                             Item { Layout.preferredWidth: 8 }
                             Label {
                                 text: "Type:"
                                 font.pointSize: 11; font.family: "Noto Sans"
-                                color: "#1e2430"
+                                color: Theme.foreground
                             }
                             ButtonGroup { id: profileTypeGroup }
                             RadioButton {
@@ -364,7 +365,7 @@ Item {
                     // Divider
                     Rectangle {
                         Layout.fillWidth: true; height: 1
-                        color: "#e8ecf2"
+                        color: Theme.surfaceAlt
                         Layout.leftMargin: 4; Layout.rightMargin: 4
                     }
 
@@ -380,11 +381,11 @@ Item {
                         clip: true
                         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                         contentWidth: availableWidth
-                        background: Rectangle { color: "#ffffff" }
+                        background: Rectangle { color: Theme.surface }
 
                         Column {
                             width: primScroll.availableWidth
-                            spacing: 8
+                            spacing: Theme.spacingSmall
                             topPadding: 4; bottomPadding: 8
 
                             Repeater {
@@ -395,7 +396,7 @@ Item {
                                     property var md: modelData
                                     property int mi: index
                                     width: parent ? parent.width : 0
-                                    spacing: 8
+                                    spacing: Theme.spacingSmall
 
                                     onMdChanged: {
                                         if (primLdr.item)  primLdr.item.primData  = md
@@ -472,11 +473,11 @@ Item {
                     // Top fade
                     Rectangle {
                         anchors { left: parent.left; right: parent.right; top: parent.top }
-                        height: 40; z: 1
+                        height: Theme.buttonHeight; z: 1
                         visible: primScroll.contentItem.contentY > 0
                         gradient: Gradient {
                             orientation: Gradient.Vertical
-                            GradientStop { position: 0.0; color: "#ffffff" }
+                            GradientStop { position: 0.0; color: Theme.surface }
                             GradientStop { position: 1.0; color: "transparent" }
                         }
                     }
@@ -484,12 +485,12 @@ Item {
                     // Bottom fade
                     Rectangle {
                         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                        height: 40; z: 1
+                        height: Theme.buttonHeight; z: 1
                         visible: primScroll.contentItem.contentY + primScroll.height < primScroll.contentHeight - 1
                         gradient: Gradient {
                             orientation: Gradient.Vertical
                             GradientStop { position: 0.0; color: "transparent" }
-                            GradientStop { position: 1.0; color: "#ffffff" }
+                            GradientStop { position: 1.0; color: Theme.surface }
                         }
                     }
 
@@ -497,7 +498,7 @@ Item {
 
                     Rectangle {
                         Layout.fillWidth: true; height: 1
-                        color: "#e8ecf2"
+                        color: Theme.surfaceAlt
                         Layout.leftMargin: 4; Layout.rightMargin: 4
                     }
 
@@ -513,7 +514,7 @@ Item {
                             anchors.verticalCenterOffset: -4
                             anchors.leftMargin: 16
                             anchors.rightMargin: 16
-                            spacing: 24
+                            spacing: Theme.margin
 
                             Repeater {
                                 model: [
@@ -528,7 +529,7 @@ Item {
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: 60
                                     enabled: modelData.direction === "Above" ? root.selectedPrimIndex > 0 : root.primitives.length > 0
-                                    font.pixelSize: 16
+                                    font.pixelSize: Theme.fontBody
                                     font.family: "Noto Sans"
 
                                     contentItem: RowLayout {
@@ -536,7 +537,7 @@ Item {
 
                                         Image {
                                             Layout.preferredWidth: 36
-                                            Layout.preferredHeight: 36
+                                            Layout.preferredHeight: Theme.buttonHeightSmall
                                             sourceSize.width: 36
                                             sourceSize.height: 36
                                             source: "../icons/add_op_icon.svg"
@@ -548,7 +549,7 @@ Item {
                                             Layout.fillWidth: true
                                             text: modelData.label
                                             font: addPrimitiveButton.font
-                                            color: "#1e2430"
+                                            color: Theme.foreground
                                             horizontalAlignment: Text.AlignHCenter
                                             verticalAlignment: Text.AlignVCenter
                                             wrapMode: Text.WordWrap
@@ -568,10 +569,10 @@ Item {
                                     }
 
                                     background: Rectangle {
-                                        radius: 6
-                                        color: parent.pressed ? "#e5edf9" : parent.hovered ? "#eef3fb" : "#f5f7fb"
-                                        border.color: "#c5d0df"
-                                        border.width: 1
+                                        radius: Theme.radius
+                                        color: parent.pressed ? Theme.selection : parent.hovered ? Theme.hover : Theme.surfaceAlt
+                                        border.color: Theme.separator
+                                        border.width: Theme.hairline
                                         opacity: parent.enabled ? 1.0 : 0.55
                                     }
 
@@ -591,7 +592,7 @@ Item {
             // Vertical separator
             Rectangle {
                 anchors { left: leftPanelBg.right; top: parent.top; bottom: parent.bottom }
-                width: 1; color: "#d6dce7"
+                width: Theme.hairline; color: Theme.separator
             }
 
             // ── Right panel: canvas ────────────────────────────────────────────────
@@ -602,7 +603,7 @@ Item {
                     leftMargin: 14; rightMargin: 12
                     topMargin: 10;  bottomMargin: 10
                 }
-                spacing: 8
+                spacing: Theme.spacingSmall
 
                 Item {
                     Layout.fillWidth:  true
@@ -628,7 +629,7 @@ Item {
                         Rectangle {
                             anchors.fill: parent
                             color: "transparent"
-                            border.color: "#d6dce7"; border.width: 1
+                            border.color: Theme.separator; border.width: Theme.hairline
                         }
                     }
 
@@ -645,13 +646,13 @@ Item {
                             ]
                             Rectangle {
                                 width: 60; height: 60
-                                radius: 6
-                                color: iconMa.pressed ? "#e5edf9" : iconMa.containsMouse ? "#eef3fb" : "#f5f7fb"
-                                border.color: "#c5d0df"; border.width: 1
+                                radius: Theme.radius
+                                color: iconMa.pressed ? Theme.selection : iconMa.containsMouse ? Theme.hover : Theme.surfaceAlt
+                                border.color: Theme.separator; border.width: Theme.hairline
 
                                 Image {
                                     anchors.centerIn: parent
-                                    width: 40; height: 40
+                                    width: 40; height: Theme.buttonHeight
                                     source: modelData.icon
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true

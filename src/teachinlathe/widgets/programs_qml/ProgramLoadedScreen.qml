@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import "gcode_viewer"
 import "program_loaded"
 import TeachInLathe.Backplot 1.0
+import theme 1.0
 
 Item {
     id: root
@@ -54,23 +55,23 @@ Item {
         handle: Rectangle {
             implicitWidth: 6
             implicitHeight: 6
-            color: "#ffffff"
+            color: Theme.surface
         }
 
         Rectangle {
-            color: "#f5f5f5"
+            color: Theme.surfaceSunken
             SplitView.preferredWidth: root.width / 2
             SplitView.minimumWidth: 420
 
             ColumnLayout {
                 anchors.fill: parent
-                spacing: 8
+                spacing: Theme.spacingSmall
 
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: false
                     Layout.preferredHeight: 220
-                    spacing: 8
+                    spacing: Theme.spacingSmall
 
                     ProgramsDro {
                         Layout.fillHeight: true
@@ -91,9 +92,9 @@ Item {
                     // The same panel an operation detail sits on: white with
                     // a light border. The preview's own palette is tuned to
                     // match - see _configure_for_lathe.
-                    color: "#ffffff"
-                    border.color: "#cccccc"
-                    border.width: 1
+                    color: Theme.surface
+                    border.color: Theme.outline
+                    border.width: Theme.hairline
 
                     // Was an empty Item that Python mapped a QOpenGLWidget
                     // onto, resyncing its geometry on every move and resize.
@@ -127,7 +128,7 @@ Item {
                             anchors.left: parent.left
                             anchors.top: parent.top
                             anchors.margins: 16
-                            spacing: 12
+                            spacing: Theme.spacing
 
                             BackplotButton {
                                 text: "Zoom In"
@@ -198,7 +199,7 @@ Item {
         y: Math.max(0, root.height - 200 - height)
         width: Math.min(gcodePane.width, toolChangedToastText.implicitWidth + 100)
         height: toolChangedToastText.implicitHeight + 50
-        radius: 8
+        radius: Theme.radiusLarge
         color: "#cc303030"
 
         Text {
@@ -207,8 +208,8 @@ Item {
             width: parent.width - 32
             text: root.toolChangedToastMessage
             textFormat: Text.RichText
-            color: "#ffffff"
-            font.pixelSize: 18
+            color: Theme.surface
+            font.pixelSize: Theme.fontLarge
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.WordWrap
@@ -223,7 +224,7 @@ Item {
         y: Math.max(0, root.height - 220 - height)
         width: Math.min(gcodePane.width, programCompletedToastText.implicitWidth + 100)
         height: programCompletedToastText.implicitHeight + 50
-        radius: 8
+        radius: Theme.radiusLarge
         color: "#ff303030"
 
         Text {
@@ -235,8 +236,8 @@ Item {
                 + "[" + root.escapeHtml(root.viewModel ? root.viewModel.programCompletedName : "") + "]<br/><br/><br/><br/>"
                 + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to run again the same program.<br/><br/>"
                 + "Press <font color=\"#ef4444\"><b>Cycle Abort</b></font> to close this screen.</div>"
-            color: "#ffffff"
-            font.pixelSize: 18
+            color: Theme.surface
+            font.pixelSize: Theme.fontLarge
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.WordWrap

@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -18,10 +19,10 @@ Rectangle {
 
     default property alias frameContent: contentColumn.data
 
-    color: "#f9f9f9"
-    radius: 6
-    border.color: "#ccc"
-    border.width: 1
+    color: Theme.surfaceAlt
+    radius: Theme.radius
+    border.color: Theme.outline
+    border.width: Theme.hairline
 
     implicitHeight: headerText.implicitHeight + contentColumn.implicitHeight + 30
 
@@ -35,8 +36,8 @@ Rectangle {
             Layout.fillWidth: true
             text: root._formattedPath
             textFormat: Text.RichText
-            color: "#4f4f4f"
-            font.pixelSize: 13
+            color: Theme.foregroundMuted
+            font.pixelSize: Theme.fontSmall
             elide: Text.ElideLeft
         }
 

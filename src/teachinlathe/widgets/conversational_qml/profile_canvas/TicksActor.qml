@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import theme 1.0
 
 QtObject {
     property real width: 0
@@ -7,8 +8,8 @@ QtObject {
     property real originY: 0
     property real scale: 1
     property var geometry
-    property color zTickColor: "#2E7D32"   // matches AxesActor.zAxisColor
-    property color xTickColor: "#1565C0"   // matches AxesActor.xAxisColor
+    property color zTickColor: Theme.success   // matches AxesActor.zAxisColor
+    property color xTickColor: Theme.accentStrong   // matches AxesActor.xAxisColor
     property real tickLineWidth: 1
     property string tickFont: "10px sans-serif"
 

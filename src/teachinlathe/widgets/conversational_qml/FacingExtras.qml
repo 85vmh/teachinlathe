@@ -2,10 +2,11 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 GroupBox {
     id: root
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
     title: "Facing Extras"
     Layout.fillWidth: true
     Layout.minimumWidth: 360
@@ -42,7 +43,7 @@ GroupBox {
 
     CheckBox {
         text: "When finished, set 'Z End' as the new datum (Z0)"
-        font.pixelSize: 16
+        font.pixelSize: Theme.fontBody
         checked: root.z_end_becomes_new_z0
         onToggled: { root.z_end_becomes_new_z0 = checked; root.emitSave() }
     }

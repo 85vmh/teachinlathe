@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -6,7 +7,7 @@ Rectangle {
     objectName: "manualJoystickPanel"
     width: 260
     height: 230
-    color: "#f5f5f5"
+    color: Theme.surfaceSunken
 
     property var viewModel: null
     property int joystickState: viewModel ? viewModel.joystickState : 0
@@ -33,7 +34,7 @@ Rectangle {
 
     readonly property color feedColor: "#009600"
     readonly property color blackColor: "#323232"
-    readonly property color dashedColor: "#c8c8c8"
+    readonly property color dashedColor: Theme.outline
 
     signal angleFeedClicked()
 
@@ -170,7 +171,7 @@ Rectangle {
         ctx.fillStyle = dashed ? colorString(root.dashedColor) : active ? colorString(root.feedColor) : colorString(root.blackColor)
         roundedRect(ctx, rectX, rectY, root.labelWidth, root.labelHeight, root.labelRadius)
         ctx.fill()
-        ctx.fillStyle = "#ffffff"
+        ctx.fillStyle = Theme.surface
         ctx.font = "13px sans-serif"
         ctx.textAlign = "center"
         ctx.textBaseline = "middle"
@@ -338,8 +339,8 @@ Rectangle {
     Rectangle {
         x: 250
         y: 5
-        width: 1
+        width: Theme.hairline
         height: parent.height - 10
-        color: "#b7b7b7"
+        color: Theme.outlineStrong
     }
 }

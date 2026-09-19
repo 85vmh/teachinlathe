@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
 import "../../touchable_input"
+import theme 1.0
 
 Popup {
     id: root
@@ -201,15 +202,15 @@ Popup {
         padding: 0
         z: 200
 
-        background: Rectangle { radius: 10; color: "#202225"; border.color: "#3A3D41"; border.width: 1 }
+        background: Rectangle { radius: Theme.radiusXLarge; color: Theme.surfaceSunken; border.color: Theme.dialogBorder; border.width: Theme.hairline }
 
         contentItem: Column {
             id: delCol
-            spacing: 12
+            spacing: Theme.spacing
             width: deleteConfirmPopup.contentWidth
             padding: 16
 
-            Text { text: "Delete Primitive"; font.pixelSize: 18; font.bold: true; color: "white" }
+            Text { text: "Delete Primitive"; font.pixelSize: Theme.fontLarge; font.bold: true; color: Theme.foreground }
 
             Text {
                 width: deleteConfirmPopup.contentWidth - 32
@@ -221,25 +222,25 @@ Popup {
                     }
                     return "Delete this primitive?"
                 }
-                font.pixelSize: 15; color: "#cccccc"; wrapMode: Text.WordWrap
+                font.pixelSize: Theme.fontSmall; color: Theme.outline; wrapMode: Text.WordWrap
             }
 
-            Rectangle { width: deleteConfirmPopup.contentWidth - 32; height: 1; color: "#3A3D41" }
+            Rectangle { width: deleteConfirmPopup.contentWidth - 32; height: 1; color: Theme.separator }
 
             Item {
                 width: deleteConfirmPopup.contentWidth - 32; height: 44
 
                 Button {
                     anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                    text: "Cancel"; width: 100; height: 40
+                    text: "Cancel"; width: 100; height: Theme.buttonHeight
                     onClicked: { root._pendingDeleteIndex = -1; deleteConfirmPopup.close() }
                 }
 
                 Button {
                     anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                    text: "Delete"; width: 120; height: 40
-                    contentItem: Text { text: parent.text; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font: parent.font }
-                    background: Rectangle { radius: 4; color: parent.pressed ? "#B71C1C" : "#C62828" }
+                    text: "Delete"; width: 120; height: Theme.buttonHeight
+                    contentItem: Text { text: parent.text; color: Theme.foregroundOnAccent; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; font: parent.font }
+                    background: Rectangle { radius: Theme.radiusSmall; color: parent.pressed ? Theme.dangerPressed : Theme.danger }
                     onClicked: {
                         if (root._pendingDeleteIndex > 0) root.primDeleted(root._pendingDeleteIndex)
                         root._pendingDeleteIndex = -1
@@ -265,53 +266,53 @@ Popup {
         property string selectedType: ""
         onAboutToShow: selectedType = ""
 
-        background: Rectangle { radius: 10; color: "#202225"; border.color: "#3A3D41"; border.width: 1 }
+        background: Rectangle { radius: Theme.radiusXLarge; color: Theme.surfaceSunken; border.color: Theme.dialogBorder; border.width: Theme.hairline }
 
         contentItem: Column {
             id: addCol
-            spacing: 12
+            spacing: Theme.spacing
             width: addPrimPopup.contentWidth
             padding: 16
 
-            Text { text: "Add Primitive"; font.pixelSize: 18; font.bold: true; color: "white" }
+            Text { text: "Add Primitive"; font.pixelSize: Theme.fontLarge; font.bold: true; color: Theme.foreground }
 
             Row {
-                spacing: 8
+                spacing: Theme.spacingSmall
                 Repeater {
                     model: [{ label: "LineTo", type: "lineTo" }, { label: "ArcTo", type: "arcTo" }]
                     delegate: Button {
                         readonly property bool isSelected: addPrimPopup.selectedType === modelData.type
                         width: 150; height: 44
                         text: modelData.label
-                        font.pixelSize: 15
+                        font.pixelSize: Theme.fontSmall
                         background: Rectangle {
-                            radius: 4
+                            radius: Theme.radiusSmall
                             color: { if (isSelected) return "#1E88E5"; if (parent.pressed) return "#3A4A5A"; if (parent.hovered) return "#2A3540"; return "#2D3035" }
-                            border.color: isSelected ? "#1565C0" : "#4A4D52"; border.width: 1
+                            border.color: isSelected ? Theme.accentStrong : "#4A4D52"; border.width: Theme.hairline
                         }
-                        contentItem: Text { text: parent.text; font: parent.font; color: "white"; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        contentItem: Text { text: parent.text; font: parent.font; color: Theme.foregroundOnAccent; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                         onClicked: addPrimPopup.selectedType = (addPrimPopup.selectedType === modelData.type) ? "" : modelData.type
                     }
                 }
             }
 
-            Rectangle { width: addPrimPopup.contentWidth - 32; height: 1; color: "#3A3D41" }
+            Rectangle { width: addPrimPopup.contentWidth - 32; height: 1; color: Theme.separator }
 
             Item {
                 width: addPrimPopup.contentWidth - 32; height: 44
 
                 Button {
                     anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                    text: "Cancel"; width: 100; height: 40
+                    text: "Cancel"; width: 100; height: Theme.buttonHeight
                     onClicked: addPrimPopup.close()
                 }
 
                 Row {
                     anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                    spacing: 8
+                    spacing: Theme.spacingSmall
 
                     Button {
-                        text: "Insert Above"; width: 130; height: 40
+                        text: "Insert Above"; width: 130; height: Theme.buttonHeight
                         enabled: addPrimPopup.selectedType !== "" && root.selectedPrimIndex > 0
                         onClicked: {
                             var ref = root._refEndCoords(root.selectedPrimIndex - 1)
@@ -321,7 +322,7 @@ Popup {
                     }
 
                     Button {
-                        text: "Insert Below"; width: 130; height: 40
+                        text: "Insert Below"; width: 130; height: Theme.buttonHeight
                         enabled: addPrimPopup.selectedType !== ""
                         onClicked: {
                             var idx = root.selectedPrimIndex < 0
@@ -348,33 +349,33 @@ Popup {
         Rectangle {
             Layout.fillWidth: true
             height: 60
-            color: "#f5f7fb"
+            color: Theme.surfaceAlt
 
             Rectangle {
                 anchors.bottom: parent.bottom
                 width: parent.width; height: 1
-                color: "#d6dce7"
+                color: Theme.separator
             }
 
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: 20; anchors.rightMargin: 20
-                spacing: 12
+                spacing: Theme.spacing
 
                 // Back button
                 Button {
                     text: "← Back"
-                    implicitHeight: 40
+                    implicitHeight: Theme.buttonHeight
                     Layout.alignment: Qt.AlignVCenter
                     contentItem: Text {
-                        text: parent.text; color: "#1e2430"
-                        font.pixelSize: 15; font.family: "Noto Sans"
+                        text: parent.text; color: Theme.foreground
+                        font.pixelSize: Theme.fontSmall; font.family: "Noto Sans"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment:   Text.AlignVCenter
                     }
                     background: Rectangle {
-                        color: parent.pressed ? "#e5edf9" : parent.hovered ? "#eef3fb" : "#eef3fb"
-                        radius: 6; border.color: "#c5d0df"; border.width: 1
+                        color: parent.pressed ? Theme.selection : parent.hovered ? Theme.hover : Theme.hover
+                        radius: Theme.radius; border.color: Theme.separator; border.width: Theme.hairline
                     }
                     onClicked: root.close()
                 }
@@ -387,8 +388,8 @@ Popup {
                         var opNum = (root.opData && root.opData.order !== undefined) ? root.opData.order : ""
                         return "Define " + typeStr + " Profile" + (opNum !== "" ? " Op #" + opNum : "")
                     }
-                    color: "#1e2430"
-                    font.pixelSize: 17; font.bold: true; font.family: "Noto Sans"
+                    color: Theme.foreground
+                    font.pixelSize: Theme.fontLarge; font.bold: true; font.family: "Noto Sans"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment:   Text.AlignVCenter
                 }
@@ -396,17 +397,17 @@ Popup {
                 // Done button
                 Button {
                     text: "Done"
-                    implicitHeight: 40
+                    implicitHeight: Theme.buttonHeight
                     Layout.alignment: Qt.AlignVCenter
                     contentItem: Text {
-                        text: parent.text; color: "white"
-                        font.pixelSize: 15; font.family: "Noto Sans"
+                        text: parent.text; color: Theme.foregroundOnAccent
+                        font.pixelSize: Theme.fontSmall; font.family: "Noto Sans"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment:   Text.AlignVCenter
                     }
                     background: Rectangle {
                         color: parent.pressed ? "#25673a" : parent.hovered ? "#348a50" : "#2d7d46"
-                        radius: 6; border.color: "#3fb950"; border.width: 1
+                        radius: Theme.radius; border.color: "#3fb950"; border.width: Theme.hairline
                     }
                     onClicked: root.close()
                 }
@@ -423,15 +424,15 @@ Popup {
                 id: leftPanel
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
                 width: parent.width * 0.30
-                spacing: 8
+                spacing: Theme.spacingSmall
                 clip: true
 
                 // Profile ID + Type row
                 RowLayout {
                     Layout.leftMargin: 10; Layout.rightMargin: 10; Layout.topMargin: 8
-                    spacing: 12
+                    spacing: Theme.spacing
 
-                    Label { text: "Profile ID"; font.pixelSize: 15 }
+                    Label { text: "Profile ID"; font.pixelSize: Theme.fontSmall }
                     NumpadField {
                         Layout.preferredWidth: 70
                         settingName: "defineProfile.profile_id"
@@ -447,13 +448,13 @@ Popup {
 
                     ButtonGroup { id: profileTypeGroup }
                     RadioButton {
-                        text: "OD"; font.pixelSize: 14
+                        text: "OD"; font.pixelSize: Theme.fontSmall
                         checked: root.profileType === "od"
                         ButtonGroup.group: profileTypeGroup
                         onToggled: if (checked) { root.profileType = "od"; root.emitSave() }
                     }
                     RadioButton {
-                        text: "ID"; font.pixelSize: 14
+                        text: "ID"; font.pixelSize: Theme.fontSmall
                         checked: root.profileType === "id"
                         ButtonGroup.group: profileTypeGroup
                         onToggled: if (checked) { root.profileType = "id"; root.emitSave() }
@@ -562,7 +563,7 @@ Popup {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.bottomMargin: 8
                     text: "Add New"
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontSmall
                     implicitWidth: 120
                     onClicked: {
                         var hasStart = root.primitives.length > 0 && root.primitives[0].type === "startPoint"
@@ -584,7 +585,7 @@ Popup {
             // Vertical separator
             Rectangle {
                 anchors { left: leftPanel.right; top: parent.top; bottom: parent.bottom }
-                width: 1; color: "#3A3D41"
+                width: Theme.hairline; color: Theme.outlineInverse
             }
 
             // ── Right panel: canvas ─────────────────────────────────────────
@@ -614,7 +615,7 @@ Popup {
                     Rectangle {
                         anchors.fill: parent
                         color: "transparent"
-                        border.color: "#555"; border.width: 1
+                        border.color: "#555"; border.width: Theme.hairline
                     }
                 }
 
@@ -622,9 +623,9 @@ Popup {
                     Layout.fillWidth: true
                     spacing: 6
 
-                    Button { text: "Zoom In";       Layout.fillWidth: true; implicitHeight: 34; font.pixelSize: 13; onClicked: profileCanvas.zoomIn() }
-                    Button { text: "Zoom Out";      Layout.fillWidth: true; implicitHeight: 34; font.pixelSize: 13; onClicked: profileCanvas.zoomOut() }
-                    Button { text: "Fit to Screen"; Layout.fillWidth: true; implicitHeight: 34; font.pixelSize: 13; onClicked: profileCanvas.fitToScreen() }
+                    Button { text: "Zoom In";       Layout.fillWidth: true; implicitHeight: Theme.buttonHeightSmall; font.pixelSize: Theme.fontSmall; onClicked: profileCanvas.zoomIn() }
+                    Button { text: "Zoom Out";      Layout.fillWidth: true; implicitHeight: Theme.buttonHeightSmall; font.pixelSize: Theme.fontSmall; onClicked: profileCanvas.zoomOut() }
+                    Button { text: "Fit to Screen"; Layout.fillWidth: true; implicitHeight: Theme.buttonHeightSmall; font.pixelSize: Theme.fontSmall; onClicked: profileCanvas.fitToScreen() }
                 }
             }
         }

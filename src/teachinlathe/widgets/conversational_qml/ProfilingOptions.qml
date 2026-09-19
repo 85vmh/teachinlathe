@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
@@ -11,7 +12,7 @@ GroupBox {
     Layout.fillWidth: true
     Layout.minimumWidth: 420
     Layout.preferredWidth: 560
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     /* --- Public API --- */
     property var  profilingOptions: null
@@ -65,14 +66,14 @@ GroupBox {
         // --- master toggle ---
         RowLayout {
             Layout.fillWidth: true
-            spacing: 16
+            spacing: Theme.spacingLarge
 
             ButtonGroup {
                 id: modeGroup
             }
             RadioButton {
                 text: "Roughing"
-                font.pixelSize: 15
+                font.pixelSize: Theme.fontSmall
                 checked: root.strategy === "rough"
                 ButtonGroup.group: modeGroup
                 onToggled: if (checked) {
@@ -82,7 +83,7 @@ GroupBox {
             }
             RadioButton {
                 text: "Finishing"
-                font.pixelSize: 15
+                font.pixelSize: Theme.fontSmall
                 checked: root.strategy === "finish"
                 ButtonGroup.group: modeGroup
                 onToggled: if (checked) {
@@ -107,9 +108,9 @@ GroupBox {
             Layout.alignment: Qt.AlignTop
             padding: 10
             background: Rectangle {
-                radius: 6
-                border.width: 1
-                border.color: "#bdbdbd"
+                radius: Theme.radius
+                border.width: Theme.hairline
+                border.color: Theme.outlineStrong
                 color: "transparent"
             }
 
@@ -137,7 +138,7 @@ GroupBox {
                         Label {
                             text: "Radial"
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontBody
                         }
                         NumpadField {
                             Layout.preferredWidth: 100
@@ -153,13 +154,13 @@ GroupBox {
                         Label {
                             text: "(mm)"
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontBody
                         }
 
                         Label {
                             text: "Axial"
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontBody
                         }
                         NumpadField {
                             Layout.preferredWidth: 100
@@ -175,7 +176,7 @@ GroupBox {
                         Label {
                             text: "(mm)"
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontBody
                         }
                     }
                 }
@@ -197,7 +198,7 @@ GroupBox {
                         Label {
                             text: "Finish passes"
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontBody
                         }
                         NumpadField {
                             Layout.preferredWidth: 50
@@ -218,7 +219,7 @@ GroupBox {
                         Label {
                             text: "Spring passes"
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontBody
                         }
                         NumpadField {
                             Layout.preferredWidth: 50

@@ -3,18 +3,19 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../touchable_input"
+import theme 1.0
 
 ColumnLayout {
     property var detailsRoot: null
 
-    spacing: 16
+    spacing: Theme.spacingLarge
 
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
     IntValidator { id: intValNonNeg; bottom: 0; top: 99 }
 
     RowLayout {
-        spacing: 16
-        Label { text: "Initial DOC"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
+        spacing: Theme.spacingLarge
+        Label { text: "Initial DOC"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
         NumpadField {
             Layout.preferredWidth: 110
             settingName: "threading.first_pass_depth"
@@ -30,18 +31,18 @@ ColumnLayout {
                 }
             }
         }
-        Label { text: "(mm/radius)"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
+        Label { text: "(mm/radius)"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter }
         Label {
             text: "[" + (detailsRoot ? detailsRoot.roughingPassCountText : "0 passes") + "]"
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSmall
             font.bold: true
             Layout.alignment: Qt.AlignVCenter
         }
     }
 
     RowLayout {
-        spacing: 16
-        Label { text: "Retract"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
+        spacing: Theme.spacingLarge
+        Label { text: "Retract"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
         NumpadField {
             Layout.preferredWidth: 110
             settingName: "threading.x_retract"
@@ -57,12 +58,12 @@ ColumnLayout {
                 }
             }
         }
-        Label { text: "(mm)"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
+        Label { text: "(mm)"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter }
     }
 
     RowLayout {
-        spacing: 16
-        Label { text: "Infeed Angle"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
+        spacing: Theme.spacingLarge
+        Label { text: "Infeed Angle"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
         NumpadField {
             Layout.preferredWidth: 110
             settingName: "threading.compound_angle"
@@ -78,12 +79,12 @@ ColumnLayout {
                 }
             }
         }
-        Label { text: "(deg)"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
+        Label { text: "(deg)"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter }
     }
 
     RowLayout {
-        spacing: 16
-        Label { text: "Spring Passes"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
+        spacing: Theme.spacingLarge
+        Label { text: "Spring Passes"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
         NumpadField {
             Layout.preferredWidth: 110
             settingName: "threading.spring_passes"

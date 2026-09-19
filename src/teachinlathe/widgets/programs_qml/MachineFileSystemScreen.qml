@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "filesystemview"
 import "gcode_viewer"
+import theme 1.0
 
 Item {
     id: root
@@ -16,7 +17,7 @@ Item {
         handle: Rectangle {
             implicitWidth: 6
             implicitHeight: 6
-            color: "#ffffff"
+            color: Theme.surface
         }
 
         FileSystemView {

@@ -1,6 +1,7 @@
 // NumpadField.qml
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 TextField {
     id: root
@@ -40,7 +41,7 @@ TextField {
     selectByMouse: false
 
     // Vizual
-    implicitHeight: 48
+    implicitHeight: Theme.inputHeight
     horizontalAlignment: hAlign
     verticalAlignment: Text.AlignVCenter
     font.pixelSize: fontPixelSize
@@ -62,7 +63,7 @@ TextField {
             id: displayText
             anchors.fill: parent
             text: root.text.length > 0 ? root.text : root.placeholderText
-            color: root.text.length > 0 ? "#0f172a" : "#808080"
+            color: root.text.length > 0 ? Theme.foregroundStrong : Theme.foregroundFaint
             font: root.font
             horizontalAlignment: contentClip.textOverflows ? Text.AlignLeft : root.hAlign
             verticalAlignment: Text.AlignVCenter
@@ -79,7 +80,7 @@ TextField {
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: 1.0; color: "#ffffff" }
+                GradientStop { position: 1.0; color: Theme.surface }
             }
         }
     }
@@ -99,8 +100,8 @@ TextField {
     background: Rectangle {
         radius: 2
         border.width: (root.numpadActive || root.activeFocus) ? 2 : 1
-        border.color: (root.numpadActive || root.activeFocus) ? "#2a7bff" : "#cccccc"
-        color: "#ffffff"
+        border.color: (root.numpadActive || root.activeFocus) ? Theme.focusBorder : Theme.outline
+        color: Theme.surface
     }
 
     // Open numpad

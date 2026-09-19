@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -253,7 +254,7 @@ Rectangle {
 
                 Rectangle {
                     anchors.right: parent.right
-                    width: 1
+                    width: Theme.hairline
                     height: parent.height
                     color: "#e0e0e0"
                 }
@@ -323,10 +324,10 @@ Rectangle {
         onClicked: root.centerHighlight(true)
 
         background: Rectangle {
-            radius: 6
+            radius: Theme.radius
             color: Qt.rgba(46 / 255, 125 / 255, 50 / 255, 0.5)
             border.color: "#2E7D32"
-            border.width: 1
+            border.width: Theme.hairline
         }
 
         contentItem: Item {

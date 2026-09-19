@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../app_shell_qml" as Shell
+import theme 1.0
 
 // The Machine Settings tab. Replaces the .ui's settingsTab.
 Rectangle {
@@ -16,7 +17,7 @@ Rectangle {
     signal setG30()
     signal goToG30()
 
-    color: "#f4f6f9"
+    color: Theme.surfaceAlt
 
     Flickable {
         anchors.fill: parent
@@ -39,7 +40,7 @@ Rectangle {
                     spacing: 10
                     Shell.ShellActionButton { text: "Set G28";   onClicked: root.setG28() }
                     Shell.ShellActionButton { text: "Go to G28"; onClicked: root.goToG28() }
-                    Rectangle { width: 1; Layout.fillHeight: true; color: "#d5dbe4" }
+                    Rectangle { width: 1; Layout.fillHeight: true; color: Theme.separator }
                     Shell.ShellActionButton { text: "Set G30";   onClicked: root.setG30() }
                     Shell.ShellActionButton { text: "Go to G30"; onClicked: root.goToG30() }
                     Item { Layout.fillWidth: true }

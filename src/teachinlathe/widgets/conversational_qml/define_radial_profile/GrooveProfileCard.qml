@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../../touchable_input"
+import theme 1.0
 
 Rectangle {
     id: root
@@ -15,9 +16,9 @@ Rectangle {
     signal openNumPadRequested(var field)
     signal tapped()
 
-    color: isSelected ? "#dbeafe" : "#f5f7fb"
-    radius: 8
-    border.color: isSelected ? "#3b82f6" : "#cccccc"
+    color: isSelected ? Theme.selection : Theme.surfaceAlt
+    radius: Theme.radiusLarge
+    border.color: isSelected ? Theme.accent : Theme.outline
     border.width: isSelected ? 2 : 1
     height: content.implicitHeight + 24
 
@@ -88,7 +89,7 @@ Rectangle {
             Layout.fillWidth: true
             Label {
                 text: (primIdx + 1) + ". Groove"
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
                 font.bold: true
             }
             Item { Layout.fillWidth: true }
@@ -156,12 +157,12 @@ Rectangle {
         signal openNumPadRequested(var field)
 
         Layout.fillWidth: true
-        spacing: 8
+        spacing: Theme.spacingSmall
 
         Label {
             text: numberRow.label
             Layout.preferredWidth: 70
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSmall
         }
 
         NumpadField {
@@ -204,14 +205,14 @@ Rectangle {
 
         Label {
             text: blendRoot.title
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSmall
             font.bold: true
             Layout.columnSpan: 3
         }
 
         RadioButton {
             text: "None"
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSmall
             checked: blendRoot.activeType === "none"
             ButtonGroup.group: modeGroup
             Layout.columnSpan: 3
@@ -220,7 +221,7 @@ Rectangle {
 
         RadioButton {
             text: "Chamfer"
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSmall
             checked: blendRoot.activeType === "chamfer"
             ButtonGroup.group: modeGroup
             onToggled: if (checked) blendRoot.blendTypeCommitted("chamfer")
@@ -240,13 +241,13 @@ Rectangle {
         }
         Label {
             text: "(mm)"
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSmall
             opacity: blendRoot.activeType === "chamfer" ? 1.0 : 0.4
         }
 
         RadioButton {
             text: "Fillet"
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSmall
             checked: blendRoot.activeType === "fillet"
             ButtonGroup.group: modeGroup
             onToggled: if (checked) blendRoot.blendTypeCommitted("fillet")
@@ -266,7 +267,7 @@ Rectangle {
         }
         Label {
             text: "(mm)"
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSmall
             opacity: blendRoot.activeType === "fillet" ? 1.0 : 0.4
         }
     }
@@ -286,18 +287,18 @@ Rectangle {
         signal blendValueCommitted(string section, string blend, string key, real value)
         signal openNumPadRequested(var field)
 
-        font.pixelSize: 14
+        font.pixelSize: Theme.fontSmall
         Layout.fillWidth: true
 
         RowLayout {
             anchors.fill: parent
             anchors.margins: 8
-            spacing: 16
+            spacing: Theme.spacingLarge
 
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignTop
-                spacing: 8
+                spacing: Theme.spacingSmall
 
                 NumberRow {
                     label: "X Start"
@@ -350,13 +351,13 @@ Rectangle {
         signal blendValueCommitted(string blend, string key, real value)
         signal openNumPadRequested(var field)
 
-        font.pixelSize: 14
+        font.pixelSize: Theme.fontSmall
         Layout.fillWidth: true
 
         RowLayout {
             anchors.fill: parent
             anchors.margins: 8
-            spacing: 16
+            spacing: Theme.spacingLarge
 
             ColumnLayout {
                 Layout.fillWidth: true

@@ -11,14 +11,15 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../touchable_input"   // NumpadField
+import theme 1.0
 
 Rectangle {
     id: root
 
-    color: "#f5f5f5"
-    border.color: "#ccc"
-    border.width: 1
-    radius: 6
+    color: Theme.surfaceSunken
+    border.color: Theme.outline
+    border.width: Theme.hairline
+    radius: Theme.radius
 
     property var viewModel: teachInDroViewModel
     signal openNumPadRequested(Item field)
@@ -49,8 +50,8 @@ Rectangle {
                 anchors.leftMargin: 16
                 anchors.rightMargin: 16
                 anchors.verticalCenter: parent.verticalCenter
-                height: 1
-                color: "#202020"
+                height: Theme.hairline
+                color: Theme.surfaceInverse
                 z: -1
             }
 
@@ -60,10 +61,10 @@ Rectangle {
                 anchors.centerIn: parent
                 width: machineLimitsText.implicitWidth + 24
                 height: machineLimitsText.implicitHeight + 12
-                radius: 6
-                color: "#f5f5f5"
-                border.color: "#ccc"
-                border.width: 1
+                radius: Theme.radius
+                color: Theme.surfaceSunken
+                border.color: Theme.outline
+                border.width: Theme.hairline
 
                 Text {
                     id: machineLimitsText
@@ -82,17 +83,17 @@ Rectangle {
                 anchors.leftMargin: 16
                 anchors.verticalCenter: parent.verticalCenter
                 width: 126
-                height: 56
-                radius: 6
-                color: "#f5f5f5"
-                border.color: "#ccc"
+                height: Theme.headerHeight
+                radius: Theme.radius
+                color: Theme.surfaceSunken
+                border.color: Theme.outline
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.top
                     anchors.bottomMargin: 4
                     text: "Chuck Limit"
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSmall
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                 }
@@ -138,8 +139,8 @@ Rectangle {
         // ── Horizontal divider between rows ───────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 1
-            color: "#202020"
+            height: Theme.hairline
+            color: Theme.surfaceInverse
         }
 
         // ── Row 2: Tool Limits cross ──────────────────────────────────
@@ -155,10 +156,10 @@ Rectangle {
                 anchors.centerIn: parent
                 width: toolLimitsText.implicitWidth + 24
                 height: toolLimitsText.implicitHeight + 12
-                radius: 6
-                color: "#f5f5f5"
-                border.color: "#ccc"
-                border.width: 1
+                radius: Theme.radius
+                color: Theme.surfaceSunken
+                border.color: Theme.outline
+                border.width: Theme.hairline
 
                 Text {
                     id: toolLimitsText
@@ -178,8 +179,8 @@ Rectangle {
                 anchors.leftMargin: parent.edgeMargin
                 anchors.right: crossCenter.left
                 anchors.verticalCenter: parent.verticalCenter
-                height: 1
-                color: "#202020"
+                height: Theme.hairline
+                color: Theme.surfaceInverse
                 z: -1
             }
             // Horizontal right
@@ -188,8 +189,8 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: parent.edgeMargin
                 anchors.verticalCenter: parent.verticalCenter
-                height: 1
-                color: "#202020"
+                height: Theme.hairline
+                color: Theme.surfaceInverse
                 z: -1
             }
             // Vertical top
@@ -198,8 +199,8 @@ Rectangle {
                 anchors.topMargin: parent.edgeMargin
                 anchors.bottom: crossCenter.top
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: 1
-                color: "#202020"
+                width: Theme.hairline
+                color: Theme.surfaceInverse
                 z: -1
             }
             // Vertical bottom
@@ -208,8 +209,8 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: parent.edgeMargin
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: 1
-                color: "#202020"
+                width: Theme.hairline
+                color: Theme.surfaceInverse
                 z: -1
             }
 

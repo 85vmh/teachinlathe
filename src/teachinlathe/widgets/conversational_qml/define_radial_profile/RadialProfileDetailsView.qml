@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
+import theme 1.0
 
 Item {
     id: root
@@ -31,7 +32,7 @@ Item {
 
         Label {
             text: "Define Radial Profile" + (root.profileId ? " P" + root.profileId : "")
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             font.bold: true
         }
 
@@ -59,8 +60,8 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 color: "transparent"
-                border.color: "#ccc"
-                border.width: 1
+                border.color: Theme.outline
+                border.width: Theme.hairline
             }
         }
     }

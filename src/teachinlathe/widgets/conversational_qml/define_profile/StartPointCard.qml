@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
 import "../../touchable_input"
+import theme 1.0
 
 Rectangle {
     id: root
@@ -21,14 +22,14 @@ Rectangle {
     signal tapped()
 
     // ── Colors ────────────────────────────────────────────────────────────────
-    readonly property color clrCardBg:            "#f5f7fb"
-    readonly property color clrCardBgSel:         "#dbeafe"
-    readonly property color clrBorder:            "#cccccc"
-    readonly property color clrBorderSel:         "#3b82f6"
+    readonly property color clrCardBg:            Theme.surfaceAlt
+    readonly property color clrCardBgSel:         Theme.selection
+    readonly property color clrBorder:            Theme.outline
+    readonly property color clrBorderSel:         Theme.accent
     readonly property color clrSeparator:         "#d0d0d0"
-    readonly property color clrBlendBtnHover:     "#e1f0ff"
-    readonly property color clrBlendBtnHoverBorder: "#8ec5ff"
-    readonly property color clrBtnBorder:         "#BDBDBD"
+    readonly property color clrBlendBtnHover:     Theme.accentSoft
+    readonly property color clrBlendBtnHoverBorder: Theme.accentBorder
+    readonly property color clrBtnBorder:         Theme.outlineStrong
 
     // ── Sizes ─────────────────────────────────────────────────────────────────
     readonly property int szCardRadius:    8
@@ -84,7 +85,7 @@ Rectangle {
         }
 
         Rectangle {
-            width: 1; Layout.fillHeight: true
+            width: Theme.hairline; Layout.fillHeight: true
             Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
             Layout.leftMargin: 0; Layout.rightMargin: szSepGap
             color: clrSeparator
@@ -142,7 +143,7 @@ Rectangle {
         }
 
         Rectangle {
-            width: 1; Layout.fillHeight: true
+            width: Theme.hairline; Layout.fillHeight: true
             Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
             Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
             color: clrSeparator

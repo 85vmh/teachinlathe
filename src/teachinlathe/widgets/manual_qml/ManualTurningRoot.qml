@@ -16,15 +16,16 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../tool_library"
 import "../touchable_input"   // SmartNumpadDialog, NumpadField
+import theme 1.0
 
 Item {
     id: root
 
     // ── Color constants ───────────────────────────────────────────────
-    readonly property color pageBackgroundColor: "#ffffff"
-    readonly property color cardBackgroundColor: "#f5f5f5"
-    readonly property color cardBorderColor: "#ccc"
-    readonly property color angleFeedGlowColor: "#ff9800"
+    readonly property color pageBackgroundColor: Theme.surface
+    readonly property color cardBackgroundColor: Theme.surfaceSunken
+    readonly property color cardBorderColor: Theme.outline
+    readonly property color angleFeedGlowColor: Theme.warning
     property var _pendingKeyboardField: null
 
     Rectangle {
@@ -85,7 +86,7 @@ Item {
         modal: true
         closePolicy: Popup.NoAutoClose
         title: "Blade Z0 Reference"
-        font.pixelSize: 20
+        font.pixelSize: Theme.fontTitle
         property real bladeWidth: 0
         implicitWidth: 520
         implicitHeight: contentColumn.implicitHeight + 96
@@ -111,22 +112,22 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: "Where is the Z0 relative to the " + root.formatBladeWidth(bladeZ0ReferenceDialog.bladeWidth) + "mm thick blade?"
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontLarge
                     font.bold: true
-                    color: "#1e2430"
+                    color: Theme.foreground
                     wrapMode: Text.WordWrap
                     horizontalAlignment: Text.AlignHCenter
                 }
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 24
+                    spacing: Theme.margin
 
                     Button {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 64
                         text: "Left Side"
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontBody
                         font.bold: true
                         onClicked: bladeZ0ReferenceDialog.choose("left")
                     }
@@ -134,7 +135,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 64
                         text: "Center"
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontBody
                         font.bold: true
                         onClicked: bladeZ0ReferenceDialog.choose("center")
                     }
@@ -142,7 +143,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 64
                         text: "Right Side"
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontBody
                         font.bold: true
                         onClicked: bladeZ0ReferenceDialog.choose("right")
                     }
@@ -208,7 +209,7 @@ Item {
                 Text {
                     x: 70; y: 0; width: 106; height: parent.height
                     text: manualViewModel ? manualViewModel.spindleTitle : "Spindle"
-                    font.pixelSize: 18; font.family: "Cantarell"
+                    font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -216,14 +217,14 @@ Item {
                 Text {
                     x: 185; y: 0; width: 71; height: parent.height
                     text: manualViewModel ? (manualViewModel.spindleOverridePercent + "%") : "0%"
-                    font.pixelSize: 18; font.family: "Cantarell"
+                    font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     verticalAlignment: Text.AlignVCenter
                 }
                 // "Manual Feed" label
                 Text {
                     x: 320; y: 0; width: 156; height: parent.height
                     text: "Handwheels"
-                    font.pixelSize: 18; font.family: "Cantarell"
+                    font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -231,7 +232,7 @@ Item {
                 Text {
                     x: 680; y: 0; width: 181; height: parent.height
                     text: "Joystick Automatic Feed"
-                    font.pixelSize: 18; font.family: "Cantarell"
+                    font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -239,7 +240,7 @@ Item {
                 Text {
                     x: 875; y: 0; width: 76; height: parent.height
                     text: manualViewModel ? (manualViewModel.feedOverridePercent + "%") : "0%"
-                    font.pixelSize: 18; font.family: "Cantarell"
+                    font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     verticalAlignment: Text.AlignVCenter
                 }
             }
@@ -282,8 +283,8 @@ Item {
                     Layout.fillHeight: true
                     color: root.cardBackgroundColor
                     border.color: frameBorderColor
-                    border.width: 1
-                    radius: 6
+                    border.width: Theme.hairline
+                    radius: Theme.radius
 
                     onAngleFeedActiveChanged: {
                         if (!angleFeedActive) {

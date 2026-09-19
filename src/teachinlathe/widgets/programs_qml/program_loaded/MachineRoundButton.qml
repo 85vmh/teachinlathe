@@ -1,5 +1,6 @@
 // MachineRoundButton.qml — round machine-style button with concave gradient
 import QtQuick 2.15
+import theme 1.0
 
 Item {
     id: root
@@ -14,25 +15,25 @@ Item {
     // ── Colors ─────────────────────────────────────────────────────────
     // Concave gradient fill — normal state (center dark → rim lighter)
     property string normalFillCenterColor: "#1a5e20"
-    property string normalFillMidColor:    "#2e7d32"
+    property string normalFillMidColor:    Theme.success
     property string normalFillRimColor:    "#66bb6a"
 
     // Concave gradient fill — active/lit state (brighter, more uniform)
-    property string activeFillCenterColor: "#2e7d32"
+    property string activeFillCenterColor: Theme.success
     property string activeFillRimColor:    "#81c784"
 
     // Concave gradient fill — disabled state
     property string disabledFillCenterColor: "#303030"
-    property string disabledFillMidColor:    "#555555"
-    property string disabledFillRimColor:    "#888888"
+    property string disabledFillMidColor:    Theme.foregroundMuted
+    property string disabledFillRimColor:    Theme.keySurfacePressed
 
     // Outer border ring
-    property string borderColor:         "#9e9e9e"
-    property string disabledBorderColor: "#606060"
+    property string borderColor:         Theme.outlineEmphasis
+    property string disabledBorderColor: Theme.keySurface
 
     // Label text
     property string textColor:         "white"
-    property string disabledTextColor: "#777777"
+    property string disabledTextColor: Theme.foregroundFaint
 
     // Darkening overlay painted while the button is pressed
     property string pressedOverlayColor: "#50000000"
@@ -104,7 +105,7 @@ Item {
         text: root.text
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        font.pixelSize: 12
+        font.pixelSize: Theme.fontXSmall
         font.bold: true
         color: root.enabled ? root.textColor : root.disabledTextColor
         style: Text.Outline

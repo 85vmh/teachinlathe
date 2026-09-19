@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -10,11 +11,11 @@ Rectangle {
     signal clicked()
 
     width: parent ? parent.width : 400
-    height: 72
+    height: Theme.rowHeight
     radius: 0
-    color: selected ? "#dbeafe" : "#e5e5e5"
+    color: selected ? Theme.selection : Theme.outlineDisabled
     border.width: selected ? 2 : 0
-    border.color: selected ? "#3b82f6" : "transparent"
+    border.color: selected ? Theme.accent : "transparent"
 
     RowLayout {
         anchors.fill: parent
@@ -22,7 +23,7 @@ Rectangle {
 
         Label {
             text: "              Program Header"
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSmall
             font.bold: true
             Layout.leftMargin: 10
             Layout.fillWidth: true

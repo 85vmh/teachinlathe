@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
 import "../../touchable_input"
+import theme 1.0
 
 Rectangle {
     id: root
@@ -31,16 +32,16 @@ Rectangle {
     signal deleteRequested(int idx)
 
     // ── Colors ────────────────────────────────────────────────────────────────
-    readonly property color clrCardBg:            "#f5f7fb"
-    readonly property color clrCardBgSel:         "#dbeafe"
-    readonly property color clrBorder:            "#cccccc"
-    readonly property color clrBorderSel:         "#3b82f6"
+    readonly property color clrCardBg:            Theme.surfaceAlt
+    readonly property color clrCardBgSel:         Theme.selection
+    readonly property color clrBorder:            Theme.outline
+    readonly property color clrBorderSel:         Theme.accent
     readonly property color clrSeparator:         "#d0d0d0"
-    readonly property color clrBlendBtnHover:     "#e1f0ff"
-    readonly property color clrBlendBtnHoverBorder: "#8ec5ff"
-    readonly property color clrBtnBorder:         "#BDBDBD"
-    readonly property color clrDeleteHover:       "#ffebee"
-    readonly property color clrDeleteBorder:      "#C62828"
+    readonly property color clrBlendBtnHover:     Theme.accentSoft
+    readonly property color clrBlendBtnHoverBorder: Theme.accentBorder
+    readonly property color clrBtnBorder:         Theme.outlineStrong
+    readonly property color clrDeleteHover:       Theme.dangerSoft
+    readonly property color clrDeleteBorder:      Theme.danger
 
     // ── Sizes ─────────────────────────────────────────────────────────────────
     readonly property int szCardRadius:    8
@@ -139,7 +140,7 @@ Rectangle {
         }
 
         Rectangle {
-            width: 1; Layout.fillHeight: true
+            width: Theme.hairline; Layout.fillHeight: true
             Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
             Layout.leftMargin: 0; Layout.rightMargin: szSepGap
             color: clrSeparator
@@ -153,7 +154,7 @@ Rectangle {
                 id: inputModeBar
                 Layout.fillWidth: true
                 Layout.preferredHeight: szTabHeight
-                radius: 8
+                radius: Theme.radiusLarge
                 color: "transparent"
 
                 Row {
@@ -168,7 +169,7 @@ Rectangle {
                     delegate: Item {
                         id: tabItem
                         readonly property bool selected: root._inputMode === modelData.mode
-                        readonly property color tabColor: selected ? "#1f6feb" : "#ffffff"
+                        readonly property color tabColor: selected ? "#1f6feb" : Theme.surface
                         readonly property bool isFirst: index === 0
                         readonly property bool isLast: index === 2
                         width: inputModeBar.width / 3
@@ -197,7 +198,7 @@ Rectangle {
                         Rectangle {
                             visible: !tabItem.isLast
                             anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-                            width: 1
+                            width: Theme.hairline
                             color: "#cbd5e1"
                             z: 1
                         }
@@ -205,7 +206,7 @@ Rectangle {
                         Text {
                             anchors.centerIn: parent
                             text: modelData.label
-                            color: parent.selected ? "#ffffff" : "#1f2937"
+                            color: parent.selected ? Theme.surface : "#1f2937"
                             font.pixelSize: szTabFont
                             font.bold: parent.selected
                             z: 2
@@ -224,7 +225,7 @@ Rectangle {
                     radius: inputModeBar.radius
                     color: "transparent"
                     border.color: "#cbd5e1"
-                    border.width: 1
+                    border.width: Theme.hairline
                     z: 3
                 }
             }
@@ -275,7 +276,7 @@ Rectangle {
             }
 
         Rectangle {
-            width: 1; Layout.fillHeight: true
+            width: Theme.hairline; Layout.fillHeight: true
             Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
             Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
             color: clrSeparator
@@ -374,7 +375,7 @@ Rectangle {
         }
 
         Rectangle {
-            width: 1; Layout.fillHeight: true
+            width: Theme.hairline; Layout.fillHeight: true
             Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
             Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
             color: clrSeparator
@@ -383,7 +384,7 @@ Rectangle {
         Rectangle {
             implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
             color:   delMA.pressed ? clrDeleteHover : "transparent"
-            border.width: 1
+            border.width: Theme.hairline
             border.color: delMA.pressed ? clrDeleteBorder : clrBtnBorder
             Layout.alignment: Qt.AlignVCenter
             Image {

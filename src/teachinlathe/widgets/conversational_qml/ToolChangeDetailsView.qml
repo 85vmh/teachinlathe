@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 Item {
     id: root
@@ -64,25 +65,25 @@ Item {
 
         Label {
             text: "Tool Change"
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             font.bold: true
         }
 
         GroupBox {
             title: "Tool"
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
             Layout.fillWidth: true
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Theme.spacingSmall
                 Layout.alignment: Qt.AlignTop
 
                 Label {
                     text: "Tool No"
                     width: 120
                     verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontBody
                 }
                 NumpadField {
                     Layout.preferredWidth: 50
@@ -127,7 +128,7 @@ Item {
 
         GroupBox {
             title: "Tool Change Position"
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
             Layout.fillWidth: true
 
             RowLayout {

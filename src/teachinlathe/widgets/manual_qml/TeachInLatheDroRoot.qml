@@ -1,10 +1,11 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 Rectangle {
     id: root
 
-    color: "#ffffff"
+    color: Theme.surface
 
     property var viewModel: teachInDroViewModel
 

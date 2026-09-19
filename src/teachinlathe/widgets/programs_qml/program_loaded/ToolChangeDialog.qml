@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 // A Popup in the window's overlay, not an Item in the screen.
 //
@@ -28,9 +29,9 @@ Popup {
     padding: 0
 
     property var viewModel
-    readonly property color textColor: "#1e2430"
-    readonly property color confirmColor: "#2e7d32"
-    readonly property color cancelColor: "#c62828"
+    readonly property color textColor: Theme.foreground
+    readonly property color confirmColor: Theme.success
+    readonly property color cancelColor: Theme.danger
 
     contentWidth: 620
     contentHeight: card.implicitHeight + 48
@@ -46,10 +47,10 @@ Popup {
 
     // The scrim is the Popup's own, so no dimming rectangle here.
     background: Rectangle {
-        radius: 10
-        color: "#ffffff"
-        border.color: "#cbd5e1"
-        border.width: 1
+        radius: Theme.radiusXLarge
+        color: Theme.surface
+        border.color: Theme.separator
+        border.width: Theme.hairline
     }
 
     contentItem: Item {
@@ -69,7 +70,7 @@ Popup {
             Text {
                 Layout.fillWidth: true
                 text: "Tool Change"
-                font.pixelSize: 20
+                font.pixelSize: Theme.fontTitle
                 font.bold: true
                 color: root.textColor
                 horizontalAlignment: Text.AlignHCenter
@@ -82,7 +83,7 @@ Popup {
                     + ((root.viewModel && root.viewModel.toolDescription.length > 0)
                         ? " [" + root.escapeHtml(root.viewModel.toolDescription) + "]"
                         : "")
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontLarge
                 color: root.textColor
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
@@ -96,14 +97,14 @@ Popup {
 
                 Text {
                     text: "Press "
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontLarge
                     color: root.textColor
                 }
 
                 Text {
                     id: cycleStartText
                     text: "CycleStart"
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontLarge
                     font.bold: true
                     color: root.confirmColor
                     opacity: cycleStartMouse.pressed ? 0.65 : 1.0
@@ -121,7 +122,7 @@ Popup {
 
                 Text {
                     text: " to confirm the tool change"
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontLarge
                     color: root.textColor
                 }
             }
@@ -132,14 +133,14 @@ Popup {
 
                 Text {
                     text: "Press "
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontLarge
                     color: root.textColor
                 }
 
                 Text {
                     id: cycleAbortText
                     text: "CycleAbort"
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontLarge
                     font.bold: true
                     color: root.cancelColor
                     opacity: cycleAbortMouse.pressed ? 0.65 : 1.0
@@ -157,7 +158,7 @@ Popup {
 
                 Text {
                     text: " to stop the program."
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontLarge
                     color: root.textColor
                 }
             }

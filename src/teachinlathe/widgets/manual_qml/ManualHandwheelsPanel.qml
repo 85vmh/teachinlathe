@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -9,10 +10,10 @@ Rectangle {
     signal xToggled(bool enabled)
     signal zToggled(bool enabled)
 
-    color: "#f5f5f5"
-    border.color: "#ccc"
-    border.width: 1
-    radius: 6
+    color: Theme.surfaceSunken
+    border.color: Theme.outline
+    border.width: Theme.hairline
+    radius: Theme.radius
 
     Item {
         id: header
@@ -32,16 +33,16 @@ Rectangle {
 
             Text {
                 text: "Increment:"
-                color: "#1e2430"
-                font.pixelSize: 17
+                color: Theme.foreground
+                font.pixelSize: Theme.fontLarge
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
 
             Text {
                 text: viewModel ? viewModel.jogIncrement : "0.001"
-                color: "#0f172a"
-                font.pixelSize: 17
+                color: Theme.foregroundStrong
+                font.pixelSize: Theme.fontLarge
                 font.bold: true
                 font.family: "Noto Sans Mono"
                 horizontalAlignment: Text.AlignHCenter
@@ -50,8 +51,8 @@ Rectangle {
 
             Text {
                 text: "mm"
-                color: "#1e2430"
-                font.pixelSize: 17
+                color: Theme.foreground
+                font.pixelSize: Theme.fontLarge
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -63,8 +64,8 @@ Rectangle {
             visible: !(viewModel ? viewModel.handwheelsAllowed : true)
             anchors.fill: parent
             text: "Disabled"
-            color: "#ff9800"
-            font.pixelSize: 17
+            color: Theme.warning
+            font.pixelSize: Theme.fontLarge
             font.bold: false
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -74,8 +75,8 @@ Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            height: 1
-            color: "#ccc"
+            height: Theme.hairline
+            color: Theme.outline
         }
     }
 

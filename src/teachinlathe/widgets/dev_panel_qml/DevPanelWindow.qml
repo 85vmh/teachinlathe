@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
+import theme 1.0
 
 Window {
     id: root
@@ -9,11 +10,11 @@ Window {
     height: 760
     visible: false
     title: "TeachInLathe Dev Panel"
-    color: "#f4f6f8"
+    color: Theme.surfaceAlt
 
-    readonly property color panelBg: "#ffffff"
-    readonly property color borderColor: "#cbd5e1"
-    readonly property color textColor: "#0f172a"
+    readonly property color panelBg: Theme.surface
+    readonly property color borderColor: Theme.separator
+    readonly property color textColor: Theme.foregroundStrong
     readonly property color mutedText: "#64748b"
     readonly property color green: "#22c55e"
     readonly property color red: "#ef4444"
@@ -36,7 +37,7 @@ Window {
 
         ColumnLayout {
             width: root.width
-            spacing: 12
+            spacing: Theme.spacing
             anchors.margins: 14
 
             Text {
@@ -52,7 +53,7 @@ Window {
                 title: "Cycle"
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 12
+                    spacing: Theme.spacing
 
                     MomentaryButton {
                         Layout.fillWidth: true
@@ -112,11 +113,11 @@ Window {
                 title: "Spindle"
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 12
+                    spacing: Theme.spacing
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: Theme.spacingSmall
 
                         SelectButton {
                             Layout.fillWidth: true
@@ -191,7 +192,7 @@ Window {
                 title: "Jog"
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 12
+                    spacing: Theme.spacing
 
                     GridLayout {
                         Layout.fillWidth: true
@@ -263,13 +264,13 @@ Window {
                     Text {
                         text: "Jog Increment"
                         color: root.mutedText
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontSmall
                         font.bold: true
                     }
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: Theme.spacingSmall
 
                         SelectButton { Layout.fillWidth: true; text: "Off"; selected: root.jogIncrement === 0.0; onClicked: root.setJogIncrement(0.0) }
                         SelectButton { Layout.fillWidth: true; text: "0.1"; selected: root.jogIncrement === 0.1; onClicked: root.setJogIncrement(0.1) }
@@ -290,7 +291,7 @@ Window {
         Layout.fillWidth: true
         Layout.leftMargin: 14
         Layout.rightMargin: 14
-        radius: 8
+        radius: Theme.radiusLarge
         color: root.panelBg
         border.color: root.borderColor
         implicitHeight: sectionLayout.implicitHeight + 28
@@ -299,20 +300,20 @@ Window {
             id: sectionLayout
             anchors.fill: parent
             anchors.margins: 14
-            spacing: 12
+            spacing: Theme.spacing
 
             Text {
                 Layout.fillWidth: true
                 text: section.title
                 color: root.textColor
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontLarge
                 font.bold: true
             }
 
             ColumnLayout {
                 id: body
                 Layout.fillWidth: true
-                spacing: 12
+                spacing: Theme.spacing
             }
         }
     }
@@ -323,17 +324,17 @@ Window {
         property bool ledActive: false
         property color activeColor: "#334155"
         Layout.preferredHeight: 54
-        font.pixelSize: 16
+        font.pixelSize: Theme.fontBody
         font.bold: true
         onPressedChanged: devPanelViewModel.setBit(pinName, pressed)
         background: Rectangle {
-            radius: 8
-            color: control.ledActive || control.pressed ? control.activeColor : "#e2e8f0"
+            radius: Theme.radiusLarge
+            color: control.ledActive || control.pressed ? control.activeColor : Theme.selection
             border.color: control.ledActive || control.pressed ? Qt.darker(control.activeColor, 1.2) : root.borderColor
         }
         contentItem: Text {
             text: control.text
-            color: control.ledActive || control.pressed ? "#ffffff" : root.textColor
+            color: control.ledActive || control.pressed ? Theme.surface : root.textColor
             font: control.font
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -354,20 +355,20 @@ Window {
             width: 48
             height: 28
             radius: 14
-            color: control.checked ? control.activeColor : "#cbd5e1"
+            color: control.checked ? control.activeColor : Theme.separator
             Rectangle {
                 width: 22
                 height: 22
                 radius: 11
                 x: control.checked ? 23 : 3
                 y: 3
-                color: "#ffffff"
+                color: Theme.surface
             }
         }
         contentItem: Text {
             text: control.text
             color: root.textColor
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
             verticalAlignment: Text.AlignVCenter
             leftPadding: 58
         }
@@ -377,16 +378,16 @@ Window {
         id: control
         property bool selected: false
         Layout.preferredHeight: 46
-        font.pixelSize: 15
+        font.pixelSize: Theme.fontSmall
         font.bold: true
         background: Rectangle {
-            radius: 8
-            color: control.selected ? "#334155" : "#e2e8f0"
-            border.color: control.selected ? "#0f172a" : root.borderColor
+            radius: Theme.radiusLarge
+            color: control.selected ? "#334155" : Theme.selection
+            border.color: control.selected ? Theme.foregroundStrong : root.borderColor
         }
         contentItem: Text {
             text: control.text
-            color: control.selected ? "#ffffff" : root.textColor
+            color: control.selected ? Theme.surface : root.textColor
             font: control.font
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -404,9 +405,9 @@ Window {
 
         RowLayout {
             Layout.fillWidth: true
-            Text { text: control.label; color: root.textColor; font.pixelSize: 15; font.bold: true }
+            Text { text: control.label; color: root.textColor; font.pixelSize: Theme.fontSmall; font.bold: true }
             Item { Layout.fillWidth: true }
-            Text { text: Math.round(slider.value) + "%"; color: root.mutedText; font.pixelSize: 15; font.bold: true }
+            Text { text: Math.round(slider.value) + "%"; color: root.mutedText; font.pixelSize: Theme.fontSmall; font.bold: true }
         }
 
         Slider {

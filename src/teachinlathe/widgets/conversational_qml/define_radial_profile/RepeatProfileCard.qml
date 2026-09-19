@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../../touchable_input"
+import theme 1.0
 
 Rectangle {
     id: root
@@ -15,9 +16,9 @@ Rectangle {
     signal openNumPadRequested(var field)
     signal tapped()
 
-    color: isSelected ? "#dbeafe" : "#f5f7fb"
-    radius: 8
-    border.color: isSelected ? "#3b82f6" : "#cccccc"
+    color: isSelected ? Theme.selection : Theme.surfaceAlt
+    radius: Theme.radiusLarge
+    border.color: isSelected ? Theme.accent : Theme.outline
     border.width: isSelected ? 2 : 1
     height: content.implicitHeight + 24
 
@@ -42,12 +43,12 @@ Rectangle {
 
         Label {
             text: (primIdx + 1) + ". Repeat"
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
             font.bold: true
             Layout.preferredWidth: 92
         }
 
-        Label { text: "Primitive"; font.pixelSize: 14 }
+        Label { text: "Primitive"; font.pixelSize: Theme.fontSmall }
         NumpadField {
             Layout.preferredWidth: 72
             settingName: "radial_profile.repeat_primitive_id"
@@ -59,7 +60,7 @@ Rectangle {
             onValueCommitted: root._commit("repeat_primitive_id", Math.round(value))
         }
 
-        Label { text: "Count"; font.pixelSize: 14 }
+        Label { text: "Count"; font.pixelSize: Theme.fontSmall }
         NumpadField {
             Layout.preferredWidth: 72
             settingName: "radial_profile.repeat_count"
@@ -71,7 +72,7 @@ Rectangle {
             onValueCommitted: root._commit("repeat_count", Math.round(value))
         }
 
-        Label { text: "Z Offset"; font.pixelSize: 14 }
+        Label { text: "Z Offset"; font.pixelSize: Theme.fontSmall }
         NumpadField {
             Layout.preferredWidth: 100
             settingName: "radial_profile.repeat_z_offset"

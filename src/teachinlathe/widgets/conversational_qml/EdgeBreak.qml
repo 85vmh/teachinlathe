@@ -4,12 +4,13 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
     title: "Edge Break"
     Layout.preferredWidth: 300
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     /* --- Public API --- */
     property string blend_type: "none"   // "none" | "chamfer" | "fillet"
@@ -56,7 +57,7 @@ GroupBox {
         // --- None (spans all columns) ---
         RadioButton {
             text: "None"
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSmall
             checked: root.blend_type === "none"
             ButtonGroup.group: modeGroup
             Layout.columnSpan: 3
@@ -66,7 +67,7 @@ GroupBox {
         // --- Chamfer ---
         RadioButton {
             text: "Chamfer"
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSmall
             checked: root.blend_type === "chamfer"
             ButtonGroup.group: modeGroup
             Layout.minimumWidth: 110
@@ -85,14 +86,14 @@ GroupBox {
         }
         Label {
             text: "(mm)"
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSmall
             opacity: root.blend_type === "chamfer" ? 1.0 : 0.4
         }
 
         // --- Fillet ---
         RadioButton {
             text: "Fillet"
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSmall
             checked: root.blend_type === "fillet"
             ButtonGroup.group: modeGroup
             Layout.minimumWidth: 110
@@ -111,7 +112,7 @@ GroupBox {
         }
         Label {
             text: "(mm)"
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSmall
             opacity: root.blend_type === "fillet" ? 1.0 : 0.4
         }
     }

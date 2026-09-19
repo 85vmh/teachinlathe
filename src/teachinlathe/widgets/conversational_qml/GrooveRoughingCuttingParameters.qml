@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
@@ -10,7 +11,7 @@ GroupBox {
     Layout.fillWidth: true
     Layout.minimumWidth: 420
     Layout.preferredWidth: 560
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     property real feed_rate: 0.1
     property real peck_depth: 3.0
@@ -51,7 +52,7 @@ GroupBox {
         columnSpacing: 20
         rowSpacing: 16
 
-        Label { text: "Feed Rate"; font.pixelSize: 16 }
+        Label { text: "Feed Rate"; font.pixelSize: Theme.fontBody }
         NumpadField {
             Layout.preferredWidth: 100
             settingName: "turning.feed_rate"
@@ -62,9 +63,9 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.feed_rate = value; root.emitSave() }
         }
-        Label { text: "(mm/rev)"; font.pixelSize: 16 }
+        Label { text: "(mm/rev)"; font.pixelSize: Theme.fontBody }
 
-        Label { text: "Peck Depth"; font.pixelSize: 16 }
+        Label { text: "Peck Depth"; font.pixelSize: Theme.fontBody }
         NumpadField {
             Layout.preferredWidth: 100
             settingName: "groove_roughing.peck_depth"
@@ -75,9 +76,9 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.peck_depth = value; root.emitSave() }
         }
-        Label { text: "(mm)"; font.pixelSize: 16 }
+        Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
 
-        Label { text: "Retract"; font.pixelSize: 16 }
+        Label { text: "Retract"; font.pixelSize: Theme.fontBody }
         NumpadField {
             Layout.preferredWidth: 100
             settingName: "groove_roughing.retract"
@@ -88,9 +89,9 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.retract = value; root.emitSave() }
         }
-        Label { text: "(mm)"; font.pixelSize: 16 }
+        Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
 
-        Label { text: "Dwell Time"; font.pixelSize: 16 }
+        Label { text: "Dwell Time"; font.pixelSize: Theme.fontBody }
         NumpadField {
             Layout.preferredWidth: 100
             settingName: "groove_roughing.dwell_time"
@@ -101,6 +102,6 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.dwell_time = value; root.emitSave() }
         }
-        Label { text: "(sec)"; font.pixelSize: 16 }
+        Label { text: "(sec)"; font.pixelSize: Theme.fontBody }
     }
 }

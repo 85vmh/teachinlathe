@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -56,7 +57,7 @@ Rectangle {
 
                 Rectangle {
                     anchors.right: parent.right
-                    width: 1
+                    width: Theme.hairline
                     height: parent.height
                     color: "#333333"
                 }

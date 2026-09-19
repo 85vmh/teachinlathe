@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import ".."
 import "../../conversational_qml"
+import theme 1.0
 
 // Row 4 — Context-sensitive action buttons + copy progress bar.
 //
@@ -22,7 +23,7 @@ Rectangle {
         return parts.length ? parts[parts.length - 1] : path
     }
 
-    color: "#f5f5f5"
+    color: Theme.surfaceSunken
     implicitHeight: 60
 
     ConfirmDialog {
@@ -45,7 +46,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         height: 3
-        color: "#e0e0e0"
+        color: Theme.outlineDisabled
         visible: root.viewModel ? root.viewModel.isCopying : false
 
         Rectangle {
@@ -62,7 +63,7 @@ Rectangle {
         anchors.leftMargin: 10
         anchors.rightMargin: 10
         anchors.topMargin: 7
-        spacing: 8
+        spacing: Theme.spacingSmall
 
         Item { Layout.fillWidth: true }
 

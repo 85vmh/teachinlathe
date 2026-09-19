@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../../programs_qml/filesystemview"
 import "../"
+import theme 1.0
 
 Item {
     id: root
@@ -69,7 +70,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: "#f2f3f5"
+        color: Theme.surfaceSunken
     }
 
     SplitView {
@@ -79,7 +80,7 @@ Item {
         handle: Rectangle {
             implicitWidth: 6
             implicitHeight: 6
-            color: "#ffffff"
+            color: Theme.surface
         }
 
         FileSystemView {
@@ -92,7 +93,7 @@ Item {
         Rectangle {
             SplitView.fillWidth: true
             SplitView.minimumWidth: 360
-            color: "#ffffff"
+            color: Theme.surface
 
             ColumnLayout {
                 anchors.fill: parent
@@ -101,19 +102,19 @@ Item {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 44
-                    color: "#f5f7fb"
-                    border.color: "#d6dce7"
-                    border.width: 1
-                    radius: 6
+                    Layout.preferredHeight: Theme.buttonHeight
+                    color: Theme.surfaceAlt
+                    border.color: Theme.separator
+                    border.width: Theme.hairline
+                    radius: Theme.radius
 
                     Text {
                         anchors.fill: parent
                         anchors.leftMargin: 14
                         anchors.rightMargin: 14
                         text: root.selectedPath.length > 0 ? root.selectedPath : "Select a DXF file"
-                        color: root.selectedPath.length > 0 ? "#1e2430" : "#7b8494"
-                        font.pixelSize: 15
+                        color: root.selectedPath.length > 0 ? Theme.foreground : "#7b8494"
+                        font.pixelSize: Theme.fontSmall
                         elide: Text.ElideMiddle
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -122,10 +123,10 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "#ffffff"
-                    border.color: "#d6dce7"
-                    border.width: 1
-                    radius: 6
+                    color: Theme.surface
+                    border.color: Theme.separator
+                    border.width: Theme.hairline
+                    radius: Theme.radius
 
                     ProfileCanvas {
                         id: previewCanvas
@@ -144,7 +145,7 @@ Item {
                         visible: root.selectedPath.length === 0
                         text: "Select a DXF file to preview"
                         color: "#7b8494"
-                        font.pixelSize: 18
+                        font.pixelSize: Theme.fontLarge
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
                     }
@@ -155,7 +156,7 @@ Item {
                         visible: root.errorMessage.length > 0
                         text: root.errorMessage
                         color: "#b00020"
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontBody
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
                     }

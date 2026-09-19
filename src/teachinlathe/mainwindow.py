@@ -270,6 +270,10 @@ class TeachInLatheApp(QObject):
         self.view.setColor(QColor("#efefef"))
         self.view.setFlag(Qt.WindowType.FramelessWindowHint)
 
+        # So every screen can say `import theme 1.0` whatever directory it is
+        # in, rather than counting ".." back to it.
+        self.view.engine().addImportPath(QML_DIR)
+
     def _publishContext(self):
         ctx = self.view.engine().rootContext()
         ctx.setContextProperty("appState", self.appState)

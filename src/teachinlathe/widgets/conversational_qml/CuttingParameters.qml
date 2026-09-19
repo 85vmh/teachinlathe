@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
@@ -11,7 +12,7 @@ GroupBox {
     Layout.fillWidth: true
     Layout.minimumWidth: 360
     Layout.preferredWidth: 520
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     // bridge
     property int  opIndex: -1
@@ -70,7 +71,7 @@ GroupBox {
         // Feed Rate
         Label {
             text: "Feed rate (Fz)"
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
         }
         NumpadField {
             Layout.preferredWidth: 100
@@ -86,14 +87,14 @@ GroupBox {
         Label {
             text: "(mm/rev)"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
         }
 
         // Depth of Cut
         Label {
             text: "Depth of Cut (Ap)"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
         }
         NumpadField {
             Layout.preferredWidth: 100
@@ -109,14 +110,14 @@ GroupBox {
         Label {
             text: "(mm/radius)"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
         }
 
         // Retract
         Label {
             text: "Retract"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
         }
         NumpadField {
             Layout.preferredWidth: 100
@@ -132,7 +133,7 @@ GroupBox {
         Label {
             text: "(mm)"
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
         }
     }
 }

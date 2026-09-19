@@ -3,18 +3,19 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Qt5Compat.GraphicalEffects
 import "."
+import theme 1.0
 
 Rectangle {
     id: root
 
     property url iconSource: ""
-    property color tint: "#4F4F4F"
+    property color tint: Theme.foregroundMuted
     property string text: ""
     property bool compact: false
     property bool iconOnRight: false
-    property int buttonHeight: 36
+    property int buttonHeight: Theme.buttonHeightSmall
     property int iconSize: 20
-    property int fontPixelSize: Theme.fontSizeNormal
+    property int fontPixelSize: Theme.fontBody
 
     signal clicked()
 
@@ -26,10 +27,10 @@ Rectangle {
     Layout.preferredWidth: implicitWidth
     Layout.preferredHeight: implicitHeight
 
-    radius: 6
-    color: (enabled && area.pressed) ? "#e1f0ff" : "transparent"
-    border.width: 1
-    border.color: enabled ? (area.pressed ? "#8ec5ff" : "#BDBDBD") : "#E0E0E0"
+    radius: Theme.radius
+    color: (enabled && area.pressed) ? Theme.accentSoft : "transparent"
+    border.width: Theme.hairline
+    border.color: enabled ? (area.pressed ? Theme.accentBorder : Theme.outlineStrong) : Theme.outlineDisabled
     opacity: enabled ? 1.0 : 0.35
 
     RowLayout {

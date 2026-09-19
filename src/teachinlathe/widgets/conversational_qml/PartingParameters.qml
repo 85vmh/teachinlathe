@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
@@ -11,7 +12,7 @@ GroupBox {
     Layout.fillWidth: true
     Layout.minimumWidth: 420
     Layout.preferredWidth: 560
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     // bridge
     property int  opIndex: -1
@@ -86,7 +87,7 @@ GroupBox {
             Label {
                 text: "X Clearance"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 Layout.preferredWidth: 100
@@ -105,7 +106,7 @@ GroupBox {
             Label {
                 text: "X Start (with Fz 1)"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 id: tf_x_start
@@ -128,7 +129,7 @@ GroupBox {
             Label {
                 text: "X Start (with Fz 2)"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 id: tf_second_feed_x_pos
@@ -151,7 +152,7 @@ GroupBox {
             Label {
                 text: "X End"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 id: tf_x_end
@@ -174,7 +175,7 @@ GroupBox {
             Label {
                 text: "Z Position"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 id: tf_z_pos
@@ -208,7 +209,7 @@ GroupBox {
             Label {
                 text: "1st Feed Rate (Fz 1)"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 Layout.preferredWidth: 100
@@ -224,14 +225,14 @@ GroupBox {
             Label {
                 text: "(mm/rev)"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
 
             // Row 2
             Label {
                 text: "2nd Feed Rate (Fz 2)"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 Layout.preferredWidth: 100
@@ -247,7 +248,7 @@ GroupBox {
             Label {
                 text: "(mm/rev)"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
         }
     }

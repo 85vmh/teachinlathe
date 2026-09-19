@@ -1,12 +1,13 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Rectangle {
     id: root
-    color: "#11161d"
-    border.color: "#2b3440"
-    border.width: 1
+    color: Theme.foregroundStrong
+    border.color: Theme.outlineInverse
+    border.width: Theme.hairline
 
     readonly property string statusSummary: appShellBridge ? appShellBridge.statusSummary : ""
     readonly property var events: appShellBridge ? appShellBridge.events : []
@@ -18,12 +19,12 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 40
+            Layout.preferredHeight: Theme.buttonHeight
 
             Text {
                 text: "Application Events"
                 color: "white"
-                font.pixelSize: 20
+                font.pixelSize: Theme.fontTitle
                 font.bold: true
                 Layout.fillWidth: true
                 verticalAlignment: Text.AlignVCenter
@@ -38,7 +39,7 @@ Rectangle {
         Text {
             text: root.statusSummary
             color: "#9fb0c7"
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSmall
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
@@ -55,8 +56,8 @@ Rectangle {
                 color: modelData.level === "ERROR" ? "#ff8a80"
                      : modelData.level === "WARNING" ? "#ffd180"
                      : modelData.level === "COMMAND" ? "#80cbc4"
-                     : "#d8e0ef"
-                font.pixelSize: 14
+                     : Theme.separator
+                font.pixelSize: Theme.fontSmall
                 elide: Text.ElideRight
             }
         }

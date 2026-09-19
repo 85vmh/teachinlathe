@@ -4,12 +4,13 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
     title: "Spindle Parameters"
     Layout.fillWidth: true
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
     Layout.minimumWidth: 420
     Layout.preferredWidth: 560
 
@@ -85,7 +86,7 @@ GroupBox {
 
             RadioButton {
                 text: "Spin Forward (M3)"
-                font.pixelSize: 15
+                font.pixelSize: Theme.fontSmall
                 checked: root.directionCache === 1
                 ButtonGroup.group: dirGroup
                 onToggled: if (checked) {
@@ -95,7 +96,7 @@ GroupBox {
             }
             RadioButton {
                 text: "Spin Reverse (M4)"
-                font.pixelSize: 15
+                font.pixelSize: Theme.fontSmall
                 checked: root.directionCache === -1
                 ButtonGroup.group: dirGroup
                 onToggled: if (checked) {
@@ -107,8 +108,8 @@ GroupBox {
 
         // ------- Vertical separator -------
         Rectangle {
-            width: 1
-            color: "#cccccc"
+            width: Theme.hairline
+            color: Theme.outline
             Layout.fillHeight: true
         }
 
@@ -117,12 +118,12 @@ GroupBox {
             id: rightCol
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignTop
-            spacing: 8
+            spacing: Theme.spacingSmall
 
             // Mode selector (replaces tabs)
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 16
+                spacing: Theme.spacingLarge
                 visible: !root.rpmOnly
 
                 ButtonGroup {
@@ -130,7 +131,7 @@ GroupBox {
                 }
                 RadioButton {
                     text: "RPM Mode"
-                    font.pixelSize: 15
+                    font.pixelSize: Theme.fontSmall
                     checked: root.spindleMode === "rpm"
                     ButtonGroup.group: modeGroup
                     onToggled: if (checked) {
@@ -140,7 +141,7 @@ GroupBox {
                 }
                 RadioButton {
                     text: "CSS Mode"
-                    font.pixelSize: 15
+                    font.pixelSize: Theme.fontSmall
                     checked: root.spindleMode === "css"
                     ButtonGroup.group: modeGroup
                     onToggled: if (checked) {
@@ -160,9 +161,9 @@ GroupBox {
                 Layout.alignment: Qt.AlignTop
                 padding: 10
                 background: Rectangle {
-                    radius: 6
-                    border.width: 1
-                    border.color: "#bdbdbd"
+                    radius: Theme.radius
+                    border.width: Theme.hairline
+                    border.color: Theme.outlineStrong
                     color: "transparent"
                 }
                 Layout.preferredHeight: Math.max(
@@ -192,7 +193,7 @@ GroupBox {
                             Label {
                                 text: "Spindle speed"
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                                font.pixelSize: 16
+                                font.pixelSize: Theme.fontBody
                             }
                             NumpadField {
                                 Layout.preferredWidth: 100
@@ -208,7 +209,7 @@ GroupBox {
                             Label {
                                 text: "(rpm)"
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                                font.pixelSize: 16
+                                font.pixelSize: Theme.fontBody
                             }
                         }
                     }
@@ -230,7 +231,7 @@ GroupBox {
                             Label {
                                 text: "CSS value (Vc)"
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                                font.pixelSize: 16
+                                font.pixelSize: Theme.fontBody
                             }
                             NumpadField {
                                 Layout.preferredWidth: 100
@@ -250,13 +251,13 @@ GroupBox {
                             Label {
                                 text: "(m/min)"
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                                font.pixelSize: 16
+                                font.pixelSize: Theme.fontBody
                             }
 
                             Label {
                                 text: "Spindle max speed"
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                                font.pixelSize: 16
+                                font.pixelSize: Theme.fontBody
                             }
                             NumpadField {
                                 Layout.preferredWidth: 100
@@ -272,7 +273,7 @@ GroupBox {
                             Label {
                                 text: "(rpm)"
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                                font.pixelSize: 16
+                                font.pixelSize: Theme.fontBody
                             }
                         }
                     }

@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import "../app_shell_qml" as Shell
+import theme 1.0
 
 // One chuck / fixture. Selecting it makes it the active fixture, which is what
 // sets the chuck Z-minus limit the machine is held to.
@@ -13,10 +14,10 @@ Rectangle {
 
     width: 200
     height: 240
-    radius: 8
-    color: active ? "#e6edf7" : "white"
+    radius: Theme.radiusLarge
+    color: active ? Theme.accentSoft : "white"
     border.width: active ? 2 : 1
-    border.color: active ? "#2d7d46" : "#d5dbe4"
+    border.color: active ? Theme.primary : Theme.separator
 
     MouseArea {
         anchors.fill: parent
@@ -40,9 +41,9 @@ Rectangle {
         Text {
             width: parent.width
             text: root.fixture ? root.fixture.description : ""
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSmall
             font.bold: true
-            color: "#1e2430"
+            color: Theme.foreground
             wrapMode: Text.WordWrap
             maximumLineCount: 2
             elide: Text.ElideRight
@@ -53,23 +54,23 @@ Rectangle {
                 if (!root.fixture || root.fixture.diameter === "") return ""
                 return "Ø " + root.fixture.diameter + " " + root.fixture.units
             }
-            font.pixelSize: 13
-            color: "#55606f"
+            font.pixelSize: Theme.fontSmall
+            color: Theme.keySurface
             visible: text !== ""
         }
 
         Text {
             text: root.fixture ? "Max " + root.fixture.maxRpm + " rpm" : ""
-            font.pixelSize: 13
-            color: "#55606f"
+            font.pixelSize: Theme.fontSmall
+            color: Theme.keySurface
         }
 
         Text {
             text: root.fixture
                   ? "Z− limit " + root.fixture.zMinusLimit.toFixed(3)
                   : ""
-            font.pixelSize: 13
-            color: "#55606f"
+            font.pixelSize: Theme.fontSmall
+            color: Theme.keySurface
         }
 
         Shell.ShellActionButton {

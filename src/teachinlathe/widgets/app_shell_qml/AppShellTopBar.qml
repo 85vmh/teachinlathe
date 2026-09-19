@@ -1,11 +1,12 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Rectangle {
     id: root
-    color: "#f5f7fb"
-    border.color: "#d6dce7"
+    color: Theme.surfaceAlt
+    border.color: Theme.separator
     border.width: 0
 
     readonly property var leftActions: appShellBridge ? appShellBridge.leftActions : []
@@ -16,8 +17,8 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        height: 1
-        color: "#d6dce7"
+        height: Theme.hairline
+        color: Theme.separator
     }
 
     RowLayout {
@@ -42,7 +43,7 @@ Rectangle {
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.42, 720)
         text: root.titleText
-        color: "#1e2430"
+        color: Theme.foreground
         font.pixelSize: 23
         font.bold: true
         horizontalAlignment: Text.AlignHCenter

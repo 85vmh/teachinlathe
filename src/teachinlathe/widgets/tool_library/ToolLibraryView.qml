@@ -8,13 +8,14 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Rectangle {
     id: root
-    color: "#f5f5f5"
-    radius: 6
-    border.color: "#ccc"
-    border.width: 1
+    color: Theme.surfaceSunken
+    radius: Theme.radius
+    border.color: Theme.outline
+    border.width: Theme.hairline
 
     signal openNumPadRequested(var field)
     signal openKeyboardRequested(var field)
@@ -77,20 +78,20 @@ Rectangle {
             property int activeTab: 0  // 0 = All tools, 1 = Recently used
 
             // Light background for the front face
-            Rectangle { anchors.fill: parent; color: "#f5f5f5" }
+            Rectangle { anchors.fill: parent; color: Theme.surfaceSunken }
 
             ColumnLayout {
                 anchors.fill: parent; spacing: 0
 
                 // Header
                 Rectangle {
-                    Layout.fillWidth: true; height: 60; color: "#d6d6d6"
+                    Layout.fillWidth: true; height: 60; color: Theme.separator
 
                     // Title — absolutely centered over the full header width
                     Text {
                         anchors.centerIn: parent
-                        text: "Tool Library"; color: "#222222"
-                        font.pixelSize: 18; font.bold: true
+                        text: "Tool Library"; color: Theme.surfaceInverse
+                        font.pixelSize: Theme.fontLarge; font.bold: true
                     }
 
                     RowLayout {
@@ -101,30 +102,30 @@ Rectangle {
 
                         // Tab: All tools
                         Rectangle {
-                            width: 120; height: 46; radius: 8
-                            color: frontFace.activeTab === 0 ? "#f5f5f5" : "#c4c4c4"
-                            border.color: frontFace.activeTab === 0 ? "#999999" : "#b0b0b0"
-                            border.width: 1
+                            width: 120; height: 46; radius: Theme.radiusLarge
+                            color: frontFace.activeTab === 0 ? Theme.surfaceSunken : Theme.outlineStrong
+                            border.color: frontFace.activeTab === 0 ? Theme.outlineEmphasis : "#b0b0b0"
+                            border.width: Theme.hairline
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "All tools"; color: "#222222"
-                                font.pixelSize: 14; font.bold: frontFace.activeTab === 0
+                                text: "All tools"; color: Theme.surfaceInverse
+                                font.pixelSize: Theme.fontSmall; font.bold: frontFace.activeTab === 0
                             }
                             MouseArea { anchors.fill: parent; onClicked: frontFace.activeTab = 0 }
                         }
 
                         // Tab: Recently used
                         Rectangle {
-                            width: 150; height: 46; radius: 8
-                            color: frontFace.activeTab === 1 ? "#f5f5f5" : "#c4c4c4"
-                            border.color: frontFace.activeTab === 1 ? "#999999" : "#b0b0b0"
-                            border.width: 1
+                            width: 150; height: 46; radius: Theme.radiusLarge
+                            color: frontFace.activeTab === 1 ? Theme.surfaceSunken : Theme.outlineStrong
+                            border.color: frontFace.activeTab === 1 ? Theme.outlineEmphasis : "#b0b0b0"
+                            border.width: Theme.hairline
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "Recently used"; color: "#222222"
-                                font.pixelSize: 14; font.bold: frontFace.activeTab === 1
+                                text: "Recently used"; color: Theme.surfaceInverse
+                                font.pixelSize: Theme.fontSmall; font.bold: frontFace.activeTab === 1
                             }
                             MouseArea { anchors.fill: parent; onClicked: frontFace.activeTab = 1 }
                         }
@@ -134,12 +135,12 @@ Rectangle {
                         // Add Tool button
                         Rectangle {
                             id: addToolButton
-                            width: 130; height: 46; radius: 8
+                            width: 130; height: 46; radius: Theme.radiusLarge
                             enabled: toolLibraryViewModel ? toolLibraryViewModel.addToolEnabled : false
                             opacity: enabled ? 1.0 : 0.45
-                            color: !enabled ? "#9e9e9e" : addMA.pressed ? "#145a30" : "#1e8449"
+                            color: !enabled ? Theme.outlineEmphasis : addMA.pressed ? "#145a30" : Theme.primary
 
-                            Text { anchors.centerIn: parent; text: "+ Add Tool"; color: "white"; font.pixelSize: 14; font.bold: true }
+                            Text { anchors.centerIn: parent; text: "+ Add Tool"; color: "white"; font.pixelSize: Theme.fontSmall; font.bold: true }
                             MouseArea { id: addMA; anchors.fill: parent; enabled: parent.enabled; onClicked: root._startAdd() }
                         }
                     }
@@ -194,7 +195,7 @@ Rectangle {
                         z: 1
                         gradient: Gradient {
                             orientation: Gradient.Vertical
-                            GradientStop { position: 0.0; color: "#f5f5f5" }
+                            GradientStop { position: 0.0; color: Theme.surfaceSunken }
                             GradientStop { position: 1.0; color: "transparent" }
                         }
                     }
@@ -208,7 +209,7 @@ Rectangle {
                         gradient: Gradient {
                             orientation: Gradient.Vertical
                             GradientStop { position: 0.0; color: "transparent" }
-                            GradientStop { position: 1.0; color: "#f5f5f5" }
+                            GradientStop { position: 1.0; color: Theme.surfaceSunken }
                         }
                     }
                 }

@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Qt5Compat.GraphicalEffects
 import "../"
+import theme 1.0
 
 Item {
     id: root
@@ -56,7 +57,7 @@ Item {
                     return "Define " + typeStr + " Profile — Op #" + (root.opData.order !== undefined ? root.opData.order : "N/A")
                 return "Define " + typeStr + " Profile"
             }
-            font.pixelSize: 18; font.bold: true
+            font.pixelSize: Theme.fontLarge; font.bold: true
         }
 
         // Canvas with zoom icon buttons overlaid top-left
@@ -74,7 +75,7 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     color: "transparent"
-                    border.color: "#ccc"; border.width: 1
+                    border.color: Theme.outline; border.width: Theme.hairline
                 }
             }
 
@@ -84,14 +85,14 @@ Item {
                 anchors { top: parent.top; right: parent.right; topMargin: 24; rightMargin: 24 }
                 height: 60
                 width: editProfileRow.implicitWidth + 32
-                radius: 6
-                color: editProfileMa.pressed ? "#e1f0ff" : "transparent"
-                border.color: editProfileMa.pressed ? "#8ec5ff" : "#BDBDBD"; border.width: 1
+                radius: Theme.radius
+                color: editProfileMa.pressed ? Theme.accentSoft : "transparent"
+                border.color: editProfileMa.pressed ? Theme.accentBorder : Theme.outlineStrong; border.width: Theme.hairline
 
                 RowLayout {
                     id: editProfileRow
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: Theme.spacingSmall
 
                     Item {
                         width: 28; height: 28
@@ -106,13 +107,13 @@ Item {
                         ColorOverlay {
                             anchors.fill: editProfileIcon
                             source: editProfileIcon
-                            color: "#2E7D32"
+                            color: Theme.success
                         }
                     }
 
                     Text {
                         text: "Edit Profile P" + root.profileId
-                        color: "#2E7D32"
+                        color: Theme.success
                         font.pointSize: 11; font.family: "Noto Sans"
                     }
                 }
@@ -138,13 +139,13 @@ Item {
                     ]
                     Rectangle {
                         width: 60; height: 60
-                        radius: 6
-                        color: zoomMa.pressed ? "#e5edf9" : zoomMa.containsMouse ? "#eef3fb" : "#f5f7fb"
-                        border.color: "#c5d0df"; border.width: 1
+                        radius: Theme.radius
+                        color: zoomMa.pressed ? Theme.selection : zoomMa.containsMouse ? Theme.hover : Theme.surfaceAlt
+                        border.color: Theme.separator; border.width: Theme.hairline
 
                         Image {
                             anchors.centerIn: parent
-                            width: 40; height: 40
+                            width: 40; height: Theme.buttonHeight
                             source: modelData.icon
                             fillMode: Image.PreserveAspectFit
                             smooth: true

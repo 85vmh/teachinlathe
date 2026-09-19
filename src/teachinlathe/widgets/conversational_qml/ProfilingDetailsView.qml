@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "." // NumpadField.qml
 import "../touchable_input"
+import theme 1.0
 
 Item {
     id: root
@@ -55,7 +56,7 @@ Item {
 
         Label {
             text: (opData && opData.type) ? ("Profiling — Op #" + (opData.order !== undefined ? opData.order : "N/A")) : "Profiling"
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             font.bold: true
             Layout.alignment: Qt.AlignTop
         }

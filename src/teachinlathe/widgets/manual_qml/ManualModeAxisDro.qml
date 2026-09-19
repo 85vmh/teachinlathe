@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 Item {
     id: root
@@ -56,16 +57,16 @@ Item {
         width: root.secondaryWidth
         height: root.secondaryHeight
         visible: root.secondaryVisible
-        radius: 6
-        border.color: "#ccc"
-        border.width: 1
+        radius: Theme.radius
+        border.color: Theme.outline
+        border.width: Theme.hairline
         color: "#56babb"
 
         Text {
             anchors.fill: parent
             anchors.rightMargin: 7
             text: root.secondaryValue
-            color: "#ffffff"
+            color: Theme.surface
             font.family: "Noto Sans Mono"
             font.pixelSize: 21
             horizontalAlignment: Text.AlignRight
@@ -90,10 +91,10 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         width: root.primaryWidth
         height: root.primaryHeight
-        radius: 6
-        border.color: "#ccc"
-        border.width: 1
-        color: "#d9d9d9"
+        radius: Theme.radius
+        border.color: Theme.outline
+        border.width: Theme.hairline
+        color: Theme.outlineDisabled
 
         Text {
             anchors.fill: parent
@@ -135,7 +136,7 @@ Item {
         width: root.buttonSize
         height: root.buttonSize
         text: "0"
-        font.pixelSize: 18
+        font.pixelSize: Theme.fontLarge
         onClicked: root.zeroClicked()
     }
 
@@ -146,7 +147,7 @@ Item {
         width: root.buttonSize
         height: root.buttonSize
         text: "A/R"
-        font.pixelSize: 18
+        font.pixelSize: Theme.fontLarge
         onClicked: root.absRelClicked()
     }
 
@@ -159,7 +160,7 @@ Item {
         width: root.datumButtonWidth
         height: root.buttonSize
         text: "Set\nDatum"
-        font.pixelSize: 16
+        font.pixelSize: Theme.fontBody
 
         property bool longPressTriggered: false
 

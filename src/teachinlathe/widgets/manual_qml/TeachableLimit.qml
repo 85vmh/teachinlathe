@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../touchable_input"
+import theme 1.0
 
 Rectangle {
     id: root
@@ -25,8 +26,8 @@ Rectangle {
     signal committed(string value)
 
     readonly property color disabledColor: "#323232"
-    readonly property color enabledColor: "#1a5fb4"
-    readonly property color pendingColor: "#ff8c00"
+    readonly property color enabledColor: Theme.accentStrong
+    readonly property color pendingColor: Theme.warning
     readonly property color reachedColor: "#ff0000"
     readonly property color activeColor: status === 0 ? enabledColor : status === 2 ? pendingColor : status === 3 ? reachedColor : disabledColor
     readonly property string limitName: title.indexOf("Limit ") === 0 ? title.substring(6) : title.replace(" Limit", "")
@@ -45,8 +46,8 @@ Rectangle {
 
     width: Math.max(minimumCardWidth, toggleButton.implicitWidth + 32)
     height: contentMargin * 2 + buttonHeight * 2 + sectionSpacing * 2 + 1
-    radius: 6
-    color: "#f5f5f5"
+    radius: Theme.radius
+    color: Theme.surfaceSunken
     border.color: activeColor
     border.width: status === 1 ? 1 : 3
 
@@ -61,7 +62,7 @@ Rectangle {
             Layout.preferredHeight: root.buttonHeight
             text: root.limitActionText
             enabled: root.toggleEnabled
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
             onClicked: root.toggleClicked()
         }
 
@@ -69,13 +70,13 @@ Rectangle {
             Layout.fillWidth: true
             Layout.topMargin: root.sectionSpacing
             Layout.bottomMargin: root.sectionSpacing
-            height: 1
-            color: "#ccc"
+            height: Theme.hairline
+            color: Theme.outline
         }
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingSmall
 
             NumpadField {
                 id: limitInput
@@ -100,7 +101,7 @@ Rectangle {
                 Layout.preferredHeight: root.buttonHeight
                 text: "TeachIn"
                 enabled: root.teachEnabled && root.status === 1
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
                 onClicked: root.teachClicked()
             }
         }

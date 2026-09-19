@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
@@ -11,7 +12,7 @@ GroupBox {
     Layout.fillWidth: true
     Layout.minimumWidth: 420
     Layout.preferredWidth: 560
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     // bridge
     property int  opIndex: -1
@@ -77,7 +78,7 @@ GroupBox {
             Label {
                 text: "X Start"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 id: tf_x_start
@@ -101,7 +102,7 @@ GroupBox {
             Label {
                 text: "Z Start"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 id: tf_z_start
@@ -134,7 +135,7 @@ GroupBox {
             Label {
                 text: "X End"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 id: tf_x_end
@@ -158,7 +159,7 @@ GroupBox {
             Label {
                 text: "Z End"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
             }
             NumpadField {
                 id: tf_z_end

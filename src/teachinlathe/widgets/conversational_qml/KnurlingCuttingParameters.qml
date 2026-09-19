@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
@@ -10,7 +11,7 @@ GroupBox {
     Layout.fillWidth: true
     Layout.minimumWidth: 360
     Layout.preferredWidth: 520
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     property int opIndex: -1
     property var opData: null
@@ -61,7 +62,7 @@ GroupBox {
         columnSpacing: 20
         rowSpacing: 20
 
-        Label { text: "Grooves Count"; font.pixelSize: 16 }
+        Label { text: "Grooves Count"; font.pixelSize: Theme.fontBody }
         NumpadField {
             Layout.preferredWidth: 100
             settingName: "knurling.grooves_count"
@@ -74,7 +75,7 @@ GroupBox {
         }
         Item {}
 
-        Label { text: "Depth of Cut"; font.pixelSize: 16 }
+        Label { text: "Depth of Cut"; font.pixelSize: Theme.fontBody }
         NumpadField {
             Layout.preferredWidth: 100
             settingName: "knurling.doc"
@@ -85,9 +86,9 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.doc = value; root.emitSave() }
         }
-        Label { text: "(mm/radius)"; font.pixelSize: 16 }
+        Label { text: "(mm/radius)"; font.pixelSize: Theme.fontBody }
 
-        Label { text: "Retract"; font.pixelSize: 16 }
+        Label { text: "Retract"; font.pixelSize: Theme.fontBody }
         NumpadField {
             Layout.preferredWidth: 100
             settingName: "knurling.retract"
@@ -98,6 +99,6 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.retract = value; root.emitSave() }
         }
-        Label { text: "(mm)"; font.pixelSize: 16 }
+        Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
     }
 }

@@ -12,6 +12,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../touchable_input"
+import theme 1.0
 
 Item {
     id: root
@@ -174,7 +175,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: "#f0f0f0"
+        color: Theme.surfaceSunken
 
         ColumnLayout {
             anchors.fill: parent
@@ -185,16 +186,16 @@ Item {
                 Layout.fillWidth: true
                 height: 60
 
-                Rectangle { anchors.fill: parent; color: "#e0e0e0" }
-                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: "#bbbbbb" }
+                Rectangle { anchors.fill: parent; color: Theme.outlineDisabled }
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.outlineStrong }
 
                 // Cancel
                 Rectangle {
                     anchors.left: parent.left; anchors.leftMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 130; height: 46; radius: 6
-                    color: cancelMA.pressed ? "#b8b8b8" : "#d8d8d8"; border.color: "#999999"; border.width: 1
-                    Text { anchors.centerIn: parent; text: "Cancel"; font.pixelSize: 16; color: "#222222" }
+                    width: 130; height: 46; radius: Theme.radius
+                    color: cancelMA.pressed ? Theme.outlineStrong : Theme.separator; border.color: Theme.outlineEmphasis; border.width: Theme.hairline
+                    Text { anchors.centerIn: parent; text: "Cancel"; font.pixelSize: Theme.fontBody; color: Theme.surfaceInverse }
                     MouseArea { id: cancelMA; anchors.fill: parent; onClicked: root.cancelled() }
                 }
 
@@ -202,16 +203,16 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: root.toolData ? ("Edit Tool  T" + root.toolData.t) : "Add Tool"
-                    font.pixelSize: 20; font.bold: true; color: "#1a1a1a"
+                    font.pixelSize: Theme.fontTitle; font.bold: true; color: Theme.surfaceInverse
                 }
 
                 // Save
                 Rectangle {
                     anchors.right: parent.right; anchors.rightMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 130; height: 46; radius: 6
-                    color: saveMA.pressed ? "#145a30" : "#1e8449"
-                    Text { anchors.centerIn: parent; text: "Save"; font.pixelSize: 16; font.bold: true; color: "white" }
+                    width: 130; height: 46; radius: Theme.radius
+                    color: saveMA.pressed ? "#145a30" : Theme.primary
+                    Text { anchors.centerIn: parent; text: "Save"; font.pixelSize: Theme.fontBody; font.bold: true; color: "white" }
                     MouseArea {
                         id: saveMA; anchors.fill: parent
                         onClicked: {
@@ -254,7 +255,7 @@ Item {
                         // Tool No — add mode, or edit mode when tool is not current
                         Text {
                             visible: !root.toolData || !root.toolData.isCurrent
-                            text: "Tool No:"; font.pixelSize: 15
+                            text: "Tool No:"; font.pixelSize: Theme.fontSmall
                             Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                         }
                         NumpadField {
@@ -274,12 +275,12 @@ Item {
                             id: toolNoError
                             visible: false
                             text: "Tool number already exists"
-                            color: "#c62828"; font.pixelSize: 13
+                            color: Theme.danger; font.pixelSize: Theme.fontSmall
                             Layout.preferredWidth: 160
                         }
 
                         // Tip Radius
-                        Text { text: "Tip Radius:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
+                        Text { text: "Tip Radius:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
                         NumpadField {
                             id: editTipRadius
                             Layout.preferredWidth: 100
@@ -290,7 +291,7 @@ Item {
                         }
 
                         // Front Angle
-                        Text { text: "Front Angle:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
+                        Text { text: "Front Angle:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
                         NumpadField {
                             id: editFrontAngle
                             Layout.preferredWidth: 100
@@ -301,7 +302,7 @@ Item {
                         }
 
                         // Back Angle
-                        Text { text: "Back Angle:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
+                        Text { text: "Back Angle:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
                         NumpadField {
                             id: editBackAngle
                             Layout.preferredWidth: 100
@@ -312,11 +313,11 @@ Item {
                         }
 
                         // Comment
-                        Text { text: "Comment:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
+                        Text { text: "Comment:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130 }
                         KeyboardField {
                             id: editComment
-                            Layout.preferredWidth: 280; Layout.preferredHeight: 44
-                            font.pixelSize: 15; placeholderText: "Description..."
+                            Layout.preferredWidth: 280; Layout.preferredHeight: Theme.buttonHeight
+                            font.pixelSize: Theme.fontSmall; placeholderText: "Description..."
                             titleText: "Comment"
                             onOpenRequested: root.openKeyboardRequested(field)
                         }
@@ -335,27 +336,27 @@ Item {
                             spacing: 10
                             visible: root._currentOrientation === 6 || root._currentOrientation === 7 || root._currentOrientation === 8
 
-                            Rectangle { Layout.fillWidth: true; height: 1; color: "#bbbbbb" }
+                            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.outlineStrong }
 
                             // Type chips
                             RowLayout {
-                                spacing: 8
-                                Text { text: "Type:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
+                                spacing: Theme.spacingSmall
+                                Text { text: "Type:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter }
 
                                 Repeater {
                                     model: root._currentOrientation === 6 ? root._toolTypes6 : root._currentOrientation === 8 ? root._toolTypes8 : root._toolTypes7
                                     delegate: Rectangle {
                                         implicitWidth:  typeLabel.implicitWidth + 20
-                                        implicitHeight: 34
-                                        radius: 6
-                                        color:        (root._currentToolType === modelData.key) ? "#dbeafe" : "#e8e8e8"
-                                        border.color: (root._currentToolType === modelData.key) ? "#3b82f6" : "#aaaaaa"
+                                        implicitHeight: Theme.buttonHeightSmall
+                                        radius: Theme.radius
+                                        color:        (root._currentToolType === modelData.key) ? Theme.selection : Theme.outlineDisabled
+                                        border.color: (root._currentToolType === modelData.key) ? Theme.accent : "#aaaaaa"
                                         border.width: (root._currentToolType === modelData.key) ? 2 : 1
 
                                         Text {
                                             id: typeLabel
                                             anchors.centerIn: parent
-                                            text: modelData.label; font.pixelSize: 13
+                                            text: modelData.label; font.pixelSize: Theme.fontSmall
                                             color: (root._currentToolType === modelData.key) ? "#1d4ed8" : "#333333"
                                         }
                                         MouseArea {
@@ -374,7 +375,7 @@ Item {
                                 // Diameter — drill / reamer / tap / trepaning
                                 Text {
                                     visible: ["drill","reamer","tap","trepaning"].indexOf(root._currentToolType) >= 0
-                                    text: "Diameter:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Diameter:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
                                     visible: ["drill","reamer","tap","trepaning"].indexOf(root._currentToolType) >= 0
@@ -390,7 +391,7 @@ Item {
                                 // Pitch — tap only
                                 Text {
                                     visible: root._currentToolType === "tap"
-                                    text: "Pitch:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Pitch:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "tap"
@@ -406,12 +407,12 @@ Item {
                                 // Material — drill / reamer
                                 Text {
                                     visible: ["drill","reamer"].indexOf(root._currentToolType) >= 0
-                                    text: "Material:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Material:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 TextField {
                                     visible: ["drill","reamer"].indexOf(root._currentToolType) >= 0
-                                    Layout.preferredWidth: 100; Layout.preferredHeight: 44
-                                    font.pixelSize: 15; placeholderText: "e.g. HSS"
+                                    Layout.preferredWidth: 100; Layout.preferredHeight: Theme.buttonHeight
+                                    font.pixelSize: Theme.fontSmall; placeholderText: "e.g. HSS"
                                     text: extraMaterial.text
                                     onTextChanged: extraMaterial.text = text
                                 }
@@ -419,7 +420,7 @@ Item {
                                 // Length — drill / reamer
                                 Text {
                                     visible: ["drill","reamer"].indexOf(root._currentToolType) >= 0
-                                    text: "Length:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Length:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
                                     visible: ["drill","reamer"].indexOf(root._currentToolType) >= 0
@@ -435,7 +436,7 @@ Item {
                                 // Min Diameter — boring bar
                                 Text {
                                     visible: root._currentToolType === "boring_bar"
-                                    text: "Min Diam.:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Min Diam.:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "boring_bar"
@@ -451,7 +452,7 @@ Item {
                                 // Max Undercut — boring bar
                                 Text {
                                     visible: root._currentToolType === "boring_bar"
-                                    text: "Max Undercut:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Max Undercut:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "boring_bar"
@@ -467,7 +468,7 @@ Item {
                                 // Max Depth — boring bar
                                 Text {
                                     visible: root._currentToolType === "boring_bar"
-                                    text: "Max Depth:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Max Depth:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
                                     visible: root._currentToolType === "boring_bar"
@@ -483,7 +484,7 @@ Item {
                                 // Width — blade
                                 Text {
                                     visible: root._isBladeType(root._currentToolType)
-                                    text: "Width:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Width:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
                                     visible: root._isBladeType(root._currentToolType)
@@ -499,7 +500,7 @@ Item {
                                 // Max Depth — blade
                                 Text {
                                     visible: root._isBladeType(root._currentToolType)
-                                    text: "Max Depth:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Max Depth:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
                                     visible: root._isBladeType(root._currentToolType)
@@ -515,7 +516,7 @@ Item {
                                 // Left Radius — blade
                                 Text {
                                     visible: root._isBladeType(root._currentToolType)
-                                    text: "Left Radius:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Left Radius:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
                                     visible: root._isBladeType(root._currentToolType)
@@ -531,7 +532,7 @@ Item {
                                 // Right Radius — blade
                                 Text {
                                     visible: root._isBladeType(root._currentToolType)
-                                    text: "Right Radius:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Right Radius:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 NumpadField {
                                     visible: root._isBladeType(root._currentToolType)
@@ -546,11 +547,11 @@ Item {
 
                                 Text {
                                     visible: root._isBladeType(root._currentToolType)
-                                    text: "Z0 Reference:"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
+                                    text: "Z0 Reference:"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter; Layout.preferredWidth: 130
                                 }
                                 RowLayout {
                                     visible: root._isBladeType(root._currentToolType)
-                                    spacing: 8
+                                    spacing: Theme.spacingSmall
                                     ButtonGroup { id: z0ReferenceGroup }
                                     RadioButton {
                                         text: "Left Side"
@@ -578,7 +579,7 @@ Item {
 
                 Item { Layout.preferredWidth: 12 }
 
-                Rectangle { width: 1; Layout.fillHeight: true; color: "#bbbbbb" }
+                Rectangle { width: 1; Layout.fillHeight: true; color: Theme.outlineStrong }
 
                 // Orientation picker
                 ColumnLayout {
@@ -588,7 +589,7 @@ Item {
                     spacing: 10
 
                     Text {
-                        text: "Orientation"; font.pixelSize: 15; font.bold: true
+                        text: "Orientation"; font.pixelSize: Theme.fontSmall; font.bold: true
                         horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true
                     }
 
@@ -598,9 +599,9 @@ Item {
                         Repeater {
                             model: [4, 8, 3, 5, 9, 7, 1, 6, 2]
                             delegate: Rectangle {
-                                width: 80; height: 80; radius: 6
-                                color:        (root._currentOrientation === modelData) ? "#dbeafe" : "#ffffff"
-                                border.color: (root._currentOrientation === modelData) ? "#3b82f6" : "#aaaaaa"
+                                width: 80; height: 80; radius: Theme.radius
+                                color:        (root._currentOrientation === modelData) ? Theme.selection : Theme.surface
+                                border.color: (root._currentOrientation === modelData) ? Theme.accent : "#aaaaaa"
                                 border.width: (root._currentOrientation === modelData) ? 2 : 1
 
                                 Image {

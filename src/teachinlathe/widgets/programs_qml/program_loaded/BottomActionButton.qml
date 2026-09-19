@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import theme 1.0
 
 // Rectangular checkable action button — QML port of the app-shell header
 // button (#appShellActionButton QSS), so Break-on-M1 / Skip-Blocks keep the
@@ -12,27 +13,27 @@ Item {
 
     signal clicked()
 
-    implicitHeight: 70
+    implicitHeight: Theme.buttonHeightTouch
     implicitWidth: 90
 
     Rectangle {
         id: bg
         anchors.fill: parent
-        radius: 6
-        border.width: 1
-        color: !root.enabled ? "#8ea99a"
-             : root.checked  ? (mouse.containsMouse ? "#25673a" : "#2d7d46")
+        radius: Theme.radius
+        border.width: Theme.hairline
+        color: !root.enabled ? Theme.primaryDisabled
+             : root.checked  ? (mouse.containsMouse ? Theme.primaryPressed : Theme.primary)
              :                  (mouse.containsMouse ? "#684b0f" : "#7a5a12")
-        border.color: !root.enabled ? "#8ea99a"
-                    : root.checked  ? "#3fb950"
+        border.color: !root.enabled ? Theme.primaryDisabled
+                    : root.checked  ? Theme.primaryBorder
                     :                  "#d7ba7d"
 
         Text {
             id: label
             anchors.centerIn: parent
             text: root.text
-            color: root.enabled ? "white" : "#d9e7de"
-            font.pixelSize: 16
+            color: root.enabled ? "white" : Theme.outlineDisabled
+            font.pixelSize: Theme.fontBody
             font.family: "Noto Sans"
         }
     }

@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 RowLayout {
     id: root
@@ -22,7 +23,7 @@ RowLayout {
         Layout.preferredWidth: root.axisLabelWidth
         Layout.preferredHeight: root.valueBoxHeight
         text: root.axisLabel
-        color: "#172033"
+        color: Theme.foreground
         font.pixelSize: root.axisLabelFontSize
         horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter

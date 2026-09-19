@@ -2,10 +2,11 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "filesystemview"
+import theme 1.0
 
 Rectangle {
     id: root
-    color: "#ffffff"
+    color: Theme.surface
 
     // While running, the view is full screen (no app bar / bottom tabs) and the
     // internal screen tabs are hidden — only the loaded-program content shows.

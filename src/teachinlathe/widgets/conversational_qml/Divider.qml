@@ -1,6 +1,7 @@
 // Divider.qml
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -10,7 +11,7 @@ Rectangle {
     // Qt.Horizontal => horizontal line (fills width in ColumnLayout)
     property int   orientation: Qt.Vertical
     property real  thickness: 1
-    property color dividerColor: "#cccccc"
+    property color dividerColor: Theme.outline
     property bool  rounded: false
 
     color: dividerColor

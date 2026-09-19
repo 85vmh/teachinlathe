@@ -3,13 +3,14 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Qt5Compat.GraphicalEffects
 import "."
+import theme 1.0
 
 Item {
     id: main
     objectName: "mainScreen"
     Rectangle {
         anchors.fill: parent
-        color: "#ffffff"
+        color: Theme.surface
         z: -1
     }
 
@@ -50,14 +51,14 @@ Item {
         Rectangle {
             id: btn
             width: 56
-            height: 56
-            radius: 6
-            color: mouseArea.pressed ? "#e1f0ff" : "transparent"
-            border.width: 1
-            border.color: mouseArea.pressed ? "#8ec5ff" : "#BDBDBD"
+            height: Theme.headerHeight
+            radius: Theme.radius
+            color: mouseArea.pressed ? Theme.accentSoft : "transparent"
+            border.width: Theme.hairline
+            border.color: mouseArea.pressed ? Theme.accentBorder : Theme.outlineStrong
 
             property url iconSource: ""
-            property color tint: "#C62828"
+            property color tint: Theme.danger
             signal clicked()
 
             Image {
@@ -114,10 +115,10 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: "#ffffff"
-            radius: 6
-            border.color: "#ccc"
-            border.width: 1
+            color: Theme.surface
+            radius: Theme.radius
+            border.color: Theme.outline
+            border.width: Theme.hairline
 
             ColumnLayout {
                 anchors.fill: parent
@@ -127,9 +128,9 @@ Item {
                 // HEADER (fixed 40px)
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 40
-                    color: "#d6d6d6"
-                    radius: 4
+                    Layout.preferredHeight: Theme.buttonHeight
+                    color: Theme.separator
+                    radius: Theme.radiusSmall
 
                     RowLayout {
                         anchors.fill: parent
@@ -148,7 +149,7 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
 
                         Label {
                             text: "Name"
@@ -163,7 +164,7 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
 
                         Label {
                             text: "Date Created"
@@ -196,7 +197,7 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
 
                         Label {
                             text: "Last Edited"
@@ -229,7 +230,7 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
 
                         Label {
                             text: "Program Operations"
@@ -241,7 +242,7 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
 
                         Label {
                             text: "Actions"
@@ -280,10 +281,10 @@ Item {
                         radius: 0
 
                         color: rowMouseArea.pressed
-                               ? "#dbeafe"
-                               : (index % 2 === 0 ? "#f0f0f0" : "#e5e5e5")
+                               ? Theme.selection
+                               : (index % 2 === 0 ? Theme.surfaceSunken : Theme.outlineDisabled)
                         border.width: (selectedProgramId === programId || rowMouseArea.pressed) ? 1 : 0
-                        border.color: rowMouseArea.pressed ? "#8ec5ff" : (selectedProgramId === programId ? "#8ec5ff" : "transparent")
+                        border.color: rowMouseArea.pressed ? Theme.accentBorder : (selectedProgramId === programId ? Theme.accentBorder : "transparent")
 
                         MouseArea {
                             id: rowMouseArea
@@ -306,7 +307,7 @@ Item {
                                 Layout.alignment: Qt.AlignVCenter
                             }
 
-                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
 
                             Label {
                                 text: programName
@@ -320,7 +321,7 @@ Item {
                                 Layout.alignment: Qt.AlignVCenter
                             }
 
-                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
 
                             Label {
                                 text: createdDate
@@ -333,7 +334,7 @@ Item {
                                 Layout.alignment: Qt.AlignVCenter
                             }
 
-                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
 
                             Label {
                                 text: lastEditDate
@@ -346,7 +347,7 @@ Item {
                                 Layout.alignment: Qt.AlignVCenter
                             }
 
-                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
 
                             Label {
                                 text: programOperations
@@ -446,7 +447,7 @@ Item {
                                     anchors.left: parent.left
                                     anchors.leftMargin: 12
                                     anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 8
+                                    spacing: Theme.spacingSmall
 
                                     Repeater {
                                         model: operationsCell.displayOperations
@@ -455,10 +456,10 @@ Item {
                                             readonly property var parts: String(modelData).split("::")
                                             readonly property bool enabledBadge: parts.length > 1 ? parts[0] === "1" : true
                                             readonly property string badgeText: parts.length > 1 ? parts.slice(1).join("::") : String(modelData)
-                                            radius: 8
-                                            border.width: 1
-                                            border.color: enabledBadge ? "#d6d6d6" : "#dcdcdc"
-                                            color: enabledBadge ? "#f9f9f9" : "#efefef"
+                                            radius: Theme.radiusLarge
+                                            border.width: Theme.hairline
+                                            border.color: enabledBadge ? Theme.outline : Theme.outlineDisabled
+                                            color: enabledBadge ? Theme.surfaceAlt : Theme.surfaceSunken
                                             opacity: enabledBadge ? 1.0 : 0.65
                                             implicitHeight: 32
                                             implicitWidth: Math.min(parent.width, opLabel.implicitWidth + 20)
@@ -468,17 +469,17 @@ Item {
                                                 anchors.centerIn: parent
                                                 text: parent.badgeText
                                                 font.pixelSize: main.cellFontPx
-                                                color: parent.enabledBadge ? "#202020" : "#7a7a7a"
+                                                color: parent.enabledBadge ? Theme.foregroundStrong : Theme.foregroundFaint
                                             }
                                         }
                                     }
 
                                     Rectangle {
                                         visible: operationsCell.showOverflowBadge
-                                        radius: 8
-                                        border.width: 1
-                                        border.color: "#d6d6d6"
-                                        color: "#f9f9f9"
+                                        radius: Theme.radiusLarge
+                                        border.width: Theme.hairline
+                                        border.color: Theme.outline
+                                        color: Theme.surfaceAlt
                                         width: overflowText.implicitWidth + 20
                                         height: 32
 
@@ -487,7 +488,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: "......."
                                             font.pixelSize: main.cellFontPx
-                                            color: "#202020"
+                                            color: Theme.foregroundStrong
                                         }
                                     }
                                 }
@@ -497,11 +498,11 @@ Item {
                                     anchors.centerIn: parent
                                     text: "No operations yet, tap to change that"
                                     font.pixelSize: main.cellFontPx
-                                    color: "#4f4f4f"
+                                    color: Theme.foregroundMuted
                                 }
                             }
 
-                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: "#cccccc" }
+                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
 
                             Item {
                                 Layout.minimumWidth: main.colActionsW
@@ -520,7 +521,7 @@ Item {
                                         sourceComponent: iconButton
                                         onLoaded: {
                                             item.iconSource = "icons/duplicate_item.svg"
-                                            item.tint = "#4F4F4F"
+                                            item.tint = Theme.foregroundMuted
                                             item.clicked.connect(function() {
                                                 main.duplicateProgramRequested(index)
                                             })
@@ -531,7 +532,7 @@ Item {
                                         sourceComponent: iconButton
                                         onLoaded: {
                                             item.iconSource = "icons/delete_icon.svg"
-                                            item.tint = "#C62828"
+                                            item.tint = Theme.danger
                                             item.clicked.connect(function() {
                                                 main.pendingDeleteIndex = index
                                                 main.pendingDeleteName = programName
@@ -553,7 +554,7 @@ Item {
                     z: 1
                     gradient: Gradient {
                         orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: "#f5f5f5" }
+                        GradientStop { position: 0.0; color: Theme.surfaceSunken }
                         GradientStop { position: 1.0; color: "transparent" }
                     }
                 }
@@ -567,7 +568,7 @@ Item {
                     gradient: Gradient {
                         orientation: Gradient.Vertical
                         GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 1.0; color: "#f5f5f5" }
+                        GradientStop { position: 1.0; color: Theme.surfaceSunken }
                     }
                 }
 

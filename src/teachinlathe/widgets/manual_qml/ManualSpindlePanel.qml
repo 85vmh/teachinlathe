@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../conversational_qml"
+import theme 1.0
 
 Rectangle {
     id: root
@@ -12,8 +13,8 @@ Rectangle {
     readonly property bool readOnlyMode: !editableMode
     readonly property int selectedSpindleMode: viewModel ? viewModel.spindleMode : 0
     readonly property int headerHeight: 50
-    readonly property color warningColor: "#ff9800"
-    readonly property color warningBaseColor: "#1e2430"
+    readonly property color warningColor: Theme.warning
+    readonly property color warningBaseColor: Theme.foreground
     readonly property int warningPulseDurationMs: 200
     property color warningTitleColor: warningBaseColor
     signal openNumPadRequested(Item field)
@@ -34,10 +35,10 @@ Rectangle {
         }
     }
 
-    color: "#f5f5f5"
-    border.color: "#ccc"
-    border.width: 1
-    radius: 6
+    color: Theme.surfaceSunken
+    border.color: Theme.outline
+    border.width: Theme.hairline
+    radius: Theme.radius
 
     TabBar {
         id: tabBar
@@ -52,43 +53,43 @@ Rectangle {
         currentIndex: viewModel ? viewModel.spindleMode : 0
         onCurrentIndexChanged: if (viewModel) viewModel.setSpindleMode(currentIndex)
         background: Rectangle {
-            color: "#f5f5f5"
+            color: Theme.surfaceSunken
         }
 
         TabButton {
             text: "RPM"
             height: root.headerHeight
             implicitHeight: root.headerHeight
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             contentItem: Text {
                 text: parent.text
                 font: parent.font
-                color: "#202020"
+                color: Theme.surfaceInverse
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
             background: Rectangle {
-                color: parent.checked ? "#ffffff" : "#d9d9d9"
+                color: parent.checked ? Theme.surface : Theme.outlineDisabled
                 border.color: "#8c8c8c"
-                border.width: 1
+                border.width: Theme.hairline
             }
         }
         TabButton {
             text: "CSS"
             height: root.headerHeight
             implicitHeight: root.headerHeight
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             contentItem: Text {
                 text: parent.text
                 font: parent.font
-                color: "#202020"
+                color: Theme.surfaceInverse
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
             background: Rectangle {
-                color: parent.checked ? "#ffffff" : "#d9d9d9"
+                color: parent.checked ? Theme.surface : Theme.outlineDisabled
                 border.color: "#8c8c8c"
-                border.width: 1
+                border.width: Theme.hairline
             }
         }
     }
@@ -103,7 +104,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.topMargin: 1
         height: root.headerHeight
-        color: "#f5f5f5"
+        color: Theme.surfaceSunken
 
         Text {
             anchors.left: parent.left
@@ -111,8 +112,8 @@ Rectangle {
             anchors.top: parent.top
             height: root.headerHeight - 1
             text: "Spindle Mode: " + (viewModel ? viewModel.spindleModeLabel : "RPM")
-            color: "#1e2430"
-            font.pixelSize: 17
+            color: Theme.foreground
+            font.pixelSize: Theme.fontLarge
             font.bold: true
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -122,8 +123,8 @@ Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            height: 1
-            color: "#ccc"
+            height: Theme.hairline
+            color: Theme.outline
         }
     }
 
@@ -136,7 +137,7 @@ Rectangle {
         anchors.top: root.readOnlyMode ? readOnlyHeader.bottom : tabBar.bottom
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 1
-        color: "#f5f5f5"
+        color: Theme.surfaceSunken
 
         StackLayout {
             anchors.left: parent.left
@@ -256,7 +257,7 @@ Rectangle {
                         Layout.fillWidth: true
                         text: viewModel ? viewModel.spindlePanelMessageTitle : ""
                         color: root.warningTitleColor
-                        font.pixelSize: 20
+                        font.pixelSize: Theme.fontTitle
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -266,8 +267,8 @@ Rectangle {
                     Text {
                         Layout.fillWidth: true
                         text: viewModel ? viewModel.spindlePanelMessageBody : ""
-                        color: "#1e2430"
-                        font.pixelSize: 18
+                        color: Theme.foreground
+                        font.pixelSize: Theme.fontLarge
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         wrapMode: Text.WordWrap
@@ -313,8 +314,8 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                height: 1
-                color: "#ccc"
+                height: Theme.hairline
+                color: Theme.outline
             }
 
             ManualSpindleAngle {

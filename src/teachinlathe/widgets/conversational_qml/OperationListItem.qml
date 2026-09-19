@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import "."
+import theme 1.0
 
 OperationRowDelegate {
     id: root
@@ -10,7 +11,7 @@ OperationRowDelegate {
     property int operationsCount: 0
 
     width: parent ? parent.width : 400
-    height: 72
+    height: Theme.rowHeight
     rowIndex: operationIndex
     op: operationData
     isCurrentItem: selected
@@ -22,8 +23,8 @@ OperationRowDelegate {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        height: 1
-        color: "#dddddd"
+        height: Theme.hairline
+        color: Theme.outlineDisabled
         z: 10
     }
 }

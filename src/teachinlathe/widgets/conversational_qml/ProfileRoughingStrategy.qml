@@ -2,12 +2,13 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 GroupBox {
     id: root
     title: root.hasResolvedProfile ? ("Profiling Type: " + root.profilingTypeLabel) : "Profiling Type"
     Layout.fillWidth: true
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     // "od" | "id" — resolved automatically from the selected DefineProfile
     property string profiling_type: "od"
@@ -60,9 +61,9 @@ GroupBox {
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.WordWrap
             text: "Select a ProfileID from a Define Profile operation\ndefined above the current operation."
-            font.pixelSize: 15
+            font.pixelSize: Theme.fontSmall
             font.bold: true
-            color: "#ff9800"
+            color: Theme.warning
             visible: !root.hasResolvedProfile
         }
 
@@ -75,14 +76,14 @@ GroupBox {
 
             RadioButton {
                 text: "Axial Passes"
-                font.pixelSize: 15
+                font.pixelSize: Theme.fontSmall
                 checked: root.pass_type === "axial"
                 ButtonGroup.group: passGroup
                 onToggled: if (checked) { root.pass_type = "axial"; root.emitSave() }
             }
             RadioButton {
                 text: "45° Passes toward interior"
-                font.pixelSize: 15
+                font.pixelSize: Theme.fontSmall
                 opacity: root.profiling_type === "id" ? 1.0 : 0.0
                 enabled: root.profiling_type === "id"
                 checked: root.pass_type === "diagonal_interior"
@@ -92,14 +93,14 @@ GroupBox {
 
             RadioButton {
                 text: "Radial Passes"
-                font.pixelSize: 15
+                font.pixelSize: Theme.fontSmall
                 checked: root.pass_type === "radial"
                 ButtonGroup.group: passGroup
                 onToggled: if (checked) { root.pass_type = "radial"; root.emitSave() }
             }
             RadioButton {
                 text: "45° Passes toward exterior"
-                font.pixelSize: 15
+                font.pixelSize: Theme.fontSmall
                 opacity: root.profiling_type === "id" ? 1.0 : 0.0
                 enabled: root.profiling_type === "id"
                 checked: root.pass_type === "diagonal_exterior"

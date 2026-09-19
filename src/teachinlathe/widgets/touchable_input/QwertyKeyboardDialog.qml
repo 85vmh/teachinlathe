@@ -2,6 +2,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Popup {
     id: root
@@ -44,10 +45,10 @@ Popup {
     bottomPadding: 16
 
     background: Rectangle {
-        color: "#202426"
+        color: Theme.surfaceInverse
         border.color: "#111416"
-        border.width: 1
-        radius: 8
+        border.width: Theme.hairline
+        radius: Theme.radiusLarge
     }
 
     function openFor(field, titleOverride) {
@@ -141,7 +142,7 @@ Popup {
 
             contentItem: Text {
                 text: keyButton.text
-                color: "#ffffff"
+                color: Theme.surface
                 font: keyButton.font
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -149,8 +150,8 @@ Popup {
             }
 
             background: Rectangle {
-                radius: 8
-                color: keyButton.pressed ? "#8b8f93" : "#5f6367"
+                radius: Theme.radiusLarge
+                color: keyButton.pressed ? Theme.keySurfacePressed : Theme.keySurface
                 border.width: 0
             }
 
@@ -170,11 +171,11 @@ Popup {
 
         Label {
             Layout.fillWidth: true
-            Layout.preferredHeight: 34
+            Layout.preferredHeight: Theme.buttonHeightSmall
             text: root.titleText
             font.pixelSize: 26
             font.bold: true
-            color: "#ffffff"
+            color: Theme.surface
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
@@ -183,9 +184,9 @@ Popup {
         Row {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: root.rowWidth
-            Layout.preferredHeight: 56
+            Layout.preferredHeight: Theme.headerHeight
             width: root.rowWidth
-            height: 56
+            height: Theme.headerHeight
             spacing: root.horizontalSpacing
 
             TextField {
@@ -197,14 +198,14 @@ Popup {
                 font.pixelSize: 26
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
-                color: "#111827"
+                color: Theme.foregroundStrong
                 selectionColor: "transparent"
-                selectedTextColor: "#111827"
+                selectedTextColor: Theme.foregroundStrong
                 background: Rectangle {
-                    radius: 8
-                    color: "#f8fafc"
-                    border.color: "#d1d5db"
-                    border.width: 1
+                    radius: Theme.radiusLarge
+                    color: Theme.surfaceAlt
+                    border.color: Theme.separator
+                    border.width: Theme.hairline
                 }
             }
 
@@ -212,18 +213,18 @@ Popup {
                 width: root.keyWidth * 1.35
                 height: parent.height
                 text: "<- Back"
-                font.pixelSize: 20
+                font.pixelSize: Theme.fontTitle
                 contentItem: Text {
                     text: parent.text
-                    color: "#ffffff"
+                    color: Theme.surface
                     font: parent.font
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
                 }
                 background: Rectangle {
-                    radius: 8
-                    color: parent.pressed ? "#8b8f93" : "#5f6367"
+                    radius: Theme.radiusLarge
+                    color: parent.pressed ? Theme.keySurfacePressed : Theme.keySurface
                 }
                 onClicked: root._backspace()
             }
@@ -232,18 +233,18 @@ Popup {
                 width: root.keyWidth * 1.85
                 height: parent.height
                 text: "Clear All"
-                font.pixelSize: 20
+                font.pixelSize: Theme.fontTitle
                 contentItem: Text {
                     text: parent.text
-                    color: "#ffffff"
+                    color: Theme.surface
                     font: parent.font
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
                 }
                 background: Rectangle {
-                    radius: 8
-                    color: parent.pressed ? "#8b8f93" : "#5f6367"
+                    radius: Theme.radiusLarge
+                    color: parent.pressed ? Theme.keySurfacePressed : Theme.keySurface
                 }
                 onClicked: root._clearAll()
             }
@@ -252,8 +253,8 @@ Popup {
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: root.rowWidth
-            Layout.preferredHeight: 1
-            color: "#4b5563"
+            Layout.preferredHeight: Theme.hairline
+            color: Theme.foregroundSubtle
         }
 
         Column {
@@ -297,15 +298,15 @@ Popup {
                     font.pixelSize: 28
                     contentItem: Text {
                         text: parent.text
-                        color: "#111827"
+                        color: Theme.foregroundStrong
                         font: parent.font
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        radius: 8
-                        color: parent.pressed ? "#f1f5f9"
-                                             : ((root.shiftOn || root.shiftLocked) ? "#e5e7eb" : "#9ca3af")
+                        radius: Theme.radiusLarge
+                        color: parent.pressed ? Theme.hover
+                                             : ((root.shiftOn || root.shiftLocked) ? Theme.outlineDisabled : "#9ca3af")
                         border.width: root.shiftLocked ? 2 : 0
                         border.color: "#2563eb"
                     }
@@ -340,14 +341,14 @@ Popup {
                     font.pixelSize: 24
                     contentItem: Text {
                         text: parent.text
-                        color: "#ffffff"
+                        color: Theme.surface
                         font: parent.font
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        radius: 8
-                        color: parent.pressed ? "#8b8f93" : "#5f6367"
+                        radius: Theme.radiusLarge
+                        color: parent.pressed ? Theme.keySurfacePressed : Theme.keySurface
                     }
                     onClicked: root.symbolMode = !root.symbolMode
                 }
@@ -364,14 +365,14 @@ Popup {
                     font.pixelSize: 26
                     contentItem: Text {
                         text: parent.text
-                        color: "#ffffff"
+                        color: Theme.surface
                         font: parent.font
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        radius: 8
-                        color: parent.pressed ? "#8b8f93" : "#5f6367"
+                        radius: Theme.radiusLarge
+                        color: parent.pressed ? Theme.keySurfacePressed : Theme.keySurface
                     }
                     onClicked: root.buffer += " "
                 }
@@ -388,13 +389,13 @@ Popup {
                     font.pixelSize: 24
                     contentItem: Text {
                         text: parent.text
-                        color: "#ffffff"
+                        color: Theme.surface
                         font: parent.font
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        radius: 8
+                        radius: Theme.radiusLarge
                         color: parent.pressed ? "#2f6ed3" : "#2563eb"
                     }
                     onClicked: root._accept()

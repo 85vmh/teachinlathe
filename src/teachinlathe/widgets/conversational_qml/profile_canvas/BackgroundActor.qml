@@ -1,9 +1,10 @@
 import QtQuick 2.15
+import theme 1.0
 
 QtObject {
     property real width: 0
     property real height: 0
-    property color backgroundColor: "#f5f5f5"
+    property color backgroundColor: Theme.surfaceSunken
 
     function paint(ctx) {
         ctx.fillStyle = backgroundColor

@@ -3,6 +3,7 @@ import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
 import ".."
 import "../gcode_viewer"
+import theme 1.0
 
 Item {
     id: root
@@ -44,8 +45,8 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: "Programs"
-                        color: "#cccccc"
-                        font.pixelSize: 16
+                        color: Theme.outline
+                        font.pixelSize: Theme.fontBody
                         font.bold: true
                     }
                 }
@@ -55,9 +56,9 @@ Item {
                     model: fsBridge.folderNames
                     delegate: Rectangle {
                         Layout.fillWidth: true
-                        height: 48
+                        height: Theme.inputHeight
                         color: root.selectedFolder === modelData
-                               ? "#37373d" : (folderArea.containsMouse ? "#2d2d2e" : "#252526")
+                               ? Theme.outlineInverse : (folderArea.containsMouse ? Theme.foreground : "#252526")
 
                         RowLayout {
                             anchors {
@@ -67,12 +68,12 @@ Item {
                             }
                             spacing: 10
 
-                            Text { text: "📁"; font.pixelSize: 18 }
+                            Text { text: "📁"; font.pixelSize: Theme.fontLarge }
 
                             Text {
                                 text: modelData
                                 color: "#d4d4d4"
-                                font.pixelSize: 14
+                                font.pixelSize: Theme.fontSmall
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -101,8 +102,8 @@ Item {
                 // Divider
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 1
-                    color: "#404040"
+                    height: Theme.hairline
+                    color: Theme.outlineInverse
                 }
 
                 // File list
@@ -121,7 +122,7 @@ Item {
                         height: 38
                         color: root.selectedFile === modelData
                                ? "#094771"
-                               : (fileArea.containsMouse ? "#2a2d2e" : "transparent")
+                               : (fileArea.containsMouse ? Theme.foreground : "transparent")
 
                         Text {
                             anchors {
@@ -131,7 +132,7 @@ Item {
                             }
                             text: modelData
                             color: "#d4d4d4"
-                            font.pixelSize: 13
+                            font.pixelSize: Theme.fontSmall
                             font.family: "monospace"
                             elide: Text.ElideLeft
                         }
@@ -158,8 +159,8 @@ Item {
                         text: root.selectedFolder === ""
                               ? "Select a folder above"
                               : "No G-code files found"
-                        color: "#555555"
-                        font.pixelSize: 13
+                        color: Theme.foregroundMuted
+                        font.pixelSize: Theme.fontSmall
                     }
                 }
             }
@@ -181,7 +182,7 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     height: 44
-                    color: "#2d2d2d"
+                    color: Theme.foreground
 
                     RowLayout {
                         anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
@@ -190,7 +191,7 @@ Item {
                         Text {
                             text: root.selectedFile !== "" ? root.selectedFile : "Select a file to preview"
                             color: "#aaaaaa"
-                            font.pixelSize: 13
+                            font.pixelSize: Theme.fontSmall
                             elide: Text.ElideLeft
                             Layout.fillWidth: true
                         }
@@ -199,14 +200,14 @@ Item {
                         // Open in machine button
                         Rectangle {
                             visible: root.selectedFile !== ""
-                            width: 130; height: 30; radius: 4
-                            color: openBtnArea.pressed ? "#1e7e34" : "#28a745"
+                            width: 130; height: 30; radius: Theme.radiusSmall
+                            color: openBtnArea.pressed ? Theme.success : "#28a745"
 
                             Text {
                                 anchors.centerIn: parent
                                 text: "Open in Machine"
                                 color: "white"
-                                font.pixelSize: 12
+                                font.pixelSize: Theme.fontXSmall
                             }
                             MouseArea {
                                 id: openBtnArea

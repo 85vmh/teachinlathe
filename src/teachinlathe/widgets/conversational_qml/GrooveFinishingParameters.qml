@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
@@ -10,7 +11,7 @@ GroupBox {
     Layout.fillWidth: true
     Layout.minimumWidth: 420
     Layout.preferredWidth: 560
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     property int profile_id: 1
     property string strategy: "towards_center"
@@ -45,7 +46,7 @@ GroupBox {
         columnSpacing: 20
         rowSpacing: 16
 
-        Label { text: "Profile ID"; font.pixelSize: 16 }
+        Label { text: "Profile ID"; font.pixelSize: Theme.fontBody }
         NumpadField {
             Layout.preferredWidth: 100
             settingName: "groove_finishing.profile_id"
@@ -56,14 +57,14 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.profile_id = Math.round(value); root.emitSave() }
         }
-        Label { text: ""; font.pixelSize: 16 }
+        Label { text: ""; font.pixelSize: Theme.fontBody }
 
-        Label { text: "Strategy"; font.pixelSize: 16 }
+        Label { text: "Strategy"; font.pixelSize: Theme.fontBody }
         ComboBox {
             id: strategyCombo
             Layout.preferredWidth: 200
-            Layout.preferredHeight: 48
-            font.pixelSize: 20
+            Layout.preferredHeight: Theme.inputHeight
+            font.pixelSize: Theme.fontTitle
             textRole: "label"
             valueRole: "value"
             model: [
@@ -77,16 +78,16 @@ GroupBox {
                 rightPadding: 8
                 text: parent.displayText
                 font: parent.font
-                color: "#0f172a"
+                color: Theme.foregroundStrong
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
             }
             delegate: ItemDelegate {
                 width: parent.width
-                height: 48
+                height: Theme.inputHeight
                 text: modelData.label
-                font.pixelSize: 20
+                font.pixelSize: Theme.fontTitle
             }
             onActivated: {
                 root.strategy = currentValue
@@ -99,6 +100,6 @@ GroupBox {
                 }
             }
         }
-        Label { text: ""; font.pixelSize: 16 }
+        Label { text: ""; font.pixelSize: Theme.fontBody }
     }
 }

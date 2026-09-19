@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Qt5Compat.GraphicalEffects
 import "."   // for Divider.qml
+import theme 1.0
 
 Rectangle {
     id: root
@@ -41,8 +42,8 @@ Rectangle {
     property url  deleteIconSource:   "icons/delete_icon.svg"
     property url  moveUpIconSource:   "icons/move_up_icon.svg"
     property url  moveDownIconSource: "icons/move_down_icon.svg"
-    property color deleteTint:   "#C62828"
-    property color reorderTint:  "#4F4F4F"
+    property color deleteTint:   Theme.danger
+    property color reorderTint:  Theme.foregroundMuted
 
     // Signals back to parent
     signal generateToggled(int rowIndex, bool checked)
@@ -53,11 +54,11 @@ Rectangle {
     signal rowTapped(int rowIndex)
 
     width: parent ? parent.width : 400
-    height: 72
+    height: Theme.rowHeight
     radius: 0
-    color: isCurrentItem ? "#dbeafe" : (rowIndex % 2 === 0 ? "#f0f0f0" : "#e5e5e5")
+    color: isCurrentItem ? Theme.selection : (rowIndex % 2 === 0 ? Theme.surfaceSunken : Theme.outlineDisabled)
     border.width: isCurrentItem ? 2 : 0
-    border.color: isCurrentItem ? "#3b82f6" : "transparent"
+    border.color: isCurrentItem ? Theme.accent : "transparent"
 
     // Reusable icon button with press feedback, tint, and enabled state
     Component {
@@ -65,22 +66,22 @@ Rectangle {
         Rectangle {
             id: iconBtn
             width: 40
-            height: 40
-            radius: 6
+            height: Theme.buttonHeight
+            radius: Theme.radius
 
             // Background stays transparent, flashes light blue when pressed
             color: (!enabled ? "transparent"
-                             : (pressedArea.pressed ? "#e1f0ff" : "transparent"))
+                             : (pressedArea.pressed ? Theme.accentSoft : "transparent"))
 
             // Always show a border when enabled: gray by default, blue when pressed
             border.width: enabled ? 1 : 0
             border.color: !enabled ? "transparent"
-                                   : (pressedArea.pressed ? "#8ec5ff" : "#BDBDBD")
+                                   : (pressedArea.pressed ? Theme.accentBorder : Theme.outlineStrong)
 
             opacity: enabled ? 1.0 : 0.35
 
             property alias source: baseImg.source
-            property color tint: "#4F4F4F"
+            property color tint: Theme.foregroundMuted
             property bool  enabled: true
             signal clicked()
 
@@ -127,7 +128,7 @@ Rectangle {
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: root.itemFontSize
-                color: root.gcodeEnabled ? "black" : "#c4c4c4"
+                color: root.gcodeEnabled ? "black" : Theme.outlineStrong
             }
         }
         Divider { }

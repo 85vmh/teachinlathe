@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 Item {
     id: root
@@ -93,7 +94,7 @@ Item {
 
         Label {
             text: "Program Header"
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             font.bold: true
         }
 
@@ -175,7 +176,7 @@ Item {
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 10
-                        spacing: 16
+                        spacing: Theme.spacingLarge
 
                         ButtonGroup { id: afterLastGroup }
 

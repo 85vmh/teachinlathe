@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../common"
+import theme 1.0
 
 Rectangle {
     id: root
@@ -9,8 +10,8 @@ Rectangle {
     readonly property string panelMode: viewModel ? viewModel.feedPanelMode : "Editable"
     readonly property bool readOnlyMode: panelMode === "ReadOnly"
     readonly property bool resetRequiredMode: panelMode === "ResetRequired"
-    readonly property color warningColor: "#ff9800"
-    readonly property color warningBaseColor: "#1e2430"
+    readonly property color warningColor: Theme.warning
+    readonly property color warningBaseColor: Theme.foreground
     readonly property int warningPulseDurationMs: 200
     property color warningTitleColor: warningBaseColor
     signal openNumPadRequested(Item field)
@@ -21,11 +22,11 @@ Rectangle {
         }
     }
 
-    color: "#f5f5f5"
+    color: Theme.surfaceSunken
 
     Rectangle {
         anchors.fill: parent
-        color: "#f5f5f5"
+        color: Theme.surfaceSunken
 
         StackLayout {
             anchors.fill: parent
@@ -33,7 +34,7 @@ Rectangle {
             currentIndex: root.resetRequiredMode ? 1 : 0
 
             ColumnLayout {
-                spacing: 8
+                spacing: Theme.spacingSmall
 
                 ManualValueRow {
                     label: "Set feed:"
@@ -79,7 +80,7 @@ Rectangle {
                         Layout.fillWidth: true
                         text: viewModel ? viewModel.feedPanelMessageTitle : ""
                         color: root.warningTitleColor
-                        font.pixelSize: 20
+                        font.pixelSize: Theme.fontTitle
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -90,7 +91,7 @@ Rectangle {
                         Layout.fillWidth: true
                         text: viewModel ? viewModel.feedPanelMessageBody : ""
                         color: root.warningBaseColor
-                        font.pixelSize: 17
+                        font.pixelSize: Theme.fontLarge
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         wrapMode: Text.WordWrap

@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -12,26 +13,26 @@ Rectangle {
     signal clicked()
 
     implicitWidth: Math.max(96, label.implicitWidth + 36)
-    implicitHeight: 44
-    radius: 6
+    implicitHeight: Theme.buttonHeight
+    radius: Theme.radius
     color: {
-        if (!enabled) return secondary ? "#f3f5f8" : "#8ea99a"
+        if (!enabled) return secondary ? Theme.surfaceSunken : Theme.primaryDisabled
         if (checkable && checked) return actionArea.pressed ? "#684b0f" : "#7a5a12"
-        if (secondary) return actionArea.pressed ? "#e5edf9" : "#eef3fb"
-        return actionArea.pressed ? "#25673a" : "#2d7d46"
+        if (secondary) return actionArea.pressed ? Theme.accentSoft : Theme.hover
+        return actionArea.pressed ? Theme.primaryPressed : Theme.primary
     }
-    border.width: 1
+    border.width: Theme.hairline
     border.color: {
-        if (!enabled) return secondary ? "#d5dbe4" : "#8ea99a"
+        if (!enabled) return secondary ? Theme.separator : Theme.primaryDisabled
         if (checkable && checked) return "#d7ba7d"
-        return secondary ? "#c5d0df" : "#3fb950"
+        return secondary ? "#c5d0df" : Theme.primaryBorder
     }
     opacity: enabled ? 1.0 : 0.75
 
     Text {
         id: label
         anchors.centerIn: parent
-        color: root.secondary ? (root.enabled ? "#1e2430" : "#8c97a8") : "white"
+        color: root.secondary ? (root.enabled ? Theme.foreground : "#8c97a8") : "white"
         font.pixelSize: root.secondary ? 15 : 16
         font.bold: true
         elide: Text.ElideRight

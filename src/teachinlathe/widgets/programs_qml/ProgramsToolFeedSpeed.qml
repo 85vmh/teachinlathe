@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 // Sits to the right of ProgramsDro, above the gremlin. Shows the current /
 // upcoming tool, movement speed and spindle state. Calculations live in the
@@ -21,10 +22,10 @@ Rectangle {
     property int valueBoxWidth: 100
     property int unitsWidth: 72
 
-    color: "#eef2f7"
-    border.color: "#cfd7e3"
-    border.width: 1
-    radius: 6
+    color: Theme.hover
+    border.color: Theme.separator
+    border.width: Theme.hairline
+    radius: Theme.radius
 
     ColumnLayout {
         anchors.left: parent.left
@@ -36,11 +37,11 @@ Rectangle {
         // ---- Header: T[current]  --upcoming tool-->  T[next] --------------
         RowLayout {
             Layout.preferredHeight: root.headerHeight
-            spacing: 8
+            spacing: Theme.spacingSmall
 
             Text {
                 text: root.viewModel ? root.viewModel.currentToolText : "T0"
-                color: "#172033"
+                color: Theme.foreground
                 font.pixelSize: 26
                 verticalAlignment: Text.AlignVCenter
             }
@@ -48,14 +49,14 @@ Rectangle {
             Text {
                     Layout.fillWidth: true
                     text: "⟶"
-                    color: "#475569"
+                    color: Theme.foregroundSubtle
                     font.pixelSize: 24
                     horizontalAlignment: Text.AlignHCenter
             }
 
             Text {
                 text: root.viewModel ? root.viewModel.nextToolText : "T-"
-                color: "#172033"
+                color: Theme.foreground
                 font.pixelSize: 26
                 verticalAlignment: Text.AlignVCenter
             }
@@ -64,17 +65,17 @@ Rectangle {
         // ---- Movement row: Feed / Rapid (aligns with the X axis row) ------
         RowLayout {
             Layout.preferredHeight: root.rowHeight
-            spacing: 8
+            spacing: Theme.spacingSmall
 
             RowLayout {
                 Layout.preferredWidth: root.labelWidth
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: Theme.buttonHeight
                 spacing: 0
 
                 Text {
                     Layout.fillWidth: true
                     text: root.viewModel ? root.viewModel.movementLetter : "-"
-                    color: "#172033"
+                    color: Theme.foreground
                     font.pixelSize: 40
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -83,8 +84,8 @@ Rectangle {
                 Text {
                     Layout.alignment: Qt.AlignRight | Qt.AlignBottom
                     text: "(" + (root.viewModel ? root.viewModel.movementOverridePercent : 0) + "%)"
-                    color: "#475569"
-                    font.pixelSize: 15
+                    color: Theme.foregroundSubtle
+                    font.pixelSize: Theme.fontSmall
                 }
             }
 
@@ -99,8 +100,8 @@ Rectangle {
             Text {
                 Layout.preferredWidth: root.unitsWidth
                 text: root.viewModel ? root.viewModel.movementUnitsText : "mm/rev"
-                color: "#475569"
-                font.pixelSize: 20
+                color: Theme.foregroundSubtle
+                font.pixelSize: Theme.fontTitle
                 verticalAlignment: Text.AlignVCenter
             }
         }
@@ -108,17 +109,17 @@ Rectangle {
         // ---- Spindle row (aligns with the Z axis row) ---------------------
         RowLayout {
             Layout.preferredHeight: root.rowHeight
-            spacing: 8
+            spacing: Theme.spacingSmall
 
             RowLayout {
                 Layout.preferredWidth: root.labelWidth
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: Theme.buttonHeight
                 spacing: 0
 
                 Text {
                     Layout.fillWidth: true
                     text: "S"
-                    color: "#172033"
+                    color: Theme.foreground
                     font.pixelSize: 40
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -127,8 +128,8 @@ Rectangle {
                 Text {
                     Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
                     text: "(" + (root.viewModel ? root.viewModel.spindleOverridePercent : 0) + "%)"
-                    color: "#475569"
-                    font.pixelSize: 15
+                    color: Theme.foregroundSubtle
+                    font.pixelSize: Theme.fontSmall
                 }
             }
 
@@ -136,7 +137,7 @@ Rectangle {
             RowLayout {
                 Layout.alignment: Qt.AlignVCenter
                 visible: !(root.viewModel && root.viewModel.spindleIsCss)
-                spacing: 8
+                spacing: Theme.spacingSmall
 
                 OutlinedValue {
                     Layout.preferredWidth: root.valueBoxWidth
@@ -148,8 +149,8 @@ Rectangle {
                 Text {
                     Layout.preferredWidth: root.unitsWidth
                     text: "RPM"
-                    color: "#475569"
-                    font.pixelSize: 20
+                    color: Theme.foregroundSubtle
+                    font.pixelSize: Theme.fontTitle
                     verticalAlignment: Text.AlignVCenter
                 }
             }
@@ -161,7 +162,7 @@ Rectangle {
                 spacing: root.cssSpacing
 
                 RowLayout {
-                    spacing: 8
+                    spacing: Theme.spacingSmall
 
                     OutlinedValue {
                         Layout.preferredWidth: root.valueBoxWidth
@@ -173,14 +174,14 @@ Rectangle {
                     Text {
                         Layout.preferredWidth: root.unitsWidth
                         text: "RPM"
-                        color: "#475569"
-                        font.pixelSize: 16
+                        color: Theme.foregroundSubtle
+                        font.pixelSize: Theme.fontBody
                         verticalAlignment: Text.AlignVCenter
                     }
                 }
 
                 RowLayout {
-                    spacing: 8
+                    spacing: Theme.spacingSmall
 
                     OutlinedValue {
                         Layout.preferredWidth: root.valueBoxWidth
@@ -192,8 +193,8 @@ Rectangle {
                     Text {
                         Layout.preferredWidth: root.unitsWidth
                         text: "m/min"
-                        color: "#475569"
-                        font.pixelSize: 16
+                        color: Theme.foregroundSubtle
+                        font.pixelSize: Theme.fontBody
                         verticalAlignment: Text.AlignVCenter
                     }
                 }

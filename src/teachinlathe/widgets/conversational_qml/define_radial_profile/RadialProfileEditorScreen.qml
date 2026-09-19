@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
 import "../../touchable_input"
+import theme 1.0
 
 Item {
     id: root
@@ -136,7 +137,7 @@ Item {
 
     IntValidator { id: intVal; bottom: 1; top: 999 }
 
-    Rectangle { anchors.fill: parent; color: "#f5f7fb" }
+    Rectangle { anchors.fill: parent; color: Theme.surfaceAlt }
 
     Item {
         anchors.fill: parent
@@ -147,22 +148,22 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: parent.width * 0.42
-            color: "#ffffff"
+            color: Theme.surface
 
             ColumnLayout {
                 anchors.fill: parent
-                spacing: 8
+                spacing: Theme.spacingSmall
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 72
+                    Layout.preferredHeight: Theme.rowHeight
                     Layout.leftMargin: 12
                     Layout.rightMargin: 12
                     spacing: 10
 
                     Label {
                         text: "Profile ID:"
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontBody
                     }
 
                     NumpadField {
@@ -178,20 +179,20 @@ Item {
 
                     Rectangle {
                         Layout.preferredWidth: 1
-                        Layout.preferredHeight: 42
-                        color: "#d6dce7"
+                        Layout.preferredHeight: Theme.buttonHeight
+                        color: Theme.separator
                     }
 
                     Label {
                         text: "Type:"
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontBody
                     }
 
                     ButtonGroup { id: profileTypeGroup }
 
                     RadioButton {
                         text: "OD"
-                        font.pixelSize: 15
+                        font.pixelSize: Theme.fontSmall
                         checked: root.profileType === "od"
                         ButtonGroup.group: profileTypeGroup
                         onToggled: if (checked) { root.profileType = "od"; root.emitSave() }
@@ -199,7 +200,7 @@ Item {
 
                     RadioButton {
                         text: "ID"
-                        font.pixelSize: 15
+                        font.pixelSize: Theme.fontSmall
                         checked: root.profileType === "id"
                         ButtonGroup.group: profileTypeGroup
                         onToggled: if (checked) { root.profileType = "id"; root.emitSave() }
@@ -222,8 +223,8 @@ Item {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 1
-                    color: "#e8ecf2"
+                    height: Theme.hairline
+                    color: Theme.surfaceAlt
                 }
 
                 ScrollView {
@@ -236,7 +237,7 @@ Item {
 
                     Column {
                         width: cardScroll.availableWidth
-                        spacing: 8
+                        spacing: Theme.spacingSmall
                         padding: 8
 
                         Repeater {
@@ -268,8 +269,8 @@ Item {
             anchors.left: leftPanelBg.right
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            width: 1
-            color: "#d6dce7"
+            width: Theme.hairline
+            color: Theme.separator
         }
 
         ColumnLayout {
@@ -278,7 +279,7 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.margins: 12
-            spacing: 8
+            spacing: Theme.spacingSmall
 
             RadialProfileCanvas {
                 id: canvas
@@ -292,8 +293,8 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     color: "transparent"
-                    border.color: "#ccc"
-                    border.width: 1
+                    border.color: Theme.outline
+                    border.width: Theme.hairline
                 }
             }
 

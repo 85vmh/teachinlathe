@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 // Row 3 — Sortable file list with Name / Size / Modified columns.
 Item {
@@ -23,14 +24,14 @@ Item {
     readonly property int iconFontSize:    14
 
     // ── Colors ──────────────────────────────────────────────────────────────
-    readonly property color sepColor:  "#cccccc"
-    readonly property color headerColor: "#d6d6d6"
-    readonly property color headerSepColor: "#cccccc"
-    readonly property color headerTextColor: "#202020"
-    readonly property color rowEven:   "#f0f0f0"
-    readonly property color rowOdd:    "#e5e5e5"
-    readonly property color rowHover:  "#dbeafe"
-    readonly property color rowSelect: "#dbeafe"
+    readonly property color sepColor:  Theme.outline
+    readonly property color headerColor: Theme.separator
+    readonly property color headerSepColor: Theme.outline
+    readonly property color headerTextColor: Theme.surfaceInverse
+    readonly property color rowEven:   Theme.surfaceSunken
+    readonly property color rowOdd:    Theme.outlineDisabled
+    readonly property color rowHover:  Theme.selection
+    readonly property color rowSelect: Theme.selection
 
     ColumnLayout {
         anchors.fill: parent
@@ -41,7 +42,7 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: root.headerHeight
             color: root.headerColor
-            radius: 4
+            radius: Theme.radiusSmall
 
             RowLayout {
                 anchors.fill: parent
@@ -140,7 +141,7 @@ Item {
                               ? root.rowHover
                               : (index % 2 === 0 ? root.rowEven : root.rowOdd))
                     border.width: modelData.isSelected ? 2 : 0
-                    border.color: modelData.isSelected ? "#3b82f6" : "transparent"
+                    border.color: modelData.isSelected ? Theme.accent : "transparent"
                 }
 
                 RowLayout {
@@ -153,14 +154,14 @@ Item {
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        spacing: 8
+                        spacing: Theme.spacingSmall
                         clip: true
 
                         // Up-arrow text for ".." entry; image icons for dirs and files
                         Text {
                             visible: modelData.isUp
                             text: "↑"
-                            color: "#f59e0b"
+                            color: Theme.warning
                             font.pixelSize: root.iconFontSize
                             font.bold: true
                             Layout.alignment: Qt.AlignVCenter
@@ -189,7 +190,7 @@ Item {
                             Layout.fillWidth: !hasFolderCount
                             Layout.preferredWidth: hasFolderCount ? Math.min(implicitWidth, parent.width * 0.58) : -1
                             text: modelData.name
-                            color: modelData.isDir ? "#4f4f4f" : "#202020"
+                            color: modelData.isDir ? Theme.foregroundMuted : Theme.surfaceInverse
                             font.pixelSize: root.itemFontSize
                             font.family: "DejaVu Sans Mono"
                             elide: Text.ElideRight
@@ -247,7 +248,7 @@ Item {
                 Rectangle {
                     anchors.bottom: parent.bottom
                     width: parent.width
-                    height: 1
+                    height: Theme.hairline
                     color: root.sepColor
                     opacity: 0.5
                 }
@@ -264,7 +265,7 @@ Item {
                 anchors.centerIn: parent
                 visible: fileList.count === 0
                 text: "No files found"
-                color: "#9e9e9e"
+                color: Theme.outlineEmphasis
                 font.pixelSize: root.itemFontSize
             }
         }
@@ -277,7 +278,7 @@ Item {
             z: 1
             gradient: Gradient {
                 orientation: Gradient.Vertical
-                GradientStop { position: 0.0; color: "#f5f5f5" }
+                GradientStop { position: 0.0; color: Theme.surfaceSunken }
                 GradientStop { position: 1.0; color: "transparent" }
             }
         }
@@ -291,7 +292,7 @@ Item {
             gradient: Gradient {
                 orientation: Gradient.Vertical
                 GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: 1.0; color: "#f5f5f5" }
+                GradientStop { position: 1.0; color: Theme.surfaceSunken }
             }
         }
 

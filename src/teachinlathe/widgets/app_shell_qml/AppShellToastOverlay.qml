@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 Item {
     id: root
@@ -12,15 +13,15 @@ Item {
         anchors.bottomMargin: 200
         width: toastText.implicitWidth + 100
         height: toastText.implicitHeight + 50
-        radius: 8
+        radius: Theme.radiusLarge
         color: "#cc303030"
 
         Text {
             id: toastText
             anchors.centerIn: parent
             text: appShellBridge ? appShellBridge.toastText : ""
-            color: "#ffffff"
-            font.pixelSize: 18
+            color: Theme.surface
+            font.pixelSize: Theme.fontLarge
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }

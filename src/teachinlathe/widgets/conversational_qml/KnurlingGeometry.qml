@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 GroupBox {
     id: root
@@ -10,7 +11,7 @@ GroupBox {
     Layout.fillWidth: true
     Layout.minimumWidth: 420
     Layout.preferredWidth: 560
-    font.pixelSize: 16
+    font.pixelSize: Theme.fontBody
 
     property int opIndex: -1
     property var opData: null
@@ -61,7 +62,7 @@ GroupBox {
         columnSpacing: 20
         rowSpacing: 20
 
-        Label { text: "X Start"; font.pixelSize: 16 }
+        Label { text: "X Start"; font.pixelSize: Theme.fontBody }
         NumpadField {
             id: tf_x_start
             Layout.preferredWidth: 100
@@ -75,7 +76,7 @@ GroupBox {
         }
         Button { text: "TeachIn"; onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2) }
 
-        Label { text: "Z Start"; font.pixelSize: 16 }
+        Label { text: "Z Start"; font.pixelSize: Theme.fontBody }
         NumpadField {
             id: tf_z_start
             Layout.preferredWidth: 100
@@ -89,7 +90,7 @@ GroupBox {
         }
         Button { text: "TeachIn"; onClicked: tf_z_start.commit(positionsBridge.teachInZ()) }
 
-        Label { text: "Z End"; font.pixelSize: 16 }
+        Label { text: "Z End"; font.pixelSize: Theme.fontBody }
         NumpadField {
             id: tf_z_end
             Layout.preferredWidth: 100

@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import theme 1.0
 
 // One machine-state line: a lamp that lights when something is wrong, and the
 // text that says what. The .ui lit its LEDs on the fault, not on the good
@@ -9,16 +10,16 @@ Row {
     property bool ok: false
     property string text: ""
 
-    spacing: 12
+    spacing: Theme.spacing
 
     Rectangle {
         width: 22
         height: 22
         radius: 11
         anchors.verticalCenter: parent.verticalCenter
-        color: root.ok ? "#2d7d46" : "#c0392b"
+        color: root.ok ? Theme.primary : "#c0392b"
         border.width: 2
-        border.color: root.ok ? "#3fb950" : "#e06c5a"
+        border.color: root.ok ? Theme.primaryBorder : "#e06c5a"
 
         SequentialAnimation on opacity {
             running: !root.ok
@@ -32,8 +33,8 @@ Row {
     Text {
         anchors.verticalCenter: parent.verticalCenter
         text: root.text
-        color: root.ok ? "#2d7d46" : "#c0392b"
-        font.pixelSize: 20
+        color: root.ok ? Theme.primary : "#c0392b"
+        font.pixelSize: Theme.fontTitle
         font.bold: true
     }
 }

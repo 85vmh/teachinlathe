@@ -1,29 +1,30 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 Button {
     id: root
     property bool active: false
-    property color accentColor: active ? "#1E88E5" : "#e8e8e8"
-    property color borderColor: active ? "#1565C0" : "#cccccc"
+    property color accentColor: active ? "#1E88E5" : Theme.outlineDisabled
+    property color borderColor: active ? Theme.accentStrong : Theme.outline
 
-    implicitHeight: 42
+    implicitHeight: Theme.buttonHeight
     implicitWidth: Math.max(120, contentItem.implicitWidth + 32)
 
     background: Rectangle {
-        radius: 8
-        color: root.enabled ? root.accentColor : "#f0f0f0"
+        radius: Theme.radiusLarge
+        color: root.enabled ? root.accentColor : Theme.surfaceSunken
         border.color: root.borderColor
-        border.width: 1
+        border.width: Theme.hairline
         opacity: root.enabled ? 1.0 : 0.55
     }
 
     contentItem: Text {
         text: root.text
-        color: root.enabled ? (root.active ? "#ffffff" : "#202020") : "#9e9e9e"
+        color: root.enabled ? (root.active ? Theme.surface : Theme.surfaceInverse) : Theme.outlineEmphasis
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        font.pixelSize: 15
+        font.pixelSize: Theme.fontSmall
         font.family: "Noto Sans"
         font.bold: root.active
     }

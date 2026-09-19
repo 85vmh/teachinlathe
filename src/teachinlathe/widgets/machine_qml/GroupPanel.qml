@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import theme 1.0
 
 // A titled box, the QML counterpart of the .ui's QGroupBox.
 Rectangle {
@@ -8,10 +9,10 @@ Rectangle {
     property Item content: null
 
     implicitHeight: column.implicitHeight + 28
-    radius: 8
+    radius: Theme.radiusLarge
     color: "white"
-    border.width: 1
-    border.color: "#d5dbe4"
+    border.width: Theme.hairline
+    border.color: Theme.separator
 
     Column {
         id: column
@@ -19,13 +20,13 @@ Rectangle {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: 14
-        spacing: 12
+        spacing: Theme.spacing
 
         Text {
             text: root.title
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
             font.bold: true
-            color: "#1e2430"
+            color: Theme.foreground
         }
 
         Item {

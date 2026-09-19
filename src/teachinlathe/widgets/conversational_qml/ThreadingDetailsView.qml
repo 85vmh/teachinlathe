@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 Item {
     id: root
@@ -136,20 +137,20 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
-        spacing: 24
+        spacing: Theme.margin
 
         Label {
             text: (opData && opData.type)
                   ? (root.operationTitle + " - Op #" + (opData.order !== undefined ? opData.order : "N/A"))
                   : root.operationTitle
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             font.bold: true
         }
 
         RowLayout {
             id: detailsLayout
             Layout.fillWidth: true
-            spacing: 24
+            spacing: Theme.margin
             Layout.alignment: Qt.AlignTop
 
             ColumnLayout {
@@ -176,14 +177,14 @@ Item {
                     title: "Thread Parameters"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontBody
 
                     GridLayout {
                         columns: 3
                         columnSpacing: 16
                         rowSpacing: 16
 
-                        Label { text: "Pitch"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
+                        Label { text: "Pitch"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                         NumpadField {
                             Layout.preferredWidth: 100
                             settingName: "threading.metric_pitch"
@@ -194,9 +195,9 @@ Item {
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.pitch = value; root.emitSave() }
                         }
-                        Label { text: "(mm)"; font.pixelSize: 15; Layout.alignment: Qt.AlignVCenter }
+                        Label { text: "(mm)"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter }
 
-                        Label { text: "Starts"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
+                        Label { text: "Starts"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                         NumpadField {
                             Layout.preferredWidth: 100
                             settingName: "threading.starts_count"
@@ -216,11 +217,11 @@ Item {
                     title: "Z Limits"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontBody
 
                     RowLayout {
                         anchors.fill: parent
-                        spacing: 16
+                        spacing: Theme.spacingLarge
 
                         GridLayout {
                             columns: 3
@@ -228,7 +229,7 @@ Item {
                             rowSpacing: 16
                             Layout.alignment: Qt.AlignVCenter
 
-                            Label { text: "Z Start"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
+                            Label { text: "Z Start"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                             NumpadField {
                                 id: tf_zStart
                                 Layout.preferredWidth: 110
@@ -242,7 +243,7 @@ Item {
                             }
                             Button { text: "TeachIn"; onClicked: tf_zStart.commit(positionsBridge.teachInZ()) }
 
-                            Label { text: "Z End"; font.pixelSize: 16; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
+                            Label { text: "Z End"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                             NumpadField {
                                 id: tf_zEnd
                                 Layout.preferredWidth: 110
@@ -261,8 +262,8 @@ Item {
                             visible: root.showThreadLengthSummary
                             Layout.fillHeight: true
                             Layout.minimumHeight: 64
-                            width: 1
-                            color: "#bdbdbd"
+                            width: Theme.hairline
+                            color: Theme.outlineStrong
                         }
 
                         GridLayout {
@@ -274,12 +275,12 @@ Item {
 
                             Label {
                                 text: "Thread Type:"
-                                font.pixelSize: 16
+                                font.pixelSize: Theme.fontBody
                                 Layout.alignment: Qt.AlignVCenter
                             }
                             Label {
                                 text: root.threadHandText
-                                font.pixelSize: 16
+                                font.pixelSize: Theme.fontBody
                                 font.bold: true
                                 horizontalAlignment: Text.AlignRight
                                 Layout.fillWidth: true
@@ -288,12 +289,12 @@ Item {
 
                             Label {
                                 text: "Thread Length:"
-                                font.pixelSize: 16
+                                font.pixelSize: Theme.fontBody
                                 Layout.alignment: Qt.AlignVCenter
                             }
                             Label {
                                 text: root.formatThreadLength() + "mm"
-                                font.pixelSize: 16
+                                font.pixelSize: Theme.fontBody
                                 horizontalAlignment: Text.AlignRight
                                 Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
@@ -328,21 +329,21 @@ Item {
                     title: "Thread Location"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontBody
 
                     ColumnLayout {
-                        spacing: 8
+                        spacing: Theme.spacingSmall
                         ButtonGroup { id: locGroup }
                         RadioButton {
                             text: "External (OD)"
-                            font.pixelSize: 15
+                            font.pixelSize: Theme.fontSmall
                             checked: root.location === "OD"
                             ButtonGroup.group: locGroup
                             onToggled: if (checked) { root.location = "OD"; root.emitSave() }
                         }
                         RadioButton {
                             text: "Internal (ID)"
-                            font.pixelSize: 15
+                            font.pixelSize: Theme.fontSmall
                             checked: root.location === "ID"
                             ButtonGroup.group: locGroup
                             onToggled: if (checked) { root.location = "ID"; root.emitSave() }
@@ -355,7 +356,7 @@ Item {
                     title: "Thread Diameters"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontBody
 
                     GridLayout {
                         columns: 3
@@ -365,7 +366,7 @@ Item {
                         // Row 1: TeachIn diameter (Major for OD, Minor for ID)
                         Label {
                             text: root.location === "OD" ? "Major Ø" : "Minor Ø"
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontBody
                             Layout.alignment: Qt.AlignVCenter
                             Layout.minimumWidth: 90
                         }
@@ -389,7 +390,7 @@ Item {
                         // Row 2: Calculate diameter (Minor for OD, Major for ID)
                         Label {
                             text: root.location === "OD" ? "Minor Ø" : "Major Ø"
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontBody
                             Layout.alignment: Qt.AlignVCenter
                             Layout.minimumWidth: 90
                         }
@@ -420,7 +421,7 @@ Item {
                     title: "Cutting Parameters"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontBody
 
                     contentItem: Loader {
                         id: cuttingParamsLoader

@@ -1,12 +1,13 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 // Row 2 — FolderUp button + scrollable breadcrumb + filter toggles.
 Rectangle {
     id: root
     property var viewModel
 
-    color: "#f5f5f5"
+    color: Theme.surfaceSunken
     implicitHeight: 38
 
     RowLayout {
@@ -19,16 +20,16 @@ Rectangle {
         Rectangle {
             width: 30
             height: 28
-            radius: 4
+            radius: Theme.radiusSmall
             color: upArea.containsMouse && root.viewModel && root.viewModel.canNavigateUp
-                   ? "#e8e8e8" : "transparent"
+                   ? Theme.outlineDisabled : "transparent"
             opacity: root.viewModel && root.viewModel.canNavigateUp ? 1.0 : 0.35
 
             Text {
                 anchors.centerIn: parent
                 text: "↑"
-                color: "#4f4f4f"
-                font.pixelSize: 16
+                color: Theme.foregroundMuted
+                font.pixelSize: Theme.fontBody
             }
 
             MouseArea {
@@ -74,14 +75,14 @@ Rectangle {
                             visible: index > 0
                             anchors.verticalCenter: parent.verticalCenter
                             text: " / "
-                            color: "#9e9e9e"
-                            font.pixelSize: 12
+                            color: Theme.outlineEmphasis
+                            font.pixelSize: Theme.fontXSmall
                         }
 
                         Rectangle {
                             height: parent.height
                             width: segText.implicitWidth + 8
-                            color: segArea.containsMouse ? "#e8e8e8" : "transparent"
+                            color: segArea.containsMouse ? Theme.outlineDisabled : "transparent"
                             radius: 3
 
                             Text {
@@ -89,8 +90,8 @@ Rectangle {
                                 anchors.centerIn: parent
                                 text: modelData.name
                                 color: index === (root.viewModel ? root.viewModel.breadcrumbs.length - 1 : 0)
-                                       ? "#202020" : "#4f4f4f"
-                                font.pixelSize: 12
+                                       ? Theme.surfaceInverse : Theme.foregroundMuted
+                                font.pixelSize: Theme.fontXSmall
                                 font.bold: index === (root.viewModel ? root.viewModel.breadcrumbs.length - 1 : 0)
                             }
 
@@ -114,17 +115,17 @@ Rectangle {
             Rectangle {
                 width: filterFoldersText.implicitWidth + 12
                 height: 24
-                radius: 4
-                color: root.viewModel && root.viewModel.showFolders ? "#dbeafe" : "#f0f0f0"
-                border.color: root.viewModel && root.viewModel.showFolders ? "#1E88E5" : "#cccccc"
-                border.width: 1
+                radius: Theme.radiusSmall
+                color: root.viewModel && root.viewModel.showFolders ? Theme.selection : Theme.surfaceSunken
+                border.color: root.viewModel && root.viewModel.showFolders ? "#1E88E5" : Theme.outline
+                border.width: Theme.hairline
 
                 Text {
                     id: filterFoldersText
                     anchors.centerIn: parent
                     text: "Folders"
-                    color: root.viewModel && root.viewModel.showFolders ? "#1565C0" : "#9e9e9e"
-                    font.pixelSize: 11
+                    color: root.viewModel && root.viewModel.showFolders ? Theme.accentStrong : Theme.outlineEmphasis
+                    font.pixelSize: Theme.fontXSmall
                 }
 
                 MouseArea {
@@ -137,18 +138,18 @@ Rectangle {
             Rectangle {
                 width: filterNgcText.implicitWidth + 12
                 height: 24
-                radius: 4
-                color: root.viewModel && root.viewModel.ngcOnly ? "#dbeafe" : "#f0f0f0"
-                border.color: root.viewModel && root.viewModel.ngcOnly ? "#1E88E5" : "#cccccc"
-                border.width: 1
+                radius: Theme.radiusSmall
+                color: root.viewModel && root.viewModel.ngcOnly ? Theme.selection : Theme.surfaceSunken
+                border.color: root.viewModel && root.viewModel.ngcOnly ? "#1E88E5" : Theme.outline
+                border.width: Theme.hairline
                 opacity: root.viewModel && root.viewModel.allowFileFilterToggle ? 1.0 : 0.65
 
                 Text {
                     id: filterNgcText
                     anchors.centerIn: parent
                     text: root.viewModel && root.viewModel.ngcOnly ? root.viewModel.fileFilterLabel : "All"
-                    color: root.viewModel && root.viewModel.ngcOnly ? "#1565C0" : "#4f4f4f"
-                    font.pixelSize: 11
+                    color: root.viewModel && root.viewModel.ngcOnly ? Theme.accentStrong : Theme.foregroundMuted
+                    font.pixelSize: Theme.fontXSmall
                 }
 
                 MouseArea {

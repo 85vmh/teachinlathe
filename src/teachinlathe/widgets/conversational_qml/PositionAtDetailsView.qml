@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import theme 1.0
 
 Item {
     id: root
@@ -70,7 +71,7 @@ Item {
 
         Label {
             text: "Position At"
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             font.bold: true
         }
 
@@ -83,12 +84,12 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                spacing: 24
+                spacing: Theme.margin
 
                 CheckBox {
                     text: "Stop spindle before positioning"
                     checked: root.stopSpindleBeforePositioning
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontBody
                     onToggled: {
                         root.stopSpindleBeforePositioning = checked
                         root.emitSave()
@@ -97,7 +98,7 @@ Item {
 
                 GroupBox {
                     title: "Position At"
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontBody
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
 
@@ -164,7 +165,7 @@ Item {
                 CheckBox {
                     text: "Pause program after positioning"
                     checked: root.includeM0
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontBody
                     onToggled: {
                         root.includeM0 = checked
                         root.emitSave()
@@ -174,7 +175,7 @@ Item {
 
             GroupBox {
                 title: "Move Sequence"
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontBody
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop

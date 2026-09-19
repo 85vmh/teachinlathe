@@ -3,11 +3,12 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import ".."
 import "../.."
+import theme 1.0
 
 Rectangle {
     id: root
     property var viewModel
-    color: "#ffffff"
+    color: Theme.surface
 
     function startFrameAt(index) {
         return frameRepeater.itemAt(index)

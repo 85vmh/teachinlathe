@@ -7,6 +7,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -20,15 +21,15 @@ Rectangle {
 
     // ── Colors ────────────────────────────────────────────────────
     readonly property color clrBg:        "white"
-    readonly property color clrBgSel:     "#dbeafe"
-    readonly property color clrBgDisabled:"#eeeeee"
-    readonly property color clrBorder:    "#cccccc"
-    readonly property color clrBorderSel: "#3b82f6"
-    readonly property color clrBorderDisabled: "#d6d6d6"
-    readonly property color clrSep:       "#d0d0d0"
-    readonly property color clrBtnBorder: "#BDBDBD"
-    readonly property color clrDelHover:  "#ffebee"
-    readonly property color clrDelBorder: "#C62828"
+    readonly property color clrBgSel:     Theme.selection
+    readonly property color clrBgDisabled:Theme.surfaceSunken
+    readonly property color clrBorder:    Theme.outline
+    readonly property color clrBorderSel: Theme.accent
+    readonly property color clrBorderDisabled: Theme.separator
+    readonly property color clrSep:       Theme.outline
+    readonly property color clrBtnBorder: Theme.outlineStrong
+    readonly property color clrDelHover:  Theme.dangerSoft
+    readonly property color clrDelBorder: Theme.danger
 
     // ── Sizes ─────────────────────────────────────────────────────
     readonly property int szR:    4    // border radius
@@ -75,7 +76,7 @@ Rectangle {
         // Tool number
         Text {
             text: toolData ? ("T" + toolData.t) : ""
-            font.pixelSize: 18; font.bold: true
+            font.pixelSize: Theme.fontLarge; font.bold: true
             Layout.preferredWidth: 37
             Layout.alignment: Qt.AlignVCenter
         }
@@ -85,10 +86,10 @@ Rectangle {
         // Data columns
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingSmall
 
             RowLayout {
-                spacing: 12; Layout.fillWidth: true
+                spacing: Theme.spacing; Layout.fillWidth: true
 
                 // X / Z offsets
                 ColumnLayout {
@@ -188,9 +189,9 @@ Rectangle {
                 implicitWidth: root.szBtn; implicitHeight: root.szBtn; radius: root.szR
                 enabled: root.actionsEnabled
                 opacity: enabled ? 1.0 : 0.35
-                color:        editMA.pressed ? "#e3f2fd" : "transparent"
-                border.width: 1
-                border.color: editMA.pressed ? "#1565c0" : root.clrBtnBorder
+                color:        editMA.pressed ? Theme.accentSoft : "transparent"
+                border.width: Theme.hairline
+                border.color: editMA.pressed ? Theme.accentStrong : root.clrBtnBorder
 
                 Image {
                     anchors.centerIn: parent
@@ -209,7 +210,7 @@ Rectangle {
             Rectangle {
                 implicitWidth: root.szBtn; implicitHeight: root.szBtn; radius: root.szR
                 color:        delMA.pressed ? root.clrDelHover  : "transparent"
-                border.width: 1
+                border.width: Theme.hairline
                 border.color: delMA.pressed ? root.clrDelBorder : root.clrBtnBorder
                 enabled: toolData ? !toolData.isCurrent && root.actionsEnabled : false
                 opacity: enabled ? 1.0 : 0.35

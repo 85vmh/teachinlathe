@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -15,10 +16,10 @@ Rectangle {
     property int rowSpacing: 20
     property int columnSpacing: 18
 
-    color: "#eef2f7"
-    border.color: "#cfd7e3"
-    border.width: 1
-    radius: 6
+    color: Theme.hover
+    border.color: Theme.separator
+    border.width: Theme.hairline
+    radius: Theme.radius
 
     ColumnLayout {
         anchors.left: parent.left
@@ -39,7 +40,7 @@ Rectangle {
                 Layout.preferredWidth: root.valueBoxWidth
                 Layout.preferredHeight: root.headerHeight
                 text: "G54 Position"
-                color: "#475569"
+                color: Theme.foregroundSubtle
                 font.pixelSize: root.headerFontSize
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
@@ -50,7 +51,7 @@ Rectangle {
                 Layout.preferredWidth: root.valueBoxWidth
                 Layout.preferredHeight: root.headerHeight
                 text: "Distance to Go"
-                color: "#475569"
+                color: Theme.foregroundSubtle
                 font.pixelSize: root.headerFontSize
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter

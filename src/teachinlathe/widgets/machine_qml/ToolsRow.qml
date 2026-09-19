@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import "../app_shell_qml" as Shell
+import theme 1.0
 
 // The row of LinuxCNC diagnostic utilities, shown on both machine screens.
 Flow {
@@ -8,7 +9,7 @@ Flow {
 
     property var viewModel: null
 
-    spacing: 8
+    spacing: Theme.spacingSmall
 
     Repeater {
         model: root.viewModel ? root.viewModel.tools : []

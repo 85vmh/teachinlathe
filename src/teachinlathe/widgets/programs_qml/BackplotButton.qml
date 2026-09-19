@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 /*
  * One of the controls floating over the backplot. These were QPushButtons
@@ -10,30 +11,30 @@ import QtQuick.Controls 2.15
 Button {
     id: control
 
-    property color baseColor: "#2d7d46"
-    property color hoverColor: "#25673a"
-    property color borderColor: "#3fb950"
+    property color baseColor: Theme.primary
+    property color hoverColor: Theme.primaryPressed
+    property color borderColor: Theme.primaryBorder
 
-    implicitHeight: 44
+    implicitHeight: Theme.buttonHeight
     implicitWidth: label.implicitWidth + 32
     focusPolicy: Qt.NoFocus
 
     contentItem: Text {
         id: label
         text: control.text
-        color: control.enabled ? "white" : "#d9e7de"
-        font.pixelSize: 16
+        color: control.enabled ? "white" : Theme.outlineDisabled
+        font.pixelSize: Theme.fontBody
         font.family: "Noto Sans"
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
 
     background: Rectangle {
-        radius: 6
-        color: !control.enabled ? "#8ea99a"
+        radius: Theme.radius
+        color: !control.enabled ? Theme.primaryDisabled
              : control.down || control.hovered ? control.hoverColor
              : control.baseColor
-        border.width: 1
-        border.color: control.enabled ? control.borderColor : "#8ea99a"
+        border.width: Theme.hairline
+        border.color: control.enabled ? control.borderColor : Theme.primaryDisabled
     }
 }

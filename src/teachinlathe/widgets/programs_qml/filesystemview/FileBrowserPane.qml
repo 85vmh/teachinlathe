@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 Item {
     id: root
@@ -65,8 +66,8 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: "Programs"
-                    color: "#cccccc"
-                    font.pixelSize: 16
+                    color: Theme.outline
+                    font.pixelSize: Theme.fontBody
                     font.bold: true
                 }
             }
@@ -75,9 +76,9 @@ Item {
                 model: fsBridge.folderNames
                 delegate: Rectangle {
                     Layout.fillWidth: true
-                    height: 48
+                    height: Theme.inputHeight
                     color: root.selectedFolder === modelData
-                           ? "#37373d" : (folderArea.containsMouse ? "#2d2d2e" : "#252526")
+                           ? Theme.outlineInverse : (folderArea.containsMouse ? Theme.foreground : "#252526")
 
                     RowLayout {
                         anchors {
@@ -87,12 +88,12 @@ Item {
                         }
                         spacing: 10
 
-                        Text { text: "📁"; font.pixelSize: 18 }
+                        Text { text: "📁"; font.pixelSize: Theme.fontLarge }
 
                         Text {
                             text: modelData
                             color: "#d4d4d4"
-                            font.pixelSize: 14
+                            font.pixelSize: Theme.fontSmall
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
@@ -101,7 +102,7 @@ Item {
                     Rectangle {
                         anchors.bottom: parent.bottom
                         width: parent.width
-                        height: 1
+                        height: Theme.hairline
                         color: "#333333"
                     }
 
@@ -121,8 +122,8 @@ Item {
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 1
-                color: "#404040"
+                height: Theme.hairline
+                color: Theme.outlineInverse
             }
 
             ListView {
@@ -139,7 +140,7 @@ Item {
                     height: 38
                     color: (!modelData.isDir && root.selectedFilePath === modelData.path)
                            ? "#094771"
-                           : (fileArea.containsMouse ? "#2a2d2e" : "transparent")
+                           : (fileArea.containsMouse ? Theme.foreground : "transparent")
 
                     RowLayout {
                         anchors {
@@ -153,13 +154,13 @@ Item {
 
                         Text {
                             text: modelData.isDir ? (modelData.isUp ? "↩" : "📁") : "📄"
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontBody
                         }
 
                         Text {
                             text: modelData.name
                             color: modelData.isDir ? "#dcdcaa" : "#d4d4d4"
-                            font.pixelSize: 13
+                            font.pixelSize: Theme.fontSmall
                             font.family: "monospace"
                             Layout.fillWidth: true
                             elide: Text.ElideLeft
@@ -195,8 +196,8 @@ Item {
                     text: root.selectedFolder === ""
                           ? "Select a folder above"
                           : "No folders or G-code files found"
-                    color: "#555555"
-                    font.pixelSize: 13
+                    color: Theme.foregroundMuted
+                    font.pixelSize: Theme.fontSmall
                 }
             }
         }

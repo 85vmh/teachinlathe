@@ -2,6 +2,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Item {
     id: root
@@ -41,11 +42,11 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
-        spacing: 24
+        spacing: Theme.margin
 
         Label {
             text: (opData && opData.type) ? ("Tapping — Op #" + (opData.order !== undefined ? opData.order : "N/A")) : "Tapping"
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             font.bold: true
         }
 

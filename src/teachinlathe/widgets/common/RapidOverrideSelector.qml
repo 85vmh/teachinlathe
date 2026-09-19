@@ -1,6 +1,7 @@
 // RapidOverrideSelector.qml — segmented button bar for feed/speed override
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 Item {
     id: root
@@ -17,7 +18,7 @@ Item {
 
     property int segmentWidth: 80
 
-    readonly property int barHeight: 42
+    readonly property int barHeight: Theme.barHeightSmall
     readonly property int labelHeight: label_text.implicitHeight
     readonly property real effectiveSegmentWidth: root.steps.length > 0
         ? (root.fillAvailableWidth ? Math.max(0, bar.width / root.steps.length) : root.segmentWidth)
@@ -26,9 +27,9 @@ Item {
     implicitWidth:  steps.length * segmentWidth
     implicitHeight: labelHeight + 4 + barHeight
 
-    readonly property color colorActive:       "#1565c0"
-    readonly property color colorActiveText:   "#ffffff"
-    readonly property color colorInactive:     "#e8eaf6"
+    readonly property color colorActive:       Theme.accentStrong
+    readonly property color colorActiveText:   Theme.surface
+    readonly property color colorInactive:     Theme.accentSoft
     readonly property color colorInactiveText: "#37474f"
     readonly property color colorBorder:       "#90a4ae"
     readonly property color colorDivider:      "#90a4ae"
@@ -45,7 +46,7 @@ Item {
             text: root.maxSpeed > 0
                   ? root.label + " (" + Math.round(root.value / 100 * root.maxSpeed) + " mm/min)"
                   : root.label
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontBody
             font.bold: true
             color: "#37474f"
             horizontalAlignment: Text.AlignHCenter
@@ -104,7 +105,7 @@ Item {
                         Rectangle {
                             visible: !isLast
                             anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-                            width: 1
+                            width: Theme.hairline
                             color: root.colorDivider
                             z: 1
                         }
@@ -113,7 +114,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: modelData + "%"
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontBody
                             font.bold: segmentItem.active
                             color: segmentItem.active ? root.colorActiveText : root.colorInactiveText
                             z: 2
@@ -140,7 +141,7 @@ Item {
                 radius: root.cornerRadius
                 color: "transparent"
                 border.color: root.colorBorder
-                border.width: 1
+                border.width: Theme.hairline
                 z: 3
             }
         }

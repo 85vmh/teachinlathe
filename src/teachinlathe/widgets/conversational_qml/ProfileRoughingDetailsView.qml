@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
+import theme 1.0
 
 Item {
     id: root
@@ -51,14 +52,14 @@ Item {
         id: contentColumn
         anchors.fill: parent
         anchors.margins: 10
-        spacing: 24
+        spacing: Theme.margin
         Layout.alignment: Qt.AlignTop
 
         Label {
             text: (opData && opData.type)
                   ? ("Profile Roughing — Op #" + (opData.order !== undefined ? opData.order : "N/A"))
                   : "Profile Roughing"
-            font.pixelSize: 18
+            font.pixelSize: Theme.fontLarge
             font.bold: true
             Layout.alignment: Qt.AlignTop
         }

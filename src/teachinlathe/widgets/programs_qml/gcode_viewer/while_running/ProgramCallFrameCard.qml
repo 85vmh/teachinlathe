@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../.."
+import theme 1.0
 
 ProgramContentFrame {
     id: root
@@ -14,7 +15,7 @@ ProgramContentFrame {
     Rectangle {
         id: lineBox
         Layout.fillWidth: true
-        color: "#fff3f3"
+        color: Theme.dangerSoft
         radius: 3
         border.color: "#E51400"
         border.width: 2
@@ -25,9 +26,9 @@ ProgramContentFrame {
             anchors.fill: parent
             anchors.margins: 9
             text: (root.lineNumber > 0 ? root.lineNumber : "?") + ": " + (root.lineText || "")
-            color: "#202020"
+            color: Theme.surfaceInverse
             font.family: "DejaVu Sans Mono"
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSmall
             elide: Text.ElideRight
         }
     }

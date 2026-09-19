@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Rectangle {
     id: root
@@ -61,8 +62,8 @@ Rectangle {
             Text {
                 anchors.centerIn: parent
                 text: "Program Files"
-                color: "#e8e8e8"
-                font.pixelSize: 17
+                color: Theme.outlineDisabled
+                font.pixelSize: Theme.fontLarge
                 font.bold: true
             }
         }
@@ -72,9 +73,9 @@ Rectangle {
 
             delegate: Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 48
+                Layout.preferredHeight: Theme.inputHeight
                 color: root.selectedFolder === modelData
-                       ? "#37373d" : (folderArea.containsMouse ? "#2d2d2e" : "#252526")
+                       ? Theme.outlineInverse : (folderArea.containsMouse ? Theme.foreground : "#252526")
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -84,14 +85,14 @@ Rectangle {
                     anchors.rightMargin: 8
                     text: modelData
                     color: "#d4d4d4"
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSmall
                     elide: Text.ElideRight
                 }
 
                 Rectangle {
                     anchors.bottom: parent.bottom
                     width: parent.width
-                    height: 1
+                    height: Theme.hairline
                     color: "#333333"
                 }
 
@@ -111,8 +112,8 @@ Rectangle {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: "#404040"
+            Layout.preferredHeight: Theme.hairline
+            color: Theme.outlineInverse
         }
 
         ListView {
@@ -126,28 +127,28 @@ Rectangle {
 
             delegate: Rectangle {
                 width: ListView.view.width
-                height: 40
+                height: Theme.buttonHeight
                 color: (!modelData.isDir && root.selectedFilePath === modelData.path)
                        ? "#094771"
-                       : (fileArea.containsMouse ? "#2a2d2e" : "transparent")
+                       : (fileArea.containsMouse ? Theme.foreground : "transparent")
 
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 14
                     anchors.rightMargin: 8
-                    spacing: 8
+                    spacing: Theme.spacingSmall
 
                     Text {
                         text: modelData.isDir ? (modelData.isUp ? "UP" : "DIR") : "NC"
                         color: modelData.isDir ? "#dcdcaa" : "#9cdcfe"
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontXSmall
                         font.bold: true
                     }
 
                     Text {
                         text: modelData.name
                         color: modelData.isDir ? "#dcdcaa" : "#d4d4d4"
-                        font.pixelSize: 13
+                        font.pixelSize: Theme.fontSmall
                         font.family: "DejaVu Sans Mono"
                         Layout.fillWidth: true
                         elide: Text.ElideLeft
@@ -181,8 +182,8 @@ Rectangle {
                 anchors.centerIn: parent
                 visible: root.currentFiles.length === 0
                 text: root.selectedFolder === "" ? "Select a folder above" : "No folders or G-code files found"
-                color: "#555555"
-                font.pixelSize: 13
+                color: Theme.foregroundMuted
+                font.pixelSize: Theme.fontSmall
             }
         }
     }

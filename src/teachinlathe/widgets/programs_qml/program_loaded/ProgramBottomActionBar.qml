@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import ".."
+import theme 1.0
 
 Rectangle {
     id: root
@@ -93,10 +94,10 @@ Rectangle {
         }
     }
 
-    color: "#f5f5f5"
-    radius: 6
-    border.color: "#ccc"
-    border.width: 1
+    color: Theme.surfaceSunken
+    radius: Theme.radius
+    border.color: Theme.outline
+    border.width: Theme.hairline
 
     RowLayout {
         anchors {
@@ -104,7 +105,7 @@ Rectangle {
             leftMargin: 16
             rightMargin: 16
         }
-        spacing: 16
+        spacing: Theme.spacingLarge
 
         // ── Left cell: Break on M1 / Skip "/" Blocks ──────────────────
         Item {
@@ -115,7 +116,7 @@ Rectangle {
                 id: leftRow
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 16
+                spacing: Theme.spacingLarge
 
                 BottomActionButton {
                     text: "Break\non M1"
@@ -144,7 +145,7 @@ Rectangle {
                 id: rightRow
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 16
+                spacing: Theme.spacingLarge
 
                 // Cycle Abort — always visible in the full-screen running view
                 MachineRoundButton {
@@ -153,9 +154,9 @@ Rectangle {
                     enabled: root.cycleAbortEnabled
                     active: false
                     normalFillCenterColor: "#6a0000"
-                    normalFillMidColor:    "#c62828"
+                    normalFillMidColor:    Theme.danger
                     normalFillRimColor:    "#ef9a9a"
-                    activeFillCenterColor: "#c62828"
+                    activeFillCenterColor: Theme.danger
                     activeFillRimColor:    "#ef9a9a"
                     onClicked: root.cycleAbortClicked()
                 }
@@ -167,8 +168,8 @@ Rectangle {
                     active: root.cycleStartBlink
                     normalFillCenterColor: "#0b3d12"
                     normalFillMidColor:    "#1b5e20"
-                    normalFillRimColor:    "#2e7d32"
-                    activeFillCenterColor: "#2e7d32"
+                    normalFillRimColor:    Theme.success
+                    activeFillCenterColor: Theme.success
                     activeFillRimColor:    "#a5d6a7"
                     onClicked: root.triggerCycleStartButton()
                 }

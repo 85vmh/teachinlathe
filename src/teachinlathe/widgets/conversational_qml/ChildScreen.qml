@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
+import theme 1.0
 
 Item {
     id: operationEditor
@@ -107,7 +108,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 8
+        spacing: Theme.spacingSmall
 
         RowLayout {
             Layout.fillWidth: true
@@ -153,10 +154,10 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 6.5
                 Layout.fillHeight: true
-                color: "#ffffff"
-                radius: 6
-                border.color: "#ccc"
-                border.width: 1
+                color: Theme.surface
+                radius: Theme.radius
+                border.color: Theme.outline
+                border.width: Theme.hairline
 
                 Flickable {
                     id: detailsFlick

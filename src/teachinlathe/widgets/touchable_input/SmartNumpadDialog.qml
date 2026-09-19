@@ -12,6 +12,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import theme 1.0
 
 Popup {
     id: root
@@ -37,9 +38,9 @@ Popup {
     readonly property int buttonSpacing: 20
     readonly property int buttonRadius: 8
     readonly property color buttonBorderColor: "#9aa3b0"
-    readonly property color buttonBg: "#ffffff"
-    readonly property color buttonPressedBg: "#dbeafe"
-    readonly property color buttonDisabledBg: "#e1e5ea"
+    readonly property color buttonBg: Theme.surface
+    readonly property color buttonPressedBg: Theme.selection
+    readonly property color buttonDisabledBg: Theme.outlineDisabled
 
     modal: true
     focus: true
@@ -55,10 +56,10 @@ Popup {
     bottomPadding: 24
 
     background: Rectangle {
-        color: "#f3f3f3"
+        color: Theme.surfaceSunken
         border.color: "#9aa3b0"
-        border.width: 1
-        radius: 8
+        border.width: Theme.hairline
+        radius: Theme.radiusLarge
     }
 
     // ── Public API ────────────────────────────────────────────────────
@@ -155,9 +156,9 @@ Popup {
         Text {
             Layout.fillWidth: true
             text: root.titleText
-            font.pixelSize: 20
+            font.pixelSize: Theme.fontTitle
             font.bold: true
-            color: "#1e2430"
+            color: Theme.foreground
             elide: Text.ElideRight
         }
 
@@ -194,7 +195,7 @@ Popup {
                                 radius: root.buttonRadius
                                 color: parent.pressed ? root.buttonPressedBg : root.buttonBg
                                 border.color: root.buttonBorderColor
-                                border.width: 1
+                                border.width: Theme.hairline
                             }
                             onClicked: root._accept(modelData)
                         }
@@ -205,12 +206,12 @@ Popup {
             // Top fade — appears when scrolled down
             Rectangle {
                 anchors { left: parent.left; right: parent.right; top: parent.top }
-                height: 40
+                height: Theme.buttonHeight
                 visible: optionsFlick.contentY > 0
                 z: 1
                 gradient: Gradient {
                     orientation: Gradient.Vertical
-                    GradientStop { position: 0.0; color: "#f3f3f3" }
+                    GradientStop { position: 0.0; color: Theme.surfaceSunken }
                     GradientStop { position: 1.0; color: "transparent" }
                 }
             }
@@ -218,13 +219,13 @@ Popup {
             // Bottom fade — appears when more values extend below the viewport
             Rectangle {
                 anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                height: 40
+                height: Theme.buttonHeight
                 visible: optionsFlick.contentY + optionsFlick.height < optionsFlick.contentHeight - 1
                 z: 1
                 gradient: Gradient {
                     orientation: Gradient.Vertical
                     GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: "#f3f3f3" }
+                    GradientStop { position: 1.0; color: Theme.surfaceSunken }
                 }
             }
         }
@@ -240,7 +241,7 @@ Popup {
                 radius: root.buttonRadius
                 color: parent.pressed ? root.buttonPressedBg : root.buttonBg
                 border.color: root.buttonBorderColor
-                border.width: 1
+                border.width: Theme.hairline
             }
             onClicked: {
                 root.bufferSelected = root.buffer.length > 0
@@ -269,9 +270,9 @@ Popup {
                     padding: 10
                     font.pixelSize: 24
                     font.family: "Noto Sans Mono"
-                    color: root.bufferSelected ? "#ffffff" : "#141414"
+                    color: root.bufferSelected ? Theme.surface : "#141414"
                     background: Rectangle {
-                        color: root.bufferSelected ? "#2a7bff" : "#f6f5f4"
+                        color: root.bufferSelected ? Theme.focusBorder : Theme.surfaceSunken
                         border.color: root.bufferSelected ? "#1d4ed8" : "#77767b"
                         radius: 5
                     }
@@ -285,7 +286,7 @@ Popup {
                         radius: root.buttonRadius
                         color: parent.pressed ? root.buttonPressedBg : root.buttonBg
                         border.color: root.buttonBorderColor
-                        border.width: 1
+                        border.width: Theme.hairline
                     }
                     onClicked: root._backspace()
                 }
@@ -298,7 +299,7 @@ Popup {
                         radius: root.buttonRadius
                         color: parent.pressed ? root.buttonPressedBg : root.buttonBg
                         border.color: root.buttonBorderColor
-                        border.width: 1
+                        border.width: Theme.hairline
                     }
                     onClicked: root._clearBuffer()
                 }
@@ -322,7 +323,7 @@ Popup {
                             radius: root.buttonRadius
                             color: parent.pressed ? root.buttonPressedBg : root.buttonBg
                             border.color: root.buttonBorderColor
-                            border.width: 1
+                            border.width: Theme.hairline
                         }
                         onClicked: root._appendToken(modelData)
                     }
@@ -337,7 +338,7 @@ Popup {
                         radius: root.buttonRadius
                         color: parent.pressed ? root.buttonPressedBg : root.buttonBg
                         border.color: root.buttonBorderColor
-                        border.width: 1
+                        border.width: Theme.hairline
                     }
                     onClicked: root._toggleSign()
                 }
@@ -350,7 +351,7 @@ Popup {
                         radius: root.buttonRadius
                         color: parent.pressed ? root.buttonPressedBg : root.buttonBg
                         border.color: root.buttonBorderColor
-                        border.width: 1
+                        border.width: Theme.hairline
                     }
                     onClicked: root._appendToken("0")
                 }
@@ -364,7 +365,7 @@ Popup {
                         radius: root.buttonRadius
                         color: parent.enabled ? (parent.pressed ? root.buttonPressedBg : root.buttonBg) : root.buttonDisabledBg
                         border.color: root.buttonBorderColor
-                        border.width: 1
+                        border.width: Theme.hairline
                     }
                     onClicked: root._appendToken(".")
                 }
@@ -384,7 +385,7 @@ Popup {
                     radius: root.buttonRadius
                     color: parent.enabled ? (parent.pressed ? root.buttonPressedBg : root.buttonBg) : root.buttonDisabledBg
                     border.color: root.buttonBorderColor
-                    border.width: 1
+                    border.width: Theme.hairline
                 }
                 onClicked: root._accept(root.buffer)
             }

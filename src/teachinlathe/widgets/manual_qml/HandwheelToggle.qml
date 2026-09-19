@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import theme 1.0
 
 Button {
     id: root
@@ -14,7 +15,7 @@ Button {
 
     contentItem: Text {
         text: root.text
-        color: root.enabled ? "#000000" : "#a0a0a0"
+        color: root.enabled ? "#000000" : Theme.outlineEmphasis
         font: root.font
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -22,8 +23,8 @@ Button {
 
     background: Rectangle {
         radius: 40
-        color: !root.enabled ? "#f0f0f0" : (root.checked ? "lightblue" : "lightgray")
-        border.color: !root.enabled ? "#d3d3d3" : "gray"
-        border.width: 1
+        color: !root.enabled ? Theme.surfaceSunken : (root.checked ? "lightblue" : "lightgray")
+        border.color: !root.enabled ? Theme.outline : "gray"
+        border.width: Theme.hairline
     }
 }

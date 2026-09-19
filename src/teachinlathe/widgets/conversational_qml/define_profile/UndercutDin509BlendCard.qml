@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
 import "../../touchable_input"
+import theme 1.0
 
 Rectangle {
     id: root
@@ -18,14 +19,14 @@ Rectangle {
     signal blendClearRequested(int idx)
 
     // Colors
-    readonly property color clrCardBg:            "#f5f7fb"
-    readonly property color clrCardBgSel:         "#dbeafe"
-    readonly property color clrBorder:            "#cccccc"
-    readonly property color clrBorderSel:         "#3b82f6"
+    readonly property color clrCardBg:            Theme.surfaceAlt
+    readonly property color clrCardBgSel:         Theme.selection
+    readonly property color clrBorder:            Theme.outline
+    readonly property color clrBorderSel:         Theme.accent
     readonly property color clrSeparator:         "#d0d0d0"
-    readonly property color clrBtnBorder:         "#BDBDBD"
-    readonly property color clrDeleteHover:       "#ffebee"
-    readonly property color clrDeleteBorder:      "#C62828"
+    readonly property color clrBtnBorder:         Theme.outlineStrong
+    readonly property color clrDeleteHover:       Theme.dangerSoft
+    readonly property color clrDeleteBorder:      Theme.danger
 
     // Sizes
     readonly property int szCardRadius:    8
@@ -93,7 +94,7 @@ Rectangle {
         }
 
         Rectangle {
-            width: 1; Layout.fillHeight: true
+            width: Theme.hairline; Layout.fillHeight: true
             Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
             Layout.leftMargin: 0; Layout.rightMargin: szSepGap
             color: clrSeparator
@@ -149,7 +150,7 @@ Rectangle {
         }
 
         Rectangle {
-            width: 1; Layout.fillHeight: true
+            width: Theme.hairline; Layout.fillHeight: true
             Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
             Layout.leftMargin: szSepGap; Layout.rightMargin: 0
             color: clrSeparator
@@ -158,7 +159,7 @@ Rectangle {
         Item { Layout.fillWidth: true }
 
         Rectangle {
-            width: 1; Layout.fillHeight: true
+            width: Theme.hairline; Layout.fillHeight: true
             Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
             Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
             color: clrSeparator
@@ -167,7 +168,7 @@ Rectangle {
         Rectangle {
             implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
             color:   delMA.pressed ? clrDeleteHover : "transparent"
-            border.width: 1
+            border.width: Theme.hairline
             border.color: delMA.pressed ? clrDeleteBorder : clrBtnBorder
             Layout.alignment: Qt.AlignVCenter
             Image {
