@@ -7,12 +7,20 @@ O<facing> sub
 #<inspect_position> = #5
 #<doc>      	    = #6
 #<spindle_dir>      = #7
+#<retract>          = #8
 
 
 G7 	; Lathe Diameter Mode
 G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
+
+; A retract of zero would leave the tool rubbing the face it just cut on the
+; way back out. Fall back to the depth of cut, which is what this used before
+; it had a retract of its own.
+O210 IF [#<retract> LE 0]
+	#<retract> = #<doc>
+O210 ENDIF
 
 G0 X#<x_start> Z#<z_start>
 
@@ -22,7 +30,12 @@ O200 WHILE [#<z_start> GT #<z_end> + #<doc>]
 
 	G1 Z#<z_start>
 	G1 X#<x_end>
-	G0 Z[#<z_start> + #<doc>]
+
+	; Away at 45 degrees to the retract line, as every other toolpath leaves
+	; a cut. X moves twice what Z does because this runs in diameter mode
+	; (G7), so a diameter step of 2R is a radial step of R.
+	G0 X[#<x_end> + #<retract> * 2] Z[#<z_start> + #<retract>]
+
 	G0 X#<x_start>
 	G0 Z#<z_start>
 
@@ -32,9 +45,9 @@ O200 ENDWHILE
 
 G1 Z#<z_end>
 G1 X#<x_end>
-G0 Z[#<z_start> + #<doc>]
-G0 X[#<x_start> + #<doc>]
+
+G0 X[#<x_end> + #<retract> * 2] Z[#<z_end> + #<retract>]
+G0 X[#<x_start> + #<retract> * 2]
 G0 Z#<z_end> ; For touch-off
 
 O<facing> endsub
-

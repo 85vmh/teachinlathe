@@ -55,10 +55,14 @@ Item {
             radius: Theme.radius
             color: mouseArea.pressed ? Theme.accentSoft : "transparent"
             border.width: Theme.hairline
-            border.color: mouseArea.pressed ? Theme.accentBorder : Theme.outlineStrong
+            border.color: mouseArea.pressed ? Theme.accentBorder : btn.borderTint
 
             property url iconSource: ""
             property color tint: Theme.danger
+            // Named apart from the tint: the duplicate button beside this one
+            // is tinted too, and only the destructive one is outlined in its
+            // own colour.
+            property color borderTint: Theme.outlineStrong
             signal clicked()
 
             Image {
@@ -533,6 +537,7 @@ Item {
                                         onLoaded: {
                                             item.iconSource = "icons/delete_icon.svg"
                                             item.tint = Theme.danger
+                                            item.borderTint = Theme.danger
                                             item.clicked.connect(function() {
                                                 main.pendingDeleteIndex = index
                                                 main.pendingDeleteName = programName

@@ -124,40 +124,50 @@ Item {
                             }
                         }
 
+                        // Clear of the scale the plot draws round its own
+                        // edge. The ticks reach 7px in, their labels another
+                        // 2px past that, and a label as wide as "-100" adds
+                        // about 36 more - so anything inside 48px sits on top
+                        // of the numbers. See actors/ticks.py for those three.
+                        readonly property int plotMargin: 48
+
                         Row {
                             anchors.left: parent.left
                             anchors.top: parent.top
-                            anchors.margins: 16
-                            spacing: Theme.spacing
+                            anchors.margins: backplot.plotMargin
+                            // The profile editor's spacing over its canvas.
+                            spacing: 32
 
-                            BackplotButton {
-                                text: "Zoom In"
+                            BackplotIconButton {
+                                iconSource: "../conversational_qml/icons/zoom-in.svg"
                                 autoRepeat: true
                                 autoRepeatDelay: 300
                                 autoRepeatInterval: 100
                                 onClicked: backplot.zoomIn()
                             }
-                            BackplotButton {
-                                text: "Zoom Out"
+                            BackplotIconButton {
+                                iconSource: "../conversational_qml/icons/zoom-out.svg"
                                 autoRepeat: true
                                 autoRepeatDelay: 300
                                 autoRepeatInterval: 100
                                 onClicked: backplot.zoomOut()
                             }
-                            BackplotButton {
-                                text: "Fit To Screen"
+                            BackplotIconButton {
+                                iconSource: "../conversational_qml/icons/zoom-fit.svg"
                                 onClicked: backplot.fitToWindow()
                             }
                         }
 
-                        BackplotButton {
+                        // Same button as the zoom row, so the two line up
+                        // across the top of the plot; the tint is what says
+                        // it throws something away.
+                        BackplotIconButton {
                             anchors.right: parent.right
                             anchors.top: parent.top
-                            anchors.margins: 16
-                            text: "Clear Plot"
-                            baseColor: "#7a2d2d"
-                            hoverColor: "#652424"
-                            borderColor: "#d16969"
+                            anchors.margins: backplot.plotMargin
+                            iconSource: "../conversational_qml/icons/brush_out.svg"
+                            tint: Theme.danger
+                            borderTint: Theme.danger
                             onClicked: backplot.clearPlot()
                         }
                     }

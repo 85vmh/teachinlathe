@@ -26,7 +26,8 @@ def generate_facing_gcode(op: Facing, datum: int = 1):
         f"[{fmt(geometry.zEnd)}] "
         f"[{inspect_position_int(m1_params)}] "
         f"[{fmt(cutting.doc)}] "
-        f"[{spindle.direction}]"
+        f"[{spindle.direction}] "
+        f"[{fmt(cutting.retract)}]"
     )
 
     if op.zEndBecomesNewZ0:

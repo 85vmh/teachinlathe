@@ -76,12 +76,16 @@ Rectangle {
             // Always show a border when enabled: gray by default, blue when pressed
             border.width: enabled ? 1 : 0
             border.color: !enabled ? "transparent"
-                                   : (pressedArea.pressed ? Theme.accentBorder : Theme.outlineStrong)
+                                   : (pressedArea.pressed ? Theme.accentBorder : iconBtn.borderTint)
 
             opacity: enabled ? 1.0 : 0.35
 
             property alias source: baseImg.source
             property color tint: Theme.foregroundMuted
+            // Named apart from the tint: the reorder arrows share this
+            // component and are tinted too, and only the destructive one is
+            // outlined in its own colour.
+            property color borderTint: Theme.outlineStrong
             property bool  enabled: true
             signal clicked()
 
@@ -188,6 +192,7 @@ Rectangle {
                 onLoaded: {
                     item.source = root.deleteIconSource
                     item.tint   = root.deleteTint
+                    item.borderTint = root.deleteTint
                     item.enabled = true
                     item.clicked.connect(function() { root.deleteClicked(rowIndex) })
                 }

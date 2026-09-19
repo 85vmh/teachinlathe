@@ -1,52 +1,75 @@
-"""The X and Z letters, each just past its arrow tip."""
+"""The Z+ and X+ labels, each just past its arrow tip."""
 
-from teachinlathe.widgets.backplot.actors import sizing
+from teachinlathe.widgets.backplot.actors import screen, sizing, text
 from teachinlathe.widgets.backplot.actors.base import VX, VZ, Actor
-from teachinlathe.widgets.backplot.actors.units import mm
 
-#: Gap between an arrow tip and its letter, in millimetres.
-LETTER_GAP_MM = 2.5
+#: The font, by the name ``text.FONTS`` knows it as.
+FONT = "axis"
 
-#: Nudge across the axis, in millimetres, to centre the glyph on the shaft.
-#: Hershey glyphs are drawn from a baseline, not a centre, so a letter sits
-#: off to one side without this.
-LETTER_SIDE_OFFSET_MM = -1.6
-
-#: Size of the glyph. Upstream uses 0.2 and it is not a length in the scene's
-#: unit - it scales the Hershey glyph, which is drawn about one unit tall - so
-#: it is left as the bare factor rather than converted.
-LETTER_SCALE = 0.2
+#: Gap between the arrow head and the label, in pixels. The profile editor's
+#: own numbers - 2 past the head's half-width for Z, 4 for X.
+Z_GAP_PX = 2.0
+X_GAP_PX = 4.0
 
 
 class AxisLettersActor(Actor):
-    """The axis letters, lying in the XZ plane the lathe view looks at.
+    """The axis labels, placed against the arrows they name.
 
-    Separate from the arrows because it is a different concern with different
-    failure modes: a letter is a glyph that has to be turned to face the view,
-    and getting that wrong shows up as a mirrored Z rather than as a mis-sized
-    arrow. The two share only the lengths, which is why those are in
-    ``sizing``.
+    Screen furniture, like the tick labels: the atlas draws in pixels, and the
+    arrows are a pixel size too, so the placement below is the profile
+    editor's ``AxesActor`` arithmetic with the sign of the vertical axis
+    turned over - that canvas measures y downwards and this one upwards.
+
+    They read "Z+" and "X+", as that canvas does. They could not before: the
+    Hershey set has no '+'.
     """
 
     def draw(self, ctx):
-        if ctx.view != VX:
-            self._letter(ctx, sizing.X_DIR, sizing.x_length(ctx),
-                         "X", ctx.colors['axis_x'])
-        if ctx.view != VZ:
-            self._letter(ctx, sizing.Z_DIR, sizing.z_length(ctx),
-                         "Z", ctx.colors['axis_z'])
+        mvp = ctx.mv.mvp()
+        scale = screen.pixels_per_unit(ctx, mvp)
+        if scale is None:
+            return
+        viewport = (ctx.width, ctx.height)
+        origin = text.to_screen(mvp, (0.0, 0.0, 0.0), viewport)
+        if origin is None:
+            return
+        px_per_z, px_per_x = scale
+        head = sizing.HEAD_LENGTH_PX
+        half_width = sizing.HEAD_HALF_WIDTH_PX
 
-    def _letter(self, ctx, direction, length, letter, color):
-        with ctx.mv.push():
-            reach = length + mm(LETTER_GAP_MM)
-            ctx.mv.translate(direction[0] * reach,
-                             direction[1] * reach,
-                             direction[2] * reach)
-            # Upstream's own rotations for the lathe case, reduced to the view
-            # this screen is always in. Working them out afresh from the view
-            # flags is how the Z first came out mirrored.
-            ctx.mv.rotate(-90, 0, 1, 0)
-            ctx.mv.rotate(90, 1, 0, 0)
-            ctx.mv.translate(mm(LETTER_SIDE_OFFSET_MM), 0, 0)
-            ctx.mv.scale(LETTER_SCALE, LETTER_SCALE, LETTER_SCALE)
-            ctx.prim.draw_hershey(ctx, letter, color, 0.5)
+        labels = []
+        if ctx.view != VZ:
+            tip = text.to_screen(
+                mvp, (0.0, 0.0, sizing.in_model(sizing.AXIS_LENGTH_PX,
+                                                px_per_z)), viewport)
+            if tip is not None:
+                # Above the shaft, centred back along it by half a head.
+                labels.append(("Z+", _towards(tip[0], origin[0], head / 2.0),
+                               origin[1] + half_width + Z_GAP_PX,
+                               text.CENTRE, text.BOTTOM))
+        if ctx.view != VX:
+            tip = text.to_screen(
+                mvp, (sizing.in_model(sizing.AXIS_LENGTH_PX, px_per_x),
+                      0.0, 0.0), viewport)
+            if tip is not None:
+                # Right of the shaft, centred back along it by half a head.
+                # The profile editor puts this one on the left; here the
+                # stock and its hatching lie that way, and the label was
+                # landing on them.
+                labels.append(("X+", origin[0] + half_width + X_GAP_PX,
+                               _towards(tip[1], origin[1], head / 2.0),
+                               text.LEFT, text.CENTRE))
+
+        # One call each, because the shader carries the colour as a uniform.
+        for label, color in zip(labels, self._colors(ctx, labels)):
+            text.draw(ctx, [label], color, FONT)
+
+    @staticmethod
+    def _colors(ctx, labels):
+        return [ctx.colors['axis_z'] if label[0].startswith("Z")
+                else ctx.colors['axis_x'] for label in labels]
+
+
+def _towards(value, anchor, distance):
+    """``value`` moved ``distance`` back towards ``anchor``."""
+    return value - distance if value > anchor else value + distance
