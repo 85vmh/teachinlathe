@@ -4,10 +4,10 @@ import os
 from enum import Enum
 
 import linuxcnc
-from PyQt5.QtCore import Q_ARG, QMetaObject, QObject, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QColor
-from PyQt5.QtQuickWidgets import QQuickWidget
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QStackedWidget,
+from PyQt6.QtCore import Q_ARG, QMetaObject, QObject, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtGui import QColor
+from PyQt6.QtQuickWidgets import QQuickWidget
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QStackedWidget,
                              QVBoxLayout, QWidget)
 from teachinlathe.repositories.command_repository import issue_mdi
 from teachinlathe.repositories.machine_repository import machine_repository
@@ -31,7 +31,7 @@ from teachinlathe.widgets.programs_qml.ProgramsQml import ProgramsQml
 from teachinlathe.widgets.tool_library.ToolLibraryViewModel import ToolLibraryViewModel
 
 LOG = logging.getLogger(__name__)
-from PyQt5.QtCore import Qt
+from PyQt6.QtCore import Qt
 
 INI = ini_repository()
 STATUS = status_repository()
@@ -176,7 +176,7 @@ class MyMainWindow(QMainWindow):
             app.setApplicationDisplayName(APPLICATION_DISPLAY_NAME)
             app.setDesktopFileName(APPLICATION_ID)
         self.setWindowTitle(APPLICATION_DISPLAY_NAME)
-        self.setWindowFlag(Qt.FramelessWindowHint)
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
 
         self._buildWindow()
         self.conversationalqml = ConversationalQml(self.conversationalTab)
@@ -301,9 +301,9 @@ class MyMainWindow(QMainWindow):
         self.numpadDialogViewModel = NumpadDialogViewModel(self)
 
         self.manualTurningRootQml = QQuickWidget(self.manualTurningTab)
-        self.manualTurningRootQml.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        self.manualTurningRootQml.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)
         self.manualTurningRootQml.setClearColor(QColor("#efefef"))
-        self.manualTurningRootQml.setFocusPolicy(Qt.StrongFocus)
+        self.manualTurningRootQml.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.manualTurningRootQml.setMouseTracking(True)
         self._ensureTabFillLayout(self.manualTurningTab, self.manualTurningRootQml)
 
@@ -338,7 +338,7 @@ class MyMainWindow(QMainWindow):
         self.manualLathe.onInputFeedChanged(self.manualTurningViewModel.inputFeed)
 
     def _on_manual_root_status_changed(self, status):
-        if status != QQuickWidget.Ready:
+        if status != QQuickWidget.Status.Ready:
             return
         root = self.manualTurningRootQml.rootObject()
         if root is None:
@@ -362,7 +362,7 @@ class MyMainWindow(QMainWindow):
             widget.raise_()
 
     def _initProgramsQml(self):
-        from PyQt5.QtWidgets import QWidget, QVBoxLayout
+        from PyQt6.QtWidgets import QWidget, QVBoxLayout
         from teachinlathe.widgets.programs_qml.filesystemview import (
             FileSystemLocation, LocationType,
         )
@@ -397,7 +397,7 @@ class MyMainWindow(QMainWindow):
         if hasattr(self, "appShellWidget") and self.appShellWidget is not None:
             return
 
-        from PyQt5.QtWidgets import QStackedWidget, QVBoxLayout
+        from PyQt6.QtWidgets import QStackedWidget, QVBoxLayout
 
         self._ensureTabFillLayout(self.conversationalTab, self.conversationalqml)
         self._ensureTabFillLayout(self.manualTurningTab, self.manualTurningRootQml)
@@ -440,7 +440,7 @@ class MyMainWindow(QMainWindow):
     def _makeMachineQmlWidget(self, file_name, parent):
         """A QQuickWidget showing one of the machine_qml screens."""
         widget = QQuickWidget(parent)
-        widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        widget.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)
         widget.setClearColor(QColor("#f4f6f9"))
         ctx = widget.rootContext()
         ctx.setContextProperty("machineViewModel", self.machineViewModel)
@@ -489,9 +489,9 @@ class MyMainWindow(QMainWindow):
     def _ensureTabFillLayout(self, tab, widget):
         if tab is None or widget is None:
             return
-        from PyQt5.QtWidgets import QSizePolicy, QVBoxLayout
+        from PyQt6.QtWidgets import QSizePolicy, QVBoxLayout
 
-        widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         widget.setMinimumSize(0, 0)
         layout = tab.layout()
         if layout is None:
@@ -732,7 +732,7 @@ class MyMainWindow(QMainWindow):
         # Keep a reference so the adapter isn't garbage-collected mid-dialog.
         self._numpad_value_field = NumpadValueField(setting_name, description, on_commit, self)
         QMetaObject.invokeMethod(
-            root_item, "openNumpad", Qt.DirectConnection, Q_ARG("QVariant", self._numpad_value_field)
+            root_item, "openNumpad", Qt.ConnectionType.DirectConnection, Q_ARG("QVariant", self._numpad_value_field)
         )
 
     def setXOffset(self, value):
@@ -751,7 +751,7 @@ class MyMainWindow(QMainWindow):
                     QMetaObject.invokeMethod(
                         root_item,
                         "openBladeZ0ReferenceDialog",
-                        Qt.DirectConnection,
+                        Qt.ConnectionType.DirectConnection,
                         Q_ARG("QVariant", blade_width),
                     )
         except Exception as e:

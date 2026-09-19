@@ -13,17 +13,24 @@ Rules-Requires-Root: no
 
 Package: python3-teachinlathe
 Architecture: all
-Description: TeachInLathe - A PyQt5 based Virtual Control Panel for LinuxCNC
+Description: TeachInLathe - A PyQt6 based Virtual Control Panel for LinuxCNC
 Depends: ${python3:Depends}, ${misc:Depends},
- python3-pyqt5,
- python3-pyqt5.qtquick,
+ python3-pyqt6,
+ python3-pyqt6.qtquick,
  python3-opengl,
+ python3-numpy,
  python3-ezdxf,
- qml-module-qtquick2,
- qml-module-qtquick-controls2,
- qml-module-qtquick-layouts,
- qml-module-qtgraphicaleffects,
- qml-module-qtquick-window2,
+ python3-qtpy,
+ qml6-module-qtquick,
+ qml6-module-qtquick-controls,
+# Controls is built on Templates, but qml6-module-qtquick-controls only
+# depends on the templates *library*, not on the QML module that installs
+# its plugin. Without this every Popup, Button, ScrollBar and SplitView
+# fails to load, so it is named explicitly.
+ qml6-module-qtquick-templates,
+ qml6-module-qtquick-layouts,
+ qml6-module-qtquick-window,
+ qml6-module-qt5compat-graphicaleffects,
  fonts-noto-core,
  fonts-noto-mono,
  fonts-dejavu-core,

@@ -16,7 +16,7 @@ import logging
 from typing import Callable, Dict, Optional
 
 import linuxcnc
-from PyQt5.QtCore import QObject, QTimer, pyqtSignal
+from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 from .ini_repository import ini_repository
 

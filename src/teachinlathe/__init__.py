@@ -18,8 +18,23 @@ import os
 import signal
 import sys
 
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QApplication
+# LinuxCNC's own Qt modules - qt5_graphics, and the qtvcp it pulls in - go
+# through QtPy, which picks PyQt5 unless told otherwise. Two bindings loaded
+# into one process do not survive contact with each other, so the binding is
+# pinned here: this package's __init__ runs before any submodule can import
+# them. ``setdefault`` leaves an explicit QT_API from the environment alone.
+os.environ.setdefault("QT_API", "pyqt6")
+
+# Qt6 picks the Fusion style for Quick Controls on desktop Linux, where Qt5
+# used the plain "Default" style that this UI was drawn against. Fusion is not
+# a repaint - it changes metrics: a Button drops from 40px to 26px high, which
+# is the difference between hitting it with a glove on and not. "Basic" is the
+# Qt6 name for the style Qt5 called "Default", and restores both the metrics
+# and the palette text colour exactly.
+os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
+
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtWidgets import QApplication
 
 from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
 from teachinlathe.logging_setup import configure as configure_logging
@@ -64,7 +79,7 @@ def main(argv=None):
     log.info("starting %s %s with %s", APPLICATION_DISPLAY_NAME, __version__,
              os.environ['INI_FILE_NAME'])
 
-    QApplication.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings, True)
+    QApplication.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings, True)
     app = QApplication(sys.argv if argv is None else [sys.argv[0]])
     app.setApplicationName(APPLICATION_DISPLAY_NAME)
     app.setApplicationDisplayName(APPLICATION_DISPLAY_NAME)
@@ -81,7 +96,7 @@ def main(argv=None):
     def shutdown(signum, _frame):
         log.info("caught %s, closing", signal.Signals(signum).name)
         stopping.append(signum)
-        # quit() does nothing before exec_() has been reached, so a signal
+        # quit() does nothing before exec() has been reached, so a signal
         # during start-up would otherwise be swallowed and the window would
         # come up anyway. The flag is checked below.
         app.quit()
@@ -111,17 +126,21 @@ def main(argv=None):
     # and leave the HAL component registered, blocking the next start.
     install_signal_handlers()
 
-    if args.fullscreen:
-        window.showFullScreen()
-    else:
-        window.showMaximized()
+    # Queued, not called straight away. The window builds its QML screens on
+    # queued callbacks of its own, and under Qt6 adding a QQuickWidget to a
+    # window that is already on screen forces the native window to be
+    # recreated: the maximized state is lost and what is left is a 200x100
+    # stub. Queueing the show behind those callbacks means every QQuickWidget
+    # exists before the window is mapped. Qt5 did not care either way.
+    show = window.showFullScreen if args.fullscreen else window.showMaximized
+    QTimer.singleShot(0, show)
 
     if stopping:
         log.info("interrupted while starting up")
         return 0
 
     try:
-        return app.exec_()
+        return app.exec()
     except KeyboardInterrupt:
         # Only reachable if the interpreter takes the signal between the
         # handler running and the loop noticing; exiting quietly is the whole

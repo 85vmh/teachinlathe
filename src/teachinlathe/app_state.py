@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from PyQt5.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 from teachinlathe.repositories.command_repository import issue_mdi
 from teachinlathe.repositories.status_repository import status_repository
 
@@ -227,13 +227,10 @@ class CncStore(QObject):
 
 
 class AppState(QObject):
-    navigationStoreChanged = pyqtSignal()
-    cncStoreChanged = pyqtSignal()
-    manualStoreChanged = pyqtSignal()
-    conversationalStoreChanged = pyqtSignal()
-    programsStoreChanged = pyqtSignal()
-    toolsStoreChanged = pyqtSignal()
-    machineSettingsStoreChanged = pyqtSignal()
+    # The stores below are built once in __init__ and never replaced, so the
+    # properties exposing them are declared constant. A constant property has
+    # no change signal by definition - the pair that used to be declared here
+    # was never emitted and never connected.
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -253,31 +250,31 @@ class AppState(QObject):
         }
         self.activateTab('manual')
 
-    @pyqtProperty(QObject, notify=navigationStoreChanged, constant=True)
+    @pyqtProperty(QObject, constant=True)
     def navigationStore(self):
         return self._navigation_store
 
-    @pyqtProperty(QObject, notify=cncStoreChanged, constant=True)
+    @pyqtProperty(QObject, constant=True)
     def cncStore(self):
         return self._cnc_store
 
-    @pyqtProperty(QObject, notify=manualStoreChanged, constant=True)
+    @pyqtProperty(QObject, constant=True)
     def manualStore(self):
         return self._manual_store
 
-    @pyqtProperty(QObject, notify=conversationalStoreChanged, constant=True)
+    @pyqtProperty(QObject, constant=True)
     def conversationalStore(self):
         return self._conversational_store
 
-    @pyqtProperty(QObject, notify=programsStoreChanged, constant=True)
+    @pyqtProperty(QObject, constant=True)
     def programsStore(self):
         return self._programs_store
 
-    @pyqtProperty(QObject, notify=toolsStoreChanged, constant=True)
+    @pyqtProperty(QObject, constant=True)
     def toolsStore(self):
         return self._tools_store
 
-    @pyqtProperty(QObject, notify=machineSettingsStoreChanged, constant=True)
+    @pyqtProperty(QObject, constant=True)
     def machineSettingsStore(self):
         return self._machine_settings_store
 

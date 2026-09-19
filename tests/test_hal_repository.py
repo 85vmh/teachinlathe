@@ -18,7 +18,7 @@ if str(SRC) not in sys.path:
 
 pytest.importorskip("_hal", reason="LinuxCNC HAL is not available")
 
-from PyQt5.QtCore import QCoreApplication, QEventLoop, QTimer  # noqa: E402
+from PyQt6.QtCore import QCoreApplication, QEventLoop, QTimer  # noqa: E402
 
 from teachinlathe.repositories import hal_repository as halrepo  # noqa: E402
 
@@ -46,7 +46,7 @@ def spin(milliseconds):
     """Run the Qt event loop for *milliseconds* so the poller can tick."""
     loop = QEventLoop()
     QTimer.singleShot(milliseconds, loop.quit)
-    loop.exec_()
+    loop.exec()
 
 
 def test_pins_are_created_with_type_and_direction(comp):

@@ -8,7 +8,7 @@ registering a QML type.
 
 from enum import IntEnum
 
-from PyQt5.QtCore import QObject, pyqtProperty
+from PyQt6.QtCore import QObject, pyqtProperty
 
 
 class ProgramsScreen(IntEnum):

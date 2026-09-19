@@ -2,7 +2,7 @@ import os
 import re
 from dataclasses import dataclass
 
-from PyQt5.QtCore import QObject
+from PyQt6.QtCore import QObject
 from teachinlathe.repositories import ini_repository
 
 from .program_runtime import ProgramRuntimeSnapshot

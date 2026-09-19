@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass, field
 
 import linuxcnc
-from PyQt5.QtCore import QObject, QTimer, pyqtSignal
+from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 
 @dataclass(frozen=True)

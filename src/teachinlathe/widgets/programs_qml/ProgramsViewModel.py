@@ -1,6 +1,6 @@
 import os
 
-from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.widgets.programs_qml.filesystemview.FileSystemBridge import FileSystemBridge, load_or_reload_program
 

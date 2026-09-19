@@ -17,7 +17,7 @@ import os
 from typing import Dict, Optional
 
 import linuxcnc
-from PyQt5.QtCore import QFileSystemWatcher, QObject, QTimer, pyqtSignal
+from PyQt6.QtCore import QFileSystemWatcher, QObject, QTimer, pyqtSignal
 
 from .command_repository import command_repository
 from .ini_repository import ini_repository

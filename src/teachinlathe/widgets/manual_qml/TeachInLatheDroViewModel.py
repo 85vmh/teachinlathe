@@ -1,6 +1,6 @@
 from enum import Enum
 
-from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from teachinlathe.repositories.command_repository import issue_mdi
 from teachinlathe.repositories.status_repository import status_repository
 

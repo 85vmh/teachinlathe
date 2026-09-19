@@ -1,16 +1,16 @@
 # ProgramListModel.py
 from datetime import datetime
 
-from PyQt5.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, pyqtSlot
+from PyQt6.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, pyqtSlot
 
 from teachinlathe.date_utils import format_recent_datetime_string
 
 class ProgramListModel(QAbstractListModel):
-    ProgramNameRole = Qt.UserRole + 1
-    CreatedDateRole = Qt.UserRole + 2
-    LastEditDateRole = Qt.UserRole + 3
-    ProgramOperationsRole = Qt.UserRole + 4
-    ProgramIdRole = Qt.UserRole + 5
+    ProgramNameRole = Qt.ItemDataRole.UserRole + 1
+    CreatedDateRole = Qt.ItemDataRole.UserRole + 2
+    LastEditDateRole = Qt.ItemDataRole.UserRole + 3
+    ProgramOperationsRole = Qt.ItemDataRole.UserRole + 4
+    ProgramIdRole = Qt.ItemDataRole.UserRole + 5
 
     def __init__(self, programs=None):
         super().__init__()
@@ -26,7 +26,7 @@ class ProgramListModel(QAbstractListModel):
             return self._programs[index]
         return None
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return QVariant()
         program = self._programs[index.row()]

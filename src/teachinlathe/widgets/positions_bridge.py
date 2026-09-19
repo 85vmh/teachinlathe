@@ -6,7 +6,7 @@ buttons can read the current position. The lathe diameter doubling for X is
 applied by the QML caller (the fields are in diameter).
 """
 
-from PyQt5.QtCore import QObject, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtSlot
 
 from teachinlathe.repositories.positions_repository import Positions
 

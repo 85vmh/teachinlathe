@@ -16,7 +16,7 @@ import logging
 from typing import Optional, Tuple
 
 import linuxcnc
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal
 
 from .command_repository import command_repository
 from .ini_repository import ini_repository

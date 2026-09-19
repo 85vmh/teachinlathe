@@ -15,7 +15,7 @@ import logging
 import os
 from typing import Optional
 
-from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.repositories.positions_repository import Positions

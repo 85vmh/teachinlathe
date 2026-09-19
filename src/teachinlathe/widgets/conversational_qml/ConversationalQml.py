@@ -3,10 +3,10 @@ import json
 import time
 from datetime import datetime
 
-from PyQt5.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop, Q_ARG, pyqtSignal, pyqtSlot
-from PyQt5.QtQuick import QQuickItem
-from PyQt5.QtQuickWidgets import QQuickWidget
-from PyQt5.QtWidgets import QApplication
+from PyQt6.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop, Q_ARG, pyqtSignal, pyqtSlot
+from PyQt6.QtQuick import QQuickItem
+from PyQt6.QtQuickWidgets import QQuickWidget
+from PyQt6.QtWidgets import QApplication
 
 from teachinlathe.conversational.data_types import (
     AfterLastOperation,
@@ -70,7 +70,7 @@ class ConversationalQml(QQuickWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        self.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)
         self.folder_path = "/home/cnc/Work/teachinlathe/conversational"
         self.current_program = None
         self.current_program_index = None
@@ -126,7 +126,7 @@ class ConversationalQml(QQuickWidget):
             print("setAppState failed:", e)
 
     def onStatusChanged(self, status):
-        if status == QQuickWidget.Ready:
+        if status == QQuickWidget.Status.Ready:
             self.root = self.rootObject()
             if not self.root:
                 print("Failed to load Root.qml")
@@ -243,7 +243,7 @@ class ConversationalQml(QQuickWidget):
             item = self._current_loader_item()
             if item is not None:
                 try:
-                    QMetaObject.invokeMethod(item, "importSelectedDxf", Qt.DirectConnection)
+                    QMetaObject.invokeMethod(item, "importSelectedDxf", Qt.ConnectionType.DirectConnection)
                 except Exception as e:
                     print("importSelectedDxf failed:", e)
         elif action_id == "create_new":
@@ -499,7 +499,7 @@ class ConversationalQml(QQuickWidget):
             if elapsed < duration:
                 loop = QEventLoop()
                 QTimer.singleShot(int((duration - elapsed) * 1000), loop.quit)
-                loop.exec_()
+                loop.exec()
             try:
                 if getattr(self, "root", None):
                     QMetaObject.invokeMethod(self.root, "closeBuildGcodeProgress")
@@ -1185,7 +1185,7 @@ class ConversationalQml(QQuickWidget):
         """
         try:
             QMetaObject.invokeMethod(
-                self.root, "openNumpad", Qt.DirectConnection, Q_ARG("QVariant", field)
+                self.root, "openNumpad", Qt.ConnectionType.DirectConnection, Q_ARG("QVariant", field)
             )
         except Exception as e:
             print("openNumpad failed:", e)
@@ -1194,7 +1194,7 @@ class ConversationalQml(QQuickWidget):
         """Called from QML when a KeyboardField was tapped."""
         try:
             QMetaObject.invokeMethod(
-                self.root, "openKeyboard", Qt.DirectConnection, Q_ARG("QVariant", field)
+                self.root, "openKeyboard", Qt.ConnectionType.DirectConnection, Q_ARG("QVariant", field)
             )
         except Exception as e:
             print("openKeyboard failed:", e)

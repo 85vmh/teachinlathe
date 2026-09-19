@@ -18,6 +18,11 @@ Dependencies (all system-installed by LinuxCNC):
 import logging
 LOG = logging.getLogger(__name__)
 
+# Belt and braces: teachinlathe/__init__ pins this already, but this module
+# is the one that actually pulls QtPy in, and it is importable on its own.
+import os
+os.environ.setdefault("QT_API", "pyqt6")
+
 try:
     from qt5_graphics import Lcnc_3dGraphics
     _LIB_GOOD = True
@@ -25,8 +30,8 @@ except ImportError as e:
     LOG.error('GremlinWidget: could not import qt5_graphics: %s', e)
     _LIB_GOOD = False
 
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
-from PyQt5.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PyQt6.QtCore import Qt
 
 
 class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
@@ -57,7 +62,7 @@ class GremlinWidget(Lcnc_3dGraphics if _LIB_GOOD else QWidget):
             QWidget.__init__(self, parent)
             layout = QVBoxLayout(self)
             label = QLabel("Gremlin unavailable\n(qt5_graphics not found)", self)
-            label.setAlignment(Qt.AlignCenter)
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(label)
             return
 

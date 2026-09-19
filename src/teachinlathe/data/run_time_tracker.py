@@ -5,7 +5,7 @@ For now this returns dummy placeholder values and touches no HAL pins, so it
 can't interfere with start-up.
 """
 
-from PyQt5.QtCore import QObject
+from PyQt6.QtCore import QObject
 
 
 def format_duration(seconds):

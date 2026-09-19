@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import os
 
-from PyQt5.QtCore import QObject, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
-from PyQt5.QtQml import QQmlApplicationEngine
+from PyQt6.QtCore import QObject, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtQml import QQmlApplicationEngine
 
 from teachinlathe.repositories.hal_repository import hal_component
 

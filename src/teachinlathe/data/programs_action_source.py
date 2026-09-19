@@ -1,5 +1,5 @@
 import linuxcnc
-from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.repositories.command_repository import command_repository, issue_mdi
 from teachinlathe.repositories.program_repository import program_repository

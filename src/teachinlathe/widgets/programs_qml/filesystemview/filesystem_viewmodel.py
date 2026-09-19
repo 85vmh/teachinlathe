@@ -2,7 +2,7 @@ import logging
 import os
 import re
 import shutil
-from PyQt5.QtCore import (
+from PyQt6.QtCore import (
     QFileSystemWatcher, QObject, QThread,
     pyqtProperty, pyqtSignal, pyqtSlot,
 )

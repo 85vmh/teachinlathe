@@ -23,7 +23,7 @@ from typing import Callable, Dict, Iterator, Optional
 
 import _hal
 import hal
-from PyQt5.QtCore import QObject, QTimer, pyqtSignal
+from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 log = logging.getLogger(__name__)
 

@@ -1,9 +1,9 @@
 import os
 
-from PyQt5.QtCore import QObject, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot, Qt
-from PyQt5.QtGui import QColor
-from PyQt5.QtQuickWidgets import QQuickWidget
-from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QWidget
+from PyQt6.QtCore import QObject, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot, Qt
+from PyQt6.QtGui import QColor
+from PyQt6.QtQuickWidgets import QQuickWidget
+from PyQt6.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QWidget
 
 
 class AppShellBridge(QObject):
@@ -248,8 +248,8 @@ class AppShellQmlWidget(QWidget):
         self.content_host = QFrame(self)
         self.content_host.setObjectName("appShellContentHost")
         self.content_host.setStyleSheet("QFrame#appShellContentHost { background: #ffffff; border: none; }")
-        self.content_host.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self._content_stack.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.content_host.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self._content_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._content_stack.setMinimumSize(0, 0)
         content_layout = QVBoxLayout(self.content_host)
         content_layout.setContentsMargins(
@@ -273,16 +273,16 @@ class AppShellQmlWidget(QWidget):
 
         self.toast_overlay = self._create_qml_widget("AppShellToastOverlay.qml")
         self.toast_overlay.setParent(self)
-        self.toast_overlay.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-        self.toast_overlay.setAttribute(Qt.WA_AlwaysStackOnTop, True)
-        self.toast_overlay.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.toast_overlay.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.toast_overlay.setAttribute(Qt.WidgetAttribute.WA_AlwaysStackOnTop, True)
+        self.toast_overlay.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.toast_overlay.setClearColor(QColor(0, 0, 0, 0))
         self.toast_overlay.setGeometry(0, 0, self.width(), self.height())
         self.toast_overlay.raise_()
 
     def _create_qml_widget(self, file_name):
         widget = QQuickWidget(self)
-        widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        widget.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)
         widget.setClearColor(QColor("#ffffff"))
         ctx = widget.engine().rootContext()
         ctx.setContextProperty("appShellBridge", self._bridge)

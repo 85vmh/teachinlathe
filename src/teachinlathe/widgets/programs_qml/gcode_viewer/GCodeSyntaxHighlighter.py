@@ -2,8 +2,8 @@ import json
 import os
 import re
 
-from PyQt5.QtCore import QObject, pyqtSlot
-from PyQt5.QtGui import QColor, QFont, QTextCharFormat, QSyntaxHighlighter
+from PyQt6.QtCore import QObject, pyqtSlot
+from PyQt6.QtGui import QColor, QFont, QTextCharFormat, QSyntaxHighlighter
 
 
 G_MODAL_GROUPS = {
@@ -93,7 +93,7 @@ class _DocumentHighlighter(QSyntaxHighlighter):
         fmt = QTextCharFormat()
         fmt.setForeground(QColor(self._theme["palette"][theme_key]))
         if bold:
-            fmt.setFontWeight(QFont.Bold)
+            fmt.setFontWeight(QFont.Weight.Bold)
         if italic:
             fmt.setFontItalic(True)
         return fmt

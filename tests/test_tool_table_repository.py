@@ -13,7 +13,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 import linuxcnc  # noqa: E402
-from PyQt5.QtCore import QCoreApplication  # noqa: E402
+from PyQt6.QtCore import QCoreApplication  # noqa: E402
 
 from teachinlathe.repositories.status_repository import StatusRepository  # noqa: E402
 from teachinlathe.repositories.tool_table_repository import (  # noqa: E402
@@ -70,10 +70,10 @@ class FakeCommand:
 
 def spin(milliseconds):
     """Run the event loop so a singleShot timer can fire."""
-    from PyQt5.QtCore import QEventLoop, QTimer
+    from PyQt6.QtCore import QEventLoop, QTimer
     loop = QEventLoop()
     QTimer.singleShot(milliseconds, loop.quit)
-    loop.exec_()
+    loop.exec()
 
 
 @pytest.fixture(scope="session")

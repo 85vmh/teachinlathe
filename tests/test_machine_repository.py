@@ -17,7 +17,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 import linuxcnc  # noqa: E402
-from PyQt5.QtCore import QCoreApplication  # noqa: E402
+from PyQt6.QtCore import QCoreApplication  # noqa: E402
 
 from teachinlathe.repositories.machine_repository import (  # noqa: E402
     ALL_JOINTS, MachineRepository,

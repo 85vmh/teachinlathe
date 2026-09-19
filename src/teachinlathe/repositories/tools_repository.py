@@ -16,7 +16,7 @@ import logging
 import os
 from typing import Dict, List, Optional, Tuple
 
-from PyQt5.QtCore import QObject, QProcess
+from PyQt6.QtCore import QObject, QProcess
 
 log = logging.getLogger(__name__)
 

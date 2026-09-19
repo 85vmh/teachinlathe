@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Callable, Optional
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal
 
 from .ini_repository import ini_repository
 from .status_repository import status_repository

@@ -67,7 +67,7 @@ Item {
         currentSource = url
         _currentParams = params || {}
         _pendingParams = _currentParams
-        loader.setSource(url) // Qt5-safe; we apply params in onLoaded
+        loader.setSource(url) // params are applied in onLoaded, not here
     }
 
     // Replace current screen without adding another history entry.

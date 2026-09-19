@@ -1,10 +1,10 @@
 import logging
 import os
 
-from PyQt5.QtCore import QPoint, QPointF, QTimer, QUrl, pyqtSignal, Qt
-from PyQt5.QtQuick import QQuickItem
-from PyQt5.QtQuickWidgets import QQuickWidget
-from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QWidget
+from PyQt6.QtCore import QPoint, QPointF, QTimer, QUrl, pyqtSignal, Qt
+from PyQt6.QtQuick import QQuickItem
+from PyQt6.QtQuickWidgets import QQuickWidget
+from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
 from teachinlathe.data.programs_screen import ProgramsScreen, ProgramsScreenEnum
 from teachinlathe.widgets.gremlin.gremlin_widget import GremlinWidget
@@ -24,7 +24,7 @@ class ProgramsQml(QQuickWidget):
 
     def __init__(self, locations, parent=None, json_folder_path=''):
         super().__init__(parent)
-        self.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        self.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)
 
         folders = [(loc.name, loc.root_path) for loc in locations]
         self.viewmodel = ProgramsViewModel(folders, self)
@@ -105,7 +105,7 @@ class ProgramsQml(QQuickWidget):
         ):
             button = QPushButton(label, self._top_left_controls)
             button.setStyleSheet(button_style)
-            button.setFocusPolicy(Qt.NoFocus)
+            button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             if repeat:
                 self._connect_repeating_button(button, handler)
             else:
@@ -114,7 +114,7 @@ class ProgramsQml(QQuickWidget):
             self._overlay_buttons.append(button)
 
         self._clear_plot_button.setStyleSheet(clear_style)
-        self._clear_plot_button.setFocusPolicy(Qt.NoFocus)
+        self._clear_plot_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._clear_plot_button.clicked.connect(self._clear_gremlin_plot)
 
     def _connect_repeating_button(self, button, handler):
@@ -210,7 +210,7 @@ class ProgramsQml(QQuickWidget):
         return name or 'No file loaded'
 
     def _on_status_changed(self, status):
-        if status != QQuickWidget.Ready:
+        if status != QQuickWidget.Status.Ready:
             return
 
         self._root_item = self.rootObject()

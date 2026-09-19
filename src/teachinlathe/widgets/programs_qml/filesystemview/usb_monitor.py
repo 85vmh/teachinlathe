@@ -1,6 +1,6 @@
 import os
 
-from PyQt5.QtCore import QFileSystemWatcher, QObject, pyqtSignal
+from PyQt6.QtCore import QFileSystemWatcher, QObject, pyqtSignal
 
 
 class UsbDriveMonitor(QObject):

@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 from typing import List, Optional
 
-from PyQt5.QtCore import QObject, QTimer, pyqtSignal
+from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 from .tool_entry import (
     SortBy, ToolEntry, ToolType,
@@ -162,7 +162,7 @@ class ToolRepository(QObject):
 
         # Watch .tbl file for external edits
         try:
-            from PyQt5.QtCore import QFileSystemWatcher
+            from PyQt6.QtCore import QFileSystemWatcher
             self._watcher = QFileSystemWatcher([str(self._tbl_path)], self)
             self._watcher.fileChanged.connect(self._on_tbl_changed)
         except Exception:

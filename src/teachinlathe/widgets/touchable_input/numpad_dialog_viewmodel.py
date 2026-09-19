@@ -9,7 +9,7 @@ remembered; the conversational tab uses ``persist=False`` so it only reads the
 predefined values and never writes ``last_value``.
 """
 
-from PyQt5.QtCore import QObject, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtSlot
 
 from teachinlathe.data_source.numpad_settings import NumpadSettings
 

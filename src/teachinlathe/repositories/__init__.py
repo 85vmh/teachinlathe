@@ -4,7 +4,7 @@ Each repository owns one source of machine truth (the INI file, HAL, the
 status channel, the tool table, ...) and exposes it as plain Python or Qt
 signals. ViewModels consume repositories; QML consumes ViewModels.
 
-A repository never imports ``PyQt5.QtWidgets``, so it stays testable without
+A repository never imports ``PyQt6.QtWidgets``, so it stays testable without
 a ``QApplication`` and independent of any UI framework.
 """
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import date
 from typing import List
 
-from PyQt5.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from .tool_entry import (
     BoringBarTool, DrillTool, GroovingBladeTool, PartingBladeTool, ReamerTool,
