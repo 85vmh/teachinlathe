@@ -2,19 +2,38 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-Item {
+// A Popup in the window's overlay, not an Item in the screen.
+//
+// As an Item it could only dim as far as its parent reached - the Programs
+// screen, inside the tab, inside the app shell's content area - so the top and
+// bottom bars stayed lit while a tool change was waiting. The confirmation
+// dialogs (ConfirmDialog.qml) were already Popups in Overlay.overlay, which is
+// why those dim the whole screen; this now matches them.
+//
+// It was also pushed off to one side, over the G-code pane. That was to keep
+// clear of the backplot, which used to be a QOpenGLWidget composited over the
+// whole window and would have covered any dialog under it. The backplot is a
+// scene-graph item now and obeys stacking like everything else, so the dialog
+// can sit in the middle.
+Popup {
     id: root
-    anchors.fill: parent
+
+    parent: Overlay.overlay
+    anchors.centerIn: parent
+    modal: true
+    // A tool change is answered at the machine, with CycleStart or CycleAbort.
+    // Nothing on screen dismisses it - a stray tap must not.
+    closePolicy: Popup.NoAutoClose
     visible: viewModel ? viewModel.requested : false
-    enabled: visible
-    z: 1200
+    padding: 0
 
     property var viewModel
     readonly property color textColor: "#1e2430"
     readonly property color confirmColor: "#2e7d32"
     readonly property color cancelColor: "#c62828"
-    property real dialogCenterX: root.width * 0.75
-    property real dialogCenterY: root.height / 2
+
+    contentWidth: 620
+    contentHeight: card.implicitHeight + 48
 
     function escapeHtml(value) {
         return String(value === undefined || value === null ? "" : value)
@@ -25,21 +44,17 @@ Item {
             .replace(/'/g, "&#39;")
     }
 
-    Rectangle {
-        anchors.fill: parent
-        color: "#80000000"
-        MouseArea { anchors.fill: parent }
-    }
-
-    Rectangle {
-        width: 620
-        height: card.implicitHeight + 48
-        x: Math.max(0, Math.min(root.width - width, root.dialogCenterX - width / 2))
-        y: Math.max(0, Math.min(root.height - height, root.dialogCenterY - height / 2))
+    // The scrim is the Popup's own, so no dimming rectangle here.
+    background: Rectangle {
         radius: 10
         color: "#ffffff"
         border.color: "#cbd5e1"
         border.width: 1
+    }
+
+    contentItem: Item {
+        implicitWidth: root.contentWidth
+        implicitHeight: card.implicitHeight + 48
 
         ColumnLayout {
             id: card

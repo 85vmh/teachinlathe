@@ -172,13 +172,10 @@ Item {
         }
     }
 
+    // No geometry here any more: it is a Popup in the window's overlay, so it
+    // centres on the screen and dims all of it.
     ToolChangeDialog {
-        anchors.fill: parent
         viewModel: root.viewModel ? root.viewModel.toolChange : null
-        dialogCenterX: gcodePane.width > 0
-            ? root.width - (gcodePane.width / 2)
-            : root.width * 0.75
-        dialogCenterY: root.height / 2
     }
 
     Connections {
