@@ -19,7 +19,7 @@ Rectangle {
 
     color: "#ffffff"
 
-    readonly property int lineCount: Math.max(1, content === "" ? 1 : content.split("\n").length)
+    readonly property int lineCount: Math.max(1, content === "" ? 1 : _lineOffsets.length)
     readonly property string lineNumberText: {
         var lines = []
         for (var i = 1; i <= lineCount; ++i) {
@@ -28,21 +28,43 @@ Rectangle {
         return lines.join("\n")
     }
 
+    // Character offset of the start of each line, rebuilt only when the
+    // program text changes.
+    //
+    // lineStartPosition() used to walk editor.text one character at a time,
+    // re-reading the text property and calling charAt() on every iteration -
+    // two JS string allocations per character of the program, per call. It is
+    // reached from syncHighlight(), centerHighlight() and
+    // updateRecenterButton(), and that last one runs on every contentY
+    // change, so once per frame while the view animates to the current line.
+    // With a program running, the line changes constantly and the scan runs
+    // constantly: hundreds of thousands of string allocations a second, which
+    // keeps the QML engine's garbage collector marking without pause. The GUI
+    // thread is where that lands, and the DRO, the backplot and the rest of
+    // the UI are all behind it - so everything stutters together, worsening as
+    // the program advances.
+    property var _lineOffsets: [0]
+
+    function _rebuildLineOffsets() {
+        var text = root.content
+        var offsets = [0]
+        var idx = text.indexOf("\n")
+        while (idx !== -1) {
+            offsets.push(idx + 1)
+            idx = text.indexOf("\n", idx + 1)
+        }
+        root._lineOffsets = offsets
+    }
+
     function lineStartPosition(lineNumber) {
         if (lineNumber <= 1) {
             return 0
         }
-        var target = Math.max(1, lineNumber)
-        var seen = 1
-        for (var i = 0; i < editor.text.length; ++i) {
-            if (editor.text.charAt(i) === "\n") {
-                seen += 1
-                if (seen === target) {
-                    return i + 1
-                }
-            }
+        var offsets = root._lineOffsets
+        if (lineNumber > offsets.length) {
+            return root.content.length
         }
-        return editor.text.length
+        return offsets[lineNumber - 1]
     }
 
     function _maxContentY() {
@@ -140,6 +162,7 @@ Rectangle {
     }
 
     onContentChanged: {
+        root._rebuildLineOffsets()
         if (editor.text !== content) {
             userDetachedFromHighlight = false
             editor.text = content
@@ -156,6 +179,7 @@ Rectangle {
     onHeightChanged: Qt.callLater(syncHighlight)
 
     Component.onCompleted: {
+        root._rebuildLineOffsets()
         if (viewModel) {
             viewModel.attachHighlighter(editor.textDocument)
         }

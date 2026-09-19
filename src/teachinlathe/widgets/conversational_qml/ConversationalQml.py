@@ -1,12 +1,14 @@
+import logging
 import os
 import json
 import time
 from datetime import datetime
 
-from PyQt6.QtCore import QUrl, QObject, QMetaObject, Qt, QTimer, QEventLoop, Q_ARG, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import (QCoreApplication, QEventLoop, QMetaObject, QObject, Q_ARG, Qt,
+                          QTimer, QUrl, pyqtSignal, pyqtSlot)
 from PyQt6.QtQuick import QQuickItem
-from PyQt6.QtQuickWidgets import QQuickWidget
-from PyQt6.QtWidgets import QApplication
+
+LOG = logging.getLogger(__name__)
 
 from teachinlathe.conversational.data_types import (
     AfterLastOperation,
@@ -65,12 +67,24 @@ from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadD
 DXF_PROFILE_FOLDER = "/home/cnc/Work/teachinlathe/dxf_profiles"
 
 
-class ConversationalQml(QQuickWidget):
+class ConversationalQml(QObject):
+    """The conversational editor.
+
+    Was a QQuickWidget with an engine of its own. It shares the application's
+    engine now, so its view models are registered on the shared root context;
+    the one name that used to collide with the manual tab's - the numpad view
+    model - is registered as conversationalNumpadViewModel and passed to the
+    dialog explicitly.
+    """
+
     headerStateChanged = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, engine, app=None, parent=None):
         super().__init__(parent)
-        self.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)
+        self._engine = engine
+        self._app = app
+        self.root = None
+        self._context = engine.rootContext()
         self.folder_path = "/home/cnc/Work/teachinlathe/conversational"
         self.current_program = None
         self.current_program_index = None
@@ -83,18 +97,18 @@ class ConversationalQml(QQuickWidget):
         programs = load_programs_from_folder(self.folder_path)
 
         self.model = ProgramListModel(programs)
-        self.engine().rootContext().setContextProperty("programsModel", self.model)
-        self.engine().rootContext().setContextProperty("conversationalQml", self)
+        self._context.setContextProperty("programsModel", self.model)
+        self._context.setContextProperty("conversationalQml", self)
 
         # Conversational never persists last_value (only the manual tab does).
         self.numpadDialogViewModel = NumpadDialogViewModel(self, persist=False)
-        self.engine().rootContext().setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
+        self._context.setContextProperty("conversationalNumpadViewModel", self.numpadDialogViewModel)
 
         self.positionsBridge = PositionsBridge(self)
-        self.engine().rootContext().setContextProperty("positionsBridge", self.positionsBridge)
+        self._context.setContextProperty("positionsBridge", self.positionsBridge)
 
         self.threadingDetailsViewModel = ThreadingDetailsViewModel(self)
-        self.engine().rootContext().setContextProperty("threadingDetailsViewModel", self.threadingDetailsViewModel)
+        self._context.setContextProperty("threadingDetailsViewModel", self.threadingDetailsViewModel)
 
         os.makedirs(DXF_PROFILE_FOLDER, exist_ok=True)
         self.dxfProfileFileSystemViewModel = FileSystemViewModel(
@@ -107,48 +121,44 @@ class ConversationalQml(QQuickWidget):
             show_recursive_folder_file_counts=True,
         )
         self.dxfProfileFileSystemViewModel.selectionChanged.connect(self._emit_header_state_changed)
-        self.engine().rootContext().setContextProperty(
+        self._context.setContextProperty(
             "dxfProfileFileSystemViewModel",
             self.dxfProfileFileSystemViewModel,
         )
 
-        root_path = os.path.join(self.base_dir, "Root.qml")
-        self.statusChanged.connect(self.onStatusChanged)
-        self.setSource(QUrl.fromLocalFile(root_path))
-
     def setAppState(self, app_state):
         self._app_state = app_state
         try:
-            self.engine().rootContext().setContextProperty("appState", app_state)
-            self.engine().rootContext().setContextProperty("cncStore", getattr(app_state, "cncStore", None))
-            self.engine().rootContext().setContextProperty("navigationStore", getattr(app_state, "navigationStore", None))
+            self._context.setContextProperty("appState", app_state)
+            self._context.setContextProperty("cncStore", getattr(app_state, "cncStore", None))
+            self._context.setContextProperty("navigationStore", getattr(app_state, "navigationStore", None))
         except Exception as e:
             print("setAppState failed:", e)
 
-    def onStatusChanged(self, status):
-        if status == QQuickWidget.Status.Ready:
-            self.root = self.rootObject()
-            if not self.root:
-                print("Failed to load Root.qml")
-                return
+    def attachRoot(self, root_item):
+        """Take the Root.qml instance the application created."""
+        self.root = root_item
+        if not self.root:
+            LOG.error("conversational: no Root.qml item")
+            return
 
-            main_url = QUrl.fromLocalFile(os.path.join(self.base_dir, "MainScreen.qml")).toString()
-            self.root.loadScreen(main_url, {"programsModel": self.model, "showBack": False, "selectedProgramId": ""})
+        main_url = QUrl.fromLocalFile(os.path.join(self.base_dir, "MainScreen.qml")).toString()
+        self.root.loadScreen(main_url, {"programsModel": self.model, "showBack": False, "selectedProgramId": ""})
 
-            loader = self.root.findChild(QQuickItem, "loader") or self.root.findChild(QObject, "loader")
-            if loader is None:
-                print("Failed to find Loader object with objectName 'loader'")
-                return
+        loader = self.root.findChild(QQuickItem, "loader") or self.root.findChild(QObject, "loader")
+        if loader is None:
+            print("Failed to find Loader object with objectName 'loader'")
+            return
 
-            try:
-                loader.itemChanged.connect(self.onLoaderItemChanged)
-            except Exception as e:
-                print("Failed to connect itemChanged:", e)
+        try:
+            loader.itemChanged.connect(self.onLoaderItemChanged)
+        except Exception as e:
+            print("Failed to connect itemChanged:", e)
 
-            current_item = loader.property("item")
-            if current_item:
-                self._hook_screen_item(current_item)
-            QTimer.singleShot(0, self._emit_header_state_changed)
+        current_item = loader.property("item")
+        if current_item:
+            self._hook_screen_item(current_item)
+        QTimer.singleShot(0, self._emit_header_state_changed)
 
     def onLoaderItemChanged(self):
         sender = self.sender()
@@ -484,7 +494,7 @@ class ConversationalQml(QQuickWidget):
                 QMetaObject.invokeMethod(self.root, "showBuildGcodeProgress")
         except Exception as e:
             print("[gcode] show progress failed:", e)
-        QApplication.processEvents()
+        QCoreApplication.processEvents()
 
         start = time.monotonic()
         path = None
@@ -508,7 +518,7 @@ class ConversationalQml(QQuickWidget):
 
         if path:
             try:
-                mw = self.window()
+                mw = self._app
                 if mw and hasattr(mw, "showGeneratedProgram"):
                     mw.showGeneratedProgram(path)
             except Exception as e:
@@ -1221,9 +1231,9 @@ class ConversationalQml(QQuickWidget):
         self._profile_editor_active = True
         self._emit_header_state_changed()
 
-        main_window = self.window()
+        main_window = self._app
         if hasattr(main_window, "enterContentFullScreen"):
-            main_window.enterContentFullScreen(self)
+            main_window.enterContentFullScreen()
             self._in_profile_editor_full_screen = True
         import_url = QUrl.fromLocalFile(
             os.path.join(self.base_dir, "import_dxf_profile", "ImportDxfProfileScreen.qml")
@@ -1286,9 +1296,9 @@ class ConversationalQml(QQuickWidget):
         self._profile_editor_active = True
         self._emit_header_state_changed()
 
-        main_window = self.window()
+        main_window = self._app
         if hasattr(main_window, "enterContentFullScreen"):
-            main_window.enterContentFullScreen(self)
+            main_window.enterContentFullScreen()
             self._in_profile_editor_full_screen = True
         editor_url = QUrl.fromLocalFile(
             os.path.join(self.base_dir, "define_profile", "ProfileEditorScreen.qml")
@@ -1338,9 +1348,9 @@ class ConversationalQml(QQuickWidget):
         self._profile_editor_active = True
         self._emit_header_state_changed()
 
-        main_window = self.window()
+        main_window = self._app
         if hasattr(main_window, "enterContentFullScreen"):
-            main_window.enterContentFullScreen(self)
+            main_window.enterContentFullScreen()
             self._in_profile_editor_full_screen = True
         editor_url = QUrl.fromLocalFile(
             os.path.join(self.base_dir, "define_radial_profile", "RadialProfileEditorScreen.qml")
@@ -1432,7 +1442,7 @@ class ConversationalQml(QQuickWidget):
         self._profile_editor_active = False
         self._dxf_import_flow_active = False
         self._emit_header_state_changed()
-        main_window = self.window()
+        main_window = self._app
         if hasattr(main_window, "exitFullScreen"):
             main_window.exitFullScreen()
         try:
@@ -1455,7 +1465,7 @@ class ConversationalQml(QQuickWidget):
             self._in_profile_editor_full_screen = False
             self._profile_editor_active = False
             self._emit_header_state_changed()
-            main_window = self.window()
+            main_window = self._app
             if hasattr(main_window, "exitFullScreen"):
                 main_window.exitFullScreen()
         self.root.goBack()

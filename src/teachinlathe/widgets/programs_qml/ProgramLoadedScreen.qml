@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "gcode_viewer"
 import "program_loaded"
+import TeachInLathe.Backplot 1.0
 
 Item {
     id: root
@@ -87,14 +88,77 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "#0f0f0f"
-                    border.color: "#252525"
+                    // The same panel an operation detail sits on: white with
+                    // a light border. The preview's own palette is tuned to
+                    // match - see _configure_for_lathe.
+                    color: "#ffffff"
+                    border.color: "#cccccc"
                     border.width: 1
 
-                    Item {
-                        id: viewport
-                        objectName: "gremlinViewport"
+                    // Was an empty Item that Python mapped a QOpenGLWidget
+                    // onto, resyncing its geometry on every move and resize.
+                    // The preview renders into the scene graph now, so it is
+                    // just an item, and the controls over it are ordinary
+                    // buttons rather than QPushButtons positioned by hand.
+                    LatheBackplot {
+                        id: backplot
+                        objectName: "latheBackplot"
                         anchors.fill: parent
+                        anchors.margins: 1
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                            onPressed: function (mouse) {
+                                backplot.pressed(mouse.x, mouse.y)
+                            }
+                            onPositionChanged: function (mouse) {
+                                if (mouse.buttons & Qt.MiddleButton)
+                                    backplot.zoomDragged(mouse.y)
+                                else if (mouse.buttons & Qt.LeftButton)
+                                    backplot.panned(mouse.x, mouse.y)
+                            }
+                            onWheel: function (wheel) {
+                                backplot.wheelZoom(wheel.angleDelta.y)
+                            }
+                        }
+
+                        Row {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.margins: 16
+                            spacing: 12
+
+                            BackplotButton {
+                                text: "Zoom In"
+                                autoRepeat: true
+                                autoRepeatDelay: 300
+                                autoRepeatInterval: 100
+                                onClicked: backplot.zoomIn()
+                            }
+                            BackplotButton {
+                                text: "Zoom Out"
+                                autoRepeat: true
+                                autoRepeatDelay: 300
+                                autoRepeatInterval: 100
+                                onClicked: backplot.zoomOut()
+                            }
+                            BackplotButton {
+                                text: "Fit To Screen"
+                                onClicked: backplot.fitToWindow()
+                            }
+                        }
+
+                        BackplotButton {
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: 16
+                            text: "Clear Plot"
+                            baseColor: "#7a2d2d"
+                            hoverColor: "#652424"
+                            borderColor: "#d16969"
+                            onClicked: backplot.clearPlot()
+                        }
                     }
                 }
             }

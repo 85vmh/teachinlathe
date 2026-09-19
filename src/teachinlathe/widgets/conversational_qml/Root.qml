@@ -44,7 +44,10 @@ Item {
         buildGcodeProgressDialog.close()
     }
 
-    SmartNumpadDialog { id: numpadDialog }
+    SmartNumpadDialog {
+        id: numpadDialog
+        viewModel: conversationalNumpadViewModel
+    }
     Loader {
         id: keyboardDialogLoader
         active: false

@@ -1,37 +1,50 @@
-# Setup logging
+"""The application: one QML scene, and the machine wiring behind it.
+
+There used to be a QMainWindow here holding a QStackedWidget of two pages, the
+second holding another QStackedWidget of four QWidget tabs, each wrapping a
+QQuickWidget with an engine of its own - plus a Gremlin QOpenGLWidget that had
+to be positioned over a placeholder by hand. Every screen was already QML; the
+widgets existed only to carry them.
+
+They are gone. A single QQuickView loads AppRoot.qml, every screen is an item
+in that one scene, and the backplot renders into the scene graph through
+LatheBackplotItem. What is left in this file is what it was always for: the
+view models, and the HAL pins wired to them.
+"""
+
 import logging
 import os
 from enum import Enum
 
 import linuxcnc
-from PyQt6.QtCore import Q_ARG, QMetaObject, QObject, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import (Q_ARG, QMetaObject, QObject, Qt, QTimer, QUrl,
+                          pyqtProperty, pyqtSignal, pyqtSlot)
 from PyQt6.QtGui import QColor
-from PyQt6.QtQuickWidgets import QQuickWidget
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QStackedWidget,
-                             QVBoxLayout, QWidget)
+from PyQt6.QtQuick import QQuickItem, QQuickView
+
 from teachinlathe.repositories.command_repository import issue_mdi
 from teachinlathe.repositories.machine_repository import machine_repository
 from teachinlathe.repositories.status_repository import status_repository
 from teachinlathe.repositories import ini_repository
 
 from teachinlathe.app_state import AppState
-from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
+from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME
 from teachinlathe.dev_panel import DevPanelWindow
 from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
-from teachinlathe.widgets.app_shell_qml import AppShellQmlWidget
+from teachinlathe.widgets.app_shell_qml import AppShellBridge
+from teachinlathe.widgets.backplot import register_qml_types as register_backplot_type
 from teachinlathe.widgets.conversational_qml.ConversationalQml import ConversationalQml
 from teachinlathe.widgets.machine_qml.FixturesViewModel import FixturesViewModel
 from teachinlathe.widgets.machine_qml.MachineViewModel import MachineViewModel
 from teachinlathe.widgets.manual_qml import ManualTurningViewModel
 from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLatheDroViewModel
 from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
-from teachinlathe.widgets.programs_qml.ProgramsQml import ProgramsQml
+from teachinlathe.widgets.programs_qml.ProgramsController import ProgramsController
 from teachinlathe.widgets.tool_library.ToolLibraryViewModel import ToolLibraryViewModel
 
 LOG = logging.getLogger(__name__)
-from PyQt6.QtCore import Qt
 
 INI = ini_repository()
 STATUS = status_repository()
@@ -43,6 +56,8 @@ PROGRAM_PREFIX = INI.program_prefix
 CONVERSATIONAL_OUTPUT_BASE = PROGRAM_PREFIX
 CONVERSATIONAL_GCODE_BASE = CONVERSATIONAL_OUTPUT_BASE
 CONVERSATIONAL_JSON_BASE = CONVERSATIONAL_OUTPUT_BASE
+
+QML_DIR = os.path.join(os.path.dirname(__file__), "widgets")
 
 
 class MainTabs(Enum):
@@ -56,6 +71,16 @@ class MainTabs(Enum):
     CONVERSATIONAL = 1
     PROGRAMS = 2
     MACHINE_SETTINGS = 3
+
+
+# The tab ids QML and AppState use, against this enum. AppRoot.qml holds the
+# same order; it is the one place the two have to agree.
+TAB_IDS = {
+    "manual": MainTabs.MANUAL_TURNING,
+    "conversational": MainTabs.CONVERSATIONAL,
+    "programs": MainTabs.PROGRAMS,
+    "settings": MainTabs.MACHINE_SETTINGS,
+}
 
 
 class ProgramTabs(Enum):
@@ -131,55 +156,11 @@ class ManualJoystickController(QObject):
             self._viewmodel.setJoystickState(state)
 
 
-class MyMainWindow(QMainWindow):
-    """The application window.
+class TeachInLatheApp(QObject):
+    """Owns the QML scene and everything behind it."""
 
-    The widget tree used to come from mainwindow.ui. It is four empty pages
-    now - every screen is QML - so it is built here instead, which removes the
-    .ui file and the third-party widgets it carried with it.
-    """
-
-    def _buildWindow(self):
-        """The whole widget tree: two pages, one of which holds four more."""
-        self.stackedWidget = QStackedWidget(self)
-        self.stackedWidget.setObjectName("stackedWidget")
-        self.setCentralWidget(self.stackedWidget)
-
-        # Shown until the machine is out of E-stop, powered and homed.
-        self.pageNotReady = QWidget(self.stackedWidget)
-        self.pageNotReady.setObjectName("pageNotReady")
-        self.stackedWidget.addWidget(self.pageNotReady)
-
-        # Everything else lives under here, behind the QML app shell.
-        self.pageReady = QWidget(self.stackedWidget)
-        self.pageReady.setObjectName("pageReady")
-        self.stackedWidget.addWidget(self.pageReady)
-
-        # One page per tab the shell's bottom bar offers, in MainTabs order.
-        self.manualTurningTab = QWidget()
-        self.manualTurningTab.setObjectName("manualTurningTab")
-        self.conversationalTab = QWidget()
-        self.conversationalTab.setObjectName("conversationalTab")
-        self.settingsTab = QWidget()
-        self.settingsTab.setObjectName("settingsTab")
-
-    def getSpindleModeIndex(self):
-        if hasattr(self, "manualTurningViewModel"):
-            return self.manualTurningViewModel.spindleMode
-        return 0
-
-    def __init__(self, *args, **kwargs):
-        super(MyMainWindow, self).__init__(*args, **kwargs)
-        app = QApplication.instance()
-        if app is not None:
-            app.setApplicationName(APPLICATION_DISPLAY_NAME)
-            app.setApplicationDisplayName(APPLICATION_DISPLAY_NAME)
-            app.setDesktopFileName(APPLICATION_ID)
-        self.setWindowTitle(APPLICATION_DISPLAY_NAME)
-        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
-
-        self._buildWindow()
-        self.conversationalqml = ConversationalQml(self.conversationalTab)
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
         self.mainSelectedTab = MainTabs.MANUAL_TURNING
         self.lastSpindleRpm = 0
@@ -189,59 +170,208 @@ class MyMainWindow(QMainWindow):
         self.current_spindle_override = 0
         self.current_feed_override = 0
         self.current_program = None
-        self.appState = AppState(self)
+        self._fullscreen = False
+        self.appRoot = None
+        self.manualScreen = None
+        self.devPanelWindow = None
 
+        self.appState = AppState(self)
         self.fixture_repository = LatheFixturesRepository()
         self.manualLathe = ManualLathe()
+        self.latheComponent = TeachInLatheComponent()
+
+        # The view exists first: the view models register themselves on its
+        # engine's root context as they are built.
+        self._createView()
+        self._buildViewModels()
+        self._publishContext()
+        self._loadScene()
+        self._connectScreens()
+        self._wireHalPins()
+        self._wireStatus()
+
+        initial_fixture = self.fixture_repository.getCurrentFixture()
+        if initial_fixture:
+            LOG.info("initial fixture: %s", initial_fixture.description)
+            self.onChuckLimitChanged(initial_fixture.z_minus_limit)
+
+        self.afterUIInit()
+
+    # ── construction ────────────────────────────────────────────────────────
+
+    def _buildViewModels(self):
+        """Everything QML binds to.
+
+        All of it exists before the scene is loaded now. It used to be spread
+        over half a dozen QTimer.singleShot(0, ...) callbacks, because each
+        screen had a QQuickWidget that had to be created, parented and shown
+        in the right order.
+        """
         self.manualTurningViewModel = ManualTurningViewModel(self.manualLathe, self)
         self.teachInLatheDroViewModel = TeachInLatheDroViewModel(self)
+        self.toolLibraryViewModel = ToolLibraryViewModel(self)
+        self.numpadDialogViewModel = NumpadDialogViewModel(self)
+
         self.manualJoystickController = ManualJoystickController(self.manualTurningViewModel, self)
         self.latheJoystick = self.manualJoystickController
         self.manualLathe.setJoystickWidget(self.manualJoystickController)
-        self.manualTurningViewModel.joystickStateChanged.connect(self._on_manual_joystick_state_changed)
+        self.manualTurningViewModel.joystickStateChanged.connect(
+            self._on_manual_joystick_state_changed)
 
-        self.latheComponent = TeachInLatheComponent()
-        self.devPanelWindow = None
+        self.machineViewModel = MachineViewModel(self)
+        self.fixturesViewModel = FixturesViewModel(self)
+        self.fixturesViewModel.chuckLimitChanged.connect(self.onChuckLimitChanged)
 
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsOn, self.onSpindleRunningChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleCoveredOpened, self.onSpindleCoverOpenedChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleResetRequired, self.onSpindleResetRequiredChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleOrientation, self.onSpindleOrientationChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStart, self.onCycleStartPressed)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinButtonCycleStop, self.onCycleStopPressed)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickIsFeeding, self.onJoystickFeedingChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinJoystickResetRequired, self.onJoystickResetRequiredChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinSpindleIsFirstGear, self.onSpindleFirstGearChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinHandwheelsAllowed, self.onHandwheelAllowedChanged)
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinDevMode, self.onDevModeChanged)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = True
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = True
-        self.onSpindleFirstGearChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
-        self.manualTurningViewModel.setSpindleRunning(
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsOn).value
+        self.programsController = self._buildProgramsController()
+        self.conversationalqml = ConversationalQml(self.view.engine(), self, self)
+        self.conversationalqml.setAppState(self.appState)
+
+        self.appShellBridge = AppShellBridge(
+            self.appState,
+            {
+                "conversational": self.conversationalqml,
+                "programs": self.programsController,
+            },
+            self,
         )
-        self.manualTurningViewModel.setSpindleCoverOpened(
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleCoveredOpened).value
+
+    def _buildProgramsController(self):
+        from teachinlathe.widgets.programs_qml.filesystemview import (
+            FileSystemLocation, LocationType,
         )
-        self.manualTurningViewModel.setSpindleResetRequired(
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleResetRequired).value
-        )
-        self.manualTurningViewModel.setSpindleAngle(
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleOrientation).value
-        )
-        self.manualTurningViewModel.setFeeding(
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinJoystickIsFeeding).value
-        )
-        self.manualTurningViewModel.setJoystickResetRequired(
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinJoystickResetRequired).value
-        )
-        self.onDevModeChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinDevMode).value)
+        gcode_folder = os.path.join(CONVERSATIONAL_GCODE_BASE, "Conversational Gcode")
+        json_folder = os.path.join(CONVERSATIONAL_JSON_BASE, "Conversational Json")
+        usb_stick_folder = os.path.join(CONVERSATIONAL_GCODE_BASE, "USB Stick Programs")
+        locations = [
+            FileSystemLocation("Generated Programs", gcode_folder, LocationType.GENERATED),
+            FileSystemLocation("USB Stick Programs", usb_stick_folder, LocationType.USB_STICK),
+            FileSystemLocation("SyncThing Programs", os.path.expanduser("~/Sync"), LocationType.SYNCTHING),
+            FileSystemLocation("Home", os.path.expanduser("~"), LocationType.HOME),
+        ]
+        controller = ProgramsController(locations, self, self, json_folder_path=json_folder)
+        controller.viewmodel.programLoadRequested.connect(self.onProgramsQmlProgramLoadRequested)
+        controller.viewmodel.ensureProgramLoadedRequested.connect(
+            self.onProgramsQmlEnsureProgramLoadedRequested)
+        controller.viewmodel.switchToManualRequested.connect(
+            self.onProgramsQmlSwitchToManualRequested)
+        # A failed file operation is reported the way the rest of the app
+        # reports one: a toast, plus an entry in the events drawer.
+        fs = controller.fs_viewmodel
+        fs.deleteFailed.connect(lambda msg: self._show_app_toast("Delete failed: %s" % msg))
+        fs.copyFailed.connect(lambda msg: self._show_app_toast("Copy failed: %s" % msg))
+        return controller
+
+    def _createView(self):
+        register_backplot_type()
+
+        self.view = QQuickView()
+        self.view.setTitle(APPLICATION_DISPLAY_NAME)
+        self.view.setResizeMode(QQuickView.ResizeMode.SizeRootObjectToView)
+        self.view.setColor(QColor("#efefef"))
+        self.view.setFlag(Qt.WindowType.FramelessWindowHint)
+
+    def _publishContext(self):
+        ctx = self.view.engine().rootContext()
+        ctx.setContextProperty("appState", self.appState)
+        ctx.setContextProperty("cncStore", self.appState.cncStore)
+        ctx.setContextProperty("navigationStore", self.appState.navigationStore)
+        ctx.setContextProperty("appShellBridge", self.appShellBridge)
+
+        ctx.setContextProperty("manualViewModel", self.manualTurningViewModel)
+        ctx.setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
+        ctx.setContextProperty("teachInDroViewModel", self.teachInLatheDroViewModel)
+        ctx.setContextProperty("toolLibraryViewModel", self.toolLibraryViewModel)
+
+        ctx.setContextProperty("machineViewModel", self.machineViewModel)
+        ctx.setContextProperty("fixturesViewModel", self.fixturesViewModel)
+
+        ctx.setContextProperty("programsViewModel", self.programsController.viewmodel)
+        ctx.setContextProperty("fsViewModel", self.programsController.fs_viewmodel)
+        ctx.setContextProperty("programsDroViewModel", self.programsController.dro_viewmodel)
+        ctx.setContextProperty("programsToolFeedSpeedViewModel",
+                               self.programsController.tool_feed_speed_viewmodel)
+        ctx.setContextProperty("ProgramsScreen", self.programsController.programs_screen_enum)
+
+    def _loadScene(self):
+        self.view.setSource(QUrl.fromLocalFile(os.path.join(QML_DIR, "AppRoot.qml")))
+        for error in self.view.errors():
+            LOG.error("QML error: %s", error.toString())
+
+        self.appRoot = self.view.rootObject()
+        if self.appRoot is None:
+            raise RuntimeError("AppRoot.qml failed to load")
+
+    def _screen(self, object_name):
+        item = self.appRoot.findChild(QQuickItem, object_name)
+        if item is None:
+            LOG.error("QML item %r not found", object_name)
+        return item
+
+    def _connectScreens(self):
+        self.manualScreen = self._screen("manualScreen")
+        if self.manualScreen is not None:
+            self.manualScreen.xToggled.connect(self.onManualQmlXHandwheelToggled)
+            self.manualScreen.zToggled.connect(self.onManualQmlZHandwheelToggled)
+            self.manualScreen.toastRequested.connect(self._show_app_toast)
+            self.manualJoystickController.attach(self.manualScreen)
+
+        settings_screen = self._screen("settingsScreen")
+        if settings_screen is not None:
+            settings_screen.setG28.connect(self.onSetG28)
+            settings_screen.goToG28.connect(self.onGoToG28)
+            settings_screen.setG30.connect(self.onSetG30)
+            settings_screen.goToG30.connect(self.onGoToG30)
+
+        conversational_root = self._screen("conversationalScreen")
+        if conversational_root is not None:
+            self.conversationalqml.attachRoot(conversational_root)
+
+        self.programsController.attachBackplot(self._screen("latheBackplot"))
 
         self.teachInLatheDroViewModel.xPrimaryDroClicked.connect(self.onXPrimaryDroClicked)
         self.teachInLatheDroViewModel.zPrimaryDroClicked.connect(self.onZPrimaryDroClicked)
 
+        # QML follows navigationStore; this is the machine-side half of it.
+        self.appState.navigationStore.currentTabChanged.connect(self.onMainTabChanged)
+        self.onMainTabChanged()
+
+    # ── machine wiring ──────────────────────────────────────────────────────
+
+    def _wireHalPins(self):
+        comp = self.latheComponent.comp
+        comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self.onSpindleRpmChanged)
+        comp.addListener(TeachInLatheComponent.PinSpindleIsOn, self.onSpindleRunningChanged)
+        comp.addListener(TeachInLatheComponent.PinSpindleCoveredOpened, self.onSpindleCoverOpenedChanged)
+        comp.addListener(TeachInLatheComponent.PinSpindleResetRequired, self.onSpindleResetRequiredChanged)
+        comp.addListener(TeachInLatheComponent.PinSpindleOrientation, self.onSpindleOrientationChanged)
+        comp.addListener(TeachInLatheComponent.PinButtonCycleStart, self.onCycleStartPressed)
+        comp.addListener(TeachInLatheComponent.PinButtonCycleStop, self.onCycleStopPressed)
+        comp.addListener(TeachInLatheComponent.PinJoystickIsFeeding, self.onJoystickFeedingChanged)
+        comp.addListener(TeachInLatheComponent.PinJoystickResetRequired, self.onJoystickResetRequiredChanged)
+        comp.addListener(TeachInLatheComponent.PinHandwheelsJogIncrement, self.onJogIncrementChanged)
+        comp.addListener(TeachInLatheComponent.PinSpindleIsFirstGear, self.onSpindleFirstGearChanged)
+        comp.addListener(TeachInLatheComponent.PinHandwheelsAllowed, self.onHandwheelAllowedChanged)
+        comp.addListener(TeachInLatheComponent.PinDevMode, self.onDevModeChanged)
+
+        comp.getPin(TeachInLatheComponent.PinHandwheelsXEnable).value = True
+        comp.getPin(TeachInLatheComponent.PinHandwheelsZEnable).value = True
+
+        self.onSpindleFirstGearChanged(comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
+        self.manualTurningViewModel.setSpindleRunning(
+            comp.getPin(TeachInLatheComponent.PinSpindleIsOn).value)
+        self.manualTurningViewModel.setSpindleCoverOpened(
+            comp.getPin(TeachInLatheComponent.PinSpindleCoveredOpened).value)
+        self.manualTurningViewModel.setSpindleResetRequired(
+            comp.getPin(TeachInLatheComponent.PinSpindleResetRequired).value)
+        self.manualTurningViewModel.setSpindleAngle(
+            comp.getPin(TeachInLatheComponent.PinSpindleOrientation).value)
+        self.manualTurningViewModel.setFeeding(
+            comp.getPin(TeachInLatheComponent.PinJoystickIsFeeding).value)
+        self.manualTurningViewModel.setJoystickResetRequired(
+            comp.getPin(TeachInLatheComponent.PinJoystickResetRequired).value)
+        self.onDevModeChanged(comp.getPin(TeachInLatheComponent.PinDevMode).value)
+
+    def _wireStatus(self):
         # spindle override, initial value and updates
         self.onSpindleOverrideChanged(STATUS.spindle[0].override.value)
         STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
@@ -254,37 +384,27 @@ class MyMainWindow(QMainWindow):
         STATUS.task_mode.signal.connect(self.onTaskModeChanged)
         STATUS.state.signal.connect(self.onStateChanged)
 
-
         self.handle_spindle_mode(self.getSpindleModeIndex)
 
         # rpm is a float that fluctuates a lot, so debounce it
-        self.debounce_timer = QTimer()
+        self.debounce_timer = QTimer(self)
         self.debounce_timer.setInterval(300)
         self.debounce_timer.timeout.connect(self.onRpmDebounced)
         self.debounce_timer.start()
 
+    # ── window ──────────────────────────────────────────────────────────────
 
+    def showMaximized(self):
+        self.view.showMaximized()
 
+    def showFullScreen(self):
+        self.view.showFullScreen()
 
-        # Runtime navigation is handled by the QML app shell content stack.
+    def close(self):
+        self.view.close()
 
-        self.toolLibraryViewModel = ToolLibraryViewModel(self)
-
-        QTimer.singleShot(0, self._initManualTurningRoot)
-        QTimer.singleShot(0, self.afterUIInit)
-        QTimer.singleShot(0, self._initProgramsQml)
-        QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
-        QTimer.singleShot(0, self._initMachineScreens)
-        QTimer.singleShot(0, self._initAppShell)
-        try:
-            self.conversationalqml.setAppState(self.appState)
-        except Exception as e:
-            print("Failed to inject app state into conversational:", e)
-
-        initial_fixture = self.fixture_repository.getCurrentFixture()
-        if initial_fixture:
-            LOG.info("initial fixture: %s", initial_fixture.description)
-            self.onChuckLimitChanged(initial_fixture.z_minus_limit)
+    def getSpindleModeIndex(self):
+        return self.manualTurningViewModel.spindleMode
 
     def afterUIInit(self):
         # set the current values
@@ -293,252 +413,29 @@ class MyMainWindow(QMainWindow):
         self.manualLathe.onInputCssChanged(self.manualTurningViewModel.inputCss)
         self.manualLathe.onMaxSpindleRpmChanged(self.manualTurningViewModel.inputMaxRpm)
         self.manualLathe.onInputFeedChanged(self.manualTurningViewModel.inputFeed)
-
-    def _initManualTurningRoot(self):
-        if hasattr(self, "manualTurningRootQml"):
-            return
-
-        self.numpadDialogViewModel = NumpadDialogViewModel(self)
-
-        self.manualTurningRootQml = QQuickWidget(self.manualTurningTab)
-        self.manualTurningRootQml.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)
-        self.manualTurningRootQml.setClearColor(QColor("#efefef"))
-        self.manualTurningRootQml.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.manualTurningRootQml.setMouseTracking(True)
-        self._ensureTabFillLayout(self.manualTurningTab, self.manualTurningRootQml)
-
-        ctx = self.manualTurningRootQml.engine().rootContext()
-        ctx.setContextProperty("manualViewModel",     self.manualTurningViewModel)
-        ctx.setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
-        ctx.setContextProperty("teachInDroViewModel", self.teachInLatheDroViewModel)
-        ctx.setContextProperty("toolLibraryViewModel", self.toolLibraryViewModel)
-        ctx.setContextProperty("appState",            self.appState)
-        ctx.setContextProperty("cncStore",            self.appState.cncStore)
-        ctx.setContextProperty("navigationStore",     self.appState.navigationStore)
-
-        self.manualTurningRootQml.statusChanged.connect(self._on_manual_root_status_changed)
-
-        qml_path = os.path.join(os.path.dirname(__file__), "widgets", "manual_qml", "ManualTurningRoot.qml")
-        self.manualTurningRootQml.setSource(QUrl.fromLocalFile(qml_path))
-        self.manualTurningRootQml.show()
-        self.manualTurningRootQml.raise_()
-
-        # Restore persisted state into ViewModel
-        self.onSpindleFirstGearChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinSpindleIsFirstGear).value)
-        spindle_mode           = self.manualTurningViewModel.spindleMode
-        jog_increment          = self.manualTurningViewModel.jogIncrement
-        x_handwheel_enabled    = self.manualTurningViewModel.xHandwheelEnabled
-        z_handwheel_enabled    = self.manualTurningViewModel.zHandwheelEnabled
-        self.manualTurningViewModel.setSpindleMode(spindle_mode)
         self.manualTurningViewModel.setFeedOverride(self.current_feed_override)
         self.manualTurningViewModel.setSpindleOverride(self.current_spindle_override)
-        self.manualTurningViewModel.setJogIncrement(jog_increment)
-        self.manualTurningViewModel.setHandwheelStates(x_handwheel_enabled, z_handwheel_enabled)
-        self.manualLathe.onInputCssChanged(self.manualTurningViewModel.inputCss)
-        self.manualLathe.onInputFeedChanged(self.manualTurningViewModel.inputFeed)
-
-    def _on_manual_root_status_changed(self, status):
-        if status != QQuickWidget.Status.Ready:
-            return
-        root = self.manualTurningRootQml.rootObject()
-        if root is None:
-            return
-        root.xToggled.connect(self.onManualQmlXHandwheelToggled)
-        root.zToggled.connect(self.onManualQmlZHandwheelToggled)
-        root.toastRequested.connect(self._show_app_toast)
-        self.manualJoystickController.attach(root)
-        self.latheJoystick = self.manualJoystickController
-        self.manualLathe.setJoystickWidget(self.manualJoystickController)
+        self.manualTurningViewModel.setHandwheelStates(
+            self.manualTurningViewModel.xHandwheelEnabled,
+            self.manualTurningViewModel.zHandwheelEnabled)
 
     @pyqtSlot(str)
     def _show_app_toast(self, message):
-        shell = getattr(self, "appShellWidget", None)
-        if shell is not None:
-            shell.showToast(message)
-
-    def _raise_manual_qml_widgets(self):
-        widget = getattr(self, "manualTurningRootQml", None)
-        if widget is not None:
-            widget.raise_()
-
-    def _initProgramsQml(self):
-        from PyQt6.QtWidgets import QWidget, QVBoxLayout
-        from teachinlathe.widgets.programs_qml.filesystemview import (
-            FileSystemLocation, LocationType,
-        )
-        gcode_folder     = os.path.join(CONVERSATIONAL_GCODE_BASE, "Conversational Gcode")
-        json_folder      = os.path.join(CONVERSATIONAL_JSON_BASE, "Conversational Json")
-        usb_stick_folder = os.path.join(CONVERSATIONAL_GCODE_BASE, "USB Stick Programs")
-        locations = [
-            FileSystemLocation("Generated Programs", gcode_folder,                         LocationType.GENERATED),
-            FileSystemLocation("USB Stick Programs",  usb_stick_folder,                    LocationType.USB_STICK),
-            FileSystemLocation("SyncThing Programs",  os.path.expanduser("~/Sync"),        LocationType.SYNCTHING),
-            FileSystemLocation("Home",                os.path.expanduser("~"),             LocationType.HOME),
-        ]
-        self.programsQmlTab = QWidget()
-        self.programsQmlTab.setObjectName("programsQmlTab")
-
-        tab_layout = QVBoxLayout(self.programsQmlTab)
-        tab_layout.setContentsMargins(0, 0, 0, 0)
-
-        self.programsQmlWidget = ProgramsQml(locations, self.programsQmlTab, json_folder_path=json_folder)
-        self.programsQmlWidget.setAppState(self.appState)
-        self.programsQmlWidget.viewmodel.programLoadRequested.connect(self.onProgramsQmlProgramLoadRequested)
-        self.programsQmlWidget.viewmodel.ensureProgramLoadedRequested.connect(self.onProgramsQmlEnsureProgramLoadedRequested)
-        self.programsQmlWidget.viewmodel.switchToManualRequested.connect(self.onProgramsQmlSwitchToManualRequested)
-        # A failed file operation is reported the way the rest of the app
-        # reports one: a toast, plus an entry in the events drawer.
-        fs = self.programsQmlWidget.fs_viewmodel
-        fs.deleteFailed.connect(lambda msg: self._show_app_toast("Delete failed: %s" % msg))
-        fs.copyFailed.connect(lambda msg: self._show_app_toast("Copy failed: %s" % msg))
-        tab_layout.addWidget(self.programsQmlWidget)
-
-    def _initAppShell(self):
-        if hasattr(self, "appShellWidget") and self.appShellWidget is not None:
-            return
-
-        from PyQt6.QtWidgets import QStackedWidget, QVBoxLayout
-
-        self._ensureTabFillLayout(self.conversationalTab, self.conversationalqml)
-        self._ensureTabFillLayout(self.manualTurningTab, self.manualTurningRootQml)
-
-        if self.pageReady.layout() is None:
-            layout = QVBoxLayout(self.pageReady)
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.setSpacing(0)
-        else:
-            layout = self.pageReady.layout()
-
-        self.appContentStack = QStackedWidget(self.pageReady)
-        self.appContentStack.setObjectName("appContentStack")
-        self.appContentStack.setContentsMargins(0, 0, 0, 0)
-        self.appContentStack.addWidget(self.manualTurningTab)
-        self.appContentStack.addWidget(self.conversationalTab)
-        self.appContentStack.addWidget(self.programsQmlTab)
-        self.appContentStack.addWidget(self.settingsTab)
-        self.appContentStack.currentChanged.connect(self.onMainTabChanged)
-
-        feature_controllers = {
-            "conversational": getattr(self, "conversationalqml", None),
-            "programs": getattr(self, "programsQmlWidget", None),
-        }
-        self.appShellWidget = AppShellQmlWidget(self.appContentStack, self.appState, self.pageReady, feature_controllers=feature_controllers)
-        layout.addWidget(self.appShellWidget)
-
-        tab_id = {
-            MainTabs.MANUAL_TURNING.value: "manual",
-            MainTabs.CONVERSATIONAL.value: "conversational",
-            MainTabs.PROGRAMS.value: "programs",
-            MainTabs.MACHINE_SETTINGS.value: "settings",
-        }.get(self.appContentStack.currentIndex(), "manual")
-        self.appState.activateTab(tab_id)
-
-    # ── QML machine screens ─────────────────────────────────────────────────────
-
-    MACHINE_QML_DIR = os.path.join(os.path.dirname(__file__), "widgets", "machine_qml")
-
-    def _makeMachineQmlWidget(self, file_name, parent):
-        """A QQuickWidget showing one of the machine_qml screens."""
-        widget = QQuickWidget(parent)
-        widget.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)
-        widget.setClearColor(QColor("#f4f6f9"))
-        ctx = widget.rootContext()
-        ctx.setContextProperty("machineViewModel", self.machineViewModel)
-        ctx.setContextProperty("fixturesViewModel", self.fixturesViewModel)
-        widget.setSource(QUrl.fromLocalFile(os.path.join(self.MACHINE_QML_DIR, file_name)))
-        for error in widget.errors():
-            LOG.error("QML error in %s: %s", file_name, error.toString())
-        root = widget.rootObject()
-        if root is not None:
-            root.setProperty("viewModel", self.machineViewModel)
-            root.setProperty("fixturesViewModel", self.fixturesViewModel)
-        return widget, root
-
-    def _initMachineScreens(self):
-        """Replace the .ui's pageNotReady and settingsTab with QML."""
-        self.machineViewModel = MachineViewModel(self)
-        self.fixturesViewModel = FixturesViewModel(self)
-        self.fixturesViewModel.chuckLimitChanged.connect(self.onChuckLimitChanged)
-
-        self.notReadyQml, _ = self._makeMachineQmlWidget(
-            "NotReadyScreen.qml", self.pageNotReady)
-        self._ensureTabFillLayout(self.pageNotReady, self.notReadyQml)
-
-        self.settingsQml, settings_root = self._makeMachineQmlWidget(
-            "MachineSettingsScreen.qml", self.settingsTab)
-        if settings_root is not None:
-            settings_root.setG28.connect(self.onSetG28)
-            settings_root.goToG28.connect(self.onGoToG28)
-            settings_root.setG30.connect(self.onSetG30)
-            settings_root.goToG30.connect(self.onGoToG30)
-        self._ensureTabFillLayout(self.settingsTab, self.settingsQml)
-
-        # The .ui switched between the two pages with a data-bound rule; the
-        # same rule lives in MachineViewModel.machineReady now.
-        self.machineViewModel.stateChanged.connect(self._refreshReadyPage)
-        self._refreshReadyPage()
-
-    def _refreshReadyPage(self):
-        ready = 1 if self.machineViewModel.machineReady else 0
-        if self.stackedWidget.currentIndex() != ready:
-            self.stackedWidget.setCurrentIndex(ready)
+        self.appShellBridge.showToast(message)
 
     def onChuckLimitChanged(self, z_minus_limit):
         self.teachInLatheDroViewModel.setChuckLimit(float(z_minus_limit))
 
-    def _ensureTabFillLayout(self, tab, widget):
-        if tab is None or widget is None:
-            return
-        from PyQt6.QtWidgets import QSizePolicy, QVBoxLayout
-
-        widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        widget.setMinimumSize(0, 0)
-        layout = tab.layout()
-        if layout is None:
-            layout = QVBoxLayout(tab)
-            layout.setContentsMargins(0, 0, 0, 0)
-            layout.setSpacing(0)
-        if layout.indexOf(widget) < 0:
-            layout.addWidget(widget)
-
-
-    def _syncEmbeddedQmlTabs(self):
-        current_index = self.appContentStack.currentIndex() if hasattr(self, "appContentStack") else 0
-        manual_active = current_index == MainTabs.MANUAL_TURNING.value
-        conversational_active = current_index == MainTabs.CONVERSATIONAL.value
-
-        if hasattr(self, "manualTurningRootQml"):
-            self.manualTurningRootQml.setVisible(manual_active)
-            if manual_active:
-                self.manualTurningRootQml.raise_()
-
-        if hasattr(self, "conversationalqml"):
-            self.conversationalqml.setVisible(conversational_active)
-            self.conversationalqml.update()
-
-        current_widget = self.appContentStack.currentWidget() if hasattr(self, "appContentStack") else None
-        if current_widget is not None:
-            current_widget.raise_()
-            current_widget.update()
-            current_widget.repaint()
-        if hasattr(self, "appContentStack"):
-            self.appContentStack.update()
-
-    def onMainTabChanged(self, index):
-        self.mainSelectedTab = MainTabs(index)
-        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = self.mainSelectedTab == MainTabs.PROGRAMS
-        self.teachInLatheDroViewModel.limitsHandler.setChuckLimitsActive(self.mainSelectedTab != MainTabs.MACHINE_SETTINGS)
-
-        tab_id = {
-            MainTabs.MANUAL_TURNING.value: "manual",
-            MainTabs.CONVERSATIONAL.value: "conversational",
-            MainTabs.PROGRAMS.value: "programs",
-            MainTabs.MACHINE_SETTINGS.value: "settings",
-        }.get(index, "manual")
-        self.appState.activateTab(tab_id)
+    def onMainTabChanged(self):
+        """The active tab changed - QML follows navigationStore, this is what
+        has to happen on the HAL side when it does."""
+        tab_id = self.appState.navigationStore.currentTab or "manual"
+        self.mainSelectedTab = TAB_IDS.get(tab_id, MainTabs.MANUAL_TURNING)
+        self.latheComponent.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = \
+            self.mainSelectedTab == MainTabs.PROGRAMS
+        self.teachInLatheDroViewModel.limitsHandler.setChuckLimitsActive(
+            self.mainSelectedTab != MainTabs.MACHINE_SETTINGS)
         self.appState.cncStore.addEvent("INFO", "navigation", f"Switched to {tab_id}")
-        QTimer.singleShot(0, self._syncEmbeddedQmlTabs)
-        QTimer.singleShot(0, self._initAppShell)
 
     def loadProgram(self):
         self.latheComponent.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = True
@@ -551,33 +448,24 @@ class MyMainWindow(QMainWindow):
 
     def onProgramsQmlSwitchToManualRequested(self):
         self.appState.activateTab("manual")
-        if hasattr(self, "appContentStack"):
-            self.appContentStack.setCurrentIndex(MainTabs.MANUAL_TURNING.value)
 
     def showGeneratedProgram(self, ngc_path: str):
         if not ngc_path:
             return
         try:
             self.appState.activateTab("programs")
-            self.programsQmlWidget.viewmodel.showFilesScreen()
-            self.programsQmlWidget.fs_viewmodel.showFileInGeneratedPrograms(
-                os.path.abspath(ngc_path)
-            )
-            self.programsQmlWidget.reactivate()
-            QTimer.singleShot(0, self.programsQmlWidget.reactivate)
-            QTimer.singleShot(100, self.programsQmlWidget.reactivate)
+            self.programsController.showFileInGeneratedPrograms(ngc_path)
         except Exception as e:
-            print("showGeneratedProgram failed:", e)
+            LOG.error("showGeneratedProgram failed: %s", e)
 
     def editConversationalProgramFromJson(self, json_path: str):
         if not json_path or not os.path.isfile(json_path):
             return
         try:
             self.appState.activateTab("conversational")
-            if hasattr(self, "conversationalqml"):
-                self.conversationalqml.openProgramFile(os.path.abspath(json_path))
+            self.conversationalqml.openProgramFile(os.path.abspath(json_path))
         except Exception as e:
-            print("editConversationalProgramFromJson failed:", e)
+            LOG.error("editConversationalProgramFromJson failed: %s", e)
 
     def onSpindleModeChanged(self):
         self.manualLathe.onSpindleModeChanged(self.getSpindleModeIndex())
@@ -608,8 +496,9 @@ class MyMainWindow(QMainWindow):
         self.manualTurningViewModel.setAngleFeedActive(bool(value))
 
     def _on_manual_joystick_state_changed(self):
-        self._raise_manual_qml_widgets()
-        QTimer.singleShot(0, self._raise_manual_qml_widgets)
+        # Used to raise the manual QQuickWidget above its siblings; in one
+        # scene there is nothing to raise.
+        pass
 
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)
@@ -725,8 +614,7 @@ class MyMainWindow(QMainWindow):
     def _open_qml_numpad(self, setting_name, description, on_commit):
         """Open the QML SmartNumpadDialog (hosted in ManualTurningRoot) for a
         one-shot value, invoking *on_commit* with the entered value."""
-        root = getattr(self, "manualTurningRootQml", None)
-        root_item = root.rootObject() if root is not None else None
+        root_item = self.manualScreen
         if root_item is None:
             return
         # Keep a reference so the adapter isn't garbage-collected mid-dialog.
@@ -745,8 +633,7 @@ class MyMainWindow(QMainWindow):
         try:
             if self.toolLibraryViewModel.currentToolRequiresBladeZ0Reference():
                 blade_width = self.toolLibraryViewModel.currentToolBladeWidth()
-                root = getattr(self, "manualTurningRootQml", None)
-                root_item = root.rootObject() if root is not None else None
+                root_item = self.manualScreen
                 if root_item is not None:
                     QMetaObject.invokeMethod(
                         root_item,
@@ -755,7 +642,7 @@ class MyMainWindow(QMainWindow):
                         Q_ARG("QVariant", blade_width),
                     )
         except Exception as e:
-            print("openBladeZ0ReferenceDialog failed:", e)
+            LOG.error("openBladeZ0ReferenceDialog failed: %s", e)
 
     def onSetG28(self):
         issue_mdi("G28.1")
@@ -771,46 +658,35 @@ class MyMainWindow(QMainWindow):
 
     # ── Full-screen overlay ──────────────────────────────────────────────────────
 
-    def enterFullScreen(self, widget):
+    def enterFullScreen(self):
         """Hide the whole chrome (top bar + bottom nav)."""
-        self._setFullScreen(widget, hide_top=True, hide_bottom=True)
+        self._setFullScreen(hide_top=True, hide_bottom=True)
 
-    def enterContentFullScreen(self, widget):
+    def enterContentFullScreen(self):
         """Hide only the bottom nav; the AppShell title bar stays visible."""
-        self._setFullScreen(widget, hide_top=False, hide_bottom=True)
+        self._setFullScreen(hide_top=False, hide_bottom=True)
 
-    def enterProgramRunFullScreen(self, widget):
+    def enterProgramRunFullScreen(self):
         """Full window (covers App Bar + bottom tab bar) for a running program."""
-        self._setFullScreen(widget, hide_top=True, hide_bottom=True)
+        self._setFullScreen(hide_top=True, hide_bottom=True)
 
-    def _setFullScreen(self, widget, hide_top, hide_bottom):
-        # NOTE: we deliberately never reparent `widget` here. Reparenting a
-        # QQuickWidget (or a native/GL child widget it hosts, e.g. the Gremlin
-        # backplot) forces Qt to tear down and recreate its render context,
-        # which can block the UI thread for many seconds. Instead we just
-        # hide the AppShell's top/bottom bars in place; the widget keeps its
-        # normal spot in the QStackedWidget and the QVBoxLayout simply
-        # reclaims the space the bars vacated.
-        if getattr(self, "_fullscreen_widget", None) is widget:
-            return
-        self._fullscreen_widget = widget
-        shell = getattr(self, "appShellWidget", None)
-        if shell is None:
-            return
-        stack = getattr(shell, "content_stack", None)
-        if stack is not None and stack.indexOf(widget) != -1:
-            stack.setCurrentWidget(widget)
-        if hasattr(shell, "hideChrome"):
-            shell.hideChrome(hide_top=hide_top, hide_bottom=hide_bottom)
+    def _setFullScreen(self, hide_top, hide_bottom):
+        # This used to carry a warning about never reparenting the page,
+        # because moving a QQuickWidget - or the Gremlin QOpenGLWidget inside
+        # it - tore down its render context and blocked the UI for seconds.
+        # Nothing moves now: the bars are items that stop being visible, and
+        # the layout gives their space back.
+        self._fullscreen = True
+        if self.appRoot is not None:
+            self.appRoot.hideChrome(hide_top, hide_bottom)
 
     def exitFullScreen(self):
         """Restore the AppShell chrome (top bar + bottom nav)."""
-        widget = getattr(self, "_fullscreen_widget", None)
-        if widget is None:
+        if not self._fullscreen:
             return
-        self._fullscreen_widget = None
-        shell = getattr(self, "appShellWidget", None)
-        if shell is not None and hasattr(shell, "showChrome"):
-            shell.showChrome()
-        if hasattr(widget, "reactivate"):
-            QTimer.singleShot(0, widget.reactivate)
+        self._fullscreen = False
+        if self.appRoot is not None:
+            self.appRoot.showChrome()
+
+# The old name, so callers that predate the QWidget removal keep working.
+MyMainWindow = TeachInLatheApp

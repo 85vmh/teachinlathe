@@ -1,9 +1,10 @@
 // SmartNumpadDialog.qml — QML numpad dialog.
 //
-// Driven by `numpadDialogViewModel` (context property). Open it with:
+// Driven by the `viewModel` property, which defaults to the
+// `numpadDialogViewModel` context property. Open it with:
 //     dialog.openFor(field, settingName, descriptionOverride)
 // where `field` is a NumpadField. On accept it writes the value back via
-// field.commit(value) and persists it via numpadDialogViewModel.commitValue().
+// field.commit(value) and persists it via viewModel.commitValue().
 //
 // Two modes:
 //   • "select"  — predefined value buttons (when the JSON entry has options)
@@ -14,6 +15,12 @@ import QtQuick.Layouts 1.15
 
 Popup {
     id: root
+
+    // Which numpad view model drives this dialog. Each screen has its own
+    // (the manual tab persists the last value, conversational does not), so
+    // it is passed in rather than read from a single context property.
+    property var viewModel: (typeof numpadDialogViewModel !== "undefined")
+                            ? numpadDialogViewModel : null
 
     // ── State for the currently edited field ──────────────────────────
     property var    targetField: null
@@ -59,8 +66,8 @@ Popup {
         root.targetField = field
         root.settingName = settingName || ""
 
-        var cfg = (typeof numpadDialogViewModel !== "undefined" && numpadDialogViewModel)
-                    ? numpadDialogViewModel.configFor(root.settingName)
+        var cfg = root.viewModel
+                    ? root.viewModel.configFor(root.settingName)
                     : ({ hasOptions: false, options: [], description: "" })
 
         root.options    = cfg.options || []
@@ -130,8 +137,8 @@ Popup {
         if (root.targetField && root.targetField.commit) {
             root.targetField.commit(v)
         }
-        if (typeof numpadDialogViewModel !== "undefined" && numpadDialogViewModel) {
-            numpadDialogViewModel.commitValue(root.settingName, v)
+        if (root.viewModel) {
+            root.viewModel.commitValue(root.settingName, v)
         }
         root.close()
     }

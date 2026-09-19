@@ -1,8 +1,8 @@
-__all__ = ["ProgramsQml"]
+__all__ = ["ProgramsController"]
 
 
 def __getattr__(name):
-    if name == "ProgramsQml":
-        from .ProgramsQml import ProgramsQml
-        return ProgramsQml
+    if name == "ProgramsController":
+        from .ProgramsController import ProgramsController
+        return ProgramsController
     raise AttributeError(name)

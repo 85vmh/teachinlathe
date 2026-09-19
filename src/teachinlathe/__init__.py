@@ -33,8 +33,16 @@ os.environ.setdefault("QT_API", "pyqt6")
 # and the palette text colour exactly.
 os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
 
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtWidgets import QApplication
+# The G-code preview draws with the renderer LinuxCNC shares between its
+# screens (rs274.glcanon_gl), straight into the Qt Quick scene graph. That
+# needs the scene graph on OpenGL rather than whichever RHI backend Qt picks,
+# and it needs to render on the GUI thread: the preview reads linuxcnc status
+# and the position logger while it draws, neither of which is thread-safe.
+os.environ.setdefault("QSG_RENDER_LOOP", "basic")
+
+from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QGuiApplication, QSurfaceFormat
+from PyQt6.QtQuick import QQuickWindow, QSGRendererInterface
 
 from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
 from teachinlathe.logging_setup import configure as configure_logging
@@ -79,8 +87,21 @@ def main(argv=None):
     log.info("starting %s %s with %s", APPLICATION_DISPLAY_NAME, __version__,
              os.environ['INI_FILE_NAME'])
 
-    QApplication.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings, True)
-    app = QApplication(sys.argv if argv is None else [sys.argv[0]])
+    QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
+    app = QGuiApplication(sys.argv if argv is None else [sys.argv[0]])
+
+    # The surface the preview renderer needs - OpenGL 3.3 core, or GLES 3.1
+    # where there is no desktop core profile. Asking qt5_graphics for it keeps
+    # this in step with the renderer rather than guessing. It has to be set
+    # after the application exists, because answering it creates a throwaway
+    # GL context, and before any window is created, because that is when the
+    # format is read.
+    try:
+        from qt5_graphics import Lcnc_3dGraphics, preview_surface_format
+        QSurfaceFormat.setDefaultFormat(
+            preview_surface_format(Lcnc_3dGraphics._desktop_core_available()))
+    except Exception as exc:
+        log.warning("could not set the preview surface format: %s", exc)
     app.setApplicationName(APPLICATION_DISPLAY_NAME)
     app.setApplicationDisplayName(APPLICATION_DISPLAY_NAME)
     app.setApplicationVersion(__version__)
@@ -126,27 +147,37 @@ def main(argv=None):
     # and leave the HAL component registered, blocking the next start.
     install_signal_handlers()
 
-    # Queued, not called straight away. The window builds its QML screens on
-    # queued callbacks of its own, and under Qt6 adding a QQuickWidget to a
-    # window that is already on screen forces the native window to be
-    # recreated: the maximized state is lost and what is left is a 200x100
-    # stub. Queueing the show behind those callbacks means every QQuickWidget
-    # exists before the window is mapped. Qt5 did not care either way.
-    show = window.showFullScreen if args.fullscreen else window.showMaximized
-    QTimer.singleShot(0, show)
+    # The whole scene is built before this returns now - there are no queued
+    # callbacks left creating QQuickWidgets, which is what the show used to
+    # have to be queued behind.
+    if args.fullscreen:
+        window.showFullScreen()
+    else:
+        window.showMaximized()
 
     if stopping:
         log.info("interrupted while starting up")
         return 0
 
     try:
-        return app.exec()
+        status = app.exec()
     except KeyboardInterrupt:
         # Only reachable if the interpreter takes the signal between the
         # handler running and the loop noticing; exiting quietly is the whole
         # point of handling it.
         log.info("interrupted")
-        return 0
+        status = 0
+
+    # Leave without unwinding. PyQt6 6.4 crashes tearing down a QQuickView
+    # that holds a QQuickFramebufferObject - reproducible with an item that
+    # draws nothing - and a crash here would leave the HAL component
+    # registered, which blocks the next start. Everything that has to happen
+    # on the way out has happened by now: the component unloads when its
+    # process ends, and the event loop is over.
+    log.info("exiting with status %s", status)
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(status)
 
 
 if __name__ == '__main__':
