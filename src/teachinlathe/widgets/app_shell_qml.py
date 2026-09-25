@@ -1,11 +1,7 @@
 """The model behind the application chrome.
 
-The chrome itself - title bar, bottom tab bar, events drawer, toast - used to
-be AppShellQmlWidget: a QWidget holding one QQuickWidget per bar, with a
-QStackedWidget between them, and Python computing the drawer's geometry on
-every resize. The bars were always QML; only the box around them was not.
-That box is AppShell.qml now, so what is left here is the bridge the bars
-read from.
+The chrome itself - title bar, bottom tab bar, events drawer, toast - is
+AppShell.qml. What this module holds is the bridge those bars read from.
 """
 
 from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot

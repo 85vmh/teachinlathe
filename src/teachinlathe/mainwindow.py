@@ -1,15 +1,9 @@
 """The application: one QML scene, and the machine wiring behind it.
 
-There used to be a QMainWindow here holding a QStackedWidget of two pages, the
-second holding another QStackedWidget of four QWidget tabs, each wrapping a
-QQuickWidget with an engine of its own - plus a Gremlin QOpenGLWidget that had
-to be positioned over a placeholder by hand. Every screen was already QML; the
-widgets existed only to carry them.
-
-They are gone. A single QQuickView loads AppRoot.qml, every screen is an item
-in that one scene, and the backplot renders into the scene graph through
-LatheBackplotItem. What is left in this file is what it was always for: the
-view models, and the HAL pins wired to them.
+A single QQuickView loads AppRoot.qml, every screen is an item in that one
+scene, and the backplot renders into the scene graph through
+LatheBackplotItem. What this file holds is the view models QML binds to, and
+the HAL pins wired to them.
 """
 
 import logging
@@ -200,13 +194,7 @@ class TeachInLatheApp(QObject):
     # ── construction ────────────────────────────────────────────────────────
 
     def _buildViewModels(self):
-        """Everything QML binds to.
-
-        All of it exists before the scene is loaded now. It used to be spread
-        over half a dozen QTimer.singleShot(0, ...) callbacks, because each
-        screen had a QQuickWidget that had to be created, parented and shown
-        in the right order.
-        """
+        """Everything QML binds to, built before the scene is loaded."""
         self.manualTurningViewModel = ManualTurningViewModel(self.manualLathe, self)
         self.teachInLatheDroViewModel = TeachInLatheDroViewModel(self)
         self.toolLibraryViewModel = ToolLibraryViewModel(self)
@@ -215,9 +203,6 @@ class TeachInLatheApp(QObject):
         self.manualJoystickController = ManualJoystickController(self.manualTurningViewModel, self)
         self.latheJoystick = self.manualJoystickController
         self.manualLathe.setJoystickWidget(self.manualJoystickController)
-        self.manualTurningViewModel.joystickStateChanged.connect(
-            self._on_manual_joystick_state_changed)
-
         self.machineViewModel = MachineViewModel(self)
         self.fixturesViewModel = FixturesViewModel(self)
         self.fixturesViewModel.chuckLimitChanged.connect(self.onChuckLimitChanged)
@@ -499,11 +484,6 @@ class TeachInLatheApp(QObject):
         print("angleFeedToggled", value)
         self.manualTurningViewModel.setAngleFeedActive(bool(value))
 
-    def _on_manual_joystick_state_changed(self):
-        # Used to raise the manual QQuickWidget above its siblings; in one
-        # scene there is nothing to raise.
-        pass
-
     def onSpindleRunningChanged(self, value):
         print("onSpindleRunningChanged", value)
         self.manualTurningViewModel.setSpindleRunning(value)
@@ -675,11 +655,8 @@ class TeachInLatheApp(QObject):
         self._setFullScreen(hide_top=True, hide_bottom=True)
 
     def _setFullScreen(self, hide_top, hide_bottom):
-        # This used to carry a warning about never reparenting the page,
-        # because moving a QQuickWidget - or the Gremlin QOpenGLWidget inside
-        # it - tore down its render context and blocked the UI for seconds.
-        # Nothing moves now: the bars are items that stop being visible, and
-        # the layout gives their space back.
+        # Nothing is reparented or moved: the bars are items that stop being
+        # visible, and the layout gives their space back.
         self._fullscreen = True
         if self.appRoot is not None:
             self.appRoot.hideChrome(hide_top, hide_bottom)

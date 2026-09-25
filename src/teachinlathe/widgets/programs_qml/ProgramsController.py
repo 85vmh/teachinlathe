@@ -1,14 +1,9 @@
-"""The Programs tab, without a widget under it.
+"""The Programs tab.
 
-This was ``ProgramsQml``, a QQuickWidget that also owned the Gremlin
-QOpenGLWidget and kept it aligned with a placeholder in its own scene: every
-move, resize, screen change and full-screen transition had to re-map the
-widget's geometry, and a set of QPushButtons had to be moved with it.
-
-The preview is a scene-graph item now (``LatheBackplot``), so none of that
-remains. What is left is what the class was always really doing: owning the
-view models, answering the app shell's header questions, and translating a
-few view-model signals into preview commands.
+The preview is a scene-graph item (``LatheBackplot``), so nothing here
+positions it. What this class does is own the view models, answer the app
+shell's header questions, and translate a few view-model signals into preview
+commands.
 """
 
 import logging

@@ -70,11 +70,10 @@ DXF_PROFILE_FOLDER = "/home/cnc/Work/teachinlathe/dxf_profiles"
 class ConversationalQml(QObject):
     """The conversational editor.
 
-    Was a QQuickWidget with an engine of its own. It shares the application's
-    engine now, so its view models are registered on the shared root context;
-    the one name that used to collide with the manual tab's - the numpad view
-    model - is registered as conversationalNumpadViewModel and passed to the
-    dialog explicitly.
+    It shares the application's QML engine, so its view models are registered
+    on the shared root context. The one name that would collide with the
+    manual tab's - the numpad view model - is registered as
+    ``conversationalNumpadViewModel`` and passed to the dialog explicitly.
     """
 
     headerStateChanged = pyqtSignal()

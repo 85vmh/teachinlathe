@@ -25,12 +25,11 @@ import sys
 # them. ``setdefault`` leaves an explicit QT_API from the environment alone.
 os.environ.setdefault("QT_API", "pyqt6")
 
-# Qt6 picks the Fusion style for Quick Controls on desktop Linux, where Qt5
-# used the plain "Default" style that this UI was drawn against. Fusion is not
-# a repaint - it changes metrics: a Button drops from 40px to 26px high, which
-# is the difference between hitting it with a glove on and not. "Basic" is the
-# Qt6 name for the style Qt5 called "Default", and restores both the metrics
-# and the palette text colour exactly.
+# Qt6 picks the Fusion style for Quick Controls on desktop Linux, and Fusion
+# is not a repaint - it changes metrics. Measured: a Button is 40px high under
+# "Basic" and 24px under Fusion, which is the difference between hitting it
+# with a glove on and not. "Basic" is the style this UI was drawn against, and
+# it restores the palette text colour with the metrics.
 os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
 
 # The G-code preview draws with the renderer LinuxCNC shares between its
@@ -81,11 +80,9 @@ def main(argv=None):
     if not os.environ.get('INI_FILE_NAME'):
         log.error("no INI file: pass --ini or set INI_FILE_NAME")
         return 2
-    os.environ.setdefault('CONFIG_DIR',
-                          os.path.dirname(os.environ['INI_FILE_NAME']))
+    os.environ.setdefault('CONFIG_DIR', os.path.dirname(os.environ['INI_FILE_NAME']))
 
-    log.info("starting %s %s with %s", APPLICATION_DISPLAY_NAME, __version__,
-             os.environ['INI_FILE_NAME'])
+    log.info("starting %s %s with %s", APPLICATION_DISPLAY_NAME, __version__, os.environ['INI_FILE_NAME'])
 
     QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
     app = QGuiApplication(sys.argv if argv is None else [sys.argv[0]])
@@ -147,9 +144,6 @@ def main(argv=None):
     # and leave the HAL component registered, blocking the next start.
     install_signal_handlers()
 
-    # The whole scene is built before this returns now - there are no queued
-    # callbacks left creating QQuickWidgets, which is what the show used to
-    # have to be queued behind.
     if args.fullscreen:
         window.showFullScreen()
     else:
