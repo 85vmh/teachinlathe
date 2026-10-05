@@ -107,12 +107,14 @@ except ImportError as exc:  # pragma: no cover - depends on the LinuxCNC install
 #: update. ``GlCanonDraw`` reads it through a defensive
 #: ``getattr(self, 'show_workpiece', True)``, but qt5_graphics overrides the
 #: getter with a bare ``self.show_workpiece``, and that is the one the graft
-#: takes.
+#: takes. ``workpiece_opacity`` followed the same way, read bare by
+#: qt5_graphics' ``get_workpiece_opacity``.
 #:
 #: ``tests/test_backplot_graft.py`` checks this against upstream, so the next
 #: addition fails a test rather than the render loop.
 _GRAFT_REQUIRES = frozenset({
     "show_workpiece",
+    "workpiece_opacity",
 })
 
 #: Set by ``Lcnc_3dGraphics.__init__`` and deliberately not set here, because
@@ -468,6 +470,9 @@ class LatheBackplotCanon(_HostBase):
         # reads it is qt5_graphics', which is a bare attribute read - see
         # _GRAFT_REQUIRES.
         self.show_workpiece = True
+        # Upstream's default: those outlines only, without the translucent
+        # solid. Same bare-read getter as above.
+        self.workpiece_opacity = 0.0
 
         # Rapids come out of upstream's baked buffer, so that RapidsActor can
         # draw them dashed - which that buffer cannot, having neither a width
