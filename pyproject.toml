@@ -16,7 +16,8 @@ packages = [
 ]
 include = [
     "src/teachinlathe/widgets/programs_qml/*.json",
-    "src/teachinlathe/widgets/dev_panel_qml/*.qml"
+    "src/teachinlathe/widgets/dev_panel_qml/*.qml",
+    "src/teachinlathe/configurations/*.json"
 ]
 
 [tool.poetry.dependencies]

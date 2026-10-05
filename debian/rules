@@ -6,11 +6,6 @@
 override_dh_auto_test:
 	dh_auto_install
 
-	# Create the truetype directory if it doesn't exist
-	mkdir -p debian/python3-teachinlathe/usr/share/fonts/truetype/
-	# Install the font file
-	install -m 644 fonts/BebasKai.ttf debian/python3-teachinlathe/usr/share/fonts/truetype/
-
 	# create icons directory if it doesn't exist
 	mkdir -p debian/python3-teachinlathe/usr/share/icons/hicolor/scalable/apps/
 	# copy icons from source to icons directory
@@ -19,11 +14,6 @@ override_dh_auto_test:
 	# install desktop launcher so desktop shells can associate the Qt window
 	mkdir -p debian/python3-teachinlathe/usr/share/applications/
 	install -m 644 debian/teachinlathe.desktop debian/python3-teachinlathe/usr/share/applications/org.teachinlathe.TeachInLathe.desktop
-
-	# create configs directory if it doesn't exist
-	mkdir -p debian/python3-teachinlathe/usr/share/configs/
-	# Install the config file contents
-	cp -r configs debian/python3-teachinlathe/usr/share/
 
 override_dh_install:
 	dh_install

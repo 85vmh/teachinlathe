@@ -7,18 +7,24 @@ The numpad config used to live in the application settings (yml) and is now
 decoupled into plain JSON, with no dependency on any settings framework.
 
 Only entries that declare a ``last_value`` field are persisted: when the user
-picks a value for such a key it is written back to the JSON so the field is
-repopulated with it next time (used for RPM / feed / CSS / max RPM).
+picks a value for such a key it is saved so the field is repopulated with it
+next time (used for RPM / feed / CSS / max RPM). The JSON shipped in the
+package is read-only once installed, so those values go to a small overlay in
+``~/.config/teachinlathe/numpad_last_values.json`` and the shipped
+``last_value`` only serves as the default until the user picks one.
 """
 
 import json
 import os
 import threading
 
-# configurations/ lives at the repository root, next to src/.
+# configurations/ ships inside the teachinlathe package.
 _THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-_REPO_ROOT = os.path.abspath(os.path.join(_THIS_DIR, '..', '..', '..'))
-DEFAULT_PATH = os.path.join(_REPO_ROOT, 'configurations', 'numpad_settings.json')
+_PACKAGE_ROOT = os.path.abspath(os.path.join(_THIS_DIR, '..'))
+DEFAULT_PATH = os.path.join(_PACKAGE_ROOT, 'configurations', 'numpad_settings.json')
+
+_CONFIG_HOME = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
+LAST_VALUES_PATH = os.path.join(_CONFIG_HOME, 'teachinlathe', 'numpad_last_values.json')
 
 
 class NumpadSettings:
@@ -32,8 +38,9 @@ class NumpadSettings:
             cls._instance = cls()
         return cls._instance
 
-    def __init__(self, file_path=DEFAULT_PATH):
+    def __init__(self, file_path=DEFAULT_PATH, last_values_path=LAST_VALUES_PATH):
         self._file_path = file_path
+        self._last_values_path = last_values_path
         self._lock = threading.Lock()
         self._data = {}
         self._load()
@@ -44,6 +51,19 @@ class NumpadSettings:
                 self._data = json.load(fh)
         except (OSError, ValueError):
             self._data = {}
+
+        try:
+            with open(self._last_values_path, 'r') as fh:
+                last_values = json.load(fh)
+        except (OSError, ValueError):
+            return
+        if not isinstance(last_values, dict):
+            return
+        for key, value in last_values.items():
+            entry = self._data.get(key)
+            # Keys the shipped JSON dropped or stopped persisting are ignored.
+            if entry is not None and 'last_value' in entry:
+                entry['last_value'] = value
 
     def get(self, key):
         """Return the raw config dict for *key*, or ``None``."""
@@ -85,11 +105,15 @@ class NumpadSettings:
         return int(number) if number.is_integer() else number
 
     def _save(self):
+        last_values = {key: entry['last_value']
+                       for key, entry in self._data.items()
+                       if 'last_value' in entry}
         with self._lock:
-            tmp_path = self._file_path + '.tmp'
+            tmp_path = self._last_values_path + '.tmp'
             try:
+                os.makedirs(os.path.dirname(self._last_values_path), exist_ok=True)
                 with open(tmp_path, 'w') as fh:
-                    json.dump(self._data, fh, indent=2)
-                os.replace(tmp_path, self._file_path)
+                    json.dump(last_values, fh, indent=2)
+                os.replace(tmp_path, self._last_values_path)
             except OSError:
                 pass
