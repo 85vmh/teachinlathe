@@ -73,6 +73,13 @@ PREVIEW_POLL_INTERVAL_MS = int(
 PERF_LOGGING = bool(os.environ.get("TEACHINLATHE_PERF"))
 PERF_REPORT_INTERVAL_MS = 5000
 
+#: The exponent in GlNavBase.get_projection_matrix's ortho half-width,
+#: ``distance ** 0.55555``.
+_ORTHO_EXPONENT = 0.55555
+#: The same bounds glnav's zoomin/zoomout keep the distance within.
+_PINCH_MIN_DISTANCE = 0.1
+_PINCH_MAX_DISTANCE = 6000.0
+
 # Mirrors gremlin_widget.py: qt5_graphics reaches for Qt through qtpy, which
 # picks PyQt5 unless told otherwise, and two bindings in one process do not
 # survive each other. teachinlathe/__init__ pins this already; repeated here
@@ -1220,6 +1227,53 @@ class LatheBackplotCanon(_HostBase):
         self.zoomout()
         self.update()
 
+    # ── two-finger pinch ────────────────────────────────────────────────────
+    #
+    # glnav's own drag-zoom scales around the middle of the window and its pan
+    # adds a boost when zoomed in, so neither keeps the drawing under the
+    # fingers. This works the ortho projection out directly instead:
+    # GlNavBase.get_projection_matrix spans 2 * distance ** 0.55555 eye units
+    # across the width, centred on the window, so one pixel is the same size
+    # both ways and a point's eye coordinates follow from its pixel.
+
+    def begin_pinch(self, x, y, width, height):
+        """Remember the view a pinch starts from; *x*, *y* is the centroid."""
+        self._pinch_start = (self.distance, self.modelview.copy(),
+                             self._pixel_to_eye(x, y, width, height, self.distance))
+
+    def update_pinch(self, scale, x, y, width, height):
+        """Zoom by *scale* since the pinch began, keeping the point that
+        started between the fingers between them as they move."""
+        start = getattr(self, '_pinch_start', None)
+        if start is None or self.perspective:
+            return
+        distance0, modelview0, eye0 = start
+
+        half_span = abs(distance0) ** _ORTHO_EXPONENT / max(scale, 1e-6)
+        distance = min(_PINCH_MAX_DISTANCE,
+                       max(_PINCH_MIN_DISTANCE, half_span ** (1.0 / _ORTHO_EXPONENT)))
+
+        eye = self._pixel_to_eye(x, y, width, height, distance)
+        self.distance = distance
+        self.modelview = glnav.multiply(
+            glnav.translation_matrix(eye[0] - eye0[0], eye[1] - eye0[1], 0.0),
+            modelview0)
+        self.invalidate_static()
+        self.current_view = 'y'
+        self.update()
+
+    def end_pinch(self):
+        self._pinch_start = None
+
+    @staticmethod
+    def _pixel_to_eye(x, y, width, height, distance):
+        """Eye-space x, y of item pixel *x*, *y* in the ortho view."""
+        width = max(1.0, float(width))
+        height = max(1.0, float(height))
+        units_per_pixel = 2.0 * abs(distance) ** _ORTHO_EXPONENT / width
+        return ((x - width / 2.0) * units_per_pixel,
+                (height / 2.0 - y) * units_per_pixel)
+
 
 class _Viewport:
     """The two fields ``screen.pixels_per_unit`` reads, outside a frame."""
@@ -1490,6 +1544,29 @@ class LatheBackplotItem(QQuickFramebufferObject):
             return
         canon.continueZoom(int(y))
         self.update()
+
+    @pyqtSlot(float, float)
+    def pinchStarted(self, x, y):
+        canon = self.canon()
+        if canon is None:
+            return
+        canon.begin_pinch(x, y, self.width(), self.height())
+
+    @pyqtSlot(float, float, float)
+    def pinchUpdated(self, scale, x, y):
+        """*scale* is relative to the start of the pinch; *x*, *y* is where
+        the fingers' centre is now."""
+        canon = self.canon()
+        if canon is None:
+            return
+        canon.update_pinch(scale, x, y, self.width(), self.height())
+        self.update()
+
+    @pyqtSlot()
+    def pinchFinished(self):
+        canon = self.canon()
+        if canon is not None:
+            canon.end_pinch()
 
     @pyqtSlot(float)
     def wheelZoom(self, angle_delta):

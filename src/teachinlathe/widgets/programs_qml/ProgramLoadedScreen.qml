@@ -107,20 +107,35 @@ Item {
                         anchors.fill: parent
                         anchors.margins: 1
 
-                        MouseArea {
+                        // Two fingers pinch-zoom, and pan as they move. One
+                        // finger still reaches the MouseArea inside; a second
+                        // one hands the gesture over here, cancelling that pan.
+                        PinchArea {
                             anchors.fill: parent
-                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-                            onPressed: function (mouse) {
-                                backplot.pressed(mouse.x, mouse.y)
+                            onPinchStarted: function (pinch) {
+                                backplot.pinchStarted(pinch.startCenter.x, pinch.startCenter.y)
                             }
-                            onPositionChanged: function (mouse) {
-                                if (mouse.buttons & Qt.MiddleButton)
-                                    backplot.zoomDragged(mouse.y)
-                                else if (mouse.buttons & Qt.LeftButton)
-                                    backplot.panned(mouse.x, mouse.y)
+                            onPinchUpdated: function (pinch) {
+                                backplot.pinchUpdated(pinch.scale, pinch.center.x, pinch.center.y)
                             }
-                            onWheel: function (wheel) {
-                                backplot.wheelZoom(wheel.angleDelta.y)
+                            onPinchFinished: backplot.pinchFinished()
+
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                                onPressed: function (mouse) {
+                                    backplot.pressed(mouse.x, mouse.y)
+                                }
+                                onPositionChanged: function (mouse) {
+                                    if (mouse.buttons & Qt.MiddleButton)
+                                        backplot.zoomDragged(mouse.y)
+                                    else if (mouse.buttons & Qt.LeftButton)
+                                        backplot.panned(mouse.x, mouse.y)
+                                }
+                                onDoubleClicked: backplot.fitToWindow()
+                                onWheel: function (wheel) {
+                                    backplot.wheelZoom(wheel.angleDelta.y)
+                                }
                             }
                         }
 
