@@ -29,11 +29,13 @@ log = logging.getLogger(__name__)
 
 DEFAULT_POLL_INTERVAL_MS = 100
 
+# hal.Type replaced the HAL_FLOAT/HAL_S32/... constants, which now warn on
+# every use. The values are the same, so pins come out the same.
 PIN_TYPES = {
-    "float": hal.HAL_FLOAT,
-    "s32": hal.HAL_S32,
-    "u32": hal.HAL_U32,
-    "bit": hal.HAL_BIT,
+    "float": hal.Type.REAL,
+    "s32": hal.Type.SINT,
+    "u32": hal.Type.UINT,
+    "bit": hal.Type.BOOL,
 }
 
 PIN_DIRECTIONS = {
@@ -178,7 +180,6 @@ class HalComponent(QObject):
         if name in self._pins:
             raise ValueError("HAL pin {}.{} already exists".format(self._name, name))
 
-        log.debug("adding HAL pin %s.%s (%s %s)", self._name, name, pin_type, direction)
         pin = HalPin(self._comp, name, pin_type, direction, parent=self)
         self._pins[name] = pin
         _poller().add(pin)
@@ -200,6 +201,17 @@ class HalComponent(QObject):
             return
         self._comp.ready()
         self._ready = True
+        log.info("HAL component %s ready, %d pins:\n%s",
+                 self._name, len(self._pins), self._pin_table())
+
+    def _pin_table(self) -> str:
+        """The pins, one per line: short enough to read, unlike a log record
+        per pin that repeats the logger name and source line every time."""
+        width = max((len(name) for name in self._pins), default=0)
+        return "\n".join(
+            "    {}.{:<{}}  {:<5} {}".format(self._name, pin.name, width,
+                                             pin.type, pin.direction)
+            for pin in self._pins.values())
 
     def exit(self):
         """Unload the component, stopping its pins from being polled."""
@@ -227,7 +239,6 @@ def hal_component(name: str) -> HalComponent:
     """The HAL component called *name*, created on first use."""
     comp = COMPONENTS.get(name)
     if comp is None:
-        log.info("creating HAL component: %s", name)
         comp = HalComponent(name)
         COMPONENTS[name] = comp
     return comp

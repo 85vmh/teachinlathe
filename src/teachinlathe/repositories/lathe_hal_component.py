@@ -114,4 +114,3 @@ class TeachInLatheComponent:
         self.comp.ready()
         self.comp.getPin(self.PinToolChangeResponse).value = False
         self.comp.getPin(self.PinToolChangeCanceled).value = False
-        print("HalComponent instance is created")

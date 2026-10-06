@@ -153,6 +153,18 @@ def main(argv=None):
         log.info("interrupted while starting up")
         return 0
 
+    # The window's HAL component is ready by now; the post-GUI HAL files wire
+    # to its pins. Queued so they run once the loop is up and the window is on
+    # screen, as Axis and QtVCP do.
+    def load_postgui():
+        from teachinlathe.postgui import run_postgui
+        error = run_postgui()
+        if error:
+            log.error("%s", error)
+            app.exit(1)
+
+    QTimer.singleShot(0, load_postgui)
+
     try:
         status = app.exec()
     except KeyboardInterrupt:

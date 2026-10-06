@@ -81,6 +81,12 @@ class IniRepository:
             return None
         return self._ini.find(section, option)
 
+    def find_all(self, section: str, option: str) -> list[str]:
+        """Every value of an option that may repeat, in file order."""
+        if self._ini is None:
+            return []
+        return list(self._ini.findall(section, option) or [])
+
     def file_path(self, section: str, option: str,
                   base: Optional[str] = None, default: Optional[str] = None) -> str:
         """``[section] option`` as an absolute path, or "" when unset."""
@@ -132,6 +138,17 @@ class IniRepository:
         dirs.extend(_normalize(p, self._config_dir)
                     for p in paths.strip(":").split(":") if p)
         return dirs
+
+    @property
+    def postgui_halfiles(self) -> list[str]:
+        """Every ``[HAL] POSTGUI_HALFILE``, as absolute paths, in file order."""
+        return [_normalize(p, self._config_dir)
+                for p in self.find_all("HAL", "POSTGUI_HALFILE")]
+
+    @property
+    def postgui_halcmds(self) -> list[str]:
+        """Every ``[HAL] POSTGUI_HALCMD``, as written, in file order."""
+        return self.find_all("HAL", "POSTGUI_HALCMD")
 
     @property
     def coordinates(self) -> str:
