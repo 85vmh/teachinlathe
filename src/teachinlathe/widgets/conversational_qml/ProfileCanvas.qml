@@ -254,68 +254,96 @@ Canvas {
         return -1
     }
 
-    // ── Mouse: pan + zoom + click + double-click fit ──────────────────────────
-    MouseArea {
+    // ── Touch: two-finger pinch zooms, and pans with the fingers ──────────────
+    // One finger still reaches the MouseArea inside (pan, tap, double-tap);
+    // a second finger hands the gesture over here, which cancels that drag.
+    PinchArea {
         anchors.fill: parent
 
-        property bool  _wasDrag:    false
-        property real  _dragStartX: 0
-        property real  _dragStartY: 0
-        property real  _originXAtDragStart: 0
-        property real  _originYAtDragStart: 0
+        property real _scaleAtStart:  1
+        property real _worldZAtStart: 0
+        property real _worldXAtStart: 0
 
-        readonly property real _DEAD_ZONE: 4   // px
-
-        onPressed: function(mouse) {
-            _wasDrag  = false
-            _dragStartX = mouse.x
-            _dragStartY = mouse.y
-            _originXAtDragStart = root._originX
-            _originYAtDragStart = root._originY
+        onPinchStarted: function(pinch) {
+            _scaleAtStart  = root._scale
+            _worldZAtStart = (pinch.startCenter.x - root._originX) / root._scale
+            _worldXAtStart = (pinch.startCenter.y - root._originY) / root._scale
+            root._manualView = true
         }
 
-        onPositionChanged: function(mouse) {
-            var dx = mouse.x - _dragStartX
-            var dy = mouse.y - _dragStartY
-            if (!_wasDrag && (Math.abs(dx) > _DEAD_ZONE || Math.abs(dy) > _DEAD_ZONE)) {
-                _wasDrag = true
-                root._manualView = true
+        onPinchUpdated: function(pinch) {
+            var newScale = Math.max(0.05, Math.min(200.0, _scaleAtStart * pinch.scale))
+
+            // the world point that started between the fingers stays between them
+            root._originX = pinch.center.x - _worldZAtStart * newScale
+            root._originY = pinch.center.y - _worldXAtStart * newScale
+            root._scale   = newScale
+            root.requestPaint()
+        }
+
+        // ── Mouse: pan + zoom + click + double-click fit ──────────────────────────
+        MouseArea {
+            anchors.fill: parent
+
+            property bool  _wasDrag:    false
+            property real  _dragStartX: 0
+            property real  _dragStartY: 0
+            property real  _originXAtDragStart: 0
+            property real  _originYAtDragStart: 0
+
+            readonly property real _DEAD_ZONE: 4   // px
+
+            onPressed: function(mouse) {
+                _wasDrag  = false
+                _dragStartX = mouse.x
+                _dragStartY = mouse.y
+                _originXAtDragStart = root._originX
+                _originYAtDragStart = root._originY
             }
-            if (_wasDrag) {
-                root._originX = _originXAtDragStart + dx
-                root._originY = _originYAtDragStart + dy
+
+            onPositionChanged: function(mouse) {
+                var dx = mouse.x - _dragStartX
+                var dy = mouse.y - _dragStartY
+                if (!_wasDrag && (Math.abs(dx) > _DEAD_ZONE || Math.abs(dy) > _DEAD_ZONE)) {
+                    _wasDrag = true
+                    root._manualView = true
+                }
+                if (_wasDrag) {
+                    root._originX = _originXAtDragStart + dx
+                    root._originY = _originYAtDragStart + dy
+                    root.requestPaint()
+                }
+            }
+
+            onClicked: function(mouse) {
+                if (_wasDrag) return
+                var idx = root._hitTest(mouse.x, mouse.y)
+                if (idx >= 0) root.primitiveSelected(idx)
+                else root.selectionCleared()
+            }
+
+            onDoubleClicked: function(mouse) {
+                root.fitToScreen()
+            }
+
+            onWheel: function(wheel) {
+                var ZOOM_FACTOR = 1.15
+                var factor = (wheel.angleDelta.y > 0) ? ZOOM_FACTOR : (1.0 / ZOOM_FACTOR)
+
+                // world coord under cursor — compute before changing scale
+                var worldZ = (wheel.x - root._originX) / root._scale
+                var worldX = (wheel.y - root._originY) / root._scale
+
+                var newScale = Math.max(0.05, Math.min(200.0, root._scale * factor))
+
+                // keep the world point under the cursor fixed
+                root._originX = wheel.x - worldZ * newScale
+                root._originY = wheel.y - worldX * newScale
+                root._scale   = newScale
+
+                root._manualView = true
                 root.requestPaint()
             }
-        }
-
-        onClicked: function(mouse) {
-            if (_wasDrag) return
-            var idx = root._hitTest(mouse.x, mouse.y)
-            if (idx >= 0) root.primitiveSelected(idx)
-            else root.selectionCleared()
-        }
-
-        onDoubleClicked: function(mouse) {
-            root.fitToScreen()
-        }
-
-        onWheel: function(wheel) {
-            var ZOOM_FACTOR = 1.15
-            var factor = (wheel.angleDelta.y > 0) ? ZOOM_FACTOR : (1.0 / ZOOM_FACTOR)
-
-            // world coord under cursor — compute before changing scale
-            var worldZ = (wheel.x - root._originX) / root._scale
-            var worldX = (wheel.y - root._originY) / root._scale
-
-            var newScale = Math.max(0.05, Math.min(200.0, root._scale * factor))
-
-            // keep the world point under the cursor fixed
-            root._originX = wheel.x - worldZ * newScale
-            root._originY = wheel.y - worldX * newScale
-            root._scale   = newScale
-
-            root._manualView = true
-            root.requestPaint()
         }
     }
 }
