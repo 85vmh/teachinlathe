@@ -13,9 +13,10 @@ Canvas {
     property int    selectedBlendIndex: -1  // index of primitive whose blend is selected; -1 = none
     property string profileType:       "od" // "od" or "id" — controls startPoint blend entry direction
     property var    workpiece:         ({})
-    property bool   mirrorAcrossCenterline: false
+    property bool   mirrorAcrossCenterline: true  // also draw the profile and its hatched stock above the centre line
 
     signal primitiveSelected(int index)
+    signal blendSelected(int index)   // the blend carried by primitive ``index``
     signal selectionCleared()
 
     // ── Private state ──────────────────────────────────────────────────────────
@@ -188,6 +189,7 @@ Canvas {
         profileType: root.profileType
         cx: root._cx
         cy: root._cy
+        mirrorAcrossCenterline: root.mirrorAcrossCenterline
     }
 
     PathActor {
@@ -209,6 +211,7 @@ Canvas {
         cx: root._cx
         cy: root._cy
         geometry: geom
+        mirrorAcrossCenterline: root.mirrorAcrossCenterline
     }
 
     // ── Hit testing ────────────────────────────────────────────────────────────
@@ -252,6 +255,103 @@ Canvas {
             }
         }
         return -1
+    }
+
+    // ── Hit testing the drawn blends ──────────────────────────────────────────
+    // Canvas distance from (px, py) to render segment ``s``, which starts at
+    // world (prevZ, prevX).
+    function _distToRenderSeg(px, py, s, prevZ, prevX) {
+        var startX = _cx(prevZ)
+        var startY = _cy(prevX)
+        if (s.type !== "arc")
+            return geom.distToSegment(px, py, startX, startY, _cx(s.z), _cy(s.x))
+        var ccx = _cx(s.zc)
+        var ccy = _cy(s.xc)
+        var radius = Math.sqrt(Math.pow(startX - ccx, 2) + Math.pow(startY - ccy, 2))
+        return geom.distToArc(px, py, ccx, ccy, radius,
+                              Math.atan2(startY - ccy, startX - ccx),
+                              Math.atan2(_cy(s.x) - ccy, _cx(s.z) - ccx),
+                              s.anticlockwise)
+    }
+
+    // The drawn line nearest (px, py), within the hit tolerance: a render
+    // segment, whose ``prim`` and ``blend`` say what it is, or the start
+    // point's marker as {prim, blend: false}. null when nothing is that close.
+    function _strokeHitTest(px, py) {
+        var segs = root._renderSegs
+        if (!segs) return null
+        var HIT = 10    // pixel tolerance, as _hitTest
+        var best = null
+        var bestDistance = HIT
+        var prevZ = 0
+        var prevX = 0
+        for (var i = 0; i < segs.length; i++) {
+            var s = segs[i]
+            if (s.type !== "move") {
+                var distance = _distToRenderSeg(px, py, s, prevZ, prevX)
+                if (distance <= bestDistance) {
+                    best = s
+                    bestDistance = distance
+                }
+            }
+            prevZ = s.z
+            prevX = s.x
+        }
+        // The start point is a marker, not a segment: it wins when it is the
+        // nearer of the two, as it did in _hitTest.
+        var prims = root._resolvedPrimitives
+        for (var k = 0; prims && k < prims.length; k++) {
+            if (prims[k].type !== "startPoint") continue
+            var dx = px - _cx(+(prims[k].z_start || 0))
+            var dy = py - _cy(+(prims[k].x_start || 0))
+            if (Math.sqrt(dx * dx + dy * dy) <= bestDistance)
+                best = { prim: k, blend: false }
+            break
+        }
+        return best
+    }
+
+    // ── Hit testing the solid between the profile and its mirror ──────────────
+    // A click inside the outline the two halves close off picks the stretch
+    // of the profile it falls in - the stretch the transition lines bound -
+    // as if the profile line itself had been clicked. Returns that stretch's
+    // render segment, whose ``prim`` and ``blend`` say what it is, or null
+    // outside the outline. Only meaningful with both halves drawn.
+    function _solidHitTest(px, py) {
+        var segs = root._renderSegs
+        if (!segs || segs.length < 2) return null
+
+        var lower = geom.flattenRenderSegments(segs, _cx, _cy)
+        var outline = lower.slice()
+        for (var m = lower.length - 1; m >= 0; m--)
+            outline.push({ x: lower[m].x, y: 2 * _originY - lower[m].y })
+        if (!geom.pointInPolygon(px, py, outline)) return null
+
+        // Fold the click onto the lower half, then take the nearest segment
+        // among those spanning its Z; vertical ones span none, so they only
+        // win when nothing else does.
+        var foldedY = _originY + Math.abs(py - _originY)
+        var best = null
+        var bestDistance = Infinity
+        var bestSpans = false
+        var prevZ = 0
+        var prevX = 0
+        for (var i = 0; i < segs.length; i++) {
+            var s = segs[i]
+            if (s.type !== "move") {
+                var startX = _cx(prevZ)
+                var spans = px >= Math.min(startX, _cx(s.z)) && px <= Math.max(startX, _cx(s.z))
+                var distance = _distToRenderSeg(px, foldedY, s, prevZ, prevX)
+                if ((spans && !bestSpans) || (spans === bestSpans && distance < bestDistance)) {
+                    best = s
+                    bestDistance = distance
+                    bestSpans = spans
+                }
+            }
+            prevZ = s.z
+            prevX = s.x
+        }
+        return best
     }
 
     // ── Touch: two-finger pinch zooms, and pans with the fingers ──────────────
@@ -317,9 +417,29 @@ Canvas {
 
             onClicked: function(mouse) {
                 if (_wasDrag) return
-                var idx = root._hitTest(mouse.x, mouse.y)
-                if (idx >= 0) root.primitiveSelected(idx)
-                else root.selectionCleared()
+                var mirrored = root.mirrorAcrossCenterline
+                var mirrorY = 2 * root._originY - mouse.y   // the click reflected across the centre line
+
+                // 1. a drawn line, on either half: a blend's line selects the
+                //    blend, any other the primitive it was drawn for
+                var hit = root._strokeHitTest(mouse.x, mouse.y)
+                if (!hit && mirrored)
+                    hit = root._strokeHitTest(mouse.x, mirrorY)
+                // 2. the primitives as entered, before any blend trims them
+                if (!hit) {
+                    var idx = root._hitTest(mouse.x, mouse.y)
+                    if (idx < 0 && mirrored)
+                        idx = root._hitTest(mouse.x, mirrorY)
+                    if (idx >= 0)
+                        hit = { prim: idx, blend: false }
+                }
+                // 3. anywhere inside the solid the two halves enclose
+                if (!hit && mirrored)
+                    hit = root._solidHitTest(mouse.x, mouse.y)
+
+                if (!hit) root.selectionCleared()
+                else if (hit.blend) root.blendSelected(hit.prim)
+                else root.primitiveSelected(hit.prim)
             }
 
             onDoubleClicked: function(mouse) {

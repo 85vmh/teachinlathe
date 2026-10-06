@@ -621,6 +621,10 @@ Item {
                             root.selectedPrimIndex  = idx
                             root.selectedBlendIndex = -1
                         }
+                        onBlendSelected: function(idx) {
+                            root.selectedBlendIndex = idx
+                            root.selectedPrimIndex  = -1
+                        }
                         onSelectionCleared: {
                             root.selectedPrimIndex = -1
                             root.selectedBlendIndex = -1

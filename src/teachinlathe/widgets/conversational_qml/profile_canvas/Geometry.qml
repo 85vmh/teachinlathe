@@ -479,6 +479,9 @@ QtObject {
         return { csZ: csZ, csX: csX, ceZ: ceZ, ceX: ceX }
     }
 
+    // Every segment carries ``prim``, the index of the primitive it was drawn
+    // for; a blend's segments belong to the primitive that carries the blend,
+    // and are marked ``blend: true``.
     function buildRenderSegments(primitives, profileType) {
         var segs = []
         if (!primitives || primitives.length === 0) {
@@ -503,10 +506,10 @@ QtObject {
                         var spEntryX = isID ? spLX2 + spcw : spLX2 - spcw
                         var spcg = chamferGeomLine(logZ, spEntryX, logZ, spLX2, spNextH, spcw)
                         if (spcg) {
-                            segs.push({ type: "move", z: spcg.csZ, x: spcg.csX * 2 })
-                            segs.push({ type: "line", z: spcg.ceZ, x: spcg.ceX * 2 })
+                            segs.push({ prim: i, type: "move", z: spcg.csZ, x: spcg.csX * 2 })
+                            segs.push({ prim: i, type: "line", z: spcg.ceZ, x: spcg.ceX * 2, blend: true })
                         } else {
-                            segs.push({ type: "move", z: logZ, x: logX })
+                            segs.push({ prim: i, type: "move", z: logZ, x: logX })
                         }
                     } else if (p.blend.type === "fillet") {
                         var spfr = +(p.blend.fillet_radius || 0)
@@ -515,22 +518,23 @@ QtObject {
                             ? filletLineArc(logZ, spEntryXF, logZ, spLX2, spNextH, spfr)
                             : filletGeom(logZ, spEntryXF, logZ, spLX2, spNextH, spfr)
                         if (spfg) {
-                            segs.push({ type: "move", z: spfg.t1z, x: spfg.t1x * 2 })
+                            segs.push({ prim: i, type: "move", z: spfg.t1z, x: spfg.t1x * 2 })
                             segs.push({
-                                type: "arc",
+                                prim: i, type: "arc",
                                 z: spfg.t2z, x: spfg.t2x * 2,
                                 zc: spfg.fcz, xc: spfg.fcx * 2,
                                 r: spfr,
-                                anticlockwise: spfg.anticlockwise
+                                anticlockwise: spfg.anticlockwise,
+                                blend: true
                             })
                         } else {
-                            segs.push({ type: "move", z: logZ, x: logX })
+                            segs.push({ prim: i, type: "move", z: logZ, x: logX })
                         }
                     } else {
-                        segs.push({ type: "move", z: logZ, x: logX })
+                        segs.push({ prim: i, type: "move", z: logZ, x: logX })
                     }
                 } else {
-                    segs.push({ type: "move", z: logZ, x: logX })
+                    segs.push({ prim: i, type: "move", z: logZ, x: logX })
                 }
             } else if (p.type === "lineTo") {
                 var ez = +(p.z_end || 0)
@@ -539,10 +543,10 @@ QtObject {
                     var cw = +(p.blend.chamfer_width || 0)
                     var cg = chamferGeomLine(logZ, logX / 2, ez, ex / 2, halfXPrim(_nextPrim(primitives, i)), cw)
                     if (cg) {
-                        segs.push({ type: "line", z: cg.csZ, x: cg.csX * 2 })
-                        segs.push({ type: "line", z: cg.ceZ, x: cg.ceX * 2 })
+                        segs.push({ prim: i, type: "line", z: cg.csZ, x: cg.csX * 2 })
+                        segs.push({ prim: i, type: "line", z: cg.ceZ, x: cg.ceX * 2, blend: true })
                     } else {
-                        segs.push({ type: "line", z: ez, x: ex })
+                        segs.push({ prim: i, type: "line", z: ez, x: ex })
                     }
                 } else if (p.blend && p.blend.type === "fillet") {
                     var fr = +(p.blend.fillet_radius || 0)
@@ -552,16 +556,17 @@ QtObject {
                         ? filletLineArc(logZ, logX / 2, ez, ex / 2, nextPrimH, fr)
                         : filletGeom(logZ, logX / 2, ez, ex / 2, nextPrimH, fr)
                     if (fg) {
-                        segs.push({ type: "line", z: fg.t1z, x: fg.t1x * 2 })
+                        segs.push({ prim: i, type: "line", z: fg.t1z, x: fg.t1x * 2 })
                         segs.push({
-                            type: "arc",
+                            prim: i, type: "arc",
                             z: fg.t2z, x: fg.t2x * 2,
                             zc: fg.fcz, xc: fg.fcx * 2,
                             r: fr,
-                            anticlockwise: fg.anticlockwise
+                            anticlockwise: fg.anticlockwise,
+                            blend: true
                         })
                     } else {
-                        segs.push({ type: "line", z: ez, x: ex })
+                        segs.push({ prim: i, type: "line", z: ez, x: ex })
                     }
                 } else if (p.blend && p.blend.type === "undercut_din509") {
                     var undercutRadius = undercutBlendValue(p.blend, "undercut_radius", 0.4)
@@ -571,24 +576,28 @@ QtObject {
                     var nextPrimUH = halfXPrim(nextPrimU)
                     var undercutGeom = undercutDin509Geom(logZ, logX / 2, ez, ex / 2, nextPrimUH, undercutRadius, undercutDepth, undercutLength)
                     if (undercutGeom) {
-                        segs.push({ type: "line", z: undercutGeom.entryZ, x: undercutGeom.entryX * 2 })
+                        segs.push({ prim: i, type: "line", z: undercutGeom.entryZ, x: undercutGeom.entryX * 2 })
+                        // Only the undercut's entry and exit are transitions of
+                        // the profile; the points in between are "interior".
                         for (var ui = 0; ui < undercutGeom.segs.length; ui++) {
                             var undercutSegment = undercutGeom.segs[ui]
+                            var undercutInterior = ui < undercutGeom.segs.length - 1
                             if (undercutSegment.type === "line") {
-                                segs.push({ type: "line", z: undercutSegment.z, x: undercutSegment.x * 2 })
+                                segs.push({ prim: i, type: "line", z: undercutSegment.z, x: undercutSegment.x * 2,
+                                            interior: undercutInterior, blend: true })
                             } else {
-                                segs.push({ type: "arc", z: undercutSegment.z, x: undercutSegment.x * 2,
+                                segs.push({ prim: i, type: "arc", z: undercutSegment.z, x: undercutSegment.x * 2,
                                             zc: undercutSegment.cz, xc: undercutSegment.cx * 2, r: undercutRadius,
-                                            anticlockwise: undercutSegment.anticlockwise })
+                                            anticlockwise: undercutSegment.anticlockwise, interior: undercutInterior, blend: true })
                             }
                         }
                         ez = undercutGeom.exitZ
                         ex = undercutGeom.exitX * 2
                     } else {
-                        segs.push({ type: "line", z: ez, x: ex })
+                        segs.push({ prim: i, type: "line", z: ez, x: ex })
                     }
                 } else {
-                    segs.push({ type: "line", z: ez, x: ex })
+                    segs.push({ prim: i, type: "line", z: ez, x: ex })
                 }
                 logZ = ez
                 logX = ex
@@ -607,15 +616,15 @@ QtObject {
                     var acg = chamferGeomArc(acz, acx2c, ar2c, isCW, aez, aex2c, halfXPrim(_nextPrim(primitives, i)), acw)
                     if (acg) {
                         segs.push({
-                            type: "arc",
+                            prim: i, type: "arc",
                             z: acg.csZ, x: acg.csX * 2,
                             zc: acz, xc: acx, r: ar,
                             anticlockwise: !isCW
                         })
-                        segs.push({ type: "line", z: acg.ceZ, x: acg.ceX * 2 })
+                        segs.push({ prim: i, type: "line", z: acg.ceZ, x: acg.ceX * 2, blend: true })
                     } else {
                         segs.push({
-                            type: "arc",
+                            prim: i, type: "arc",
                             z: aez, x: aex,
                             zc: acz, xc: acx, r: ar,
                             anticlockwise: !isCW
@@ -628,21 +637,22 @@ QtObject {
                     var afg = filletArcLine(acz, acx2f, ar2f, isCW, aez, aex2f, halfXPrim(_nextPrim(primitives, i)), afr)
                     if (afg) {
                         segs.push({
-                            type: "arc",
+                            prim: i, type: "arc",
                             z: afg.t1z, x: afg.t1x * 2,
                             zc: acz, xc: acx, r: ar,
                             anticlockwise: !isCW
                         })
                         segs.push({
-                            type: "arc",
+                            prim: i, type: "arc",
                             z: afg.t2z, x: afg.t2x * 2,
                             zc: afg.fcz, xc: afg.fcx * 2,
                             r: afr,
-                            anticlockwise: afg.anticlockwise
+                            anticlockwise: afg.anticlockwise,
+                            blend: true
                         })
                     } else {
                         segs.push({
-                            type: "arc",
+                            prim: i, type: "arc",
                             z: aez, x: aex,
                             zc: acz, xc: acx, r: ar,
                             anticlockwise: !isCW
@@ -650,7 +660,7 @@ QtObject {
                     }
                 } else {
                     segs.push({
-                        type: "arc",
+                        prim: i, type: "arc",
                         z: aez,
                         x: aex,
                         zc: acz,
@@ -711,6 +721,55 @@ QtObject {
                      direction: p.direction, blend: p.blend }
         }
         return p
+    }
+
+    // ── Outline of the solid (operate on canvas pixel coords) ─────────────────
+
+    // The render segments as canvas points, arcs sampled into short chords.
+    // ``cx``/``cy`` map world Z / diameter X to the canvas.
+    function flattenRenderSegments(segs, cx, cy) {
+        var pts = []
+        var prevZ = 0
+        var prevX = 0
+        for (var i = 0; i < segs.length; i++) {
+            var s = segs[i]
+            if (s.type === "arc" && pts.length > 0) {
+                var ccx = cx(s.zc)
+                var ccy = cy(s.xc)
+                var startX = cx(prevZ)
+                var startY = cy(prevX)
+                var radius = Math.sqrt(Math.pow(startX - ccx, 2) + Math.pow(startY - ccy, 2))
+                var sa = Math.atan2(startY - ccy, startX - ccx)
+                var ea = Math.atan2(cy(s.x) - ccy, cx(s.z) - ccx)
+                // the way ctx.arc goes: anticlockwise means decreasing angle
+                var sweep = ea - sa
+                if (s.anticlockwise) { while (sweep > 0) sweep -= Math.PI * 2 }
+                else                 { while (sweep < 0) sweep += Math.PI * 2 }
+                var steps = Math.max(2, Math.ceil(Math.abs(sweep) / (Math.PI / 24)))
+                for (var k = 1; k <= steps; k++) {
+                    var angle = sa + sweep * k / steps
+                    pts.push({ x: ccx + radius * Math.cos(angle), y: ccy + radius * Math.sin(angle) })
+                }
+            } else {
+                pts.push({ x: cx(s.z), y: cy(s.x) })
+            }
+            prevZ = s.z
+            prevX = s.x
+        }
+        return pts
+    }
+
+    // Even-odd point-in-polygon; ``pts`` is a closed outline of {x, y}.
+    function pointInPolygon(px, py, pts) {
+        var inside = false
+        for (var i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+            var a = pts[i]
+            var b = pts[j]
+            if ((a.y > py) !== (b.y > py)
+                    && px < (b.x - a.x) * (py - a.y) / (b.y - a.y) + a.x)
+                inside = !inside
+        }
+        return inside
     }
 
     // ── Hit-test helpers (operate on canvas pixel coords) ─────────────────────

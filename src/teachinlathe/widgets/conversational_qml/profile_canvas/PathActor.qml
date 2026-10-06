@@ -18,8 +18,26 @@ QtObject {
         ctx.setLineDash([])
 
         _paintPath(ctx, false)
-        if (mirrorAcrossCenterline)
+        if (mirrorAcrossCenterline) {
             _paintPath(ctx, true)
+            _paintTransitions(ctx)
+        }
+    }
+
+    // With both halves drawn, every transition of the profile - where one
+    // primitive or blend gives way to the next - is joined to its mirror
+    // image by a line across the centre line. The first one is wherever the
+    // path starts, which is where a start-point blend begins rather than the
+    // start diameter itself.
+    function _paintTransitions(ctx) {
+        ctx.beginPath()
+        for (var i = 0; i < renderSegs.length; i++) {
+            var s = renderSegs[i]
+            if (s.interior || Math.abs(s.x) < 1e-9) continue
+            ctx.moveTo(cx(s.z), cy(s.x))
+            ctx.lineTo(cx(s.z), cy(-s.x))
+        }
+        ctx.stroke()
     }
 
     function _paintPath(ctx, mirrored) {
