@@ -8,6 +8,12 @@ Rectangle {
     id: root
     property var viewModel
     property bool showActionBar: true
+    // The file list's Actions column (delete).
+    property bool showActions: true
+    // The action bar only has something to offer on mounted media (copying
+    // to the USB stick); deleting is in the list's Actions column.
+    readonly property bool actionBarShown: showActionBar
+                                           && !!viewModel && viewModel.isInMountedMedia
 
     color: Theme.surfaceSunken
     radius: Theme.radius
@@ -50,6 +56,7 @@ Rectangle {
         // Row 3 — Sortable file list
         FileListView {
             viewModel: root.viewModel
+            showActions: root.showActions
             Layout.fillWidth: true
             Layout.fillHeight: true
         }
@@ -58,14 +65,15 @@ Rectangle {
             Layout.fillWidth: true
             height: Theme.hairline
             color: Theme.outlineDisabled
+            visible: root.actionBarShown
         }
 
-        // Row 4 — Context-sensitive actions + copy progress
+        // Row 4 — copy to the USB stick, on mounted media
         ActionBar {
             viewModel: root.viewModel
-            visible: root.showActionBar
+            visible: root.actionBarShown
             Layout.fillWidth: true
-            Layout.preferredHeight: root.showActionBar ? 60 : 0
+            Layout.preferredHeight: root.actionBarShown ? 60 : 0
         }
     }
 }

@@ -365,12 +365,19 @@ class FileSystemViewModel(QObject):
 
     @pyqtSlot()
     def deleteSelectedConfirmed(self) -> None:
-        if not self._selected_path:
+        if self._selected_path:
+            self.deleteEntry(self._selected_path)
+
+    @pyqtSlot(str)
+    def deleteEntry(self, relative_path: str) -> None:
+        """Delete the entry at ``relative_path`` in the current location, once
+        the user has confirmed it. Nothing is deleted from mounted media."""
+        if not relative_path:
             return
         loc = self._current_location()
         if loc is None or loc.location_type == LocationType.MOUNTED_MEDIA:
             return
-        abs_path = self._resolve(loc.root_path, self._selected_path)
+        abs_path = self._resolve(loc.root_path, relative_path)
         if abs_path is None:
             return
         try:
@@ -382,8 +389,9 @@ class FileSystemViewModel(QObject):
             LOG.error("failed to delete %s: %s", abs_path, exc)
             self.deleteFailed.emit(str(exc))
             return
-        self._selected_path = ""
-        self.selectionChanged.emit()
+        if relative_path == self._selected_path:
+            self._selected_path = ""
+            self.selectionChanged.emit()
         self.entriesChanged.emit()
 
     @pyqtSlot()

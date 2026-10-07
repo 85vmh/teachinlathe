@@ -86,6 +86,7 @@ Item {
         FileSystemView {
             viewModel: root.fileSystemViewModel
             showActionBar: false
+            showActions: false
             SplitView.preferredWidth: parent.width * 0.42
             SplitView.minimumWidth: 320
         }

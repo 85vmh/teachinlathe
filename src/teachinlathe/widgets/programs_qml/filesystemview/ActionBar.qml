@@ -1,43 +1,17 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import ".."
-import "../../conversational_qml"
 import theme 1.0
 
-// Row 4 — Context-sensitive action buttons + copy progress bar.
-//
-// Mounted Media context:
-//   [Copy to USB Stick Programs]  (disabled while copying)
-//   Progress bar shown at top when isCopying = true
-//
-// All other contexts:
-//   [Delete]  [Load Program ← green, rightmost]
+// Row 4 — shown on mounted media only: [Copy to USB Stick Programs]
+// (disabled while copying), with a progress bar along the top while it copies.
+// Deleting is per file, from the list's Actions column.
 Rectangle {
     id: root
     property var viewModel
-    readonly property string selectedName: {
-        var path = viewModel ? viewModel.selectedEntryPath : ""
-        if (!path)
-            return ""
-        var parts = String(path).replace(/\\/g, "/").split("/")
-        return parts.length ? parts[parts.length - 1] : path
-    }
 
     color: Theme.surfaceSunken
     implicitHeight: 60
-
-    ConfirmDialog {
-        id: deleteConfirmDialog
-        titleText: "Delete Program"
-        confirmText: "Delete"
-        messageText: root.selectedName
-            ? "Delete '" + root.selectedName + "'?"
-            : "Delete selected program?"
-        onConfirmed: {
-            if (root.viewModel)
-                root.viewModel.deleteSelectedConfirmed()
-        }
-    }
 
     // ---- Copy progress bar (top edge, shown while copying) ----
     Rectangle {
@@ -67,23 +41,13 @@ Rectangle {
 
         Item { Layout.fillWidth: true }
 
-        // "Copy to USB Stick Programs" — only in Mounted Media
         ProgramButton {
-            visible: root.viewModel ? root.viewModel.isInMountedMedia : false
             enabled: root.viewModel
                      ? (root.viewModel.selectedIsFile && !root.viewModel.isCopying)
                      : false
             text: (root.viewModel ? root.viewModel.isCopying : false)
                   ? "Copying…" : "Copy to USB Stick Programs"
             onClicked: if (root.viewModel) root.viewModel.copySelectedToUsbStickPrograms()
-        }
-
-        // "Delete" — only outside Mounted Media
-        ProgramButton {
-            visible: root.viewModel ? !root.viewModel.isInMountedMedia : false
-            enabled: root.viewModel ? root.viewModel.selectedEntryPath !== "" : false
-            text: "Delete"
-            onClicked: deleteConfirmDialog.open()
         }
 
     }

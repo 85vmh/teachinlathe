@@ -2,17 +2,22 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
+import "../../conversational_qml"
 
-// Row 3 — Sortable file list with Name / Size / Modified columns.
+// Row 3 — Sortable file list with Name / Size / Modified / Actions columns.
 Item {
     id: root
     property var viewModel
+    // The Actions column (delete). Off where the list only picks a file.
+    property bool showActions: true
 
     // ── Dimensions ─────────────────────────────────────────────────────────
     readonly property int rowHeight:       72
     readonly property int headerHeight:    40
     readonly property int sizeColWidth:    96
     readonly property int modifiedColWidth: 160
+    // As wide as the operation list's delete column, with the same button.
+    readonly property int actionsColWidth: 100
     readonly property int nameLeftMargin:  10
     readonly property int rowRightMargin:  18
     readonly property int colRightPad:     10
@@ -32,6 +37,24 @@ Item {
     readonly property color rowOdd:    Theme.outlineDisabled
     readonly property color rowHover:  Theme.selection
     readonly property color rowSelect: Theme.selection
+
+    // The file a delete button was tapped for, until the dialog answers.
+    property string _pendingDeletePath: ""
+    property string _pendingDeleteName: ""
+
+    function confirmDelete(relativePath, name) {
+        _pendingDeletePath = relativePath
+        _pendingDeleteName = name
+        deleteConfirmDialog.open()
+    }
+
+    ConfirmDialog {
+        id: deleteConfirmDialog
+        titleText: "Delete Program"
+        confirmText: "Delete"
+        messageText: "Delete '" + root._pendingDeleteName + "'?"
+        onConfirmed: if (root.viewModel) root.viewModel.deleteEntry(root._pendingDeletePath)
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -108,6 +131,24 @@ Item {
                     }
                     MouseArea { anchors.fill: parent; onClicked: if (root.viewModel) root.viewModel.setSortColumn("modified") }
                 }
+
+                Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.headerSepColor; visible: root.showActions }
+
+                // Actions
+                Item {
+                    visible: root.showActions
+                    Layout.minimumWidth: root.actionsColWidth
+                    Layout.preferredWidth: root.actionsColWidth
+                    Layout.maximumWidth: root.actionsColWidth
+                    Layout.fillHeight: true
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Actions"
+                        color: root.headerTextColor
+                        font.pixelSize: root.headerFontSize
+                        font.bold: true
+                    }
+                }
             }
 
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: root.headerSepColor }
@@ -149,6 +190,9 @@ Item {
                     anchors.leftMargin: root.nameLeftMargin
                     anchors.rightMargin: root.rowRightMargin
                     spacing: 0
+                    // Over the row's MouseArea, so the delete button takes its
+                    // own taps; the rest of the row lets them through to it.
+                    z: 1
 
                     // Name column
                     RowLayout {
@@ -240,6 +284,31 @@ Item {
                             text: modelData.modifiedDisplay
                             color: "#6b7280"
                             font.pixelSize: root.metaFontSize
+                        }
+                    }
+
+                    Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.sepColor; visible: root.showActions }
+
+                    // Actions column — delete, for files; disabled on folders
+                    // and on mounted media, which this list never deletes from.
+                    Item {
+                        visible: root.showActions
+                        Layout.minimumWidth: root.actionsColWidth
+                        Layout.preferredWidth: root.actionsColWidth
+                        Layout.maximumWidth: root.actionsColWidth
+                        Layout.fillHeight: true
+
+                        PressableIconButton {
+                            anchors.centerIn: parent
+                            visible: !modelData.isUp
+                            // resolved here: a relative path would otherwise be taken
+                            // from PressableIconButton's folder, where the Image is
+                            source: Qt.resolvedUrl("../../conversational_qml/icons/delete_icon.svg")
+                            tint: Theme.danger
+                            borderTint: Theme.danger
+                            enabled: !modelData.isDir
+                                     && !(root.viewModel && root.viewModel.isInMountedMedia)
+                            onClicked: root.confirmDelete(modelData.relativePath, modelData.name)
                         }
                     }
                 }
