@@ -172,7 +172,7 @@ class ProgramsController(QObject):
             if self.fs_viewmodel.isInGeneratedPrograms:
                 left_actions.append({
                     "id": "edit_program",
-                    "text": "Edit Program",
+                    "text": "← Back to Conversational",
                     "enabled": bool(self.fs_viewmodel.canEditSelectedGeneratedProgram),
                 })
             right_actions.append({

@@ -1,15 +1,23 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "gcode_viewer"
 import "program_loaded"
 import TeachInLathe.Backplot 1.0
 import theme 1.0
 
+// The loaded-program screen's own pane - DRO, tool/feed/speed and the
+// backplot - on the right of the strip ProgramsTabRoot slides; the program
+// code beside it is the strip's shared code pane.
 Item {
     id: root
     objectName: "programLoadedScreen"
     property var viewModel
+    // Whether the loaded-program screen is the one on show (it stays visible
+    // while the strip slides away from it).
+    property bool shown: true
+    // Where the code pane is, relative to this pane: the toasts centre over it.
+    property real codePaneX: 0
+    property real codePaneWidth: width
     property bool toolChangedToastVisible: false
     property string toolChangedToastMessage: ""
 
@@ -45,156 +53,137 @@ Item {
     }
 
     Component.onCompleted: root.refreshToolChangeFromHal()
-    onVisibleChanged: if (visible) root.refreshToolChangeFromHal()
+    onShownChanged: if (shown) root.refreshToolChangeFromHal()
     onViewModelChanged: root.refreshToolChangeFromHal()
 
-    SplitView {
+    Rectangle {
         anchors.fill: parent
-        orientation: Qt.Horizontal
+        color: Theme.surfaceSunken
 
-        handle: Rectangle {
-            implicitWidth: 6
-            implicitHeight: 6
-            color: Theme.surface
-        }
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: Theme.spacingSmall
 
-        Rectangle {
-            color: Theme.surfaceSunken
-            SplitView.preferredWidth: root.width / 2
-            SplitView.minimumWidth: 420
-
-            ColumnLayout {
-                anchors.fill: parent
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: false
+                Layout.preferredHeight: 220
                 spacing: Theme.spacingSmall
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: false
-                    Layout.preferredHeight: 220
-                    spacing: Theme.spacingSmall
-
-                    ProgramsDro {
-                        Layout.fillHeight: true
-                        Layout.preferredWidth: 600
-                        viewModel: root.viewModel
-                    }
-
-                    ProgramsToolFeedSpeed {
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
-                        viewModel: programsToolFeedSpeedViewModel
-                    }
+                ProgramsDro {
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 600
+                    viewModel: root.viewModel
                 }
 
-                Rectangle {
-                    Layout.fillWidth: true
+                ProgramsToolFeedSpeed {
                     Layout.fillHeight: true
-                    // The same panel an operation detail sits on: white with
-                    // a light border. The preview's own palette is tuned to
-                    // match - see _configure_for_lathe.
-                    color: Theme.surface
-                    border.color: Theme.outline
-                    border.width: Theme.hairline
+                    Layout.fillWidth: true
+                    viewModel: programsToolFeedSpeedViewModel
+                }
+            }
 
-                    // Was an empty Item that Python mapped a QOpenGLWidget
-                    // onto, resyncing its geometry on every move and resize.
-                    // The preview renders into the scene graph now, so it is
-                    // just an item, and the controls over it are ordinary
-                    // buttons rather than QPushButtons positioned by hand.
-                    LatheBackplot {
-                        id: backplot
-                        objectName: "latheBackplot"
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                // The same panel an operation detail sits on: white with
+                // a light border. The preview's own palette is tuned to
+                // match - see _configure_for_lathe.
+                color: Theme.surface
+                border.color: Theme.outline
+                border.width: Theme.hairline
+
+                // Was an empty Item that Python mapped a QOpenGLWidget
+                // onto, resyncing its geometry on every move and resize.
+                // The preview renders into the scene graph now, so it is
+                // just an item, and the controls over it are ordinary
+                // buttons rather than QPushButtons positioned by hand.
+                LatheBackplot {
+                    id: backplot
+                    objectName: "latheBackplot"
+                    anchors.fill: parent
+                    anchors.margins: 1
+
+                    // Two fingers pinch-zoom, and pan as they move. One
+                    // finger still reaches the MouseArea inside; a second
+                    // one hands the gesture over here, cancelling that pan.
+                    PinchArea {
                         anchors.fill: parent
-                        anchors.margins: 1
+                        onPinchStarted: function (pinch) {
+                            backplot.pinchStarted(pinch.startCenter.x, pinch.startCenter.y)
+                        }
+                        onPinchUpdated: function (pinch) {
+                            backplot.pinchUpdated(pinch.scale, pinch.center.x, pinch.center.y)
+                        }
+                        onPinchFinished: backplot.pinchFinished()
 
-                        // Two fingers pinch-zoom, and pan as they move. One
-                        // finger still reaches the MouseArea inside; a second
-                        // one hands the gesture over here, cancelling that pan.
-                        PinchArea {
+                        MouseArea {
                             anchors.fill: parent
-                            onPinchStarted: function (pinch) {
-                                backplot.pinchStarted(pinch.startCenter.x, pinch.startCenter.y)
+                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                            onPressed: function (mouse) {
+                                backplot.pressed(mouse.x, mouse.y)
                             }
-                            onPinchUpdated: function (pinch) {
-                                backplot.pinchUpdated(pinch.scale, pinch.center.x, pinch.center.y)
+                            onPositionChanged: function (mouse) {
+                                if (mouse.buttons & Qt.MiddleButton)
+                                    backplot.zoomDragged(mouse.y)
+                                else if (mouse.buttons & Qt.LeftButton)
+                                    backplot.panned(mouse.x, mouse.y)
                             }
-                            onPinchFinished: backplot.pinchFinished()
-
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-                                onPressed: function (mouse) {
-                                    backplot.pressed(mouse.x, mouse.y)
-                                }
-                                onPositionChanged: function (mouse) {
-                                    if (mouse.buttons & Qt.MiddleButton)
-                                        backplot.zoomDragged(mouse.y)
-                                    else if (mouse.buttons & Qt.LeftButton)
-                                        backplot.panned(mouse.x, mouse.y)
-                                }
-                                onDoubleClicked: backplot.fitToWindow()
-                                onWheel: function (wheel) {
-                                    backplot.wheelZoom(wheel.angleDelta.y)
-                                }
+                            onDoubleClicked: backplot.fitToWindow()
+                            onWheel: function (wheel) {
+                                backplot.wheelZoom(wheel.angleDelta.y)
                             }
                         }
+                    }
 
-                        // Clear of the scale the plot draws round its own
-                        // edge. The ticks reach 7px in, their labels another
-                        // 2px past that, and a label as wide as "-100" adds
-                        // about 36 more - so anything inside 48px sits on top
-                        // of the numbers. See actors/ticks.py for those three.
-                        readonly property int plotMargin: 48
+                    // Clear of the scale the plot draws round its own
+                    // edge. The ticks reach 7px in, their labels another
+                    // 2px past that, and a label as wide as "-100" adds
+                    // about 36 more - so anything inside 48px sits on top
+                    // of the numbers. See actors/ticks.py for those three.
+                    readonly property int plotMargin: 48
 
-                        Row {
-                            anchors.left: parent.left
-                            anchors.top: parent.top
-                            anchors.margins: backplot.plotMargin
-                            // The profile editor's spacing over its canvas.
-                            spacing: 32
+                    Row {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.margins: backplot.plotMargin
+                        // The profile editor's spacing over its canvas.
+                        spacing: 32
 
-                            BackplotIconButton {
-                                iconSource: "../conversational_qml/icons/zoom-in.svg"
-                                autoRepeat: true
-                                autoRepeatDelay: 300
-                                autoRepeatInterval: 100
-                                onClicked: backplot.zoomIn()
-                            }
-                            BackplotIconButton {
-                                iconSource: "../conversational_qml/icons/zoom-out.svg"
-                                autoRepeat: true
-                                autoRepeatDelay: 300
-                                autoRepeatInterval: 100
-                                onClicked: backplot.zoomOut()
-                            }
-                            BackplotIconButton {
-                                iconSource: "../conversational_qml/icons/zoom-fit.svg"
-                                onClicked: backplot.fitToWindow()
-                            }
-                        }
-
-                        // Same button as the zoom row, so the two line up
-                        // across the top of the plot; the tint is what says
-                        // it throws something away.
                         BackplotIconButton {
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            anchors.margins: backplot.plotMargin
-                            iconSource: "../conversational_qml/icons/brush_out.svg"
-                            tint: Theme.danger
-                            borderTint: Theme.danger
-                            onClicked: backplot.clearPlot()
+                            iconSource: "../conversational_qml/icons/zoom-in.svg"
+                            autoRepeat: true
+                            autoRepeatDelay: 300
+                            autoRepeatInterval: 100
+                            onClicked: backplot.zoomIn()
                         }
+                        BackplotIconButton {
+                            iconSource: "../conversational_qml/icons/zoom-out.svg"
+                            autoRepeat: true
+                            autoRepeatDelay: 300
+                            autoRepeatInterval: 100
+                            onClicked: backplot.zoomOut()
+                        }
+                        BackplotIconButton {
+                            iconSource: "../conversational_qml/icons/zoom-fit.svg"
+                            onClicked: backplot.fitToWindow()
+                        }
+                    }
+
+                    // Same button as the zoom row, so the two line up
+                    // across the top of the plot; the tint is what says
+                    // it throws something away.
+                    BackplotIconButton {
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: backplot.plotMargin
+                        iconSource: "../conversational_qml/icons/brush_out.svg"
+                        tint: Theme.danger
+                        borderTint: Theme.danger
+                        onClicked: backplot.clearPlot()
                     }
                 }
             }
-        }
-
-        GCodeViewerPane {
-            id: gcodePane
-            viewModel: root.viewModel
-            SplitView.preferredWidth: root.width / 2
-            SplitView.minimumWidth: 420
         }
     }
 
@@ -218,11 +207,11 @@ Item {
 
     Rectangle {
         id: toolChangedToast
-        visible: root.toolChangedToastVisible
+        visible: root.toolChangedToastVisible && root.shown
         z: 1200
-        x: gcodePane.x + Math.max(0, (gcodePane.width - width) / 2)
+        x: root.codePaneX + Math.max(0, (root.codePaneWidth - width) / 2)
         y: Math.max(0, root.height - 200 - height)
-        width: Math.min(gcodePane.width, toolChangedToastText.implicitWidth + 100)
+        width: Math.min(root.codePaneWidth, toolChangedToastText.implicitWidth + 100)
         height: toolChangedToastText.implicitHeight + 50
         radius: Theme.radiusLarge
         color: "#cc303030"
@@ -243,11 +232,11 @@ Item {
 
     Rectangle {
         id: programCompletedToast
-        visible: root.viewModel ? root.viewModel.programCompletedVisible : false
+        visible: root.shown && (root.viewModel ? root.viewModel.programCompletedVisible : false)
         z: 1300
-        x: gcodePane.x + Math.max(0, (gcodePane.width - width) / 2)
+        x: root.codePaneX + Math.max(0, (root.codePaneWidth - width) / 2)
         y: Math.max(0, root.height - 220 - height)
-        width: Math.min(gcodePane.width, programCompletedToastText.implicitWidth + 100)
+        width: Math.min(root.codePaneWidth, programCompletedToastText.implicitWidth + 100)
         height: programCompletedToastText.implicitHeight + 50
         radius: Theme.radiusLarge
         color: "#ff303030"
