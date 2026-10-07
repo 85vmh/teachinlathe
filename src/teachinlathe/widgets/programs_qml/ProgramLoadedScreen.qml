@@ -5,9 +5,10 @@ import "program_loaded"
 import TeachInLathe.Backplot 1.0
 import theme 1.0
 
-// The loaded-program screen's own pane - DRO, tool/feed/speed and the
-// backplot - on the right of the strip ProgramsTabRoot slides; the program
-// code beside it is the strip's shared code pane.
+// The loaded-program screen's own pane - the backplot, and under it the run
+// controls while the program runs - on the right of the strip
+// ProgramsTabRoot slides; the code beside it, with the DRO over it, is the
+// strip's shared code pane.
 Item {
     id: root
     objectName: "programLoadedScreen"
@@ -63,25 +64,6 @@ Item {
         ColumnLayout {
             anchors.fill: parent
             spacing: Theme.spacingSmall
-
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: false
-                Layout.preferredHeight: 220
-                spacing: Theme.spacingSmall
-
-                ProgramsDro {
-                    Layout.fillHeight: true
-                    Layout.preferredWidth: 600
-                    viewModel: root.viewModel
-                }
-
-                ProgramsToolFeedSpeed {
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
-                    viewModel: programsToolFeedSpeedViewModel
-                }
-            }
 
             Rectangle {
                 Layout.fillWidth: true
@@ -184,6 +166,15 @@ Item {
                     }
                 }
             }
+
+            // Cycle Abort and Feed Hold / Resume, while the program runs - the
+            // same height as the options bar under the code, so the two line up.
+            RunControlBar {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 90
+                visible: root.viewModel ? root.viewModel.screenIndex === ProgramsScreen.Running : false
+                viewModel: root.viewModel
+            }
         }
     }
 
@@ -246,10 +237,17 @@ Item {
             anchors.centerIn: parent
             width: parent.width - 32
             textFormat: Text.RichText
+            // The two actions are links: tapping either does what the
+            // machine's button would.
             text: "<div align=\"center\"><b>Program Completed</b><br/>"
                 + "[" + root.escapeHtml(root.viewModel ? root.viewModel.programCompletedName : "") + "]<br/><br/><br/><br/>"
-                + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to run again the same program.<br/><br/>"
-                + "Press <font color=\"#ef4444\"><b>Cycle Abort</b></font> to close this screen.</div>"
+                + "Press <a href=\"cycle_start\"><font color=\"#22c55e\"><b>Cycle Start</b></font></a> to run again the same program.<br/><br/>"
+                + "Press <a href=\"cycle_abort\"><font color=\"#ef4444\"><b>Cycle Abort</b></font></a> to close this screen.</div>"
+            onLinkActivated: function(link) {
+                if (!root.viewModel) return
+                if (link === "cycle_start") root.viewModel.triggerCycleStart()
+                else if (link === "cycle_abort") root.viewModel.closeCompletedProgram()
+            }
             color: Theme.surface
             font.pixelSize: Theme.fontLarge
             horizontalAlignment: Text.AlignHCenter

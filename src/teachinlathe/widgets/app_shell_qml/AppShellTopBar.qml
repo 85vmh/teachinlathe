@@ -66,6 +66,7 @@ Rectangle {
                 enabled: modelData.enabled !== false
                 checked: !!modelData.checked
                 checkable: !!modelData.checked
+                active: !!modelData.active
                 onClicked: if (appShellBridge) appShellBridge.triggerHeaderAction(modelData.id || "")
             }
         }

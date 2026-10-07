@@ -168,6 +168,18 @@ class ProgramsController(QObject):
         if self.viewmodel.screenIndex != ProgramsScreen.FileSystem:
             left_actions.append({"id": "back", "text": "← Back to FileSystem", "enabled": True})
             title = f'Loaded Program [{self._current_program_name()}]'
+            # Cycle Start lives up here until the program is going; from then
+            # on the view is full screen and Feed Hold / Resume and Cycle
+            # Abort sit under the backplot. It lights with the machine's
+            # cycle-start LED, so it blinks when the machine wants it pressed.
+            actions = self.viewmodel.actions
+            if not actions.isActive:
+                right_actions.append({
+                    "id": "cycle_start",
+                    "text": "Cycle Start",
+                    "enabled": bool(actions.startAction.enabled),
+                    "active": bool(actions.cycleStartLedActive),
+                })
         else:
             if self.fs_viewmodel.isInGeneratedPrograms:
                 left_actions.append({
@@ -190,6 +202,8 @@ class ProgramsController(QObject):
     def triggerHeaderAction(self, action_id):
         if action_id == "back":
             self.viewmodel.showFilesScreen()
+        elif action_id == "cycle_start":
+            self.viewmodel.triggerCycleStart()
         elif action_id == "load_program":
             self.fs_viewmodel.openSelectedFile()
         elif action_id == "edit_program":

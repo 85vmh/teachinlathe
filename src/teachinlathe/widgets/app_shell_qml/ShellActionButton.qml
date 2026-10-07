@@ -9,6 +9,9 @@ Rectangle {
     property bool secondary: false
     property bool checkable: false
     property bool checked: false
+    // Lit, as when the action is waiting to be taken - the Programs tab ties
+    // Cycle Start's to the machine's cycle-start LED, so it blinks with it.
+    property bool active: false
 
     signal clicked()
 
@@ -19,6 +22,7 @@ Rectangle {
         if (!enabled) return secondary ? Theme.surfaceSunken : Theme.primaryDisabled
         if (checkable && checked) return actionArea.pressed ? "#684b0f" : "#7a5a12"
         if (secondary) return actionArea.pressed ? Theme.accentSoft : Theme.hover
+        if (active) return actionArea.pressed ? Theme.primaryPressed : Theme.primaryBorder
         return actionArea.pressed ? Theme.primaryPressed : Theme.primary
     }
     border.width: Theme.hairline

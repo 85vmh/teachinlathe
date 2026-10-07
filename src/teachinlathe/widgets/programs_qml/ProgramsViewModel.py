@@ -338,6 +338,13 @@ class ProgramsViewModel(QObject):
             return
         self._actions.triggerStop()
 
+    @pyqtSlot()
+    def closeCompletedProgram(self):
+        """The Program Completed dialog's Cycle Abort: close the screen, as
+        the machine's abort button does once the program has completed."""
+        if self._program_completed:
+            self._close_completed_program_screen()
+
     def _on_cycle_start_button_changed(self, value=False):
         pressed = self._read_bool_pin(TeachInLatheComponent.PinButtonCycleStart, bool(value))
         if not pressed or not self._program_completed:
