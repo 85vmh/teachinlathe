@@ -3,7 +3,9 @@
 // Coordinate convention: Z+ → right, X+ → down (lathe radial, outward = positive).
 // Scale and origin are computed from fixed viewport margins.
 import QtQuick 2.15
+import theme 1.0
 import "profile_canvas"
+import "../touchable_input"
 
 Canvas {
     id: root
@@ -15,9 +17,109 @@ Canvas {
     property var    workpiece:         ({})
     property bool   mirrorAcrossCenterline: true  // also draw the profile and its hatched stock above the centre line
 
+    // A selected cylindrical stretch, fillet or chamfer shows its value in a
+    // tag; with this set, tapping the tag opens the numpad and reports the
+    // new value through diameterEdited or blendEdited.
+    property bool   tagEditable: false
+
     signal primitiveSelected(int index)
     signal blendSelected(int index)   // the blend carried by primitive ``index``
     signal selectionCleared()
+    signal openNumPadRequested(var field)
+    // A new diameter for the cylindrical stretch primitive ``index`` is in;
+    // primitivesWithDiameter turns it into updated primitives.
+    signal diameterEdited(int index, real diameter)
+    // A new value for ``field`` ("fillet_radius" / "chamfer_width") of the
+    // blend carried by primitive ``index``.
+    signal blendEdited(int index, string field, real value)
+
+    // ── Value tag ──────────────────────────────────────────────────────────────
+    // What the tag shows for the current selection, or null:
+    //   kind         "diameter" | "fillet" | "chamfer"
+    //   index        the selected primitive, or the one carrying the blend
+    //   value        the number shown and edited
+    //   prefix       the symbol before it
+    //   field        the blend field it edits (blends only)
+    //   description  the numpad's title
+    //   anchorX/Y    where the leader touches the profile, in canvas px - on
+    //                the upper half when both halves are drawn
+    readonly property var _tag: _currentTag()
+
+    function _currentTag() {
+        if (selectedPrimIndex >= 0) {
+            var cylinder = geom.cylinderAt(_resolvedPrimitives, selectedPrimIndex)
+            if (!cylinder) return null
+            var lineY = _cy(cylinder.diameter)
+            return {
+                kind: "diameter", index: selectedPrimIndex, value: cylinder.diameter,
+                prefix: "\u00D8", description: "Diameter",
+                anchorX: _cx((cylinder.zSelectedStart + cylinder.zSelectedEnd) / 2),
+                anchorY: mirrorAcrossCenterline ? 2 * _originY - lineY : lineY
+            }
+        }
+        if (selectedBlendIndex >= 0 && primitives && selectedBlendIndex < primitives.length) {
+            var blend = primitives[selectedBlendIndex].blend
+            if (!blend || (blend.type !== "fillet" && blend.type !== "chamfer")) return null
+            var mid = _blendMidpoint(selectedBlendIndex)
+            if (!mid) return null
+            var isFillet = blend.type === "fillet"
+            return {
+                kind: blend.type, index: selectedBlendIndex,
+                value: +(isFillet ? blend.fillet_radius : blend.chamfer_width) || 0,
+                prefix: isFillet ? "r" : "w",
+                field: isFillet ? "fillet_radius" : "chamfer_width",
+                description: isFillet ? "Fillet radius" : "Chamfer width",
+                anchorX: mid.x,
+                anchorY: mirrorAcrossCenterline ? 2 * _originY - mid.y : mid.y
+            }
+        }
+        return null
+    }
+
+    // Canvas position halfway along the drawn blend of primitive ``index``
+    // (the chamfer's line, the fillet's arc), on the lower half; or null.
+    function _blendMidpoint(index) {
+        var segs = _renderSegs
+        var prevZ = 0
+        var prevX = 0
+        for (var i = 0; segs && i < segs.length; i++) {
+            var s = segs[i]
+            if (s.prim === index && s.blend && s.type !== "move") {
+                var startX = _cx(prevZ)
+                var startY = _cy(prevX)
+                if (s.type !== "arc")
+                    return { x: (startX + _cx(s.z)) / 2, y: (startY + _cy(s.x)) / 2 }
+                var ccx = _cx(s.zc)
+                var ccy = _cy(s.xc)
+                var radius = Math.sqrt(Math.pow(startX - ccx, 2) + Math.pow(startY - ccy, 2))
+                var sa = Math.atan2(startY - ccy, startX - ccx)
+                var sweep = Math.atan2(_cy(s.x) - ccy, _cx(s.z) - ccx) - sa
+                // the way ctx.arc goes: anticlockwise means decreasing angle
+                if (s.anticlockwise) { while (sweep > 0) sweep -= Math.PI * 2 }
+                else                 { while (sweep < 0) sweep += Math.PI * 2 }
+                return { x: ccx + radius * Math.cos(sa + sweep / 2),
+                         y: ccy + radius * Math.sin(sa + sweep / 2) }
+            }
+            prevZ = s.z
+            prevX = s.x
+        }
+        return null
+    }
+
+    // The leader leaves the anchor at 45 degrees, up and to the right (down
+    // and to the right on the lower half, away from the part).
+    readonly property real _leaderRun: 56   // px along each axis
+    readonly property real _leaderEndX: _tag ? _tag.anchorX + _leaderRun : 0
+    readonly property real _leaderEndY: _tag ? _tag.anchorY + (mirrorAcrossCenterline ? -_leaderRun : _leaderRun) : 0
+
+    // e.g. "\u00D8 11.000 mm", "r 1.000 mm"
+    function _tagText(tag) { return tag.prefix + " " + Number(tag.value).toFixed(3) + " mm" }
+
+    // ``primitives`` with the cylindrical run containing primitive ``index``
+    // moved to ``diameter``, or null; for handlers of diameterEdited.
+    function primitivesWithDiameter(index, diameter) {
+        return geom.withCylinderDiameter(primitives, index, diameter)
+    }
 
     // ── Private state ──────────────────────────────────────────────────────────
     property real _scale:   5.0
@@ -127,6 +229,7 @@ Canvas {
         originActor.paint(ctx)
         pathActor.paint(ctx)
         highlightActor.paint(ctx)
+        diameterLeaderActor.paint(ctx)
     }
 
     function _rebuildRenderCache() {
@@ -199,6 +302,16 @@ Canvas {
         cx: root._cx
         cy: root._cy
         mirrorAcrossCenterline: root.mirrorAcrossCenterline
+    }
+
+    DiameterLeaderActor {
+        id: diameterLeaderActor
+        active: root._tag !== null
+        anchorX: root._tag ? root._tag.anchorX : 0
+        anchorY: root._tag ? root._tag.anchorY : 0
+        endX: root._leaderEndX
+        endY: root._leaderEndY
+        color: Theme.accentStrong
     }
 
     HighlightActor {
@@ -463,6 +576,63 @@ Canvas {
 
                 root._manualView = true
                 root.requestPaint()
+            }
+        }
+    }
+
+    // Declared after the PinchArea so it sits above it: a tap here must not
+    // also reach the canvas MouseArea and change the selection.
+    Rectangle {
+        id: valueTag
+        visible: root._tag !== null
+        width: tagText.implicitWidth + 2 * Theme.spacing
+        height: Theme.inputHeight
+        // at the end of the leader, kept inside the canvas
+        x: Math.max(0, Math.min(root.width - width, root._leaderEndX))
+        y: Math.max(0, Math.min(root.height - height,
+                                root.mirrorAcrossCenterline ? root._leaderEndY - height : root._leaderEndY))
+        radius: Theme.radius
+        color: Theme.surface
+        border.color: tagField.numpadActive ? Theme.focusBorder : Theme.accentStrong
+        border.width: tagField.numpadActive ? 2 : 1
+
+        Text {
+            id: tagText
+            anchors.centerIn: parent
+            text: root._tag ? root._tagText(root._tag) : ""
+            color: Theme.foregroundStrong
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontTitle
+        }
+
+        // Never shown: the numpad dialog edits a NumpadField, so the tag
+        // hands it this one, seeded with the current value on each tap.
+        NumpadField {
+            id: tagField
+            visible: false
+            settingName: "profile.tag"
+            validatorObject: DoubleValidator { bottom: 0.001; notation: DoubleValidator.StandardNotation }
+            formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
+            property var editing: null   // the tag being edited, fixed at the tap
+            onValueCommitted: function(value) {
+                var tag = editing
+                if (!tag) return
+                if (tag.kind === "diameter")
+                    root.diameterEdited(tag.index, Number(value))
+                else
+                    root.blendEdited(tag.index, tag.field, Number(value))
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            enabled: root.tagEditable
+            onClicked: {
+                tagField.editing = root._tag
+                tagField.description = root._tag.description
+                tagField.value = root._tag.value
+                tagField.numpadActive = true
+                root.openNumPadRequested(tagField)
             }
         }
     }

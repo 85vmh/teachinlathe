@@ -46,6 +46,130 @@ QtObject {
         return out
     }
 
+    // ── Cylindrical stretches ─────────────────────────────────────────────────
+    // A lineTo that starts and ends on the same diameter. ``resolved`` is what
+    // resolvePrimitives returns, so a line given by angle counts by where it
+    // actually ends.
+
+    function _resolvedEndX(p) {
+        return p.type === "startPoint" ? +(p.x_start || 0) : +(p.x_end || 0)
+    }
+
+    function _isCylinder(resolved, i, diameter) {
+        if (i < 1 || i >= resolved.length || resolved[i].type !== "lineTo") return false
+        var startX = _resolvedEndX(resolved[i - 1])
+        var endX = +(resolved[i].x_end || 0)
+        if (Math.abs(startX - endX) > 1e-6) return false
+        return diameter === undefined || Math.abs(endX - diameter) <= 1e-6
+    }
+
+    // {first, last, diameter, zStart, zEnd, zSelectedStart, zSelectedEnd}
+    // for the run of cylindrical lines on one diameter that contains
+    // primitive ``index``, or null when that primitive is not cylindrical.
+    function cylinderAt(resolved, index) {
+        if (!resolved || !_isCylinder(resolved, index)) return null
+        var diameter = +(resolved[index].x_end || 0)
+        var first = index
+        var last = index
+        while (_isCylinder(resolved, first - 1, diameter)) first--
+        while (_isCylinder(resolved, last + 1, diameter)) last++
+        return {
+            first: first, last: last, diameter: diameter,
+            zStart: _resolvedEndZ(resolved[first - 1]),
+            zEnd: +(resolved[last].z_end || 0),
+            // the selected line's own stretch, for marking it
+            zSelectedStart: _resolvedEndZ(resolved[index - 1]),
+            zSelectedEnd: +(resolved[index].z_end || 0)
+        }
+    }
+
+    function _resolvedEndZ(p) {
+        return p.type === "startPoint" ? +(p.z_start || 0) : +(p.z_end || 0)
+    }
+
+    // A copy of ``primitives`` with the cylindrical run containing ``index``
+    // moved to ``diameter``: every line of the run ends on it, and so does
+    // the primitive the run starts from (the start point's x_start, a line's
+    // or an arc's x_end). An arc either side of the run is refitted to the
+    // moved end - see _refitArc - and corner blends follow by themselves.
+    // null when ``index`` is not cylindrical.
+    function withCylinderDiameter(primitives, index, diameter) {
+        var resolved = resolvePrimitives(primitives)
+        var run = cylinderAt(resolved, index)
+        if (!run) return null
+        var out = JSON.parse(JSON.stringify(primitives))
+        for (var i = run.first; i <= run.last; i++)
+            _setEndX(out[i], diameter)
+        _setEndX(out[run.first - 1], diameter)
+
+        // an arc ending where the run starts: its start stays put
+        var before = out[run.first - 1]
+        if (before.type === "arcTo" && run.first >= 2)
+            _refitArc(before, _resolvedEndZ(resolved[run.first - 2]), _resolvedEndX(resolved[run.first - 2]),
+                      +(before.z_end || 0), diameter, false)
+        // an arc starting where the run ends: its end stays put
+        var after = out[run.last + 1]
+        if (after && after.type === "arcTo")
+            _refitArc(after, run.zEnd, diameter, +(after.z_end || 0), +(after.x_end || 0), true)
+        return out
+    }
+
+    // Re-centre ``arc`` so it runs from (startZ, startX) to (endZ, endX) -
+    // X as diameters - after one of the two has moved (the start when
+    // ``startMoved``, else the end). It keeps its radius, measured from the
+    // end that stayed, and of the two centres that fit, the one nearer the
+    // old; if the radius no longer spans the chord, it grows to half of it.
+    function _refitArc(arc, startZ, startX, endZ, endX, startMoved) {
+        var oldCz = +(arc.z_center || 0)
+        var oldCr = +(arc.x_center || 0) / 2
+        var fixedZ = startMoved ? endZ : startZ
+        var fixedR = (startMoved ? endX : startX) / 2
+        var radius = Math.sqrt(Math.pow(fixedZ - oldCz, 2) + Math.pow(fixedR - oldCr, 2))
+
+        var r1 = startX / 2
+        var r2 = endX / 2
+        var midZ = (startZ + endZ) / 2
+        var midR = (r1 + r2) / 2
+        var chordZ = endZ - startZ
+        var chordR = r2 - r1
+        var chord = Math.sqrt(chordZ * chordZ + chordR * chordR)
+        if (chord < 1e-9) return
+
+        var centerZ = midZ
+        var centerR = midR
+        var half = chord / 2
+        if (radius > half) {
+            var offset = Math.sqrt(radius * radius - half * half)
+            // unit normal to the chord
+            var nz = -chordR / chord
+            var nr = chordZ / chord
+            var aZ = midZ + nz * offset, aR = midR + nr * offset
+            var bZ = midZ - nz * offset, bR = midR - nr * offset
+            var nearA = Math.pow(aZ - oldCz, 2) + Math.pow(aR - oldCr, 2)
+                      <= Math.pow(bZ - oldCz, 2) + Math.pow(bR - oldCr, 2)
+            centerZ = nearA ? aZ : bZ
+            centerR = nearA ? aR : bR
+        } else {
+            radius = half
+        }
+        arc.z_center = centerZ
+        arc.x_center = centerR * 2
+        arc.arc_radius = radius
+    }
+
+    // Make primitive ``p`` end on ``diameter``. A line given by angle and Z
+    // ("az") has no X of its own to set; its end follows its start.
+    function _setEndX(p, diameter) {
+        if (p.type === "startPoint") {
+            p.x_start = diameter
+        } else if (p.type === "arcTo") {
+            p.x_end = diameter
+        } else if (p.type === "lineTo") {
+            var mode = String(p.input !== undefined ? p.input : "xz").toLowerCase()
+            if (mode !== "az") p.x_end = diameter
+        }
+    }
+
     function undercutBlendValue(blend, field, defaultValue) {
         if (!blend) return defaultValue
         return blend[field] !== undefined ? +(blend[field] || defaultValue) : defaultValue

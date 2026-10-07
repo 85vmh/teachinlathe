@@ -615,6 +615,19 @@ Popup {
                         root.selectedBlendIndex = idx
                         root.selectedPrimIndex  = -1
                     }
+                    tagEditable: true
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    onDiameterEdited: function(idx, diameter) {
+                        var arr = profileCanvas.primitivesWithDiameter(idx, diameter)
+                        if (!arr) return
+                        root.primitives = root._renumber(arr)
+                        root.emitSave()
+                    }
+                    onBlendEdited: function(idx, field, value) {
+                        var d = JSON.parse(JSON.stringify(root.primitives[idx]))
+                        d.blend[field] = value
+                        root.primUpdated(idx, d)
+                    }
                     onSelectionCleared: {
                         root.selectedPrimIndex  = -1
                         root.selectedBlendIndex = -1
