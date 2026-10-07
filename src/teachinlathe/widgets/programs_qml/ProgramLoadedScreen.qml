@@ -19,6 +19,9 @@ Item {
     // Where the code pane is, relative to this pane: the toasts centre over it.
     property real codePaneX: 0
     property real codePaneWidth: width
+    // How far three fingers have to travel together, in px, for the swipe
+    // that clears the plot.
+    readonly property int clearSwipeDistance: 80
     property bool toolChangedToastVisible: false
     property string toolChangedToastMessage: ""
 
@@ -83,6 +86,8 @@ Item {
                 LatheBackplot {
                     id: backplot
                     objectName: "latheBackplot"
+                    // three fingers swiped this far clear the plot
+                    clearSwipeDistance: root.clearSwipeDistance
                     anchors.fill: parent
                     anchors.margins: 1
 

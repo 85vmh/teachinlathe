@@ -25,7 +25,7 @@ import shutil
 import tempfile
 import time
 
-from PyQt6.QtCore import QObject, QSize, QTimer, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QSize, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QColor
 from PyQt6.QtOpenGL import (QOpenGLFramebufferObject,
                             QOpenGLFramebufferObjectFormat)
@@ -33,6 +33,7 @@ from PyQt6.QtQml import qmlRegisterType
 from PyQt6.QtQuick import QQuickFramebufferObject
 
 from teachinlathe.widgets.backplot import actors, workpiece
+from teachinlathe.widgets.backplot.touch_gestures import ThreeFingerSwipe
 from teachinlathe.widgets.backplot.actors import base as actor_base
 from teachinlathe.widgets.backplot.actors import palette, screen, text
 
@@ -1452,6 +1453,34 @@ class LatheBackplotItem(QQuickFramebufferObject):
         # The preview draws bottom-up, as OpenGL does; Quick composes
         # top-down.
         self.setMirrorVertically(True)
+
+        # Three fingers swiped across the plot clear it, as the clear button
+        # does. It has to watch the window, not this item: see touch_gestures.
+        self._clear_swipe = ThreeFingerSwipe(self, self.clearPlot, parent=self)
+        self._swipe_window = None
+        self.windowChanged.connect(self._watch_window)
+
+    def _watch_window(self, window):
+        if window is self._swipe_window:
+            return
+        if self._swipe_window is not None:
+            try:
+                self._swipe_window.removeEventFilter(self._clear_swipe)
+            except RuntimeError:
+                pass   # the window went first, at shutdown, filter and all
+        self._swipe_window = window
+        if window is not None:
+            window.installEventFilter(self._clear_swipe)
+
+    def _get_clear_swipe_distance(self):
+        return self._clear_swipe.distance
+
+    def _set_clear_swipe_distance(self, distance):
+        self._clear_swipe.distance = int(distance)
+
+    #: How far, in px, three fingers travel together to clear the plot.
+    clearSwipeDistance = pyqtProperty(int, _get_clear_swipe_distance,
+                                      _set_clear_swipe_distance)
 
     # ── wiring ──────────────────────────────────────────────────────────────
 
