@@ -19,7 +19,7 @@ Item {
     id: root
 
     // mărimile disponibile (cifra din codul ISO)
-    enum Size { S11, S16 }
+    enum Size { S11, S16, S22 }
 
     // ---- parametri --------------------------------------------------------
     property int  size: VBMT.Size.S16
@@ -39,8 +39,8 @@ Item {
     readonly property string family: "VBMT"
     readonly property string shape: "V"
     readonly property string insertType: "T"
-    readonly property var icValues: [6.35, 9.525]          // mm, în ordinea enum-ului
-    readonly property var sizeCodes: ["11", "16"]
+    readonly property var icValues: [6.35, 9.525, 12.7]          // mm, în ordinea enum-ului
+    readonly property var sizeCodes: ["11", "16", "22"]
     readonly property var noseRadii: [0.2, 0.4, 0.8, 1.2, 1.6]
 
     readonly property real ic: icValues[Math.max(0, Math.min(size, icValues.length - 1))]

@@ -47,11 +47,11 @@ def approx_points(actual, expected):
 @pytest.mark.parametrize("family,shape,insert_type,ic,codes", [
     ("CCMT", "C", "T", (6.35, 9.525, 12.7, 15.875), ("06", "09", "12", "16")),
     ("DCMT", "D", "T", (6.35, 9.525, 12.7), ("07", "11", "15")),
-    ("VBMT", "V", "T", (6.35, 9.525), ("11", "16")),
-    ("TCMT", "T", "T", (6.35, 9.525, 12.7), ("11", "16", "22")),
+    ("VBMT", "V", "T", (6.35, 9.525, 12.7), ("11", "16", "22")),
+    ("TCMT", "T", "T", (5.56, 6.35, 9.525, 12.7), ("09", "11", "16", "22")),
     ("WNMG", "W", "G", (9.525, 12.7, 15.875), ("06", "08", "10")),
-    ("SNMG", "S", "G", (9.525, 12.7, 15.875, 19.05), ("09", "12", "15", "19")),
-    ("RCMT", "R", "T", (8, 10, 12, 16), ("08", "10", "12", "16")),
+    ("SNMG", "S", "G", (9.525, 12.7, 15.875), ("09", "12", "15")),
+    ("RCMT", "R", "T", (5, 6, 8, 10, 12, 16), ("05", "06", "08", "10", "12", "16")),
 ])
 def test_family_matches_qml(family, shape, insert_type, ic, codes):
     """Each family file's shape, type, sizes and codes, in enum order."""
@@ -70,7 +70,7 @@ def test_size_index_selects_ic_and_code():
 
 def test_size_index_is_clamped_like_the_qml():
     """The QML clamps with ``Math.max(0, Math.min(size, len - 1))``."""
-    assert inserts.Insert("VBMT", size_index=99).size_code == "16"
+    assert inserts.Insert("VBMT", size_index=99).size_code == "22"
     assert inserts.Insert("VBMT", size_index=-5).size_code == "11"
 
 

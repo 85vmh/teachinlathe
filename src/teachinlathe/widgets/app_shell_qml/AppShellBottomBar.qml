@@ -26,6 +26,7 @@ Rectangle {
         Repeater {
             model: [
                 { id: "manual", label: "Manual Turning" },
+                { id: "tools", label: "Tool Library" },
                 { id: "conversational", label: "Conversational" },
                 { id: "programs", label: "Programs" },
                 { id: "settings", label: "Machine Settings" }

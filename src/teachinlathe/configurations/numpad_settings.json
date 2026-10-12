@@ -144,5 +144,50 @@
       0.1,
       0.12
     ]
+  },
+  "blade.width": {
+    "description": "Enter blade width (mm)",
+    "value_type": "float",
+    "default_value": 1.5,
+    "min_value": 0.5,
+    "max_value": 10,
+    "options": [1, 1.2, 1.5, 2, 2.5, 3, 4, 5]
+  },
+  "blade.corner_radius": {
+    "description": "Enter corner radius (mm)",
+    "value_type": "float",
+    "default_value": 0.2,
+    "min_value": 0,
+    "max_value": 5,
+    "options": [0.1, 0.2, 0.3, 0.4, 0.5]
+  },
+  "drill.diameter": {
+    "description": "Enter drill diameter (mm)",
+    "value_type": "float",
+    "default_value": 10,
+    "min_value": 0.5,
+    "max_value": 50
+  },
+  "reamer.diameter": {
+    "description": "Enter reamer diameter (mm)",
+    "value_type": "float",
+    "default_value": 10,
+    "min_value": 0.5,
+    "max_value": 50
+  },
+  "tap.diameter": {
+    "description": "Enter tap diameter (mm)",
+    "value_type": "float",
+    "default_value": 10,
+    "min_value": 1,
+    "max_value": 50
+  },
+  "tap.pitch": {
+    "description": "Enter thread pitch (mm)",
+    "value_type": "float",
+    "default_value": 1.5,
+    "min_value": 0.2,
+    "max_value": 6,
+    "options": [0.5, 0.7, 0.8, 1, 1.25, 1.5, 1.75, 2, 2.5, 3]
   }
 }

@@ -19,7 +19,7 @@ Item {
     id: root
 
     // mărimile disponibile (cifra din codul ISO)
-    enum Size { S09, S12, S15, S19 }
+    enum Size { S09, S12, S15 }
 
     // ---- parametri --------------------------------------------------------
     property int  size: SNMG.Size.S12
@@ -39,8 +39,8 @@ Item {
     readonly property string family: "SNMG"
     readonly property string shape: "S"
     readonly property string insertType: "G"
-    readonly property var icValues: [9.525, 12.7, 15.875, 19.05]          // mm, în ordinea enum-ului
-    readonly property var sizeCodes: ["09", "12", "15", "19"]
+    readonly property var icValues: [9.525, 12.7, 15.875]          // mm, în ordinea enum-ului
+    readonly property var sizeCodes: ["09", "12", "15"]
     readonly property var noseRadii: [0.2, 0.4, 0.8, 1.2, 1.6]
 
     readonly property real ic: icValues[Math.max(0, Math.min(size, icValues.length - 1))]

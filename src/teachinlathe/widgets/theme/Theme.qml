@@ -123,6 +123,7 @@ QtObject {
     readonly property color danger:     "#c62828"   // 10 - delete, abort
     readonly property color dangerSoft: "#ffebee"   // 4
     readonly property color dangerPressed: "#b71c1c"
+    readonly property color redHighlight: "#ff0000"   // the tool tip cross
     readonly property color warning:    "#ff9800"   // the manual tab already
                                                     // called this warningColor
                                                     // in three files

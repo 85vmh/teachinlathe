@@ -21,32 +21,42 @@ import math
 
 #: Families, as the QML files declare them: the ISO shape letter, whether the
 #: insert is positive (T, single-sided) or negative (G, double-sided), the
-#: inscribed-circle diameters offered, and the size code printed for each.
+#: inscribed-circle diameters offered, the size code printed for each, and
+#: the ISO thickness code that size is commonly made in (the "02" of
+#: CCMT 06 02 04). The QML files have no thickness; only the tool library
+#: prints it.
 #:
 #: Ordered as the QML ``Size`` enums are, so an index means the same thing on
 #: both sides.
 FAMILIES = {
     "CCMT": {"shape": "C", "type": "T",
              "ic": (6.35, 9.525, 12.7, 15.875),
-             "codes": ("06", "09", "12", "16")},
+             "codes": ("06", "09", "12", "16"),
+             "thickness": ("02", "T3", "04", "06")},
     "DCMT": {"shape": "D", "type": "T",
              "ic": (6.35, 9.525, 12.7),
-             "codes": ("07", "11", "15")},
+             "codes": ("07", "11", "15"),
+             "thickness": ("02", "T3", "04")},
     "VBMT": {"shape": "V", "type": "T",
-             "ic": (6.35, 9.525),
-             "codes": ("11", "16")},
-    "TCMT": {"shape": "T", "type": "T",
              "ic": (6.35, 9.525, 12.7),
-             "codes": ("11", "16", "22")},
+             "codes": ("11", "16", "22"),
+             "thickness": ("03", "04", "04")},
+    "TCMT": {"shape": "T", "type": "T",
+             "ic": (5.56, 6.35, 9.525, 12.7),
+             "codes": ("09", "11", "16", "22"),
+             "thickness": ("02", "02", "T3", "04")},
     "WNMG": {"shape": "W", "type": "G",
              "ic": (9.525, 12.7, 15.875),
-             "codes": ("06", "08", "10")},
+             "codes": ("06", "08", "10"),
+             "thickness": ("04", "04", "06")},
     "SNMG": {"shape": "S", "type": "G",
-             "ic": (9.525, 12.7, 15.875, 19.05),
-             "codes": ("09", "12", "15", "19")},
+             "ic": (9.525, 12.7, 15.875),
+             "codes": ("09", "12", "15"),
+             "thickness": ("03", "04", "06")},
     "RCMT": {"shape": "R", "type": "T",
-             "ic": (8, 10, 12, 16),
-             "codes": ("08", "10", "12", "16")},
+             "ic": (5, 6, 8, 10, 12, 16),
+             "codes": ("05", "06", "08", "10", "12", "16"),
+             "thickness": ("02", "02", "03", "T3", "04", "06")},
 }
 
 #: Nose radii offered, the same list for every family.
@@ -57,13 +67,16 @@ RHOMBIC_ANGLE = {"C": 80.0, "D": 55.0, "V": 35.0}
 
 #: Hole and countersink diameters, by inscribed circle and insert type. As in
 #: the QML: entries marked there as measured from a DXF are the T rows for
-#: 6.35, 9.525 and 12.7.
+#: 6.35, 9.525 and 12.7. The 5, 5.56 and 6 rows are catalogue estimates.
 HOLES = {
+    5.56:   {"T": (2.50, 3.60), "G": (2.50, 3.60)},
     6.35:   {"T": (2.85, 4.46), "G": (2.80, 4.10)},
     9.525:  {"T": (4.40, 6.33), "G": (3.81, 5.50)},
     12.7:   {"T": (5.50, 7.85), "G": (5.16, 7.40)},
     15.875: {"T": (6.60, 9.20), "G": (6.35, 9.00)},
     19.05:  {"T": (7.93, 11.0), "G": (7.93, 11.0)},
+    5:      {"T": (2.20, 3.20), "G": (2.20, 3.20)},
+    6:      {"T": (2.80, 4.10), "G": (2.80, 4.10)},
     8:      {"T": (3.40, 5.00), "G": (3.40, 5.00)},
     10:     {"T": (4.40, 6.33), "G": (4.40, 6.33)},
     12:     {"T": (5.50, 7.85), "G": (5.50, 7.85)},
@@ -160,6 +173,24 @@ class Insert:
         if self.shape == "W":
             return 0.879 * (self.ic / 1.286)
         return math.pi * self.ic                    # round: the circumference
+
+    @property
+    def corner_angle(self):
+        """Included angle at the cutting corner, in degrees - read off the
+        outline rather than kept in a table, so it cannot disagree with the
+        drawing. ``None`` for the round insert, which has no corner."""
+        verts, cutting = self.outline()
+        if not verts:
+            return None
+        count = len(verts)
+        index = self._active_index(cutting)
+        vertex = verts[index]
+        before = verts[(index - 1) % count]
+        after = verts[(index + 1) % count]
+        angle = (math.atan2(after[1] - vertex[1], after[0] - vertex[0])
+                 - math.atan2(before[1] - vertex[1], before[0] - vertex[0]))
+        angle = abs(math.degrees(angle)) % 360.0
+        return min(angle, 360.0 - angle)
 
     def _active_index(self, cutting):
         return cutting[min(self.active_corner, len(cutting) - 1)]

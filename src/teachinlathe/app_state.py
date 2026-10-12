@@ -239,7 +239,7 @@ class AppState(QObject):
         self._manual_store = DomainStore('Manual Turning', False, self)
         self._conversational_store = DomainStore('Conversational', True, self)
         self._programs_store = DomainStore('Programs', True, self)
-        self._tools_store = DomainStore('Tools & Offsets', True, self)
+        self._tools_store = DomainStore('Tool Library', True, self)
         self._machine_settings_store = DomainStore('Machine Settings', True, self)
         self._stores = {
             'manual': self._manual_store,

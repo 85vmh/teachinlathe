@@ -582,52 +582,25 @@ Item {
                 Rectangle { width: 1; Layout.fillHeight: true; color: Theme.outlineStrong }
 
                 // Orientation picker
-                ColumnLayout {
+                OrientationPicker {
                     Layout.alignment: Qt.AlignTop
                     Layout.leftMargin: 12
                     Layout.rightMargin: 4
-                    spacing: 10
+                    orientation: root._currentOrientation
 
-                    Text {
-                        text: "Orientation"; font.pixelSize: Theme.fontSmall; font.bold: true
-                        horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true
-                    }
-
-                    GridLayout {
-                        columns: 3; rowSpacing: 6; columnSpacing: 6
-
-                        Repeater {
-                            model: [4, 8, 3, 5, 9, 7, 1, 6, 2]
-                            delegate: Rectangle {
-                                width: 80; height: 80; radius: Theme.radius
-                                color:        (root._currentOrientation === modelData) ? Theme.selection : Theme.surface
-                                border.color: (root._currentOrientation === modelData) ? Theme.accent : "#aaaaaa"
-                                border.width: (root._currentOrientation === modelData) ? 2 : 1
-
-                                Image {
-                                    anchors.centerIn: parent; width: 60; height: 60
-                                    source: "../../images/lathe_control_point_" + modelData + ".png"
-                                    fillMode: Image.PreserveAspectFit
-                                }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: {
-                                        root._currentOrientation = modelData
-                                        var valid6 = ["generic", "parting_blade"]
-                                        var valid7 = ["drill", "reamer", "tap", "boring_bar", "trepaning"]
-                                        var valid8 = ["grooving_blade"]
-                                        if (modelData === 6 && valid6.indexOf(root._currentToolType) < 0)
-                                            root._currentToolType = "parting_blade"
-                                        else if (modelData === 7 && valid7.indexOf(root._currentToolType) < 0)
-                                            root._currentToolType = "drill"
-                                        else if (modelData === 8 && valid8.indexOf(root._currentToolType) < 0)
-                                            root._currentToolType = "grooving_blade"
-                                        else if (modelData !== 6 && modelData !== 7 && modelData !== 8)
-                                            root._currentToolType = "generic"
-                                    }
-                                }
-                            }
-                        }
+                    onPicked: function(picked) {
+                        root._currentOrientation = picked
+                        var valid6 = ["generic", "parting_blade"]
+                        var valid7 = ["drill", "reamer", "tap", "boring_bar", "trepaning"]
+                        var valid8 = ["grooving_blade"]
+                        if (picked === 6 && valid6.indexOf(root._currentToolType) < 0)
+                            root._currentToolType = "parting_blade"
+                        else if (picked === 7 && valid7.indexOf(root._currentToolType) < 0)
+                            root._currentToolType = "drill"
+                        else if (picked === 8 && valid8.indexOf(root._currentToolType) < 0)
+                            root._currentToolType = "grooving_blade"
+                        else if (picked !== 6 && picked !== 7 && picked !== 8)
+                            root._currentToolType = "generic"
                     }
                 }
             }

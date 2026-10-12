@@ -35,6 +35,9 @@ Item {
     property bool   showInscribedCircle: false
     property bool   showToolTip: false
     property bool   showHole: true
+    // Gaura decupată din corp (se vede ce e sub plăcuță), ca în backplot,
+    // în loc să fie umplută cu holeColor.
+    property bool   openHole: false
 
     property color bodyColor: "#39424c"
     property color edgeColor: "#aeb9c4"
@@ -45,12 +48,16 @@ Item {
     readonly property real d2r: Math.PI / 180
 
     // gaură + teșitură [mm], pe cerc înscris și tip. m:true = măsurat din DXF.
+    // 5, 5.56 și 6 sunt estimări din cataloage.
     readonly property var holeTable: ({
+        "5.56":  { "T": { "d": 2.50, "cs": 3.60 },             "G": { "d": 2.50, "cs": 3.60 } },
         "6.35":  { "T": { "d": 2.85, "cs": 4.46, "m": true  }, "G": { "d": 2.80, "cs": 4.10 } },
         "9.525": { "T": { "d": 4.40, "cs": 6.33, "m": true  }, "G": { "d": 3.81, "cs": 5.50 } },
         "12.7":  { "T": { "d": 5.50, "cs": 7.85, "m": true  }, "G": { "d": 5.16, "cs": 7.40 } },
         "15.875":{ "T": { "d": 6.60, "cs": 9.20 },             "G": { "d": 6.35, "cs": 9.00 } },
         "19.05": { "T": { "d": 7.93, "cs": 11.0 },             "G": { "d": 7.93, "cs": 11.0 } },
+        "5":     { "T": { "d": 2.20, "cs": 3.20 },             "G": { "d": 2.20, "cs": 3.20 } },
+        "6":     { "T": { "d": 2.80, "cs": 4.10 },             "G": { "d": 2.80, "cs": 4.10 } },
         "8":     { "T": { "d": 3.40, "cs": 5.00 },             "G": { "d": 3.40, "cs": 5.00 } },
         "10":    { "T": { "d": 4.40, "cs": 6.33 },             "G": { "d": 4.40, "cs": 6.33 } },
         "12":    { "T": { "d": 5.50, "cs": 7.85 },             "G": { "d": 5.50, "cs": 7.85 } },
@@ -159,6 +166,9 @@ Item {
             function onShowInscribedCircleChanged() { canvas.requestPaint() }
             function onShowToolTipChanged() { canvas.requestPaint() }
             function onShowHoleChanged()    { canvas.requestPaint() }
+            function onOpenHoleChanged()    { canvas.requestPaint() }
+            function onBodyColorChanged()   { canvas.requestPaint() }
+            function onEdgeColorChanged()   { canvas.requestPaint() }
         }
 
         onPaint: {
@@ -186,6 +196,14 @@ Item {
                 }
                 ctx.closePath();
             }
+            var hl = base.hole();
+            var cutHole = base.showHole && base.openHole && hl;
+            if (cutHole) {
+                // A doua subcale + regula par-impar: gaura rămâne goală.
+                ctx.moveTo(hl.d / 2, 0);
+                ctx.arc(0, 0, hl.d / 2, 0, 2 * Math.PI);
+                ctx.fillRule = Qt.OddEvenFill;
+            }
             ctx.fillStyle = base.bodyColor;
             ctx.fill();
             ctx.lineJoin = "round";
@@ -193,9 +211,8 @@ Item {
             ctx.strokeStyle = base.edgeColor;
             ctx.stroke();
 
-            // gaură + teșitură
-            var hl = base.hole();
-            if (base.showHole && hl) {
+            // gaură + teșitură (o gaură decupată are deja muchia trasă)
+            if (base.showHole && hl && !cutHole) {
                 ctx.beginPath();
                 ctx.arc(0, 0, hl.cs / 2, 0, 2 * Math.PI);
                 ctx.lineWidth = 1.2 / k;
@@ -205,6 +222,13 @@ Item {
                 ctx.fillStyle = base.holeColor;
                 ctx.fill();
                 ctx.lineWidth = 1.4 / k;
+                ctx.stroke();
+            }
+
+            if (cutHole) {
+                ctx.beginPath();
+                ctx.arc(0, 0, hl.cs / 2, 0, 2 * Math.PI);
+                ctx.lineWidth = 1.2 / k;
                 ctx.stroke();
             }
 

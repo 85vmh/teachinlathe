@@ -6,6 +6,7 @@ import "app_shell_qml"
 import "machine_qml"
 import "manual_qml"
 import "programs_qml"
+import "tools_qml"
 import "conversational_qml" as Conversational
 
 /*
@@ -31,7 +32,7 @@ Item {
     readonly property bool machineReady: ctxMachine ? ctxMachine.machineReady : false
 
     // MainTabs order, as the bottom bar lists them.
-    readonly property var tabOrder: ["manual", "conversational", "programs", "settings"]
+readonly property var tabOrder: ["manual", "tools", "conversational", "programs", "settings"]
     readonly property int currentTabIndex: {
         var idx = tabOrder.indexOf(navigationStore ? navigationStore.currentTab : "manual")
         return idx < 0 ? 0 : idx
@@ -61,6 +62,10 @@ Item {
 
                 ManualTurningRoot {
                     objectName: "manualScreen"
+                }
+
+                ToolLibraryRoot {
+                    objectName: "toolsScreen"
                 }
 
                 // Root.qml anchors itself to its parent, from when it was the

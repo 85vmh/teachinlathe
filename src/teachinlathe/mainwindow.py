@@ -37,6 +37,8 @@ from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLath
 from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.widgets.programs_qml.ProgramsController import ProgramsController
 from teachinlathe.widgets.tool_library.ToolLibraryViewModel import ToolLibraryViewModel
+from teachinlathe.widgets.tools_qml.ToolsTabViewModel import ToolsTabViewModel
+from teachinlathe.tooling.tool_library_store import ToolLibraryStore
 
 LOG = logging.getLogger(__name__)
 
@@ -57,20 +59,22 @@ QML_DIR = os.path.join(os.path.dirname(__file__), "widgets")
 class MainTabs(Enum):
     """Pages of the app content stack, in the order the shell lists them.
 
-    There is no tools page: the shell's bottom bar offers four tabs, and the
-    tool library lives inside the manual screen.
+    The tool library page holds the tool holders and the cutting tools; the
+    manual screen keeps its own list of the tool table for tool changes.
     """
 
     MANUAL_TURNING = 0
-    CONVERSATIONAL = 1
-    PROGRAMS = 2
-    MACHINE_SETTINGS = 3
+    TOOL_LIBRARY = 1
+    CONVERSATIONAL = 2
+    PROGRAMS = 3
+    MACHINE_SETTINGS = 4
 
 
 # The tab ids QML and AppState use, against this enum. AppRoot.qml holds the
 # same order; it is the one place the two have to agree.
 TAB_IDS = {
     "manual": MainTabs.MANUAL_TURNING,
+    "tools": MainTabs.TOOL_LIBRARY,
     "conversational": MainTabs.CONVERSATIONAL,
     "programs": MainTabs.PROGRAMS,
     "settings": MainTabs.MACHINE_SETTINGS,
@@ -198,6 +202,9 @@ class TeachInLatheApp(QObject):
         self.manualTurningViewModel = ManualTurningViewModel(self.manualLathe, self)
         self.teachInLatheDroViewModel = TeachInLatheDroViewModel(self)
         self.toolLibraryViewModel = ToolLibraryViewModel(self)
+        # The tool library's files live next to the tool table.
+        self.toolsTabViewModel = ToolsTabViewModel(
+            ToolLibraryStore(os.path.dirname(INI.tool_table_file)), self)
         self.numpadDialogViewModel = NumpadDialogViewModel(self)
 
         self.manualJoystickController = ManualJoystickController(self.manualTurningViewModel, self)
@@ -214,6 +221,7 @@ class TeachInLatheApp(QObject):
         self.appShellBridge = AppShellBridge(
             self.appState,
             {
+                "tools": self.toolsTabViewModel,
                 "conversational": self.conversationalqml,
                 "programs": self.programsController,
             },
@@ -270,6 +278,7 @@ class TeachInLatheApp(QObject):
         ctx.setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
         ctx.setContextProperty("teachInDroViewModel", self.teachInLatheDroViewModel)
         ctx.setContextProperty("toolLibraryViewModel", self.toolLibraryViewModel)
+        ctx.setContextProperty("toolsTabViewModel", self.toolsTabViewModel)
 
         ctx.setContextProperty("machineViewModel", self.machineViewModel)
         ctx.setContextProperty("fixturesViewModel", self.fixturesViewModel)

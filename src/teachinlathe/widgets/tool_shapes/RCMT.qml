@@ -19,7 +19,7 @@ Item {
     id: root
 
     // mărimile disponibile (cifra din codul ISO)
-    enum Size { S08, S10, S12, S16 }
+    enum Size { S05, S06, S08, S10, S12, S16 }
 
     // ---- parametri --------------------------------------------------------
     property int  size: RCMT.Size.S10
@@ -39,8 +39,8 @@ Item {
     readonly property string family: "RCMT"
     readonly property string shape: "R"
     readonly property string insertType: "T"
-    readonly property var icValues: [8, 10, 12, 16]          // mm, în ordinea enum-ului
-    readonly property var sizeCodes: ["08", "10", "12", "16"]
+    readonly property var icValues: [5, 6, 8, 10, 12, 16]          // mm, în ordinea enum-ului
+    readonly property var sizeCodes: ["05", "06", "08", "10", "12", "16"]
     readonly property var noseRadii: [0.2, 0.4, 0.8, 1.2, 1.6]
 
     readonly property real ic: icValues[Math.max(0, Math.min(size, icValues.length - 1))]
