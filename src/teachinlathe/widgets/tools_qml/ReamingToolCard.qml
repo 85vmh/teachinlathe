@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import theme 1.0
+import "ToolTitles.js" as ToolTitles
 
 // One reamer as a card, laid out as DrillingToolCard is:
 //
@@ -87,9 +88,7 @@ Rectangle {
                 width: parent.width
                 elide: Text.ElideRight
                 textFormat: Text.StyledText
-                text: !root.view ? ""
-                      : "<font color='" + root.view.bodyColor + "'>Ø"
-                        + Number(root.view.diameter.toFixed(3)) + " mm</font>"
+                text: ToolTitles.richTitle("reaming", root.view, Theme)
                 color: Theme.foreground
                 font.pixelSize: Theme.fontLarge
                 font.bold: true

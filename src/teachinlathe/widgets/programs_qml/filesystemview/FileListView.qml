@@ -15,12 +15,11 @@ Item {
     readonly property int rowHeight:       72
     readonly property int headerHeight:    40
     readonly property int sizeColWidth:    96
-    readonly property int modifiedColWidth: 160
+    readonly property int modifiedColWidth: 150
     // As wide as the operation list's delete column, with the same button.
-    readonly property int actionsColWidth: 100
+    readonly property int actionsColWidth: 80
     readonly property int nameLeftMargin:  10
     readonly property int rowRightMargin:  18
-    readonly property int colRightPad:     10
 
     // ── Fonts ───────────────────────────────────────────────────────────────
     readonly property int headerFontSize:  16
@@ -141,8 +140,11 @@ Item {
                     Layout.preferredWidth: root.actionsColWidth
                     Layout.maximumWidth: root.actionsColWidth
                     Layout.fillHeight: true
+                    // Centred between the separator and the row's right edge,
+                    // past the scroll bar's margin.
                     Text {
                         anchors.centerIn: parent
+                        anchors.horizontalCenterOffset: root.rowRightMargin / 2
                         text: "Actions"
                         color: root.headerTextColor
                         font.pixelSize: root.headerFontSize
@@ -271,16 +273,15 @@ Item {
 
                     Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.sepColor }
 
-                    // Modified column — right-aligned, same width as header cell
+                    // Modified column — centred, as the header and the
+                    // conversational programs' dates
                     Item {
                         Layout.minimumWidth: root.modifiedColWidth
                         Layout.preferredWidth: root.modifiedColWidth
                         Layout.maximumWidth: root.modifiedColWidth
                         Layout.fillHeight: true
                         Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.right: parent.right
-                            anchors.rightMargin: root.colRightPad
+                            anchors.centerIn: parent
                             text: modelData.modifiedDisplay
                             color: "#6b7280"
                             font.pixelSize: root.metaFontSize
@@ -298,8 +299,11 @@ Item {
                         Layout.maximumWidth: root.actionsColWidth
                         Layout.fillHeight: true
 
+                        // As the header: centred between the separator and
+                        // the row's right edge.
                         PressableIconButton {
                             anchors.centerIn: parent
+                            anchors.horizontalCenterOffset: root.rowRightMargin / 2
                             visible: !modelData.isUp
                             // resolved here: a relative path would otherwise be taken
                             // from PressableIconButton's folder, where the Image is

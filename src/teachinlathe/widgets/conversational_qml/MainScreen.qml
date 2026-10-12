@@ -41,8 +41,8 @@ Item {
     // Column width constants
     readonly property int colIndexW: 56
     readonly property int colNameW: 360
-    readonly property int colCreatedW: 230
-    readonly property int colLastEditW: 230
+    readonly property int colCreatedW: 150
+    readonly property int colLastEditW: 150
     readonly property int colActionsW: 180
     readonly property int cellFontPx: 16
 
@@ -172,9 +172,9 @@ Item {
 
                         Label {
                             text: "Date Created"
-                            Layout.minimumWidth: main.colCreatedW
-                            Layout.preferredWidth: main.colCreatedW
-                            Layout.maximumWidth: main.colCreatedW
+                            Layout.minimumWidth: main.colCreatedW - 24
+                            Layout.preferredWidth: main.colCreatedW - 24
+                            Layout.maximumWidth: main.colCreatedW - 24
                             font.pixelSize: main.cellFontPx
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
@@ -329,9 +329,9 @@ Item {
 
                             Label {
                                 text: createdDate
-                                Layout.minimumWidth: main.colCreatedW + 24
-                                Layout.preferredWidth: main.colCreatedW + 24
-                                Layout.maximumWidth: main.colCreatedW + 24
+                                Layout.minimumWidth: main.colCreatedW
+                                Layout.preferredWidth: main.colCreatedW
+                                Layout.maximumWidth: main.colCreatedW
                                 font.pixelSize: main.cellFontPx
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter

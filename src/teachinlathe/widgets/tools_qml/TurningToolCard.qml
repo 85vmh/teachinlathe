@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
+import "ToolTitles.js" as ToolTitles
 
 // One turning tool, as a card:
 //
@@ -101,11 +102,7 @@ Rectangle {
                 width: parent.width
                 elide: Text.ElideRight
                 textFormat: Text.StyledText
-                text: !root.view ? ""
-                      : "<font color='" + root.familyColor + "'>" + root.view.familyCode + "</font> "
-                        + "<font color='" + root.view.insertBodyColor + "'>" + root.view.sizeCode + "</font>"
-                        + "<font color='" + Theme.foregroundStrong + "'>" + root.view.thicknessCode + "</font>"
-                        + "<font color='" + root.radiusColor + "'>" + root.view.radiusCode + "</font>"
+                text: ToolTitles.richTitle("turning", root.view, Theme)
                 color: Theme.foreground
                 font.pixelSize: Theme.fontLarge
                 font.bold: true

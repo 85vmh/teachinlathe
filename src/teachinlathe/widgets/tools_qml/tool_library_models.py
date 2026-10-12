@@ -8,14 +8,13 @@ adding a field.
 from __future__ import annotations
 
 import dataclasses
-import json
 from dataclasses import dataclass
-from typing import Any, List, Optional, Set, Type
+from typing import Any, Dict, List, Optional, Set, Type
 
 from PyQt6.QtCore import (QAbstractListModel, QModelIndex, QObject, Qt,
                           pyqtProperty, pyqtSignal, pyqtSlot)
 
-from teachinlathe.tooling.data_types import CuttingToolType, to_json
+from teachinlathe.tooling.data_types import CuttingToolType
 from teachinlathe.tooling.tool_library_store import ToolLibraryStore
 from teachinlathe.widgets.tools_qml.BladeToolView import BladeToolView
 from teachinlathe.widgets.tools_qml.DrillingToolView import DrillingToolView
@@ -74,30 +73,83 @@ class DataclassListModel(QAbstractListModel):
 @dataclass(frozen=True)
 class HolderRow:
     holderId: int
-    text: str        # the holder as it is stored, one "key: value" per field
-    toolText: str    # what is clamped in it, or empty
-    ready: bool
+    ready: bool          # a tool, touched off: the holder can be used
+    toolId: int          # the mounted cutting tool's id, 0 when empty
+    toolCard: str        # which thumbnail and title draw it - CategoryRow.card's values
+    toolComment: str     # the operator's note on the tool, or empty
+    toolView: Any        # the view the thumbnail reads, or None
+    xOffset: str         # as shown: "123.123", or "—" until touched off
+    zOffset: str
+
+
+class MountedToolViews:
+    """The views of the tools mounted in the holders, for a list that shows
+    them. Its own - not the cutting-tool list's, which throws its away on
+    its own refreshes - and kept while the store holds the same tool, as
+    the cutting-tool list keeps its.
+
+    Call begin(), then view_for() for each tool shown, then end()."""
+
+    def __init__(self, parent: QObject):
+        self._parent = parent
+        self._views: Dict[int, QObject] = {}
+        self._next: Dict[int, QObject] = {}
+
+    def begin(self) -> None:
+        self._next = {}
+
+    def view_for(self, tool) -> tuple:
+        """(card kind, view) for a tool, ("", None) for none."""
+        if tool is None:
+            return "", None
+        card, view_class = _CARDS.get(tool.tool_type, ("summary", CuttingToolSummary))
+        view = self._views.get(tool.cutting_tool_id)
+        if view is None or view._tool is not tool:
+            view = view_class(tool, self._parent)
+        self._next[tool.cutting_tool_id] = view
+        return card, view
+
+    def end(self) -> None:
+        """Let go of the views no longer shown - once the rows that held
+        them are gone."""
+        old, self._views = self._views, self._next
+        kept = {id(view) for view in self._views.values()}
+        for view in old.values():
+            if id(view) not in kept:
+                view.deleteLater()
 
 
 class ToolHolderListModel(DataclassListModel):
+    """The tool holders, each with the cutting tool mounted in it."""
+
     def __init__(self, store: ToolLibraryStore, parent=None):
         super().__init__(HolderRow, parent)
         self._store = store
+        self._views = MountedToolViews(self)
         self.refresh()
 
     def refresh(self) -> None:
         rows = []
+        self._views.begin()
         for holder in self._store.holders:
             tool = self._store.find_tool(holder.cutting_tool_id)
+            card, view = self._views.view_for(tool)
             rows.append(HolderRow(
                 holderId=holder.tool_holder_id,
-                # A no-break space keeps each "key: value" on one line.
-                text="   ".join(f"{key}:\u00a0{json.dumps(value)}"
-                                for key, value in to_json(holder).items()),
-                toolText=f"{tool.tool_type.label}: {tool.summary()}" if tool else "",
                 ready=holder.is_ready,
+                toolId=tool.cutting_tool_id if tool else 0,
+                toolCard=card,
+                toolComment=tool.comment if tool else "",
+                toolView=view,
+                xOffset=_offset_text(holder.x_offset),
+                zOffset=_offset_text(holder.z_offset),
             ))
         self.setRows(rows)
+        self._views.end()
+
+
+def _offset_text(value: Optional[float]) -> str:
+    return "\u2014" if value is None else f"{value:.3f}"
 
 
 # ── Cutting tools ───────────────────────────────────────────────────────────
@@ -156,12 +208,15 @@ class CuttingToolCategoriesModel(DataclassListModel):
     #: A category was folded or unfolded: allExpanded and allCollapsed may
     #: have changed.
     expansionChanged = pyqtSignal()
+    #: A tool was mounted in a holder, or taken out of one.
+    mountedChanged = pyqtSignal()
 
     def __init__(self, store: ToolLibraryStore, parent=None):
         super().__init__(CategoryRow, parent)
         self._store = store
         self._collapsed: Set[CuttingToolType] = set()
         self._views: List[QObject] = []
+        self._mounted: List[int] = []
         self.refresh()
 
     @pyqtSlot(str)
@@ -196,6 +251,11 @@ class CuttingToolCategoriesModel(DataclassListModel):
         """Every category folded: nothing left for "collapse all" to do."""
         return self._collapsed >= set(CuttingToolType)
 
+    @pyqtProperty("QVariantList", notify=mountedChanged)
+    def mountedToolIds(self):
+        """The ids of the tools mounted in a holder, whose cards say so."""
+        return list(self._mounted)
+
     def isExpanded(self, tool_type: CuttingToolType) -> bool:
         return tool_type not in self._collapsed
 
@@ -224,9 +284,28 @@ class CuttingToolCategoriesModel(DataclassListModel):
         kept = {id(view) for view in views}
         old_views, self._views = self._views, views
         self.setRows(rows)
+        mounted = sorted(h.cutting_tool_id for h in self._store.holders if h.has_tool)
+        if mounted != self._mounted:
+            self._mounted = mounted
+            self.mountedChanged.emit()
         for view in old_views:
             if id(view) not in kept:
                 view.deleteLater()
+
+    @pyqtSlot(int, result="QVariantList")
+    def locate(self, cutting_tool_id: int):
+        """[category row, position in it, the category's tool type] of a
+        tool, or [] when it is not listed."""
+        for row_index, row in enumerate(self._rows):
+            for position, view in enumerate(row.tools):
+                if view.cuttingToolId == cutting_tool_id:
+                    return [row_index, position, row.toolType]
+        return []
+
+    @pyqtSlot(str)
+    def expand(self, tool_type: str) -> None:
+        if not self.isExpanded(CuttingToolType(tool_type)):
+            self.toggle(tool_type)
 
     def categoryRow(self, tool_type: CuttingToolType) -> Optional[CategoryRow]:
         return next((r for r in self._rows if r.toolType == tool_type.value), None)

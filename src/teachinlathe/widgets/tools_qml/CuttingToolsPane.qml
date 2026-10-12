@@ -6,7 +6,9 @@ import theme 1.0
 // The cutting tools, grouped by type. Each group's header folds the group
 // and has a "+" for adding a tool of that type; under it the group's tools
 // are cards, two to a row, filling left to right and then down. Tapping a
-// card opens the tool. The title bar's buttons unfold or fold every group.
+// card opens the tool (or, while a holder waits for one, mounts it). The
+// title bar's buttons unfold or fold every group. A tool mounted in a
+// holder has its card outlined in blue.
 ToolLibraryPane {
     id: root
 
@@ -19,6 +21,77 @@ ToolLibraryPane {
     readonly property int toolIndent: Theme.margin
     readonly property int cardSpacing: Theme.spacingSmall
     readonly property int summaryCardHeight: Theme.inputHeight
+    readonly property var mountedToolIds: model ? model.mountedToolIds : []
+    //: The tool flashed after revealTool() scrolled to it, 0 when none is.
+    property int highlightedToolId: 0
+    //: How long each flash is on, and off between them, in ms.
+    readonly property int highlightDuration: 100
+    //: How many times it flashes.
+    readonly property int highlightFlashes: 2
+    // The tool to flash once the scroll to it has finished.
+    property int _pendingHighlightId: 0
+
+    // Scroll to a tool's card - unfolding its category if it is folded -
+    // and once there flash it.
+    function revealTool(toolId) {
+        if (!model)
+            return
+        var at = model.locate(toolId)
+        if (at.length !== 3)
+            return
+        model.expand(at[2])
+        // The unfolded category's cards are laid out on the next polish.
+        Qt.callLater(_scrollToCard, at[0], at[1], toolId)
+    }
+
+    function _scrollToCard(row, position, toolId) {
+        list.positionViewAtIndex(row, ListView.Contain)
+        var category = list.itemAtIndex(row)
+        if (!category)
+            return
+        category.layoutCards()
+        var card = category.cardAt(position)
+        if (!card)
+            return
+        // In the list's content, as contentY is: the card's middle in the
+        // middle of the list, as far as the list goes.
+        var cardY = category.y + category.cardsY + card.y
+        var target = cardY - (list.height - card.height) / 2
+        var top = list.originY
+        var bottom = list.originY + Math.max(0, list.contentHeight - list.height)
+        highlightTimer.stop()
+        highlightedToolId = 0
+        _pendingHighlightId = toolId
+        scrollAnimation.to = Math.max(top, Math.min(bottom, target))
+        scrollAnimation.restart()
+    }
+
+    NumberAnimation {
+        id: scrollAnimation
+        target: list
+        property: "contentY"
+        duration: 300
+        easing.type: Easing.OutCubic
+        onFinished: {
+            highlightTimer.ticks = 0
+            root.highlightedToolId = root._pendingHighlightId
+            highlightTimer.restart()
+        }
+    }
+
+    // On, off, on, off: each tick turns the highlight the other way.
+    Timer {
+        id: highlightTimer
+        property int ticks: 0
+        interval: root.highlightDuration
+        repeat: true
+        onTriggered: {
+            ticks += 1
+            root.highlightedToolId = ticks % 2 === 0 ? root._pendingHighlightId : 0
+            if (ticks >= 2 * root.highlightFlashes - 1)
+                stop()
+        }
+    }
 
     title: "Cutting Tools"
 
@@ -101,6 +174,10 @@ ToolLibraryPane {
             // Read here: inside the Repeater below, `model` is its own.
             readonly property string card: model.card
             readonly property var tools: model.tools
+            readonly property real cardsY: cards.y
+
+            function cardAt(position) { return cardRepeater.itemAt(position) }
+            function layoutCards() { list.forceLayout(); cards.forceLayout() }
 
             // ── Category header ─────────────────────────────────────────
             Rectangle {
@@ -188,18 +265,44 @@ ToolLibraryPane {
                 readonly property real cardWidth: (width - (perRow - 1) * spacing) / perRow
 
                 Repeater {
+                    id: cardRepeater
                     model: cards.shown ? category.tools : []
 
-                    delegate: Loader {
+                    delegate: Item {
                         readonly property var toolView: modelData
                         width: cards.cardWidth
-                        // A full card is as tall as its content says.
-                        height: item ? (category.card === "summary" ? root.summaryCardHeight
-                                                                    : item.implicitHeight) : 0
-                        sourceComponent: root.cards[category.card]
-                        onLoaded: {
-                            item.view = toolView
-                            item.tapped.connect(function() { root.toolTapped(toolView.cuttingToolId) })
+                        height: card.height
+
+                        Loader {
+                            id: card
+                            width: parent.width
+                            // A full card is as tall as its content says.
+                            height: item ? (category.card === "summary" ? root.summaryCardHeight
+                                                                        : item.implicitHeight) : 0
+                            sourceComponent: root.cards[category.card]
+                            onLoaded: {
+                                item.view = toolView
+                                item.tapped.connect(function() { root.toolTapped(toolView.cuttingToolId) })
+                            }
+                        }
+
+                        // Flashed when revealTool() scrolls to it.
+                        Rectangle {
+                            anchors.fill: card
+                            radius: Theme.radius
+                            color: Theme.accent
+                            opacity: root.highlightedToolId === toolView.cuttingToolId ? 0.25 : 0
+                            Behavior on opacity { NumberAnimation { duration: 50 } }
+                        }
+
+                        // A tool mounted in a holder: its card's border blue.
+                        Rectangle {
+                            anchors.fill: card
+                            visible: root.mountedToolIds.indexOf(toolView.cuttingToolId) >= 0
+                            color: "transparent"
+                            radius: Theme.radius
+                            border.width: 2
+                            border.color: Theme.accent
                         }
                     }
                 }

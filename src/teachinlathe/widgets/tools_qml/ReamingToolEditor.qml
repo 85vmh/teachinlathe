@@ -16,6 +16,8 @@ Item {
 
     property var editor: null
 
+    QwertyKeyboardDialog { id: keyboard }
+
     readonly property int labelWidth: 150
     readonly property int fieldWidth: 260
 
@@ -127,6 +129,21 @@ Item {
                             options: [{ text: "CW", value: true }, { text: "CCW", value: false }]
                             chosen: root.editor ? root.editor.clockwise : null
                             onPicked: function(value) { root.editor.setClockwise(value) }
+                        }
+                    }
+                    FormRow {
+                        label: "Comment"
+                        KeyboardField {
+                            Layout.preferredWidth: root.fieldWidth
+                            Layout.preferredHeight: Theme.inputHeight
+                            fontPixelSize: Theme.fontBody
+                            titleText: "Comment"
+                            placeholderText: "Optional"
+                            maximumLength: root.editor ? root.editor.commentMaxLength : 200
+                            text: root.editor ? root.editor.comment : ""
+                            commitUpdatesText: false
+                            onOpenRequested: function(field) { keyboard.openFor(field, titleText) }
+                            onValueCommitted: function(value) { root.editor.setComment(value) }
                         }
                     }
                 }

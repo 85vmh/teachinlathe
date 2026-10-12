@@ -74,6 +74,19 @@ class DrillingToolEditorViewModel(DrillingToolView):
     def isNew(self):
         return self._is_new
 
+    @pyqtProperty(str, notify=edited)
+    def comment(self):
+        return self._tool.comment
+
+    @pyqtProperty(int, constant=True)
+    def commentMaxLength(self):
+        return self._tool.COMMENT_MAX_LENGTH
+
+    @pyqtSlot(str)
+    def setComment(self, text):
+        self._tool.comment = text[:self._tool.COMMENT_MAX_LENGTH]
+        self.changed.emit()
+
     @pyqtProperty("QStringList", notify=edited)
     def tipAngleTexts(self):
         return [f"{angle:g}°  ({what})" if what else f"{angle:g}°"

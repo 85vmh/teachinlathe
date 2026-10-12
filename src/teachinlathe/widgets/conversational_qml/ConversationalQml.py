@@ -575,6 +575,11 @@ class ConversationalQml(QObject):
         data = self._attach_current_workpiece(build_details_payload(op))
         if not data:
             return
+        if getattr(op, "type", "") == "changeTool":
+            # The tool already in by then: changing to it again is no change.
+            ops = self.current_program.operations[:index]
+            previous = next((o for o in reversed(ops) if getattr(o, "type", "") == "changeTool"), None)
+            data["previous_tool_no"] = int(previous.tool_no) if previous is not None else 0
         try:
             screen_item.receiveDetailsData(index, data)
         except Exception as e:

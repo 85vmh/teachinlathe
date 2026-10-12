@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
+import "ToolTitles.js" as ToolTitles
 
 // One blade - parting, grooving, trepanning - as a card, laid out as
 // ThreadingToolCard is:
@@ -97,9 +98,7 @@ Rectangle {
                 width: parent.width
                 elide: Text.ElideRight
                 textFormat: Text.StyledText
-                text: !root.view ? ""
-                      : "<font color='" + root.view.bodyColor + "'>"
-                        + Number(root.view.bladeWidth.toFixed(3)) + " mm</font>"
+                text: ToolTitles.richTitle("blade", root.view, Theme)
                 color: Theme.foreground
                 font.pixelSize: Theme.fontLarge
                 font.bold: true

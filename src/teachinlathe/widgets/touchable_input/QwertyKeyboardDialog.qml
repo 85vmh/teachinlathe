@@ -10,6 +10,9 @@ Popup {
     property var targetField: null
     property string titleText: "Enter text"
     property string buffer: ""
+    //: The most characters the field takes: its maximumLength (a TextField's
+    //: default, 32767, leaves it unlimited in practice).
+    property int maxLength: 32767
     property bool shiftOn: true
     property bool shiftLocked: false
     property bool symbolMode: false
@@ -57,6 +60,7 @@ Popup {
                        ? String(titleOverride)
                        : (field && field.titleText ? field.titleText : "Enter text")
         root.buffer = field && field.text !== undefined ? String(field.text) : ""
+        root.maxLength = field && field.maximumLength > 0 ? field.maximumLength : 32767
         root.shiftOn = root.buffer.length === 0
         root.shiftLocked = false
         root.symbolMode = false
@@ -65,8 +69,15 @@ Popup {
         root.open()
     }
 
+    function _append(text) {
+        if (root.buffer.length + text.length <= root.maxLength)
+            root.buffer += text
+    }
+
     function _appendKey(label) {
         var text = String(label)
+        if (root.buffer.length >= root.maxLength)
+            return
         root.buffer += root.symbolMode ? text : (root.shiftOn ? text.toUpperCase() : text.toLowerCase())
         if (!root.symbolMode && !root.shiftLocked)
             root.shiftOn = false
@@ -374,7 +385,7 @@ Popup {
                         radius: Theme.radiusLarge
                         color: parent.pressed ? Theme.keySurfacePressed : Theme.keySurface
                     }
-                    onClicked: root.buffer += " "
+                    onClicked: root._append(" ")
                 }
 
                 Item {

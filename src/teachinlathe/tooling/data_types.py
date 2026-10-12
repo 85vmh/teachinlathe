@@ -55,11 +55,12 @@ class HolderOrientation(str, Enum):
 
 
 class ZOffsetPlace(str, Enum):
-    """Which point of a blade the Z offset was taken from."""
+    """Which point of a blade the Z offset was taken from: its -1 corner,
+    its middle (0) or its +1 corner."""
 
-    LEFT = "left"
-    MIDDLE = "middle"
-    RIGHT = "right"
+    LEFT = "-1"
+    MIDDLE = "0"
+    RIGHT = "1"
 
 
 class TwistDirection(str, Enum):
@@ -169,6 +170,10 @@ class CuttingTool:
 
     cutting_tool_id: int
     spindle_direction: SpindleDirection = SpindleDirection.CCW
+    #: The operator's note on the tool, at most COMMENT_MAX_LENGTH characters.
+    comment: str = ""
+
+    COMMENT_MAX_LENGTH: ClassVar[int] = 200
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -186,11 +191,14 @@ class CuttingTool:
 
     def to_json(self) -> Dict[str, Any]:
         body = _encode(self)
-        # Laid out as the files are: id and type first, spindle direction last.
+        # Laid out as the files are: id and type first, then the comment -
+        # only when there is one - and the spindle direction last.
         tool_id = body.pop("cutting_tool_id")
         spindle_direction = body.pop("spindle_direction")
+        comment = body.pop("comment")
         return {"cutting_tool_id": tool_id, "type": self.TYPE.value,
-                **body, "spindle_direction": spindle_direction}
+                **body, **({"comment": comment} if comment else {}),
+                "spindle_direction": spindle_direction}
 
     @staticmethod
     def from_json(raw: Dict[str, Any]) -> "CuttingTool":
@@ -302,6 +310,10 @@ class ToolHolder:
     cleared whenever the cutting tool changes, and the holder cannot be used
     until they are set again. `z_offset_place` is only meaningful for
     blades, which can be touched off on either corner or in the middle.
+
+    The holder is the tool LinuxCNC knows as T<tool_holder_id>: it is what
+    the tool table is written from. `last_loaded` is when it last went into
+    the spindle, a Unix time, for the recently used list.
     """
 
     tool_holder_id: int
@@ -310,6 +322,7 @@ class ToolHolder:
     x_offset: Optional[float] = None
     z_offset: Optional[float] = None
     z_offset_place: Optional[ZOffsetPlace] = None
+    last_loaded: Optional[float] = None
 
     def mount(self, cutting_tool_id: Optional[int]) -> None:
         """Clamp another cutting tool in (None empties the holder). Offsets

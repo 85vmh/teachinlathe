@@ -1,20 +1,20 @@
 // ManualTurningRoot.qml — unified root for the Manual Turning tab.
 //
 // Layout (responsive):
-//   Left column (anchors to left of ToolLibraryView):
+//   Left column (anchors to left of ManualToolList):
 //     • TeachInLatheDroRoot  — fixed height (droHeight)
 //     • LimitsPanel          — fills remaining vertical space
 //     • Section headers      — fixed height (sectionHeaderHeight)
 //     • Control panels       — fixed height (panelHeight)
-//   Right: ToolLibraryView — fixed width (toolListWidth), full height
+//   Right: ManualToolList — fixed width (toolListWidth), full height
 //
 // Context properties required (set by mainwindow.py):
-//   manualViewModel, teachInDroViewModel, toolsProvider, appState,
+//   manualViewModel, teachInDroViewModel, manualToolsViewModel, appState,
 //   cncStore, navigationStore
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "../tool_library"
+import "../tools_qml"
 import "../touchable_input"   // SmartNumpadDialog, NumpadField
 import theme 1.0
 
@@ -26,7 +26,6 @@ Item {
     readonly property color cardBackgroundColor: Theme.surfaceSunken
     readonly property color cardBorderColor: Theme.outline
     readonly property color angleFeedGlowColor: Theme.warning
-    property var _pendingKeyboardField: null
 
     Rectangle {
         anchors.fill: parent
@@ -40,21 +39,13 @@ Item {
         numpadDialog.openFor(field, field.settingName, field.description)
     }
 
-    function openKeyboard(field) {
-        if (!field)
-            return
-        root._pendingKeyboardField = field
-        if (!keyboardDialogLoader.active)
-            keyboardDialogLoader.active = true
-        if (keyboardDialogLoader.item) {
-            keyboardDialogLoader.item.openFor(field, field.titleText)
-            root._pendingKeyboardField = null
+    // A blade touched off in Z: which of its points was it?
+    Connections {
+        target: typeof manualToolsViewModel !== "undefined" ? manualToolsViewModel : null
+        function onBladePlaceRequested(bladeWidth) {
+            bladeZ0ReferenceDialog.bladeWidth = Number(bladeWidth || 0)
+            bladeZ0ReferenceDialog.open()
         }
-    }
-
-    function openBladeZ0ReferenceDialog(bladeWidth) {
-        bladeZ0ReferenceDialog.bladeWidth = Number(bladeWidth || 0)
-        bladeZ0ReferenceDialog.open()
     }
 
     function formatBladeWidth(value) {
@@ -66,19 +57,6 @@ Item {
 
     SmartNumpadDialog {
         id: numpadDialog
-    }
-
-    Loader {
-        id: keyboardDialogLoader
-        active: false
-        source: "../touchable_input/QwertyKeyboardDialog.qml"
-
-        onLoaded: {
-            if (item && root._pendingKeyboardField) {
-                item.openFor(root._pendingKeyboardField, root._pendingKeyboardField.titleText)
-                root._pendingKeyboardField = null
-            }
-        }
     }
 
     Dialog {
@@ -93,9 +71,10 @@ Item {
         x: Math.round((root.width - width) / 2)
         y: Math.round((root.height - height) / 2)
 
-        function choose(reference) {
-            if (toolLibraryViewModel)
-                toolLibraryViewModel.saveCurrentToolBladeZ0Reference(reference)
+        // -1 the left corner, 0 the middle, 1 the right corner.
+        function choose(place) {
+            if (typeof manualToolsViewModel !== "undefined" && manualToolsViewModel)
+                manualToolsViewModel.setBladePlace(place)
             close()
         }
 
@@ -129,7 +108,7 @@ Item {
                         text: "Left Side"
                         font.pixelSize: Theme.fontBody
                         font.bold: true
-                        onClicked: bladeZ0ReferenceDialog.choose("left")
+                        onClicked: bladeZ0ReferenceDialog.choose("-1")
                     }
                     Button {
                         Layout.fillWidth: true
@@ -137,7 +116,7 @@ Item {
                         text: "Center"
                         font.pixelSize: Theme.fontBody
                         font.bold: true
-                        onClicked: bladeZ0ReferenceDialog.choose("center")
+                        onClicked: bladeZ0ReferenceDialog.choose("0")
                     }
                     Button {
                         Layout.fillWidth: true
@@ -145,7 +124,7 @@ Item {
                         text: "Right Side"
                         font.pixelSize: Theme.fontBody
                         font.bold: true
-                        onClicked: bladeZ0ReferenceDialog.choose("right")
+                        onClicked: bladeZ0ReferenceDialog.choose("1")
                     }
                 }
             }
@@ -156,7 +135,7 @@ Item {
     readonly property int droHeight: 190
     readonly property int sectionHeaderHeight: 39
     readonly property int panelHeight: 241
-    readonly property int toolListWidth: 800
+    readonly property int toolListWidth: 600
     readonly property int panelMargin: 6
     readonly property int panelInnerPadding: 6
     readonly property int spindlePanelWidth: 286
@@ -412,12 +391,11 @@ Item {
             }
         }
 
-        ToolLibraryView {
+        ManualToolList {
             id: toolList
             Layout.preferredWidth: root.toolListWidth
             Layout.fillHeight: true
-            onOpenNumPadRequested: root.openNumpad(field)
-            onOpenKeyboardRequested: root.openKeyboard(field)
+            viewModel: typeof manualToolsViewModel !== "undefined" ? manualToolsViewModel : null
         }
     }
 }

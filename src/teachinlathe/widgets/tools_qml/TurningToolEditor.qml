@@ -2,7 +2,6 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
-import "../tool_library"
 import "../touchable_input"
 
 // Add or edit a turning tool. The form is on the left, the insert as it
@@ -13,6 +12,8 @@ Item {
     id: root
 
     property var editor: null
+
+    QwertyKeyboardDialog { id: keyboard }
 
     readonly property int labelWidth: 150
     readonly property int fieldWidth: 220
@@ -200,6 +201,21 @@ Item {
                                     }
                                 }
                             }
+                        }
+                    }
+                    FormRow {
+                        label: "Comment"
+                        KeyboardField {
+                            Layout.preferredWidth: root.fieldWidth
+                            Layout.preferredHeight: Theme.inputHeight
+                            fontPixelSize: Theme.fontBody
+                            titleText: "Comment"
+                            placeholderText: "Optional"
+                            maximumLength: root.editor ? root.editor.commentMaxLength : 200
+                            text: root.editor ? root.editor.comment : ""
+                            commitUpdatesText: false
+                            onOpenRequested: function(field) { keyboard.openFor(field, titleText) }
+                            onValueCommitted: function(value) { root.editor.setComment(value) }
                         }
                     }
                 }

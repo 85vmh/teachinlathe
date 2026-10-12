@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Callable, List, Optional
 
 from teachinlathe.tooling.data_types import (
-    CuttingTool, CuttingToolType, ToolHolder, from_json, to_json,
+    CuttingTool, CuttingToolType, ToolHolder, ZOffsetPlace, from_json, to_json,
 )
 from teachinlathe.tooling.seed import seed_cutting_tools, seed_tool_holders
 
@@ -35,7 +35,20 @@ class ToolLibraryStore:
         self._tools_path = directory / CUTTING_TOOLS_FILE
         self.holders: List[ToolHolder] = []
         self.cutting_tools: List[CuttingTool] = []
+        self._listeners: List[Callable[[], None]] = []
         self.load()
+
+    def add_listener(self, listener: Callable[[], None]) -> None:
+        """Call `listener` after every change that is saved - except a
+        holder going into the spindle, which changes nothing it describes."""
+        self._listeners.append(listener)
+
+    def _changed(self) -> None:
+        for listener in list(self._listeners):
+            try:
+                listener()
+            except Exception:
+                log.exception("tool library listener failed")
 
     # ── Queries ─────────────────────────────────────────────────────────────
 
@@ -77,11 +90,45 @@ class ToolLibraryStore:
         holder.mount(cutting_tool_id)
         self.save_holders()
 
+    def add_holder(self) -> ToolHolder:
+        """A new, empty holder, numbered after the last: T<n+1>."""
+        tool_holder_id = max((h.tool_holder_id for h in self.holders), default=0) + 1
+        holder = ToolHolder(tool_holder_id)
+        self.holders.append(holder)
+        self.save_holders()
+        return holder
+
+    def set_z_offset_place(self, tool_holder_id: int, place: Optional[ZOffsetPlace]) -> None:
+        """Which point of the blade in the holder its Z offset is taken from."""
+        self._holder(tool_holder_id).z_offset_place = place
+        self.save_holders()
+
+    def set_x_offset(self, tool_holder_id: int, value: Optional[float]) -> None:
+        """The X offset LinuxCNC worked out when the holder was touched off."""
+        self._holder(tool_holder_id).x_offset = value
+        self.save_holders()
+
+    def set_z_offset(self, tool_holder_id: int, value: Optional[float]) -> None:
+        self._holder(tool_holder_id).z_offset = value
+        self.save_holders()
+
+    def record_loaded(self, tool_holder_id: int, timestamp: float) -> None:
+        """The holder went into the spindle. Saved without telling the
+        listeners: nothing the tool table is written from has changed."""
+        self._holder(tool_holder_id).last_loaded = timestamp
+        self._write_holders()
+
+    def _holder(self, tool_holder_id: int) -> ToolHolder:
+        holder = self.find_holder(tool_holder_id)
+        if holder is None:
+            raise KeyError(f"no tool holder {tool_holder_id}")
+        return holder
+
     def save_cutting_tool(self, tool: CuttingTool) -> None:
         """Add the tool, or replace the one with its id.
 
         Offsets were taken with the tool as it was. Any change to it other
-        than the spindle direction - insert, nose radius, orientation, angles
+        than the spindle direction or the comment - insert, nose radius, orientation, angles
         - moves the tip, so the holder it is clamped in loses its offsets and
         has to be touched off again.
         """
@@ -125,16 +172,23 @@ class ToolLibraryStore:
             self.holders = holders
 
     def save_holders(self) -> None:
-        _write_json(self._holders_path, {_HOLDERS_KEY: to_json(self.holders)})
+        self._write_holders()
+        self._changed()
 
     def save_cutting_tools(self) -> None:
         _write_json(self._tools_path, to_json(self.cutting_tools))
+        self._changed()
+
+    def _write_holders(self) -> None:
+        _write_json(self._holders_path, {_HOLDERS_KEY: to_json(self.holders)})
 
 
 def _geometry_changed(before: CuttingTool, after: CuttingTool) -> bool:
-    """Whether the tool differs in anything but its spindle direction."""
+    """Whether the tool differs in anything but its spindle direction and
+    its comment."""
     return (type(before) is not type(after)
-            or dataclasses.replace(after, spindle_direction=before.spindle_direction) != before)
+            or dataclasses.replace(after, spindle_direction=before.spindle_direction,
+                                   comment=before.comment) != before)
 
 
 def _read(path: Path, parse: Callable[[object], list]) -> Optional[list]:

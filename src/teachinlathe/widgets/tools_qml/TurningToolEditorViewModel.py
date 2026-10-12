@@ -36,8 +36,16 @@ ROUND_ORIENTATIONS = [9]
 #: whatever the corner leaves of the 180 (95 for an 80 degree CCMT).
 DEFAULT_BACK_ANGLE = 5.0
 
+#: Families whose holders are usually 93 degree ones, rather than 5 degree
+#: clearance at the back: the narrow corners would leave 120 (DCMT) or 140
+#: (VBMT) in front.
+DEFAULT_FRONT_ANGLES = {"DCMT": 93.0, "VBMT": 93.0}
 
-def _default_front_angle(corner: Optional[float], orientation: int) -> float:
+
+def _default_front_angle(family: str, corner: Optional[float], orientation: int) -> float:
+    front = DEFAULT_FRONT_ANGLES.get(family)
+    if front is not None and tool_angles.max_angle(corner, orientation) is not None:
+        return tool_angles.clamp_angle(front, corner, orientation)
     front = tool_angles.complementary_angle(DEFAULT_BACK_ANGLE, corner, orientation)
     return DEFAULT_BACK_ANGLE if front is None else front
 
@@ -46,12 +54,14 @@ def new_turning_tool(cutting_tool_id: int,
                      tool_class: Type[TurningTool] = TurningTool) -> TurningTool:
     """A new tool of `tool_class` - TurningTool or BoringTool - with the
     catalogue's first insert and the default clearance."""
-    spec = insert_catalog.make_spec(insert_catalog.families()[0], 0,
-                                    insert_catalog.nose_radii()[1])
+    family = insert_catalog.families()[0]
+    spec = insert_catalog.make_spec(family, 0, insert_catalog.nose_radii()[1])
     corner = insert_catalog.corner_angle(spec)
+    front = _default_front_angle(family, corner, 2)
+    back = tool_angles.complementary_angle(front, corner, 2)
     return tool_class(cutting_tool_id=cutting_tool_id, insert=spec, orientation=2,
-                      front_angle=_default_front_angle(corner, 2),
-                      back_angle=DEFAULT_BACK_ANGLE)
+                      front_angle=front,
+                      back_angle=DEFAULT_BACK_ANGLE if back is None else back)
 
 
 class TurningToolEditorViewModel(TurningToolView):
@@ -83,6 +93,19 @@ class TurningToolEditorViewModel(TurningToolView):
     @pyqtProperty(bool, constant=True)
     def isNew(self):
         return self._is_new
+
+    @pyqtProperty(str, notify=edited)
+    def comment(self):
+        return self._tool.comment
+
+    @pyqtProperty(int, constant=True)
+    def commentMaxLength(self):
+        return self._tool.COMMENT_MAX_LENGTH
+
+    @pyqtSlot(str)
+    def setComment(self, text):
+        self._tool.comment = text[:self._tool.COMMENT_MAX_LENGTH]
+        self.changed.emit()
 
     @pyqtProperty("QStringList", constant=True)
     def families(self):
@@ -133,7 +156,10 @@ class TurningToolEditorViewModel(TurningToolView):
         if family == self._family:
             return
         # The size list differs per family: keep the position in it, clamped.
-        self._set_insert(family, self.sizeIndex, self.noseRadiusMm)
+        self._tool.insert = insert_catalog.make_spec(family, self.sizeIndex, self.noseRadiusMm)
+        # Each family starts from its own usual front angle.
+        self._tool.front_angle = self._default_front()
+        self._recouple()
 
     @pyqtSlot(int)
     def setSize(self, index):
@@ -151,7 +177,7 @@ class TurningToolEditorViewModel(TurningToolView):
         self._tool.orientation = orientation
         if coming_from_fixed:
             # The equal angles of 6 and 8 mean nothing in a corner.
-            self._tool.front_angle = _default_front_angle(self._corner, orientation)
+            self._tool.front_angle = self._default_front()
         self._recouple()
 
     @pyqtSlot(float)
@@ -181,6 +207,9 @@ class TurningToolEditorViewModel(TurningToolView):
 
     def _allowed_orientations(self):
         return ROUND_ORIENTATIONS if self._corner is None else TURNING_ORIENTATIONS
+
+    def _default_front(self) -> float:
+        return _default_front_angle(self._family, self._corner, self._tool.orientation)
 
     def _clamp(self, value) -> float:
         return tool_angles.clamp_angle(float(value), self._corner, self._tool.orientation)
@@ -213,7 +242,7 @@ class TurningToolEditorViewModel(TurningToolView):
             # Onto a round insert, or off one: the only one it takes, or the
             # usual turning one with the default clearance.
             self._tool.orientation = allowed[0]
-            self._tool.front_angle = _default_front_angle(self._corner, self._tool.orientation)
+            self._tool.front_angle = self._default_front()
         if self.anglesEditable is False:
             self._tool.front_angle = self._tool.back_angle = \
                 tool_angles.symmetric_angle(self._corner)
@@ -223,7 +252,7 @@ class TurningToolEditorViewModel(TurningToolView):
         if limit is not None and self._tool.front_angle > limit:
             # A smaller corner than the one the angle was set for: start
             # again from the default clearance rather than the limit.
-            self._tool.front_angle = _default_front_angle(self._corner, self._tool.orientation)
+            self._tool.front_angle = self._default_front()
         self._tool.front_angle = self._clamp(self._tool.front_angle)
         back = tool_angles.complementary_angle(self._tool.front_angle, self._corner,
                                                self._tool.orientation)

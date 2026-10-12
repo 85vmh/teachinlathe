@@ -66,16 +66,24 @@ class ToolsTabViewModel(QObject):
     editorChanged = pyqtSignal()
     # AppShellBridge listens for this to redraw the top bar.
     headerStateChanged = pyqtSignal()
+    selectingHolderChanged = pyqtSignal()
+    #: The tool picked to mount is in another holder: (tool, its holder, the
+    #: holder it is for). The screen asks, and calls mountTool if told to.
+    mountMoveRequested = pyqtSignal(int, int, int)
 
     def __init__(self, store: ToolLibraryStore, parent=None):
         super().__init__(parent)
         self._store = store
         self._holders_model = ToolHolderListModel(store, self)
         self._cutting_tools_model = CuttingToolCategoriesModel(store, self)
+        # Offsets come in from the Manual Turning screen's touch-offs.
+        store.add_listener(self.refresh)
         self._editor = None
         # The editor last closed. The screen showing it is still sliding out
         # when it closes, so it is deleted when the next one opens instead.
         self._closed_editor = None
+        # The holder a cutting tool is being picked for, 0 when none is.
+        self._selecting_holder_id = 0
 
     @pyqtProperty(QObject, constant=True)
     def holdersModel(self):
@@ -89,6 +97,58 @@ class ToolsTabViewModel(QObject):
     def editor(self):
         """The add/edit screen's view model while it is open, else null."""
         return self._editor
+
+    @pyqtProperty(int, notify=selectingHolderChanged)
+    def selectingHolderId(self):
+        """The holder whose cutting tool is being picked, 0 when none is:
+        while one is, tapping a cutting tool mounts it rather than editing it."""
+        return self._selecting_holder_id
+
+    # ── Mounting ────────────────────────────────────────────────────────────
+
+    @pyqtSlot(int)
+    def beginMount(self, tool_holder_id: int) -> None:
+        self._set_selecting(tool_holder_id)
+
+    @pyqtSlot()
+    def cancelMount(self) -> None:
+        self._set_selecting(0)
+
+    @pyqtSlot(int)
+    def cuttingToolTapped(self, cutting_tool_id: int) -> None:
+        """A tool tapped in the list: mounted if a holder is waiting for one,
+        otherwise opened to edit."""
+        holder_id = self._selecting_holder_id
+        if holder_id == 0:
+            self.editCuttingTool(cutting_tool_id)
+            return
+        current = self._store.holder_of(cutting_tool_id)
+        if current is not None and current.tool_holder_id != holder_id:
+            self.mountMoveRequested.emit(cutting_tool_id, current.tool_holder_id, holder_id)
+            return
+        self.mountTool(cutting_tool_id, holder_id)
+
+    @pyqtSlot(int, int)
+    def mountTool(self, cutting_tool_id: int, tool_holder_id: int) -> None:
+        """Mount the tool, out of whatever holder it was in."""
+        self._store.mount(tool_holder_id, cutting_tool_id)
+        self._set_selecting(0)
+        self.refresh()
+
+    @pyqtSlot(int)
+    def unmountTool(self, tool_holder_id: int) -> None:
+        self._store.mount(tool_holder_id, None)
+        self.refresh()
+
+    @pyqtSlot()
+    def addToolHolder(self) -> None:
+        self._store.add_holder()
+        self.refresh()
+
+    def _set_selecting(self, tool_holder_id: int) -> None:
+        if tool_holder_id != self._selecting_holder_id:
+            self._selecting_holder_id = tool_holder_id
+            self.selectingHolderChanged.emit()
 
     # ── Opening the editor ──────────────────────────────────────────────────
 

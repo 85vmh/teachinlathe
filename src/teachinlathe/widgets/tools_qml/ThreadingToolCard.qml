@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
+import "ToolTitles.js" as ToolTitles
 
 // One threading tool, as a card - TurningToolCard's layout:
 //
@@ -97,10 +98,7 @@ Rectangle {
                 width: parent.width
                 elide: Text.ElideRight
                 textFormat: Text.StyledText
-                text: !root.view ? ""
-                      : "<font color='" + root.view.insertBodyColor + "'>" + root.view.sizeCode + "</font>"
-                        + "<font color='" + root.familyColor + "'>" + root.view.hand + "</font> "
-                        + "<font color='" + root.pitchColor + "'>" + root.view.pitchText + "</font>"
+                text: ToolTitles.richTitle("threading", root.view, Theme)
                 color: Theme.foreground
                 font.pixelSize: Theme.fontLarge
                 font.bold: true

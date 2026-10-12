@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
+import "ToolTitles.js" as ToolTitles
 
 // One tap as a card, laid out as DrillingToolCard is:
 //
@@ -94,9 +95,7 @@ Rectangle {
                 width: parent.width
                 elide: Text.ElideRight
                 textFormat: Text.StyledText
-                text: !root.view ? ""
-                      : "<font color='" + root.view.bodyColor + "'>"
-                        + root.view.designation + "</font>"
+                text: ToolTitles.richTitle("tapping", root.view, Theme)
                 color: Theme.foreground
                 font.pixelSize: Theme.fontLarge
                 font.bold: true

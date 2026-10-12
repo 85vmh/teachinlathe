@@ -46,6 +46,11 @@ class ToolExtrasStore:
         if self._data.pop(str(tool_no), None) is not None:
             self._flush()
 
+    def replace_all(self, data: Dict[str, dict]) -> None:
+        """Replace every entry: the tool table was written again."""
+        self._data = {key: dict(value) for key, value in data.items() if value}
+        self._flush()
+
     def update_last_loaded(self, tool_no: int, timestamp: float) -> None:
         entry = self._data.setdefault(str(tool_no), {})
         entry["last_loaded"] = timestamp

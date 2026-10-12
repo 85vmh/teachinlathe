@@ -54,7 +54,7 @@ USER_TOOLS = [
 ]
 
 USER_HOLDER = {"tool_holder_id": 1, "orientation": "radial", "cutting_tool_id": 3,
-               "x_offset": 123.123, "z_offset": 123.123, "z_offset_place": "left"}
+               "x_offset": 123.123, "z_offset": 123.123, "z_offset_place": "-1"}
 
 
 @pytest.mark.parametrize("raw", USER_TOOLS, ids=lambda raw: raw["type"])

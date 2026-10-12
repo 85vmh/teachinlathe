@@ -36,7 +36,8 @@ from teachinlathe.widgets.manual_qml import ManualTurningViewModel
 from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLatheDroViewModel
 from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.widgets.programs_qml.ProgramsController import ProgramsController
-from teachinlathe.widgets.tool_library.ToolLibraryViewModel import ToolLibraryViewModel
+from teachinlathe.widgets.tool_library.tool_table_sync import ToolTableSync
+from teachinlathe.widgets.tools_qml.ManualToolsViewModel import ManualToolsViewModel
 from teachinlathe.widgets.tools_qml.ToolsTabViewModel import ToolsTabViewModel
 from teachinlathe.tooling.tool_library_store import ToolLibraryStore
 
@@ -201,10 +202,14 @@ class TeachInLatheApp(QObject):
         """Everything QML binds to, built before the scene is loaded."""
         self.manualTurningViewModel = ManualTurningViewModel(self.manualLathe, self)
         self.teachInLatheDroViewModel = TeachInLatheDroViewModel(self)
-        self.toolLibraryViewModel = ToolLibraryViewModel(self)
-        # The tool library's files live next to the tool table.
-        self.toolsTabViewModel = ToolsTabViewModel(
-            ToolLibraryStore(os.path.dirname(INI.tool_table_file)), self)
+        # The tool library's files live next to the tool table, which is
+        # written from its holders - at start, and after every change.
+        self.toolLibraryStore = ToolLibraryStore(os.path.dirname(INI.tool_table_file))
+        self.toolTableSync = ToolTableSync(self.toolLibraryStore, INI.tool_table_file)
+        self.toolTableSync.sync()
+        self.toolsTabViewModel = ToolsTabViewModel(self.toolLibraryStore, self)
+        self.manualToolsViewModel = ManualToolsViewModel(
+            self.toolLibraryStore, status_repository(), issue_mdi, self)
         self.numpadDialogViewModel = NumpadDialogViewModel(self)
 
         self.manualJoystickController = ManualJoystickController(self.manualTurningViewModel, self)
@@ -277,7 +282,7 @@ class TeachInLatheApp(QObject):
         ctx.setContextProperty("manualViewModel", self.manualTurningViewModel)
         ctx.setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
         ctx.setContextProperty("teachInDroViewModel", self.teachInLatheDroViewModel)
-        ctx.setContextProperty("toolLibraryViewModel", self.toolLibraryViewModel)
+        ctx.setContextProperty("manualToolsViewModel", self.manualToolsViewModel)
         ctx.setContextProperty("toolsTabViewModel", self.toolsTabViewModel)
 
         ctx.setContextProperty("machineViewModel", self.machineViewModel)
@@ -364,6 +369,8 @@ class TeachInLatheApp(QObject):
         self.manualTurningViewModel.setSpindleAngle(
             comp.getPin(TeachInLatheComponent.PinSpindleOrientation).value)
         self.manualTurningViewModel.setFeeding(
+            comp.getPin(TeachInLatheComponent.PinJoystickIsFeeding).value)
+        self.manualToolsViewModel.setFeeding(
             comp.getPin(TeachInLatheComponent.PinJoystickIsFeeding).value)
         self.manualTurningViewModel.setJoystickResetRequired(
             comp.getPin(TeachInLatheComponent.PinJoystickResetRequired).value)
@@ -511,6 +518,7 @@ class TeachInLatheApp(QObject):
 
     def onJoystickFeedingChanged(self, value):
         self.manualTurningViewModel.setFeeding(value)
+        self.manualToolsViewModel.setFeeding(value)
 
     def onJoystickResetRequiredChanged(self, value):
         self.manualTurningViewModel.setJoystickResetRequired(value)
@@ -618,24 +626,14 @@ class TeachInLatheApp(QObject):
 
     def setXOffset(self, value):
         print("setXOffset", value)
-        issue_mdi('o<touch_off_x> call [{}]'.format(value).strip())
+        if issue_mdi('o<touch_off_x> call [{}]'.format(value).strip()):
+            self.manualToolsViewModel.captureTouchOff("x")
 
     def setZOffset(self, value):
         print("setZOffset", value)
-        issue_mdi('o<touch_off_z> call [{}]'.format(value).strip())
-        try:
-            if self.toolLibraryViewModel.currentToolRequiresBladeZ0Reference():
-                blade_width = self.toolLibraryViewModel.currentToolBladeWidth()
-                root_item = self.manualScreen
-                if root_item is not None:
-                    QMetaObject.invokeMethod(
-                        root_item,
-                        "openBladeZ0ReferenceDialog",
-                        Qt.ConnectionType.DirectConnection,
-                        Q_ARG("QVariant", blade_width),
-                    )
-        except Exception as e:
-            LOG.error("openBladeZ0ReferenceDialog failed: %s", e)
+        # A blade is asked which of its points this was once the offset is in.
+        if issue_mdi('o<touch_off_z> call [{}]'.format(value).strip()):
+            self.manualToolsViewModel.captureTouchOff("z")
 
     def onSetG28(self):
         issue_mdi("G28.1")
