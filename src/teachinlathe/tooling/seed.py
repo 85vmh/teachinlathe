@@ -16,35 +16,36 @@ from teachinlathe.tooling.data_types import (
 
 
 def seed_cutting_tools() -> List[CuttingTool]:
-    ccw = SpindleDirection.CCW
+    m4 = SpindleDirection.M4
+    m3 = SpindleDirection.M3        # right-hand drills and taps cut with M3
     return [
         TurningTool(cutting_tool_id=1, insert=InsertSpec("ccmt", "06", "02"),
-                    orientation=2, front_angle=95, back_angle=5, spindle_direction=ccw),
+                    orientation=2, front_angle=95, back_angle=5, spindle_direction=m4),
         TurningTool(cutting_tool_id=2, insert=InsertSpec("dcmt", "11", "04"),
-                    orientation=2, front_angle=93, back_angle=32, spindle_direction=ccw),
+                    orientation=2, front_angle=93, back_angle=32, spindle_direction=m4),
         TurningTool(cutting_tool_id=3, insert=InsertSpec("vbmt", "16", "04"),
-                    orientation=6, front_angle=72.5, back_angle=72.5, spindle_direction=ccw),
+                    orientation=6, front_angle=72.5, back_angle=72.5, spindle_direction=m4),
         BoringTool(cutting_tool_id=4, insert=InsertSpec("ccmt", "06", "02"),
                    solid_body=SolidBody(tip_angle=50, diameter=5, max_radial_undercut=3),
-                   orientation=6, front_angle=5, back_angle=5, spindle_direction=ccw),
+                   orientation=6, front_angle=5, back_angle=5, spindle_direction=m4),
         BoringTool(cutting_tool_id=5, insert=InsertSpec("ccmt", "09", "04"),
                    solid_body=SolidBody(tip_angle=50, diameter=10, max_radial_undercut=6),
-                   orientation=6, front_angle=5, back_angle=5, spindle_direction=ccw),
+                   orientation=6, front_angle=5, back_angle=5, spindle_direction=m4),
         BladeTool(cutting_tool_id=6, blade_width=3, left_radius=0.5, right_radius=0.5,
-                  orientation=6, spindle_direction=ccw),
+                  orientation=6, spindle_direction=m4),
         BladeTool(cutting_tool_id=7, blade_width=2, left_radius=0.2, right_radius=0.2,
-                  orientation=6, spindle_direction=ccw),
+                  orientation=6, spindle_direction=m4),
         ThreadingTool(cutting_tool_id=8, insert=InsertSpec("ER", "16", "02"),
-                      orientation=6, spindle_direction=ccw),
+                      orientation=6, spindle_direction=m4),
         ThreadingTool(cutting_tool_id=9, insert=InsertSpec("IR", "16", "02"),
-                      orientation=8, spindle_direction=ccw),
+                      orientation=8, spindle_direction=m4),
         DrillingTool(cutting_tool_id=10, diameter=10, tip_angle=118,
-                     twist_direction=TwistDirection.RIGHT_HAND, spindle_direction=ccw),
+                     twist_direction=TwistDirection.RIGHT_HAND, spindle_direction=m3),
         DrillingTool(cutting_tool_id=11, diameter=6.8, tip_angle=118,
-                     twist_direction=TwistDirection.RIGHT_HAND, spindle_direction=ccw),
+                     twist_direction=TwistDirection.RIGHT_HAND, spindle_direction=m3),
         TappingTool(cutting_tool_id=12, diameter=10, pitch=1.5,
-                    twist_direction=TwistDirection.RIGHT_HAND, spindle_direction=ccw),
-        ReamingTool(cutting_tool_id=13, diameter=10, spindle_direction=ccw),
+                    twist_direction=TwistDirection.RIGHT_HAND, spindle_direction=m3),
+        ReamingTool(cutting_tool_id=13, diameter=10, spindle_direction=m4),
     ]
 
 

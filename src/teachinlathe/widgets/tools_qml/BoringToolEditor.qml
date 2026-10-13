@@ -19,7 +19,9 @@ Item {
     readonly property int labelWidth: 150
     readonly property int fieldWidth: 220
 
-    function angleText(v) { return v === null || v === undefined ? "" : Number(v).toFixed(2) }
+    // Whole degrees as typed; a half only where the corner makes one (72.5
+    // either side of a 35° VBMT held square).
+    function angleText(v) { return v === null || v === undefined ? "" : String(Number(Number(v).toFixed(2))) }
 
     SmartNumpadDialog { id: numpad }
 
@@ -100,7 +102,8 @@ Item {
                 ColumnLayout {
                     id: formColumn
                     width: parent.width
-                    spacing: Theme.spacing
+                    // Rows as far apart as Position At's, for a finger.
+                    spacing: 20
 
                     Text {
                         text: "Insert"
@@ -175,33 +178,10 @@ Item {
 
                     Item { Layout.preferredHeight: Theme.spacingSmall }
                     FormRow {
-                        label: "Spindle"
-                        Row {
-                            spacing: Theme.spacingSmall
-                            Repeater {
-                                model: [{ text: "CW", clockwise: true }, { text: "CCW", clockwise: false }]
-                                delegate: Rectangle {
-                                    readonly property bool chosen: root.editor
-                                                                   && root.editor.clockwise === modelData.clockwise
-                                    width: (root.fieldWidth - Theme.spacingSmall) / 2
-                                    height: Theme.inputHeight
-                                    radius: Theme.radius
-                                    color: chosen ? Theme.selection : Theme.surface
-                                    border.color: chosen ? Theme.accent : Theme.outline
-                                    border.width: chosen ? 2 : 1
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: modelData.text
-                                        color: Theme.foreground
-                                        font.pixelSize: Theme.fontBody
-                                        font.bold: parent.chosen
-                                    }
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        onClicked: root.editor.setClockwise(modelData.clockwise)
-                                    }
-                                }
-                            }
+                        label: "Spindle direction"
+                        SpindleDirectionPicker {
+                            clockwise: root.editor ? root.editor.clockwise : null
+                            onPicked: function(clockwise) { root.editor.setClockwise(clockwise) }
                         }
                     }
                     FormRow {

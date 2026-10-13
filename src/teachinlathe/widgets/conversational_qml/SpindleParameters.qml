@@ -1,9 +1,10 @@
-// SpindleParameters.qml (two-column, radio-mode switch, top-aligned layout)
+// SpindleParameters.qml (two-column: direction buttons, radio-mode switch; top-aligned)
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import "../touchable_input"
+import "../tools_qml"
 import theme 1.0
 
 GroupBox {
@@ -73,34 +74,18 @@ GroupBox {
         spacing: 30
         Layout.alignment: Qt.AlignTop   // ensure whole block sticks to top
 
-        // ------- Left column: Direction radios -------
+        // ------- Left column: Direction -------
         ColumnLayout {
             id: leftCol
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignTop
             spacing: 20
 
-            ButtonGroup {
-                id: dirGroup
-            }
-
-            RadioButton {
-                text: "Spin Forward (M3)"
-                font.pixelSize: Theme.fontSmall
-                checked: root.directionCache === 1
-                ButtonGroup.group: dirGroup
-                onToggled: if (checked) {
-                    root.directionCache = 1;
-                    root.emitSave()
-                }
-            }
-            RadioButton {
-                text: "Spin Reverse (M4)"
-                font.pixelSize: Theme.fontSmall
-                checked: root.directionCache === -1
-                ButtonGroup.group: dirGroup
-                onToggled: if (checked) {
-                    root.directionCache = -1;
+            // M3 then M4, as the cutting-tool editors pick a tool's.
+            SpindleDirectionPicker {
+                clockwise: root.directionCache === 1
+                onPicked: function(clockwise) {
+                    root.directionCache = clockwise ? 1 : -1
                     root.emitSave()
                 }
             }

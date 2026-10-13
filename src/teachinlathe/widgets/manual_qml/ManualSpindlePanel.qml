@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../conversational_qml"
+import "../tools_qml"
 import theme 1.0
 
 Rectangle {
@@ -13,6 +14,10 @@ Rectangle {
     readonly property bool readOnlyMode: !editableMode
     readonly property int selectedSpindleMode: viewModel ? viewModel.spindleMode : 0
     readonly property int headerHeight: 50
+    //: The column right of the RPM/CSS content, past a divider: M4 at the
+    //: top, M3 at the bottom.
+    readonly property int sideWidth: 100
+    readonly property int directionIconSize: 64
     readonly property color warningColor: Theme.warning
     readonly property color warningBaseColor: Theme.foreground
     readonly property int warningPulseDurationMs: 200
@@ -45,8 +50,8 @@ Rectangle {
         visible: !root.readOnlyMode
         anchors.left: parent.left
         anchors.leftMargin: 1
-        anchors.right: parent.right
-        anchors.rightMargin: 1
+        anchors.right: sideDivider.left
+        anchors.rightMargin: 0
         anchors.top: parent.top
         anchors.topMargin: 1
         height: root.headerHeight
@@ -99,8 +104,8 @@ Rectangle {
         visible: root.readOnlyMode
         anchors.left: parent.left
         anchors.leftMargin: 1
-        anchors.right: parent.right
-        anchors.rightMargin: 1
+        anchors.right: sideDivider.left
+        anchors.rightMargin: 0
         anchors.top: parent.top
         anchors.topMargin: 1
         height: root.headerHeight
@@ -132,8 +137,8 @@ Rectangle {
         id: contentArea
         anchors.left: parent.left
         anchors.leftMargin: 1
-        anchors.right: parent.right
-        anchors.rightMargin: 1
+        anchors.right: sideDivider.left
+        anchors.rightMargin: 0
         anchors.top: root.readOnlyMode ? readOnlyHeader.bottom : tabBar.bottom
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 1
@@ -324,6 +329,47 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 value: viewModel ? viewModel.spindleAngleText : "0.0°"
             }
+        }
+    }
+
+    // ── Right of the content: a divider, then the spindle directions ────
+    Rectangle {
+        id: sideDivider
+        anchors.right: sideColumn.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.topMargin: 1
+        anchors.bottomMargin: 1
+        width: Theme.hairline
+        color: Theme.outline
+    }
+
+    Item {
+        id: sideColumn
+        anchors.right: parent.right
+        anchors.rightMargin: 1
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.topMargin: 1
+        anchors.bottomMargin: 1
+        width: root.sideWidth
+
+        SpindleDirectionIcon {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: Theme.spacingSmall
+            size: root.directionIconSize
+            clockwise: false            // M4
+        }
+
+        // The middle is left empty for now.
+
+        SpindleDirectionIcon {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Theme.spacingSmall
+            size: root.directionIconSize
+            clockwise: true             // M3
         }
     }
 }

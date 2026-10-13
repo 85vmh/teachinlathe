@@ -4,8 +4,9 @@ import QtQuick.Layouts 1.15
 import theme 1.0
 
 // The Manual Turning screen's tools: the tool holders as LinuxCNC numbers
-// them, one to a row, all or only the recently used. The one in the
-// spindle is selected; tapping another loads it. Each is a ToolHolderCard.
+// them, one to a row - all, or with the header's toggle on only the
+// recently used. The one in the spindle is selected; tapping another loads
+// it. Each is a ToolHolderCard.
 //
 // Nothing is edited here: the offsets come from touching off.
 Item {
@@ -27,50 +28,41 @@ Item {
             Layout.preferredHeight: 60
             color: Theme.separator
 
-            // Centred in what the selector leaves of the header.
             Text {
-                anchors.left: selector.right
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                horizontalAlignment: Text.AlignHCenter
+                anchors.centerIn: parent
                 text: "Tools"
                 color: Theme.surfaceInverse
                 font.pixelSize: Theme.fontLarge
                 font.bold: true
             }
 
-            Row {
-                id: selector
-                anchors.left: parent.left
-                anchors.leftMargin: 8
+            // On: only the recently used tools; off: all of them.
+            Rectangle {
+                id: recentToggle
+                readonly property bool on: root.viewModel ? root.viewModel.recentOnly : false
+                anchors.right: parent.right
+                anchors.rightMargin: 8
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
+                width: 46
+                height: 46
+                radius: Theme.radiusLarge
+                color: on ? Theme.selection : Theme.outlineStrong
+                border.color: on ? Theme.accent : "#b0b0b0"
+                border.width: on ? 2 : Theme.hairline
 
-                Repeater {
-                    model: [{ text: "All tools", recent: false, width: 120 },
-                            { text: "Recently used", recent: true, width: 150 }]
-                    delegate: Rectangle {
-                        readonly property bool active: root.viewModel
-                                                       && root.viewModel.recentOnly === modelData.recent
-                        width: modelData.width
-                        height: 46
-                        radius: Theme.radiusLarge
-                        color: active ? Theme.surfaceSunken : Theme.outlineStrong
-                        border.color: active ? Theme.outlineEmphasis : "#b0b0b0"
-                        border.width: Theme.hairline
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData.text
-                            color: Theme.surfaceInverse
-                            font.pixelSize: Theme.fontSmall
-                            font.bold: parent.active
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: if (root.viewModel) root.viewModel.recentOnly = modelData.recent
-                        }
-                    }
+                Image {
+                    anchors.centerIn: parent
+                    width: parent.width - 8
+                    height: width
+                    source: "icons/recent.svg"
+                    sourceSize.width: width
+                    sourceSize.height: height
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: if (root.viewModel) root.viewModel.recentOnly = !recentToggle.on
                 }
             }
         }

@@ -112,7 +112,8 @@ Item {
                 ColumnLayout {
                     id: formColumn
                     width: parent.width
-                    spacing: Theme.spacing
+                    // Rows as far apart as Position At's, for a finger.
+                    spacing: 20
 
                     Text {
                         text: "Drill"
@@ -160,11 +161,12 @@ Item {
 
                     Item { Layout.preferredHeight: Theme.spacingSmall }
                     FormRow {
-                        label: "Spindle"
-                        Toggle {
-                            options: [{ text: "CW", value: true }, { text: "CCW", value: false }]
-                            chosen: root.editor ? root.editor.clockwise : null
-                            onPicked: function(value) { root.editor.setClockwise(value) }
+                        label: "Spindle direction"
+                        SpindleDirectionPicker {
+                            clockwise: root.editor ? root.editor.clockwise : null
+                            // A right-hand twist cuts only with M3, a left-hand one only with M4.
+                            onlyClockwise: root.editor ? root.editor.rightHand : null
+                            onPicked: function(clockwise) { root.editor.setClockwise(clockwise) }
                         }
                     }
                     FormRow {

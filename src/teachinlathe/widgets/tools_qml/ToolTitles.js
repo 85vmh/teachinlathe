@@ -40,6 +40,31 @@ function richTitle(card, view, theme) {
     return view.text !== undefined ? view.text : ""
 }
 
+// What a tool is, as the Tool Holders pane heads its box: "Turning Tool",
+// "Boring Tool", "Parting Blade" (orientation 6), "Grooving Blade" (8),
+// "Trepanning Blade" (5 and 7), "OD Threading", "ID Threading",
+// "Drill Tool", "Reamer Tool", "Tap". Plain text.
+function kindTitle(card, view) {
+    if (!view)
+        return ""
+    switch (card) {
+    case "turning":
+        return view.toolType === "boring" ? "Boring Tool" : "Turning Tool"
+    case "threading":
+        return view.hand === "IR" ? "ID Threading" : "OD Threading"
+    case "blade":
+        return { 6: "Parting Blade", 8: "Grooving Blade", 5: "Trepanning Blade",
+                 7: "Trepanning Blade" }[view.orientation] || "Blade"
+    case "drilling":
+        return "Drill Tool"
+    case "reaming":
+        return "Reamer Tool"
+    case "tapping":
+        return "Tap"
+    }
+    return ""
+}
+
 // A tool's name as the Manual Turning list heads it: what the tool is as
 // well as its size - "Turning CCMT 060204", "3mm Grooving/Parting Blade",
 // "ER16 OD Threading", "RH Tap M10x1.5mm", "118° RH Drill Ø6.8mm",

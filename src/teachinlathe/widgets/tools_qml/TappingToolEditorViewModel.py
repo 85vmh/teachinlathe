@@ -19,8 +19,10 @@ DEFAULT_PITCH = 1.5
 
 
 def new_tapping_tool(cutting_tool_id: int) -> TappingTool:
-    return TappingTool(cutting_tool_id=cutting_tool_id, diameter=DEFAULT_DIAMETER,
+    tool = TappingTool(cutting_tool_id=cutting_tool_id, diameter=DEFAULT_DIAMETER,
                        pitch=DEFAULT_PITCH, twist_direction=TwistDirection.RIGHT_HAND)
+    tool.spindle_direction = tool.twist_direction.spindle_direction
+    return tool
 
 
 class TappingToolEditorViewModel(TappingToolView):
@@ -35,6 +37,9 @@ class TappingToolEditorViewModel(TappingToolView):
         super().__init__(copy.deepcopy(tool), parent)
         self.changed.connect(self.edited)
         self._is_new = is_new
+        # The twist decides the spindle direction; one stored otherwise is
+        # set right.
+        self._tool.spindle_direction = self._tool.twist_direction.spindle_direction
         if self._tool.diameter <= 0:
             self._tool.diameter = DEFAULT_DIAMETER
         if self._tool.pitch <= 0:
@@ -87,9 +92,14 @@ class TappingToolEditorViewModel(TappingToolView):
     def setRightHand(self, right_hand):
         self._tool.twist_direction = (TwistDirection.RIGHT_HAND if right_hand
                                       else TwistDirection.LEFT_HAND)
+        self._tool.spindle_direction = self._tool.twist_direction.spindle_direction
         self.changed.emit()
 
     @pyqtSlot(bool)
     def setClockwise(self, clockwise):
-        self._tool.spindle_direction = SpindleDirection.CW if clockwise else SpindleDirection.CCW
+        """Only the direction the twist cuts in: the other is disabled."""
+        direction = SpindleDirection.M3 if clockwise else SpindleDirection.M4
+        if direction is not self._tool.twist_direction.spindle_direction:
+            return
+        self._tool.spindle_direction = direction
         self.changed.emit()

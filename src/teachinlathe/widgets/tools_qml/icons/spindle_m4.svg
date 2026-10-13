@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <!-- spindle_m3.svg mirrored: an arc from 8 o'clock over the top to 4 o'clock, its head at 4. -->
+  <path d="M8.412 33 A18 18 0 1 1 39.588 33" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+  <path d="M36.588 38.196 L43.485 35.25 L35.691 30.75 Z" fill="#212121"/>
+  <!-- "M4" as outlines, not <text>: the font is then the same wherever it is
+       drawn - Qt fell back to a much wider one. Liberation Sans Bold, 18 px,
+       its ink centred on the arc's centre. -->
+  <path d="M22.43 30.19V22.69Q22.43 22.43 22.44 22.18Q22.44 21.92 22.52 19.99Q21.9 22.35 21.6 23.28L19.36 30.19H17.52L15.29 23.28L14.35 19.99Q14.45 22.03 14.45 22.69V30.19H12.15V17.81H15.62L17.83 24.73L18.03 25.4L18.45 27.06L19 25.08L21.28 17.81H24.73V30.19ZM34.2 27.67V30.19H31.84V27.67H26.21V25.81L31.44 17.81H34.2V25.83H35.85V27.67ZM31.84 21.78Q31.84 21.31 31.88 20.75Q31.91 20.2 31.92 20.04Q31.69 20.53 31.1 21.46L28.22 25.83H31.84Z" fill="#212121"/>
+</svg>

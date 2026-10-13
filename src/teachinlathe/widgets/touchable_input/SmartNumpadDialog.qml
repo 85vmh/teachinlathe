@@ -360,7 +360,9 @@ Popup {
                     Layout.preferredHeight: root.buttonHeight
                     text: "."
                     font.pixelSize: root.buttonFontSize
-                    enabled: root.bufferSelected || root.buffer.indexOf(".") === -1
+                    // An int setting takes no decimals.
+                    enabled: root.valueType !== "int"
+                             && (root.bufferSelected || root.buffer.indexOf(".") === -1)
                     background: Rectangle {
                         radius: root.buttonRadius
                         color: parent.enabled ? (parent.pressed ? root.buttonPressedBg : root.buttonBg) : root.buttonDisabledBg

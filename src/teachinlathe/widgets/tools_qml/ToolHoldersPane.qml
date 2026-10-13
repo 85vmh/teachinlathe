@@ -6,21 +6,19 @@ import "ToolTitles.js" as ToolTitles
 
 // The tool holders, two to a row, each:
 //
-//        ┌─────────────────────────────┐
-//        │ ┌─────────┐ #1 CCMT 060204   │
-//   H1   │ │thumbnail│ the tool's       │
-//        │ │         │ comment          │
-//        │ └─────────┘             [🗑] │
-//        └─────────────────────────────┘
-//        Offsets   X: 123.123   Z: 45.678
+//        ┌──────────────────────────────┐    Offsets
+//        │ ┌─────────┐ Turning Tool #1  │ X:  123.123
+//   H1   │ │thumbnail│ CCMT 060204      │ Z:  Not set
+//        │ │         │ the comment      │
+//        │ └─────────┘              [🗑] │
+//        └──────────────────────────────┘
 //
-// The box is as tall as a cutting tool's card, its thumbnail and title the
-// card's. Tapping it shows the tool in the cutting-tool list. An empty
-// holder's box reads "No tool mounted - Tap to mount a tool"; tapping it
-// asks for the tool to mount, which is then picked in the cutting-tool
-// list (selectingHolderId says which holder is waiting).
-// A holder that cannot be used yet - no cutting tool, or one that has not
-// been touched off - is marked with a stripe down its left edge.
+// The box is as tall as a cutting tool's card, its thumbnail the card's.
+// Tapping it shows the tool in the cutting-tool list. An empty holder's box
+// reads "No tool mounted - Tap to mount a tool"; tapping it asks for the
+// tool to mount, which is then picked in the cutting-tool list
+// (selectingHolderId says which holder is waiting). The offsets are Manual
+// Turning's column: "Not set", orange, until touched off.
 ToolLibraryPane {
     id: root
 
@@ -39,6 +37,18 @@ ToolLibraryPane {
     readonly property int boxPadding: 8
     readonly property int boxHeight: thumbnailSize + 2 * boxPadding
     readonly property int perRow: 2
+    //: Above and below the box, inside the holder's card.
+    readonly property int cardPadding: 4
+
+    // The holder numbers' column: as wide as the widest, "H99".
+    TextMetrics {
+        id: holderNoMetrics
+        text: "H99"
+        font.pixelSize: Theme.fontLarge
+        font.bold: true
+    }
+    //: The offsets' column, right of the box - as Manual Turning's.
+    readonly property int offsetsWidth: 100
 
     title: "Tool Holders"
 
@@ -85,7 +95,8 @@ ToolLibraryPane {
             width: flick.width
             spacing: Theme.spacingSmall
 
-            readonly property real itemWidth: (width - (root.perRow - 1) * spacing) / root.perRow
+            // Whole pixels: a half one at the right edge is clipped off.
+            readonly property real itemWidth: Math.floor((width - (root.perRow - 1) * spacing) / root.perRow)
 
             Repeater {
                 model: root.model
@@ -93,7 +104,7 @@ ToolLibraryPane {
                 delegate: Rectangle {
                     id: holder
                     width: holders.itemWidth
-                    height: content.implicitHeight + 2 * Theme.spacing
+                    height: content.implicitHeight + 2 * root.cardPadding
                     radius: Theme.radius
                     color: Theme.surface
                     border.color: Theme.outline
@@ -104,33 +115,27 @@ ToolLibraryPane {
                     readonly property int toolId: model.toolId
                     readonly property bool selecting: root.selectingHolderId === model.holderId
 
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.margins: Theme.hairline
-                        width: 5
-                        radius: Theme.radiusSmall
-                        color: model.ready ? Theme.primary : Theme.warning
-                    }
-
                     Column {
                         id: content
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
-                        anchors.leftMargin: Theme.spacingLarge
+                        anchors.leftMargin: Theme.spacing
                         anchors.rightMargin: Theme.spacing
-                        anchors.topMargin: Theme.spacing
+                        anchors.topMargin: root.cardPadding
                         spacing: Theme.spacingSmall
 
                         Row {
                             width: parent.width
                             spacing: Theme.spacing
 
+                            // As wide as "H99" whatever the number, centred
+                            // in it, so every box starts at the same place.
                             Text {
                                 id: holderLabel
                                 anchors.verticalCenter: toolBox.verticalCenter
+                                width: holderNoMetrics.width
+                                horizontalAlignment: Text.AlignHCenter
                                 text: "H" + model.holderId
                                 color: Theme.foreground
                                 font.pixelSize: Theme.fontLarge
@@ -140,7 +145,8 @@ ToolLibraryPane {
                             // ── The mounted tool ────────────────────────
                             Rectangle {
                                 id: toolBox
-                                width: parent.width - holderLabel.width - parent.spacing
+                                width: parent.width - holderLabel.width
+                                       - offsets.width - 2 * parent.spacing
                                 height: root.boxHeight
                                 radius: Theme.radius
                                 color: boxArea.pressed ? Theme.hover : Theme.surfaceAlt
@@ -176,27 +182,53 @@ ToolLibraryPane {
                                     onLoaded: item.view = Qt.binding(function() { return toolView })
                                 }
 
+                                // In place of the thumbnail's frame: a line
+                                // between it and the text.
+                                Rectangle {
+                                    id: thumbnailSeparator
+                                    visible: toolBox.hasTool
+                                    x: thumbnail.x + thumbnail.width + root.boxPadding
+                                    anchors.top: parent.top
+                                    anchors.bottom: parent.bottom
+                                    anchors.margins: root.boxPadding
+                                    width: Theme.hairline
+                                    color: Theme.separator
+                                }
+
                                 Column {
                                     id: toolText
                                     visible: toolBox.hasTool
-                                    anchors.left: thumbnail.right
+                                    anchors.left: thumbnailSeparator.right
                                     anchors.right: parent.right
                                     anchors.top: parent.top
-                                    anchors.leftMargin: Theme.spacingSmall
+                                    anchors.leftMargin: root.boxPadding
                                     anchors.rightMargin: root.boxPadding
                                     anchors.topMargin: root.boxPadding
                                     spacing: 4
 
+                                    // What it is and its number, bold, then its
+                                    // designation, plain.
+                                    // Too long, the middle goes: the start and
+                                    // the number stay.
                                     Text {
                                         width: parent.width
-                                        elide: Text.ElideRight
+                                        elide: Text.ElideMiddle
+                                        text: !toolBox.hasTool ? ""
+                                              : ToolTitles.kindTitle(model.toolCard, model.toolView)
+                                                + " #" + model.toolId
+                                        color: Theme.foreground
+                                        font.pixelSize: Theme.fontBody
+                                        font.bold: true
+                                    }
+
+                                    Text {
+                                        width: parent.width
+                                        elide: Text.ElideMiddle
                                         textFormat: Text.StyledText
                                         text: !toolBox.hasTool ? ""
-                                              : "#" + model.toolId + " "
-                                                + ToolTitles.richTitle(model.toolCard, model.toolView, Theme)
+                                              : ToolTitles.richTitle(model.toolCard, model.toolView, Theme)
                                         color: Theme.foreground
-                                        font.pixelSize: Theme.fontLarge
-                                        font.bold: true
+                                        font.pixelSize: Theme.fontBody
                                     }
 
                                     Text {
@@ -271,33 +303,15 @@ ToolLibraryPane {
                                     }
                                 }
                             }
-                        }
 
-                        // ── Offsets, under the box ──────────────────────
-                        Row {
-                            leftPadding: holderLabel.width + Theme.spacing
-                            spacing: Theme.spacing
-
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: "Offsets"
-                                color: Theme.foregroundMuted
-                                font.pixelSize: Theme.fontSmall
-                                font.bold: true
-                            }
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: "X: " + model.xOffset
-                                color: Theme.foreground
-                                font.pixelSize: Theme.fontBody
-                                font.family: "monospace"
-                            }
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: "Z: " + model.zOffset
-                                color: Theme.foreground
-                                font.pixelSize: Theme.fontBody
-                                font.family: "monospace"
+                            // ── Offsets, right of the box, as Manual
+                            // Turning shows them ────────────────────────
+                            OffsetsColumn {
+                                id: offsets
+                                width: root.offsetsWidth
+                                y: root.boxPadding
+                                xOffset: model.xOffset
+                                zOffset: model.zOffset
                             }
                         }
                     }
@@ -306,12 +320,12 @@ ToolLibraryPane {
         }
     }
 
-    Component { id: insertThumbnail; InsertThumbnail { size: root.thumbnailSize; padding: 10 } }
-    Component { id: threadingThumbnail; ThreadingInsertThumbnail { size: root.thumbnailSize; padding: 10 } }
-    Component { id: bladeThumbnail; BladeThumbnail { size: root.thumbnailSize; padding: 10 } }
-    Component { id: drillThumbnail; DrillThumbnail { size: root.thumbnailSize; padding: 10 } }
-    Component { id: reamerThumbnail; ReamerThumbnail { size: root.thumbnailSize; padding: 10 } }
-    Component { id: tapThumbnail; TapThumbnail { size: root.thumbnailSize; padding: 10 } }
+    Component { id: insertThumbnail; InsertThumbnail { size: root.thumbnailSize; padding: 10; framed: false } }
+    Component { id: threadingThumbnail; ThreadingInsertThumbnail { size: root.thumbnailSize; padding: 10; framed: false } }
+    Component { id: bladeThumbnail; BladeThumbnail { size: root.thumbnailSize; padding: 10; framed: false } }
+    Component { id: drillThumbnail; DrillThumbnail { size: root.thumbnailSize; padding: 10; framed: false } }
+    Component { id: reamerThumbnail; ReamerThumbnail { size: root.thumbnailSize; padding: 10; framed: false } }
+    Component { id: tapThumbnail; TapThumbnail { size: root.thumbnailSize; padding: 10; framed: false } }
 
     // The thumbnail for each of the holder model's `toolCard` values; a
     // "summary" tool has none.

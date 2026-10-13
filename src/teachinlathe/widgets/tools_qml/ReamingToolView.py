@@ -55,7 +55,7 @@ class ReamingToolView(QObject):
 
     @pyqtProperty(bool, notify=changed)
     def clockwise(self):
-        return self._tool.spindle_direction is SpindleDirection.CW
+        return self._tool.spindle_direction is SpindleDirection.M3
 
     @pyqtProperty(float, constant=True)
     def catalogReachMm(self):

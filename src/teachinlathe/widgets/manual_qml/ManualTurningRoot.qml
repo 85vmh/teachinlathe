@@ -5,7 +5,8 @@
 //     • TeachInLatheDroRoot  — fixed height (droHeight)
 //     • LimitsPanel          — fills remaining vertical space
 //     • Section headers      — fixed height (sectionHeaderHeight)
-//     • Control panels       — fixed height (panelHeight)
+//     • Control panels       — fixed height (panelHeight): Handwheels,
+//                              Joystick + Feed, Spindle
 //   Right: ManualToolList — fixed width (toolListWidth), full height
 //
 // Context properties required (set by mainwindow.py):
@@ -138,7 +139,9 @@ Item {
     readonly property int toolListWidth: 600
     readonly property int panelMargin: 6
     readonly property int panelInnerPadding: 6
-    readonly property int spindlePanelWidth: 286
+    // 286 for the RPM/CSS content, then a 1 px divider and the 100 px
+    // spindle direction column.
+    readonly property int spindlePanelWidth: 387
     readonly property int handwheelsPanelWidth: 216
     readonly property int joystickPanelWidth: 260
 
@@ -177,7 +180,8 @@ Item {
                 onOpenNumPadRequested: root.openNumpad(field)
             }
 
-            // Section headers (fixed height)
+            // Section headers (fixed height), each placed over its panel
+            // below: Handwheels, Joystick Automatic Feed, Spindle.
             Item {
                 Layout.fillWidth: true
                 Layout.minimumHeight: root.sectionHeaderHeight
@@ -186,7 +190,7 @@ Item {
 
                 // "Spindle" label
                 Text {
-                    x: 70; y: 0; width: 106; height: parent.height
+                    x: spindlePanel.x + 70; y: 0; width: 106; height: parent.height
                     text: manualViewModel ? manualViewModel.spindleTitle : "Spindle"
                     font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
@@ -194,14 +198,15 @@ Item {
                 }
                 // Spindle override %
                 Text {
-                    x: 185; y: 0; width: 71; height: parent.height
+                    x: spindlePanel.x + 185; y: 0; width: 71; height: parent.height
                     text: manualViewModel ? (manualViewModel.spindleOverridePercent + "%") : "0%"
                     font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     verticalAlignment: Text.AlignVCenter
                 }
                 // "Manual Feed" label
                 Text {
-                    x: 320; y: 0; width: 156; height: parent.height
+                    width: 156; height: parent.height; y: 0
+                    x: handwheelsPanel.x + (handwheelsPanel.width - width) / 2
                     text: "Handwheels"
                     font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
@@ -209,7 +214,7 @@ Item {
                 }
                 // "Automatic Feed" label
                 Text {
-                    x: 680; y: 0; width: 181; height: parent.height
+                    x: joystickFeedFrame.x + 166; y: 0; width: 181; height: parent.height
                     text: "Joystick Automatic Feed"
                     font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
@@ -217,7 +222,7 @@ Item {
                 }
                 // Feed override %
                 Text {
-                    x: 875; y: 0; width: 76; height: parent.height
+                    x: joystickFeedFrame.x + 361; y: 0; width: 76; height: parent.height
                     text: manualViewModel ? (manualViewModel.feedOverridePercent + "%") : "0%"
                     font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     verticalAlignment: Text.AlignVCenter
@@ -231,13 +236,6 @@ Item {
                 Layout.preferredHeight: root.panelHeight
                 Layout.maximumHeight: root.panelHeight
                 spacing: root.panelMargin
-
-                ManualSpindlePanel {
-                    id: spindlePanel
-                    Layout.preferredWidth: root.spindlePanelWidth
-                    Layout.fillHeight: true
-                    onOpenNumPadRequested: root.openNumpad(field)
-                }
 
                 ManualHandwheelsPanel {
                     id: handwheelsPanel
@@ -387,6 +385,13 @@ Item {
                             onOpenNumPadRequested: root.openNumpad(field)
                         }
                     }
+                }
+
+                ManualSpindlePanel {
+                    id: spindlePanel
+                    Layout.preferredWidth: root.spindlePanelWidth
+                    Layout.fillHeight: true
+                    onOpenNumPadRequested: root.openNumpad(field)
                 }
             }
         }

@@ -21,7 +21,7 @@ import logging
 import math
 from contextlib import contextmanager
 
-from teachinlathe.widgets.backplot.actors import geometry, inserts, palette
+from teachinlathe.widgets.backplot.actors import (geometry, inserts, palette, screen, tool_outlines)
 from teachinlathe.widgets.backplot.actors.base import (Actor, line_width,
                                                        multisample)
 from teachinlathe.widgets.backplot.actors.units import mm, to_mm
@@ -59,9 +59,11 @@ MIN_NOSE_RADIUS_MM = 0.01
 class InsertActor(_TOOL_PART):
     """The insert at the programmed point.
 
-    ``host`` is the backplot item, read for a per-tool insert choice if it
-    grows one; the tool list is where that will be set. Until then every tool
-    draws the default.
+    ``host`` is the backplot item. Its ``insert`` describes the tool in the
+    spindle as the Tool Library has it - see ``backplot.tool_source``: an ISO
+    insert, a threading insert, a blade, a drill, a reamer or a tap. While it
+    is empty - no library, or nothing in the holder - the default insert is
+    drawn, turned by the tool table's orientation.
     """
 
     def __init__(self, host=None):
@@ -132,10 +134,10 @@ class InsertActor(_TOOL_PART):
         self._draw_insert(ctx)
 
     def _draw_insert(self, ctx):
-        shape = self._shape(ctx)
+        mvp = ctx.mv.mvp()
+        shape = self._shape(ctx, mvp)
         if shape is None:
             return
-        mvp = ctx.mv.mvp()
 
         Actor.fill(ctx, shape["body"], palette.INSERT_BODY, mvp)
         line_width(palette.WIDTH_INSERT_EDGE)
@@ -146,13 +148,36 @@ class InsertActor(_TOOL_PART):
         if shape["hole"]:
             line_width(palette.WIDTH_INSERT_HOLE)
             Actor.stroke(ctx, shape["hole"], palette.INSERT_EDGE, mvp)
+        if shape.get("lines"):
+            line_width(palette.WIDTH_INSERT_HOLE)
+            Actor.stroke(ctx, shape["lines"], palette.INSERT_EDGE, mvp)
 
     # ── building the shape, once per tool ───────────────────────────────────
 
-    def _shape(self, ctx):
-        """The insert's vertices in model space, built or reused."""
+    def _shape(self, ctx, mvp=None):
+        """The tool's vertices in model space, built or reused. ``mvp`` is
+        what the flutes' pairs are spaced by; without it they are single."""
+        chosen = getattr(self._host, "insert", None) or {}
+        outline = _OUTLINES.get(chosen.get("kind"))
+        if outline is not None:
+            # The flutes' pairs are a few pixels apart whatever the zoom, so
+            # a drill or a reamer is rebuilt when the zoom changes.
+            gap = (_helix_gap_mm(ctx, mvp)
+                   if mvp is not None and chosen.get("kind") in _PAIRED else 0.0)
+            key = (tuple(sorted(chosen.items())), round(gap, 4))
+            if key != self._cached_key:
+                self._cached = _build_outline(outline(chosen, gap),
+                                              math.radians(chosen.get("rotation", 0.0)),
+                                              chosen.get("mirror_y", False))
+                self._cached_key = key
+            return self._cached
+
         insert = self._insert(ctx)
-        angle = self._angle(ctx, insert)
+        if "rotation" in chosen:
+            # As the Tool Library turns it, front and back angle included.
+            angle = math.radians(chosen["rotation"])
+        else:
+            angle = self._angle(ctx, insert)
         key = (insert.family, insert.size_index, insert.nose_radius,
                insert.active_corner, round(angle, 9))
         if key != self._cached_key:
@@ -165,10 +190,10 @@ class InsertActor(_TOOL_PART):
     def _insert(self, ctx):
         """The insert to draw for the tool in the spindle.
 
-        The nose radius comes from the tool table, where LinuxCNC keeps it as
-        a diameter - the same reading ``_draw_lathetool_geometry`` takes of
-        it. Family and size have nowhere to come from yet; the tool list is
-        where they will be chosen.
+        Family, size and nose radius are the Tool Library's when it has the
+        tool. Without it the nose radius comes from the tool table, where
+        LinuxCNC keeps it as a diameter - the same reading
+        ``_draw_lathetool_geometry`` takes of it - on the default family.
         """
         chosen = getattr(self._host, "insert", None) or {}
         family = chosen.get("family", DEFAULT_FAMILY)
@@ -244,6 +269,68 @@ def _build(insert, angle):
                                   closed=True),
         "hole": ring(hole_radius),
         "countersink": ring(countersink_radius),
+    }
+
+
+#: The tools that are not ISO turning inserts, by the description's kind.
+#: Each takes the description and the flutes' pair spacing in millimetres.
+_OUTLINES = {
+    "threading": lambda d, gap: tool_outlines.threading_insert(
+        d["size"], d["pitch"], d.get("mirrored", False)),
+    "blade": lambda d, gap: tool_outlines.blade(
+        d["width"], d["left_radius"], d["right_radius"], d.get("control", 0)),
+    "drill": lambda d, gap: tool_outlines.drill(
+        d["diameter"], d["tip_angle"], d.get("right_hand", True), gap),
+    "reamer": lambda d, gap: tool_outlines.reamer(d["diameter"], gap),
+    "tap": lambda d, gap: tool_outlines.tap(
+        d["diameter"], d["pitch"], d.get("right_hand", True)),
+}
+
+#: The kinds whose flute edges are drawn in pairs.
+_PAIRED = ("drill", "reamer")
+
+
+def _helix_gap_mm(ctx, mvp):
+    """``tool_outlines.HELIX_GAP_PX`` at the zoom drawn at, in millimetres;
+    0 - single lines - when the frame cannot be measured."""
+    scale = screen.pixels_per_unit(ctx, mvp)
+    if not scale:
+        return 0.0
+    px_per_mm = scale[0] * mm(1.0)
+    return tool_outlines.HELIX_GAP_PX / px_per_mm if px_per_mm > 0 else 0.0
+
+
+def _build_outline(outline, angle, mirror_y=False):
+    """A ``tool_outlines.Outline``'s model-space vertices, in the shape
+    ``_build`` gives an insert's: hung from its control point, mirrored top
+    to bottom if asked - a blade held at 8 - then turned by ``angle``."""
+    if len(outline.loop) < 3:
+        return None
+    tip = outline.tip
+
+    def place(point):
+        x, y = _offset(point, tip)
+        if mirror_y:
+            y = -y
+        return _to_plane(_rotate((x, y), angle))
+
+    def ring(radius):
+        if radius <= 0:
+            return []
+        return geometry.polyline(
+            [place(point) for point in geometry.circle_loop(radius, CIRCLE_SEGMENTS)],
+            closed=True)
+
+    hole_radius, countersink_radius = outline.hole or (0.0, 0.0)
+    lines = []
+    for line in outline.lines:
+        lines.extend(geometry.polyline([place(point) for point in line]))
+    return {
+        "body": [place(point) for point in outline.fill],
+        "edge": geometry.polyline([place(point) for point in outline.loop], closed=True),
+        "hole": ring(hole_radius),
+        "countersink": ring(countersink_radius),
+        "lines": lines,
     }
 
 

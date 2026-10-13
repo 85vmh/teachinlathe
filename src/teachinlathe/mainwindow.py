@@ -29,6 +29,7 @@ from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.widgets.app_shell_qml import AppShellBridge
 from teachinlathe.widgets.backplot import register_qml_types as register_backplot_type
+from teachinlathe.widgets.backplot import tool_source as backplot_tool_source
 from teachinlathe.widgets.conversational_qml.ConversationalQml import ConversationalQml
 from teachinlathe.widgets.machine_qml.FixturesViewModel import FixturesViewModel
 from teachinlathe.widgets.machine_qml.MachineViewModel import MachineViewModel
@@ -207,6 +208,8 @@ class TeachInLatheApp(QObject):
         self.toolLibraryStore = ToolLibraryStore(os.path.dirname(INI.tool_table_file))
         self.toolTableSync = ToolTableSync(self.toolLibraryStore, INI.tool_table_file)
         self.toolTableSync.sync()
+        # The backplot draws the tool in the spindle as the library has it.
+        backplot_tool_source.set_store(self.toolLibraryStore)
         self.toolsTabViewModel = ToolsTabViewModel(self.toolLibraryStore, self)
         self.manualToolsViewModel = ManualToolsViewModel(
             self.toolLibraryStore, status_repository(), issue_mdi, self)

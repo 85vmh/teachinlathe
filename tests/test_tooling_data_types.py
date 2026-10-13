@@ -35,22 +35,22 @@ def qt_app():
 USER_TOOLS = [
     {"cutting_tool_id": 1, "type": "turning",
      "insert": {"geometry": "ccmt", "size": "06", "radius": "02"},
-     "orientation": 6, "front_angle": 5, "back_angle": 5, "spindle_direction": -1},
+     "orientation": 6, "front_angle": 5, "back_angle": 5, "spindle_direction": 4},
     {"cutting_tool_id": 2, "type": "boring",
      "insert": {"geometry": "ccmt", "size": "06", "radius": "02"},
      "solid_body": {"tip_angle": 50, "diameter": 5, "max_radial_undercut": 3},
-     "orientation": 6, "front_angle": 5, "back_angle": 5, "spindle_direction": -1},
+     "orientation": 6, "front_angle": 5, "back_angle": 5, "spindle_direction": 4},
     {"cutting_tool_id": 3, "type": "blade", "blade_width": 3, "left_radius": 0.5,
-     "right_radius": 0.5, "orientation": 6, "spindle_direction": -1},
+     "right_radius": 0.5, "orientation": 6, "spindle_direction": 4},
     {"cutting_tool_id": 4, "type": "threading",
      "insert": {"geometry": "ER", "size": "16", "radius": "02"},
-     "orientation": 8, "spindle_direction": -1},
+     "orientation": 8, "spindle_direction": 4},
     {"cutting_tool_id": 5, "type": "drilling", "diameter": 10, "tip_angle": 118,
-     "twist_direction": "right_hand", "spindle_direction": -1},
+     "twist_direction": "right_hand", "spindle_direction": 4},
     {"cutting_tool_id": 6, "type": "tapping", "diameter": 10, "pitch": 1.5,
-     "twist_direction": "right_hand", "spindle_direction": -1},
+     "twist_direction": "right_hand", "spindle_direction": 4},
     {"cutting_tool_id": 7, "type": "reaming", "diameter": 10,
-     "spindle_direction": -1},
+     "spindle_direction": 4},
 ]
 
 USER_HOLDER = {"tool_holder_id": 1, "orientation": "radial", "cutting_tool_id": 3,
@@ -74,7 +74,7 @@ def test_cutting_tool_types_resolve_to_their_classes():
 def test_decoded_values_are_typed():
     drill = CuttingTool.from_json(USER_TOOLS[4])
     assert drill.twist_direction is TwistDirection.RIGHT_HAND
-    assert drill.spindle_direction is SpindleDirection.CCW
+    assert drill.spindle_direction is SpindleDirection.M4
     boring = CuttingTool.from_json(USER_TOOLS[1])
     assert boring.solid_body.diameter == 5.0
     assert boring.insert.size == "06"

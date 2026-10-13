@@ -200,7 +200,7 @@ class TurningToolEditorViewModel(TurningToolView):
 
     @pyqtSlot(bool)
     def setClockwise(self, clockwise):
-        self._tool.spindle_direction = SpindleDirection.CW if clockwise else SpindleDirection.CCW
+        self._tool.spindle_direction = SpindleDirection.M3 if clockwise else SpindleDirection.M4
         self.changed.emit()
 
     # ── Internals ───────────────────────────────────────────────────────────
@@ -212,7 +212,9 @@ class TurningToolEditorViewModel(TurningToolView):
         return _default_front_angle(self._family, self._corner, self._tool.orientation)
 
     def _clamp(self, value) -> float:
-        return tool_angles.clamp_angle(float(value), self._corner, self._tool.orientation)
+        """An angle as typed: whole degrees, within what fits."""
+        return tool_angles.clamp_angle(float(round(float(value))), self._corner,
+                                       self._tool.orientation)
 
     def _set_insert(self, family, size_index, radius_mm):
         self._tool.insert = insert_catalog.make_spec(family, size_index, radius_mm)

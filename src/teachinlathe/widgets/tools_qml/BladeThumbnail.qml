@@ -11,6 +11,8 @@ Item {
 
     property var view: null            // BladeToolView
     property real size: 50
+    //: Whether the frame round it is drawn.
+    property bool framed: true
     //: Length of each arm of the tip cross, from the tip, in pixels.
     property real crossArm: 10
     //: Space between the frame and the reference insert, in pixels.
@@ -24,6 +26,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         z: 2
+        visible: root.framed
         color: "transparent"
         radius: Theme.radiusSmall
         border.width: Theme.hairline

@@ -78,7 +78,7 @@ class HolderRow:
     toolCard: str        # which thumbnail and title draw it - CategoryRow.card's values
     toolComment: str     # the operator's note on the tool, or empty
     toolView: Any        # the view the thumbnail reads, or None
-    xOffset: str         # as shown: "123.123", or "—" until touched off
+    xOffset: str         # as shown: "123.123", or empty until touched off
     zOffset: str
 
 
@@ -149,7 +149,7 @@ class ToolHolderListModel(DataclassListModel):
 
 
 def _offset_text(value: Optional[float]) -> str:
-    return "\u2014" if value is None else f"{value:.3f}"
+    return "" if value is None else f"{value:.3f}"
 
 
 # ── Cutting tools ───────────────────────────────────────────────────────────

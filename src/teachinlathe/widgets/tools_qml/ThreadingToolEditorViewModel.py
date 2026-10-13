@@ -134,7 +134,7 @@ class ThreadingToolEditorViewModel(ThreadingToolView):
 
     @pyqtSlot(bool)
     def setClockwise(self, clockwise):
-        self._tool.spindle_direction = SpindleDirection.CW if clockwise else SpindleDirection.CCW
+        self._tool.spindle_direction = SpindleDirection.M3 if clockwise else SpindleDirection.M4
         self.changed.emit()
 
     # ── Internals ───────────────────────────────────────────────────────────

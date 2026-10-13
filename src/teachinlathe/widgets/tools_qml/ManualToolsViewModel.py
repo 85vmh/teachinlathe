@@ -176,7 +176,9 @@ class ManualToolsViewModel(QObject):
         views.end()
 
     def _shown_holders(self) -> List[ToolHolder]:
-        holders = sorted(self._store.holders, key=lambda h: h.tool_holder_id)
+        """The holders with a tool in them: an empty one is nothing to load."""
+        holders = sorted((h for h in self._store.holders if h.has_tool),
+                         key=lambda h: h.tool_holder_id)
         if not self._recent_only:
             return holders
         return _recently_used(holders)

@@ -32,7 +32,7 @@ from PyQt6.QtOpenGL import (QOpenGLFramebufferObject,
 from PyQt6.QtQml import qmlRegisterType
 from PyQt6.QtQuick import QQuickFramebufferObject
 
-from teachinlathe.widgets.backplot import actors, workpiece
+from teachinlathe.widgets.backplot import actors, tool_source, workpiece
 from teachinlathe.widgets.backplot.touch_gestures import ThreeFingerSwipe
 from teachinlathe.widgets.backplot.actors import base as actor_base
 from teachinlathe.widgets.backplot.actors import palette, screen, text
@@ -462,8 +462,9 @@ class LatheBackplotCanon(_HostBase):
         # object, distinguished by a plural, is a trap to walk into later.
         self.stock = {}
 
-        # A per-tool insert choice, once the tool list can set one. The insert
-        # actor falls back to its own default while this is empty.
+        # The tool in the spindle as the Tool Library has it - see
+        # backplot.tool_source - refreshed on every poll. The insert actor
+        # falls back to its own default while this is empty.
         self.insert = {}
 
         # Upstream's own stock outlines, left on. It draws what
@@ -1125,6 +1126,9 @@ class LatheBackplotCanon(_HostBase):
         task_mode = stat.task_mode
         tool_signature = (stat.tool_in_spindle, tuple(stat.tool_offset))
         source = stat
+        # Read each poll, not only on a tool change: the tool in the holder
+        # can be edited in the Tool Library while it stays in the spindle.
+        self.insert = tool_source.describe(stat.tool_in_spindle)
 
         # The interpreter's current file is not necessarily the program. While
         # a subroutine runs, stat.file names the subroutine, and call_level

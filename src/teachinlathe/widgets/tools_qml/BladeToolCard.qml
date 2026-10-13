@@ -85,7 +85,7 @@ Rectangle {
             padding: 10
         }
 
-        // ── The designation at the top, its figures at the bottom ───────
+        // ── The designation, its figures under it ───────────────────────
         Item {
             width: parent.width - toolId.width - thumbnail.width - 2 * parent.spacing
             height: parent.height
@@ -104,6 +104,13 @@ Rectangle {
                 font.bold: true
             }
 
+            // ── The spindle direction, in the bottom right corner ───────
+            SpindleDirectionIcon {
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                clockwise: root.view ? root.view.clockwise : null
+            }
+
             // One column of figures, labels left-aligned and values
             // right-aligned, the values taking what width is left:
             //
@@ -119,9 +126,10 @@ Rectangle {
 
             GridLayout {
                 id: figures
-                // titleTop above the card's bottom.
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: root.titleTop - root.padding
+                // Under the title, leaving the bottom right corner to the
+                // spindle direction.
+                anchors.top: title.bottom
+                anchors.topMargin: Theme.spacingSmall
                 width: parent.width
                 columns: 2
                 rowSpacing: 8

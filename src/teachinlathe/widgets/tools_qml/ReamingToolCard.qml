@@ -93,6 +93,13 @@ Rectangle {
                 font.pixelSize: Theme.fontLarge
                 font.bold: true
             }
+
+            // ── The spindle direction, in the bottom right corner ───────
+            SpindleDirectionIcon {
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                clockwise: root.view ? root.view.clockwise : null
+            }
         }
     }
 }

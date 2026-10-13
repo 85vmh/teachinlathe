@@ -8,6 +8,8 @@
     text.py           real text, from the renderer's Pango glyph atlas
     geometry.py       the shapes, with no GL and no frame
     inserts.py        ISO insert geometry, ported from the QML tool shapes
+    tool_outlines.py  threading inserts, blades, drills, reamers and taps,
+                      likewise ported
     profile.py        the finished shape, read off the program's cutting moves
     sizing.py         the axes' size in pixels; shared by the arrows, the
                       letters and the origin symbol they all sit on

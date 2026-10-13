@@ -7,7 +7,7 @@ import "ToolTitles.js" as ToolTitles
 //
 //   ┌─────────────────────────────────────────────────────────────────┐
 //   │     ┌─────────┐ Turning CCMT 060202 (comment) │    Offsets      │
-//   │ T01 │thumbnail│ Tip:      80°                 │ X:      123.123 │
+//   │ T1  │thumbnail│ Tip:      80°                 │ X:      123.123 │
 //   │     │         │ Radius:   0.2 mm              │ Z:     Not set  │
 //   │     └─────────┘                               │                 │
 //   └─────────────────────────────────────────────────────────────────┘
@@ -35,7 +35,6 @@ Rectangle {
     readonly property int offsetsWidth: 100
 
     readonly property bool hasTool: toolId !== 0
-    readonly property bool offsetsSet: xOffset !== "" && zOffset !== ""
 
     height: thumbnailSize + 2 * cardPadding
     radius: Theme.radius
@@ -63,8 +62,11 @@ Rectangle {
         anchors.left: parent.left
         anchors.leftMargin: Theme.spacing
         anchors.verticalCenter: parent.verticalCenter
+        // As wide as "T99" whatever the number, centred in it, so the
+        // thumbnail starts at the same place on every card.
         width: toolNoMetrics.width
-        text: "T" + (root.toolNo < 10 ? "0" : "") + root.toolNo
+        horizontalAlignment: Text.AlignHCenter
+        text: "T" + root.toolNo
         color: Theme.foreground
         font.pixelSize: Theme.fontLarge
         font.bold: true
@@ -80,6 +82,17 @@ Rectangle {
         height: root.thumbnailSize
         sourceComponent: root.hasTool ? root.thumbnails[root.toolCard] || null : null
         onLoaded: item.view = Qt.binding(function() { return root.toolView })
+    }
+
+    // The spindle direction, M3 or M4: right of the thumbnail, under the
+    // name and figures, its bottom on the thumbnail's.
+    SpindleDirectionIcon {
+        visible: root.hasTool && clockwise !== null && clockwise !== undefined
+        anchors.left: thumbnail.right
+        anchors.leftMargin: Theme.spacing
+        anchors.bottom: thumbnail.bottom
+        clockwise: root.toolView && root.toolView.clockwise !== undefined
+                   ? root.toolView.clockwise : null
     }
 
     // ── The tool: its name, then its figures ────────────────────────────
@@ -154,48 +167,15 @@ Rectangle {
         color: Theme.separator
     }
 
-    Column {
+    OffsetsColumn {
         id: offsets
         anchors.right: parent.right
         anchors.rightMargin: Theme.spacing
         anchors.top: parent.top
         anchors.topMargin: root.cardPadding
         width: root.offsetsWidth
-        spacing: 4
-
-        Text {
-            width: parent.width
-            horizontalAlignment: Text.AlignHCenter
-            text: "Offsets"
-            color: root.offsetsSet ? Theme.foregroundMuted : Theme.warning
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
-        }
-
-        Repeater {
-            model: [{ axis: "X:", value: root.xOffset },
-                    { axis: "Z:", value: root.zOffset }]
-            delegate: Item {
-                width: offsets.width
-                height: axisLabel.implicitHeight
-
-                Text {
-                    id: axisLabel
-                    text: modelData.axis
-                    color: Theme.foreground
-                    font.pixelSize: Theme.fontBody
-                    font.family: "monospace"
-                }
-                // A value to the right; the missing one orange.
-                Text {
-                    anchors.right: parent.right
-                    text: modelData.value !== "" ? modelData.value : "Not set"
-                    color: modelData.value !== "" ? Theme.foreground : Theme.warning
-                    font.pixelSize: Theme.fontBody
-                    font.family: "monospace"
-                }
-            }
-        }
+        xOffset: root.xOffset
+        zOffset: root.zOffset
     }
 
     Component { id: insertThumbnail; InsertThumbnail { size: root.thumbnailSize; padding: 10 } }

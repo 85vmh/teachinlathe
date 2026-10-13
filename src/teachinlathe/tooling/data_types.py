@@ -67,10 +67,19 @@ class TwistDirection(str, Enum):
     RIGHT_HAND = "right_hand"
     LEFT_HAND = "left_hand"
 
+    @property
+    def spindle_direction(self) -> "SpindleDirection":
+        """The only way a drill or a tap of this hand cuts: a right-hand one
+        with M3, a left-hand one with M4."""
+        return SpindleDirection.M3 if self is TwistDirection.RIGHT_HAND else SpindleDirection.M4
+
 
 class SpindleDirection(IntEnum):
-    CW = 1
-    CCW = -1
+    """The way the spindle turns for the tool, as the M code that starts it:
+    M3 clockwise, M4 counter-clockwise. Stored as the code's number."""
+
+    M3 = 3
+    M4 = 4
 
 
 # ── Generic JSON codec ──────────────────────────────────────────────────────
@@ -169,7 +178,7 @@ class CuttingTool:
     _registry: ClassVar[Dict[CuttingToolType, Type["CuttingTool"]]] = {}
 
     cutting_tool_id: int
-    spindle_direction: SpindleDirection = SpindleDirection.CCW
+    spindle_direction: SpindleDirection = SpindleDirection.M4
     #: The operator's note on the tool, at most COMMENT_MAX_LENGTH characters.
     comment: str = ""
 

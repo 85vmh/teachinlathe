@@ -176,8 +176,8 @@ def test_editor_works_on_a_copy(qt_app):
     editor = TurningToolEditorViewModel(tool, is_new=False)
     editor.setFrontAngle(1)
     editor.setClockwise(True)
-    assert tool.front_angle == 5 and tool.spindle_direction is SpindleDirection.CCW
-    assert editor.result().spindle_direction is SpindleDirection.CW
+    assert tool.front_angle == 5 and tool.spindle_direction is SpindleDirection.M4
+    assert editor.result().spindle_direction is SpindleDirection.M3
 
 
 # ── Tab navigation and saving ───────────────────────────────────────────────

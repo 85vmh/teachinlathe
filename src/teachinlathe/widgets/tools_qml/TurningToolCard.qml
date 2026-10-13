@@ -108,6 +108,13 @@ Rectangle {
                 font.bold: true
             }
 
+            // ── The spindle direction, in the bottom right corner ───────
+            SpindleDirectionIcon {
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                clockwise: root.view ? root.view.clockwise : null
+            }
+
             // Angles in the first two columns, the tip radius in the last
             // two, a rule between them; labels left-aligned, values right-aligned. The
             // last column takes what width is left, so the grid spans the card.
