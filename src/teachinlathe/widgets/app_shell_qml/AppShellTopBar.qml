@@ -63,6 +63,7 @@ Rectangle {
             model: root.rightActions
             delegate: ShellActionButton {
                 text: modelData.text || ""
+                iconSource: modelData.icon || ""
                 enabled: modelData.enabled !== false
                 checked: !!modelData.checked
                 checkable: !!modelData.checked

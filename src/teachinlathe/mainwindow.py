@@ -229,6 +229,7 @@ class TeachInLatheApp(QObject):
         self.appShellBridge = AppShellBridge(
             self.appState,
             {
+                "manual": self.manualToolsViewModel,
                 "tools": self.toolsTabViewModel,
                 "conversational": self.conversationalqml,
                 "programs": self.programsController,

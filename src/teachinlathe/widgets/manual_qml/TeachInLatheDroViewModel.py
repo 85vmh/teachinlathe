@@ -100,6 +100,16 @@ class TeachInLatheDroViewModel(QObject):
     def xSecondaryValue(self):
         return self._x_secondary_value
 
+    # Whether each axis shows its absolute position (else relative): what
+    # the ABS/REL toggle lights.
+    @pyqtProperty(bool, notify=droChanged)
+    def xIsAbs(self):
+        return self.isXAbs
+
+    @pyqtProperty(bool, notify=droChanged)
+    def zIsAbs(self):
+        return self.isZAbs
+
     @pyqtProperty(bool, notify=droChanged)
     def xSecondaryVisible(self):
         return self._x_secondary_visible

@@ -12,12 +12,13 @@ which of its points that was.
 from __future__ import annotations
 
 import logging
+import os
 import time
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, List, Optional
 
-from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.tooling.data_types import BladeTool, ToolHolder, ZOffsetPlace
 from teachinlathe.tooling.tool_library_store import ToolLibraryStore
@@ -26,6 +27,11 @@ from teachinlathe.widgets.tools_qml.tool_library_models import (
 )
 
 log = logging.getLogger(__name__)
+
+#: The title bar's toggle: on, only the recently used tools are listed.
+_RECENT_ACTION = "toggle_recent"
+_RECENT_ICON = QUrl.fromLocalFile(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "recent.svg")).toString()
 
 #: How many status polls a touch-off is waited for when the interpreter is
 #: never seen busy - G10 can run inside one poll.
@@ -52,6 +58,8 @@ class ManualToolListModel(DataclassListModel):
 
 class ManualToolsViewModel(QObject):
     recentOnlyChanged = pyqtSignal()
+    #: The title bar reads getHeaderState() again: the recent toggle is there.
+    headerStateChanged = pyqtSignal()
     currentToolChanged = pyqtSignal()
     feedingChanged = pyqtSignal()
     #: A blade was touched off in Z: which of its points was it? (its width)
@@ -98,6 +106,7 @@ class ManualToolsViewModel(QObject):
         if bool(value) != self._recent_only:
             self._recent_only = bool(value)
             self.recentOnlyChanged.emit()
+            self.headerStateChanged.emit()
             self.refresh()
 
     @pyqtProperty(int, notify=currentToolChanged)
@@ -107,6 +116,22 @@ class ManualToolsViewModel(QObject):
     @pyqtProperty(bool, notify=feedingChanged)
     def feeding(self):
         return self._feeding
+
+    # ── The title bar ───────────────────────────────────────────────────────
+
+    def getHeaderState(self) -> dict:
+        """The Manual Turning tab's title bar: the recent toggle, on the
+        right. The title stays the tab's."""
+        return {"right_actions": [{
+            "id": _RECENT_ACTION,
+            "icon": _RECENT_ICON,
+            "checked": self._recent_only,
+            "enabled": True,
+        }]}
+
+    def triggerHeaderAction(self, action_id: str) -> None:
+        if action_id == _RECENT_ACTION:
+            self.recentOnly = not self._recent_only
 
     # ── Edits ───────────────────────────────────────────────────────────────
 

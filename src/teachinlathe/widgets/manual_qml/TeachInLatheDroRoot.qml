@@ -43,6 +43,7 @@ Rectangle {
         unit: root.viewModel ? root.viewModel.units : "mm"
         onPrimaryClicked: if (root.viewModel) root.viewModel.xPrimaryClicked()
         onZeroClicked: if (root.viewModel) root.viewModel.xZeroClicked()
+        isAbs: root.viewModel ? root.viewModel.xIsAbs : true
         onAbsRelClicked: if (root.viewModel) root.viewModel.xAbsRelClicked()
     }
 
@@ -58,6 +59,7 @@ Rectangle {
         unit: root.viewModel ? root.viewModel.units : "mm"
         onPrimaryClicked: if (root.viewModel) root.viewModel.zPrimaryClicked()
         onZeroClicked: if (root.viewModel) root.viewModel.zZeroClicked()
+        isAbs: root.viewModel ? root.viewModel.zIsAbs : true
         onAbsRelClicked: if (root.viewModel) root.viewModel.zAbsRelClicked()
         setDatumVisible: true
         onSetDatumClicked: if (root.viewModel) root.viewModel.zSetDatumClicked()

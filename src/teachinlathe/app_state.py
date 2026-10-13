@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
+from teachinlathe.app_identity import MACHINE_NAME
 from teachinlathe.repositories.command_repository import issue_mdi
 from teachinlathe.repositories.status_repository import status_repository
 
@@ -236,7 +237,8 @@ class AppState(QObject):
         super().__init__(parent)
         self._navigation_store = NavigationStore(self)
         self._cnc_store = CncStore(self)
-        self._manual_store = DomainStore('Manual Turning', False, self)
+        # Titled with the machine's name, not the tab's.
+        self._manual_store = DomainStore(MACHINE_NAME, True, self)
         self._conversational_store = DomainStore('Conversational', True, self)
         self._programs_store = DomainStore('Programs', True, self)
         self._tools_store = DomainStore('Tool Library', True, self)
