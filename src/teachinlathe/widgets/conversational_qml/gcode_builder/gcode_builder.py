@@ -9,9 +9,9 @@ from teachinlathe.conversational.data_types import (
     Program,
 )
 from teachinlathe.conversational.qml_adapter import display_name_for_op
-from teachinlathe.widgets.tool_library.tool_entry import ToolType, make_tool
-from teachinlathe.widgets.tool_library.tool_extras_store import ToolExtrasStore
-from teachinlathe.widgets.tool_library.tool_table_file import parse_tbl
+from teachinlathe.tooling.store.tool_entry import ToolType, make_tool
+from teachinlathe.tooling.store.tool_extras_store import ToolExtrasStore
+from teachinlathe.tooling.store.tool_table_file import parse_tbl
 
 from .operations import OPERATION_GENERATORS
 

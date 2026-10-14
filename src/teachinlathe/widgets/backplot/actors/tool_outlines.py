@@ -1,7 +1,7 @@
 """The cutting tools that are not ISO turning inserts, in millimetres.
 
 Threading inserts, blades, drills, reamers and taps, as the Tool Library
-draws them - ported from ``widgets/tool_shapes/ThreadingInsert.qml``,
+draws them - ported from ``tooling/ui/shapes/ThreadingInsert.qml``,
 ``Drill.qml``, ``Reamer.qml``, ``Tap.qml`` and ``tools_qml/BladeThumbnail.qml``
 for the same reason ``inserts.py`` ports the turning inserts: the backplot
 draws OpenGL, and a QML Canvas cannot be drawn inside it. The two have to

@@ -6,7 +6,7 @@ import "app_shell_qml"
 import "machine_qml"
 import "manual_qml"
 import "programs_qml"
-import "tools_qml"
+import "../tooling/ui"
 import "conversational_qml" as Conversational
 
 /*

@@ -8,7 +8,7 @@ insert in the holder; the second is a wedge that happens to have the right
 included angle.
 
 This draws the insert instead: the same ISO outline the tool list renders from
-``widgets/tool_shapes``, at its real size, rounded to its real nose radius,
+``tooling/ui/shapes``, at its real size, rounded to its real nose radius,
 turned to the orientation the tool table gives, and with its clamping hole
 open so the toolpath and the stock show through it.
 

@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../conversational_qml"
-import "../tools_qml"
+import "../../tooling/ui"
 import theme 1.0
 
 Rectangle {

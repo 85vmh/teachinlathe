@@ -38,10 +38,10 @@ from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLath
 from teachinlathe.ui.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.ui import QML_IMPORT_DIR
 from teachinlathe.widgets.programs_qml.ProgramsController import ProgramsController
-from teachinlathe.widgets.tool_library.tool_table_sync import ToolTableSync
-from teachinlathe.widgets.tools_qml.ManualToolsViewModel import ManualToolsViewModel
-from teachinlathe.widgets.tools_qml.ToolsTabViewModel import ToolsTabViewModel
-from teachinlathe.tooling.tool_library_store import ToolLibraryStore
+from teachinlathe.tooling.store.tool_table_sync import ToolTableSync
+from teachinlathe.tooling.ui.ManualToolsViewModel import ManualToolsViewModel
+from teachinlathe.tooling.ui.ToolsTabViewModel import ToolsTabViewModel
+from teachinlathe.tooling.store.tool_library_store import ToolLibraryStore
 
 LOG = logging.getLogger(__name__)
 

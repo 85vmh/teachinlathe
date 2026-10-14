@@ -1,6 +1,6 @@
 """ISO turning-insert geometry, in millimetres.
 
-A port of ``widgets/tool_shapes/TurningInsertBase.qml`` and the family files
+A port of ``tooling/ui/shapes/TurningInsertBase.qml`` and the family files
 beside it. The QML stays where it is - it is what the tool list renders - so
 this is a second implementation of the same rules, and the two have to agree.
 They are kept honest by ``tests/test_inserts.py``, which checks this module

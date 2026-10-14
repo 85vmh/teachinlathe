@@ -53,8 +53,8 @@ def describe(tool_no):
 
 
 def _describe(holder, tool):
-    from teachinlathe.tooling import insert_catalog, threading_catalog, tool_angles
-    from teachinlathe.tooling.data_types import (BladeTool, DrillingTool, ReamingTool,
+    from teachinlathe.tooling.model import insert_catalog, threading_catalog, tool_angles
+    from teachinlathe.tooling.model.data_types import (BladeTool, DrillingTool, ReamingTool,
                                                  TappingTool, ThreadingTool, TurningTool,
                                                  TwistDirection)
 

@@ -15,7 +15,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "../tools_qml"
+import "../../tooling/ui"
 import touchable_input 1.0   // SmartNumpadDialog, NumpadField
 import theme 1.0
 

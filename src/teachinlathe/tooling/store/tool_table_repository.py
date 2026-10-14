@@ -105,7 +105,7 @@ class ToolTableRepository(QObject):
             self.tool_table_changed.emit(table)
             return table
 
-        from teachinlathe.widgets.tool_library.tool_table_file import parse_tbl
+        from teachinlathe.tooling.store.tool_table_file import parse_tbl
 
         try:
             entries = parse_tbl(path)
@@ -136,8 +136,8 @@ class ToolTableRepository(QObject):
                       columns=None, tool_file: Optional[str] = None) -> None:
         """Write *tool_table* back to the .tbl and tell LinuxCNC to re-read it."""
         path = tool_file or self._tool_file
-        from teachinlathe.widgets.tool_library.tool_entry import ToolEntry
-        from teachinlathe.widgets.tool_library.tool_table_file import write_tbl
+        from teachinlathe.tooling.store.tool_entry import ToolEntry
+        from teachinlathe.tooling.store.tool_table_file import write_tbl
 
         entries = []
         for tnum, tool in tool_table.items():
