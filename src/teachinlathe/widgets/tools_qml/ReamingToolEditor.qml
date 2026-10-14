@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
-import "../touchable_input"
+import touchable_input 1.0
 
 // Add or edit a reamer, laid out as DrillingToolEditor is: the form on the
 // left, the reamer as it sits on the right. There is no orientation to pick

@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
-import "../touchable_input"
+import touchable_input 1.0
 
 // Add or edit a threading tool, laid out as TurningToolEditor is: the form
 // on the left, the orientation in the middle, the insert as it will sit in

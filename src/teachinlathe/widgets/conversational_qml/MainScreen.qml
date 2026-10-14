@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import Qt5Compat.GraphicalEffects
 import "."
 import theme 1.0
+import common 1.0
 
 Item {
     id: main
@@ -524,7 +525,7 @@ Item {
                                     Loader {
                                         sourceComponent: iconButton
                                         onLoaded: {
-                                            item.iconSource = "icons/duplicate_item.svg"
+                                            item.iconSource = Images.url("duplicate_item.svg")
                                             item.tint = Theme.foregroundMuted
                                             item.clicked.connect(function() {
                                                 main.duplicateProgramRequested(index)
@@ -535,7 +536,7 @@ Item {
                                     Loader {
                                         sourceComponent: iconButton
                                         onLoaded: {
-                                            item.iconSource = "icons/delete_icon.svg"
+                                            item.iconSource = Images.url("delete_icon.svg")
                                             item.tint = Theme.danger
                                             item.borderTint = Theme.danger
                                             item.clicked.connect(function() {

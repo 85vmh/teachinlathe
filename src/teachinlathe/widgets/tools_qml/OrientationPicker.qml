@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
+import common 1.0
 
 // LinuxCNC's nine lathe tool orientations, laid out as the tool sits
 // around the tip: each picture shows the control point of one.
@@ -43,7 +44,7 @@ ColumnLayout {
                 Image {
                     anchors.centerIn: parent
                     width: root.cellSize * 0.75; height: width
-                    source: "../../images/lathe_control_point_" + modelData + ".png"
+                    source: Images.url("lathe_control_point_" + modelData + ".png")
                     fillMode: Image.PreserveAspectFit
                 }
                 MouseArea {

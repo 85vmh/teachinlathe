@@ -3,8 +3,9 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
-import "../../touchable_input"
+import touchable_input 1.0
 import theme 1.0
+import common 1.0
 
 Item {
     id: root
@@ -518,10 +519,10 @@ Item {
 
                             Repeater {
                                 model: [
-                                    { label: "LineTo", direction: "Above", type: "lineTo", iconEnd: "../icons/move_up_icon.svg" },
-                                    { label: "ArcTo", direction: "Above", type: "arcTo", iconEnd: "../icons/move_up_icon.svg" },
-                                    { label: "LineTo", direction: "Below", type: "lineTo", iconEnd: "../icons/move_down_icon.svg" },
-                                    { label: "ArcTo", direction: "Below", type: "arcTo", iconEnd: "../icons/move_down_icon.svg" }
+                                    { label: "LineTo", direction: "Above", type: "lineTo", iconEnd: Images.url("move_up_icon.svg") },
+                                    { label: "ArcTo", direction: "Above", type: "arcTo", iconEnd: Images.url("move_up_icon.svg") },
+                                    { label: "LineTo", direction: "Below", type: "lineTo", iconEnd: Images.url("move_down_icon.svg") },
+                                    { label: "ArcTo", direction: "Below", type: "arcTo", iconEnd: Images.url("move_down_icon.svg") }
                                 ]
 
                                 delegate: Button {
@@ -540,7 +541,7 @@ Item {
                                             Layout.preferredHeight: Theme.buttonHeightSmall
                                             sourceSize.width: 36
                                             sourceSize.height: 36
-                                            source: "../icons/add_op_icon.svg"
+                                            source: Images.url("add_op_icon.svg")
                                             fillMode: Image.PreserveAspectFit
                                             opacity: addPrimitiveButton.enabled ? 1.0 : 0.35
                                         }
@@ -657,9 +658,9 @@ Item {
 
                         Repeater {
                             model: [
-                                { icon: "../icons/zoom-in.svg",  action: "zoomIn"      },
-                                { icon: "../icons/zoom-out.svg", action: "zoomOut"     },
-                                { icon: "../icons/zoom-fit.svg", action: "fitToScreen" }
+                                { icon: Images.url("zoom-in.svg"),  action: "zoomIn"      },
+                                { icon: Images.url("zoom-out.svg"), action: "zoomOut"     },
+                                { icon: Images.url("zoom-fit.svg"), action: "fitToScreen" }
                             ]
                             Rectangle {
                                 width: 60; height: 60

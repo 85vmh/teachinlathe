@@ -35,7 +35,8 @@ from teachinlathe.widgets.machine_qml.FixturesViewModel import FixturesViewModel
 from teachinlathe.widgets.machine_qml.MachineViewModel import MachineViewModel
 from teachinlathe.widgets.manual_qml import ManualTurningViewModel
 from teachinlathe.widgets.manual_qml.TeachInLatheDroViewModel import TeachInLatheDroViewModel
-from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
+from teachinlathe.ui.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
+from teachinlathe.ui import QML_IMPORT_DIR
 from teachinlathe.widgets.programs_qml.ProgramsController import ProgramsController
 from teachinlathe.widgets.tool_library.tool_table_sync import ToolTableSync
 from teachinlathe.widgets.tools_qml.ManualToolsViewModel import ManualToolsViewModel
@@ -274,7 +275,7 @@ class TeachInLatheApp(QObject):
 
         # So every screen can say `import theme 1.0` whatever directory it is
         # in, rather than counting ".." back to it.
-        self.view.engine().addImportPath(QML_DIR)
+        self.view.engine().addImportPath(QML_IMPORT_DIR)
 
     def _publishContext(self):
         ctx = self.view.engine().rootContext()

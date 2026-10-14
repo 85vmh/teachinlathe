@@ -14,7 +14,7 @@ override_dh_install:
 	# create icons directory if it doesn't exist
 	mkdir -p debian/python3-teachinlathe/usr/share/icons/hicolor/scalable/apps/
 	# copy icons from source to icons directory
-	install -m 644 src/teachinlathe/images/home_folder.svg debian/python3-teachinlathe/usr/share/icons/hicolor/scalable/apps/teachinlathe.svg
+	install -m 644 src/teachinlathe/ui/common/images/home_folder.svg debian/python3-teachinlathe/usr/share/icons/hicolor/scalable/apps/teachinlathe.svg
 
 	# install desktop launcher so desktop shells can associate the Qt window
 	mkdir -p debian/python3-teachinlathe/usr/share/applications/

@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
 import theme 1.0
 import "ToolTitles.js" as ToolTitles
+import common 1.0
 
 // The tool holders, two to a row, each:
 //
@@ -261,7 +262,7 @@ ToolLibraryPane {
                                         anchors.centerIn: parent
                                         width: Math.round(parent.width * 0.6)
                                         height: width
-                                        source: "icons/delete.svg"
+                                        source: Images.url("delete.svg")
                                         sourceSize.width: width
                                         sourceSize.height: height
                                         // Hidden, not removed: ColorOverlay reads it as its source.

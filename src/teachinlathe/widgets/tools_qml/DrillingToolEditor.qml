@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
-import "../touchable_input"
+import touchable_input 1.0
 
 // Add or edit a drill: the form on the left, the drill as it sits on the
 // right. There is no orientation to pick - a drill is always at 7, on the

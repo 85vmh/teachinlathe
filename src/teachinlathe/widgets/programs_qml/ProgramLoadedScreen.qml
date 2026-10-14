@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import "program_loaded"
 import TeachInLathe.Backplot 1.0
 import theme 1.0
+import common 1.0
 
 // The loaded-program screen's own pane - the backplot, and under it the run
 // controls while the program runs - on the right of the strip
@@ -138,21 +139,21 @@ Item {
                         spacing: 32
 
                         BackplotIconButton {
-                            iconSource: "../conversational_qml/icons/zoom-in.svg"
+                            iconSource: Images.url("zoom-in.svg")
                             autoRepeat: true
                             autoRepeatDelay: 300
                             autoRepeatInterval: 100
                             onClicked: backplot.zoomIn()
                         }
                         BackplotIconButton {
-                            iconSource: "../conversational_qml/icons/zoom-out.svg"
+                            iconSource: Images.url("zoom-out.svg")
                             autoRepeat: true
                             autoRepeatDelay: 300
                             autoRepeatInterval: 100
                             onClicked: backplot.zoomOut()
                         }
                         BackplotIconButton {
-                            iconSource: "../conversational_qml/icons/zoom-fit.svg"
+                            iconSource: Images.url("zoom-fit.svg")
                             onClicked: backplot.fitToWindow()
                         }
                     }
@@ -164,7 +165,7 @@ Item {
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.margins: backplot.plotMargin
-                        iconSource: "../conversational_qml/icons/brush_out.svg"
+                        iconSource: Images.url("brush_out.svg")
                         tint: Theme.danger
                         borderTint: Theme.danger
                         onClicked: backplot.clearPlot()

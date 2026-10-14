@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import Qt5Compat.GraphicalEffects
 import "."   // for Divider.qml
 import theme 1.0
+import common 1.0
 
 Rectangle {
     id: root
@@ -39,9 +40,9 @@ Rectangle {
     }
 
     // Icon sources / tints
-    property url  deleteIconSource:   "icons/delete_icon.svg"
-    property url  moveUpIconSource:   "icons/move_up_icon.svg"
-    property url  moveDownIconSource: "icons/move_down_icon.svg"
+    property url  deleteIconSource:   Images.url("delete_icon.svg")
+    property url  moveUpIconSource:   Images.url("move_up_icon.svg")
+    property url  moveDownIconSource: Images.url("move_down_icon.svg")
     property color deleteTint:   Theme.danger
     property color reorderTint:  Theme.foregroundMuted
 

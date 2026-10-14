@@ -1,6 +1,6 @@
 """Single source of truth for the SmartNumpad dialog configuration.
 
-Loads ``configurations/numpad_settings.json`` and exposes, per ``settingName``:
+Loads ``numpad_settings.json`` (beside this module) and exposes, per ``settingName``:
 the predefined values, description, limits and the persisted ``last_value``.
 
 The numpad config used to live in the application settings (yml) and is now
@@ -18,10 +18,9 @@ import json
 import os
 import threading
 
-# configurations/ ships inside the teachinlathe package.
+# The defaults ship beside this module.
 _THIS_DIR = os.path.dirname(os.path.realpath(__file__))
-_PACKAGE_ROOT = os.path.abspath(os.path.join(_THIS_DIR, '..'))
-DEFAULT_PATH = os.path.join(_PACKAGE_ROOT, 'configurations', 'numpad_settings.json')
+DEFAULT_PATH = os.path.join(_THIS_DIR, 'numpad_settings.json')
 
 _CONFIG_HOME = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
 LAST_VALUES_PATH = os.path.join(_CONFIG_HOME, 'teachinlathe', 'numpad_last_values.json')

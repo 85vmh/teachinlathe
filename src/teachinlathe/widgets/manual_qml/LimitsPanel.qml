@@ -12,7 +12,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "../touchable_input"   // NumpadField
+import touchable_input 1.0   // NumpadField
 import theme 1.0
 
 Rectangle {

@@ -1,6 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import "../touchable_input"
+import touchable_input 1.0
 
 Item {
     id: root
@@ -51,7 +51,7 @@ Item {
     Loader {
         id: keyboardDialogLoader
         active: false
-        source: "../touchable_input/QwertyKeyboardDialog.qml"
+        sourceComponent: Component { QwertyKeyboardDialog {} }
 
         onLoaded: {
             if (item && root._pendingKeyboardField) {

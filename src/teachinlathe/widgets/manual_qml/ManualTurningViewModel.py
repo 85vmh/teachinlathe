@@ -2,7 +2,7 @@ from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from teachinlathe.repositories.settings_repository import settings_repository
 
 from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
-from teachinlathe.data_source.numpad_settings import NumpadSettings
+from teachinlathe.ui.touchable_input.numpad_settings import NumpadSettings
 
 
 class ManualTurningViewModel(QObject):

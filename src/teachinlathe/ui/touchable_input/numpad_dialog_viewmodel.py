@@ -11,7 +11,7 @@ predefined values and never writes ``last_value``.
 
 from PyQt6.QtCore import QObject, pyqtSlot
 
-from teachinlathe.data_source.numpad_settings import NumpadSettings
+from teachinlathe.ui.touchable_input.numpad_settings import NumpadSettings
 
 
 class NumpadDialogViewModel(QObject):

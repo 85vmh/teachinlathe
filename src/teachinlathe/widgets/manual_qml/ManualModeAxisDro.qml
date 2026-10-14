@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import theme 1.0
+import common 1.0
 
 Item {
     id: root
@@ -138,7 +139,7 @@ Item {
         height: root.buttonSize
         // Zero the axis: an icon in place of the "0" it used to read.
         display: AbstractButton.IconOnly
-        icon.source: Qt.resolvedUrl("icons/zero.svg")
+        icon.source: Images.url("zero.svg")
         // As big as the ABS/REL toggle's icon, so their lines match.
         icon.width: Math.round(root.buttonSize * 0.8)
         icon.height: Math.round(root.buttonSize * 0.8)
@@ -163,7 +164,7 @@ Item {
         height: root.buttonSize
         // ABS over a diagonal, REL under it, the selected one blue.
         display: AbstractButton.IconOnly
-        icon.source: Qt.resolvedUrl(root.isAbs ? "icons/abs_rel_abs.svg" : "icons/abs_rel_rel.svg")
+        icon.source: Images.url(root.isAbs ? "abs_rel_abs.svg" : "abs_rel_rel.svg")
         icon.width: Math.round(root.buttonSize * 0.8)
         icon.height: Math.round(root.buttonSize * 0.8)
         icon.color: "transparent"       // the SVG's own colours, not the style's tint
@@ -188,7 +189,7 @@ Item {
         width: root.buttonSize
         height: root.buttonSize
         display: AbstractButton.IconOnly
-        icon.source: Qt.resolvedUrl("icons/set_datum.svg")
+        icon.source: Images.url("set_datum.svg")
         icon.width: Math.round(root.buttonSize * 0.8)
         icon.height: Math.round(root.buttonSize * 0.8)
         icon.color: "transparent"       // the SVG's own colour, not the style's tint

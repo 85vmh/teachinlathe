@@ -19,18 +19,14 @@ from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.fixtures import LatheFixturesRepository
 from teachinlathe.repositories.positions_repository import Positions
+from teachinlathe.ui.common.images import IMAGES_DIR
 
 log = logging.getLogger(__name__)
 
 #: Where fixture images live, looked up by file name when the path recorded in
 #: lathe_fixtures.json does not exist. Those paths are absolute and were
 #: written on whichever machine last edited the file, so they rarely survive.
-IMAGE_DIRS = (
-    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-        os.path.abspath(__file__)))), 'images'),
-    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))), 'images'),
-)
+IMAGE_DIRS = (IMAGES_DIR,)
 
 
 def resolve_image(path: str) -> str:

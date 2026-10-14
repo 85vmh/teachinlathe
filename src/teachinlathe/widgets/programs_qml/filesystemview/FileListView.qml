@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
 import "../../conversational_qml"
+import common 1.0
 
 // Row 3 — Sortable file list with Name / Size / Modified / Actions columns.
 Item {
@@ -215,7 +216,7 @@ Item {
                         }
                         Image {
                             visible: !modelData.isUp && modelData.isDir
-                            source: "../../../images/folder-icon.svg"
+                            source: Images.url("folder-icon.svg")
                             sourceSize.width: 24; sourceSize.height: 24
                             width: 22; height: 22
                             fillMode: Image.PreserveAspectFit
@@ -224,7 +225,7 @@ Item {
                         }
                         Image {
                             visible: !modelData.isUp && !modelData.isDir
-                            source: "../../../images/gcode.png"
+                            source: Images.url("gcode.png")
                             sourceSize.width: 24; sourceSize.height: 24
                             width: 22; height: 22
                             fillMode: Image.PreserveAspectFit
@@ -307,7 +308,7 @@ Item {
                             visible: !modelData.isUp
                             // resolved here: a relative path would otherwise be taken
                             // from PressableIconButton's folder, where the Image is
-                            source: Qt.resolvedUrl("../../conversational_qml/icons/delete_icon.svg")
+                            source: Images.url("delete_icon.svg")
                             tint: Theme.danger
                             borderTint: Theme.danger
                             enabled: !modelData.isDir

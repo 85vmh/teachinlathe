@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import theme 1.0
+import common 1.0
 
 // The spindle direction a cutting tool is used with: two square icon
 // buttons, M3 then M4, as tall as an input field, the chosen one blue as
@@ -19,8 +20,8 @@ Row {
     spacing: Theme.margin
 
     Repeater {
-        model: [{ icon: "icons/spindle_m3.svg", clockwise: true },
-                { icon: "icons/spindle_m4.svg", clockwise: false }]
+        model: [{ icon: Images.url("spindle_m3.svg"), clockwise: true },
+                { icon: Images.url("spindle_m4.svg"), clockwise: false }]
         delegate: Rectangle {
             readonly property bool chosen: root.clockwise === modelData.clockwise
             readonly property bool allowed: root.onlyClockwise === null

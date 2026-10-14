@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
 import theme 1.0
+import common 1.0
 
 // The cutting tools, grouped by type. Each group's header folds the group
 // and has a "+" for adding a tool of that type; under it the group's tools
@@ -101,12 +102,12 @@ ToolLibraryPane {
     headerActionsSpacing: 3 * Theme.spacingSmall
     headerActions: [
         HeaderButton {
-            iconSource: "icons/expand-vertical.svg"
+            iconSource: Images.url("expand-vertical.svg")
             enabled: root.model ? !root.model.allExpanded : false
             onClicked: root.model.setAllExpanded(true)
         },
         HeaderButton {
-            iconSource: "icons/collapse-vertical.svg"
+            iconSource: Images.url("collapse-vertical.svg")
             enabled: root.model ? !root.model.allCollapsed : false
             onClicked: root.model.setAllExpanded(false)
         }

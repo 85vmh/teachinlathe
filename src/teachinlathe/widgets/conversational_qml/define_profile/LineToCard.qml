@@ -3,8 +3,9 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../"
-import "../../touchable_input"
+import touchable_input 1.0
 import theme 1.0
+import common 1.0
 
 Rectangle {
     id: root
@@ -134,7 +135,7 @@ Rectangle {
                 anchors.centerIn: parent
                 width: szIconSize; height: szIconSize
                 sourceSize.width: szIconSize; sourceSize.height: szIconSize
-                source: "../icons/line_to.svg"
+                source: Images.url("line_to.svg")
                 fillMode: Image.PreserveAspectFit; smooth: true
             }
         }
@@ -293,7 +294,7 @@ Rectangle {
             Image {
                 anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
                 sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: "../icons/chamfer.svg"
+                source: Images.url("chamfer.svg")
                 fillMode: Image.PreserveAspectFit; smooth: true
             }
             MouseArea {
@@ -323,7 +324,7 @@ Rectangle {
             Image {
                 anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
                 sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: "../icons/fillet.svg"
+                source: Images.url("fillet.svg")
                 fillMode: Image.PreserveAspectFit; smooth: true
             }
             MouseArea {
@@ -353,7 +354,7 @@ Rectangle {
             Image {
                 anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
                 sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: "../icons/undercut.svg"
+                source: Images.url("undercut.svg")
                 fillMode: Image.PreserveAspectFit; smooth: true
             }
             MouseArea {
@@ -390,7 +391,7 @@ Rectangle {
             Image {
                 anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
                 sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: "../icons/delete_icon.svg"
+                source: Images.url("delete_icon.svg")
                 fillMode: Image.PreserveAspectFit; smooth: true
             }
             MouseArea {

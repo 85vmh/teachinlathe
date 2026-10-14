@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
-import "../touchable_input"
+import touchable_input 1.0
 
 // Add or edit a turning tool. The form is on the left, the insert as it
 // will sit in the holder on the right. Everything is written to `editor`

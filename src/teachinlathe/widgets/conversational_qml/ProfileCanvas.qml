@@ -5,7 +5,7 @@
 import QtQuick 2.15
 import theme 1.0
 import "profile_canvas"
-import "../touchable_input"
+import touchable_input 1.0
 
 Canvas {
     id: root

@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "."
 import theme 1.0
+import common 1.0
 
 Rectangle {
     id: root
@@ -290,7 +291,7 @@ Rectangle {
 
                     OperationIconTextButton {
                         anchors.centerIn: parent
-                        iconSource: "icons/add_op_icon.svg"
+                        iconSource: Images.url("add_op_icon.svg")
                         text: "Add New Operation"
                         tint: Theme.success
                         compact: false
@@ -303,7 +304,7 @@ Rectangle {
                     OperationIconTextButton {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        iconSource: "icons/reorder_icon.svg"
+                        iconSource: Images.url("reorder_icon.svg")
                         text: "Reorder"
                         tint: root.reorderMode ? "#1E88E5" : Theme.foregroundMuted
                         compact: false

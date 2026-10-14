@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
-import "../touchable_input"
+import touchable_input 1.0
 
 // Add or edit a boring bar - for now a copy of TurningToolEditor.qml, over
 // the same view model; the bar's body is kept as it was. The form is on the

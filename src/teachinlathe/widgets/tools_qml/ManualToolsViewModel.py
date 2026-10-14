@@ -12,16 +12,16 @@ which of its points that was.
 from __future__ import annotations
 
 import logging
-import os
 import time
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, List, Optional
 
-from PyQt6.QtCore import QObject, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.tooling.data_types import BladeTool, ToolHolder, ZOffsetPlace
 from teachinlathe.tooling.tool_library_store import ToolLibraryStore
+from teachinlathe.ui.common.images import image_url
 from teachinlathe.widgets.tools_qml.tool_library_models import (
     DataclassListModel, MountedToolViews,
 )
@@ -30,8 +30,7 @@ log = logging.getLogger(__name__)
 
 #: The title bar's toggle: on, only the recently used tools are listed.
 _RECENT_ACTION = "toggle_recent"
-_RECENT_ICON = QUrl.fromLocalFile(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons", "recent.svg")).toString()
+_RECENT_ICON = image_url("recent.svg")
 
 #: How many status polls a touch-off is waited for when the interpreter is
 #: never seen busy - G10 can run inside one poll.

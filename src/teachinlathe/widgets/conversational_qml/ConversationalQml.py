@@ -61,7 +61,7 @@ from teachinlathe.widgets.conversational_qml.ThreadingDetailsViewModel import Th
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.programs_qml.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.widgets.positions_bridge import PositionsBridge
-from teachinlathe.widgets.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
+from teachinlathe.ui.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 
 
 DXF_PROFILE_FOLDER = "/home/cnc/Work/teachinlathe/dxf_profiles"

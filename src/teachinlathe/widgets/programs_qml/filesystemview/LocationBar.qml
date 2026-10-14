@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
+import common 1.0
 
 // Row 1 — Horizontal location selector.
 // Buttons are equally wide, mutually exclusive. A button is highlighted only
@@ -16,18 +17,18 @@ Rectangle {
 
     function iconForLocation(locationType) {
         if (locationType === "generated") {
-            return "../../../images/generated_programs_folder.svg"
+            return Images.url("generated_programs_folder.svg")
         }
         if (locationType === "usb_stick" || locationType === "mounted_media") {
-            return "../../../images/usb-stick-folder.svg"
+            return Images.url("usb-stick-folder.svg")
         }
         if (locationType === "syncthing") {
-            return "../../../images/syncthing-folder.svg"
+            return Images.url("syncthing-folder.svg")
         }
         if (locationType === "home") {
-            return "../../../images/home_folder.svg"
+            return Images.url("home_folder.svg")
         }
-        return "../../../images/folder-icon.svg"
+        return Images.url("folder-icon.svg")
     }
 
     RowLayout {

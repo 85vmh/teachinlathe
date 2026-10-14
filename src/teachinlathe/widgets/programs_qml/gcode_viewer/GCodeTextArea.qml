@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import theme 1.0
+import common 1.0
 
 Rectangle {
     id: root
@@ -335,7 +336,7 @@ Rectangle {
                 anchors.centerIn: parent
                 width: 34
                 height: 34
-                source: "while_running/images/center_vertical.svg"
+                source: Images.url("center_vertical.svg")
                 fillMode: Image.PreserveAspectFit
                 smooth: true
             }

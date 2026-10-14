@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import Qt5Compat.GraphicalEffects
 import "../"
 import theme 1.0
+import common 1.0
 
 Item {
     id: root
@@ -99,7 +100,7 @@ Item {
                         Image {
                             id: editProfileIcon
                             anchors.fill: parent
-                            source: "../icons/edit-profile.svg"
+                            source: Images.url("edit-profile.svg")
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             visible: false
@@ -133,9 +134,9 @@ Item {
 
                 Repeater {
                     model: [
-                        { icon: "../icons/zoom-in.svg",  action: "zoomIn"      },
-                        { icon: "../icons/zoom-out.svg", action: "zoomOut"     },
-                        { icon: "../icons/zoom-fit.svg", action: "fitToScreen" }
+                        { icon: Images.url("zoom-in.svg"),  action: "zoomIn"      },
+                        { icon: Images.url("zoom-out.svg"), action: "zoomOut"     },
+                        { icon: Images.url("zoom-fit.svg"), action: "fitToScreen" }
                     ]
                     Rectangle {
                         width: 60; height: 60
