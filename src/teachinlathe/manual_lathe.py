@@ -3,9 +3,9 @@ from collections import deque
 from enum import Enum, auto
 
 import linuxcnc
-from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
-from teachinlathe.repositories.settings_repository import JOG_SPEED, settings_repository
-from teachinlathe.repositories.status_repository import status_repository
+from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.core.settings_repository import JOG_SPEED, settings_repository
+from teachinlathe.core.status_repository import status_repository
 from teachinlathe.widgets.manual_qml.joystick_state import JoystickState
 
 LINUXCNC_CMD = linuxcnc.command()

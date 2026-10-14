@@ -3,7 +3,7 @@ from datetime import datetime
 
 from PyQt6.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, pyqtSlot
 
-from teachinlathe.date_utils import format_recent_datetime_string
+from teachinlathe.core.date_utils import format_recent_datetime_string
 
 class ProgramListModel(QAbstractListModel):
     ProgramNameRole = Qt.ItemDataRole.UserRole + 1

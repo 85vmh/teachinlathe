@@ -18,7 +18,7 @@ from typing import Optional
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.fixtures import LatheFixturesRepository
-from teachinlathe.repositories.positions_repository import Positions
+from teachinlathe.core.positions_repository import Positions
 from teachinlathe.ui.common.images import IMAGES_DIR
 
 log = logging.getLogger(__name__)

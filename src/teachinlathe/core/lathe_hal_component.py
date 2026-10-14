@@ -1,4 +1,4 @@
-from teachinlathe.repositories.hal_repository import hal_component
+from teachinlathe.core.hal_repository import hal_component
 
 
 class TeachInLatheComponent:

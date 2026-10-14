@@ -19,9 +19,9 @@ from typing import Dict, Optional
 import linuxcnc
 from PyQt6.QtCore import QFileSystemWatcher, QObject, QTimer, pyqtSignal
 
-from .command_repository import command_repository
-from .ini_repository import ini_repository
-from .status_repository import status_repository
+from teachinlathe.core.command_repository import command_repository
+from teachinlathe.core.ini_repository import ini_repository
+from teachinlathe.core.status_repository import status_repository
 
 log = logging.getLogger(__name__)
 

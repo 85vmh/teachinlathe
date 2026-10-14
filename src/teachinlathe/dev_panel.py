@@ -5,7 +5,7 @@ import os
 from PyQt6.QtCore import QObject, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
 from PyQt6.QtQml import QQmlApplicationEngine
 
-from teachinlathe.repositories.hal_repository import hal_component
+from teachinlathe.core.hal_repository import hal_component
 from teachinlathe.ui import QML_IMPORT_DIR
 
 

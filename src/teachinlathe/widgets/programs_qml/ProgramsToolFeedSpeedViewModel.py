@@ -1,7 +1,7 @@
 import linuxcnc
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal
 
-from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 
 
 class ProgramsToolFeedSpeedViewModel(QObject):

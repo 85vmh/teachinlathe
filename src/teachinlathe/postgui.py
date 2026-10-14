@@ -19,7 +19,7 @@ import shlex
 import subprocess
 from typing import Optional
 
-from teachinlathe.repositories.ini_repository import ini_repository
+from teachinlathe.core.ini_repository import ini_repository
 
 log = logging.getLogger(__name__)
 

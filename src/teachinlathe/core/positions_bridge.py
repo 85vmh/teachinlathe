@@ -8,7 +8,7 @@ applied by the QML caller (the fields are in diameter).
 
 from PyQt6.QtCore import QObject, pyqtSlot
 
-from teachinlathe.repositories.positions_repository import Positions
+from teachinlathe.core.positions_repository import Positions
 
 
 class PositionsBridge(QObject):

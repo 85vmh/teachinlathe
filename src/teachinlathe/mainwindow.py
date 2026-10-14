@@ -16,16 +16,16 @@ from PyQt6.QtCore import (Q_ARG, QMetaObject, QObject, Qt, QTimer, QUrl,
 from PyQt6.QtGui import QColor
 from PyQt6.QtQuick import QQuickItem, QQuickView
 
-from teachinlathe.repositories.command_repository import issue_mdi
-from teachinlathe.repositories.machine_repository import machine_repository
-from teachinlathe.repositories.status_repository import status_repository
-from teachinlathe.repositories import ini_repository
+from teachinlathe.core.command_repository import issue_mdi
+from teachinlathe.core.machine_repository import machine_repository
+from teachinlathe.core.status_repository import status_repository
+from teachinlathe.core import ini_repository
 
 from teachinlathe.app_state import AppState
 from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME
 from teachinlathe.dev_panel import DevPanelWindow
 from teachinlathe.fixtures import LatheFixturesRepository
-from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual_lathe import ManualLathe
 from teachinlathe.widgets.app_shell_qml import AppShellBridge
 from teachinlathe.widgets.backplot import register_qml_types as register_backplot_type

@@ -7,7 +7,7 @@ from teachinlathe.widgets.programs_qml.gcode_viewer.GCodeSyntaxHighlighter impor
 
 def load_or_reload_program(path: str) -> None:
     """Open *path*, reloading in place when it is already the open program."""
-    from teachinlathe.repositories.program_repository import program_repository
+    from teachinlathe.core.program_repository import program_repository
 
     program_repository().load_or_reload(path)
 

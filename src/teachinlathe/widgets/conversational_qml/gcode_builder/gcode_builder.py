@@ -104,7 +104,7 @@ def _resolve_previous_tool_change(operations, before_index=None):
 
 
 def _tool_table_path():
-    from teachinlathe.repositories import ini_repository
+    from teachinlathe.core import ini_repository
     return ini_repository().tool_table_file
 
 

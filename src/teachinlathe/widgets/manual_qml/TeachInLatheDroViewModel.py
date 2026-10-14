@@ -1,11 +1,11 @@
 from enum import Enum
 
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
-from teachinlathe.repositories.command_repository import issue_mdi
-from teachinlathe.repositories.status_repository import status_repository
+from teachinlathe.core.command_repository import issue_mdi
+from teachinlathe.core.status_repository import status_repository
 
-from teachinlathe.repositories.positions_repository import Positions
-from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.core.positions_repository import Positions
+from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.machine_limits import MachineLimitsHandler
 
 

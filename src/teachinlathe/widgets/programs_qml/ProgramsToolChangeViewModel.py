@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
-from teachinlathe.repositories.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.widgets.tool_library.tool_entry import ToolType
 from teachinlathe.widgets.tool_library.tool_repository import ToolRepository
 
-from teachinlathe.repositories import ini_repository
+from teachinlathe.core import ini_repository
 
 _TBL_PATH: str = ini_repository().tool_table_file
 

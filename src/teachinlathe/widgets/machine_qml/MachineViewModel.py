@@ -16,9 +16,9 @@ from typing import Optional
 
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
-from teachinlathe.repositories.machine_repository import machine_repository
-from teachinlathe.repositories.status_repository import status_repository
-from teachinlathe.repositories.tools_repository import tools_repository
+from teachinlathe.core.machine_repository import machine_repository
+from teachinlathe.core.status_repository import status_repository
+from teachinlathe.core.tools_repository import tools_repository
 
 log = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QObject, pyqtSignal
-from teachinlathe.repositories import AxisLimits, ini_repository
+from teachinlathe.core import AxisLimits, ini_repository
 
 INI = ini_repository()
 

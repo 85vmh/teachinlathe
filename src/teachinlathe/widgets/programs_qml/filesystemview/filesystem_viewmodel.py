@@ -7,7 +7,7 @@ from PyQt6.QtCore import (
     pyqtProperty, pyqtSignal, pyqtSlot,
 )
 
-from teachinlathe.date_utils import format_recent_timestamp
+from teachinlathe.core.date_utils import format_recent_timestamp
 
 from .data_types import FileSystemEntry, FileSystemLocation, LocationType
 from .usb_monitor import UsbDriveMonitor

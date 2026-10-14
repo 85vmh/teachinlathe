@@ -1,4 +1,4 @@
-"""Repositories: the only layer that talks to LinuxCNC.
+"""The core: the repositories, the only layer that talks to LinuxCNC.
 
 Each repository owns one source of machine truth (the INI file, HAL, the
 status channel, the tool table, ...) and exposes it as plain Python or Qt
@@ -20,7 +20,6 @@ from .settings_repository import (
     SettingSpec, SettingsRepository, get_setting, set_setting, settings_repository,
 )
 from .status_repository import StatusChannel, StatusRepository, status_repository
-from .tool_table_repository import ToolTableRepository, tool_table_repository
 
 __all__ = [
     "Axis",
@@ -37,7 +36,6 @@ __all__ = [
     "SettingsRepository",
     "StatusChannel",
     "StatusRepository",
-    "ToolTableRepository",
     "command_repository",
     "get_setting",
     "hal_component",
@@ -49,6 +47,5 @@ __all__ = [
     "set_setting",
     "settings_repository",
     "status_repository",
-    "tool_table_repository",
     "unload_all",
 ]

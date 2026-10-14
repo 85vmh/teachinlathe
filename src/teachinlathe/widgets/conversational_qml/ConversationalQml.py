@@ -60,7 +60,7 @@ from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramList
 from teachinlathe.widgets.conversational_qml.ThreadingDetailsViewModel import ThreadingDetailsViewModel
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
 from teachinlathe.widgets.programs_qml.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
-from teachinlathe.widgets.positions_bridge import PositionsBridge
+from teachinlathe.core.positions_bridge import PositionsBridge
 from teachinlathe.ui.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 
 
