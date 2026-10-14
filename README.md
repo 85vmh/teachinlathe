@@ -1,32 +1,53 @@
- # VCP Template
+# TeachInLathe
 
-Very basic PyQt6 based Virtual Control Panel for LinuxCNC.
-This is intended as a template that you can use as a base for
-creating your own VCPs.
+A touch-screen control panel for LinuxCNC lathes, written in PyQt6 and QML.
+It covers manual turning (jogging, spindle, teach-in limits), running G-code
+programs with a live backplot, a tool library, and a conversational editor
+that builds G-code from operations filled in on forms.
 
-## Getting Started
+## Install
 
-1) Fork this repository to your github account.
-2) Clone it to your local machine:
-  `git clone https://github.com/USERNAME/REPO.git`
-3) Install with pip under a venv:
-  `pip install -e .`
-5) Edit the files to customize name etc.
-6) Edit the layout in QtDesigner by running:
-  `editvcp myvcp`
+On a Debian machine with LinuxCNC:
 
-## To Copy
+```bash
+./install.sh                  # system-wide, so LinuxCNC finds it on PATH
+./install.sh --ini FILE       # also point that LinuxCNC INI at this panel
+./install.sh --deps-only      # only the apt packages, to run from a checkout
+```
 
-1) Clone the VCP Template:
-  `git clone https://github.com/kcjengr/vcp-template.git`
-2) Run the copy.sh script and give it a new name:
-  `./copy.sh`
+Or build a Debian package with `./build_deb.sh`.
 
-## To Create the Tutorial
+LinuxCNC starts the panel from the INI file:
 
-1) Clone the VCP Template:
-  `git clone https://github.com/kcjengr/vcp-template.git`
-2) Run the tutorial.sh script and give it a new name:
-  `./tutorial.sh`
+```ini
+[DISPLAY]
+DISPLAY = teachinlathe
+PROGRAM_PREFIX = /path/to/programs
+```
 
+Conversational output (`Conversational Gcode`, `Conversational Json`) and the
+DXF import folder (`DXF Profiles`) live under `PROGRAM_PREFIX`.
 
+## Run from a checkout
+
+After `./install.sh --deps-only`, edit the paths at the top of
+`scripts/teachinlathe.sh` (this checkout, the LinuxCNC tree, the INI file) and
+run it. It starts LinuxCNC with the panel straight from `src/`, with nothing
+installed.
+
+## Tests
+
+```bash
+PYTHONPATH=/path/to/linuxcnc/lib/python:src QT_QPA_PLATFORM=offscreen python3 -m pytest tests
+```
+
+## Layout
+
+The package in `src/teachinlathe/` is organised by feature (`manual`,
+`programs`, `conversational`, `tooling`, `machine`), with `core` for the
+LinuxCNC repositories, `app` for the window that wires them together and `ui`
+for shared QML and images. See `CLAUDE.md` for details.
+
+## License
+
+GPL-2.0, see `LICENSE`.

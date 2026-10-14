@@ -60,11 +60,13 @@ from teachinlathe.conversational.ui.ProgramListModel import ProgramListModel
 from teachinlathe.conversational.ui.ThreadingDetailsViewModel import ThreadingDetailsViewModel
 from teachinlathe.conversational.ui.program_loader import load_programs_from_folder
 from teachinlathe.programs.ui.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
+from teachinlathe.core.ini_repository import ini_repository
 from teachinlathe.core.positions_bridge import PositionsBridge
 from teachinlathe.ui.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 
-
-DXF_PROFILE_FOLDER = "/home/cnc/Work/teachinlathe/dxf_profiles"
+#: Where the DXF import screen looks for drawings, under [DISPLAY] PROGRAM_PREFIX
+#: beside the conversational G-code and JSON folders.
+DXF_PROFILE_SUBFOLDER = "DXF Profiles"
 
 
 class ConversationalQml(QObject):
@@ -109,9 +111,10 @@ class ConversationalQml(QObject):
         self.threadingDetailsViewModel = ThreadingDetailsViewModel(self)
         self._context.setContextProperty("threadingDetailsViewModel", self.threadingDetailsViewModel)
 
-        os.makedirs(DXF_PROFILE_FOLDER, exist_ok=True)
+        dxf_profile_folder = os.path.join(ini_repository().program_prefix, DXF_PROFILE_SUBFOLDER)
+        os.makedirs(dxf_profile_folder, exist_ok=True)
         self.dxfProfileFileSystemViewModel = FileSystemViewModel(
-            [FileSystemLocation("DXF Profiles", DXF_PROFILE_FOLDER, LocationType.HOME)],
+            [FileSystemLocation("DXF Profiles", dxf_profile_folder, LocationType.HOME)],
             self,
             file_extensions=(".dxf",),
             file_filter_label="DXF",
