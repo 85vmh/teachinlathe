@@ -5,7 +5,7 @@ because that is the shape the tool table view reads, and reshaping a view that
 is due to be rewritten in QML would be work thrown away twice.
 
 Parsing and writing the ``.tbl`` itself is not reimplemented here: it already
-lives in ``widgets.tool_library.tool_table_file``, and one parser for one file
+lives in ``tooling.store.tool_table_file``, and one parser for one file
 format is enough.
 """
 

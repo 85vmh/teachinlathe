@@ -4,7 +4,7 @@ Dispatches to the shared profiling/ strategies based on ProfilingType (OD/ID)
 and PassType (AXIAL / RADIAL / DIAGONAL_*).
 """
 
-from teachinlathe.conversational.data_types import PassType, ProfileRoughingConfig, ProfilingType
+from teachinlathe.conversational.model.data_types import PassType, ProfileRoughingConfig, ProfilingType
 
 from ..helpers.spindle import build_spindle_gcode
 from ..helpers.utils import get_float

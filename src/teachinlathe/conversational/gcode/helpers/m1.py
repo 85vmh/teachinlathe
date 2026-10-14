@@ -1,4 +1,4 @@
-from teachinlathe.conversational.data_types import M1Parameters, PredefinedPosition
+from teachinlathe.conversational.model.data_types import M1Parameters, PredefinedPosition
 
 
 def _inspect_position(value) -> PredefinedPosition:

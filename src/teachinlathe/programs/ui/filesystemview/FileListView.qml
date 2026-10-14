@@ -2,7 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
-import "../../../widgets/conversational_qml"
+import "../../../conversational/ui"
 import common 1.0
 
 // Row 3 — Sortable file list with Name / Size / Modified / Actions columns.

@@ -7,7 +7,7 @@ import "../machine/ui"
 import "../manual/ui"
 import "../programs/ui"
 import "../tooling/ui"
-import "conversational_qml" as Conversational
+import "../conversational/ui" as Conversational
 
 /*
  * The whole window.

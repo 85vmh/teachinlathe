@@ -30,7 +30,7 @@ from teachinlathe.manual.logic.manual_lathe import ManualLathe
 from teachinlathe.widgets.app_shell_qml import AppShellBridge
 from teachinlathe.programs.ui.backplot import register_qml_types as register_backplot_type
 from teachinlathe.programs.ui.backplot import tool_source as backplot_tool_source
-from teachinlathe.widgets.conversational_qml.ConversationalQml import ConversationalQml
+from teachinlathe.conversational.ui.ConversationalQml import ConversationalQml
 from teachinlathe.machine.ui.FixturesViewModel import FixturesViewModel
 from teachinlathe.machine.ui.MachineViewModel import MachineViewModel
 from teachinlathe.manual.ui import ManualTurningViewModel

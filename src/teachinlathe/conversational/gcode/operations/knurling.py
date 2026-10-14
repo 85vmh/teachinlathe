@@ -1,4 +1,4 @@
-from teachinlathe.conversational.data_types import Knurling
+from teachinlathe.conversational.model.data_types import Knurling
 
 from ..config import fmt
 from ..helpers.m1 import inspect_position_int

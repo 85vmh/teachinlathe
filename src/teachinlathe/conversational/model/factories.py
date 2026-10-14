@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 
-from teachinlathe.conversational.data_types import (
+from teachinlathe.conversational.model.data_types import (
     BlendType,
     ChangeTool,
     CuttingParameters,

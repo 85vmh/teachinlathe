@@ -10,13 +10,13 @@ from PyQt6.QtQuick import QQuickItem
 
 LOG = logging.getLogger(__name__)
 
-from teachinlathe.conversational.data_types import (
+from teachinlathe.conversational.model.data_types import (
     AfterLastOperation,
     Program,
     Workpiece,
     operation_types,
 )
-from teachinlathe.conversational.program_commands import (
+from teachinlathe.conversational.model.program_commands import (
     add_profiling_finish,
     create_new_program,
     delete_operation,
@@ -27,9 +27,9 @@ from teachinlathe.conversational.program_commands import (
     move_operation_down,
     move_operation_up,
 )
-from teachinlathe.conversational.program_store import save_program_to_disk
-from teachinlathe.conversational.qml_adapter import build_details_payload, build_operations_model, build_selected_program_summary
-from teachinlathe.conversational.updaters import (
+from teachinlathe.conversational.store.program_store import save_program_to_disk
+from teachinlathe.conversational.model.qml_adapter import build_details_payload, build_operations_model, build_selected_program_summary
+from teachinlathe.conversational.model.updaters import (
     apply_cutting_update,
     apply_define_profile_update,
     apply_define_radial_profile_update,
@@ -56,9 +56,9 @@ from teachinlathe.conversational.updaters import (
     apply_threading_update,
     apply_turnable_operation_update,
 )
-from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
-from teachinlathe.widgets.conversational_qml.ThreadingDetailsViewModel import ThreadingDetailsViewModel
-from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
+from teachinlathe.conversational.ui.ProgramListModel import ProgramListModel
+from teachinlathe.conversational.ui.ThreadingDetailsViewModel import ThreadingDetailsViewModel
+from teachinlathe.conversational.ui.program_loader import load_programs_from_folder
 from teachinlathe.programs.ui.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.core.positions_bridge import PositionsBridge
 from teachinlathe.ui.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
@@ -279,7 +279,7 @@ class ConversationalQml(QObject):
 
     def _resolve_profile_type(self, profile_id, before_index=None):
         """Return the ProfilingType of the DefineProfile with the given id, or None."""
-        from teachinlathe.conversational.data_types import DefineProfile
+        from teachinlathe.conversational.model.data_types import DefineProfile
         prog = self._get_current_program()
         if not prog or not profile_id:
             return None
@@ -301,8 +301,8 @@ class ConversationalQml(QObject):
     @pyqtSlot(str, result="QVariant")
     def previewDxfProfile(self, dxf_file_path):
         try:
-            from teachinlathe.conversational.data_types import DefineProfile
-            from teachinlathe.conversational.dxf_profile_importer import read_dxf_profile
+            from teachinlathe.conversational.model.data_types import DefineProfile
+            from teachinlathe.conversational.store.dxf_profile_importer import read_dxf_profile
 
             op = self._get_current_op(getattr(self, "current_op_index", -1))
             if not isinstance(op, DefineProfile):
@@ -357,7 +357,7 @@ class ConversationalQml(QObject):
             self.model.setProgramAt(row, prog)
             top = self.model.index(row)
             bottom = self.model.index(row)
-            from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel as _PLM
+            from teachinlathe.conversational.ui.ProgramListModel import ProgramListModel as _PLM
             self.model.dataChanged.emit(top, bottom, [_PLM.LastEditDateRole])
 
         self.current_program = prog
@@ -524,7 +524,7 @@ class ConversationalQml(QObject):
                 print("[gcode] showGeneratedProgram failed:", e)
 
     def generate_gcode_for_program(self, program):
-        from .gcode_builder import build_ngc_from_program
+        from teachinlathe.conversational.gcode import build_ngc_from_program
         from teachinlathe import mainwindow as mw
 
         base_dir = getattr(mw, "CONVERSATIONAL_OUTPUT_BASE", None) \
@@ -916,7 +916,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import DefineProfile
+            from teachinlathe.conversational.model.data_types import DefineProfile
             if not isinstance(op, DefineProfile):
                 return
             apply_define_profile_update(op, p)
@@ -929,7 +929,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import DefineRadialProfile
+            from teachinlathe.conversational.model.data_types import DefineRadialProfile
             if not isinstance(op, DefineRadialProfile):
                 return
             apply_define_radial_profile_update(op, p)
@@ -962,7 +962,7 @@ class ConversationalQml(QObject):
     def onUpdateFacing(self, index: int, payload):
         p = self._to_py(payload) or {}
         op = self._get_current_op(index)
-        from teachinlathe.conversational.data_types import Facing
+        from teachinlathe.conversational.model.data_types import Facing
         if not isinstance(op, Facing):
             return
 
@@ -977,7 +977,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import Profiling
+            from teachinlathe.conversational.model.data_types import Profiling
             if not isinstance(op, Profiling):
                 return
 
@@ -993,7 +993,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import Knurling
+            from teachinlathe.conversational.model.data_types import Knurling
             if not isinstance(op, Knurling):
                 return
 
@@ -1010,7 +1010,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import ProfileRoughing
+            from teachinlathe.conversational.model.data_types import ProfileRoughing
             if not isinstance(op, ProfileRoughing):
                 return
             apply_turnable_operation_update(op, p)
@@ -1032,7 +1032,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import ProfileContour
+            from teachinlathe.conversational.model.data_types import ProfileContour
             if not isinstance(op, ProfileContour):
                 return
             apply_turnable_operation_update(op, p)
@@ -1055,7 +1055,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import GrooveRoughing
+            from teachinlathe.conversational.model.data_types import GrooveRoughing
             if not isinstance(op, GrooveRoughing):
                 return
             apply_turnable_operation_update(op, p)
@@ -1074,7 +1074,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import GrooveFinishing
+            from teachinlathe.conversational.model.data_types import GrooveFinishing
             if not isinstance(op, GrooveFinishing):
                 return
             apply_turnable_operation_update(op, p)
@@ -1102,7 +1102,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import Drilling
+            from teachinlathe.conversational.model.data_types import Drilling
             if not isinstance(op, Drilling):
                 return
 
@@ -1118,7 +1118,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import Parting
+            from teachinlathe.conversational.model.data_types import Parting
             if not isinstance(op, Parting):
                 return
 
@@ -1134,7 +1134,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import Tapping
+            from teachinlathe.conversational.model.data_types import Tapping
             if not isinstance(op, Tapping):
                 return
 
@@ -1150,7 +1150,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import Threading
+            from teachinlathe.conversational.model.data_types import Threading
             if not isinstance(op, Threading):
                 return
 
@@ -1165,7 +1165,7 @@ class ConversationalQml(QObject):
         try:
             p = self._to_py(payload) or {}
             op = self._get_current_op(index)
-            from teachinlathe.conversational.data_types import G33Threading
+            from teachinlathe.conversational.model.data_types import G33Threading
             if not isinstance(op, G33Threading):
                 return
 
@@ -1256,8 +1256,8 @@ class ConversationalQml(QObject):
             return
 
         try:
-            from teachinlathe.conversational.data_types import DefineProfile
-            from teachinlathe.conversational.dxf_profile_importer import read_dxf_profile
+            from teachinlathe.conversational.model.data_types import DefineProfile
+            from teachinlathe.conversational.store.dxf_profile_importer import read_dxf_profile
             if not isinstance(op, DefineProfile):
                 return
             profile_type = getattr(op, "profile_type", "od")

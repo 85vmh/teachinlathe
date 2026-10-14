@@ -1,5 +1,5 @@
-from teachinlathe.conversational.data_types import G33Threading, ThreadLocation
-from teachinlathe.conversational.g33_threading_pass_planner import plan_g33_threading_passes
+from teachinlathe.conversational.model.data_types import G33Threading, ThreadLocation
+from teachinlathe.conversational.gcode.g33_threading_pass_planner import plan_g33_threading_passes
 
 from ..config import fmt
 from ..helpers.m1 import inspect_position_int

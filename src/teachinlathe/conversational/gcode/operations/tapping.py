@@ -1,6 +1,6 @@
 import math
 
-from teachinlathe.conversational.data_types import Tapping
+from teachinlathe.conversational.model.data_types import Tapping
 
 from ..config import fmt
 from ..helpers.m1 import inspect_position_int

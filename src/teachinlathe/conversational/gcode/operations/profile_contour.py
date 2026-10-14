@@ -1,4 +1,4 @@
-from teachinlathe.conversational.data_types import ProfileContourConfig, ProfilingType
+from teachinlathe.conversational.model.data_types import ProfileContourConfig, ProfilingType
 
 from ..helpers.spindle import build_spindle_gcode
 from ..helpers.utils import get_float

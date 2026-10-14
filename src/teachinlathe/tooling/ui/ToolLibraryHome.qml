@@ -1,6 +1,6 @@
 import QtQuick 2.15
 import theme 1.0
-import "../../widgets/conversational_qml"
+import "../../conversational/ui"
 
 // The Tool Library's first screen: the tool holders on the left, the
 // cutting tools that can be clamped in them on the right.

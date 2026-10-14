@@ -31,7 +31,7 @@ lead-in and Z lead-out.
 import math
 import os
 
-from teachinlathe.conversational.data_types import PassType
+from teachinlathe.conversational.model.data_types import PassType
 
 from ...config import fmt
 from .geometry import find_45deg_profile_intersection

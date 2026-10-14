@@ -1,4 +1,4 @@
-from teachinlathe.conversational.data_types import (
+from teachinlathe.conversational.model.data_types import (
     BlendType,
     DefineRadialProfile,
     GrooveFinishingStrategy,

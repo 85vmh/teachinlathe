@@ -1,4 +1,4 @@
-from teachinlathe.conversational.data_types import SpindleMode, SpindleParameters
+from teachinlathe.conversational.model.data_types import SpindleMode, SpindleParameters
 
 from .utils import get_int
 

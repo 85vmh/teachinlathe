@@ -1,7 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "../../widgets/conversational_qml"
+import "../../conversational/ui"
 import "../../tooling/ui"
 import theme 1.0
 

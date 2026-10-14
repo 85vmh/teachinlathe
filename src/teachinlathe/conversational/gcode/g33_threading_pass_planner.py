@@ -2,7 +2,7 @@ import math
 from dataclasses import dataclass
 from typing import List, Union
 
-from teachinlathe.conversational.data_types import G33ThreadPassType, ThreadLocation
+from teachinlathe.conversational.model.data_types import G33ThreadPassType, ThreadLocation
 
 
 ThreadLocationInput = Union[ThreadLocation, str]

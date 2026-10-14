@@ -2,7 +2,7 @@ import json
 import os
 from typing import List
 
-from teachinlathe.conversational.data_types import Program
+from teachinlathe.conversational.model.data_types import Program
 
 
 def load_programs_from_folder(folder_path: str) -> List[Program]:

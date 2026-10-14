@@ -2,13 +2,13 @@ import json
 import os
 from datetime import datetime
 
-from teachinlathe.conversational.data_types import (
+from teachinlathe.conversational.model.data_types import (
     AfterLastOperation,
     DefineProfile,
     DefineRadialProfile,
     Program,
 )
-from teachinlathe.conversational.qml_adapter import display_name_for_op
+from teachinlathe.conversational.model.qml_adapter import display_name_for_op
 from teachinlathe.tooling.store.tool_entry import ToolType, make_tool
 from teachinlathe.tooling.store.tool_extras_store import ToolExtrasStore
 from teachinlathe.tooling.store.tool_table_file import parse_tbl

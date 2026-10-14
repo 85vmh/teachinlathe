@@ -1,4 +1,4 @@
-from teachinlathe.conversational.data_types import MoveSequence, PositionAt
+from teachinlathe.conversational.model.data_types import MoveSequence, PositionAt
 
 
 def _fmt(value):

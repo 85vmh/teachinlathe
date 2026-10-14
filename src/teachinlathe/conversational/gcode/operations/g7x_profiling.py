@@ -1,4 +1,4 @@
-from teachinlathe.conversational.data_types import Profiling, Strategy
+from teachinlathe.conversational.model.data_types import Profiling, Strategy
 
 from ..config import fmt
 from ..helpers.spindle import build_spindle_gcode

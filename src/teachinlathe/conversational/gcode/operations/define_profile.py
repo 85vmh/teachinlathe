@@ -1,6 +1,6 @@
 import math
 
-from teachinlathe.conversational.data_types import ArcTo, BlendType, DefineProfile, LineTo, StartPoint
+from teachinlathe.conversational.model.data_types import ArcTo, BlendType, DefineProfile, LineTo, StartPoint
 
 from ..config import fmt as _f
 

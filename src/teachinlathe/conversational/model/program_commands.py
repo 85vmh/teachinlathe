@@ -4,8 +4,8 @@ import re
 import time
 from datetime import datetime
 
-from teachinlathe.conversational.data_types import Profiling, Program, Strategy
-from teachinlathe.conversational.factories import make_default_operation, make_new_program
+from teachinlathe.conversational.model.data_types import Profiling, Program, Strategy
+from teachinlathe.conversational.model.factories import make_default_operation, make_new_program
 
 
 def renumber_operations(operations):
@@ -16,7 +16,7 @@ def renumber_operations(operations):
 def insert_default_operation(program, op_type: str, insert_index: int):
     new_op = make_default_operation(op_type)
     if op_type in ("defineProfile", "importDxfProfile"):
-        from teachinlathe.conversational.data_types import DefineProfile
+        from teachinlathe.conversational.model.data_types import DefineProfile
         existing_ids = [op.profile_id for op in program.operations if isinstance(op, DefineProfile)]
         new_op.profile_id = (max(existing_ids) + 1) if existing_ids else 1
     ops = program.operations
