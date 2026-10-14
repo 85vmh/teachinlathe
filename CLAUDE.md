@@ -27,19 +27,32 @@ There is no test suite and no linter configured for this project.
 - **Python 3.11**, **PyQt6** (Qt 6), **QML** (Qt declarative UI)
 - **LinuxCNC HAL** — hardware abstraction layer for machine I/O pins
 
-### Application Layers
+### Package Layout
+
+The package (`src/teachinlathe/`) is organised by feature. Each feature splits into
+`model/` (domain), `store/` (files on disk), `ui/` (QML + ViewModels) as it needs them.
 
 ```
-mainwindow.py             → Top-level window; wires all tabs together
-lathe_hal_component.py    → Singleton; owns all HAL pin definitions
-manual_lathe.py           → Manual jog/spindle logic
-widgets/conversational_qml/ConversationalQml.py  → QML conversational editor
-conversational/data_types.py                     → Domain model (dataclasses)
+app/             → mainwindow.py (wires all tabs together), AppRoot.qml, app shell, dev panel, logging
+core/            → repositories: the only layer that talks to LinuxCNC (HAL, INI, status, commands);
+                   lathe_hal_component.py is the singleton owning all HAL pin definitions
+manual/          → logic/ (manual_lathe.py: jog/spindle, joystick, teach-in limits) + ui/
+machine/         → model/ (fixtures) + ui/
+tooling/         → model/ (tool types, catalogs) + store/ (tool library JSON, .tbl) + ui/ (+ ui/shapes)
+programs/        → model/ (program runtime) + ui/ (file browser, G-code viewer, backplot/)
+conversational/  → model/ (data_types.py: domain dataclasses) + store/ + gcode/ (G-code generation)
+                   + ui/ (ConversationalQml.py, the QML editor, profile definition canvases)
+ui/              → shared QML modules: theme, touchable_input, common (Images singleton + images/)
 ```
+
+Shared QML is imported by module name (`import theme 1.0`, `import touchable_input 1.0`,
+`import common 1.0`); `teachinlathe.ui.QML_IMPORT_DIR` is on every engine's import path.
+All images live in `ui/common/images/` and are referenced as `Images.url("name.svg")` in QML or
+through `teachinlathe.ui.common.images` in Python — never by a relative path.
 
 ### Conversational Module Data Flow
 
-The domain model is a hierarchy of Python dataclasses (`conversational/data_types.py`):
+The domain model is a hierarchy of Python dataclasses (`conversational/model/data_types.py`):
 
 ```
 Program → Header (Workpiece) + List[Operation]
@@ -70,9 +83,9 @@ Data flow for edits:
 
 ### HAL Component
 
-`TeachInLatheComponent` is a singleton. All HAL pins (joystick axes, spindle direction, tool-change handshake, axis limits, etc.) are defined there. `mainwindow.py` registers listener callbacks on these pins; `manual_lathe.py` uses them to drive jog commands.
+`TeachInLatheComponent` is a singleton. All HAL pins (joystick axes, spindle direction, tool-change handshake, axis limits, etc.) are defined there. `app/mainwindow.py` registers listener callbacks on these pins; `manual/logic/manual_lathe.py` uses them to drive jog commands.
 
-### QML File Conventions
+### QML File Conventions (conversational/ui)
 
 - `Root.qml` — navigation shell
 - `MainScreen.qml` — program list
@@ -86,8 +99,8 @@ Every `*DetailsView.qml` emits a signal when the user changes a value. The corre
 
 ### Adding a New Operation Type
 
-1. Add a dataclass in `conversational/data_types.py` (subclass `TurnableOperation`)
+1. Add a dataclass in `conversational/model/data_types.py` (subclass `TurnableOperation`)
 2. Register it in `operation_types` dict
-3. Create `<Op>DetailsView.qml` and any `<Op>Parameters.qml` reusable components
+3. Create `<Op>DetailsView.qml` and any `<Op>Parameters.qml` reusable components in `conversational/ui/`, and its generator in `conversational/gcode/operations/`
 4. Add the signal/slot pair in `ConversationalQml._hook_screen_item()` and implement the slot
 5. Wire the new operation into `ChildScreen.qml`

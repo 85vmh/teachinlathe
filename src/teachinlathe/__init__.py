@@ -43,8 +43,8 @@ from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QGuiApplication, QSurfaceFormat
 from PyQt6.QtQuick import QQuickWindow, QSGRendererInterface
 
-from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
-from teachinlathe.logging_setup import configure as configure_logging
+from teachinlathe.app.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_ID
+from teachinlathe.app.logging_setup import configure as configure_logging
 
 log = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ def main(argv=None):
     wake.start(200)
     wake.timeout.connect(lambda: None)
 
-    from teachinlathe.mainwindow import MyMainWindow
+    from teachinlathe.app.mainwindow import MyMainWindow
 
     if stopping:
         log.info("interrupted while starting up")
@@ -157,7 +157,7 @@ def main(argv=None):
     # to its pins. Queued so they run once the loop is up and the window is on
     # screen, as Axis and QtVCP do.
     def load_postgui():
-        from teachinlathe.postgui import run_postgui
+        from teachinlathe.app.postgui import run_postgui
         error = run_postgui()
         if error:
             log.error("%s", error)

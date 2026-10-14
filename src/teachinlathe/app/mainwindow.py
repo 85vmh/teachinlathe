@@ -21,13 +21,13 @@ from teachinlathe.core.machine_repository import machine_repository
 from teachinlathe.core.status_repository import status_repository
 from teachinlathe.core import ini_repository
 
-from teachinlathe.app_state import AppState
-from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME
-from teachinlathe.dev_panel import DevPanelWindow
+from teachinlathe.app.app_state import AppState
+from teachinlathe.app.app_identity import APPLICATION_DISPLAY_NAME
+from teachinlathe.app.dev_panel import DevPanelWindow
 from teachinlathe.machine.model.fixtures import LatheFixturesRepository
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual.logic.manual_lathe import ManualLathe
-from teachinlathe.widgets.app_shell_qml import AppShellBridge
+from teachinlathe.app.app_shell_qml import AppShellBridge
 from teachinlathe.programs.ui.backplot import register_qml_types as register_backplot_type
 from teachinlathe.programs.ui.backplot import tool_source as backplot_tool_source
 from teachinlathe.conversational.ui.ConversationalQml import ConversationalQml
@@ -56,7 +56,7 @@ CONVERSATIONAL_OUTPUT_BASE = PROGRAM_PREFIX
 CONVERSATIONAL_GCODE_BASE = CONVERSATIONAL_OUTPUT_BASE
 CONVERSATIONAL_JSON_BASE = CONVERSATIONAL_OUTPUT_BASE
 
-QML_DIR = os.path.join(os.path.dirname(__file__), "widgets")
+QML_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class MainTabs(Enum):

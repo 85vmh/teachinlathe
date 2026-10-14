@@ -525,7 +525,7 @@ class ConversationalQml(QObject):
 
     def generate_gcode_for_program(self, program):
         from teachinlathe.conversational.gcode import build_ngc_from_program
-        from teachinlathe import mainwindow as mw
+        from teachinlathe.app import mainwindow as mw
 
         base_dir = getattr(mw, "CONVERSATIONAL_OUTPUT_BASE", None) \
             or getattr(mw, "CONVERSATIONAL_GCODE_BASE", None) \

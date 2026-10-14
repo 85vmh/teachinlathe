@@ -1,6 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
-import "../../widgets/app_shell_qml" as Shell
+import "../../app/app_shell_qml" as Shell
 import theme 1.0
 
 // The row of LinuxCNC diagnostic utilities, shown on both machine screens.

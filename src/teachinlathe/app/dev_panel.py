@@ -125,7 +125,7 @@ class DevPanelWindow(QObject):
         self._view_model = DevPanelViewModel(self)
         self._root_window = None
 
-        qml_dir = os.path.join(os.path.dirname(__file__), "widgets", "dev_panel_qml")
+        qml_dir = os.path.join(os.path.dirname(__file__), "dev_panel_qml")
         self._engine = QQmlApplicationEngine(self)
         self._engine.addImportPath(QML_IMPORT_DIR)
         self._engine.rootContext().setContextProperty("devPanelViewModel", self._view_model)

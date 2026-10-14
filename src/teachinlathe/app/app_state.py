@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
-from teachinlathe.app_identity import MACHINE_NAME
+from teachinlathe.app.app_identity import MACHINE_NAME
 from teachinlathe.core.command_repository import issue_mdi
 from teachinlathe.core.status_repository import status_repository
 
