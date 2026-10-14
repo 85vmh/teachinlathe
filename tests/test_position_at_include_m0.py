@@ -8,7 +8,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from teachinlathe.conversational.data_types import (
+from teachinlathe.conversational.model.data_types import (
     MoveSequence,
     PositionAt,
     PositionDetails,
@@ -18,9 +18,8 @@ POSITION_AT_GENERATOR = (
     ROOT
     / "src"
     / "teachinlathe"
-    / "widgets"
-    / "conversational_qml"
-    / "gcode_builder"
+    / "conversational"
+    / "gcode"
     / "operations"
     / "position_at.py"
 )

@@ -2,8 +2,8 @@ import math
 
 import pytest
 
-from teachinlathe.conversational.data_types import DefineProfile, ImportDxfProfile
-from teachinlathe.conversational.dxf_profile_importer import (
+from teachinlathe.conversational.model.data_types import DefineProfile, ImportDxfProfile
+from teachinlathe.conversational.store.dxf_profile_importer import (
     DxfProfileImportError,
     ProfilePoint,
     ProfileSegment,

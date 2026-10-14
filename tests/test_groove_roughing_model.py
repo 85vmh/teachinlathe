@@ -7,9 +7,9 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from teachinlathe.conversational.data_types import GrooveRoughing, Operation
-from teachinlathe.conversational.factories import make_default_operation
-from teachinlathe.conversational.qml_adapter import display_name_for_op
+from teachinlathe.conversational.model.data_types import GrooveRoughing, Operation
+from teachinlathe.conversational.model.factories import make_default_operation
+from teachinlathe.conversational.model.qml_adapter import display_name_for_op
 
 
 def test_groove_roughing_default_roundtrip_and_json_shape():

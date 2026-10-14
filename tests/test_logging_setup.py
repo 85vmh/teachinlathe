@@ -17,7 +17,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from teachinlathe import logging_setup  # noqa: E402
+from teachinlathe.app import logging_setup  # noqa: E402
 
 
 @pytest.fixture

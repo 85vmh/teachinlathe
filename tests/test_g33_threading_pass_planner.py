@@ -10,8 +10,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from teachinlathe.conversational.data_types import G33ThreadPassType  # noqa: E402
-from teachinlathe.conversational.g33_threading_pass_planner import plan_g33_threading_passes  # noqa: E402
+from teachinlathe.conversational.model.data_types import G33ThreadPassType  # noqa: E402
+from teachinlathe.conversational.gcode.g33_threading_pass_planner import plan_g33_threading_passes  # noqa: E402
 
 
 def _plan(**overrides):

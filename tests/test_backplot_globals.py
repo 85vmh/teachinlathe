@@ -32,10 +32,10 @@ pytest.importorskip(
     "rs274.glcanon_scene",
     reason="needs a LinuxCNC with the split-out preview renderer")
 
-BACKPLOT = SRC / "teachinlathe" / "widgets" / "backplot"
+BACKPLOT = SRC / "teachinlathe" / "programs" / "ui" / "backplot"
 
 MODULES = sorted(
-    "teachinlathe.widgets.backplot."
+    "teachinlathe.programs.ui.backplot."
     + str(path.relative_to(BACKPLOT).with_suffix("")).replace("/", ".")
     for path in BACKPLOT.rglob("*.py")
     if path.name != "__init__.py"

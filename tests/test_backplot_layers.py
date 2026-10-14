@@ -27,7 +27,7 @@ glcanon_scene = pytest.importorskip(
     "rs274.glcanon_scene",
     reason="needs a LinuxCNC with the split-out preview renderer")
 
-from teachinlathe.widgets.backplot.lathe_backplot_item import (  # noqa: E402
+from teachinlathe.programs.ui.backplot.lathe_backplot_item import (  # noqa: E402
     STATIC_MAX_AGE_S, LatheBackplotCanon)
 
 
@@ -35,7 +35,7 @@ from teachinlathe.widgets.backplot.lathe_backplot_item import (  # noqa: E402
 
 def scene_with_actors():
     """A real preview scene with our actors installed into it."""
-    from teachinlathe.widgets.backplot.actors import scene as our_scene
+    from teachinlathe.programs.ui.backplot.actors import scene as our_scene
 
     scene = glcanon_scene.PreviewScene()
 
@@ -327,7 +327,7 @@ def test_the_layer_can_be_turned_off_without_editing_anything():
     """Its failures are silent by nature - an old picture or none - so there
     has to be a way back to a working plot that is not an edit and a restart.
     """
-    from teachinlathe.widgets.backplot import lathe_backplot_item as module
+    from teachinlathe.programs.ui.backplot import lathe_backplot_item as module
 
     assert isinstance(module.STATIC_LAYER, bool)
     body = source_of(LatheBackplotCanon.redraw)

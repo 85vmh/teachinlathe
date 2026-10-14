@@ -18,11 +18,11 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from teachinlathe.conversational.data_types import (  # noqa: E402
+from teachinlathe.conversational.model.data_types import (  # noqa: E402
     CuttingParameters, Facing, GeometryParameters, M1Parameters,
     PredefinedPosition, SpindleMode, SpindleParameters,
 )
-from teachinlathe.widgets.conversational_qml.gcode_builder.operations.facing \
+from teachinlathe.conversational.gcode.operations.facing \
     import generate_facing_gcode  # noqa: E402
 
 SUBROUTINE = ROOT / "subroutines" / "facing.ngc"

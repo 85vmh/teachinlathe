@@ -17,9 +17,12 @@ teachinlathe --ini=/path/to/config.ini
 
 # Build Debian package
 ./build_deb.sh
+
+# Run the tests (pytest; needs LinuxCNC's Python modules on the path)
+PYTHONPATH=/path/to/linuxcnc/lib/python:src QT_QPA_PLATFORM=offscreen python3 -m pytest tests
 ```
 
-There is no test suite and no linter configured for this project.
+There is no linter configured for this project.
 
 ## Architecture
 

@@ -13,15 +13,15 @@ if str(SRC) not in sys.path:
 
 from PyQt6.QtCore import QCoreApplication, Qt  # noqa: E402
 
-from teachinlathe.tooling.data_types import (  # noqa: E402
+from teachinlathe.tooling.model.data_types import (  # noqa: E402
     BladeTool, BoringTool, CuttingTool, CuttingToolType, DrillingTool,
     HolderOrientation, ReamingTool, SpindleDirection, TappingTool, ThreadingTool,
     ToolHolder, TurningTool, TwistDirection, ZOffsetPlace, from_json, to_json,
 )
-from teachinlathe.tooling.tool_library_store import (  # noqa: E402
+from teachinlathe.tooling.store.tool_library_store import (  # noqa: E402
     CUTTING_TOOLS_FILE, TOOL_HOLDERS_FILE, ToolLibraryStore,
 )
-from teachinlathe.widgets.tools_qml.tool_library_models import (  # noqa: E402
+from teachinlathe.tooling.ui.tool_library_models import (  # noqa: E402
     CuttingToolTreeModel, ToolHolderListModel,
 )
 

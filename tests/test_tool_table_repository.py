@@ -15,8 +15,8 @@ if str(SRC) not in sys.path:
 import linuxcnc  # noqa: E402
 from PyQt6.QtCore import QCoreApplication  # noqa: E402
 
-from teachinlathe.repositories.status_repository import StatusRepository  # noqa: E402
-from teachinlathe.repositories.tool_table_repository import (  # noqa: E402
+from teachinlathe.core.status_repository import StatusRepository  # noqa: E402
+from teachinlathe.tooling.store.tool_table_repository import (  # noqa: E402
     NO_TOOL, ToolTableRepository,
 )
 

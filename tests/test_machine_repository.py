@@ -19,10 +19,10 @@ if str(SRC) not in sys.path:
 import linuxcnc  # noqa: E402
 from PyQt6.QtCore import QCoreApplication  # noqa: E402
 
-from teachinlathe.repositories.machine_repository import (  # noqa: E402
+from teachinlathe.core.machine_repository import (  # noqa: E402
     ALL_JOINTS, MachineRepository,
 )
-from teachinlathe.repositories.status_repository import StatusRepository  # noqa: E402
+from teachinlathe.core.status_repository import StatusRepository  # noqa: E402
 
 
 class FakeStat:
@@ -237,8 +237,8 @@ def test_homing_is_allowed_once_the_machine_is_on(repo):
 # -- the ready / not-ready rule --------------------------------------------
 
 def machine_view_model(repo_result):
-    from teachinlathe.repositories.tools_repository import ToolsRepository
-    from teachinlathe.widgets.machine_qml.MachineViewModel import MachineViewModel
+    from teachinlathe.core.tools_repository import ToolsRepository
+    from teachinlathe.machine.ui.MachineViewModel import MachineViewModel
     r, stat, status, _, _ = repo_result
     return MachineViewModel(machine=r, status=status, tools=ToolsRepository()), stat, status
 

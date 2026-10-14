@@ -1,7 +1,7 @@
 """The insert geometry port, checked against the QML it was ported from.
 
-``widgets/backplot/actors/inserts.py`` is a second implementation of
-``widgets/tool_shapes/TurningInsertBase.qml``. Both stay: the QML is what the
+``programs/ui/backplot/actors/inserts.py`` is a second implementation of
+``tooling/ui/shapes/TurningInsertBase.qml``. Both stay: the QML is what the
 tool list renders, and the Python is what the backplot draws into its
 framebuffer, which cannot host a QML Canvas. Two implementations of one set of
 rules drift, so this is what stops them.
@@ -23,8 +23,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from teachinlathe.widgets.backplot.actors import inserts  # noqa: E402
-from teachinlathe.widgets.backplot.actors import geometry  # noqa: E402
+from teachinlathe.programs.ui.backplot.actors import inserts  # noqa: E402
+from teachinlathe.programs.ui.backplot.actors import geometry  # noqa: E402
 
 TOLERANCE = 1e-9
 

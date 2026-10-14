@@ -22,11 +22,11 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from teachinlathe.widgets.backplot.actors import inserts  # noqa: E402
-from teachinlathe.widgets.backplot.actors.insert_tool import (  # noqa: E402
+from teachinlathe.programs.ui.backplot.actors import inserts  # noqa: E402
+from teachinlathe.programs.ui.backplot.actors.insert_tool import (  # noqa: E402
     _offset, _rotate, _to_plane, turn_angle,
 )
-from teachinlathe.widgets.backplot.actors.units import to_mm  # noqa: E402
+from teachinlathe.programs.ui.backplot.actors.units import to_mm  # noqa: E402
 
 #: Upstream's ``ToolPart.LATHE_SHAPES``, transcribed. The test states what it
 #: expects of orientation rather than importing it, so a change upstream shows

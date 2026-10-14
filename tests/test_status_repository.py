@@ -14,7 +14,7 @@ if str(SRC) not in sys.path:
 
 from PyQt6.QtCore import QCoreApplication  # noqa: E402
 
-from teachinlathe.repositories.status_repository import (  # noqa: E402
+from teachinlathe.core.status_repository import (  # noqa: E402
     StatusChannel, StatusRepository,
 )
 
@@ -352,7 +352,7 @@ def test_a_failing_poll_is_logged_once_and_again_on_recovery(repo, caplog):
     r = repo(stat)
 
     with caplog.at_level(logging.ERROR,
-                         logger="teachinlathe.repositories.status_repository"):
+                         logger="teachinlathe.core.status_repository"):
         for _ in range(10):
             r.poll()
 
@@ -364,7 +364,7 @@ def test_a_failing_poll_is_logged_once_and_again_on_recovery(repo, caplog):
 def test_recovery_is_reported_and_then_it_stays_quiet(repo, caplog):
     stat = BrokenStat(task_mode=1)
     r = repo(stat)
-    logger_name = "teachinlathe.repositories.status_repository"
+    logger_name = "teachinlathe.core.status_repository"
 
     with caplog.at_level(logging.INFO, logger=logger_name):
         r.poll()

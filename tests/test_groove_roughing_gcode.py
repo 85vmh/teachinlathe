@@ -1,6 +1,5 @@
 import sys
 import os
-import types
 from pathlib import Path
 
 
@@ -10,17 +9,7 @@ os.environ["HOME"] = "/tmp"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-widgets_pkg = types.ModuleType("teachinlathe.widgets")
-widgets_pkg.__path__ = [str(SRC / "teachinlathe" / "widgets")]
-sys.modules.setdefault("teachinlathe.widgets", widgets_pkg)
-
-conversational_qml_pkg = types.ModuleType("teachinlathe.widgets.conversational_qml")
-conversational_qml_pkg.__path__ = [
-    str(SRC / "teachinlathe" / "widgets" / "conversational_qml")
-]
-sys.modules.setdefault("teachinlathe.widgets.conversational_qml", conversational_qml_pkg)
-
-from teachinlathe.widgets.conversational_qml.gcode_builder.operations.groove_roughing import (
+from teachinlathe.conversational.gcode.operations.groove_roughing import (
     generate_groove_roughing_gcode,
 )
 

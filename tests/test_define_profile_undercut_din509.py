@@ -8,11 +8,11 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
-BASE = SRC / "teachinlathe" / "widgets" / "conversational_qml" / "gcode_builder"
+BASE = SRC / "teachinlathe" / "conversational" / "gcode"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from teachinlathe.conversational.data_types import (  # noqa: E402
+from teachinlathe.conversational.model.data_types import (  # noqa: E402
     BlendType,
     DefineProfile,
     LineTo,

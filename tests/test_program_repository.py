@@ -14,7 +14,7 @@ if str(SRC) not in sys.path:
 import linuxcnc  # noqa: E402
 from PyQt6.QtCore import QCoreApplication  # noqa: E402
 
-from teachinlathe.repositories.program_repository import ProgramRepository  # noqa: E402
+from teachinlathe.core.program_repository import ProgramRepository  # noqa: E402
 
 
 class FakeStat:

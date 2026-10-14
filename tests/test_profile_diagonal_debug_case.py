@@ -5,12 +5,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = ROOT / "src" / "teachinlathe" / "widgets" / "conversational_qml" / "gcode_builder"
+BASE = ROOT / "src" / "teachinlathe" / "conversational" / "gcode"
 CONVERSATIONAL_SRC = ROOT / "src"
 if str(CONVERSATIONAL_SRC) not in sys.path:
     sys.path.insert(0, str(CONVERSATIONAL_SRC))
 
-from teachinlathe.conversational.data_types import PassType
+from teachinlathe.conversational.model.data_types import PassType
 
 
 def _load_diagonal_modules():

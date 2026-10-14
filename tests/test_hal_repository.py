@@ -20,7 +20,7 @@ pytest.importorskip("_hal", reason="LinuxCNC HAL is not available")
 
 from PyQt6.QtCore import QCoreApplication, QEventLoop, QTimer  # noqa: E402
 
-from teachinlathe.repositories import hal_repository as halrepo  # noqa: E402
+from teachinlathe.core import hal_repository as halrepo  # noqa: E402
 
 
 _names = ("teachin_test_%d" % n for n in itertools.count())

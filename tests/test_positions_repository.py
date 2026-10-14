@@ -21,10 +21,10 @@ if str(SRC) not in sys.path:
 
 from PyQt6.QtCore import QCoreApplication  # noqa: E402
 
-from teachinlathe.repositories.positions_repository import (  # noqa: E402
+from teachinlathe.core.positions_repository import (  # noqa: E402
     Axis, Position, Positions,
 )
-from teachinlathe.repositories.status_repository import StatusRepository  # noqa: E402
+from teachinlathe.core.status_repository import StatusRepository  # noqa: E402
 
 UNITS_INCH, UNITS_MM = 1, 2
 
