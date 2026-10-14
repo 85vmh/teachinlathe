@@ -6,7 +6,7 @@ from teachinlathe.core.status_repository import status_repository
 
 from teachinlathe.core.positions_repository import Positions
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
-from teachinlathe.machine_limits import MachineLimitsHandler
+from teachinlathe.manual.logic.machine_limits import MachineLimitsHandler
 
 
 class LimitStatus(Enum):

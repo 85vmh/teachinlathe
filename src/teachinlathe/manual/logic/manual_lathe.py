@@ -6,7 +6,7 @@ import linuxcnc
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.core.settings_repository import JOG_SPEED, settings_repository
 from teachinlathe.core.status_repository import status_repository
-from teachinlathe.widgets.manual_qml.joystick_state import JoystickState
+from teachinlathe.manual.logic.joystick_state import JoystickState
 
 LINUXCNC_CMD = linuxcnc.command()
 STATUS = status_repository()
