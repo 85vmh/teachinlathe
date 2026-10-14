@@ -28,17 +28,17 @@ moved and scaled together with the rest.
 
 import logging
 
-from teachinlathe.widgets.backplot.actors.axis_arrows import AxisArrowsActor
-from teachinlathe.widgets.backplot.actors.axis_letters import AxisLettersActor
-from teachinlathe.widgets.backplot.actors.base import LIB_GOOD, InertActor
-from teachinlathe.widgets.backplot.actors import cutting
-from teachinlathe.widgets.backplot.actors.centerline import CenterlineActor
-from teachinlathe.widgets.backplot.actors.grid import GridActor
-from teachinlathe.widgets.backplot.actors.insert_tool import InsertActor
-from teachinlathe.widgets.backplot.actors.origin import OriginActor
-from teachinlathe.widgets.backplot.actors.rapids import RapidsActor
-from teachinlathe.widgets.backplot.actors.stock import StockActor
-from teachinlathe.widgets.backplot.actors.ticks import TicksActor
+from teachinlathe.programs.ui.backplot.actors.axis_arrows import AxisArrowsActor
+from teachinlathe.programs.ui.backplot.actors.axis_letters import AxisLettersActor
+from teachinlathe.programs.ui.backplot.actors.base import LIB_GOOD, InertActor
+from teachinlathe.programs.ui.backplot.actors import cutting
+from teachinlathe.programs.ui.backplot.actors.centerline import CenterlineActor
+from teachinlathe.programs.ui.backplot.actors.grid import GridActor
+from teachinlathe.programs.ui.backplot.actors.insert_tool import InsertActor
+from teachinlathe.programs.ui.backplot.actors.origin import OriginActor
+from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+from teachinlathe.programs.ui.backplot.actors.stock import StockActor
+from teachinlathe.programs.ui.backplot.actors.ticks import TicksActor
 
 LOG = logging.getLogger(__name__)
 

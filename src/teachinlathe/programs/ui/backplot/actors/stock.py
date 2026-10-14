@@ -17,10 +17,10 @@ stop at and the bar hatches whole.
 
 import math
 
-from teachinlathe.widgets.backplot.actors import (geometry, palette, profile,
+from teachinlathe.programs.ui.backplot.actors import (geometry, palette, profile,
                                                   screen)
-from teachinlathe.widgets.backplot.actors.base import Actor
-from teachinlathe.widgets.backplot.actors.units import mm
+from teachinlathe.programs.ui.backplot.actors.base import Actor
+from teachinlathe.programs.ui.backplot.actors.units import mm
 
 #: Pitch of the hatch lines, in pixels, as the QML spaced them.
 HATCH_PITCH_PX = 12.0

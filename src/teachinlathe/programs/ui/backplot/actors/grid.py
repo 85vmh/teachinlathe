@@ -7,9 +7,9 @@ from the zoom, and sized in diameter on X. Upstream's stays in the scene,
 gated off by its own ``grid_size``, rather than being bent into this.
 """
 
-from teachinlathe.widgets.backplot.actors import palette, screen, stepping
-from teachinlathe.widgets.backplot.actors.base import Actor
-from teachinlathe.widgets.backplot.actors.units import mm, to_mm
+from teachinlathe.programs.ui.backplot.actors import palette, screen, stepping
+from teachinlathe.programs.ui.backplot.actors.base import Actor
+from teachinlathe.programs.ui.backplot.actors.units import mm, to_mm
 
 
 class GridActor(Actor):

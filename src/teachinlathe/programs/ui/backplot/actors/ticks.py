@@ -11,10 +11,10 @@ position - so they are placed by projecting the mark's anchor and then moving
 in pixels, which is also the space the glyph atlas draws in. See ``text``.
 """
 
-from teachinlathe.widgets.backplot.actors import (palette, screen, stepping,
+from teachinlathe.programs.ui.backplot.actors import (palette, screen, stepping,
                                                   text)
-from teachinlathe.widgets.backplot.actors.base import Actor
-from teachinlathe.widgets.backplot.actors.units import mm, to_mm
+from teachinlathe.programs.ui.backplot.actors.base import Actor
+from teachinlathe.programs.ui.backplot.actors.units import mm, to_mm
 
 #: Tick lengths in pixels: the long one for a major or 5 mm mark, the short
 #: one for everything else.

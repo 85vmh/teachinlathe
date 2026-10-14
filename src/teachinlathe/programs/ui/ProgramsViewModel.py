@@ -2,15 +2,15 @@ import os
 
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
-from teachinlathe.widgets.programs_qml.filesystemview.FileSystemBridge import FileSystemBridge, load_or_reload_program
+from teachinlathe.programs.ui.filesystemview.FileSystemBridge import FileSystemBridge, load_or_reload_program
 
-from teachinlathe.data.program_runtime import ProgramRuntimeStore
-from teachinlathe.data.program_stack import ProgramCallStackResolver
-from teachinlathe.data.programs_action_source import ProgramsActionSource
-from teachinlathe.data.programs_screen import ProgramsScreen
-from teachinlathe.data.run_time_tracker import RunTimeTracker
+from teachinlathe.programs.model.program_runtime import ProgramRuntimeStore
+from teachinlathe.programs.model.program_stack import ProgramCallStackResolver
+from teachinlathe.programs.model.programs_action_source import ProgramsActionSource
+from teachinlathe.programs.model.programs_screen import ProgramsScreen
+from teachinlathe.programs.model.run_time_tracker import RunTimeTracker
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
-from teachinlathe.widgets.programs_qml.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
+from teachinlathe.programs.ui.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
 
 Screen = ProgramsScreen
 

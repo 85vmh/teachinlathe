@@ -23,7 +23,7 @@ from PyQt6.QtGui import QColor
 
 from teachinlathe.tooling.model import insert_catalog
 from teachinlathe.tooling.model.data_types import BladeTool, SpindleDirection
-from teachinlathe.widgets.backplot.actors import palette
+from teachinlathe.programs.ui.backplot.actors import palette
 
 #: The drawn blade's length: 10 mm for a 1 mm blade, 20 mm for a 5 mm one,
 #: in a straight line between and held at the ends beyond.

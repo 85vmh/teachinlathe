@@ -32,10 +32,10 @@ from PyQt6.QtOpenGL import (QOpenGLFramebufferObject,
 from PyQt6.QtQml import qmlRegisterType
 from PyQt6.QtQuick import QQuickFramebufferObject
 
-from teachinlathe.widgets.backplot import actors, tool_source, workpiece
-from teachinlathe.widgets.backplot.touch_gestures import ThreeFingerSwipe
-from teachinlathe.widgets.backplot.actors import base as actor_base
-from teachinlathe.widgets.backplot.actors import palette, screen, text
+from teachinlathe.programs.ui.backplot import actors, tool_source, workpiece
+from teachinlathe.programs.ui.backplot.touch_gestures import ThreeFingerSwipe
+from teachinlathe.programs.ui.backplot.actors import base as actor_base
+from teachinlathe.programs.ui.backplot.actors import palette, screen, text
 
 LOG = logging.getLogger(__name__)
 

@@ -23,8 +23,8 @@ and what is highlighted pointing at geometry nobody draws.
 import logging
 from contextlib import contextmanager
 
-from teachinlathe.widgets.backplot.actors import palette
-from teachinlathe.widgets.backplot.actors.base import line_width
+from teachinlathe.programs.ui.backplot.actors import palette
+from teachinlathe.programs.ui.backplot.actors.base import line_width
 
 LOG = logging.getLogger(__name__)
 

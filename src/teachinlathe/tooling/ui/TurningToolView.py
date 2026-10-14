@@ -15,7 +15,7 @@ from PyQt6.QtGui import QColor
 
 from teachinlathe.tooling.model import insert_catalog, tool_angles
 from teachinlathe.tooling.model.data_types import SpindleDirection, TurningTool
-from teachinlathe.widgets.backplot.actors import palette
+from teachinlathe.programs.ui.backplot.actors import palette
 
 
 class TurningToolView(QObject):

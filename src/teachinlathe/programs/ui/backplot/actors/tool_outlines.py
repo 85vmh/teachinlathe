@@ -15,7 +15,7 @@ mirrored and placed on the lathe's XZ plane is the actor's job.
 import math
 from typing import List, NamedTuple, Optional, Tuple
 
-from teachinlathe.widgets.backplot.actors import geometry
+from teachinlathe.programs.ui.backplot.actors import geometry
 
 Point = Tuple[float, float]
 

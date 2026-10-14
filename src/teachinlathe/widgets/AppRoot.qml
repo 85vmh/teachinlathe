@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.15
 import "app_shell_qml"
 import "../machine/ui"
 import "../manual/ui"
-import "programs_qml"
+import "../programs/ui"
 import "../tooling/ui"
 import "conversational_qml" as Conversational
 

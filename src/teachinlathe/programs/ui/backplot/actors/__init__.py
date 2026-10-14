@@ -31,6 +31,6 @@
 ``scene.install(canon)`` is the entry point.
 """
 
-from teachinlathe.widgets.backplot.actors.scene import install
+from teachinlathe.programs.ui.backplot.actors.scene import install
 
 __all__ = ["install"]

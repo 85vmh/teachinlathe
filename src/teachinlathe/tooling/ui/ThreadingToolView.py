@@ -17,7 +17,7 @@ from PyQt6.QtGui import QColor
 
 from teachinlathe.tooling.model import insert_catalog, threading_catalog
 from teachinlathe.tooling.model.data_types import SpindleDirection, ThreadingTool
-from teachinlathe.widgets.backplot.actors import palette
+from teachinlathe.programs.ui.backplot.actors import palette
 
 #: How far ThreadingInsert.qml is turned for each orientation. At 0 its tip
 #: points up (+X), which is orientation 6's: the body below, the tip up.

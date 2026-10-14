@@ -17,7 +17,7 @@ from PyQt6.QtGui import QColor
 
 from teachinlathe.tooling.model import insert_catalog
 from teachinlathe.tooling.model.data_types import DrillingTool, SpindleDirection, TwistDirection
-from teachinlathe.widgets.backplot.actors import palette
+from teachinlathe.programs.ui.backplot.actors import palette
 
 #: Where a drill always sits: on the axis, pointing -Z.
 DRILL_ORIENTATION = 7

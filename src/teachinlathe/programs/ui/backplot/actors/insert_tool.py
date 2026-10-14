@@ -21,10 +21,10 @@ import logging
 import math
 from contextlib import contextmanager
 
-from teachinlathe.widgets.backplot.actors import (geometry, inserts, palette, screen, tool_outlines)
-from teachinlathe.widgets.backplot.actors.base import (Actor, line_width,
+from teachinlathe.programs.ui.backplot.actors import (geometry, inserts, palette, screen, tool_outlines)
+from teachinlathe.programs.ui.backplot.actors.base import (Actor, line_width,
                                                        multisample)
-from teachinlathe.widgets.backplot.actors.units import mm, to_mm
+from teachinlathe.programs.ui.backplot.actors.units import mm, to_mm
 
 LOG = logging.getLogger(__name__)
 

@@ -43,7 +43,7 @@ GLYPH_DEBUG = bool(os.environ.get("TEACHINLATHE_TEXT"))
 try:
     import numpy as np
     from rs274 import glcanon_gl
-    from teachinlathe.widgets.backplot.actors.base import device_pixel_ratio
+    from teachinlathe.programs.ui.backplot.actors.base import device_pixel_ratio
     LIB_GOOD = True
 except ImportError as exc:  # pragma: no cover - depends on the LinuxCNC install
     LOG.error("backplot text: preview modules unavailable: %s", exc)

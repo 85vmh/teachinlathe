@@ -21,8 +21,8 @@ is two numpy indexing steps, and it happens once per program, not per frame.
 import logging
 import math
 
-from teachinlathe.widgets.backplot.actors import geometry, palette, screen
-from teachinlathe.widgets.backplot.actors.base import Actor
+from teachinlathe.programs.ui.backplot.actors import geometry, palette, screen
+from teachinlathe.programs.ui.backplot.actors.base import Actor
 
 LOG = logging.getLogger(__name__)
 

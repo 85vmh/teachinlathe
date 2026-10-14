@@ -2,7 +2,7 @@ import os
 
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, pyqtProperty
 
-from teachinlathe.widgets.programs_qml.gcode_viewer.GCodeSyntaxHighlighter import GCodeSyntaxHighlighter
+from teachinlathe.programs.ui.gcode_viewer.GCodeSyntaxHighlighter import GCodeSyntaxHighlighter
 
 
 def load_or_reload_program(path: str) -> None:

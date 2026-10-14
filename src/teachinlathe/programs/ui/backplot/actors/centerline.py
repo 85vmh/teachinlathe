@@ -9,8 +9,8 @@ Ported from ``ToolpathCanvas.paintAxes()``, which drew exactly this pair
 before drawing the arrows over it.
 """
 
-from teachinlathe.widgets.backplot.actors import geometry, palette, screen
-from teachinlathe.widgets.backplot.actors.base import Actor
+from teachinlathe.programs.ui.backplot.actors import geometry, palette, screen
+from teachinlathe.programs.ui.backplot.actors.base import Actor
 
 
 class CenterlineActor(Actor):

@@ -28,8 +28,8 @@ from teachinlathe.machine.model.fixtures import LatheFixturesRepository
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual.logic.manual_lathe import ManualLathe
 from teachinlathe.widgets.app_shell_qml import AppShellBridge
-from teachinlathe.widgets.backplot import register_qml_types as register_backplot_type
-from teachinlathe.widgets.backplot import tool_source as backplot_tool_source
+from teachinlathe.programs.ui.backplot import register_qml_types as register_backplot_type
+from teachinlathe.programs.ui.backplot import tool_source as backplot_tool_source
 from teachinlathe.widgets.conversational_qml.ConversationalQml import ConversationalQml
 from teachinlathe.machine.ui.FixturesViewModel import FixturesViewModel
 from teachinlathe.machine.ui.MachineViewModel import MachineViewModel
@@ -37,7 +37,7 @@ from teachinlathe.manual.ui import ManualTurningViewModel
 from teachinlathe.manual.ui.TeachInLatheDroViewModel import TeachInLatheDroViewModel
 from teachinlathe.ui.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.ui import QML_IMPORT_DIR
-from teachinlathe.widgets.programs_qml.ProgramsController import ProgramsController
+from teachinlathe.programs.ui.ProgramsController import ProgramsController
 from teachinlathe.tooling.store.tool_table_sync import ToolTableSync
 from teachinlathe.tooling.ui.ManualToolsViewModel import ManualToolsViewModel
 from teachinlathe.tooling.ui.ToolsTabViewModel import ToolsTabViewModel
@@ -239,7 +239,7 @@ class TeachInLatheApp(QObject):
         )
 
     def _buildProgramsController(self):
-        from teachinlathe.widgets.programs_qml.filesystemview import (
+        from teachinlathe.programs.ui.filesystemview import (
             FileSystemLocation, LocationType,
         )
         gcode_folder = os.path.join(CONVERSATIONAL_GCODE_BASE, "Conversational Gcode")

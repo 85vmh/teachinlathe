@@ -59,7 +59,7 @@ from teachinlathe.conversational.updaters import (
 from teachinlathe.widgets.conversational_qml.ProgramListModel import ProgramListModel
 from teachinlathe.widgets.conversational_qml.ThreadingDetailsViewModel import ThreadingDetailsViewModel
 from teachinlathe.widgets.conversational_qml.program_loader import load_programs_from_folder
-from teachinlathe.widgets.programs_qml.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
+from teachinlathe.programs.ui.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.core.positions_bridge import PositionsBridge
 from teachinlathe.ui.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 

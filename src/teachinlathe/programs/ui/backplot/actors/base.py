@@ -20,7 +20,7 @@ Helpers for the two ways an actor puts geometry on screen - ``stroke`` and
 import logging
 from contextlib import contextmanager
 
-from teachinlathe.widgets.backplot.actors import palette
+from teachinlathe.programs.ui.backplot.actors import palette
 
 LOG = logging.getLogger(__name__)
 

@@ -16,7 +16,7 @@ from PyQt6.QtGui import QColor
 
 from teachinlathe.tooling.model import insert_catalog
 from teachinlathe.tooling.model.data_types import ReamingTool, SpindleDirection
-from teachinlathe.widgets.backplot.actors import palette
+from teachinlathe.programs.ui.backplot.actors import palette
 
 #: Where a reamer always sits: on the axis, pointing -Z.
 REAMER_ORIENTATION = 7

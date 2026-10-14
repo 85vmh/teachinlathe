@@ -11,12 +11,12 @@ import os
 
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
-from teachinlathe.data.programs_screen import ProgramsScreen, ProgramsScreenEnum
-from teachinlathe.widgets.programs_qml.filesystemview import FileSystemViewModel
-from teachinlathe.widgets.programs_qml.ProgramsDroViewModel import ProgramsDroViewModel
-from teachinlathe.widgets.programs_qml.ProgramsToolFeedSpeedViewModel import \
+from teachinlathe.programs.model.programs_screen import ProgramsScreen, ProgramsScreenEnum
+from teachinlathe.programs.ui.filesystemview import FileSystemViewModel
+from teachinlathe.programs.ui.ProgramsDroViewModel import ProgramsDroViewModel
+from teachinlathe.programs.ui.ProgramsToolFeedSpeedViewModel import \
     ProgramsToolFeedSpeedViewModel
-from teachinlathe.widgets.programs_qml.ProgramsViewModel import ProgramsViewModel
+from teachinlathe.programs.ui.ProgramsViewModel import ProgramsViewModel
 
 LOG = logging.getLogger(__name__)
 

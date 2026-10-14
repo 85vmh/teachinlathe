@@ -1,8 +1,8 @@
 """The X and Z arrows: a shaft and a solid head, one per axis."""
 
-from teachinlathe.widgets.backplot.actors import (geometry, palette, screen,
+from teachinlathe.programs.ui.backplot.actors import (geometry, palette, screen,
                                                   sizing)
-from teachinlathe.widgets.backplot.actors.base import Actor
+from teachinlathe.programs.ui.backplot.actors.base import Actor
 
 
 class AxisArrowsActor(Actor):

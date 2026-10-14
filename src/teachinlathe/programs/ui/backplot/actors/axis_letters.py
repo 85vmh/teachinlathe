@@ -1,7 +1,7 @@
 """The Z+ and X+ labels, each just past its arrow tip."""
 
-from teachinlathe.widgets.backplot.actors import screen, sizing, text
-from teachinlathe.widgets.backplot.actors.base import VX, VZ, Actor
+from teachinlathe.programs.ui.backplot.actors import screen, sizing, text
+from teachinlathe.programs.ui.backplot.actors.base import VX, VZ, Actor
 
 #: The font, by the name ``text.FONTS`` knows it as.
 FONT = "axis"
