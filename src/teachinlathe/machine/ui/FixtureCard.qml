@@ -1,5 +1,5 @@
 import QtQuick 2.15
-import "../app_shell_qml" as Shell
+import "../../widgets/app_shell_qml" as Shell
 import theme 1.0
 
 // One chuck / fixture. Selecting it makes it the active fixture, which is what

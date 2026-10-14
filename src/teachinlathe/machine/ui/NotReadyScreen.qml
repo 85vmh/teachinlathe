@@ -1,6 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
-import "../app_shell_qml" as Shell
+import "../../widgets/app_shell_qml" as Shell
 import theme 1.0
 
 // Shown until the machine is out of E-stop, powered and homed. Replaces the

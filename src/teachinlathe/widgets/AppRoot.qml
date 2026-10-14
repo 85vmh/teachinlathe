@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 import "app_shell_qml"
-import "machine_qml"
+import "../machine/ui"
 import "../manual/ui"
 import "programs_qml"
 import "../tooling/ui"

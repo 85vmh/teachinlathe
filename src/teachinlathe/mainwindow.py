@@ -24,15 +24,15 @@ from teachinlathe.core import ini_repository
 from teachinlathe.app_state import AppState
 from teachinlathe.app_identity import APPLICATION_DISPLAY_NAME
 from teachinlathe.dev_panel import DevPanelWindow
-from teachinlathe.fixtures import LatheFixturesRepository
+from teachinlathe.machine.model.fixtures import LatheFixturesRepository
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual.logic.manual_lathe import ManualLathe
 from teachinlathe.widgets.app_shell_qml import AppShellBridge
 from teachinlathe.widgets.backplot import register_qml_types as register_backplot_type
 from teachinlathe.widgets.backplot import tool_source as backplot_tool_source
 from teachinlathe.widgets.conversational_qml.ConversationalQml import ConversationalQml
-from teachinlathe.widgets.machine_qml.FixturesViewModel import FixturesViewModel
-from teachinlathe.widgets.machine_qml.MachineViewModel import MachineViewModel
+from teachinlathe.machine.ui.FixturesViewModel import FixturesViewModel
+from teachinlathe.machine.ui.MachineViewModel import MachineViewModel
 from teachinlathe.manual.ui import ManualTurningViewModel
 from teachinlathe.manual.ui.TeachInLatheDroViewModel import TeachInLatheDroViewModel
 from teachinlathe.ui.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
