@@ -75,7 +75,7 @@ Item {
         } else if (data.type === "profiling") {
             detailsLoader.source = "ProfilingDetailsView.qml"
         } else if (data.type === "profileRoughing") {
-            detailsLoader.source = "ProfileRoughingDetailsView.qml"
+            detailsLoader.source = "ProfileRoughingVisualDetailsView.qml"
         } else if (data.type === "profileContour") {
             detailsLoader.source = "ProfileContourDetailsView.qml"
         } else if (data.type === "grooveRoughing") {

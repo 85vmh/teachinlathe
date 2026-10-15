@@ -104,24 +104,18 @@ def _path_z_min(path):
     return min(z_vals) if z_vals else 0.0
 
 
-def generate_profile_roughing_gcode(op):
-    if hasattr(op, "to_dict"):
-        op = op.to_dict()
+_NO_PROFILE = "no valid profile found"
+_NO_ROUGHING_PROFILE = "no valid roughing profile after stock/clipping"
 
-    config = parse_profile_roughing_config(op)
-    spindle = op.get("spindle_parameters", {}) or {}
-    m1_params = op.get("m1_parameters", {}) or {}
-    spindle_direction = int(spindle.get("direction", 0) or 0)
+
+def build_roughing_setup(op, config):
+    """The roughing context and the path every pass is cut against: the profile
+    offset by stock-to-leave and clipped to X Start. Returns (ctx, roughing_path,
+    error); error names what is missing when there is nothing to rough.
+    """
     segments, path = _resolve_profile(op)
-
-    lines = []
-    lines.extend(build_spindle_gcode(spindle, config.optional_prefix))
-    lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
-    lines.append("")
-
     if not segments or not isinstance(segments[0], StartPoint):
-        lines.append("( ERROR: Profile Roughing -- no valid profile found )")
-        return lines
+        return None, None, _NO_PROFILE
 
     x_min, x_max, _ = _profile_extents(path)
 
@@ -141,7 +135,27 @@ def generate_profile_roughing_gcode(op):
     )
 
     if not roughing_path or not isinstance(roughing_path[0], StartPoint):
-        lines.append("( ERROR: Profile Roughing -- no valid roughing profile after stock/clipping )")
+        return ctx, None, _NO_ROUGHING_PROFILE
+    return ctx, roughing_path, None
+
+
+def generate_profile_roughing_gcode(op):
+    if hasattr(op, "to_dict"):
+        op = op.to_dict()
+
+    config = parse_profile_roughing_config(op)
+    spindle = op.get("spindle_parameters", {}) or {}
+    m1_params = op.get("m1_parameters", {}) or {}
+    spindle_direction = int(spindle.get("direction", 0) or 0)
+
+    lines = []
+    lines.extend(build_spindle_gcode(spindle, config.optional_prefix))
+    lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
+    lines.append("")
+
+    ctx, roughing_path, error = build_roughing_setup(op, config)
+    if error:
+        lines.append(f"( ERROR: Profile Roughing -- {error} )")
         return lines
 
     # z_cut_deepest is used by radial and diagonal strategies.

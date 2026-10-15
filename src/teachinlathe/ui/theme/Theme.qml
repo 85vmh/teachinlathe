@@ -77,6 +77,8 @@ QtObject {
     readonly property int spacing:       12
     readonly property int spacingLarge:  16
     readonly property int margin:        24
+    // between the boxes of an editor screen, and between them and its canvas
+    readonly property int innerSpacings: 12
 
     // ── Surfaces ────────────────────────────────────────────────────────────
 

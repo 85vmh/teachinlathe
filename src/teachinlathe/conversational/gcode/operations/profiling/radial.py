@@ -49,6 +49,32 @@ def _emit_m1_handling_at_safe_diameter(
     )
 
 
+def plan_radial_passes(context: RoughingContext, path: list, z_cut_deepest: float) -> list:
+    """The radial passes as (cut_z, cut_x): each cuts at cut_z from x_start to cut_x.
+
+    One doc apart from z_start toward z_cut_deepest; the pass at that depth is
+    left to the contour pass, as are depths where the offset profile is flush
+    with x_start.
+    """
+    if z_cut_deepest >= context.z_start - 1e-9:
+        return []
+    pass_count = max(1, math.ceil((context.z_start - z_cut_deepest) / context.doc))
+    passes = []
+    for n in range(pass_count):
+        cut_z = context.z_start - (n + 1) * context.doc
+        if cut_z < z_cut_deepest:
+            cut_z = z_cut_deepest
+        if abs(cut_z - z_cut_deepest) < 1e-9:
+            continue  # at contour depth; contour pass handles this
+        cut_x = find_profile_x_at_z(path, cut_z)
+        if context.x_direction < 0 and cut_x >= context.x_start - 1e-9:
+            continue  # OD: offset profile flush with x_start, nothing to remove
+        if context.x_direction > 0 and cut_x <= context.x_start + 1e-9:
+            continue  # ID: offset profile flush with x_start at this depth
+        passes.append((cut_z, cut_x))
+    return passes
+
+
 def emit_radial_roughing(
     lines: list,
     context: RoughingContext,
@@ -64,24 +90,12 @@ def emit_radial_roughing(
         lines.append("( ProfileRoughing radial: nothing to cut – check z_start vs profile )")
         return
 
-    pass_count = max(1, math.ceil((context.z_start - z_cut_deepest) / context.doc))
-
     lines.append(f"{prefix}G0 X{fmt(context.x_safe)} Z{fmt(context.z_start)}")
 
-    for n in range(pass_count):
-        cut_z = context.z_start - (n + 1) * context.doc
-        if cut_z < z_cut_deepest:
-            cut_z = z_cut_deepest
-        if abs(cut_z - z_cut_deepest) < 1e-9:
-            continue  # at contour depth; contour pass handles this
-
-        cut_x = find_profile_x_at_z(path, cut_z)
-
+    for cut_z, cut_x in plan_radial_passes(context, path, z_cut_deepest):
         if context.x_direction < 0:
             # OD: tool approaches from x_safe (large X), cuts inward to cut_x.
             # cut_x is the offset-profile boundary (profile_x + stock_x).
-            if cut_x >= context.x_start - 1e-9:
-                continue  # offset profile flush with x_start, nothing to remove
             entry_x = context.x_start - context.x_direction * context.retract * 2
             entry_z = cut_z + context.retract
             exit_x = cut_x - context.x_direction * context.retract * 2
@@ -101,8 +115,6 @@ def emit_radial_roughing(
         else:
             # ID: tool moves to x_start (bore entry), cuts outward to cut_x.
             # cut_x is the offset-profile boundary (profile_x - stock_x).
-            if cut_x <= context.x_start + 1e-9:
-                continue  # offset profile flush with x_start at this depth
             entry_x = context.x_start - context.x_direction * context.retract * 2
             entry_z = cut_z + context.retract
             exit_x = cut_x - context.x_direction * context.retract * 2

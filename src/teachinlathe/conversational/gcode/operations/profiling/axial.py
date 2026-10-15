@@ -31,6 +31,28 @@ def _include_m1(m1_params) -> bool:
     return bool(m1_params.get("include_m1", False))
 
 
+def plan_axial_passes(context: RoughingContext, path: list) -> list:
+    """The axial passes as (cut_x, cut_z): each cuts at cut_x from z_start to cut_z.
+
+    One doc apart from x_start toward x_limit; the pass at x_limit is left to
+    the contour pass. Empty when there is nothing to cut.
+    """
+    if not context.has_radial_range():
+        return []
+    pass_count = max(1, math.ceil(abs(context.x_limit - context.x_start) / (context.doc * 2)))
+    passes = []
+    for n in range(pass_count):
+        raw_x = context.x_start + context.x_direction * (n + 1) * context.doc * 2
+        cut_x = context.clamp_cut_x(raw_x)
+        if abs(cut_x - context.x_limit) < 1e-9:
+            continue  # at contour boundary; contour pass handles this
+        cut_z = find_deepest_z_at_x_path(path, cut_x)
+        if cut_z > context.z_start + 1e-9:
+            continue
+        passes.append((cut_x, cut_z))
+    return passes
+
+
 def emit_axial_roughing(
     lines: list,
     context: RoughingContext,
@@ -45,18 +67,7 @@ def emit_axial_roughing(
         lines.append("( ProfileRoughing axial: nothing to cut – check x_start vs profile )")
         return
 
-    pass_count = max(1, math.ceil(abs(context.x_limit - context.x_start) / (context.doc * 2)))
-    passes = []
-    for n in range(pass_count):
-        raw_x = context.x_start + context.x_direction * (n + 1) * context.doc * 2
-        cut_x = context.clamp_cut_x(raw_x)
-        if abs(cut_x - context.x_limit) < 1e-9:
-            continue  # at contour boundary; contour pass handles this
-        cut_z = find_deepest_z_at_x_path(path, cut_x)
-        if cut_z > context.z_start + 1e-9:
-            continue
-        passes.append((cut_x, cut_z))
-
+    passes = plan_axial_passes(context, path)
     if not passes:
         lines.append("( ProfileRoughing axial: no valid passes after geometry checks )")
         return

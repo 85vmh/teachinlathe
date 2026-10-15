@@ -60,17 +60,18 @@ def _path_point(element):
     }
 
 
-def emit_diagonal_roughing(
-    lines: list,
+def plan_diagonal_passes(
     context: RoughingContext,
     path: list,
     x_cut_limit: float,
     z_cut_deepest: float,
     pass_type: PassType,
-) -> None:
-    prefix = context.optional_prefix
+):
+    """The 45° passes as (cut_start_x, cut_start_z, cut_end_x, cut_end_z), in
+    cutting order; None when there is no material span to cut at all.
+    """
     _debug(
-        "emit_diagonal_roughing "
+        "plan_diagonal_passes "
         f"pass_type={pass_type!r} x_cut_limit={x_cut_limit!r} z_cut_deepest={z_cut_deepest!r} "
         f"context={context!r} path_len={len(path or [])} path={[_path_point(item) for item in (path or [])]}"
     )
@@ -81,15 +82,12 @@ def emit_diagonal_roughing(
     _debug(f"spans max_span_x={max_span_x!r} max_span_z={max_span_z!r} max_span={max_span!r}")
     if max_span <= 1e-9:
         _debug("skip all: max_span <= 1e-9")
-        lines.append("( ProfileRoughing diagonal: nothing to cut – check x_start/profile/depth )")
-        return
+        return None
 
     pass_count = max(1, math.ceil(max_span / context.doc))
-    start_z_clear = context.z_start + context.retract
     last_points = None
-    _debug(f"planning pass_count={pass_count!r} start_z_clear={start_z_clear!r}")
-
-    lines.append(f"{prefix}G0 X{fmt(context.x_safe)} Z{fmt(start_z_clear)}")
+    passes = []
+    _debug(f"planning pass_count={pass_count!r}")
 
     for n in range(pass_count):
         step = min((n + 1) * context.doc, max_span)
@@ -178,7 +176,30 @@ def emit_diagonal_roughing(
                 f"cut_start=({cut_start_x!r}, {cut_start_z!r}) cut_end=({cut_end_x!r}, {cut_end_z!r})"
             )
             continue
+        passes.append((cut_start_x, cut_start_z, cut_end_x, cut_end_z))
+    return passes
 
+
+def emit_diagonal_roughing(
+    lines: list,
+    context: RoughingContext,
+    path: list,
+    x_cut_limit: float,
+    z_cut_deepest: float,
+    pass_type: PassType,
+) -> None:
+    prefix = context.optional_prefix
+    passes = plan_diagonal_passes(context, path, x_cut_limit, z_cut_deepest, pass_type)
+    if passes is None:
+        lines.append("( ProfileRoughing diagonal: nothing to cut – check x_start/profile/depth )")
+        return
+
+    start_z_clear = context.z_start + context.retract
+    lines.append(f"{prefix}G0 X{fmt(context.x_safe)} Z{fmt(start_z_clear)}")
+
+    for cut_start_x, cut_start_z, cut_end_x, cut_end_z in passes:
+        dx = cut_end_x - cut_start_x
+        dz = cut_end_z - cut_start_z
         if pass_type == PassType.DIAGONAL_INTERIOR:
             entry_x = cut_start_x
             entry_z = cut_start_z + context.retract

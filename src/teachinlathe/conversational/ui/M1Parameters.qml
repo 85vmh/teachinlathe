@@ -7,7 +7,7 @@ import theme 1.0
 
 GroupBox {
     id: root
-    title: "M1 Pause to inspect Parameters"
+    title: "Pause to Inspect"
     Layout.fillWidth: true
     Layout.minimumWidth: 420
     Layout.preferredWidth: 560
@@ -53,7 +53,7 @@ GroupBox {
             Layout.fillWidth: true
             CheckBox {
                 id: includeBox
-                text: "Include 'M1' in the generated G-Code"
+                text: "Allow inspection after each pass"
                 checked: root.include_m1
                 enabled: !root.readOnly
                 onToggled: { root.include_m1 = checked; root.emitSave() }
@@ -69,6 +69,7 @@ GroupBox {
         }
 
         // --- Inspect position radio buttons ---
+        // each takes half the row, so what the texts leave falls between them
         RowLayout {
             Layout.fillWidth: true
             spacing: 20
@@ -77,7 +78,9 @@ GroupBox {
 
             RadioButton {
                 id: rbG28
-                text: "Position stored in G28"
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                text: "Retract at <b>G28</b>"
                 font.pixelSize: Theme.fontBody
                 checked: root.inspect_position === "G28"
                 onToggled: if (checked) { root.inspect_position = "G28"; root.emitSave() }
@@ -85,7 +88,9 @@ GroupBox {
 
             RadioButton {
                 id: rbG30
-                text: "Position stored in G30"
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                text: "Retract at <b>G30</b>"
                 font.pixelSize: Theme.fontBody
                 checked: root.inspect_position === "G30"
                 onToggled: if (checked) { root.inspect_position = "G30"; root.emitSave() }

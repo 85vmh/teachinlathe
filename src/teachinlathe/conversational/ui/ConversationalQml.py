@@ -301,6 +301,35 @@ class ConversationalQml(QObject):
             return ""
         return resolved_type.value if hasattr(resolved_type, "value") else str(resolved_type).lower()
 
+    @pyqtSlot(int, result="QVariant")
+    def lastProfileBefore(self, before_index):
+        """The last DefineProfile above ``before_index``, as its details payload, or {}."""
+        from teachinlathe.conversational.model.data_types import DefineProfile
+        prog = self._get_current_program()
+        if not prog:
+            return {}
+        operations = (getattr(prog, "operations", []) or [])[:max(before_index, 0)]
+        for op in reversed(operations):
+            if isinstance(op, DefineProfile):
+                return self._attach_current_workpiece(build_details_payload(op)) or {}
+        return {}
+
+    @pyqtSlot(int, "QVariant", result="QVariant")
+    def profileRoughingPreview(self, op_index, op_data):
+        """What the Profile Roughing at ``op_index`` would cut with ``op_data``,
+        against the last profile above it; see build_profile_roughing_preview.
+        """
+        from teachinlathe.conversational.gcode.operations.profile_roughing_preview import (
+            build_profile_roughing_preview,
+        )
+        try:
+            op = self._to_py(op_data) or {}
+            op["_resolved_profile"] = self.lastProfileBefore(op_index)
+            return build_profile_roughing_preview(op)
+        except Exception as e:
+            print("profileRoughingPreview failed:", e)
+            return {"profile": [], "offset": [], "feeds": [], "rapids": [], "error": str(e)}
+
     @pyqtSlot(str, result="QVariant")
     def previewDxfProfile(self, dxf_file_path):
         try:

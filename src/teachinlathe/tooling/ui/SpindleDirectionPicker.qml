@@ -4,10 +4,14 @@ import common 1.0
 
 // The spindle direction a cutting tool is used with: two square icon
 // buttons, M3 then M4, as tall as an input field, the chosen one blue as
-// the editors' other toggles have it.
+// the editors' other toggles have it. Side by side, or M3 above M4 with
+// `vertical`.
 // `clockwise` is M3.
-Row {
+Grid {
     id: root
+
+    property bool vertical: false
+    columns: vertical ? 1 : 2
 
     property var clockwise: null        // true M3, false M4, null neither
     //: The only direction allowed - a drill's or a tap's twist decides it:

@@ -16,6 +16,31 @@ Canvas {
     property string profileType:       "od" // "od" or "id" — controls startPoint blend entry direction
     property var    workpiece:         ({})
     property bool   mirrorAcrossCenterline: true  // also draw the profile and its hatched stock above the centre line
+    // false makes the canvas a plain viewer: no pan, zoom or selection
+    property bool   interactive: true
+    // false keeps pan and zoom but leaves taps from selecting anything
+    property bool   selectable: true
+    // px along the right edge that fitToScreen leaves free, for boxes laid there
+    property real   fitInsetRight: 0
+    // When 0 or more, fitToScreen scales X to the profile alone: its largest
+    // diameter plus this many mm (on the diameter) reaches the top and bottom
+    // edges - with 10, a Ø50 profile shows up to Ø60. Z still has to fit, so
+    // a long part can make it smaller. Below 0, X fits everything drawn with
+    // the usual margin.
+    property real   fitDiameterMargin: -1
+    // where the tool starts, as {x: diameter, z}, drawn by StartPositionActor; null hides it
+    property var    startPosition: null
+    // what roughing will cut, {profile, offset, feeds, rapids}
+    // as profileRoughingPreview returns it; null draws none of it
+    property var    roughingPreview: null
+    // the roughing overlays' colours, for boxes that label their values to match
+    readonly property color feedColor:        "#2e7d32"
+    readonly property color rapidColor:       "#777777"   // the backplot's rapids
+    readonly property color stockToLeaveColor: "#ef6c00"
+    // boxes laid over the canvas that the overlays point arrows to, as
+    // {x, y, width, height} in canvas px; null draws no arrow
+    property var    startPositionArrowRect: null
+    property var    stockToLeaveArrowRect: null
 
     // A selected cylindrical stretch, fillet or chamfer shows its value in a
     // tag; with this set, tapping the tag opens the numpad and reports the
@@ -149,7 +174,15 @@ Canvas {
         else              requestPaint()
     }
     onWidthChanged:  { if (!_manualView) fitToScreen() }
+    onFitInsetRightChanged: { if (!_manualView) Qt.callLater(fitToScreen) }
     onHeightChanged: { if (!_manualView) fitToScreen() }
+    onStartPositionChanged: {
+        if (!_manualView) Qt.callLater(fitToScreen)
+        else              requestPaint()
+    }
+    onRoughingPreviewChanged:        requestPaint()
+    onStartPositionArrowRectChanged: requestPaint()
+    onStockToLeaveArrowRectChanged:  requestPaint()
     onSelectedPrimIndexChanged:  requestPaint()
     onSelectedBlendIndexChanged: requestPaint()
     onMirrorAcrossCenterlineChanged: {
@@ -161,8 +194,10 @@ Canvas {
     function resetView() { _manualView = false; Qt.callLater(fitToScreen) }
 
     // ── Zoom in / out (public, zoom around canvas centre) ─────────────────────
-    function zoomIn()  { _zoomAround(width / 2, height / 2, 1.3) }
-    function zoomOut() { _zoomAround(width / 2, height / 2, 1.0 / 1.3) }
+    // how much one zoomIn / zoomOut scales the view
+    property real zoomStep: 1.3
+    function zoomIn()  { _zoomAround(width / 2, height / 2, zoomStep) }
+    function zoomOut() { _zoomAround(width / 2, height / 2, 1.0 / zoomStep) }
 
     function _zoomAround(cx, cy, factor) {
         var worldZ = (cx - _originX) / _scale
@@ -183,6 +218,7 @@ Canvas {
         if (!primitives || primitives.length === 0 || width <= 0 || height <= 0) return
         var b = geom.computeBounds(_resolvedPrimitives)
         if (!b) return
+        var profileDiameter = Math.max(Math.abs(b.fXMin), Math.abs(b.fXMax))
         var stockLength = workpiece && workpiece.stock_length !== undefined ? Number(workpiece.stock_length) : 0
         var stockDiameter = workpiece && workpiece.external_diameter !== undefined ? Number(workpiece.external_diameter) : 0
         if (stockLength > 0) {
@@ -193,25 +229,37 @@ Canvas {
             b.fXMin = Math.min(b.fXMin, 0)
             b.fXMax = Math.max(b.fXMax, stockDiameter)
         }
+        if (startPosition) {
+            b.fZMax = Math.max(b.fZMax, +startPosition.z || 0)
+            b.fXMax = Math.max(b.fXMax, Math.abs(+startPosition.x || 0))
+        }
         var MARGIN = 10
+        var marginX = MARGIN   // around X, in radius units
 
         var displayXMin = root.mirrorAcrossCenterline ? -Math.max(Math.abs(b.fXMin), Math.abs(b.fXMax)) / 2 : 0
         var displayXMax = root.mirrorAcrossCenterline ?  Math.max(Math.abs(b.fXMin), Math.abs(b.fXMax)) / 2 : b.fXMax / 2
+        if (fitDiameterMargin >= 0) {
+            var edge = (profileDiameter + fitDiameterMargin) / 2
+            displayXMin = root.mirrorAcrossCenterline ? -edge : 0
+            displayXMax = edge
+            marginX = 0
+        }
 
         // Z: [zMin-M, zMax+M]
         var spanZ = Math.max(b.fZMax - b.fZMin + 2 * MARGIN, 1)
         // X is diameter in profile primitives; canvas uses radius units for display.
-        var spanX = Math.max(displayXMax - displayXMin + 2 * MARGIN, 1)
+        var spanX = Math.max(displayXMax - displayXMin + 2 * marginX, 1)
 
-        var scale = Math.min(width / spanZ, height / spanX)
+        var fitWidth = Math.max(1, width - fitInsetRight)
+        var scale = Math.min(fitWidth / spanZ, height / spanX)
 
         // Centre each axis in whatever canvas space it gets
-        var leftOffset = (width  - spanZ * scale) / 2
+        var leftOffset = (fitWidth - spanZ * scale) / 2
         var topOffset  = (height - spanX * scale) / 2
 
         _scale   = scale
         _originX = leftOffset + (MARGIN - b.fZMin) * scale
-        _originY = topOffset  + (MARGIN - displayXMin) * scale
+        _originY = topOffset  + (marginX - displayXMin) * scale
         _manualView = false
         requestPaint()
     }
@@ -228,8 +276,11 @@ Canvas {
         axesActor.paint(ctx)
         originActor.paint(ctx)
         pathActor.paint(ctx)
+        stockToLeaveActor.paint(ctx)
+        toolpathActor.paint(ctx)
         highlightActor.paint(ctx)
         diameterLeaderActor.paint(ctx)
+        startPositionActor.paint(ctx)
     }
 
     function _rebuildRenderCache() {
@@ -312,6 +363,41 @@ Canvas {
         endX: root._leaderEndX
         endY: root._leaderEndY
         color: Theme.accentStrong
+    }
+
+    StartPositionActor {
+        id: startPositionActor
+        position: root.startPosition
+        zEnd: {
+            var b = geom.computeBounds(root._resolvedPrimitives)
+            return b ? b.fZMin : 0
+        }
+        arrowToRect: root.startPositionArrowRect
+        cx: root._cx
+        cy: root._cy
+        mirrorAcrossCenterline: root.mirrorAcrossCenterline
+    }
+
+    StockToLeaveActor {
+        id: stockToLeaveActor
+        offset: root.roughingPreview ? root.roughingPreview.offset : []
+        profile: root.roughingPreview ? root.roughingPreview.profile : []
+        color: root.stockToLeaveColor
+        lineWidth: pathActor.lineWidth
+        cx: root._cx
+        cy: root._cy
+        mirrorAcrossCenterline: root.mirrorAcrossCenterline
+        arrowToRect: root.stockToLeaveArrowRect
+    }
+
+    ToolpathActor {
+        id: toolpathActor
+        feeds: root.roughingPreview ? root.roughingPreview.feeds : []
+        rapids: root.roughingPreview ? root.roughingPreview.rapids : []
+        feedColor: root.feedColor
+        rapidColor: root.rapidColor
+        cx: root._cx
+        cy: root._cy
     }
 
     HighlightActor {
@@ -472,6 +558,7 @@ Canvas {
     // a second finger hands the gesture over here, which cancels that drag.
     PinchArea {
         anchors.fill: parent
+        enabled: root.interactive
 
         property real _scaleAtStart:  1
         property real _worldZAtStart: 0
@@ -529,7 +616,7 @@ Canvas {
             }
 
             onClicked: function(mouse) {
-                if (_wasDrag) return
+                if (_wasDrag || !root.selectable) return
                 var mirrored = root.mirrorAcrossCenterline
                 var mirrorY = 2 * root._originY - mouse.y   // the click reflected across the centre line
 
