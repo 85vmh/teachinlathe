@@ -31,16 +31,17 @@ QtObject {
         ctx.restore()
 
         if (!arrowToRect) return
-        // from the offset point nearest the box, on the upper half when drawn
+        // from the offset point nearest where the arrow ends, on the upper
+        // half when drawn
         var sign = mirrorAcrossCenterline ? -1 : 1
-        var best = null, bestDistance = Infinity, bestTo = null
+        var to = Arrow.anchorOf(arrowToRect)
+        var best = null, bestDistance = Infinity
         for (var i = 0; i < offset.length; i++) {
             var px = cx(offset[i].z), py = cy(sign * offset[i].x)
-            var to = Arrow.nearestOnRect(arrowToRect, px, py)
             var d = Math.pow(to.x - px, 2) + Math.pow(to.y - py, 2)
-            if (d < bestDistance) { bestDistance = d; best = { x: px, y: py }; bestTo = to }
+            if (d < bestDistance) { bestDistance = d; best = { x: px, y: py } }
         }
-        if (best) Arrow.paint(ctx, best.x, best.y, bestTo.x, bestTo.y, color, 0)
+        if (best) Arrow.paintToBox(ctx, best.x, best.y, arrowToRect, color, 0)
     }
 
     // Between the offset and the profile: along the offset, then back along

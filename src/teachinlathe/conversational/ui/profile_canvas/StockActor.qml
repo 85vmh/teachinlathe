@@ -101,7 +101,16 @@ QtObject {
 
         var profileMode = String(profileType || "od").toLowerCase()
         var hatchBoundaryX = profileMode === "id" ? stockX : innerX
-        if (profileMode === "od" || profileMode === "id") {
+        if (!renderSegs || renderSegs.length === 0) {
+            // no profile yet: the whole stock, outside the bore, is material
+            var innerY = _cy(innerX, mirrored)
+            ctx.save()
+            ctx.beginPath()
+            ctx.rect(Math.min(left, right), Math.min(innerY, bottom), Math.abs(right - left), Math.abs(bottom - innerY))
+            ctx.clip()
+            _hatchCurrentClip(ctx, Math.min(left, right), Math.min(top, bottom), Math.max(left, right), Math.max(top, bottom))
+            ctx.restore()
+        } else if (profileMode === "od" || profileMode === "id") {
             ctx.save()
             ctx.beginPath()
             if (_pathProfileToStock(ctx, hatchBoundaryX, mirrored)) {
@@ -112,6 +121,8 @@ QtObject {
         }
         ctx.restore()
 
+        // its outside and its far end; not its face at Z0, where the dashed
+        // Z0 line goes - only the finished profile is drawn over that
         ctx.strokeStyle = "#9ca3af"
         ctx.lineWidth = 1
         ctx.setLineDash([])
@@ -119,8 +130,6 @@ QtObject {
         ctx.moveTo(left, bottom)
         ctx.lineTo(right, bottom)
         ctx.lineTo(right, top)
-        ctx.moveTo(left, bottom)
-        ctx.lineTo(left, top)
         ctx.stroke()
 
         if (hasInternalDiameter && innerX > 0) {

@@ -8,6 +8,8 @@ Item {
     property var workpiece: ({})
     property string profileType: "od"
     property int selectedIndex: -1
+    // the upper half too, above the centre line
+    property alias mirrorAcrossCenterline: profileCanvas.mirrorAcrossCenterline
     property var _profilePrimitives: []
 
     onPrimitivesChanged: _rebuildProfilePrimitives()

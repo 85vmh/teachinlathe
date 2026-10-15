@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 512 512" fill="none"
+     stroke="#101010" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Mirror across the centre line: SVG Repo's "mirror horizontally" redrawn
+       in thinner strokes and turned 90 degrees anticlockwise, so its two
+       halves face across a horizontal axis, as the profile's do. -->
+  <g transform="rotate(-90 256 256)">
+    <path d="M58 201 L58 386 L216 293.6 Z"/>
+    <path d="M454 201 L454 386 L296 293.6 Z"/>
+    <path d="M256 187 L256 208 M256 294 L256 315 M256 401 L256 422"/>
+    <path d="M192 123 C 236 79, 300 78, 344 125.6 L 384 165.6"/>
+    <path d="M323 165.6 L384 165.6 L384 105"/>
+  </g>
+</svg>

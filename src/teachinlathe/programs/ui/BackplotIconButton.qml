@@ -22,13 +22,19 @@ Button {
      * Set, it is flooded with this one - which is how an icon drawn in black
      * says "destructive" without a second copy of the file in red. */
     property color tint: "transparent"
-    readonly property bool tinted: tint.a > 0
+    readonly property bool tinted: glyphTint.a > 0
 
     /* The border, named apart from the tint rather than following it: a
      * button can be tinted for legibility without claiming to be
      * destructive, and only the one that throws something away should be
      * outlined in its own colour. */
     property color borderTint: Theme.separator
+
+    /* On, for a button that switches something: drawn as M3 or M4 is when
+     * chosen - the selection colour, an accent border two px wide - and its
+     * glyph in the accent too. */
+    property bool active: false
+    readonly property color glyphTint: active ? Theme.accent : tint
 
     implicitWidth: 60
     implicitHeight: 60
@@ -58,7 +64,7 @@ Button {
         ColorOverlay {
             anchors.fill: glyph
             source: glyph
-            color: control.tint
+            color: control.glyphTint
             visible: control.tinted
             opacity: control.enabled ? 1.0 : 0.4
         }
@@ -66,10 +72,10 @@ Button {
 
     background: Rectangle {
         radius: Theme.radius
-        color: control.down ? Theme.selection
+        color: control.down || control.active ? Theme.selection
              : control.hovered ? Theme.hover
              : Theme.surfaceAlt
-        border.width: Theme.hairline
-        border.color: control.borderTint
+        border.width: control.active ? 2 : Theme.hairline
+        border.color: control.active ? Theme.accent : control.borderTint
     }
 }

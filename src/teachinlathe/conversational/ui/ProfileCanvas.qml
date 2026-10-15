@@ -22,6 +22,11 @@ Canvas {
     property bool   selectable: true
     // px along the right edge that fitToScreen leaves free, for boxes laid there
     property real   fitInsetRight: 0
+    // px fitToScreen leaves on every side as well, for dimensions drawn
+    // outside the part
+    property real   fitPadding: 0
+    // dimensions drawn by DimensionActor; see it for their form
+    property var    dimensions: []
     // When 0 or more, fitToScreen scales X to the profile alone: its largest
     // diameter plus this many mm (on the diameter) reaches the top and bottom
     // edges - with 10, a Ø50 profile shows up to Ø60. Z still has to fit, so
@@ -175,6 +180,8 @@ Canvas {
     }
     onWidthChanged:  { if (!_manualView) fitToScreen() }
     onFitInsetRightChanged: { if (!_manualView) Qt.callLater(fitToScreen) }
+    onFitPaddingChanged:    { if (!_manualView) Qt.callLater(fitToScreen) }
+    onDimensionsChanged:     requestPaint()
     onHeightChanged: { if (!_manualView) fitToScreen() }
     onStartPositionChanged: {
         if (!_manualView) Qt.callLater(fitToScreen)
@@ -185,10 +192,8 @@ Canvas {
     onStockToLeaveArrowRectChanged:  requestPaint()
     onSelectedPrimIndexChanged:  requestPaint()
     onSelectedBlendIndexChanged: requestPaint()
-    onMirrorAcrossCenterlineChanged: {
-        if (!_manualView) Qt.callLater(fitToScreen)
-        else              requestPaint()
-    }
+    // always fitted anew, zoomed or not: the drawing is a different shape
+    onMirrorAcrossCenterlineChanged: Qt.callLater(fitToScreen)
 
     // ── Reset view to fit (public, call when entering the screen) ─────────────
     function resetView() { _manualView = false; Qt.callLater(fitToScreen) }
@@ -215,9 +220,16 @@ Canvas {
     // X axis: equal margin above the center line (X=0) and below fXMax.
     //         The non-constraining axis is centred in the remaining canvas space.
     function fitToScreen() {
-        if (!primitives || primitives.length === 0 || width <= 0 || height <= 0) return
-        var b = geom.computeBounds(_resolvedPrimitives)
-        if (!b) return
+        if (width <= 0 || height <= 0) return
+        var hasProfile = primitives && primitives.length > 0
+        var b = hasProfile ? geom.computeBounds(_resolvedPrimitives) : null
+        if (hasProfile && !b) return
+        // with no profile, the workpiece alone, if there is one
+        if (!b) {
+            var hasStock = workpiece && Number(workpiece.stock_length) > 0 && Number(workpiece.external_diameter) > 0
+            if (!hasStock) return
+            b = { fZMin: 0, fZMax: 0, fXMin: 0, fXMax: 0 }
+        }
         var profileDiameter = Math.max(Math.abs(b.fXMin), Math.abs(b.fXMax))
         var stockLength = workpiece && workpiece.stock_length !== undefined ? Number(workpiece.stock_length) : 0
         var stockDiameter = workpiece && workpiece.external_diameter !== undefined ? Number(workpiece.external_diameter) : 0
@@ -250,12 +262,13 @@ Canvas {
         // X is diameter in profile primitives; canvas uses radius units for display.
         var spanX = Math.max(displayXMax - displayXMin + 2 * marginX, 1)
 
-        var fitWidth = Math.max(1, width - fitInsetRight)
-        var scale = Math.min(fitWidth / spanZ, height / spanX)
+        var fitWidth = Math.max(1, width - fitInsetRight - 2 * fitPadding)
+        var fitHeight = Math.max(1, height - 2 * fitPadding)
+        var scale = Math.min(fitWidth / spanZ, fitHeight / spanX)
 
         // Centre each axis in whatever canvas space it gets
-        var leftOffset = (fitWidth - spanZ * scale) / 2
-        var topOffset  = (height - spanX * scale) / 2
+        var leftOffset = fitPadding + (fitWidth - spanZ * scale) / 2
+        var topOffset  = fitPadding + (fitHeight - spanX * scale) / 2
 
         _scale   = scale
         _originX = leftOffset + (MARGIN - b.fZMin) * scale
@@ -278,6 +291,7 @@ Canvas {
         pathActor.paint(ctx)
         stockToLeaveActor.paint(ctx)
         toolpathActor.paint(ctx)
+        dimensionActor.paint(ctx)
         highlightActor.paint(ctx)
         diameterLeaderActor.paint(ctx)
         startPositionActor.paint(ctx)
@@ -368,14 +382,9 @@ Canvas {
     StartPositionActor {
         id: startPositionActor
         position: root.startPosition
-        zEnd: {
-            var b = geom.computeBounds(root._resolvedPrimitives)
-            return b ? b.fZMin : 0
-        }
         arrowToRect: root.startPositionArrowRect
         cx: root._cx
         cy: root._cy
-        mirrorAcrossCenterline: root.mirrorAcrossCenterline
     }
 
     StockToLeaveActor {
@@ -388,6 +397,13 @@ Canvas {
         cy: root._cy
         mirrorAcrossCenterline: root.mirrorAcrossCenterline
         arrowToRect: root.stockToLeaveArrowRect
+    }
+
+    DimensionActor {
+        id: dimensionActor
+        dimensions: root.dimensions
+        cx: root._cx
+        cy: root._cy
     }
 
     ToolpathActor {

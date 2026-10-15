@@ -220,85 +220,135 @@ Item {
             }
         }
 
-        GroupBox {
-            title: "Workpiece Details"
-            Layout.alignment: Qt.AlignTop | Qt.AlignLeft
-            font.pixelSize: root.fieldFontSize
+        // The workpiece, hatched, with its dimensions: the diameters right of
+        // the face, the lengths below it, each pointing to the box with its
+        // value down the right edge.
+        ProfileCanvas {
+            id: workpieceCanvas
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            // pinch and the buttons zoom, a drag pans, a double tap fits
+            selectable: false
+            // the backplot's step (glnav's zoomin / zoomout)
+            zoomStep: 1.1
+            primitives: []
+            workpiece: ({ external_diameter: root.extDia, internal_diameter: root.intDia,
+                          stickout_length: root.stickout, stock_length: root.stockLength })
 
-            ColumnLayout {
+            readonly property color externalColor: "#1565c0"
+            readonly property color internalColor: "#6a1b9a"
+            readonly property color stickoutColor: "#00838f"
+            readonly property color stockLengthColor: "#ad1457"
+
+            // px from the part: the inner dimension first, the outer beyond it
+            readonly property real nearOffset: 24
+            readonly property real farOffset: 48
+            fitPadding: farOffset + 16
+            // Internal Ø inside the stock, across the bore 3/4 of the way from
+            // its Z- end, its leader from the lower half; the stock length
+            // above the part, the stickout below it
+            dimensions: {
+                var dims = [
+                    { axis: "z", from: 0, to: -root.stockLength, x: -root.extDia, offset: -nearOffset,
+                      color: stockLengthColor, arrowToRect: stockLengthBox.rect },
+                    { axis: "x", from: -root.extDia, to: root.extDia, z: 0, offset: nearOffset,
+                      color: externalColor, arrowToRect: externalBox.rect },
+                    { axis: "z", from: 0, to: -root.stickout, x: root.extDia, offset: nearOffset,
+                      color: stickoutColor, arrowToRect: stickoutBox.rect }
+                ]
+                if (root.intDia > 0)
+                    dims.push({ axis: "x", from: root.intDia, to: -root.intDia, z: -root.stockLength / 4, offset: 0,
+                                color: internalColor, arrowToRect: internalBox.rect })
+                return dims
+            }
+
+            Rectangle {
                 anchors.fill: parent
-                spacing: root.rowGap
+                color: "transparent"
+                border.color: Theme.outline; border.width: Theme.hairline
+            }
 
-                GridLayout {
-                    columns: 2
-                    rowSpacing: root.rowGap
-                    columnSpacing: root.columnGap
-                    Layout.fillWidth: true
+            // The boxes stack down the right edge, each as wide as it needs;
+            // the drawing is fitted into what the widest leaves free.
+            readonly property real boxWidth: Math.max(externalBox.implicitWidth, internalBox.implicitWidth,
+                                                      stickoutBox.implicitWidth, stockLengthBox.implicitWidth)
+            readonly property real boxGap: Theme.spacingLarge
+            readonly property real boxLabelWidth: Math.max(externalBox.labelImplicitWidth, internalBox.labelImplicitWidth,
+                                                           stickoutBox.labelImplicitWidth, stockLengthBox.labelImplicitWidth)
+            fitInsetRight: boxWidth + boxGap
 
-                    Label {
-                        text: "External Ø"
-                        Layout.preferredWidth: root.labelWidth
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: root.fieldFontSize
-                    }
-                    NumpadField {
-                        Layout.preferredWidth: root.inputWidth
-                        settingName: "smart_numpad.workpiece-external-dia"
-                        value: root.extDia
-                        formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: { root.extDia = value; root.emitSave() }
-                    }
-
-                    Label {
-                        text: "Internal Ø"
-                        Layout.preferredWidth: root.labelWidth
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: root.fieldFontSize
-                    }
-                    NumpadField {
-                        Layout.preferredWidth: root.inputWidth
-                        settingName: "smart_numpad.workpiece-internal-dia"
-                        value: root.intDia
-                        formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: { root.intDia = value; root.emitSave() }
-                    }
-
-                    Label {
-                        text: "Stickout length"
-                        Layout.preferredWidth: root.labelWidth
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: root.fieldFontSize
-                    }
-                    NumpadField {
-                        Layout.preferredWidth: root.inputWidth
-                        settingName: "smart_numpad.workpiece-stickout"
-                        value: root.stickout
-                        formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: { root.stickout = value; root.emitSave() }
-                    }
-
-                    Label {
-                        text: "Stock Length"
-                        Layout.preferredWidth: root.labelWidth
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: root.fieldFontSize
-                    }
-                    NumpadField {
-                        Layout.preferredWidth: root.inputWidth
-                        settingName: "smart_numpad.workpiece-stock-length"
-                        description: "Stock Length"
-                        value: root.stockLength
-                        formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: { root.stockLength = value; root.emitSave() }
-                    }
+            // top to bottom: stock length, the two diameters, stickout - each
+            // near its dimension - the first at the top, the last at the
+            // bottom, the space between them shared out equally
+            readonly property real boxSpacing: (height - 2 * boxGap - stockLengthBox.height - externalBox.height
+                                                - internalBox.height - stickoutBox.height) / 3
+            DimensionBox {
+                id: stockLengthBox
+                x: workpieceCanvas.width - width - workpieceCanvas.boxGap
+                y: workpieceCanvas.boxGap
+                label: "Stock length"
+                dimensionColor: workpieceCanvas.stockLengthColor
+                labelWidth: workpieceCanvas.boxLabelWidth
+                settingName: "smart_numpad.workpiece-stock-length"
+                value: root.stockLength
+                // the stickout cannot be longer: it comes down with it
+                onValueEdited: function(value) {
+                    root.stockLength = value
+                    root.stickout = Math.min(root.stickout, value)
+                    root.emitSave()
                 }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            DimensionBox {
+                id: externalBox
+                x: workpieceCanvas.width - width - workpieceCanvas.boxGap
+                y: stockLengthBox.y + stockLengthBox.height + workpieceCanvas.boxSpacing
+                label: "External Ø"
+                dimensionColor: workpieceCanvas.externalColor
+                labelWidth: workpieceCanvas.boxLabelWidth
+                settingName: "smart_numpad.workpiece-external-dia"
+                value: root.extDia
+                onValueEdited: function(value) { root.extDia = value; root.emitSave() }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            DimensionBox {
+                id: internalBox
+                x: workpieceCanvas.width - width - workpieceCanvas.boxGap
+                y: externalBox.y + externalBox.height + workpieceCanvas.boxSpacing
+                label: "Internal Ø"
+                dimensionColor: workpieceCanvas.internalColor
+                labelWidth: workpieceCanvas.boxLabelWidth
+                settingName: "smart_numpad.workpiece-internal-dia"
+                value: root.intDia
+                onValueEdited: function(value) { root.intDia = value; root.emitSave() }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            DimensionBox {
+                id: stickoutBox
+                x: workpieceCanvas.width - width - workpieceCanvas.boxGap
+                y: internalBox.y + internalBox.height + workpieceCanvas.boxSpacing
+                label: "Stickout length"
+                dimensionColor: workpieceCanvas.stickoutColor
+                labelWidth: workpieceCanvas.boxLabelWidth
+                settingName: "smart_numpad.workpiece-stickout"
+                value: root.stickout
+                // no longer than the stock
+                onValueEdited: function(value) {
+                    root.stickout = Math.min(value, root.stockLength)
+                    root.emitSave()
+                }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            // zoom, fit to screen - top-left, as on every profile canvas
+            CanvasViewButtons {
+                canvas: workpieceCanvas
+                // only the workpiece here: nothing to mirror
+                showMirror: false
             }
         }
-
-        Item { Layout.fillHeight: true }
     }
 }

@@ -651,43 +651,9 @@ Item {
                         }
                     }
 
-                    // Zoom icon buttons — top-left overlay
-                    Row {
-                        anchors { top: parent.top; left: parent.left; topMargin: 24; leftMargin: 24 }
-                        spacing: 32
-
-                        Repeater {
-                            model: [
-                                { icon: Images.url("zoom-in.svg"),  action: "zoomIn"      },
-                                { icon: Images.url("zoom-out.svg"), action: "zoomOut"     },
-                                { icon: Images.url("zoom-fit.svg"), action: "fitToScreen" }
-                            ]
-                            Rectangle {
-                                width: 60; height: 60
-                                radius: Theme.radius
-                                color: iconMa.pressed ? Theme.selection : iconMa.containsMouse ? Theme.hover : Theme.surfaceAlt
-                                border.color: Theme.separator; border.width: Theme.hairline
-
-                                Image {
-                                    anchors.centerIn: parent
-                                    width: 40; height: Theme.buttonHeight
-                                    source: modelData.icon
-                                    fillMode: Image.PreserveAspectFit
-                                    smooth: true
-                                }
-
-                                MouseArea {
-                                    id: iconMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    onClicked: {
-                                        if (modelData.action === "zoomIn")       profileCanvas.zoomIn()
-                                        else if (modelData.action === "zoomOut") profileCanvas.zoomOut()
-                                        else                                     profileCanvas.fitToScreen()
-                                    }
-                                }
-                            }
-                        }
+                    // zoom, fit to screen and mirror - top-left, as on every profile canvas
+                    CanvasViewButtons {
+                        canvas: profileCanvas
                     }
                 }
             }

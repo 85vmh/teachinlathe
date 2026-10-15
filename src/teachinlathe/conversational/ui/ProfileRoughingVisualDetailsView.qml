@@ -7,8 +7,6 @@ import QtQuick.Layouts 1.15
 import "."
 import "profile_canvas"
 import theme 1.0
-import common 1.0
-import "../../programs/ui" as Programs
 
 Item {
     id: root
@@ -205,31 +203,10 @@ Item {
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
-            // Zoom buttons — top-left, where the profile editor has them. The
-            // backplot's: held down, zoom in and out repeat as they do there.
-            Row {
+            // zoom, fit to screen and mirror - top-left, as on every profile canvas
+            CanvasViewButtons {
+                canvas: profileCanvas
                 visible: root.primitives.length > 0
-                anchors { top: parent.top; left: parent.left; topMargin: 24; leftMargin: 24 }
-                spacing: 32
-
-                Programs.BackplotIconButton {
-                    iconSource: Images.url("zoom-in.svg")
-                    autoRepeat: true
-                    autoRepeatDelay: 300
-                    autoRepeatInterval: 100
-                    onClicked: profileCanvas.zoomIn()
-                }
-                Programs.BackplotIconButton {
-                    iconSource: Images.url("zoom-out.svg")
-                    autoRepeat: true
-                    autoRepeatDelay: 300
-                    autoRepeatInterval: 100
-                    onClicked: profileCanvas.zoomOut()
-                }
-                Programs.BackplotIconButton {
-                    iconSource: Images.url("zoom-fit.svg")
-                    onClicked: profileCanvas.fitToScreen()
-                }
             }
 
             Label {

@@ -305,6 +305,13 @@ Item {
                 Button { text: "Zoom In"; onClicked: canvas.zoomIn() }
                 Button { text: "Zoom Out"; onClicked: canvas.zoomOut() }
                 Button { text: "Fit"; onClicked: canvas.fitToScreen() }
+                // the upper half too, above the centre line, or only the lower
+                Button {
+                    text: "Mirror"
+                    checkable: true
+                    checked: canvas.mirrorAcrossCenterline
+                    onToggled: canvas.mirrorAcrossCenterline = checked
+                }
             }
         }
     }
