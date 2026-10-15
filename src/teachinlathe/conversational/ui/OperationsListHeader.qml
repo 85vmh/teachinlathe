@@ -14,6 +14,11 @@ Rectangle {
     property int colOptW: 80
     property int colDelW: 100
     property int headerFontSize: 14
+    // the operations' rows' font, whose "[#NN]    " the title is indented by,
+    // so it starts where the operation names do
+    property int itemFontSize: 16
+
+    TextMetrics { id: orderPrefix; font.pixelSize: root.itemFontSize; text: "[#00]    " }
 
     width: parent ? parent.width : 400
     height: Theme.buttonHeight
@@ -28,11 +33,11 @@ Rectangle {
             spacing: 0
 
             Label {
-                text: "              Program Operations"
+                text: "Program Operations"
                 font.bold: true
                 font.pixelSize: root.headerFontSize
                 color: Theme.foregroundStrong
-                Layout.leftMargin: 10
+                Layout.leftMargin: 10 + orderPrefix.advanceWidth
                 Layout.minimumWidth: root.colOpNumW + root.colTypeW
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignLeft

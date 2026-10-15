@@ -25,24 +25,35 @@ Item {
         opData = data || {}
 
         // populate sub-panels
-        spindlePanel.applyData(opIndex, opData)
+        header.applyData(opData, (opData.cutting_parameters || {}).feed_rate)
         cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
         geometryPanel.applyData(opIndex, (opData.geometry_parameters || {}), opData)
-        m1Panel.applyData(opData && opData.m1_parameters ? opData.m1_parameters : {})
         extrasPanel.applyData(opIndex, opData)
     }
 
+    // Sub-objects merge one level deep, so a part sent alone (the header's
+    // feed rate, say) updates its fields and keeps the rest.
     function mergeIntoOp(payload) {
         var out = JSON.parse(JSON.stringify(opData || {}))
         for (var k in payload) {
-            if (k === "index") continue
-            if (payload.hasOwnProperty(k)) out[k] = payload[k]
+            if (k === "index" || !payload.hasOwnProperty(k)) continue
+            var v = payload[k]
+            var cur = out[k]
+            if (v && typeof v === "object" && !Array.isArray(v)
+                    && cur && typeof cur === "object" && !Array.isArray(cur))
+                out[k] = Object.assign({}, cur, v)
+            else
+                out[k] = v
         }
         opData = out
         return out
     }
 
-    // ===== Layout: title + two-column parameter grid =====
+    function save(payload) {
+        root.saveRequested({index: opIndex, payload: root.mergeIntoOp(payload)})
+    }
+
+    // ===== Layout: header, then a two-column parameter grid =====
     ColumnLayout {
         id: col
         anchors.left: parent.left
@@ -51,10 +62,12 @@ Item {
         anchors.margins: 10
         spacing: Theme.margin
 
-        Label {
-            text: (opData && opData.type) ? ("Facing — Op #" + (opData.order !== undefined ? opData.order : "N/A")) : "Facing"
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
+        OperationHeader {
+            id: header
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            onSpindleEdited: function(spindle) { root.save({spindle_parameters: spindle}) }
+            onFeedRateEdited: function(value) { root.save({cutting_parameters: {feed_rate: value}}) }
+            onM1Edited: function(m1) { root.save({m1_parameters: m1}) }
         }
 
         GridLayout {
@@ -66,18 +79,17 @@ Item {
             Layout.alignment: Qt.AlignTop
 
             // Row 1, column 1
-            SpindleParameters {
-                id: spindlePanel
+            CuttingGeometry {
+                id: geometryPanel
                 Layout.row: 0
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function (p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
+                onTeachXRequested: root.teachXRequested(opIndex)
+                onTeachZRequested: root.teachZRequested(opIndex)
+                onSaveRequested: function (p) { root.save(p) }
             }
 
             // Row 1, column 2
@@ -89,76 +101,23 @@ Item {
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function (p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
+                onSaveRequested: function (p) { root.save(p.payload || p) }
             }
 
             // Row 2, column 1
-            CuttingGeometry {
-                id: geometryPanel
+            FacingExtras {
+                id: extrasPanel
                 Layout.row: 1
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onTeachXRequested: root.teachXRequested(opIndex)
-                onTeachZRequested: root.teachZRequested(opIndex)
-                onSaveRequested: function (p) {
-                    var merged = root.mergeIntoOp(p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
+                onSaveRequested: function (p) { root.save(p.payload || p) }
             }
 
             // Row 2, column 2 intentionally empty.
             Item {
                 Layout.row: 1
-                Layout.column: 1
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-            }
-
-            // Row 3, column 1
-            M1Parameters {
-                id: m1Panel
-                Layout.row: 2
-                Layout.column: 0
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-                Layout.alignment: Qt.AlignTop
-                onSaveRequested: function (payload) {
-                    var merged = root.mergeIntoOp(payload)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
-            }
-
-            // Row 3, column 2 intentionally empty.
-            Item {
-                Layout.row: 2
-                Layout.column: 1
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-            }
-
-            // Row 4, column 1
-            FacingExtras {
-                id: extrasPanel
-                Layout.row: 3
-                Layout.column: 0
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-                Layout.alignment: Qt.AlignTop
-                onSaveRequested: function (p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
-            }
-
-            // Row 4, column 2 intentionally empty.
-            Item {
-                Layout.row: 3
                 Layout.column: 1
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1

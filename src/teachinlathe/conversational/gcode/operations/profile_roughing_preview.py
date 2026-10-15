@@ -45,7 +45,7 @@ def _arc_points(prev_x, prev_z, arc):
             for k in range(1, steps)]
 
 
-def _flatten_path(path):
+def flatten_path(path):
     """The roughing path as [{x, z}] points, arcs split into short lines."""
     points = [{"x": path[0].x, "z": path[0].z}]
     prev_x, prev_z = path[0].x, path[0].z
@@ -57,28 +57,26 @@ def _flatten_path(path):
     return points
 
 
-def _toolpath_moves(op):
-    """The roughing moves of the generated G-code, the final contour pass
-    included, as (feeds, rapids), each [{x0, z0, x1, z1}]; arcs come as short
-    lines. A feed also carries ``pass``, counting the passes from 0, a pass
-    being the feeds between two rapids, and ``contour``, true for the final
-    contour pass.
+def gcode_moves(lines, start=_ROUGHING_START):
+    """The moves of generated G-code ``lines`` from the comment that begins
+    with ``start`` on, as (feeds, rapids), each [{x0, z0, x1, z1}]; arcs come
+    as short lines. A feed also carries ``pass``, counting the passes from 0,
+    a pass being the feeds between two rapids, and ``contour``, true from the
+    contour pass's comment on.
     """
     feeds, rapids = [], []
     pass_no = -1
     last_mode = None
-    in_roughing = in_contour = False
+    in_moves = in_contour = False
     mode = None
     x = z = None
-    for line in generate_profile_roughing_gcode(op):
+    for line in lines:
         text = line.strip()
-        if text.startswith(_ROUGHING_START):
-            in_roughing = True
-            continue
+        if text.startswith(start):
+            in_moves = True
         if text.startswith(_CONTOUR_START):
             in_contour = True
-            continue
-        if not in_roughing or not text or text.startswith("(") or "o<" in text:
+        if not in_moves or not text or text.startswith("(") or "o<" in text:
             continue
         match = _MOTION.match(text)
         if not match or (match.group(2) is None and match.group(3) is None):
@@ -125,10 +123,10 @@ def build_profile_roughing_preview(op):
     if error:
         return {"profile": [], "offset": [], "feeds": [], "rapids": [], "error": error}
     _, profile_path = _resolve_profile(op)
-    feeds, rapids = _toolpath_moves(op)
+    feeds, rapids = gcode_moves(generate_profile_roughing_gcode(op))
     return {
-        "profile": _flatten_path(profile_path),
-        "offset": _flatten_path(roughing_path),
+        "profile": flatten_path(profile_path),
+        "offset": flatten_path(roughing_path),
         "feeds": feeds,
         "rapids": rapids,
         "error": "",

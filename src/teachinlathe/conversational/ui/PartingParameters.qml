@@ -28,7 +28,6 @@ GroupBox {
     property real x_end:   0.0
     property real z_pos:   0.0
     property real second_feed_x_pos:   0.0
-    property real first_feed_rate:   0.0
     property real second_feed_rate:   0.0
     property real x_clearance: 1.0
     property bool _loading: false
@@ -42,7 +41,6 @@ GroupBox {
         x_end   = parseFloat(partingData.x_end    !== undefined ? partingData.x_end    : 0.0)
         z_pos   = parseFloat(partingData.z_pos    !== undefined ? partingData.z_pos    : 0.0)
         second_feed_x_pos   = parseFloat(partingData.second_feed_x_pos    !== undefined ? partingData.second_feed_x_pos    : 0.0)
-        first_feed_rate   = parseFloat(partingData.first_feed_rate    !== undefined ? partingData.first_feed_rate    : 0.0)
         second_feed_rate   = parseFloat(partingData.second_feed_rate    !== undefined ? partingData.second_feed_rate    : 0.0)
         x_clearance = parseFloat(partingData.x_clearance !== undefined ? partingData.x_clearance : 1.0)
         _loading = false
@@ -59,7 +57,7 @@ GroupBox {
                 x_start: x_start,
                 x_end:   x_end,
                 z_pos:   z_pos,
-                first_feed_rate:   first_feed_rate,
+                // the first feed rate is the operation header's
                 second_feed_rate: second_feed_rate,
                 second_feed_x_pos: second_feed_x_pos,
                 x_clearance: x_clearance
@@ -205,30 +203,6 @@ GroupBox {
             columnSpacing: 20
             rowSpacing: 20
 
-            // Row 1
-            Label {
-                text: "1st Feed Rate (Fz 1)"
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: Theme.fontBody
-            }
-            NumpadField {
-                Layout.preferredWidth: 100
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                settingName: "geometry.x_end"
-                validatorObject: dblVal
-                value: root.first_feed_rate
-                formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
-                hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.first_feed_rate = value; root.emitSave() }
-            }
-            Label {
-                text: "(mm/rev)"
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: Theme.fontBody
-            }
-
-            // Row 2
             Label {
                 text: "2nd Feed Rate (Fz 2)"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft

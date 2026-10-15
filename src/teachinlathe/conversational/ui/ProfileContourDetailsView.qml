@@ -20,20 +20,32 @@ Item {
         opIndex = index
         opData = data || {}
 
-        spindlePanel.applyData(opIndex, opData)
+        header.applyData(opData, (opData.cutting_parameters || {}).feed_rate)
         cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
         profilingParamsPanel.applyData(opIndex, (opData.profiling_parameters || {}), opData)
         stockToLeavePanel.applyData(opData.stock_to_leave || {}, !!opData.stock_to_leave_enabled)
     }
 
+    // Sub-objects merge one level deep, so a part sent alone (the header's
+    // feed rate, say) updates its fields and keeps the rest.
     function mergeIntoOp(payload) {
         var out = JSON.parse(JSON.stringify(opData || {}))
         for (var k in payload) {
-            if (k === "index") continue
-            if (payload.hasOwnProperty(k)) out[k] = payload[k]
+            if (k === "index" || !payload.hasOwnProperty(k)) continue
+            var v = payload[k]
+            var cur = out[k]
+            if (v && typeof v === "object" && !Array.isArray(v)
+                    && cur && typeof cur === "object" && !Array.isArray(cur))
+                out[k] = Object.assign({}, cur, v)
+            else
+                out[k] = v
         }
         opData = out
         return out
+    }
+
+    function save(payload) {
+        root.saveRequested({index: opIndex, payload: root.mergeIntoOp(payload)})
     }
 
     ColumnLayout {
@@ -42,13 +54,13 @@ Item {
         spacing: Theme.margin
         Layout.alignment: Qt.AlignTop
 
-        Label {
-            text: (opData && opData.type)
-                  ? ("Profile Contour — Op #" + (opData.order !== undefined ? opData.order : "N/A"))
-                  : "Profile Contour"
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
-            Layout.alignment: Qt.AlignTop
+        // Profile Contour has no M1: the header leaves that width empty
+        OperationHeader {
+            id: header
+            hasM1: false
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            onSpindleEdited: function(spindle) { root.save({spindle_parameters: spindle}) }
+            onFeedRateEdited: function(value) { root.save({cutting_parameters: {feed_rate: value}}) }
         }
 
         GridLayout {
@@ -60,64 +72,50 @@ Item {
             Layout.alignment: Qt.AlignTop
 
             // Row 1, column 1
-            SpindleParameters {
-                id: spindlePanel
+            ProfilingParameters {
+                id: profilingParamsPanel
                 Layout.row: 0
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
+                onSaveRequested: function(p) { root.save(p.payload || p) }
             }
 
             // Row 1, column 2
-            CuttingParameters {
-                id: cuttingPanel
+            CheckableStockToLeave {
+                id: stockToLeavePanel
                 Layout.row: 0
                 Layout.column: 1
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
+                onSaveRequested: function(p) { root.save(p.payload || p) }
             }
 
-            // Row 2, column 1
-            ProfilingParameters {
-                id: profilingParamsPanel
+            // Row 2, column 1: Cutting parameters (Ap, retract)
+            CuttingParameters {
+                id: cuttingPanel
                 Layout.row: 1
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
+                onSaveRequested: function(p) { root.save(p.payload || p) }
             }
 
-            // Row 2, column 2
-            CheckableStockToLeave {
-                id: stockToLeavePanel
+            // Row 2, column 2 intentionally empty.
+            Item {
                 Layout.row: 1
                 Layout.column: 1
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
-                Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
             }
         }
+
+        Item { Layout.fillHeight: true }
     }
 }

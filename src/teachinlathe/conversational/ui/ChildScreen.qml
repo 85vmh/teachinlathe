@@ -77,7 +77,7 @@ Item {
         } else if (data.type === "profileRoughing") {
             detailsLoader.source = "ProfileRoughingVisualDetailsView.qml"
         } else if (data.type === "profileContour") {
-            detailsLoader.source = "ProfileContourDetailsView.qml"
+            detailsLoader.source = "ProfileContourVisualDetailsView.qml"
         } else if (data.type === "grooveRoughing") {
             detailsLoader.source = "GrooveRoughingDetailsView.qml"
         } else if (data.type === "grooveFinishing") {
@@ -118,6 +118,7 @@ Item {
             ConversationalLeftPane {
                 id: leftPane
                 operationsModel: operationEditor.operationsModel
+                programDatum: (operationEditor.selectedProgram && operationEditor.selectedProgram.datum) || 1
                 activeOpIndex: operationEditor.activeOpIndex
                 reorderMode: operationEditor.reorderMode
 

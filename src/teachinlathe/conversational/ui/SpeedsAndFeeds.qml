@@ -1,6 +1,7 @@
 // SpeedsAndFeeds.qml — spindle direction, speed mode, speed and feed rate in
 // one row: M3/M4 | CSS/RPM | the speed for the mode | feed rate.
-// Reads spindle_parameters and cutting_parameters.feed_rate of an operation.
+// Edits an operation's spindle_parameters, and a feed rate the operation
+// keeps wherever it keeps it: each edit reports only what changed.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -14,11 +15,13 @@ GroupBox {
     title: "Speeds and Feeds"
     font.pixelSize: Theme.fontBody
 
-    property int  opIndex: -1
-    property var  opData: null
+    // for operations that cannot run in CSS: its button disabled, RPM only
+    property bool rpmOnly: false
+    // false for operations without a feed rate: the field disabled and empty
+    property bool feedEnabled: true
 
-    // spindle_parameters and cutting_parameters as edited, with the rest of the op
-    signal saveRequested(var updated)
+    signal spindleEdited(var spindle)    // a whole spindle_parameters
+    signal feedRateEdited(real value)
     signal openNumPadRequested(var field)
 
     property string spindleMode: "rpm"   // "rpm" | "css"
@@ -28,25 +31,20 @@ GroupBox {
     property int    direction: -1        // +1 = Forward (M3), -1 = Reverse (M4)
     property real   feed_rate: 0.0
 
-    function applyData(index, data) {
-        opIndex = index
-        opData = data || {}
-
-        var sp = opData.spindle_parameters || {}
+    function applyData(spindleParams, feedRate) {
+        var sp = spindleParams || {}
         direction = (sp.direction !== undefined) ? sp.direction : -1
         var hasRPM = (sp.rpm_value !== undefined && sp.rpm_value !== null)
         var hasCSS = (sp.css_value !== undefined && sp.css_max_speed !== undefined)
-        spindleMode = (sp.mode === "css" || sp.mode === "rpm") ? sp.mode : (hasRPM ? "rpm" : "css")
+        spindleMode = rpmOnly ? "rpm"
+                    : (sp.mode === "css" || sp.mode === "rpm") ? sp.mode : (hasRPM ? "rpm" : "css")
         rpm_value = hasRPM ? +sp.rpm_value : 0
         css_value = hasCSS ? +sp.css_value : 0
         css_max_rpm = hasCSS ? +sp.css_max_speed : 0
-
-        var cp = opData.cutting_parameters || {}
-        feed_rate = (cp.feed_rate !== undefined) ? +cp.feed_rate : 0
+        feed_rate = (feedRate !== undefined && feedRate !== null) ? +feedRate : 0
     }
 
-    function emitSave() {
-        if (!opData) return
+    function emitSpindle() {
         var spindle = {direction: direction, mode: spindleMode}
         if (spindleMode === "rpm") {
             spindle.rpm_value = rpm_value
@@ -54,9 +52,7 @@ GroupBox {
             spindle.css_value = css_value
             spindle.css_max_speed = css_max_rpm
         }
-        var cutting = JSON.parse(JSON.stringify(opData.cutting_parameters || {}))
-        cutting.feed_rate = feed_rate
-        root.saveRequested({index: opIndex, payload: {spindle_parameters: spindle, cutting_parameters: cutting}})
+        root.spindleEdited(spindle)
     }
 
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
@@ -100,7 +96,7 @@ GroupBox {
             clockwise: root.direction === 1
             onPicked: function(clockwise) {
                 root.direction = clockwise ? 1 : -1
-                root.emitSave()
+                root.emitSpindle()
             }
         }
 
@@ -121,10 +117,11 @@ GroupBox {
                 leftPadding: 0
                 rightPadding: 0
                 text: "<b>(G96)</b> CSS"
+                enabled: !root.rpmOnly
                 font.pixelSize: Theme.fontBody
                 checked: root.spindleMode === "css"
                 ButtonGroup.group: modeGroup
-                onToggled: if (checked) { root.spindleMode = "css"; root.emitSave() }
+                onToggled: if (checked) { root.spindleMode = "css"; root.emitSpindle() }
             }
             RadioButton {
                 leftPadding: 0
@@ -133,7 +130,7 @@ GroupBox {
                 font.pixelSize: Theme.fontBody
                 checked: root.spindleMode === "rpm"
                 ButtonGroup.group: modeGroup
-                onToggled: if (checked) { root.spindleMode = "rpm"; root.emitSave() }
+                onToggled: if (checked) { root.spindleMode = "rpm"; root.emitSpindle() }
             }
         }
 
@@ -170,7 +167,7 @@ GroupBox {
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
                 onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.css_value = value; root.emitSave() }
+                onValueCommitted: { root.css_value = value; root.emitSpindle() }
             }
             Label {
                 Layout.row: 0; Layout.column: 2
@@ -195,7 +192,7 @@ GroupBox {
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
                 onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.css_max_rpm = value; root.emitSave() }
+                onValueCommitted: { root.css_max_rpm = value; root.emitSpindle() }
             }
             NumpadField {
                 Layout.row: 1; Layout.column: 1
@@ -206,7 +203,7 @@ GroupBox {
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
                 onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.rpm_value = value; root.emitSave() }
+                onValueCommitted: { root.rpm_value = value; root.emitSpindle() }
             }
             Label {
                 Layout.row: 1; Layout.column: 2
@@ -218,6 +215,9 @@ GroupBox {
         Separator {}
 
         ValueFrame {
+            enabled: root.feedEnabled
+            opacity: root.feedEnabled ? 1.0 : 0.5
+
             RowLayout {
                 spacing: 20
 
@@ -231,10 +231,10 @@ GroupBox {
                     value: root.feed_rate
                     validatorObject: dblVal
                     // up to three decimals, without trailing zeros
-                    formatter: function (v) { return (v == null) ? "" : String(Number(Number(v).toFixed(3))) }
+                    formatter: function (v) { return (v == null || !root.feedEnabled) ? "" : String(Number(Number(v).toFixed(3))) }
                     hAlign: Text.AlignRight
                     onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: { root.feed_rate = value; root.emitSave() }
+                    onValueCommitted: { root.feed_rate = value; root.feedRateEdited(value) }
                 }
                 Label {
                     text: "(mm/rev)"

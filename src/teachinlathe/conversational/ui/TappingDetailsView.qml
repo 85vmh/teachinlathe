@@ -23,31 +23,46 @@ Item {
         opData = data || {}
 
         // populate sub-panels
-        spindlePanel.rpmOnly = true
-        spindlePanel.applyData(opIndex, opData)
+        header.applyData(opData, null)
         tappingParamsPanel.applyData(opIndex, (opData.tapping_parameters || {}), opData)
-        m1Panel.applyData(opData && opData.m1_parameters ? opData.m1_parameters : {})
     }
 
+    // Sub-objects merge one level deep, so a part sent alone updates its
+    // fields and keeps the rest.
     function mergeIntoOp(payload) {
         var out = JSON.parse(JSON.stringify(opData || {}))
         for (var k in payload) {
-            if (k === "index") continue
-            if (payload.hasOwnProperty(k)) out[k] = payload[k]
+            if (k === "index" || !payload.hasOwnProperty(k)) continue
+            var v = payload[k]
+            var cur = out[k]
+            if (v && typeof v === "object" && !Array.isArray(v)
+                    && cur && typeof cur === "object" && !Array.isArray(cur))
+                out[k] = Object.assign({}, cur, v)
+            else
+                out[k] = v
         }
         opData = out
         return out
     }
 
+    function save(payload) {
+        root.saveRequested({index: opIndex, payload: root.mergeIntoOp(payload)})
+    }
+
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
+        anchors.margins: 10
         spacing: Theme.margin
 
-        Label {
-            text: (opData && opData.type) ? ("Tapping — Op #" + (opData.order !== undefined ? opData.order : "N/A")) : "Tapping"
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
+        // Tapping runs in RPM only, and the pitch sets its feed: the
+        // header's feed rate is left disabled
+        OperationHeader {
+            id: header
+            rpmOnly: true
+            feedEnabled: false
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            onSpindleEdited: function(spindle) { root.save({spindle_parameters: spindle}) }
+            onM1Edited: function(m1) { root.save({m1_parameters: m1}) }
         }
 
         GridLayout {
@@ -65,19 +80,17 @@ Item {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: 1
-                Layout.preferredHeight: spindlePanel.implicitHeight
+                Layout.preferredHeight: tappingParamsPanel.implicitHeight
                 Layout.alignment: Qt.AlignTop
 
-                SpindleParameters {
-                    id: spindlePanel
+                TappingParameters {
+                    id: tappingParamsPanel
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
                     onOpenNumPadRequested: root.openNumPadRequested(field)
-                    onSaveRequested: function (p) {
-                        var merged = root.mergeIntoOp(p.payload || p)
-                        root.saveRequested({index: opIndex, payload: merged})
-                    }
+                    onTeachZRequested: root.teachZRequested(opIndex)
+                    onSaveRequested: function (p) { root.save(p.payload || p) }
                 }
             }
 
@@ -89,70 +102,8 @@ Item {
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: 1
             }
-
-            // Row 2, column 1
-            Item {
-                Layout.row: 1
-                Layout.column: 0
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: tappingParamsPanel.implicitHeight
-                Layout.alignment: Qt.AlignTop
-
-                TappingParameters {
-                    id: tappingParamsPanel
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    onOpenNumPadRequested: root.openNumPadRequested(field)
-                    onTeachZRequested: root.teachZRequested(opIndex)
-                    onSaveRequested: function (p) {
-                        var merged = root.mergeIntoOp(p.payload || p)
-                        root.saveRequested({index: opIndex, payload: merged})
-                    }
-                }
-            }
-
-            // Row 2, column 2 intentionally empty.
-            Item {
-                Layout.row: 1
-                Layout.column: 1
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: 1
-            }
-
-            // Row 3, column 1
-            Item {
-                Layout.row: 2
-                Layout.column: 0
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: m1Panel.implicitHeight
-                Layout.alignment: Qt.AlignTop
-
-                M1Parameters {
-                    id: m1Panel
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    onSaveRequested: function (payload) {
-                        var merged = root.mergeIntoOp(payload)
-                        root.saveRequested({index: opIndex, payload: merged})
-                    }
-                }
-            }
-
-            // Row 3, column 2 intentionally empty.
-            Item {
-                Layout.row: 2
-                Layout.column: 1
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: 1
-            }
         }
+
+        Item { Layout.fillHeight: true }
     }
 }

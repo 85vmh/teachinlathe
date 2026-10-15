@@ -40,14 +40,6 @@ Item {
         spacing: Theme.margin
         Layout.alignment: Qt.AlignTop
 
-        Label {
-            text: (opData && opData.type)
-                  ? ("Groove Finishing - Op #" + (opData.order !== undefined ? opData.order : "N/A"))
-                  : "Groove Finishing"
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
-        }
-
         GridLayout {
             Layout.fillWidth: true
             columns: 2

@@ -11,12 +11,12 @@ Item {
     anchors.fill: parent
     property int fieldFontSize: 16
     readonly property int labelWidth: 150
-    readonly property int inputWidth: 120
+    readonly property int inputWidth: 90
     readonly property int programNameWidth: 360
     readonly property int inputHeight: 48
     readonly property int inputFontSize: 20
     readonly property int rowGap: 20
-    readonly property int columnGap: 32
+    readonly property int columnGap: 8
 
     // --- Input model ---
     // Expect either applyProgram(programDict) or applyData(_, programDict)
@@ -87,108 +87,126 @@ Item {
         root.saveRequested({ index: -1, payload: payload })
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 12
-        spacing: 20
-
-        Label {
-            text: "Program Header"
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
+    // the insert type's dropdown, from the tool editors
+    component Choice: ComboBox {
+        // just wide enough for its text and the arrow: the padding on the
+        // right already holds the arrow
+        Layout.preferredWidth: leftPadding + contentItem.implicitWidth + rightPadding
+        Layout.preferredHeight: Theme.inputHeight
+        font.pixelSize: Theme.fontTitle
+        contentItem: Text {
+            leftPadding: 8
+            rightPadding: 8
+            text: parent.displayText
+            font: parent.font
+            color: Theme.foregroundStrong
+            horizontalAlignment: Text.AlignLeft
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
         }
+        delegate: Component {
+            ItemDelegate {
+                width: parent ? parent.width : 0
+                height: Theme.inputHeight
+                text: modelData
+                font.pixelSize: Theme.fontTitle
+            }
+        }
+    }
 
+    ColumnLayout {
+        id: contentColumn
+        anchors.fill: parent
+        anchors.margins: 10
+        spacing: Theme.innerSpacings
+
+        // Program Details, then On Program Finished as tall
         RowLayout {
+            id: topRow
             Layout.fillWidth: true
-            spacing: 30
-            Layout.alignment: Qt.AlignTop
+            spacing: Theme.innerSpacings
 
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
+            GroupBox {
+                id: programDetails
+                title: "Program Details"
                 Layout.alignment: Qt.AlignTop
-                spacing: 20
+                font.pixelSize: root.fieldFontSize
 
-                GroupBox {
-                    title: "Program Details"
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    font.pixelSize: root.fieldFontSize
+                RowLayout {
+                    anchors.fill: parent
+                    spacing: Theme.spacing
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: root.rowGap
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: root.columnGap
-                            Label {
-                                text: "Program name"
-                                Layout.preferredWidth: root.labelWidth
-                                verticalAlignment: Text.AlignVCenter
-                                font.pixelSize: root.fieldFontSize
-                            }
-                            KeyboardField {
-                                Layout.preferredWidth: root.programNameWidth
-                                Layout.preferredHeight: root.inputHeight
-                                font.pixelSize: root.inputFontSize
-                                titleText: "Program name"
-                                text: root.programName
-                                commitUpdatesText: false
-                                onOpenRequested: root.openKeyboardRequested(field)
-                                onValueCommitted: {
-                                    root.programName = value
-                                    root.emitSave()
-                                }
-                            }
+                    Label {
+                        text: "Program name"
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
+                    KeyboardField {
+                        Layout.preferredWidth: root.programNameWidth
+                        Layout.preferredHeight: root.inputHeight
+                        font.pixelSize: root.inputFontSize
+                        titleText: "Program name"
+                        text: root.programName
+                        commitUpdatesText: false
+                        onOpenRequested: root.openKeyboardRequested(field)
+                        onValueCommitted: {
+                            root.programName = value
+                            root.emitSave()
                         }
+                    }
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: root.columnGap
+                    Rectangle {
+                        implicitWidth: Theme.hairline
+                        Layout.fillHeight: true
+                        color: Theme.outline
+                    }
 
-                            Label {
-                                text: "Datum"
-                                Layout.preferredWidth: root.labelWidth
-                                verticalAlignment: Text.AlignVCenter
-                                font.pixelSize: root.fieldFontSize
-                            }
-                            NumpadField {
-                                Layout.preferredWidth: root.inputWidth
-                                settingName: "smart_numpad.header-datum"
-                                value: root.datum
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.datum = Math.round(value); root.emitSave() }
-                            }
-                        }
-
-                        Item { Layout.preferredHeight: root.rowGap }
+                    Label {
+                        text: "Datum"
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
+                    // G54..G59, saved as the work offset's P number, 1..6
+                    Choice {
+                        model: ["G54", "G55", "G56", "G57", "G58", "G59"]
+                        currentIndex: (root.datum >= 1 && root.datum <= 6) ? root.datum - 1 : 0
+                        onActivated: function(index) { root.datum = index + 1; root.emitSave() }
                     }
                 }
+            }
 
-                GroupBox {
-                    title: "After the last operation:"
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    font.pixelSize: root.fieldFontSize
+            GroupBox {
+                title: "On Program Finished"
+                Layout.alignment: Qt.AlignTop
+                // whatever width Program Details leaves, and as tall
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 0
+                Layout.preferredHeight: programDetails.implicitHeight
+                font.pixelSize: root.fieldFontSize
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: Theme.spacingLarge
+                ButtonGroup { id: afterLastGroup }
 
-                        ButtonGroup { id: afterLastGroup }
+                // the buttons as wide as their texts, the space left shared
+                // out equally between them: first at the left, last at the right
+                RowLayout {
+                    anchors.fill: parent
+                    spacing: 0
 
-                        Repeater {
-                            model: [
-                                { value: "do_nothing", label: "Do nothing" },
-                                { value: "g28",        label: "Go to G28" },
-                                { value: "g30",        label: "Go to G30" }
-                            ]
+                    Repeater {
+                        model: [
+                            { value: "do_nothing", label: "Do nothing" },
+                            { value: "g28",        label: "Retract at <b>G28</b>" },
+                            { value: "g30",        label: "Retract at <b>G30</b>" }
+                        ]
+                        // a stretch, then the button; the first without it
+                        RowLayout {
+                            spacing: 0
+                            Layout.fillWidth: index > 0
+                            Item { visible: index > 0; Layout.fillWidth: true }
                             RadioButton {
                                 text: modelData.label
-                                font.pixelSize: root.fieldFontSize
+                                font.pixelSize: Theme.fontBody
                                 ButtonGroup.group: afterLastGroup
                                 checked: root.afterLastOperation === modelData.value
                                 onToggled: if (checked && root.afterLastOperation !== modelData.value) {
@@ -197,95 +215,90 @@ Item {
                                 }
                             }
                         }
-
-                        Item { Layout.preferredHeight: 8 }
                     }
-                }
-            }
-
-            GroupBox {
-                title: "Workpiece Details"
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-                Layout.alignment: Qt.AlignTop
-                font.pixelSize: root.fieldFontSize
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 10
-                    spacing: root.rowGap
-
-                    GridLayout {
-                        columns: 2
-                        rowSpacing: root.rowGap
-                        columnSpacing: root.columnGap
-                        Layout.fillWidth: true
-
-                        Label {
-                            text: "External Ø"
-                            Layout.preferredWidth: root.labelWidth
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: root.fieldFontSize
-                        }
-                        NumpadField {
-                            Layout.preferredWidth: root.inputWidth
-                            settingName: "smart_numpad.workpiece-external-dia"
-                            value: root.extDia
-                            formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.extDia = value; root.emitSave() }
-                        }
-
-                        Label {
-                            text: "Internal Ø"
-                            Layout.preferredWidth: root.labelWidth
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: root.fieldFontSize
-                        }
-                        NumpadField {
-                            Layout.preferredWidth: root.inputWidth
-                            settingName: "smart_numpad.workpiece-internal-dia"
-                            value: root.intDia
-                            formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.intDia = value; root.emitSave() }
-                        }
-
-                        Label {
-                            text: "Stickout length"
-                            Layout.preferredWidth: root.labelWidth
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: root.fieldFontSize
-                        }
-                        NumpadField {
-                            Layout.preferredWidth: root.inputWidth
-                            settingName: "smart_numpad.workpiece-stickout"
-                            value: root.stickout
-                            formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.stickout = value; root.emitSave() }
-                        }
-
-                        Label {
-                            text: "Stock Length"
-                            Layout.preferredWidth: root.labelWidth
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: root.fieldFontSize
-                        }
-                        NumpadField {
-                            Layout.preferredWidth: root.inputWidth
-                            settingName: "smart_numpad.workpiece-stock-length"
-                            description: "Stock Length"
-                            value: root.stockLength
-                            formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.stockLength = value; root.emitSave() }
-                        }
-                    }
-
-                    Item { Layout.preferredHeight: root.rowGap }
                 }
             }
         }
+
+        GroupBox {
+            title: "Workpiece Details"
+            Layout.alignment: Qt.AlignTop | Qt.AlignLeft
+            font.pixelSize: root.fieldFontSize
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: root.rowGap
+
+                GridLayout {
+                    columns: 2
+                    rowSpacing: root.rowGap
+                    columnSpacing: root.columnGap
+                    Layout.fillWidth: true
+
+                    Label {
+                        text: "External Ø"
+                        Layout.preferredWidth: root.labelWidth
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
+                    NumpadField {
+                        Layout.preferredWidth: root.inputWidth
+                        settingName: "smart_numpad.workpiece-external-dia"
+                        value: root.extDia
+                        formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: { root.extDia = value; root.emitSave() }
+                    }
+
+                    Label {
+                        text: "Internal Ø"
+                        Layout.preferredWidth: root.labelWidth
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
+                    NumpadField {
+                        Layout.preferredWidth: root.inputWidth
+                        settingName: "smart_numpad.workpiece-internal-dia"
+                        value: root.intDia
+                        formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: { root.intDia = value; root.emitSave() }
+                    }
+
+                    Label {
+                        text: "Stickout length"
+                        Layout.preferredWidth: root.labelWidth
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
+                    NumpadField {
+                        Layout.preferredWidth: root.inputWidth
+                        settingName: "smart_numpad.workpiece-stickout"
+                        value: root.stickout
+                        formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: { root.stickout = value; root.emitSave() }
+                    }
+
+                    Label {
+                        text: "Stock Length"
+                        Layout.preferredWidth: root.labelWidth
+                        verticalAlignment: Text.AlignVCenter
+                        font.pixelSize: root.fieldFontSize
+                    }
+                    NumpadField {
+                        Layout.preferredWidth: root.inputWidth
+                        settingName: "smart_numpad.workpiece-stock-length"
+                        description: "Stock Length"
+                        value: root.stockLength
+                        formatter: function(v){ return (v==null)?"":Number(v).toFixed(3) }
+                        onOpenRequested: root.openNumPadRequested(field)
+                        onValueCommitted: { root.stockLength = value; root.emitSave() }
+                    }
+                }
+            }
+        }
+
+        Item { Layout.fillHeight: true }
     }
 }

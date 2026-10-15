@@ -13,7 +13,6 @@ Item {
     property int opIndex: -1
     property var opData: null
     readonly property bool isG33Threading: opData && opData.type === "g33Threading"
-    readonly property string operationTitle: isG33Threading ? "G33 Threading" : "G76 Threading"
     readonly property string defaultThreadType: isG33Threading ? "g33" : "metric"
     readonly property string cuttingParamsSource: isG33Threading ? "G33CuttingParams.qml" : "G76CuttingParams.qml"
     readonly property real finalRadialDepth: Math.abs(root.majorDiameter - root.minorDiameter) / 2.0
@@ -138,14 +137,6 @@ Item {
         anchors.fill: parent
         anchors.margins: 12
         spacing: Theme.margin
-
-        Label {
-            text: (opData && opData.type)
-                  ? (root.operationTitle + " - Op #" + (opData.order !== undefined ? opData.order : "N/A"))
-                  : root.operationTitle
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
-        }
 
         RowLayout {
             id: detailsLayout

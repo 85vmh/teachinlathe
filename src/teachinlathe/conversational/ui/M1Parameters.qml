@@ -22,6 +22,10 @@ GroupBox {
     signal saveRequested(var payload)
 
     property bool readOnly: false
+
+    // how wide each Retract button's half of the row is, for rows elsewhere
+    // that space their buttons the same
+    readonly property real optionWidth: rbG28.width
     property bool _loading: false
 
     function applyData(data) {

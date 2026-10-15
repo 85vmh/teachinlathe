@@ -51,16 +51,6 @@ Item {
         anchors.margins: 12
         spacing: 10
 
-        Label {
-            text: {
-                var typeStr = (root.profileType === "id") ? "ID" : "OD"
-                if (root.opData && root.opData.type)
-                    return "Define " + typeStr + " Profile — Op #" + (root.opData.order !== undefined ? root.opData.order : "N/A")
-                return "Define " + typeStr + " Profile"
-            }
-            font.pixelSize: Theme.fontLarge; font.bold: true
-        }
-
         // Canvas with zoom icon buttons overlaid top-left
         Item {
             Layout.fillWidth:  true

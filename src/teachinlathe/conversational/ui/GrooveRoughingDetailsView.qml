@@ -42,14 +42,6 @@ Item {
         spacing: Theme.margin
         Layout.alignment: Qt.AlignTop
 
-        Label {
-            text: (opData && opData.type)
-                  ? ("Groove Roughing - Op #" + (opData.order !== undefined ? opData.order : "N/A"))
-                  : "Groove Roughing"
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
-        }
-
         GridLayout {
             Layout.fillWidth: true
             columns: 2

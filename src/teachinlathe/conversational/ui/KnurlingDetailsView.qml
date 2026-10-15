@@ -20,20 +20,31 @@ Item {
         opIndex = index
         opData = data || {}
 
-        spindlePanel.applyData(opIndex, opData)
+        header.applyData(opData, null)
         cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
         geometryPanel.applyData(opIndex, (opData.geometry_parameters || {}), opData)
-        m1Panel.applyData(opData && opData.m1_parameters ? opData.m1_parameters : {})
     }
 
+    // Sub-objects merge one level deep, so a part sent alone updates its
+    // fields and keeps the rest.
     function mergeIntoOp(payload) {
         var out = JSON.parse(JSON.stringify(opData || {}))
         for (var k in payload) {
-            if (k === "index") continue
-            if (payload.hasOwnProperty(k)) out[k] = payload[k]
+            if (k === "index" || !payload.hasOwnProperty(k)) continue
+            var v = payload[k]
+            var cur = out[k]
+            if (v && typeof v === "object" && !Array.isArray(v)
+                    && cur && typeof cur === "object" && !Array.isArray(cur))
+                out[k] = Object.assign({}, cur, v)
+            else
+                out[k] = v
         }
         opData = out
         return out
+    }
+
+    function save(payload) {
+        root.saveRequested({index: opIndex, payload: root.mergeIntoOp(payload)})
     }
 
     ColumnLayout {
@@ -43,40 +54,13 @@ Item {
         anchors.margins: 10
         spacing: 40
 
-        Label {
-            text: (opData && opData.type) ? ("SinglePoint Knurling - Op #" + (opData.order !== undefined ? opData.order : "N/A")) : "SinglePoint Knurling"
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 30
-            Layout.alignment: Qt.AlignTop
-
-            SpindleParameters {
-                id: spindlePanel
-                Layout.fillWidth: true
-                Layout.preferredWidth: 6
-                Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({ index: opIndex, payload: merged })
-                }
-            }
-
-            KnurlingCuttingParameters {
-                id: cuttingPanel
-                Layout.fillWidth: true
-                Layout.preferredWidth: 4
-                Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({ index: opIndex, payload: merged })
-                }
-            }
+        // Knurling has no feed rate: the header's is left disabled
+        OperationHeader {
+            id: header
+            feedEnabled: false
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            onSpindleEdited: function(spindle) { root.save({spindle_parameters: spindle}) }
+            onM1Edited: function(m1) { root.save({m1_parameters: m1}) }
         }
 
         RowLayout {
@@ -92,21 +76,16 @@ Item {
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onTeachXRequested: root.teachXRequested(opIndex)
                 onTeachZRequested: root.teachZRequested(opIndex)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p)
-                    root.saveRequested({ index: opIndex, payload: merged })
-                }
+                onSaveRequested: function(p) { root.save(p) }
             }
 
-            M1Parameters {
-                id: m1Panel
+            KnurlingCuttingParameters {
+                id: cuttingPanel
                 Layout.fillWidth: true
                 Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
-                onSaveRequested: function(payload) {
-                    var merged = root.mergeIntoOp(payload)
-                    root.saveRequested({ index: opIndex, payload: merged })
-                }
+                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onSaveRequested: function(p) { root.save(p.payload || p) }
             }
         }
     }

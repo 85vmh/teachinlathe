@@ -9,6 +9,7 @@ Rectangle {
     id: root
 
     property var operationsModel: []
+    property int programDatum: 1          // the work offset's P number: 1 is G54
     property int activeOpIndex: -1
     property bool reorderMode: false
 
@@ -199,6 +200,8 @@ Rectangle {
                             ProgramHeader {
                                 anchors.fill: parent
                                 visible: index === 0
+                                datum: root.programDatum
+                                colDelW: root.colDelW
                                 selected: opsList.currentIndex === 0
                                 onClicked: opsList.currentIndex = 0
                             }

@@ -4,6 +4,8 @@ def build_selected_program_summary(program):
         "name": program.header.name,
         "created_date": getattr(program.header, "created_date", ""),
         "last_edit": program.header.last_edit,
+        # the work offset's P number: 1 is G54 ... 6 is G59
+        "datum": int(getattr(program.header, "datum", 1) or 1),
     }
 
 

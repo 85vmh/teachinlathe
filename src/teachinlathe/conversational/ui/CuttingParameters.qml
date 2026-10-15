@@ -23,7 +23,6 @@ GroupBox {
     signal openNumPadRequested(var field)
 
     // state
-    property real feed_rate: 0.0
     property real doc: 0.0
     property real retract: 0.0
     property bool _loading: false
@@ -36,7 +35,6 @@ GroupBox {
         opData  = fullOp || {}
         cuttingData = cuttingParams || {}
 
-        feed_rate = parseFloat(cuttingData.feed_rate !== undefined ? cuttingData.feed_rate : 0.0)
         doc       = parseFloat(cuttingData.doc       !== undefined ? cuttingData.doc       : 0.0)
         retract   = parseFloat(cuttingData.retract   !== undefined ? cuttingData.retract   : 0.0)
         _loading = false
@@ -49,8 +47,8 @@ GroupBox {
             type:  (opData && opData.type)  ? opData.type  : "",
             generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
             is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
+            // the feed rate is the operation header's
             cutting_parameters: {
-                feed_rate: feed_rate,
                 doc:       doc,
                 retract:   retract
             }
@@ -67,28 +65,6 @@ GroupBox {
         columns: 3
         columnSpacing: 20
         rowSpacing: 20
-
-        // Feed Rate
-        Label {
-            text: "Feed rate (Fz)"
-            font.pixelSize: Theme.fontBody
-        }
-        NumpadField {
-            Layout.preferredWidth: 100
-            Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-            settingName: "turning.feed_rate"
-            value: root.feed_rate
-            validatorObject: dblVal
-            formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
-            hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.feed_rate = value; root.emitSave() }
-        }
-        Label {
-            text: "(mm/rev)"
-            Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            font.pixelSize: Theme.fontBody
-        }
 
         // Depth of Cut
         Label {

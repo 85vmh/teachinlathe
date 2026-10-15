@@ -330,6 +330,22 @@ class ConversationalQml(QObject):
             print("profileRoughingPreview failed:", e)
             return {"profile": [], "offset": [], "feeds": [], "rapids": [], "error": str(e)}
 
+    @pyqtSlot(int, "QVariant", result="QVariant")
+    def profileContourPreview(self, op_index, op_data):
+        """What the Profile Contour at ``op_index`` would cut with ``op_data``,
+        against the last profile above it; see build_profile_contour_preview.
+        """
+        from teachinlathe.conversational.gcode.operations.profile_contour_preview import (
+            build_profile_contour_preview,
+        )
+        try:
+            op = self._to_py(op_data) or {}
+            op["_resolved_profile"] = self.lastProfileBefore(op_index)
+            return build_profile_contour_preview(op)
+        except Exception as e:
+            print("profileContourPreview failed:", e)
+            return {"profile": [], "offset": [], "feeds": [], "rapids": [], "error": str(e)}
+
     @pyqtSlot(str, result="QVariant")
     def previewDxfProfile(self, dxf_file_path):
         try:
@@ -399,6 +415,8 @@ class ConversationalQml(QObject):
                 new_ops = build_operations_model(self.current_program)
                 self.child_screen_item.setProperty("activeOpIndex", getattr(self, "current_op_index", -1))
                 self.child_screen_item.setProperty("operationsModel", new_ops)
+                # the header row shows the datum, which the header edits
+                self.child_screen_item.setProperty("selectedProgram", build_selected_program_summary(self.current_program))
             except RuntimeError:
                 self.child_screen_item = None
 

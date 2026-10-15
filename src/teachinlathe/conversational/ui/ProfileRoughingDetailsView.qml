@@ -55,15 +55,6 @@ Item {
         spacing: Theme.margin
         Layout.alignment: Qt.AlignTop
 
-        Label {
-            text: (opData && opData.type)
-                  ? ("Profile Roughing — Op #" + (opData.order !== undefined ? opData.order : "N/A"))
-                  : "Profile Roughing"
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
-            Layout.alignment: Qt.AlignTop
-        }
-
         GridLayout {
             id: detailsGrid
             Layout.fillWidth: true

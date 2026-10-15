@@ -95,8 +95,7 @@ Item {
         var strategy = opData.profile_roughing_strategy || {}
         passType = strategy.pass_type ? String(strategy.pass_type) : "axial"
 
-        speedsAndFeeds.applyData(opIndex, opData)
-        m1Panel.applyData(opData.m1_parameters || {})
+        header.applyData(opData, cp.feed_rate)
         profileCanvas.resetView()
     }
 
@@ -105,35 +104,24 @@ Item {
         anchors.margins: 10
         spacing: Theme.innerSpacings
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Theme.innerSpacings
-
-            SpeedsAndFeeds {
-                id: speedsAndFeeds
-                Layout.minimumWidth: implicitWidth
-                // takes only its own values: its copy of the cutting
-                // parameters predates the Ap and retract edited here
-                onSaveRequested: function(updated) {
-                    var op = root._draftOp()
-                    op.spindle_parameters = updated.payload.spindle_parameters
-                    op.cutting_parameters.feed_rate = updated.payload.cutting_parameters.feed_rate
-                    root.save(op)
-                }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+        // each edit goes into the whole op with the canvas boxes' values
+        OperationHeader {
+            id: header
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            onSpindleEdited: function(spindle) {
+                var op = root._draftOp()
+                op.spindle_parameters = spindle
+                root.save(op)
             }
-
-            M1Parameters {
-                id: m1Panel
-                // whatever width Speeds and Feeds leaves
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: 0
-                Layout.preferredHeight: speedsAndFeeds.implicitHeight
-                onSaveRequested: function(payload) {
-                    var op = root._draftOp()
-                    op.m1_parameters = payload.m1_parameters
-                    root.save(op)
-                }
+            onFeedRateEdited: function(value) {
+                var op = root._draftOp()
+                op.cutting_parameters.feed_rate = value
+                root.save(op)
+            }
+            onM1Edited: function(m1) {
+                var op = root._draftOp()
+                op.m1_parameters = m1
+                root.save(op)
             }
         }
 

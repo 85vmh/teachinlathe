@@ -27,7 +27,6 @@ GroupBox {
     property real z_end:   0.0
     property real z_retract:   0.0
     property real peck_depth:   0.0
-    property real feed_rate:   0.0
     property bool _loading: false
 
     function applyData(index, drillingParams, fullOp) {
@@ -39,7 +38,6 @@ GroupBox {
         z_end   = parseFloat(drillingData.z_end    !== undefined ? drillingData.z_end    : 0.0)
         z_retract   = parseFloat(drillingData.z_retract    !== undefined ? drillingData.z_retract    : 0.0)
         peck_depth   = parseFloat(drillingData.peck_depth    !== undefined ? drillingData.peck_depth    : 0.0)
-        feed_rate   = parseFloat(drillingData.feed_rate    !== undefined ? drillingData.feed_rate    : 0.0)
         _loading = false
     }
 
@@ -54,8 +52,8 @@ GroupBox {
                 z_start: z_start,
                 z_end:   z_end,
                 z_retract:   z_retract,
-                peck_depth:   peck_depth,
-                feed_rate: feed_rate
+                peck_depth:   peck_depth
+                // the feed rate is the operation header's
             }
         }
         root.saveRequested(payload)
@@ -178,28 +176,6 @@ GroupBox {
                 font.pixelSize: Theme.fontBody
             }
 
-            // Row 2
-            Label {
-                text: "Feed rate (Fz)"
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: Theme.fontBody
-            }
-            NumpadField {
-                Layout.preferredWidth: 100
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                settingName: "drilling.feed_rate"
-                validatorObject: dblVal
-                value: root.feed_rate
-                formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
-                hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.feed_rate = value; root.emitSave() }
-            }
-            Label {
-                text: "(mm/rev)"
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                font.pixelSize: Theme.fontBody
-            }
         }
     }
 }

@@ -72,20 +72,11 @@ Item {
         anchors.bottomMargin: 10
         spacing: 0
 
-        Label {
-            Layout.leftMargin: root.sideMargin
-            Layout.rightMargin: root.sideMargin
-            text: "Tool Change"
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
-        }
-
         GroupBox {
             id: positionBox
             title: "Tool Change Position"
             font.pixelSize: Theme.fontBody
             Layout.fillWidth: true
-            Layout.topMargin: Theme.margin
             Layout.leftMargin: root.sideMargin
             Layout.rightMargin: root.sideMargin
 

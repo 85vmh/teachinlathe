@@ -69,22 +69,18 @@ def _profile_extents(path):
     return x_min, x_max
 
 
-def generate_profile_contour_gcode(op):
-    if hasattr(op, "to_dict"):
-        op = op.to_dict()
+_NO_PROFILE = "no valid profile found"
+_NO_CONTOUR_PROFILE = "no valid contour profile after stock/clipping"
 
-    config = parse_profile_contour_config(op)
-    spindle = op.get("spindle_parameters", {}) or {}
+
+def build_contour_setup(op, config):
+    """The context and the path the contour is cut along: the profile offset
+    by stock-to-leave and clipped to X Start. Returns (ctx, contour_path,
+    error); error names what is missing when there is nothing to cut.
+    """
     segments, path = _resolve_profile(op)
-
-    lines = []
-    lines.extend(build_spindle_gcode(spindle, config.optional_prefix))
-    lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
-    lines.append("")
-
     if not segments or not isinstance(segments[0], StartPoint):
-        lines.append("( ERROR: Profile Contour -- no valid profile found )")
-        return lines
+        return None, None, _NO_PROFILE
 
     x_min, x_max = _profile_extents(path)
 
@@ -104,7 +100,25 @@ def generate_profile_contour_gcode(op):
     )
 
     if not contour_path or not isinstance(contour_path[0], StartPoint):
-        lines.append("( ERROR: Profile Contour -- no valid contour profile after stock/clipping )")
+        return ctx, None, _NO_CONTOUR_PROFILE
+    return ctx, contour_path, None
+
+
+def generate_profile_contour_gcode(op):
+    if hasattr(op, "to_dict"):
+        op = op.to_dict()
+
+    config = parse_profile_contour_config(op)
+    spindle = op.get("spindle_parameters", {}) or {}
+
+    lines = []
+    lines.extend(build_spindle_gcode(spindle, config.optional_prefix))
+    lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
+    lines.append("")
+
+    ctx, contour_path, error = build_contour_setup(op, config)
+    if error:
+        lines.append(f"( ERROR: Profile Contour -- {error} )")
         return lines
 
     emit_roughing_contour_pass(lines, ctx, contour_path)
