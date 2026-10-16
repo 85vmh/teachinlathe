@@ -13,11 +13,11 @@ QtObject {
 
     property color zAxisColor:    Theme.success
     property color xAxisColor:    Theme.accentStrong
-    property color zeroLineColor: "#999999"
+    property color zeroLineColor: Theme.accentStrong   // the X axis arrow's
     property real axisLineWidth:  1.5
     property real zeroLineWidth:  0.8
     property string axisFont:     "bold 11px sans-serif"
-    property var zeroDashPattern: [8, 5, 2, 5]   // long dash · dot · long dash …
+    property var zeroDashPattern: [16, 4, 3, 4]  // as the centre line's: long dash, gap, dot, gap
     property real circleR: 0
 
     function paint(ctx) {

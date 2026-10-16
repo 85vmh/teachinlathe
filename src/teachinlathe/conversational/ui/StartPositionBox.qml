@@ -1,5 +1,6 @@
 // StartPositionBox.qml — X Start / Z Start of a profile operation, laid over
-// the profile canvas.
+// the profile canvas; with other labels and accent, any X / Z position, as
+// Facing's end position.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -11,6 +12,8 @@ CanvasBox {
 
     property real xStart: 0.0
     property real zStart: 0.0
+    property string xLabel: "X Start Position"
+    property string zLabel: "Z Start Position"
 
     signal xStartEdited(real value)
     signal zStartEdited(real value)
@@ -23,7 +26,7 @@ CanvasBox {
         columnSpacing: 20
         rowSpacing: 20
 
-        Label { text: "X Start Position"; color: root.accent; font.pixelSize: Theme.fontBody }
+        Label { text: root.xLabel; color: root.accent; font.pixelSize: Theme.fontBody }
         NumpadField {
             id: tf_x_start
             Layout.preferredWidth: 100
@@ -40,7 +43,7 @@ CanvasBox {
             onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2)
         }
 
-        Label { text: "Z Start Position"; color: root.accent; font.pixelSize: Theme.fontBody }
+        Label { text: root.zLabel; color: root.accent; font.pixelSize: Theme.fontBody }
         NumpadField {
             id: tf_z_start
             Layout.preferredWidth: 100

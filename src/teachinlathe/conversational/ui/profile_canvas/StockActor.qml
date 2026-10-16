@@ -11,6 +11,9 @@ QtObject {
     readonly property real stockLength: workpiece && workpiece.stock_length !== undefined ? Number(workpiece.stock_length) : 0
     readonly property real externalDiameter: workpiece && workpiece.external_diameter !== undefined ? Number(workpiece.external_diameter) : 0
     readonly property real internalDiameter: workpiece && workpiece.internal_diameter !== undefined ? Number(workpiece.internal_diameter) : 0
+    // where the raw face is: Z0 unless the stock still stands proud of it,
+    // as before facing
+    readonly property real faceZ: workpiece && workpiece.face_z !== undefined ? Math.max(0, Number(workpiece.face_z)) : 0
 
     // Canvas y of diameter x, on the mirrored half (above the centre line)
     // when asked.
@@ -87,7 +90,7 @@ QtObject {
 
     // One half of the stock: below the centre line, or its mirror above it.
     function _paintHalf(ctx, stockZ, stockX, mirrored) {
-        var left = cx(0)
+        var left = cx(faceZ)
         var right = cx(stockZ)
         var top = cy(0)
         var bottom = _cy(stockX, mirrored)
@@ -121,8 +124,9 @@ QtObject {
         }
         ctx.restore()
 
-        // its outside and its far end; not its face at Z0, where the dashed
-        // Z0 line goes - only the finished profile is drawn over that
+        // its outside and its far end; its face only when it stands proud of
+        // Z0 - at Z0 the dashed Z0 line goes, and only the finished profile
+        // is drawn over that
         ctx.strokeStyle = "#9ca3af"
         ctx.lineWidth = 1
         ctx.setLineDash([])
@@ -130,6 +134,10 @@ QtObject {
         ctx.moveTo(left, bottom)
         ctx.lineTo(right, bottom)
         ctx.lineTo(right, top)
+        if (faceZ > 0) {
+            ctx.moveTo(left, bottom)
+            ctx.lineTo(left, top)
+        }
         ctx.stroke()
 
         if (hasInternalDiameter && innerX > 0) {

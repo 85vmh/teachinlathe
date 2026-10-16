@@ -151,6 +151,11 @@ Item {
             readonly property real boxWidth: Math.max(strategyBox.implicitWidth, stockBox.implicitWidth,
                                                       docBox.implicitWidth, startBox.implicitWidth)
             readonly property real boxGap: Theme.spacingLarge
+            // top to bottom: strategy, stock to leave, Ap / retract, start -
+            // the first at the top, the last at the bottom, the space between
+            // them shared out equally
+            readonly property real boxSpacing: (height - 2 * boxGap - strategyBox.height - stockBox.height
+                                                - docBox.height - startBox.height) / 3
             fitInsetRight: root.primitives.length > 0 ? boxWidth + boxGap : 0
 
             ProfilingTypeBox {
@@ -167,7 +172,7 @@ Item {
                 id: stockBox
                 visible: root.primitives.length > 0
                 x: profileCanvas.width - width - profileCanvas.boxGap
-                y: strategyBox.y + strategyBox.height + profileCanvas.boxGap
+                y: strategyBox.y + strategyBox.height + profileCanvas.boxSpacing
                 labelColor: profileCanvas.stockToLeaveColor
                 radial: root.stockRadial
                 axial: root.stockAxial
@@ -180,8 +185,7 @@ Item {
                 id: docBox
                 visible: root.primitives.length > 0
                 x: profileCanvas.width - width - profileCanvas.boxGap
-                // halfway between the stock to leave and start position boxes
-                y: (stockBox.y + stockBox.height + startBox.y - height) / 2
+                y: stockBox.y + stockBox.height + profileCanvas.boxSpacing
                 docColor: profileCanvas.feedColor
                 retractColor: profileCanvas.rapidColor
                 doc: root.doc
@@ -195,7 +199,7 @@ Item {
                 id: startBox
                 visible: profileCanvas.startPosition !== null
                 x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.height - height - profileCanvas.boxGap
+                y: docBox.y + docBox.height + profileCanvas.boxSpacing
                 xStart: root.xStart
                 zStart: root.zStart
                 onXStartEdited: function(value) { root.xStart = value; root.save() }

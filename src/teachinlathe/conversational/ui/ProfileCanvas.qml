@@ -35,6 +35,9 @@ Canvas {
     property real   fitDiameterMargin: -1
     // where the tool starts, as {x: diameter, z}, drawn by StartPositionActor; null hides it
     property var    startPosition: null
+    // where it ends, likewise, in endPositionColor; null hides it
+    property var    endPosition: null
+    readonly property color endPositionColor: "#8e24aa"
     // what roughing will cut, {profile, offset, feeds, rapids}
     // as profileRoughingPreview returns it; null draws none of it
     property var    roughingPreview: null
@@ -45,6 +48,7 @@ Canvas {
     // boxes laid over the canvas that the overlays point arrows to, as
     // {x, y, width, height} in canvas px; null draws no arrow
     property var    startPositionArrowRect: null
+    property var    endPositionArrowRect: null
     property var    stockToLeaveArrowRect: null
 
     // A selected cylindrical stretch, fillet or chamfer shows its value in a
@@ -187,8 +191,13 @@ Canvas {
         if (!_manualView) Qt.callLater(fitToScreen)
         else              requestPaint()
     }
+    onEndPositionChanged: {
+        if (!_manualView) Qt.callLater(fitToScreen)
+        else              requestPaint()
+    }
     onRoughingPreviewChanged:        requestPaint()
     onStartPositionArrowRectChanged: requestPaint()
+    onEndPositionArrowRectChanged:   requestPaint()
     onStockToLeaveArrowRectChanged:  requestPaint()
     onSelectedPrimIndexChanged:  requestPaint()
     onSelectedBlendIndexChanged: requestPaint()
@@ -224,10 +233,10 @@ Canvas {
         var hasProfile = primitives && primitives.length > 0
         var b = hasProfile ? geom.computeBounds(_resolvedPrimitives) : null
         if (hasProfile && !b) return
-        // with no profile, the workpiece alone, if there is one
+        // with no profile, the workpiece and the tool's positions, if any
         if (!b) {
             var hasStock = workpiece && Number(workpiece.stock_length) > 0 && Number(workpiece.external_diameter) > 0
-            if (!hasStock) return
+            if (!hasStock && !startPosition && !endPosition) return
             b = { fZMin: 0, fZMax: 0, fXMin: 0, fXMax: 0 }
         }
         var profileDiameter = Math.max(Math.abs(b.fXMin), Math.abs(b.fXMax))
@@ -241,10 +250,15 @@ Canvas {
             b.fXMin = Math.min(b.fXMin, 0)
             b.fXMax = Math.max(b.fXMax, stockDiameter)
         }
-        if (startPosition) {
-            b.fZMax = Math.max(b.fZMax, +startPosition.z || 0)
-            b.fXMax = Math.max(b.fXMax, Math.abs(+startPosition.x || 0))
+        var positions = [startPosition, endPosition]
+        for (var p = 0; p < positions.length; p++) {
+            if (!positions[p]) continue
+            b.fZMax = Math.max(b.fZMax, +positions[p].z || 0)
+            b.fZMin = Math.min(b.fZMin, +positions[p].z || 0)
+            b.fXMax = Math.max(b.fXMax, Math.abs(+positions[p].x || 0))
         }
+        var faceZ = workpiece && workpiece.face_z !== undefined ? Number(workpiece.face_z) : 0
+        if (faceZ > 0) b.fZMax = Math.max(b.fZMax, faceZ)
         var MARGIN = 10
         var marginX = MARGIN   // around X, in radius units
 
@@ -295,6 +309,7 @@ Canvas {
         highlightActor.paint(ctx)
         diameterLeaderActor.paint(ctx)
         startPositionActor.paint(ctx)
+        endPositionActor.paint(ctx)
     }
 
     function _rebuildRenderCache() {
@@ -383,6 +398,16 @@ Canvas {
         id: startPositionActor
         position: root.startPosition
         arrowToRect: root.startPositionArrowRect
+        cx: root._cx
+        cy: root._cy
+    }
+
+    // the same target, for where the tool ends
+    StartPositionActor {
+        id: endPositionActor
+        position: root.endPosition
+        arrowToRect: root.endPositionArrowRect
+        color: root.endPositionColor
         cx: root._cx
         cy: root._cy
     }

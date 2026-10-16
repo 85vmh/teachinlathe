@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 from PyQt6.QtCore import (QCoreApplication, QEventLoop, QMetaObject, QObject, Q_ARG, Qt,
-                          QTimer, QUrl, pyqtSignal, pyqtSlot)
+                          QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot)
 from PyQt6.QtQuick import QQuickItem
 
 LOG = logging.getLogger(__name__)
@@ -79,9 +79,11 @@ class ConversationalQml(QObject):
     """
 
     headerStateChanged = pyqtSignal()
+    facingMirrorChanged = pyqtSignal()
 
     def __init__(self, engine, app=None, parent=None):
         super().__init__(parent)
+        self._facing_mirror = False
         self._engine = engine
         self._app = app
         self.root = None
@@ -329,6 +331,23 @@ class ConversationalQml(QObject):
         except Exception as e:
             print("profileRoughingPreview failed:", e)
             return {"profile": [], "offset": [], "feeds": [], "rapids": [], "error": str(e)}
+
+    @pyqtSlot("QVariant", result="QVariant")
+    def facingPreview(self, op_data):
+        """What a Facing would cut with ``op_data``; see build_facing_preview."""
+        from teachinlathe.conversational.gcode.operations.facing_preview import build_facing_preview
+        try:
+            return build_facing_preview(self._to_py(op_data) or {})
+        except Exception as e:
+            print("facingPreview failed:", e)
+            return {"profile": [], "offset": [], "feeds": [], "rapids": [], "error": str(e)}
+
+    @pyqtSlot(result="QVariant")
+    def currentWorkpiece(self):
+        """The current program header's workpiece, as its dict, or {}."""
+        program = self._get_current_program()
+        workpiece = getattr(getattr(program, "header", None), "workpiece", None) if program else None
+        return workpiece.to_dict() if workpiece is not None and hasattr(workpiece, "to_dict") else {}
 
     @pyqtSlot(int, "QVariant", result="QVariant")
     def profileContourPreview(self, op_index, op_data):
@@ -801,6 +820,21 @@ class ConversationalQml(QObject):
         except Exception as e:
             print("[profiling] add finish failed:", e)
 
+    # Facing's canvas mirrored or not: off whenever a program is opened, then as
+    # the operator leaves it for every Facing of that program - the editor
+    # screen is rebuilt on the way back from the profile editor, so it is
+    # kept here rather than there.
+    def _get_facing_mirror(self):
+        return self._facing_mirror
+
+    def _set_facing_mirror(self, on):
+        on = bool(on)
+        if on != self._facing_mirror:
+            self._facing_mirror = on
+            self.facingMirrorChanged.emit()
+
+    facingMirror = pyqtProperty(bool, _get_facing_mirror, _set_facing_mirror, notify=facingMirrorChanged)
+
     def openChildScreen(self, arg=None, replace_current=False):
         program = None
         row_index = None
@@ -833,6 +867,7 @@ class ConversationalQml(QObject):
         self.current_program = program
         self.current_program_index = row_index
         self.current_op_index = -1
+        self._set_facing_mirror(False)
 
         selected_program = build_selected_program_summary(program)
         operations_model = build_operations_model(program)

@@ -14,6 +14,10 @@ Item {
 
     property bool showBack: true
     property bool reorderMode: false
+    // Facing's canvas mirrored or not: kept by conversationalQml, off for a
+    // program just opened, then as the operator leaves it
+    readonly property bool facingMirror: (typeof conversationalQml !== "undefined" && conversationalQml)
+                                         ? conversationalQml.facingMirror : false
 
     property string titleText: (selectedProgram && (selectedProgram.name || (selectedProgram.header && selectedProgram.header.name)))
         ? "Editing: " + (selectedProgram.name || selectedProgram.header.name)
@@ -69,7 +73,7 @@ Item {
         } else if (data.type === "positionAt") {
             detailsLoader.source = "PositionAtDetailsView.qml"
         } else if (data.type === "facing") {
-            detailsLoader.source = "FacingDetailsView.qml"
+            detailsLoader.source = "FacingVisualDetailsView.qml"
         } else if (data.type === "knurling") {
             detailsLoader.source = "KnurlingDetailsView.qml"
         } else if (data.type === "profiling") {
@@ -100,6 +104,8 @@ Item {
             detailsLoader.source = ""
         }
         Qt.callLater(function () {
+            if (detailsLoader.item && data && data.type === "facing" && detailsLoader.item.canvasMirror !== undefined)
+                detailsLoader.item.canvasMirror = operationEditor.facingMirror
             if (detailsLoader.item && detailsLoader.item.applyData) {
                 detailsLoader.item.applyData(index, data)
             }
@@ -195,6 +201,12 @@ Item {
                     target: detailsLoader.item
                     ignoreUnknownSignals: true
                     enabled: !!target
+
+                    // only Facing's view has it
+                    function onCanvasMirrorChanged() {
+                        if (typeof conversationalQml !== "undefined" && conversationalQml)
+                            conversationalQml.facingMirror = target.canvasMirror
+                    }
 
                     function onSaveRequested(updated) {
                         if (!updated || !updated.payload) return
