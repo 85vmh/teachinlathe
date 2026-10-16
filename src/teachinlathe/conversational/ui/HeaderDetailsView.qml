@@ -226,6 +226,7 @@ Item {
         // value down the right edge.
         ProfileCanvas {
             id: workpieceCanvas
+            showTransitions: false
             Layout.fillWidth: true
             Layout.fillHeight: true
             // pinch and the buttons zoom, a drag pans, a double tap fits
@@ -303,8 +304,6 @@ Item {
             readonly property real boxWidth: Math.max(externalBox.implicitWidth, internalBox.implicitWidth,
                                                       stickoutBox.implicitWidth, stockLengthBox.implicitWidth)
             readonly property real boxGap: Theme.spacingLarge
-            readonly property real boxLabelWidth: Math.max(externalBox.labelImplicitWidth, internalBox.labelImplicitWidth,
-                                                           stickoutBox.labelImplicitWidth, stockLengthBox.labelImplicitWidth)
             fitInsetRight: boxWidth + boxGap
 
             // top to bottom: stock length, the two diameters, stickout - each
@@ -318,7 +317,6 @@ Item {
                 y: workpieceCanvas.boxGap
                 label: "Stock length"
                 dimensionColor: workpieceCanvas.stockLengthColor
-                labelWidth: workpieceCanvas.boxLabelWidth
                 settingName: "smart_numpad.workpiece-stock-length"
                 value: root.stockLength
                 // the stickout cannot be longer: it comes down with it
@@ -336,7 +334,6 @@ Item {
                 y: stockLengthBox.y + stockLengthBox.height + workpieceCanvas.boxSpacing
                 label: "External Ø"
                 dimensionColor: workpieceCanvas.externalColor
-                labelWidth: workpieceCanvas.boxLabelWidth
                 settingName: "smart_numpad.workpiece-external-dia"
                 value: root.extDia
                 onValueEdited: function(value) { root.extDia = value; root.emitSave() }
@@ -349,7 +346,6 @@ Item {
                 y: externalBox.y + externalBox.height + workpieceCanvas.boxSpacing
                 label: "Internal Ø"
                 dimensionColor: workpieceCanvas.internalColor
-                labelWidth: workpieceCanvas.boxLabelWidth
                 settingName: "smart_numpad.workpiece-internal-dia"
                 value: root.intDia
                 onValueEdited: function(value) { root.intDia = value; root.emitSave() }
@@ -360,9 +356,8 @@ Item {
                 id: stickoutBox
                 x: workpieceCanvas.width - width - workpieceCanvas.boxGap
                 y: internalBox.y + internalBox.height + workpieceCanvas.boxSpacing
-                label: "Stickout length"
+                label: "Stickout"
                 dimensionColor: workpieceCanvas.stickoutColor
-                labelWidth: workpieceCanvas.boxLabelWidth
                 settingName: "smart_numpad.workpiece-stickout"
                 value: root.stickout
                 // no longer than the stock

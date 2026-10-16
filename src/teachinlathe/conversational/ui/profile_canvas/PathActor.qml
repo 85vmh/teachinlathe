@@ -8,6 +8,7 @@ QtObject {
     property color strokeColor: "#333333"
     property real lineWidth: 1
     property bool mirrorAcrossCenterline: false
+    property bool showTransitions: true
 
     function paint(ctx) {
         if (!renderSegs || renderSegs.length === 0) return
@@ -28,14 +29,20 @@ QtObject {
     // primitive or blend gives way to the next - is joined to its mirror
     // image by a line across the centre line. The first one is wherever the
     // path starts, which is where a start-point blend begins rather than the
-    // start diameter itself.
+    // start diameter itself. Without ``showTransitions``, only the first and
+    // the last: where the profile starts and where it ends.
     function _paintTransitions(ctx) {
-        ctx.beginPath()
+        var joins = []
         for (var i = 0; i < renderSegs.length; i++) {
             var s = renderSegs[i]
             if (s.interior || Math.abs(s.x) < 1e-9) continue
-            ctx.moveTo(cx(s.z), cy(s.x))
-            ctx.lineTo(cx(s.z), cy(-s.x))
+            joins.push(s)
+        }
+        if (!showTransitions && joins.length > 2) joins = [joins[0], joins[joins.length - 1]]
+        ctx.beginPath()
+        for (var k = 0; k < joins.length; k++) {
+            ctx.moveTo(cx(joins[k].z), cy(joins[k].x))
+            ctx.lineTo(cx(joins[k].z), cy(-joins[k].x))
         }
         ctx.stroke()
     }

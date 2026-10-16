@@ -112,7 +112,11 @@ function faceEnd(x, cy, R) {
 // centre line at canvas y ``cy``, outer radius ``R`` and bore radius ``r``
 // (0: a bar) in px, each end broken or the bar's face. ``style``: fill,
 // hatch, hatchPitch, outline, bore, lineWidth, lensFill, lensHatch - as the
-// canvas draws its stock.
+// canvas draws its stock - and, for a caller with hatching of its own (the
+// finished part, say), ``noWallHatch`` to leave a tube's walls plain and
+// ``inside(ctx)``, called after the fill, clipped to the piece's body; and
+// ``fillInside(ctx)`` to fill only some of the body, in the fill colour set,
+// and ``skinTo``, the canvas x the skin's lines stop at short of the right end.
 function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
     if (R <= 0 || rightX <= leftX) return
     var solid = r <= 0
@@ -146,15 +150,29 @@ function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
     ctx.save()
     ctx.setLineDash([])
 
-    // opaque, over the grid behind it; the cut faces on a darker ground
+    // opaque, over the grid behind it - or only where ``fillInside(ctx)``
+    // fills, clipped to the body; the cut faces on a darker ground
     ctx.fillStyle = style.fill
-    body(); ctx.fill()
+    if (style.fillInside) {
+        ctx.save()
+        body(); ctx.clip()
+        style.fillInside(ctx)
+        ctx.restore()
+    } else {
+        body(); ctx.fill()
+    }
     ctx.fillStyle = style.lensFill || style.fill
     for (k = 0; k < broken.length; k++) { lensPath(broken[k]); ctx.fill() }
 
     ctx.lineWidth = 1
+    if (style.inside) {
+        ctx.save()
+        body(); ctx.clip()
+        style.inside(ctx)
+        ctx.restore()
+    }
     // a tube's walls, hatched as the canvas hatches its stock
-    if (!solid) {
+    if (!solid && !style.noWallHatch) {
         ctx.strokeStyle = style.hatch
         var bands = [[top, cy - r], [cy + r, bottom]]
         for (k = 0; k < bands.length; k++) {
@@ -179,8 +197,9 @@ function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
     ctx.strokeStyle = style.outline
     ctx.lineWidth = style.lineWidth || 1
     ctx.beginPath()
-    ctx.moveTo(left.top[0], left.top[1]); ctx.lineTo(right.top[0], right.top[1])
-    ctx.moveTo(left.bottom[0], left.bottom[1]); ctx.lineTo(right.bottom[0], right.bottom[1])
+    var skinTo = style.skinTo !== undefined ? Math.min(style.skinTo, right.top[0]) : right.top[0]
+    ctx.moveTo(left.top[0], left.top[1]); ctx.lineTo(skinTo, right.top[1])
+    ctx.moveTo(left.bottom[0], left.bottom[1]); ctx.lineTo(skinTo, right.bottom[1])
     for (k = 0; k < broken.length; k++) {
         var arcs = broken[k].segs.concat(broken[k].lens[1])
         for (i = 0; i < arcs.length; i++) {

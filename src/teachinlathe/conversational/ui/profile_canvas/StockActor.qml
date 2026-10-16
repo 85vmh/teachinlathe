@@ -23,6 +23,42 @@ QtObject {
     // and a stretch of its middle left out too: {near, far} in drawn Z, where
     // the piece at the face and the far piece are broken off, or null
     readonly property var breakMiddle: workpiece && workpiece.break_middle ? workpiece.break_middle : null
+    // Profile Roughing's and Contour's: with a profile, broken off after it -
+    // where the profile ends, set back by as far as the break bends in and
+    // then by the break's whole width again, a stretch of plain stock before
+    // it - instead of drawn on to its full length; the finished part hatched
+    // as before. Only while mirrored: with the mirror off no stock is drawn,
+    // the profile alone
+    readonly property bool breakAfterProfile: !!(workpiece && workpiece.break_after_profile)
+                                              && !!renderSegs && renderSegs.length > 0
+    // Facing's: broken off after where the face ends up, Z End, in mm - set
+    // back by as far as the break bends in and then by twice the break's
+    // width, the faced-off stock in front of it not drawn - or null. The same
+    // rules as after a profile; only while mirrored
+    readonly property var breakAfterZ: workpiece && workpiece.break_after_z !== undefined
+                                       && workpiece.break_after_z !== null ? Number(workpiece.break_after_z) : null
+
+    // Where the profile ends, its smallest Z, in mm.
+    function profileEndZ() {
+        var zMin = 0
+        for (var i = 0; i < renderSegs.length; i++)
+            if (renderSegs[i].z !== undefined) zMin = Math.min(zMin, Number(renderSegs[i].z))
+        return zMin
+    }
+
+    // The Z the stock is broken off at after the profile, in mm, or null.
+    function profileBreakZ() {
+        if (!breakAfterProfile) return null
+        var bend = Broken.reach(1.0) * Math.max(0, externalDiameter) / 2
+        return Math.max(-Math.max(0, stockLength), profileEndZ() - 3 * bend)
+    }
+
+    // The Z the stock is broken off at after Z End, in mm, or null.
+    function zEndBreakZ() {
+        if (breakAfterZ === null) return null
+        var bend = Broken.reach(1.0) * Math.max(0, externalDiameter) / 2
+        return Math.max(-Math.max(0, stockLength), breakAfterZ - 5 * bend)
+    }
 
     // the colours and pitch the stock is drawn in, whole or broken
     readonly property color hatchColor:   "#d5d9df"
@@ -32,6 +68,9 @@ QtObject {
     // stock's, its hatch darker again so it still stands out on it
     readonly property color lensFillColor:  "#e5e7eb"
     readonly property color lensHatchColor: "#a3aab4"
+    // Profile Roughing's and Contour's tube: the stock past the profile's end
+    // hatched lighter than the finished part (a bar is left plain)
+    readonly property color pastProfileHatchColor: "#e6e9ed"
     readonly property real  hatchPitch:   12
     // the outline and the bore lines; the hatch stays at one px
     readonly property real  outlineWidth: 1.5
@@ -40,10 +79,10 @@ QtObject {
     // when asked.
     function _cy(x, mirrored) { return cy(mirrored ? -x : x) }
 
-    function _pathProfileToStock(ctx, stockX, mirrored) {
+    function _pathProfileToStock(ctx, stockX, mirrored, endZ) {
         var started = false
         var stockStartZ = 0
-        var stockEndZ = -Math.max(0, stockLength)
+        var stockEndZ = endZ !== undefined ? endZ : -Math.max(0, stockLength)
         var drawZ = 0
         var drawX = 0
         for (var i = 0; i < (renderSegs || []).length; i++) {
@@ -85,10 +124,10 @@ QtObject {
         return true
     }
 
-    function _hatchCurrentClip(ctx, left, top, right, bottom) {
+    function _hatchCurrentClip(ctx, left, top, right, bottom, colour) {
         var spacing = hatchPitch
         var overshoot = bottom - top
-        ctx.strokeStyle = hatchColor
+        ctx.strokeStyle = colour !== undefined ? colour : hatchColor
         ctx.lineWidth = 1
         ctx.setLineDash([])
         for (var x = left - overshoot; x < right + overshoot; x += spacing) {
@@ -104,12 +143,89 @@ QtObject {
         var stockX = Math.max(0, externalDiameter)
         if (stockLength <= 0 || stockX <= 0 || !cx || !cy) return
 
-        if (breakFarEnd) {
+        var breakZ = profileBreakZ()
+        var zEndBreak = zEndBreakZ()
+        if (breakFarEnd || breakZ !== null || zEndBreak !== null) {
             var innerX = Math.max(0, Math.min(internalDiameter, stockX))
             var R = cy(stockX) - cy(0), r = innerX > 0 ? cy(innerX) - cy(0) : 0
             var style = { fill: Theme.surface, hatch: hatchColor, hatchPitch: hatchPitch,
                           outline: outlineColor, bore: boreColor, lineWidth: outlineWidth,
                           lensFill: lensFillColor, lensHatch: lensHatchColor }
+            if (zEndBreak !== null) {
+                // as after a profile: with the mirror off no stock; the
+                // stock from Z End back to the break - a tube's walls hatched
+                // light, a bar plain - and the faced-off stock in front of Z
+                // End, under the toolpath, not drawn: the background
+                if (!mirrorAcrossCenterline) return
+                style.hatch = pastProfileHatchColor
+                Broken.paint(ctx, cx(Math.min(breakAfterZ, faceZ)), cx(zEndBreak), cy(0), R, r, style)
+                return
+            }
+            if (breakZ !== null) {
+                // Mirror off: no stock at all - the profile alone, with the
+                // toolpath over it; the broken stock is a whole-bar drawing
+                if (!mirrorAcrossCenterline) return
+                // the finished part hatched as before, within the piece
+                var self = this
+                style.noWallHatch = true
+                // Below the centre line, where the break's S bulges out past
+                // its line: hatched past it by as far as the S reaches - the
+                // piece's own outline, the clip this is drawn in, stops it at
+                // the S - and past the profile's end the bar whole, from the
+                // bore out to its skin. Above the line, as it was: to the
+                // break line.
+                var hatchEndZ = breakZ - 2 * Broken.reach(1.0) * stockX / 2
+                var wholeFrom = cx(profileEndZ()), wholeTo = cx(hatchEndZ)
+                // a tube's stock past the profile lighter than the part; a
+                // bar not hatched at all, neither the part nor the stock
+                var pastColor = innerX > 0 ? pastProfileHatchColor : null
+                var top = cy(-stockX), bottom = cy(stockX)
+                // what is drawn on the part's side of the profile's end, or past it
+                function side(c, past, draw) {
+                    if (past && pastColor === null) return
+                    c.save()
+                    c.beginPath()
+                    if (past) c.rect(wholeTo - 1, top, wholeFrom - wholeTo + 1, bottom - top)
+                    else c.rect(wholeFrom, top, cx(faceZ) - wholeFrom, bottom - top)
+                    c.clip()
+                    draw(past ? pastColor : hatchColor)
+                    c.restore()
+                }
+                style.inside = function(c) {
+                    if (pastColor === null) return
+                    for (var k = 0; k < 2; k++) {
+                        side(c, k === 1, function(colour) {
+                            self._hatchHalf(c, hatchEndZ, stockX, false, colour)
+                            self._hatchHalf(c, breakZ, stockX, true, colour)
+                        })
+                    }
+                    var lower = [cy(innerX), cy(stockX)]
+                    c.save()
+                    c.beginPath()
+                    c.rect(wholeTo, lower[0], wholeFrom - wholeTo, lower[1] - lower[0])
+                    c.clip()
+                    self._hatchCurrentClip(c, wholeTo, lower[0], wholeFrom, lower[1], pastColor)
+                    c.restore()
+                }
+                // What the toolpath takes off - between the profile and the
+                // skin, up to the profile's end, on both halves - not filled:
+                // the background behind the toolpath. The rest of the piece
+                // as before. Nor the skin's lines over it: they stop at the
+                // profile's end.
+                if (String(profileType || "od").toLowerCase() === "od") {
+                    style.skinTo = wholeFrom
+                    var farX = cx(-Math.max(0, stockLength)) - 2 * R
+                    style.fillInside = function(c) {
+                        for (var m = 0; m < 2; m++) {
+                            c.beginPath()
+                            if (self._pathProfileToStock(c, 0, m === 1, -Math.max(0, stockLength))) c.fill()
+                        }
+                        c.beginPath(); c.rect(farX, top, wholeFrom - farX, bottom - top); c.fill()
+                    }
+                }
+                Broken.paint(ctx, cx(faceZ), cx(breakZ), cy(0), R, r, style)
+                return
+            }
             if (breakMiddle) {
                 // the piece at the face, broken off at the gap; the far piece,
                 // broken at both its ends
@@ -126,8 +242,9 @@ QtObject {
             _paintHalf(ctx, stockZ, stockX, true)
     }
 
-    // One half of the stock: below the centre line, or its mirror above it.
-    function _paintHalf(ctx, stockZ, stockX, mirrored) {
+    // The hatch of one half: the material, or with a profile the finished
+    // part - from the face back to ``stockZ``; in ``colour``, or the hatch's.
+    function _hatchHalf(ctx, stockZ, stockX, mirrored, colour) {
         var left = cx(faceZ)
         var right = cx(stockZ)
         var top = cy(0)
@@ -149,27 +266,77 @@ QtObject {
             ctx.beginPath()
             ctx.rect(Math.min(left, right), Math.min(innerY, bottom), Math.abs(right - left), Math.abs(bottom - innerY))
             ctx.clip()
-            _hatchCurrentClip(ctx, Math.min(left, right), Math.min(top, bottom), Math.max(left, right), Math.max(top, bottom))
+            _hatchCurrentClip(ctx, Math.min(left, right), Math.min(top, bottom), Math.max(left, right), Math.max(top, bottom), colour)
             ctx.restore()
         } else if (profileMode === "od" || profileMode === "id") {
             ctx.save()
             ctx.beginPath()
-            if (_pathProfileToStock(ctx, hatchBoundaryX, mirrored)) {
+            if (_pathProfileToStock(ctx, hatchBoundaryX, mirrored, stockZ)) {
                 ctx.clip()
-                _hatchCurrentClip(ctx, Math.min(left, right), Math.min(top, bottom), Math.max(left, right), Math.max(top, bottom))
+                _hatchCurrentClip(ctx, Math.min(left, right), Math.min(top, bottom), Math.max(left, right), Math.max(top, bottom), colour)
             }
             ctx.restore()
         }
         ctx.restore()
+    }
+
+    // One half of an OD profile's stock drawn whole (Define Profile) as
+    // Profile Roughing draws it: the finished part and the stock past the
+    // profile's end on the surface colour, what is turned off between the
+    // profile and the skin left on the background; a tube's part hatched, the
+    // stock past it lighter, a bar not hatched at all.
+    function _paintProfileHalf(ctx, stockZ, stockX, mirrored, innerX) {
+        var endX = cx(profileEndZ())
+        var far = cx(stockZ)
+        var skin = _cy(stockX, mirrored), axis = cy(0)
+        var top = Math.min(skin, axis), bottom = Math.max(skin, axis)
+        ctx.save()
+        ctx.fillStyle = Theme.surface
+        ctx.beginPath()
+        if (_pathProfileToStock(ctx, 0, mirrored, stockZ)) ctx.fill()
+        if (endX > far) { ctx.beginPath(); ctx.rect(far, top, endX - far, bottom - top); ctx.fill() }
+        ctx.restore()
+        if (innerX <= 0) return
+        // the part, to the profile's end
+        ctx.save()
+        ctx.beginPath(); ctx.rect(endX, top, cx(faceZ) - endX, bottom - top); ctx.clip()
+        _hatchHalf(ctx, stockZ, stockX, mirrored)
+        ctx.restore()
+        // past it, the walls, lighter
+        if (endX > far) {
+            var wall = _cy(innerX, mirrored)
+            var wTop = Math.min(skin, wall), wBottom = Math.max(skin, wall)
+            ctx.save()
+            ctx.beginPath(); ctx.rect(far, wTop, endX - far, wBottom - wTop); ctx.clip()
+            _hatchCurrentClip(ctx, far, wTop, endX, wBottom, pastProfileHatchColor)
+            ctx.restore()
+        }
+    }
+
+    // One half of the stock: below the centre line, or its mirror above it.
+    function _paintHalf(ctx, stockZ, stockX, mirrored) {
+        var left = cx(faceZ)
+        var right = cx(stockZ)
+        var top = cy(0)
+        var bottom = _cy(stockX, mirrored)
+        var hasInternalDiameter = internalDiameter > 0
+        var innerX = hasInternalDiameter ? Math.max(0, Math.min(internalDiameter, stockX)) : 0
+
+        if (renderSegs && renderSegs.length > 0 && String(profileType || "od").toLowerCase() === "od")
+            _paintProfileHalf(ctx, stockZ, stockX, mirrored, innerX)
+        else
+            _hatchHalf(ctx, stockZ, stockX, mirrored)
 
         // its outside and its far end; its face only when it stands proud of
         // Z0 - at Z0 the dashed Z0 line goes, and only the finished profile
-        // is drawn over that
+        // is drawn over that. With a profile (Define Profile), its outside
+        // only past the profile's end, not along it
         ctx.strokeStyle = outlineColor
         ctx.lineWidth = outlineWidth
         ctx.setLineDash([])
         ctx.beginPath()
-        ctx.moveTo(left, bottom)
+        var hasProfile = renderSegs && renderSegs.length > 0
+        ctx.moveTo(hasProfile ? Math.max(right, cx(profileEndZ())) : left, bottom)
         ctx.lineTo(right, bottom)
         ctx.lineTo(right, top)
         if (faceZ > 0) {

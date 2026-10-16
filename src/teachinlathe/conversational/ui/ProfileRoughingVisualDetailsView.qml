@@ -77,7 +77,11 @@ Item {
                         ? (conversationalQml.lastProfileBefore(index) || {}) : {}
         primitives  = JSON.parse(JSON.stringify(profileOp.profile_primitives || []))
         profileType = profileOp.profile_type !== undefined ? String(profileOp.profile_type) : "od"
-        workpiece   = JSON.parse(JSON.stringify(profileOp.workpiece || {}))
+        // the stock broken off right after the profile, as the Program
+        // Header draws its stock - set before it is handed on
+        var stock = JSON.parse(JSON.stringify(profileOp.workpiece || {}))
+        stock.break_after_profile = true
+        workpiece   = stock
 
         // X Start defaults to the profile's largest diameter plus the retract
         var pp = opData.profiling_parameters || {}
@@ -125,12 +129,16 @@ Item {
 
         ProfileCanvas {
             id: profileCanvas
+            showTransitions: false
             Layout.fillWidth: true
             Layout.fillHeight: true
             // pinch and the buttons zoom, a drag pans, a double tap fits
             selectable: false
             // the backplot's step (glnav's zoomin / zoomout)
             zoomStep: 1.1
+            // the profile in the stock's outline colour and weight
+            profileLineColor: "#6b7280"
+            profileLineWidth: 1.5
             fitDiameterMargin: 10
             primitives:  root.primitives
             profileType: root.profileType

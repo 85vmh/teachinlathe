@@ -59,6 +59,13 @@ Item {
             ProfileCanvas {
                 id: profileCanvas
                 anchors.fill: parent
+                // only where the profile starts and where it ends across
+                // the centre line
+                showTransitions: false
+                // the profile in the stock's outline colour and weight, as
+                // the operations draw it
+                profileLineColor: "#6b7280"
+                profileLineWidth: 1.5
                 primitives:   root.primitives
                 profileType:  root.profileType
                 workpiece:    root.workpiece

@@ -602,6 +602,10 @@ Popup {
                     id: profileCanvas
                     Layout.fillWidth:  true
                     Layout.fillHeight: true
+                    // the profile in the stock's outline colour and weight,
+                    // as the operations draw it
+                    profileLineColor: "#6b7280"
+                    profileLineWidth: 1.5
                     primitives:         root.primitives
                     profileType:        root.profileType
                     workpiece:          root.workpiece

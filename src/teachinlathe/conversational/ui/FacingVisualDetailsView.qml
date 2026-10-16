@@ -111,6 +111,7 @@ Item {
 
         ProfileCanvas {
             id: profileCanvas
+            showTransitions: false
             Layout.fillWidth: true
             Layout.fillHeight: true
             // pinch and the buttons zoom, a drag pans, a double tap fits
@@ -120,10 +121,12 @@ Item {
             mirrorAcrossCenterline: false
             primitives: []
             // the header's stock, and in front of Z0 up to Z Start, the
-            // material being faced off
+            // material being faced off; mirrored, broken off after Z End
+            // as Profile Roughing's after its profile
             workpiece: {
                 var w = JSON.parse(JSON.stringify(root.workpiece || {}))
                 w.face_z = Math.max(0, root.zStart)
+                w.break_after_z = root.zEnd
                 return w
             }
             startPosition: ({ x: root.xStart, z: root.zStart })
@@ -151,10 +154,12 @@ Item {
             readonly property real boxGap: Theme.spacingLarge
             fitInsetRight: boxWidth + boxGap
 
+            // top to bottom: the end position, Ap / Retract halfway down to
+            // the start, the start at the bottom
             DepthOfCutBox {
                 id: docBox
                 x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.boxGap
+                y: (endBox.y + endBox.height + startBox.y - height) / 2
                 docColor: profileCanvas.feedColor
                 retractColor: profileCanvas.rapidColor
                 doc: root.doc
@@ -165,14 +170,11 @@ Item {
             }
 
             // the end position, and above it whether Z End becomes the new
-            // Z0, in its colour - halfway between Ap / Retract and the start
-            readonly property real endGroupHeight: z0Check.height + Theme.spacingSmall + endBox.height
-            readonly property real endGroupY: (docBox.y + docBox.height + startBox.y - endGroupHeight) / 2
-
+            // Z0, in its colour - at the top
             CheckBox {
                 id: z0Check
                 x: endBox.x
-                y: profileCanvas.endGroupY
+                y: profileCanvas.boxGap
                 text: "Set Z End as the new Z0"
                 font.pixelSize: Theme.fontBody
                 font.bold: true

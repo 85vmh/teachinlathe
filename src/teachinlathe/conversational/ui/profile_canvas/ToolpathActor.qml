@@ -15,8 +15,8 @@ QtObject {
     property real  contourLineWidth: 3    // the final contour pass
     property real  rapidLineWidth: 1
     property var   rapidDash: [6, 3]      // px on, px off
-    property real  arrowLength: 8         // px
-    property real  arrowHalfWidth: 3.5    // px
+    property real  arrowLength: 12        // px
+    property real  arrowHalfWidth: 4.5    // px
     property real  arrowEvery: 10         // mm along the cut, X counted on the diameter
 
     function paint(ctx) {

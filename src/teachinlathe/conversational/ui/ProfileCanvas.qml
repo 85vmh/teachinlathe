@@ -5,6 +5,7 @@
 import QtQuick 2.15
 import theme 1.0
 import "profile_canvas"
+import "profile_canvas/brokenstock.js" as Broken
 import touchable_input 1.0
 
 Canvas {
@@ -27,6 +28,13 @@ Canvas {
     property real   fitPadding: 0
     // dimensions drawn by DimensionActor; see it for their form
     property var    dimensions: []
+    // the finished profile's line
+    property color  profileLineColor: "#333333"
+    property real   profileLineWidth: 1
+    // with the mirror on, each transition of the profile joined to its mirror
+    // by a line across the centre line while the profile is defined; else
+    // only where it starts and where it ends
+    property bool   showTransitions: true
     // a stretch of Z left out of the drawing - the grid and the ticks skip
     // it and mark the real Z past it; see profile_canvas/axisbreak.js
     property var    axisBreak: null
@@ -264,7 +272,20 @@ Canvas {
         var profileDiameter = Math.max(Math.abs(b.fXMin), Math.abs(b.fXMax))
         var stockLength = workpiece && workpiece.stock_length !== undefined ? Number(workpiece.stock_length) : 0
         var stockDiameter = workpiece && workpiece.external_diameter !== undefined ? Number(workpiece.external_diameter) : 0
-        if (stockLength > 0) {
+        // the stock broken off after the profile (StockActor): as far as the
+        // break reaches past the profile's end, not the stock's whole length:
+        // set back three of its bends, reaching out one more
+        if (stockLength > 0 && hasProfile && workpiece && workpiece.break_after_profile) {
+            b.fZMin = Math.max(-stockLength, b.fZMin - 4 * Broken.reach(1.0) * stockDiameter / 2)
+            b.fZMax = Math.max(b.fZMax, 0)
+        } else if (stockLength > 0 && workpiece && workpiece.break_after_z !== undefined
+                   && workpiece.break_after_z !== null) {
+            // Facing's, broken off after Z End: set back five bends, reaching
+            // out one more
+            b.fZMin = Math.min(b.fZMin, Math.max(-stockLength,
+                               Number(workpiece.break_after_z) - 6 * Broken.reach(1.0) * stockDiameter / 2))
+            b.fZMax = Math.max(b.fZMax, 0)
+        } else if (stockLength > 0) {
             b.fZMin = Math.min(b.fZMin, -stockLength)
             b.fZMax = Math.max(b.fZMax, 0)
         }
@@ -333,7 +354,7 @@ Canvas {
         ticksActor.paint(ctx)
         stockActor.paint(ctx)
         centerLineActor.paint(ctx)
-        axesActor.paint(ctx)
+        axesActor.paintZeroLine(ctx)
         originActor.paint(ctx)
         pathActor.paint(ctx)
         stockToLeaveActor.paint(ctx)
@@ -343,6 +364,8 @@ Canvas {
         diameterLeaderActor.paint(ctx)
         startPositionActor.paint(ctx)
         endPositionActor.paint(ctx)
+        // the axes' arrows over everything, the arrows to the boxes too
+        axesActor.paintArrows(ctx)
     }
 
     function _rebuildRenderCache() {
@@ -412,11 +435,14 @@ Canvas {
 
     PathActor {
         id: pathActor
+        strokeColor: root.profileLineColor
+        lineWidth: root.profileLineWidth
         renderSegs: root._renderSegs
         scale: root._scale
         cx: root._cx
         cy: root._cy
         mirrorAcrossCenterline: root.mirrorAcrossCenterline
+        showTransitions: root.showTransitions
     }
 
     DiameterLeaderActor {

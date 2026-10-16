@@ -20,11 +20,15 @@ QtObject {
     property var zeroDashPattern: [16, 4, 3, 4]  // as the centre line's: long dash, gap, dot, gap
     property real circleR: 0
 
+    // The Z0 line and the arrows, drawn at two depths: the line under the
+    // drawing, the arrows over it all.
     function paint(ctx) {
-        var ahl = arrowHeadLen
-        var ahw = arrowHeadWidth
+        paintZeroLine(ctx)
+        paintArrows(ctx)
+    }
 
-        // ── Z=0 dashed vertical line (full canvas height) ─────────────────
+    // ── Z=0 dashed vertical line (full canvas height) ─────────────────────
+    function paintZeroLine(ctx) {
         ctx.strokeStyle = zeroLineColor
         ctx.lineWidth   = zeroLineWidth
         ctx.setLineDash(zeroDashPattern)
@@ -33,6 +37,11 @@ QtObject {
         ctx.lineTo(originX, height)
         ctx.stroke()
         ctx.setLineDash([])
+    }
+
+    function paintArrows(ctx) {
+        var ahl = arrowHeadLen
+        var ahw = arrowHeadWidth
 
         // ── Z+ arrow — green, fixed pixel length, rightward from origin ───
         var zTipX  = originX + axisLength
