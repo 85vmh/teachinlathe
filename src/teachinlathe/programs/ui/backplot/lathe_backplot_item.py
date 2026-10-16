@@ -39,6 +39,12 @@ from teachinlathe.programs.ui.backplot.actors import palette, screen, text
 
 LOG = logging.getLogger(__name__)
 
+#: Whether the plot is mirrored across the centre line - the material left
+#: drawn above it. Off when the application starts, then as the operator last
+#: left it, for as long as it runs: kept here rather than on the canon, which
+#: is rebuilt with the item.
+_mirror = False
+
 #: How often the preview looks at the machine, in milliseconds.
 #:
 #: The tool marker and the live trail only move when this fires, so it is what
@@ -466,6 +472,10 @@ class LatheBackplotCanon(_HostBase):
         # backplot.tool_source - refreshed on every poll. The insert actor
         # falls back to its own default while this is empty.
         self.insert = {}
+
+        # Mirrored: the material left drawn above the centre line, by
+        # actors.remaining. See _mirror.
+        self.mirror = _mirror
 
         # Upstream's own stock outlines, left on. It draws what
         # (WORKPIECE,...) comments in the G-code declare, and the stock actor
@@ -1206,6 +1216,40 @@ class LatheBackplotCanon(_HostBase):
         open. Empty falls back to following the machine's file."""
         self._program_file = os.path.abspath(path) if path else ''
 
+    def set_mirror(self, on):
+        """Mirror across the centre line, or not, and fit the view to it."""
+        global _mirror
+        on = bool(on)
+        if on == self.mirror:
+            return
+        self.mirror = _mirror = on
+        self.set_lathe_view()
+
+    def extents_info(self):
+        """Upstream's extents - the program's - and, while mirrored, as far
+        again on the other side of the centre line, so a fit takes in the
+        material drawn there.
+
+        The centre line is the program's X zero, so in the machine
+        coordinates the extents are in it sits at the X offsets.
+        """
+        mid, size = super().extents_info()
+        if not self.mirror or not self.canon:
+            return mid, size
+        try:
+            s = self.stat
+            axis = (self.to_internal_units(s.g5x_offset)[0]
+                    + self.to_internal_units(s.g92_offset)[0])
+            low, high = self.canon.min_extents[0], self.canon.max_extents[0]
+            low, high = min(low, 2 * axis - high), max(high, 2 * axis - low)
+        except (AttributeError, IndexError, TypeError) as exc:
+            LOG.debug("backplot mirror: extents not reflected: %s", exc)
+            return mid, size
+        mid = list(mid)
+        size = list(size)
+        mid[0], size[0] = (low + high) / 2.0, high - low
+        return mid, size
+
     def set_lathe_view(self):
         """The standard XZ lathe view, fitted to the window."""
         self.invalidate_static()
@@ -1515,6 +1559,22 @@ class LatheBackplotItem(QQuickFramebufferObject):
         canon = self.canon()
         if canon is not None:
             canon.set_lathe_view()
+
+    mirrorChanged = pyqtSignal()
+
+    def _get_mirror(self):
+        canon = self.canon()
+        return bool(canon.mirror) if canon is not None else _mirror
+
+    def _set_mirror(self, on):
+        canon = self.canon()
+        if canon is None or bool(on) == bool(canon.mirror):
+            return
+        canon.set_mirror(on)
+        self.mirrorChanged.emit()
+
+    #: The material left drawn above the centre line, the toolpath below it.
+    mirror = pyqtProperty(bool, _get_mirror, _set_mirror, notify=mirrorChanged)
 
     @pyqtSlot()
     def clearPlot(self):

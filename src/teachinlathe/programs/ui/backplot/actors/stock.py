@@ -17,6 +17,8 @@ stop at and the bar hatches whole.
 
 import math
 
+import numpy as np
+
 from teachinlathe.programs.ui.backplot.actors import (geometry, palette, profile,
                                                   screen)
 from teachinlathe.programs.ui.backplot.actors.base import Actor
@@ -207,22 +209,19 @@ def _inside_part(segment, finished, core, px_per_z):
 
     span = end[2] - start[2]
     steps = max(1, int(abs(span) * px_per_z / PROFILE_STEP_PX))
+    # Every step at once: the inside points, and where each run of them
+    # starts and ends. This is drawn on every frame for the material left
+    # while the machine cuts, so it cannot be a Python loop per step.
+    t = np.arange(steps + 1) / steps
+    z = start[2] + span * t
+    x = start[0] + (end[0] - start[0]) * t
+    inside = (x >= core) & (x <= finished.at_many(z))
+    if not inside.any():
+        return []
+    edges = np.diff(np.concatenate(([0], inside.view(np.int8), [0])))
+    firsts = np.flatnonzero(edges == 1)
+    lasts = np.flatnonzero(edges == -1) - 1
     kept = []
-    run_start = None
-
-    for i in range(steps + 1):
-        t = i / steps
-        z = start[2] + span * t
-        x = start[0] + (end[0] - start[0]) * t
-        point = (x, 0.0, z)
-        if core <= x <= finished.at(z):
-            if run_start is None:
-                run_start = point
-            last_inside = point
-        elif run_start is not None:
-            kept.extend([run_start, last_inside])
-            run_start = None
-
-    if run_start is not None:
-        kept.extend([run_start, last_inside])
+    for a, b in zip(firsts, lasts):
+        kept.extend([(float(x[a]), 0.0, float(z[a])), (float(x[b]), 0.0, float(z[b]))])
     return kept

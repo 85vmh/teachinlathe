@@ -98,6 +98,22 @@ class Profile:
         index = int(round(position))
         return float(self._radii[max(0, min(index, len(self._radii) - 1))])
 
+    def at_many(self, z):
+        """``at`` for an array of Z, as an array."""
+        z = np.asarray(z, dtype=float)
+        if self._span <= 0 or not len(self._radii):
+            return np.full(z.shape, self._radii[0] if len(self._radii) else 0.0)
+        index = np.rint((z - self._z_start) / self._span * (len(self._radii) - 1)).astype(np.int64)
+        return np.asarray(self._radii, dtype=float)[np.clip(index, 0, len(self._radii) - 1)]
+
+    def polyline(self):
+        """The profile as ``(radius, z)`` points, one per sample, Z rising."""
+        count = len(self._radii)
+        if count < 2:
+            return []
+        z = self._z_start + np.arange(count) * (self._span / (count - 1))
+        return list(zip(np.asarray(self._radii, dtype=float), z))
+
 
 def finished(ctx, z_start, z_end, outer_radius):
     """The profile between ``z_start`` and ``z_end``, in the actor's frame.

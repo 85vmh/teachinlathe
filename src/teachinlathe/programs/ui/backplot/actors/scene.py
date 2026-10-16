@@ -37,6 +37,7 @@ from teachinlathe.programs.ui.backplot.actors.grid import GridActor
 from teachinlathe.programs.ui.backplot.actors.insert_tool import InsertActor
 from teachinlathe.programs.ui.backplot.actors.origin import OriginActor
 from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+from teachinlathe.programs.ui.backplot.actors.remaining import RemainingStockActor
 from teachinlathe.programs.ui.backplot.actors.stock import StockActor
 from teachinlathe.programs.ui.backplot.actors.ticks import TicksActor
 
@@ -122,6 +123,17 @@ def install(canon):
     except Exception as exc:
         LOG.warning("backplot actors: could not replace the tool marker: %s",
                     exc)
+
+    # The material left, mirrored above the centre line, only while the
+    # mirror is on. In the moving part of the scene - after the trace, under
+    # the tool - because it changes as the machine cuts; the static layer
+    # would freeze it.
+    try:
+        installed.append(scene.insert_before(
+            scene.tool, RemainingStockActor(canon),
+            lambda ctx: bool(getattr(canon, "mirror", False))))
+    except Exception as exc:
+        LOG.warning("backplot actors: could not add the material left: %s", exc)
     return installed
 
 

@@ -156,6 +156,13 @@ Item {
                             iconSource: Images.url("zoom-fit.svg")
                             onClicked: backplot.fitToWindow()
                         }
+                        // the material left so far, drawn above the centre
+                        // line; off when the app starts, then as left
+                        BackplotIconButton {
+                            iconSource: Images.url("mirror.svg")
+                            active: backplot.mirror
+                            onClicked: backplot.mirror = !backplot.mirror
+                        }
                     }
 
                     // Same button as the zoom row, so the two line up
