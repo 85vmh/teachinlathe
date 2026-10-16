@@ -39,6 +39,8 @@ QtObject {
     }
 
     function _paintDimension(ctx, d) {
+        // nothing to measure (a value not set yet): nothing drawn
+        if (d.from === d.to) return
         var a, b
         ctx.save()
         ctx.setLineDash([])

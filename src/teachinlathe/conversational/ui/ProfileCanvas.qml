@@ -162,6 +162,22 @@ Canvas {
     property var  _renderSegs: [] // cached render segments in world coords
     property var  _resolvedPrimitives: []
     property bool _manualView: false  // when true, primitive/size changes don't reset fit
+    // false until fitToScreen has placed the drawing: until then only the
+    // background is painted, or the first frame of a screen would show it at
+    // the starting scale and origin - the profile in a corner, the arrows to
+    // the boxes running across the whole canvas
+    property bool _fitted: false
+    // a fit asked for and not yet made: the next paint makes it first, so no
+    // frame is drawn at a view the data has already moved on from
+    property bool _fitPending: false
+
+    // Fit once the changes that came together are all in - and in any case
+    // before the next paint.
+    function _scheduleFit() {
+        _fitPending = true
+        Qt.callLater(_runPendingFit)
+    }
+    function _runPendingFit() { if (_fitPending) fitToScreen() }
 
     readonly property real _circleR: 8   // origin marker radius
     Geometry { id: geom }
@@ -174,25 +190,25 @@ Canvas {
     // ── Recompute + repaint on any relevant change ─────────────────────────────
     onPrimitivesChanged: {
         _rebuildRenderCache()
-        if (!_manualView) Qt.callLater(fitToScreen)
+        if (!_manualView) _scheduleFit()
         else              requestPaint()
     }
     onProfileTypeChanged: { _rebuildRenderCache(); requestPaint() }
     onWorkpieceChanged: {
-        if (!_manualView) Qt.callLater(fitToScreen)
+        if (!_manualView) _scheduleFit()
         else              requestPaint()
     }
     onWidthChanged:  { if (!_manualView) fitToScreen() }
-    onFitInsetRightChanged: { if (!_manualView) Qt.callLater(fitToScreen) }
-    onFitPaddingChanged:    { if (!_manualView) Qt.callLater(fitToScreen) }
+    onFitInsetRightChanged: { if (!_manualView) _scheduleFit() }
+    onFitPaddingChanged:    { if (!_manualView) _scheduleFit() }
     onDimensionsChanged:     requestPaint()
     onHeightChanged: { if (!_manualView) fitToScreen() }
     onStartPositionChanged: {
-        if (!_manualView) Qt.callLater(fitToScreen)
+        if (!_manualView) _scheduleFit()
         else              requestPaint()
     }
     onEndPositionChanged: {
-        if (!_manualView) Qt.callLater(fitToScreen)
+        if (!_manualView) _scheduleFit()
         else              requestPaint()
     }
     onRoughingPreviewChanged:        requestPaint()
@@ -202,10 +218,10 @@ Canvas {
     onSelectedPrimIndexChanged:  requestPaint()
     onSelectedBlendIndexChanged: requestPaint()
     // always fitted anew, zoomed or not: the drawing is a different shape
-    onMirrorAcrossCenterlineChanged: Qt.callLater(fitToScreen)
+    onMirrorAcrossCenterlineChanged: _scheduleFit()
 
     // ── Reset view to fit (public, call when entering the screen) ─────────────
-    function resetView() { _manualView = false; Qt.callLater(fitToScreen) }
+    function resetView() { _manualView = false; _fitted = false; _scheduleFit() }
 
     // ── Zoom in / out (public, zoom around canvas centre) ─────────────────────
     // how much one zoomIn / zoomOut scales the view
@@ -229,14 +245,16 @@ Canvas {
     // X axis: equal margin above the center line (X=0) and below fXMax.
     //         The non-constraining axis is centred in the remaining canvas space.
     function fitToScreen() {
+        _fitPending = false
         if (width <= 0 || height <= 0) return
         var hasProfile = primitives && primitives.length > 0
         var b = hasProfile ? geom.computeBounds(_resolvedPrimitives) : null
-        if (hasProfile && !b) return
+        // nothing to fit: drawn as it stands
+        if (hasProfile && !b) { _showUnfitted(); return }
         // with no profile, the workpiece and the tool's positions, if any
         if (!b) {
             var hasStock = workpiece && Number(workpiece.stock_length) > 0 && Number(workpiece.external_diameter) > 0
-            if (!hasStock && !startPosition && !endPosition) return
+            if (!hasStock && !startPosition && !endPosition) { _showUnfitted(); return }
             b = { fZMin: 0, fZMax: 0, fXMin: 0, fXMax: 0 }
         }
         var profileDiameter = Math.max(Math.abs(b.fXMin), Math.abs(b.fXMax))
@@ -288,14 +306,25 @@ Canvas {
         _originX = leftOffset + (MARGIN - b.fZMin) * scale
         _originY = topOffset  + (marginX - displayXMin) * scale
         _manualView = false
+        _fitted = true
+        requestPaint()
+    }
+
+    function _showUnfitted() {
+        if (_fitted) return
+        _fitted = true
         requestPaint()
     }
 
     // ── Paint dispatcher ───────────────────────────────────────────────────────
     onPaint: {
+        // a fit still waiting: made now, before anything is drawn
+        if (_fitPending) fitToScreen()
         var ctx = getContext("2d")
         ctx.clearRect(0, 0, width, height)
         backgroundActor.paint(ctx)
+        // not placed yet, and not zoomed or panned by hand: the background alone
+        if (!_fitted && !_manualView) return
         gridActor.paint(ctx)
         ticksActor.paint(ctx)
         stockActor.paint(ctx)
