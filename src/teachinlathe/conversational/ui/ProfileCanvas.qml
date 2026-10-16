@@ -27,6 +27,10 @@ Canvas {
     property real   fitPadding: 0
     // dimensions drawn by DimensionActor; see it for their form
     property var    dimensions: []
+    // a stretch of Z left out of the drawing - the grid and the ticks skip
+    // it and mark the real Z past it; see profile_canvas/axisbreak.js
+    property var    axisBreak: null
+    onAxisBreakChanged: requestPaint()
     // When 0 or more, fitToScreen scales X to the profile alone: its largest
     // diameter plus this many mm (on the diameter) reaches the top and bottom
     // edges - with 10, a Ø50 profile shows up to Ø60. Z still has to fit, so
@@ -361,6 +365,7 @@ Canvas {
         originY: root._originY
         scale: root._scale
         geometry: geom
+        axisBreak: root.axisBreak
     }
 
     TicksActor {
@@ -371,6 +376,7 @@ Canvas {
         originY: root._originY
         scale: root._scale
         geometry: geom
+        axisBreak: root.axisBreak
     }
 
     CenterLineActor {

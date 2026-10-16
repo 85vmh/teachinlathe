@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import "axisbreak.js" as AxisBreak
 
 QtObject {
     property real width: 0
@@ -9,6 +10,8 @@ QtObject {
     property var geometry
     property color gridColor: "#e0e0e0"
     property real gridLineWidth: 0.5
+    // a stretch of Z left out of the drawing; see axisbreak.js
+    property var axisBreak: null
 
     function paint(ctx) {
         var sz = geometry.steps(scale)
@@ -19,11 +22,10 @@ QtObject {
 
         var zWMin = -originX / scale
         var zWMax = (width - originX) / scale
-        var z0 = Math.floor(zWMin / sz.major) * sz.major
-        var z1 = Math.ceil(zWMax / sz.major) * sz.major
-
-        for (var z = z0; z <= z1; z += sz.major) {
-            var canvasX = originX + z * scale
+        // at the ticks' Z: none in a left-out stretch, the real Z past it
+        var zMarks = AxisBreak.marks(zWMin, zWMax, sz.major, axisBreak)
+        for (var i = 0; i < zMarks.length; i++) {
+            var canvasX = originX + zMarks[i].drawn * scale
             ctx.beginPath()
             ctx.moveTo(canvasX, 0)
             ctx.lineTo(canvasX, height)

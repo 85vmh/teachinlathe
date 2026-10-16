@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import "."
 import touchable_input 1.0
 import theme 1.0
+import "profile_canvas/brokenstock.js" as Broken
 
 Item {
     id: root
@@ -232,8 +233,35 @@ Item {
             // the backplot's step (glnav's zoomin / zoomout)
             zoomStep: 1.1
             primitives: []
+            // The stock drawn from its face, its far end always broken off
+            // (brokenstock.js). Up to twice its diameter it is drawn whole;
+            // longer, its middle is left out too, so it is drawn twice its
+            // diameter long: the piece at the face and the far piece, a gap
+            // between. stock_length here is how much is drawn; the boxes keep
+            // the true values.
+            readonly property bool breakMiddle: root.extDia > 0 && root.stockLength > 2 * root.extDia
+            // the gap: as far as the two breaks reach into it, and a clearance
+            readonly property real gap: (Broken.reach(1.0) + 0.06) * root.extDia
+            // each piece's length, and where the drawing ends
+            readonly property real pieceLength: (2 * root.extDia - gap) / 2
+            readonly property real drawnLength: breakMiddle ? 2 * root.extDia : root.stockLength
+            // in drawn Z: where the piece at the face is broken off, where the
+            // far piece starts; a real Z on the far piece is drawn at real + shift
+            readonly property var middle: breakMiddle
+                ? { near: -pieceLength, far: -(pieceLength + gap), shift: root.stockLength - 2 * root.extDia }
+                : null
+            // a real Z, where it is drawn: on the far piece moved by the shift,
+            // in the stretch left out at the gap's middle
+            function drawnZ(z) {
+                if (!middle || z >= middle.near) return z
+                if (z <= -root.stockLength + pieceLength) return z + middle.shift
+                return (middle.near + middle.far) / 2
+            }
             workpiece: ({ external_diameter: root.extDia, internal_diameter: root.intDia,
-                          stickout_length: root.stickout, stock_length: root.stockLength })
+                          stickout_length: root.stickout, stock_length: drawnLength,
+                          break_far_end: true,
+                          break_middle: middle ? { near: middle.near, far: middle.far } : null })
+            axisBreak: middle
 
             readonly property color externalColor: "#1565c0"
             readonly property color internalColor: "#6a1b9a"
@@ -249,15 +277,17 @@ Item {
             // above the part, the stickout below it
             dimensions: {
                 var dims = [
-                    { axis: "z", from: 0, to: -root.stockLength, x: -root.extDia, offset: -nearOffset,
+                    // to the drawn ends: the stock to the break, the stickout to
+                    // where it ends - at the break if it reaches past it
+                    { axis: "z", from: 0, to: -drawnLength, x: -root.extDia, offset: -nearOffset,
                       color: stockLengthColor, arrowToRect: stockLengthBox.rect },
                     { axis: "x", from: -root.extDia, to: root.extDia, z: 0, offset: nearOffset,
                       color: externalColor, arrowToRect: externalBox.rect },
-                    { axis: "z", from: 0, to: -root.stickout, x: root.extDia, offset: nearOffset,
+                    { axis: "z", from: 0, to: drawnZ(-root.stickout), x: root.extDia, offset: nearOffset,
                       color: stickoutColor, arrowToRect: stickoutBox.rect }
                 ]
                 if (root.intDia > 0)
-                    dims.push({ axis: "x", from: root.intDia, to: -root.intDia, z: -root.stockLength / 4, offset: 0,
+                    dims.push({ axis: "x", from: root.intDia, to: -root.intDia, z: -(breakMiddle ? pieceLength : drawnLength) / 4, offset: 0,
                                 color: internalColor, arrowToRect: internalBox.rect })
                 return dims
             }

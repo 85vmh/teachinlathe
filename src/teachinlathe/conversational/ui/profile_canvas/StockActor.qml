@@ -1,4 +1,6 @@
 import QtQuick 2.15
+import theme 1.0
+import "brokenstock.js" as Broken
 
 QtObject {
     property var workpiece: ({})
@@ -14,6 +16,25 @@ QtObject {
     // where the raw face is: Z0 unless the stock still stands proud of it,
     // as before facing
     readonly property real faceZ: workpiece && workpiece.face_z !== undefined ? Math.max(0, Number(workpiece.face_z)) : 0
+    // drawn with its far end broken off - stock_length is then how much of
+    // it is drawn, not how long it is - opaque over the grid, as the Program
+    // Header shows it; see brokenstock.js
+    readonly property bool breakFarEnd: !!(workpiece && workpiece.break_far_end)
+    // and a stretch of its middle left out too: {near, far} in drawn Z, where
+    // the piece at the face and the far piece are broken off, or null
+    readonly property var breakMiddle: workpiece && workpiece.break_middle ? workpiece.break_middle : null
+
+    // the colours and pitch the stock is drawn in, whole or broken
+    readonly property color hatchColor:   "#d5d9df"
+    readonly property color outlineColor: "#6b7280"
+    readonly property color boreColor:    "#aeb4bd"
+    // the cut face of a broken end: its ground a shade darker than the
+    // stock's, its hatch darker again so it still stands out on it
+    readonly property color lensFillColor:  "#e5e7eb"
+    readonly property color lensHatchColor: "#a3aab4"
+    readonly property real  hatchPitch:   12
+    // the outline and the bore lines; the hatch stays at one px
+    readonly property real  outlineWidth: 1.5
 
     // Canvas y of diameter x, on the mirrored half (above the centre line)
     // when asked.
@@ -65,9 +86,9 @@ QtObject {
     }
 
     function _hatchCurrentClip(ctx, left, top, right, bottom) {
-        var spacing = 12
+        var spacing = hatchPitch
         var overshoot = bottom - top
-        ctx.strokeStyle = "#d5d9df"
+        ctx.strokeStyle = hatchColor
         ctx.lineWidth = 1
         ctx.setLineDash([])
         for (var x = left - overshoot; x < right + overshoot; x += spacing) {
@@ -82,6 +103,23 @@ QtObject {
         var stockZ = -Math.max(0, stockLength)
         var stockX = Math.max(0, externalDiameter)
         if (stockLength <= 0 || stockX <= 0 || !cx || !cy) return
+
+        if (breakFarEnd) {
+            var innerX = Math.max(0, Math.min(internalDiameter, stockX))
+            var R = cy(stockX) - cy(0), r = innerX > 0 ? cy(innerX) - cy(0) : 0
+            var style = { fill: Theme.surface, hatch: hatchColor, hatchPitch: hatchPitch,
+                          outline: outlineColor, bore: boreColor, lineWidth: outlineWidth,
+                          lensFill: lensFillColor, lensHatch: lensHatchColor }
+            if (breakMiddle) {
+                // the piece at the face, broken off at the gap; the far piece,
+                // broken at both its ends
+                Broken.piece(ctx, cx(breakMiddle.near), cx(faceZ), cy(0), R, r, true, false, style)
+                Broken.piece(ctx, cx(stockZ), cx(breakMiddle.far), cy(0), R, r, true, true, style)
+            } else {
+                Broken.paint(ctx, cx(faceZ), cx(stockZ), cy(0), R, r, style)
+            }
+            return
+        }
 
         _paintHalf(ctx, stockZ, stockX, false)
         if (mirrorAcrossCenterline)
@@ -127,8 +165,8 @@ QtObject {
         // its outside and its far end; its face only when it stands proud of
         // Z0 - at Z0 the dashed Z0 line goes, and only the finished profile
         // is drawn over that
-        ctx.strokeStyle = "#9ca3af"
-        ctx.lineWidth = 1
+        ctx.strokeStyle = outlineColor
+        ctx.lineWidth = outlineWidth
         ctx.setLineDash([])
         ctx.beginPath()
         ctx.moveTo(left, bottom)
@@ -141,7 +179,7 @@ QtObject {
         ctx.stroke()
 
         if (hasInternalDiameter && innerX > 0) {
-            ctx.strokeStyle = "#aeb4bd"
+            ctx.strokeStyle = boreColor
             ctx.beginPath()
             ctx.moveTo(left, _cy(innerX, mirrored))
             ctx.lineTo(right, _cy(innerX, mirrored))
