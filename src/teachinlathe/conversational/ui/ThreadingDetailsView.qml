@@ -72,7 +72,10 @@ Item {
         depthDegression = (opData.depth_degression !== undefined) ? Number(opData.depth_degression)    : 1.0
         taperType       = (opData.taper_type      !== undefined) ? Math.round(Number(opData.taper_type)) : 0
         compoundAngle   = (opData.compound_angle  !== undefined) ? Number(opData.compound_angle)         : 0.0
-        m1Panel.applyData(opData && opData.m1_parameters ? opData.m1_parameters : {})
+        // G33's speeds, pitch and starts, and its pause, in the header
+        header.pitch  = pitch
+        header.starts = starts
+        header.applyData(opData, null)
         _loading = false
     }
 
@@ -133,10 +136,30 @@ Item {
     IntValidator    { id: intVal; bottom: 1; top: 99 }
     IntValidator    { id: intValNonNeg; bottom: 0; top: 99 }
 
+    // the header's spindle, M1 or pitch and starts, saved straight away
+    function _saveFromHeader(part) {
+        root.saveRequested({ index: root.opIndex, payload: root.mergeIntoOp(part) })
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
         spacing: Theme.margin
+
+        // G33: Speeds and Feeds - RPM only, with Pitch and Starts for its
+        // feeds - and Pause to Inspect beside it, as the other operations
+        // have them
+        OperationHeader {
+            id: header
+            visible: root.isG33Threading
+            rpmOnly: true
+            feedKind: SpeedsAndFeeds.FeedKind.Threading
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            onSpindleEdited: function(spindle) { root._saveFromHeader({ spindle_parameters: spindle }) }
+            onPitchEdited: function(value) { root.pitch = value; root.emitSave() }
+            onStartsEdited: function(value) { root.starts = value; root.emitSave() }
+            onM1Edited: function(m1) { root._saveFromHeader({ m1_parameters: m1 }) }
+        }
 
         RowLayout {
             id: detailsLayout
@@ -150,10 +173,12 @@ Item {
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                spacing: 40
+                spacing: root.isG33Threading ? Theme.margin : 40
 
+                // G76's; G33's are in the header
                 SpindleParameters {
                     id: spindlePanel
+                    visible: !root.isG33Threading
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
                     onOpenNumPadRequested: root.openNumPadRequested(field)
@@ -163,8 +188,10 @@ Item {
                     }
                 }
 
+                // G76's pitch and starts; G33's are in the header
                 GroupBox {
                     id: threadParametersBox
+                    visible: !root.isG33Threading
                     title: "Thread Parameters"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
@@ -293,18 +320,6 @@ Item {
                         }
                     }
                 }
-
-                M1Parameters {
-                    id: m1Panel
-                    visible: root.isG33Threading
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                    Layout.alignment: Qt.AlignTop
-                    onSaveRequested: function (payload) {
-                        var merged = root.mergeIntoOp(payload)
-                        root.saveRequested({ index: opIndex, payload: merged })
-                    }
-                }
             }
 
             ColumnLayout {
@@ -313,10 +328,12 @@ Item {
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                spacing: 40
+                spacing: root.isG33Threading ? Theme.margin : 40
 
+                // G33's under Z Limits, so the columns come out even
                 GroupBox {
                     id: threadLocationBox
+                    parent: root.isG33Threading ? leftColumn : rightColumn
                     title: "Thread Location"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop

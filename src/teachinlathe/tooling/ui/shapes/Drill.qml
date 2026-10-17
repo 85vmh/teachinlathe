@@ -43,24 +43,24 @@ Item {
     property real helixGapPx: 3
     property real fluteLengthD: 5       // lungimea canalelor, în diametre
     property real shankLengthD: 2       // lungimea cozii, în diametre
-    // Lungimea totală desenată [mm]; 0 = proporțională cu diametrul (vârf +
-    // canale + coadă de mai sus). Altfel lungimea e impusă, iar canalele și
-    // coada își păstrează raportul — așa un burghiu se poate desena la scară
-    // fixă, în cât loc are, cu diametrul la mărimea lui.
+    // Cât din burghiu se desenează [mm], de la vârf; 0 = tot (vârf + canale +
+    // coadă de mai sus). Doar îl taie: canalele, elicea și coada rămân unde
+    // sunt, așa că un burghiu arată la fel în orice loc e desenat.
     property real length: 0
 
     property color bodyColor:  "#e5a93b"
     property color edgeColor:  "#674c1b"
 
-    // ---- derivate (mm) ----------------------------------------------------
+    // ---- derivate (mm), din drill.js ------------------------------------
+    readonly property var _lengths: DrillShape.lengths({ diameter: diameter, tipAngle: tipAngle,
+                                                         fluteLengthD: fluteLengthD,
+                                                         shankLengthD: shankLengthD, length: length })
     readonly property real radius: diameter / 2
-    readonly property real pointLength: tipAngle >= 179.999 ? 0
-                                        : radius / Math.tan(tipAngle / 2 * Math.PI / 180)
-    readonly property real bodyLength: length > 0 ? Math.max(0, length - pointLength)
-                                                  : (fluteLengthD + shankLengthD) * diameter
-    readonly property real fluteLength: bodyLength * fluteLengthD / (fluteLengthD + shankLengthD)
-    readonly property real shankLength: bodyLength - fluteLength
-    readonly property real totalLength: pointLength + bodyLength
+    readonly property real pointLength: _lengths.point
+    readonly property real fluteLength: _lengths.flute
+    readonly property real shankLength: _lengths.shank
+    // cât se desenează: tot burghiul, sau cât taie `length`
+    readonly property real totalLength: _lengths.drawn
     readonly property real helixLead: Math.PI * diameter / Math.tan(helixAngle * Math.PI / 180)
 
     // vârful, în pixeli, în item

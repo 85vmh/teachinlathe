@@ -227,6 +227,8 @@ Item {
         ProfileCanvas {
             id: workpieceCanvas
             showTransitions: false
+            // a dot at both ends of each arrow to a box
+            arrowStartDots: true
             Layout.fillWidth: true
             Layout.fillHeight: true
             // pinch and the buttons zoom, a drag pans, a double tap fits

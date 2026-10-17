@@ -1,7 +1,12 @@
-// SpeedsAndFeeds.qml — spindle direction, speed mode, speed and feed rate in
-// one row: M3/M4 | CSS/RPM | the speed for the mode | feed rate.
-// Edits an operation's spindle_parameters, and a feed rate the operation
-// keeps wherever it keeps it: each edit reports only what changed.
+// SpeedsAndFeeds.qml — spindle direction, speed mode, speed and feeds in one
+// row: M3/M4 | CSS/RPM | the speed for the mode | the feeds.
+// Edits an operation's spindle_parameters, and feeds the operation keeps
+// wherever it keeps them: each edit reports only what changed.
+//
+// What the feeds column holds is ``feedKind``'s:
+//   Standard   Feed rate (Fz)
+//   Parting    Feed rate (Fz1) over Feed rate (Fz2)
+//   Threading  Pitch over Starts
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -15,13 +20,25 @@ GroupBox {
     title: "Speeds and Feeds"
     font.pixelSize: Theme.fontBody
 
+    enum FeedKind { Standard, Parting, Threading }
+    // what the feeds column holds; see above
+    property int feedKind: SpeedsAndFeeds.FeedKind.Standard
+
     // for operations that cannot run in CSS: its button disabled, RPM only
     property bool rpmOnly: false
     // false for operations without a feed rate: the field disabled and empty
     property bool feedEnabled: true
+    // the only spindle direction the tool allows - a drill's or a tap's:
+    // true M3, false M4, null either. The other button is disabled, and an
+    // op set the other way is turned round to it when its data comes in
+    // (applyData), and saved; set it before then
+    property var onlyClockwise: null
 
     signal spindleEdited(var spindle)    // a whole spindle_parameters
-    signal feedRateEdited(real value)
+    signal feedRateEdited(real value)      // Standard's Fz, Parting's Fz1
+    signal feedRate2Edited(real value)     // Parting's Fz2
+    signal pitchEdited(real value)         // Threading's
+    signal startsEdited(int value)         // Threading's
     signal openNumPadRequested(var field)
 
     property string spindleMode: "rpm"   // "rpm" | "css"
@@ -30,6 +47,11 @@ GroupBox {
     property int    css_max_rpm: 0
     property int    direction: -1        // +1 = Forward (M3), -1 = Reverse (M4)
     property real   feed_rate: 0.0
+    // Parting's second feed rate, and Threading's pitch and starts: set them
+    // as feed_rate is, from the operation's data
+    property real   feed_rate2: 0.0
+    property real   pitch: 0.0
+    property int    starts: 1
 
     function applyData(spindleParams, feedRate) {
         var sp = spindleParams || {}
@@ -42,6 +64,14 @@ GroupBox {
         css_value = hasCSS ? +sp.css_value : 0
         css_max_rpm = hasCSS ? +sp.css_max_speed : 0
         feed_rate = (feedRate !== undefined && feedRate !== null) ? +feedRate : 0
+        _keepToAllowedDirection()
+    }
+
+    function _keepToAllowedDirection() {
+        if (onlyClockwise !== true && onlyClockwise !== false) return
+        if ((direction === 1) === onlyClockwise) return
+        direction = onlyClockwise ? 1 : -1
+        emitSpindle()
     }
 
     function emitSpindle() {
@@ -74,16 +104,6 @@ GroupBox {
         Layout.rightMargin: root.columnGap
     }
 
-    component ValueFrame: Frame {
-        Layout.alignment: Qt.AlignVCenter
-        padding: 10
-        background: Rectangle {
-            radius: Theme.radius
-            border.width: Theme.hairline
-            border.color: Theme.outlineStrong
-            color: "transparent"
-        }
-    }
 
     RowLayout {
         anchors.fill: parent
@@ -94,6 +114,7 @@ GroupBox {
             vertical: true
             Layout.alignment: Qt.AlignVCenter
             clockwise: root.direction === 1
+            onlyClockwise: root.onlyClockwise
             onPicked: function(clockwise) {
                 root.direction = clockwise ? 1 : -1
                 root.emitSpindle()
@@ -214,32 +235,89 @@ GroupBox {
 
         Separator {}
 
-        ValueFrame {
+        // the feeds, unframed, each row level with a speed row: the first
+        // with the CSS value's, the second with the bottom one
+        GridLayout {
+            Layout.alignment: Qt.AlignTop
+            Layout.topMargin: speedGrid.y
             enabled: root.feedEnabled
             opacity: root.feedEnabled ? 1.0 : 0.5
+            columns: 3
+            columnSpacing: 20
+            rowSpacing: speedGrid.rowSpacing
 
-            RowLayout {
-                spacing: 20
+            readonly property bool parting: root.feedKind === SpeedsAndFeeds.FeedKind.Parting
+            readonly property bool threading: root.feedKind === SpeedsAndFeeds.FeedKind.Threading
 
-                Label {
-                    text: "Feed rate (Fz)"
-                    font.pixelSize: Theme.fontBody
-                }
-                NumpadField {
-                    Layout.preferredWidth: 80
-                    settingName: "turning.feed_rate"
-                    value: root.feed_rate
-                    validatorObject: dblVal
-                    // up to three decimals, without trailing zeros
-                    formatter: function (v) { return (v == null || !root.feedEnabled) ? "" : String(Number(Number(v).toFixed(3))) }
-                    hAlign: Text.AlignRight
-                    onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: { root.feed_rate = value; root.feedRateEdited(value) }
-                }
-                Label {
-                    text: "(mm/rev)"
-                    font.pixelSize: Theme.fontBody
-                }
+            // first row: Fz, Fz1, or Pitch
+            Label {
+                Layout.preferredHeight: root.speedRowHeight
+                verticalAlignment: Text.AlignVCenter
+                text: parent.threading ? "Pitch" : parent.parting ? "Feed rate (Fz1)" : "Feed rate (Fz)"
+                font.pixelSize: Theme.fontBody
+            }
+            NumpadField {
+                visible: !parent.threading
+                Layout.preferredWidth: 80
+                settingName: "turning.feed_rate"
+                value: root.feed_rate
+                validatorObject: dblVal
+                // up to three decimals, without trailing zeros
+                formatter: function (v) { return (v == null || !root.feedEnabled) ? "" : String(Number(Number(v).toFixed(3))) }
+                hAlign: Text.AlignRight
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: { root.feed_rate = value; root.feedRateEdited(value) }
+            }
+            NumpadField {
+                visible: parent.threading
+                Layout.preferredWidth: 80
+                settingName: "threading.metric_pitch"
+                value: root.pitch
+                validatorObject: dblVal
+                formatter: function (v) { return (v == null) ? "" : String(Number(Number(v).toFixed(3))) }
+                hAlign: Text.AlignRight
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: { root.pitch = value; root.pitchEdited(value) }
+            }
+            Label {
+                text: parent.threading ? "(mm)" : "(mm/rev)"
+                font.pixelSize: Theme.fontBody
+            }
+
+            // second row: Fz2, or Starts; none for Standard
+            Label {
+                visible: parent.parting || parent.threading
+                Layout.preferredHeight: root.speedRowHeight
+                verticalAlignment: Text.AlignVCenter
+                text: parent.threading ? "Starts" : "Feed rate (Fz2)"
+                font.pixelSize: Theme.fontBody
+            }
+            NumpadField {
+                visible: parent.parting
+                Layout.preferredWidth: 80
+                settingName: "turning.feed_rate"
+                value: root.feed_rate2
+                validatorObject: dblVal
+                formatter: function (v) { return (v == null || !root.feedEnabled) ? "" : String(Number(Number(v).toFixed(3))) }
+                hAlign: Text.AlignRight
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: { root.feed_rate2 = value; root.feedRate2Edited(value) }
+            }
+            NumpadField {
+                visible: parent.threading
+                Layout.preferredWidth: 80
+                settingName: "threading.starts_count"
+                value: root.starts
+                validatorObject: IntValidator { bottom: 1 }
+                formatter: function (v) { return (v == null) ? "" : String(Math.round(Number(v))) }
+                hAlign: Text.AlignRight
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: { root.starts = Math.max(1, Math.round(value)); root.startsEdited(root.starts) }
+            }
+            Label {
+                visible: parent.parting || parent.threading
+                text: parent.parting ? "(mm/rev)" : ""
+                font.pixelSize: Theme.fontBody
             }
         }
 

@@ -99,7 +99,7 @@ Item {
         } else if (data.type === "parting") {
             detailsLoader.source = "PartingDetailsView.qml"
         } else if (data.type === "tapping") {
-            detailsLoader.source = "TappingDetailsView.qml"
+            detailsLoader.source = "TappingVisualDetailsView.qml"
         } else {
             detailsLoader.source = ""
         }

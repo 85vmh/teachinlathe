@@ -128,6 +128,20 @@
       1.5
     ]
   },
+  "drilling.tool_clearance": {
+    "description": "Enter the clearance in front of Z Start (mm)",
+    "value_type": "float",
+    "default_value": 2.0,
+    "min_value": 0,
+    "max_value": 50
+  },
+  "tapping.tool_clearance": {
+    "description": "Enter the clearance in front of Z Start (mm)",
+    "value_type": "float",
+    "default_value": 2.0,
+    "min_value": 0,
+    "max_value": 50
+  },
   "drilling.feed_rate": {
     "description": "Enter drilling feed rate",
     "value_type": "float",

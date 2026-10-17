@@ -13,7 +13,34 @@ def build_details_payload(obj):
     return obj.to_dict() if hasattr(obj, "to_dict") else None
 
 
-def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, strategy=None, profiling_type=None, profile_type=None):
+def _number(value):
+    """25.0 as 25, 6.80 as 6.8."""
+    return f"{float(value):.3f}".rstrip("0").rstrip(".")
+
+
+def axial_tool_label(op_type, operations, index):
+    """What Drilling and Tapping show of their tool, in brackets: the drill's
+    diameter, (Ø25), or the tap's size, (M12 x 1mm) - the tool the last
+    Change Tool above ``index`` puts in, from the Tool Library - or (???)
+    when that is not a drill, or a tap, or there is none. None for any other
+    operation."""
+    kind = {"drilling": "drill", "tapping": "tap"}.get(op_type)
+    if kind is None:
+        return None
+    from teachinlathe.programs.ui.backplot import tool_source
+    change = next((o for o in reversed((operations or [])[:max(index, 0)])
+                   if getattr(o, "type", "") == "changeTool"), None)
+    tool = tool_source.describe(int(getattr(change, "tool_no", 0) or 0)) if change is not None else {}
+    if tool.get("kind") != kind or not tool.get("diameter"):
+        return "(???)"
+    if kind == "drill":
+        return f"(\u00d8{_number(tool['diameter'])})"
+    if not tool.get("pitch"):
+        return "(???)"
+    return f"(M{_number(tool['diameter'])} x {_number(tool['pitch'])}mm)"
+
+
+def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, strategy=None, profiling_type=None, profile_type=None, tool_label=None):
     op_type_value = (op_type or "").strip()
     if op_type_value == "changeTool":
         return f"Tool Change (T{tool_no})" if tool_no is not None else "Tool Change"
@@ -56,9 +83,9 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
     if op_type_value == "g33Threading":
         return f"G33 Threading (P: {pitch})" if pitch is not None else "G33 Threading"
     if op_type_value == "drilling":
-        return "Drilling"
+        return f"Drilling {tool_label}" if tool_label else "Drilling"
     if op_type_value == "tapping":
-        return "Tapping"
+        return f"Tapping {tool_label}" if tool_label else "Tapping"
     if op_type_value == "parting":
         return "Parting"
     return op_type_value or "Unknown"
@@ -67,7 +94,7 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
 def build_operations_model(program):
     out = []
     operations = getattr(program, "operations", []) or []
-    for op in operations:
+    for index, op in enumerate(operations):
         item = {
             "order": getattr(op, "order", None),
             "type": getattr(op, "type", ""),
@@ -93,6 +120,7 @@ def build_operations_model(program):
         item["display_type"] = display_name_for_op(
             item["type"], tool_no=tool_no, pitch=pitch, profile_id=profile_id,
             strategy=strategy, profiling_type=profiling_type, profile_type=profile_type,
+            tool_label=axial_tool_label(item["type"], operations, index),
         )
         out.append(item)
     return out

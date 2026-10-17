@@ -53,16 +53,27 @@ Canvas {
     // more targets, each with its arrow to a box: [{x: diameter, z, color,
     // arrowToRect}], drawn by MarkersActor; fitted as the positions are
     property var    markers: []
-    // the drill in the spindle, {diameter, tip_angle, right_hand, z}, its
-    // point at z on the centre line; null draws none
-    property var    drill: null
-    // where the drill's pecks end, in mm, each drawn as the drill's point,
-    // dotted in drillPeckColor
-    property var    drillPecks: []
-    // where the edges of what the pecks drill start: Z Start
-    property var    drillPecksFrom: null
-    property color  drillPeckColor: feedColor
-    onDrillPecksChanged: requestPaint()
+    // the drill or tap in the spindle, {kind, diameter, tip_angle,
+    // right_hand, pitch, z} (AxialToolActor), its point at z on the centre
+    // line; null draws none
+    property var    axialTool: null
+    // a dot where each arrow to a box starts as well as where it ends -
+    // the markers' and the dimensions' leaders
+    property bool   arrowStartDots: false
+    onArrowStartDotsChanged: requestPaint()
+    // whether fitToScreen takes in the axial tool's whole length, or only
+    // its point: a drill is long, and longer the bigger it is
+    property bool   fitAxialToolLength: true
+    // where the axial tool's pecks end, in mm, each drawn as its point, in
+    // axialToolPeckColor
+    property var    axialToolPecks: []
+    // where the edges of what the pecks cut start: Z Start
+    property var    axialToolPecksFrom: null
+    property color  axialToolPeckColor: feedColor
+    onAxialToolPecksChanged: requestPaint()
+    // how far back from a peck's Z its mark reaches the axial tool's edges,
+    // in mm - see AxialToolActor.peckBack
+    function axialToolPeckBack() { return axialToolActor.peckBack() }
     // what roughing will cut, {profile, offset, feeds, rapids}
     // as profileRoughingPreview returns it; null draws none of it
     property var    roughingPreview: null
@@ -236,7 +247,7 @@ Canvas {
         if (!_manualView) _scheduleFit()
         else              requestPaint()
     }
-    onDrillChanged: {
+    onAxialToolChanged: {
         if (!_manualView) _scheduleFit()
         else              requestPaint()
     }
@@ -315,11 +326,12 @@ Canvas {
             b.fXMax = Math.max(b.fXMax, stockDiameter)
         }
         var positions = [startPosition, endPosition].concat(markers || [])
-        // the drill, from its point to its far end
-        if (drill && Number(drill.diameter) > 0) {
-            var drillZ = Number(drill.z) || 0
-            positions.push({ x: Number(drill.diameter), z: drillZ })
-            positions.push({ x: Number(drill.diameter), z: drillZ + drillActor.length() })
+        // the axial tool, from its point to its far end
+        if (axialTool && Number(axialTool.diameter) > 0) {
+            var toolZ = Number(axialTool.z) || 0
+            positions.push({ x: Number(axialTool.diameter), z: toolZ })
+            if (fitAxialToolLength)
+                positions.push({ x: Number(axialTool.diameter), z: toolZ + axialToolActor.length() })
         }
         for (var p = 0; p < positions.length; p++) {
             if (!positions[p]) continue
@@ -389,12 +401,25 @@ Canvas {
         dimensionActor.paint(ctx)
         highlightActor.paint(ctx)
         diameterLeaderActor.paint(ctx)
-        drillActor.paint(ctx)
+        axialToolActor.paint(ctx)
         startPositionActor.paint(ctx)
         endPositionActor.paint(ctx)
         markersActor.paint(ctx)
-        // the axes' arrows over everything, the arrows to the boxes too
+        // the axes' arrows over everything, the arrows to the boxes too;
+        // with the stock drawn, X+ past its skin by its usual length
+        axesActor.xAxisLength = _stockDrawn() ? _cy(Number(workpiece.external_diameter)) - _cy(0) + axesActor.axisLength
+                                              : axesActor.axisLength
         axesActor.paintArrows(ctx)
+    }
+
+    // Whether StockActor draws any stock: not with the mirror off where the
+    // stock is broken off after the profile or Z End.
+    function _stockDrawn() {
+        if (!workpiece || !(Number(workpiece.stock_length) > 0) || !(Number(workpiece.external_diameter) > 0))
+            return false
+        var brokenAfter = (workpiece.break_after_profile && _renderSegs && _renderSegs.length > 0)
+                          || (workpiece.break_after_z !== undefined && workpiece.break_after_z !== null)
+        return mirrorAcrossCenterline || !brokenAfter
     }
 
     function _rebuildRenderCache() {
@@ -505,16 +530,17 @@ Canvas {
     MarkersActor {
         id: markersActor
         markers: root.markers
+        startDots: root.arrowStartDots
         cx: root._cx
         cy: root._cy
     }
 
-    DrillActor {
-        id: drillActor
-        drill: root.drill
-        peckZs: root.drillPecks
-        peckFrom: root.drillPecksFrom
-        peckColor: root.drillPeckColor
+    AxialToolActor {
+        id: axialToolActor
+        tool: root.axialTool
+        peckZs: root.axialToolPecks
+        peckFrom: root.axialToolPecksFrom
+        peckColor: root.axialToolPeckColor
         scale: root._scale
         cx: root._cx
         cy: root._cy
@@ -535,6 +561,7 @@ Canvas {
     DimensionActor {
         id: dimensionActor
         dimensions: root.dimensions
+        startDots: root.arrowStartDots
         cx: root._cx
         cy: root._cy
     }

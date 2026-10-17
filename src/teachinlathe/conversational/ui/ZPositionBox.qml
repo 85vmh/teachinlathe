@@ -32,7 +32,7 @@ CanvasBox {
             value: root.value
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
             onValueCommitted: root.valueEdited(Number(value))
         }
         Button {

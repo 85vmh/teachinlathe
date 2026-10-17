@@ -8,7 +8,7 @@ from teachinlathe.conversational.model.data_types import (
     DefineRadialProfile,
     Program,
 )
-from teachinlathe.conversational.model.qml_adapter import display_name_for_op
+from teachinlathe.conversational.model.qml_adapter import display_name_for_op, axial_tool_label
 from teachinlathe.tooling.store.tool_entry import ToolType, make_tool
 from teachinlathe.tooling.store.tool_extras_store import ToolExtrasStore
 from teachinlathe.tooling.store.tool_table_file import parse_tbl
@@ -132,6 +132,19 @@ def _resolve_tool_payload(tool_no, fallback_orientation=0):
 
 
 
+def _resolve_tap_pitch(operations, op_index):
+    """The pitch of the tap the last Change Tool above ``op_index`` puts in,
+    from the Tool Library; None when it is not a tap or cannot be found."""
+    from teachinlathe.programs.ui.backplot import tool_source
+    tool_change = _resolve_previous_tool_change(operations, op_index)
+    if tool_change is None:
+        return None
+    tool = tool_source.describe(int(getattr(tool_change, "tool_no", 0) or 0))
+    if tool.get("kind") != "tap" or not tool.get("pitch"):
+        return None
+    return float(tool["pitch"])
+
+
 def _build_operation_payload(op, program, op_index=None):
     payload = op.to_dict()
     if op.type in ("profileRoughing", "profileContour"):
@@ -155,7 +168,7 @@ def _build_operation_payload(op, program, op_index=None):
     return payload
 
 
-def _display_name_for_operation(op):
+def _display_name_for_operation(op, operations=None, index=None):
     op_type = getattr(op, "type", "")
     tool_no = getattr(op, "tool_no", None)
     pitch = getattr(op, "pitch", None)
@@ -181,6 +194,7 @@ def _display_name_for_operation(op):
         strategy=strategy,
         profiling_type=profiling_type,
         profile_type=profile_type,
+        tool_label=axial_tool_label(op_type, operations, index) if operations is not None else None,
     )
 
 
@@ -224,7 +238,7 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None, 
         if not bool(op.generate_gcode):
             continue
 
-        op_display = _display_name_for_operation(op)
+        op_display = _display_name_for_operation(op, operations, index - 1)
         lines.append(_format_comment(f"----------Operation #{index}: {op_display}----------") + "\n")
 
         if op.type in ("defineProfile", "importDxfProfile"):
@@ -243,6 +257,8 @@ def build_ngc_from_program(program: Program, output_dir=None, output_path=None, 
                 lines.extend(generator(_build_operation_payload(op, program, index - 1)))
             elif op.type == "facing":
                 lines.extend(generator(op, datum=datum))
+            elif op.type == "tapping":
+                lines.extend(generator(op, pitch=_resolve_tap_pitch(operations, index - 1)))
             else:
                 lines.extend(generator(op))
         else:

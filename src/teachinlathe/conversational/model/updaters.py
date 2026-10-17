@@ -119,8 +119,10 @@ def apply_drilling_update(drilling, payload):
         return
     _set_attr_if_present(drilling, payload, "z_start", attr="zStart", coerce=float)
     _set_attr_if_present(drilling, payload, "z_end", attr="zEnd", coerce=float)
-    _set_attr_if_present(drilling, payload, "z_retract", attr="zRetract", coerce=float)
+    _set_attr_if_present(drilling, payload, "tool_clearance", attr="toolClearance",
+                         coerce=lambda v: abs(float(v)))
     _set_attr_if_present(drilling, payload, "peck_depth", attr="peckDepth", coerce=float)
+    _set_attr_if_present(drilling, payload, "dwell_time", attr="dwellTime", coerce=float)
     _set_attr_if_present(drilling, payload, "feed_rate", attr="feedRate", coerce=float)
 
 
@@ -129,7 +131,8 @@ def apply_tapping_update(tapping, payload):
         return
     _set_attr_if_present(tapping, payload, "z_start", attr="zStart", coerce=float)
     _set_attr_if_present(tapping, payload, "z_end", attr="zEnd", coerce=float)
-    _set_attr_if_present(tapping, payload, "z_retract", attr="zRetract", coerce=float)
+    _set_attr_if_present(tapping, payload, "tool_clearance", attr="toolClearance",
+                         coerce=lambda v: abs(float(v)))
     _set_attr_if_present(tapping, payload, "peck_depth", attr="peckDepth", coerce=float)
     _set_attr_if_present(tapping, payload, "pitch", coerce=float)
 

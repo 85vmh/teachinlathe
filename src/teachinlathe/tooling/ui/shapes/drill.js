@@ -3,37 +3,46 @@
 // Vezi Drill.qml pentru cote, elice și canale.
 //
 // `d`: diameter, tipAngle, rightHand, helixAngle, helixLineWidth, helixGapPx,
-// fluteLengthD, shankLengthD, length (mm, 0 = proporțional), bodyColor,
-// edgeColor; pxPerMm; tipX, tipY - vârful, în px; corpul spre dreapta.
+// fluteLengthD, shankLengthD, length, bodyColor, edgeColor; pxPerMm; tipX,
+// tipY - vârful, în px; corpul spre dreapta.
+//
+// Burghiul e mereu același, dat doar de diametru și unghiul vârfului: vârf,
+// `fluteLengthD` diametre de canale, `shankLengthD` de coadă - ca în backplot
+// (programs/ui/backplot/actors/tool_outlines.py, `drill`). `length` [mm], dacă
+// e dat, doar îl taie: se desenează de la vârf atât cât, cât încape, iar
+// elicea, canalele și coada rămân unde sunt - așa arată la fel oriunde.
 .pragma library
 
-// Lungimile, în mm: vârful, canalele, coada, totalul.
+// Lungimile, în mm: vârful, canalele, coada, totalul burghiului, și cât din
+// el se desenează (`drawn`).
 function lengths(d) {
     var r = d.diameter / 2
     var point = d.tipAngle >= 179.999 ? 0 : r / Math.tan(d.tipAngle / 2 * Math.PI / 180)
-    var body = d.length > 0 ? Math.max(0, d.length - point)
-                            : (d.fluteLengthD + d.shankLengthD) * d.diameter
-    var flute = body * d.fluteLengthD / (d.fluteLengthD + d.shankLengthD)
-    return { point: point, flute: flute, shank: body - flute, total: point + body }
+    var flute = d.fluteLengthD * d.diameter
+    var shank = d.shankLengthD * d.diameter
+    var total = point + flute + shank
+    return { point: point, flute: flute, shank: shank, total: total,
+             drawn: d.length > 0 ? Math.min(d.length, total) : total }
 }
 
 function paint(ctx, d) {
     var k = d.pxPerMm, r = d.diameter / 2
     if (r <= 0 || k <= 0) return
     var l = lengths(d)
-    var h = l.point, fEnd = h + l.flute, end = l.total
+    var h = l.point, fEnd = h + l.flute, end = l.drawn
 
     ctx.save()
     ctx.translate(d.tipX, d.tipY)
     ctx.scale(k, k)                          // y în jos, ca pe ecran
 
+    // cut off inside the point, the cone is cut there too
+    var cut = Math.min(h, end), cutR = h > 0 ? r * cut / h : r
     function outline() {
         ctx.beginPath()
         ctx.moveTo(0, 0)
-        ctx.lineTo(h, -r)
-        ctx.lineTo(end, -r)
-        ctx.lineTo(end, r)
-        ctx.lineTo(h, r)
+        ctx.lineTo(cut, -cutR)
+        if (end > cut) { ctx.lineTo(end, -r); ctx.lineTo(end, r) }
+        ctx.lineTo(cut, cutR)
         ctx.closePath()
     }
 
@@ -41,15 +50,12 @@ function paint(ctx, d) {
     ctx.fillStyle = d.bodyColor
     ctx.fill()
 
-    // muchiile canalelor, tăiate la vârf + canale
+    // muchiile canalelor, tăiate la vârf + canale, și unde se oprește desenul
     ctx.save()
+    outline()
+    ctx.clip()
     ctx.beginPath()
-    ctx.moveTo(0, 0)
-    ctx.lineTo(h, -r)
-    ctx.lineTo(fEnd, -r)
-    ctx.lineTo(fEnd, r)
-    ctx.lineTo(h, r)
-    ctx.closePath()
+    ctx.rect(0, -r, fEnd, 2 * r)
     ctx.clip()
     ctx.strokeStyle = d.edgeColor
     ctx.lineWidth = d.helixLineWidth / k
@@ -78,12 +84,14 @@ function paint(ctx, d) {
     }
     ctx.restore()
 
-    // capătul canalelor, unde începe coada
-    ctx.strokeStyle = d.edgeColor
-    ctx.lineWidth = 1 / k
-    ctx.beginPath()
-    ctx.moveTo(fEnd, -r); ctx.lineTo(fEnd, r)
-    ctx.stroke()
+    // capătul canalelor, unde începe coada - dacă se ajunge acolo
+    if (fEnd < end) {
+        ctx.strokeStyle = d.edgeColor
+        ctx.lineWidth = 1 / k
+        ctx.beginPath()
+        ctx.moveTo(fEnd, -r); ctx.lineTo(fEnd, r)
+        ctx.stroke()
+    }
 
     outline()
     ctx.lineJoin = "round"

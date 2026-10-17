@@ -21,7 +21,10 @@ import "arrow.js" as Arrow
 //       diameter ``x`` - above it when ``offset`` is negative, as for the
 //       upper half's -D
 // arrowToRect is the box, in canvas px, or null for no leader; ``leaderAt``,
-// how far along from ``from`` the leader leaves, a fraction - 1/4 if not set.
+// how far along from ``from`` the leader leaves, a fraction - 1/4 if not set;
+// ``arrowsOutside``, for a short one: the arrow line run on past both
+// extension lines, its heads outside them pointing in; ``noExtensionLines``,
+// for one drawn between lines already there.
 QtObject {
     property var  dimensions: []
     property var  cx: null
@@ -32,6 +35,8 @@ QtObject {
     property real headLength: 10     // px
     property real headHalfWidth: 3.5 // px
     property real leaderStub: 16     // px of the short line the leader starts with
+    // a dot where each leader starts, on the dimension, too
+    property bool startDots: false
 
     function paint(ctx) {
         if (!cx || !cy || !dimensions) return
@@ -64,14 +69,29 @@ QtObject {
             var away = d.offset < 0 ? -1 : 1   // up, above the part
             var x0 = cx(d.from), x1 = cx(d.to)
             // none at Z0: the dashed Z0 line is the extension line there
-            if (d.from !== 0) { ctx.moveTo(x0, base + away * gap); ctx.lineTo(x0, lineY + away * overshoot) }
-            if (d.to !== 0)   { ctx.moveTo(x1, base + away * gap); ctx.lineTo(x1, lineY + away * overshoot) }
+            if (!d.noExtensionLines) {
+                if (d.from !== 0) { ctx.moveTo(x0, base + away * gap); ctx.lineTo(x0, lineY + away * overshoot) }
+                if (d.to !== 0)   { ctx.moveTo(x1, base + away * gap); ctx.lineTo(x1, lineY + away * overshoot) }
+            }
             a = { x: x0, y: lineY }; b = { x: x1, y: lineY }
         }
-        ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
-        ctx.stroke()
-        _paintHead(ctx, b, a)
-        _paintHead(ctx, a, b)
+        if (d.arrowsOutside) {
+            // out past each end by a head and as much again, the heads
+            // pointing in at the ends
+            var len = Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2))
+            var ux = (b.x - a.x) / len, uy = (b.y - a.y) / len, run = 2 * headLength
+            var outA = { x: a.x - ux * run, y: a.y - uy * run }
+            var outB = { x: b.x + ux * run, y: b.y + uy * run }
+            ctx.moveTo(outA.x, outA.y); ctx.lineTo(outB.x, outB.y)
+            ctx.stroke()
+            _paintHead(ctx, outA, a)
+            _paintHead(ctx, outB, b)
+        } else {
+            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y)
+            ctx.stroke()
+            _paintHead(ctx, b, a)
+            _paintHead(ctx, a, b)
+        }
         ctx.restore()
 
         if (d.arrowToRect)
@@ -94,6 +114,7 @@ QtObject {
         ctx.stroke()
         ctx.restore()
 
+        if (startDots) Arrow.paintDot(ctx, start.x, start.y, d.color)
         Arrow.paintToBox(ctx, stubEnd.x, stubEnd.y, d.arrowToRect, d.color, 0)
     }
 

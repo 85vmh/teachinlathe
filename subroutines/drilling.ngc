@@ -3,11 +3,12 @@ O<drilling> sub
 #<x_start>           = #1
 #<z_start>           = #2
 #<z_end>             = #3
-#<retract>           = #4
+#<retract>           = #4   (Z Start + clearance: the drill starts and retracts here)
 #<inspect_position>  = #5
 #<increment>         = #6
 #<rpm>               = #7
 #<feed>              = #8
+#<dwell>             = #9   (seconds at the bottom of each peck)
 
 (--- setup ---)
 G7   (Diameter mode)
@@ -16,7 +17,6 @@ G90  (Absolute)
 
 #<x_start> = [#<x_start> / 2]  (half diameter -> radius)
 #<feed_clearance> = 0.2   (extra amount on re-entering the hole)
-#<dwell>          = 0.5   (seconds)
 
 G0 X0
 G95 F#<feed>
@@ -47,7 +47,9 @@ O210 while [#<current_z> GT #<z_end>]
 
     (feed to the next peck depth)
     G1 Z#<target_z> F#<feed>
-    G4 P#<dwell>
+    O214 if [#<dwell> GT 0]
+      G4 P#<dwell>
+    O214 endif
 
     (normal retract to plane)
     G0 Z#<retract>
@@ -62,8 +64,8 @@ O210 while [#<current_z> GT #<z_end>]
 
 O210 endwhile
 
-(--- restore positions similar to original ---)
-G0 Z#<z_start>
+(--- back out to the retract plane: Z Start + clearance ---)
+G0 Z#<retract>
 G0 X#<x_start>
 
 O<drilling> endsub

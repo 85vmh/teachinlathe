@@ -76,7 +76,7 @@ GroupBox {
         // each takes half the row, so what the texts leave falls between them
         RowLayout {
             Layout.fillWidth: true
-            spacing: 20
+            spacing: 16
             enabled: includeBox.checked && !root.readOnly
             opacity: includeBox.checked ? 1.0 : 0.5
 

@@ -219,14 +219,16 @@ def make_default_operation(op_type: str, order: int = 1):
         return Drilling(
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
             spindleParameters=spindle_rpm,
-            drillingParameters=DrillingParameters(zStart=0.0, zEnd=0.0, zRetract=5.0, peckDepth=3.0, feedRate=0.05),
+            drillingParameters=DrillingParameters(zStart=0.0, zEnd=0.0, toolClearance=2.0, peckDepth=3.0,
+                                                  dwellTime=0.5, feedRate=0.05),
             m1Parameters=m1_default,
         )
     if op_type == "tapping":
         return Tapping(
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
             spindleParameters=SpindleParameters(direction=-1, mode=SpindleMode.RPM, rpm_value=500),
-            tappingParameters=TappingParameters(zStart=0.0, zEnd=0.0, zRetract=5.0, peckDepth=0.0, pitch=1.0),
+            tappingParameters=TappingParameters(zStart=0.0, zEnd=0.0, toolClearance=2.0, peckDepth=0.0,
+                                                pitch=1.0),
             m1Parameters=m1_default,
         )
     if op_type == "parting":

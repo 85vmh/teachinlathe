@@ -8,6 +8,8 @@ QtObject {
 
     // ── Configurable sizes (pixels, zoom-independent) ─────────────────────
     property real axisLength:    60    // shaft + head, origin to tip
+    // the X+ arrow's, when it has to reach further: past the stock
+    property real xAxisLength:   axisLength
     property real arrowHeadLen:  14    // arrowhead depth (along axis)
     property real arrowHeadWidth: 7    // arrowhead half-width (perpendicular)
 
@@ -70,7 +72,7 @@ QtObject {
         ctx.fillText("Z+", zTipX - ahl / 2, originY - ahw - 2)
 
         // ── X+ arrow — blue, fixed pixel length, downward from origin ─────
-        var xTipY  = originY + axisLength
+        var xTipY  = originY + Math.max(axisLength, xAxisLength)
         var xShaft = xTipY - ahl
         var xStart = originY + circleR + 1
 

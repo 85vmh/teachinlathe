@@ -10,7 +10,9 @@ QtObject {
     property var markers: []
     property var cx: null
     property var cy: null
-    property real lineWidth: 1.5
+    property real lineWidth: 1             // as a dimension's extension lines
+    // a dot where each arrow to a box starts, too
+    property bool startDots: false
 
     property StartPositionActor _one: StartPositionActor {}
 
@@ -48,7 +50,7 @@ QtObject {
         if (m.arrowToRect) {
             var r = m.arrowToRect
             var above = r.y + r.height / 2 < cy(0)
-            Arrow.paintToBox(ctx, px, above ? top : bottom, r, color, 0)
+            Arrow.paintToBox(ctx, px, above ? top : bottom, r, color, 0, startDots)
         }
         ctx.restore()
     }

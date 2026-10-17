@@ -3,6 +3,7 @@ from datetime import datetime
 
 from PyQt6.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, pyqtSlot
 
+from teachinlathe.conversational.model.qml_adapter import axial_tool_label
 from teachinlathe.core.date_utils import format_recent_datetime_string
 
 class ProgramListModel(QAbstractListModel):
@@ -108,7 +109,7 @@ class ProgramListModel(QAbstractListModel):
         self._sort_ascending = ascending
         self.layoutChanged.emit()
 
-    def _display_name_for_op(self, op):
+    def _display_name_for_op(self, op, tool_label=None):
         op_type = getattr(op, "type", "") or ""
         if op_type == "changeTool":
             tool_no = getattr(op, "tool_no", None)
@@ -160,19 +161,20 @@ class ProgramListModel(QAbstractListModel):
             pitch = getattr(op, "pitch", None)
             return f"G33 Threading (P: {pitch})" if pitch is not None else "G33 Threading"
         if op_type == "drilling":
-            return "Drilling"
+            return f"Drilling {tool_label}" if tool_label else "Drilling"
         if op_type == "tapping":
-            return "Tapping"
+            return f"Tapping {tool_label}" if tool_label else "Tapping"
         if op_type == "parting":
             return "Parting"
         return op_type or "Unknown"
 
     def _operations_summary(self, program):
         ops = getattr(program, "operations", []) or []
-        visible_ops = [op for op in ops if getattr(op, "type", "") != "changeTool"]
-        if not visible_ops:
+        visible = [(i, op) for i, op in enumerate(ops) if getattr(op, "type", "") != "changeTool"]
+        if not visible:
             return "No operations yet, tap to change that"
         return "||".join(
-            f"{1 if bool(getattr(op, 'generate_gcode', False)) else 0}::{self._display_name_for_op(op)}"
-            for op in visible_ops
+            f"{1 if bool(getattr(op, 'generate_gcode', False)) else 0}::"
+            f"{self._display_name_for_op(op, axial_tool_label(getattr(op, 'type', ''), ops, i))}"
+            for i, op in visible
         )

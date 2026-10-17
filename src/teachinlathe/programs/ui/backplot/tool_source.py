@@ -85,12 +85,16 @@ def _describe(holder, tool):
     if getattr(tool, "diameter", 0.0) <= 0:
         return {}                               # nothing to draw it at
     right_hand = getattr(tool, "twist_direction", None) is not TwistDirection.LEFT_HAND
+    # the M code the spindle turns the tool with: 3 or 4
+    spindle = int(tool.spindle_direction)
     if isinstance(tool, DrillingTool):
         return {"kind": "drill", "diameter": tool.diameter,
-                "tip_angle": tool.tip_angle, "right_hand": right_hand, "rotation": 0.0}
+                "tip_angle": tool.tip_angle, "right_hand": right_hand, "rotation": 0.0,
+                "spindle_direction": spindle}
     if isinstance(tool, ReamingTool):
-        return {"kind": "reamer", "diameter": tool.diameter, "rotation": 0.0}
+        return {"kind": "reamer", "diameter": tool.diameter, "rotation": 0.0,
+                "spindle_direction": spindle}
     if isinstance(tool, TappingTool):
         return {"kind": "tap", "diameter": tool.diameter, "pitch": tool.pitch,
-                "right_hand": right_hand, "rotation": 0.0}
+                "right_hand": right_hand, "rotation": 0.0, "spindle_direction": spindle}
     return {}

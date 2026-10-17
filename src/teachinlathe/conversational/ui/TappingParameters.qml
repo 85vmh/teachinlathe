@@ -25,7 +25,7 @@ GroupBox {
     // state
     property real z_start: 0.0
     property real z_end:   0.0
-    property real z_retract:   0.0
+    property real tool_clearance: 0.0
     property real peck_depth:   0.0
     property real pitch:   0.0
     property bool _loading: false
@@ -37,7 +37,7 @@ GroupBox {
         tappingData = tappingParams || {}
         z_start = parseFloat(tappingData.z_start  !== undefined ? tappingData.z_start  : 0.0)
         z_end   = parseFloat(tappingData.z_end    !== undefined ? tappingData.z_end    : 0.0)
-        z_retract   = parseFloat(tappingData.z_retract    !== undefined ? tappingData.z_retract    : 0.0)
+        tool_clearance = Math.abs(parseFloat(tappingData.tool_clearance !== undefined ? tappingData.tool_clearance : 0.0))
         peck_depth   = parseFloat(tappingData.peck_depth    !== undefined ? tappingData.peck_depth    : 0.0)
         pitch   = parseFloat(tappingData.pitch    !== undefined ? tappingData.pitch    : 0.0)
         _loading = false
@@ -53,7 +53,7 @@ GroupBox {
             tapping_parameters: {
                 z_start: z_start,
                 z_end:   z_end,
-                z_retract:   z_retract,
+                tool_clearance: tool_clearance,
                 peck_depth:   peck_depth,
                 pitch: pitch
             }
@@ -124,26 +124,26 @@ GroupBox {
             }
 
             Label {
-                text: "Z Retract"
+                text: "Clearance"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                 font.pixelSize: Theme.fontBody
             }
             NumpadField {
-                id: tf_z_retract
+                id: tf_tool_clearance
                 Layout.preferredWidth: 100
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                settingName: "geometry.z_end"
+                settingName: "tapping.tool_clearance"
                 validatorObject: dblVal
-                value: root.z_retract
+                value: root.tool_clearance
                 formatter: function(v){ return (v==null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
                 onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.z_retract = value; root.emitSave() }
+                onValueCommitted: { root.tool_clearance = Math.abs(value); root.emitSave() }
             }
-            Button {
-                text: "TeachIn"
+            Label {
+                text: "(mm)"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                onClicked: tf_z_retract.commit(positionsBridge.teachInZ())
+                font.pixelSize: Theme.fontBody
             }
         }
 

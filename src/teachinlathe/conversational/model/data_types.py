@@ -536,8 +536,12 @@ class KnurlingGeometryParameters:
 class DrillingParameters:
     zStart: float = 0.0
     zEnd: float = 0.0
-    zRetract: float = 0.0
+    # how far in front of Z Start the drill starts and every peck retracts
+    # to, always positive
+    toolClearance: float = 0.0
     peckDepth: float = 0.0
+    # seconds at the bottom of each peck
+    dwellTime: float = 0.0
     feedRate: float = 0.0
 
     @staticmethod
@@ -545,8 +549,9 @@ class DrillingParameters:
         return DrillingParameters(
             zStart=float(data.get("z_start", 0.0) or 0.0),
             zEnd=float(data.get("z_end", 0.0) or 0.0),
-            zRetract=float(data.get("z_retract", 0.0) or 0.0),
+            toolClearance=abs(float(data.get("tool_clearance", 0.0) or 0.0)),
             peckDepth=float(data.get("peck_depth", 0.0) or 0.0),
+            dwellTime=float(data.get("dwell_time", 0.0) or 0.0),
             feedRate=float(data.get("feed_rate", 0.0) or 0.0),
         )
 
@@ -554,8 +559,9 @@ class DrillingParameters:
         out = {
             "z_start": float(self.zStart),
             "z_end": float(self.zEnd),
-            "z_retract" : float(self.zRetract),
-            "peck_depth" : float(self.peckDepth),
+            "tool_clearance": float(self.toolClearance),
+            "peck_depth": float(self.peckDepth),
+            "dwell_time": float(self.dwellTime),
             "feed_rate": float(self.feedRate)
         }
         return out
@@ -564,8 +570,13 @@ class DrillingParameters:
 class TappingParameters:
     zStart: float = 0.0
     zEnd: float = 0.0
-    zRetract: float = 0.0
+    # how far in front of Z Start the tap starts and every peck comes back
+    # to, always positive
+    toolClearance: float = 0.0
     peckDepth: float = 0.0
+    # the tap's, as the Tool Library had it when last edited; the G-code
+    # takes the pitch of the tap the Change Tool above puts in when it can
+    # find it
     pitch: float = 0.0
 
     @staticmethod
@@ -573,7 +584,7 @@ class TappingParameters:
         return TappingParameters(
             zStart=float(data.get("z_start", 0.0) or 0.0),
             zEnd=float(data.get("z_end", 0.0) or 0.0),
-            zRetract=float(data.get("z_retract", 0.0) or 0.0),
+            toolClearance=abs(float(data.get("tool_clearance", 0.0) or 0.0)),
             peckDepth=float(data.get("peck_depth", 0.0) or 0.0),
             pitch=float(data.get("pitch", 0.0) or 0.0),
         )
@@ -582,8 +593,8 @@ class TappingParameters:
         out = {
             "z_start": float(self.zStart),
             "z_end": float(self.zEnd),
-            "z_retract" : float(self.zRetract),
-            "peck_depth" : float(self.peckDepth),
+            "tool_clearance": float(self.toolClearance),
+            "peck_depth": float(self.peckDepth),
             "pitch": float(self.pitch)
         }
         return out

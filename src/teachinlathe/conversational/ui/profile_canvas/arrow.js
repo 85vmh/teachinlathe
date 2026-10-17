@@ -18,20 +18,28 @@ function anchorOf(rect) {
 }
 
 // An arrow from (sx, sy), starting ``gap`` px out, to box ``rect``: the dot
-// in front of the box, and the arrow's tip on the dot's edge.
-function paintToBox(ctx, sx, sy, rect, color, gap) {
+// in front of the box, and the arrow's tip on the dot's edge; with
+// ``startDot``, a dot where the arrow starts as well.
+function paintToBox(ctx, sx, sy, rect, color, gap, startDot) {
     var dot = anchorOf(rect)
-    ctx.save()
-    ctx.fillStyle = color
-    ctx.beginPath()
-    ctx.arc(dot.x, dot.y, dotRadius, 0, 2 * Math.PI)
-    ctx.fill()
-    ctx.restore()
+    paintDot(ctx, dot.x, dot.y, color)
 
     var dx = dot.x - sx, dy = dot.y - sy
     var length = Math.sqrt(dx * dx + dy * dy)
     if (length <= dotRadius) return
+    if (startDot)
+        paintDot(ctx, sx + dx / length * (gap || 0), sy + dy / length * (gap || 0), color)
     paint(ctx, sx, sy, dot.x - dx / length * dotRadius, dot.y - dy / length * dotRadius, color, gap)
+}
+
+// The dot an arrow ends at, or starts from, centred on (x, y).
+function paintDot(ctx, x, y, color) {
+    ctx.save()
+    ctx.fillStyle = color
+    ctx.beginPath()
+    ctx.arc(x, y, dotRadius, 0, 2 * Math.PI)
+    ctx.fill()
+    ctx.restore()
 }
 
 // A line from (sx, sy), starting ``gap`` px out, to (ex, ey), with the

@@ -13,7 +13,6 @@ GroupBox {
     Layout.preferredWidth: 560
     font.pixelSize: Theme.fontBody
 
-    property real feed_rate: 0.1
     property real peck_depth: 3.0
     property real retract: 1.0
     property real dwell_time: 0.5
@@ -25,7 +24,6 @@ GroupBox {
     function applyData(data) {
         _loading = true
         var d = data || {}
-        feed_rate = d.feed_rate !== undefined ? Number(d.feed_rate) : 0.1
         peck_depth = d.peck_depth !== undefined ? Number(d.peck_depth) : 3.0
         retract = d.retract !== undefined ? Number(d.retract) : 1.0
         dwell_time = d.dwell_time !== undefined ? Number(d.dwell_time) : 0.5
@@ -35,8 +33,8 @@ GroupBox {
     function emitSave() {
         if (_loading) return
         root.saveRequested({
+            // the feed rate is the operation header's
             cutting_parameters: {
-                feed_rate: Number(feed_rate),
                 peck_depth: Number(peck_depth),
                 retract: Number(retract),
                 dwell_time: Number(dwell_time)
@@ -51,19 +49,6 @@ GroupBox {
         columns: 3
         columnSpacing: 20
         rowSpacing: 16
-
-        Label { text: "Feed Rate"; font.pixelSize: Theme.fontBody }
-        NumpadField {
-            Layout.preferredWidth: 100
-            settingName: "turning.feed_rate"
-            value: root.feed_rate
-            validatorObject: dblVal
-            formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
-            hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.feed_rate = value; root.emitSave() }
-        }
-        Label { text: "(mm/rev)"; font.pixelSize: Theme.fontBody }
 
         Label { text: "Peck Depth"; font.pixelSize: Theme.fontBody }
         NumpadField {

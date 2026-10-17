@@ -18,21 +18,32 @@ Item {
     function applyData(index, data) {
         opIndex = index
         opData = data || {}
-        spindlePanel.applyData(opIndex, opData)
+        header.applyData(opData, (opData.cutting_parameters || {}).feed_rate)
         cuttingPanel.applyData(opData.cutting_parameters || {})
         roughingPanel.applyData(opData.roughing_parameters || {})
         stockToLeavePanel.applyData(opData.stock_to_leave || {}, !!opData.stock_to_leave_enabled)
-        m1Panel.applyData(opData.m1_parameters || {})
     }
 
+    // Sub-objects merge one level deep, so a part sent alone (the header's
+    // feed rate, say) updates its fields and keeps the rest.
     function mergeIntoOp(payload) {
         var out = JSON.parse(JSON.stringify(opData || {}))
         for (var k in payload) {
-            if (k === "index") continue
-            if (payload.hasOwnProperty(k)) out[k] = payload[k]
+            if (k === "index" || !payload.hasOwnProperty(k)) continue
+            var v = payload[k]
+            var cur = out[k]
+            if (v && typeof v === "object" && !Array.isArray(v)
+                    && cur && typeof cur === "object" && !Array.isArray(cur))
+                out[k] = Object.assign({}, cur, v)
+            else
+                out[k] = v
         }
         opData = out
         return out
+    }
+
+    function save(payload) {
+        root.saveRequested({index: opIndex, payload: root.mergeIntoOp(payload)})
     }
 
     ColumnLayout {
@@ -42,23 +53,32 @@ Item {
         spacing: Theme.margin
         Layout.alignment: Qt.AlignTop
 
+        // Speeds and Feeds and Pause to Inspect, as Facing has them; the
+        // feed rate is the cutting_parameters'
+        OperationHeader {
+            id: header
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            onSpindleEdited: function(spindle) { root.save({spindle_parameters: spindle}) }
+            onFeedRateEdited: function(value) { root.save({cutting_parameters: {feed_rate: value}}) }
+            onM1Edited: function(m1) { root.save({m1_parameters: m1}) }
+        }
+
         GridLayout {
             Layout.fillWidth: true
             columns: 2
             columnSpacing: 30
             rowSpacing: 40
 
-            SpindleParameters {
-                id: spindlePanel
+            GrooveRoughingParameters {
+                id: roughingPanel
                 Layout.row: 0
                 Layout.column: 0
+                Layout.rowSpan: 2
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
+                Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
+                onSaveRequested: function(p) { root.save(p.payload || p) }
             }
 
             GrooveRoughingCuttingParameters {
@@ -67,24 +87,9 @@ Item {
                 Layout.column: 1
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
+                Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
-            }
-
-            GrooveRoughingParameters {
-                id: roughingPanel
-                Layout.row: 1
-                Layout.column: 0
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
+                onSaveRequested: function(p) { root.save(p.payload || p) }
             }
 
             CheckableStockToLeave {
@@ -93,24 +98,12 @@ Item {
                 Layout.column: 1
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
+                Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
-            }
-
-            M1Parameters {
-                id: m1Panel
-                Layout.row: 2
-                Layout.column: 0
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-                onSaveRequested: function(p) {
-                    var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
-                }
+                onSaveRequested: function(p) { root.save(p.payload || p) }
             }
         }
+
+        Item { Layout.fillHeight: true }
     }
 }

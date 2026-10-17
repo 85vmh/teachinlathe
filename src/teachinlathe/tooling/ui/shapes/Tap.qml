@@ -1,4 +1,5 @@
 import QtQuick
+import "tap.js" as TapShape
 
 /*
  * Tap.qml — tarod, parametric, văzut din lateral
@@ -19,6 +20,9 @@ import QtQuick
  * după. Pe fața văzută, fiecare vârf de dinte de sus e legat de cel de jos
  * de după el: spre dreapta la filet dreapta (RH) "\", spre stânga la filet
  * stânga (LH) "/".
+ *
+ * Desenul e în tap.js, ca să-l poată desena la fel și canvasul unei
+ * operații (Tapping).
  */
 Item {
     id: root
@@ -41,37 +45,24 @@ Item {
     property color bodyColor:  "#e5a93b"
     property color edgeColor:  "#674c1b"
 
-    // ---- derivate (mm) ----------------------------------------------------
+    // ---- derivate (mm), din tap.js --------------------------------------
+    readonly property var _shape: ({ diameter: diameter, pitch: pitch, leadThreads: leadThreads,
+                                     threadLengthD: threadLengthD, minThreads: minThreads,
+                                     shankRatio: shankRatio, shankLengthD: shankLengthD,
+                                     length: length })
+    readonly property var _geometry: TapShape.geometry(_shape)
     readonly property real radius: diameter / 2
-    readonly property real threadDepth: pitch * Math.sqrt(3) / 2
-    // Un pas prea mare pentru diametru ar trece dinții de axă: fundul rămâne
-    // cel puțin la o treime din rază.
-    readonly property real rootRadius: Math.max(radius - threadDepth, radius / 3)
-    readonly property real leadLength: leadThreads * pitch
-    readonly property real threadLength: Math.max(threadLengthD * diameter, minThreads * pitch)
-    readonly property real totalLength: length > 0 ? Math.max(length, threadLength)
-                                                   : threadLength + shankLengthD * diameter
-    readonly property real shankRadius: Math.min(radius, Math.max(rootRadius, shankRatio * radius))
+    readonly property real threadDepth: _geometry.depth
+    readonly property real rootRadius: _geometry.root
+    readonly property real leadLength: _geometry.lead
+    readonly property real threadLength: _geometry.thread
+    readonly property real totalLength: _geometry.total
+    readonly property real shankRadius: _geometry.shank
 
     readonly property point tipPoint: Qt.point(0, height / 2)
 
     implicitWidth:  totalLength * pxPerMm
     implicitHeight: diameter * pxPerMm
-
-    // Raza vârfurilor dinților la x: de la fundul filetului la vârf până la
-    // D/2 la capătul conicității.
-    function crestRadius(x) {
-        if (x >= leadLength) return radius
-        return rootRadius + (radius - rootRadius) * Math.max(0, x) / leadLength
-    }
-
-    // Raza profilului la x, pe o latură; `phase` decalează dinții (P/2 jos).
-    function profileRadius(x, phase) {
-        var u = ((x - phase) / pitch) % 1
-        if (u < 0) u += 1
-        var tri = 1 - Math.abs(2 * u - 1)             // 0 la fund, 1 la vârf
-        return Math.min(rootRadius + tri * (radius - rootRadius), crestRadius(x))
-    }
 
     Canvas {
         id: canvas
@@ -88,62 +79,14 @@ Item {
         onPaint: {
             var ctx = getContext("2d")
             ctx.reset()
-            var k = root.pxPerMm, P = root.pitch
-            var tEnd = root.threadLength, end = root.totalLength
-            if (root.radius <= 0 || P <= 0) return
-
-            ctx.save()
-            ctx.translate(root.tipPoint.x, root.tipPoint.y)
-            ctx.scale(k, k)                          // y în jos, ca pe ecran
-
-            // Profilul: vârfurile și funduri dinților, plus capetele
-            // conicității, ca muchiile să cadă exact pe ele.
-            function stations(phase) {
-                var xs = [0, root.leadLength, tEnd]
-                for (var n = Math.floor(-phase / P); phase + n * P <= tEnd; n++) {
-                    var x0 = phase + n * P
-                    xs.push(x0, x0 + P / 2)
-                }
-                xs = xs.filter(function(x) { return x >= 0 && x <= tEnd })
-                xs.sort(function(a, b) { return a - b })
-                return xs
-            }
-            var top = stations(0), bottom = stations(P / 2)
-
-            ctx.beginPath()
-            ctx.moveTo(0, root.profileRadius(0, P / 2))
-            ctx.lineTo(0, -root.profileRadius(0, 0))
-            for (var i = 0; i < top.length; i++)
-                ctx.lineTo(top[i], -root.profileRadius(top[i], 0))
-            ctx.lineTo(tEnd, -root.shankRadius)
-            ctx.lineTo(end, -root.shankRadius)
-            ctx.lineTo(end, root.shankRadius)
-            ctx.lineTo(tEnd, root.shankRadius)
-            for (var j = bottom.length - 1; j >= 0; j--)
-                ctx.lineTo(bottom[j], root.profileRadius(bottom[j], P / 2))
-            ctx.closePath()
-            ctx.fillStyle = root.bodyColor
-            ctx.fill()
-            ctx.lineJoin = "miter"
-            ctx.lineWidth = 1.2 / k
-            ctx.strokeStyle = root.edgeColor
-            ctx.stroke()
-
-            // Elicea pe fața văzută: fiecare vârf de sus spre vârful de jos
-            // de după el, jumătate de pas mai încolo.
-            ctx.lineWidth = root.helixLineWidth / k
-            var dir = root.rightHand ? 1 : -1
-            for (var n = 0; n * P <= tEnd; n++) {
-                var xt = n * P + P / 2                       // vârf de sus
-                var xb = xt + dir * P / 2                    // vârful de jos
-                if (xt > tEnd || xb < 0 || xb > tEnd) continue
-                ctx.beginPath()
-                ctx.moveTo(xt, -root.crestRadius(xt))
-                ctx.lineTo(xb, root.crestRadius(xb))
-                ctx.stroke()
-            }
-
-            ctx.restore()
+            TapShape.paint(ctx, {
+                diameter: root.diameter, pitch: root.pitch, rightHand: root.rightHand,
+                leadThreads: root.leadThreads, threadLengthD: root.threadLengthD,
+                minThreads: root.minThreads, shankRatio: root.shankRatio,
+                shankLengthD: root.shankLengthD, helixLineWidth: root.helixLineWidth,
+                length: root.length, bodyColor: root.bodyColor, edgeColor: root.edgeColor,
+                pxPerMm: root.pxPerMm, tipX: root.tipPoint.x, tipY: root.tipPoint.y
+            })
         }
     }
 }

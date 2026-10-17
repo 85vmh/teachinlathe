@@ -1,8 +1,10 @@
 // DrillingVisualDetailsView.qml — Drilling on the profile canvas, laid out
 // as Facing's: the header's stock, and on the centre line the drill the last
-// Change Tool above puts in, its point at Z Start. Its four values in boxes
-// down the right edge; each Z drawn as a line across the centre line, with
-// an arrow from it to its box. Edits the same data as DrillingDetailsView
+// Change Tool above puts in, its point at Z Start + Clearance, where it
+// starts and every peck retracts to. Its values in boxes down the right
+// edge; Z Start, Z End and the clearance's Z each drawn as a line across the
+// centre line, with an arrow from it to its box; each peck as the drill's
+// point, one of them dimensioned, to the Peck Depth / Dwell Time box. Edits the same data as DrillingDetailsView
 // and saves every change through the same updateDrilling slot.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
@@ -25,13 +27,16 @@ Item {
     // the values the boxes on the canvas show and edit
     property real   zStart: 0.0
     property real   zEnd: 0.0
-    property real   zRetract: 0.0
+    property real   toolClearance: 0.0
     property real   peckDepth: 0.0
+    property real   dwellTime: 0.0
+    // where the drill starts and every peck retracts to
+    readonly property real retractZ: zStart + Math.abs(toolClearance)
 
     // the boxes' and their targets' colours
     readonly property color zStartColor:   "#1565c0"
     readonly property color zEndColor:     profileCanvas.endPositionColor
-    readonly property color zRetractColor: "#00838f"
+    readonly property color clearanceColor: "#00838f"
     readonly property color peckColor:     profileCanvas.feedColor
 
     signal saveRequested(var updated)
@@ -43,8 +48,9 @@ Item {
         op.drilling_parameters = op.drilling_parameters || {}
         op.drilling_parameters.z_start = zStart
         op.drilling_parameters.z_end = zEnd
-        op.drilling_parameters.z_retract = zRetract
+        op.drilling_parameters.tool_clearance = Math.abs(toolClearance)
         op.drilling_parameters.peck_depth = peckDepth
+        op.drilling_parameters.dwell_time = dwellTime
         return op
     }
 
@@ -67,8 +73,9 @@ Item {
         var dp = opData.drilling_parameters || {}
         zStart    = dp.z_start    !== undefined ? Number(dp.z_start)    : 0
         zEnd      = dp.z_end      !== undefined ? Number(dp.z_end)      : 0
-        zRetract  = dp.z_retract  !== undefined ? Number(dp.z_retract)  : 0
+        toolClearance = dp.tool_clearance !== undefined ? Math.abs(Number(dp.tool_clearance)) : 0
         peckDepth = dp.peck_depth !== undefined ? Number(dp.peck_depth) : 0
+        dwellTime = dp.dwell_time !== undefined ? Number(dp.dwell_time) : 0
 
         header.applyData(opData, dp.feed_rate)
         profileCanvas.resetView()
@@ -83,6 +90,9 @@ Item {
         OperationHeader {
             id: header
             rpmOnly: true
+            // only the way the tool in turns
+            onlyClockwise: root.tool && root.tool.spindle_direction === 3 ? true
+                         : root.tool && root.tool.spindle_direction === 4 ? false : null
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             onSpindleEdited: function(spindle) {
                 var op = root._draftOp()
@@ -112,6 +122,11 @@ Item {
             zoomStep: 1.1
             // the drill and the stock whole, both halves
             mirrorAcrossCenterline: true
+            // fitted to the stock, the drill's point in; its body runs on
+            // off the right edge as far as it is long
+            fitAxialToolLength: false
+            // a dot at both ends of each arrow to a box
+            arrowStartDots: true
             primitives: []
             // the header's stock, broken off after Z End as Facing's
             workpiece: {
@@ -119,14 +134,14 @@ Item {
                 w.break_after_z = root.zEnd
                 return w
             }
-            // the drill in, its point at Z Start; none when it is not a drill
-            drill: root.tool && root.tool.kind === "drill"
-                   ? { diameter: root.tool.diameter, tip_angle: root.tool.tip_angle,
-                       right_hand: root.tool.right_hand, z: root.zStart }
-                   : null
+            // the drill in, its point where it starts; none when it is not a drill
+            axialTool: root.tool && root.tool.kind === "drill"
+                       ? { kind: "drill", diameter: root.tool.diameter, tip_angle: root.tool.tip_angle,
+                           right_hand: root.tool.right_hand, z: root.retractZ }
+                       : null
             // where each peck ends: every Peck Depth on from Z Start while
             // short of Z End, and the last at Z End
-            drillPecks: {
+            axialToolPecks: {
                 var out = []
                 if (root.peckDepth > 0)
                     for (var z = root.zStart - root.peckDepth; z > root.zEnd + 1e-6 && out.length < 1000;
@@ -135,35 +150,43 @@ Item {
                 if (root.zEnd < root.zStart) out.push(root.zEnd)
                 return out
             }
-            drillPeckColor: root.peckColor
-            drillPecksFrom: root.zStart
-            // one peck's depth, between the arms' ends of the first two Vs -
-            // or Z Start and the first, when there is only one full peck -
-            // under the drill's lower edge, its leader from its middle to
-            // the Peck Depth box
-            dimensions: {
-                var pecks = drillPecks
+            axialToolPeckColor: root.peckColor
+            axialToolPecksFrom: root.zStart
+            // one peck's depth - the full peck nearest halfway between Z
+            // Start and Z End, between the arms' ends of the Vs at its ends
+            // (Z Start for the first) - under the drill's lower edge, its
+            // leader from its middle to the Peck Depth box
+            dimensions: peckDimensions.concat(clearanceDimension ? [clearanceDimension] : [])
+            readonly property var peckDimensions: {
+                var pecks = axialToolPecks
                 var d = root.tool && root.tool.kind === "drill" ? Number(root.tool.diameter) : 0
                 if (!(d > 0) || !(root.peckDepth > 0) || pecks.length === 0) return []
-                var a, b
-                if (pecks.length >= 2 && Math.abs(pecks[0] - pecks[1] - root.peckDepth) < 1e-6) {
-                    a = pecks[0]; b = pecks[1]
-                } else if (Math.abs(root.zStart - pecks[0] - root.peckDepth) < 1e-6) {
-                    a = root.zStart; b = pecks[0]
-                } else {
-                    return []
+                var ends = [root.zStart].concat(pecks), full = []
+                for (var i = 0; i + 1 < ends.length; i++)
+                    if (Math.abs(ends[i] - ends[i + 1] - root.peckDepth) < 1e-6) full.push(i)
+                if (full.length === 0) return []
+                var middle = (root.zStart + root.zEnd) / 2, k = full[0]
+                for (var j = 1; j < full.length; j++) {
+                    var c = (ends[full[j]] + ends[full[j] + 1]) / 2
+                    if (Math.abs(c - middle) < Math.abs((ends[k] + ends[k + 1]) / 2 - middle)) k = full[j]
                 }
+                var a = ends[k], b = ends[k + 1]
                 var point = drillPoint
                 return [{ axis: "z", from: b + point, to: a + point, x: d,
-                          offset: 28, color: root.peckColor, arrowToRect: peckBox.rect, leaderAt: 0.5 }]
+                          // below the Z lines' lower ends, clear of the clearance's
+                          offset: (zLineDiameter - d) / 2 * _scale + 28,
+                          color: root.peckColor, arrowToRect: peckBox.rect, leaderAt: 0.5,
+                          arrowsOutside: true }]
             }
+            // the clearance, between the Z Start and Clearance lines at their
+            // lower ends, its leader from its middle to the Clearance box
+            readonly property var clearanceDimension: root.toolClearance > 0
+                ? { axis: "z", from: root.zStart, to: root.retractZ, x: zLineDiameter, offset: 0,
+                    color: root.clearanceColor, arrowToRect: clearanceBox.rect, leaderAt: 0.5,
+                    arrowsOutside: true, noExtensionLines: true }
+                : null
             // how far the drill's point reaches back from its tip, in mm
-            readonly property real drillPoint: {
-                if (!(root.tool && root.tool.kind === "drill")) return 0
-                var r = Number(root.tool.diameter) / 2
-                var angle = root.tool.tip_angle !== undefined ? Number(root.tool.tip_angle) : 118
-                return angle >= 179.999 ? 0 : r / Math.tan(angle / 2 * Math.PI / 180)
-            }
+            readonly property real drillPoint: axialTool ? axialToolPeckBack() : 0
             // at each Z, a line across the centre line longer than the
             // drill is wide, an arrow from it to its box; Peck Depth none yet
             readonly property real zLineDiameter: (root.tool && root.tool.kind === "drill"
@@ -172,7 +195,8 @@ Item {
             markers: [
                 { line: true, x: zLineDiameter, z: root.zStart,   color: root.zStartColor,   arrowToRect: zStartBox.rect },
                 { line: true, x: zLineDiameter, z: root.zEnd,     color: root.zEndColor,     arrowToRect: zEndBox.rect },
-                { line: true, x: zLineDiameter, z: root.zRetract, color: root.zRetractColor, arrowToRect: zRetractBox.rect }
+                // its arrow to the box is the clearance dimension's
+                { line: true, x: zLineDiameter, z: root.retractZ, color: root.clearanceColor, arrowToRect: null }
             ]
 
             Rectangle {
@@ -184,18 +208,18 @@ Item {
             // The boxes stack down the right edge, each as wide as it needs;
             // the drawing is fitted into what the widest leaves free.
             readonly property real boxWidth: Math.max(zStartBox.implicitWidth, zEndBox.implicitWidth,
-                                                      zRetractBox.implicitWidth, peckBox.implicitWidth)
+                                                      clearanceBox.implicitWidth, peckBox.implicitWidth)
             readonly property real boxGap: Theme.spacingLarge
             fitInsetRight: boxWidth + boxGap
 
-            // top to bottom: Z Start, Z End, Z Retract, Peck Depth - the
-            // first at the top, the last at the bottom, the space between
-            // them shared out equally
-            readonly property real boxSpacing: (height - 2 * boxGap - zStartBox.height - zEndBox.height
-                                                - zRetractBox.height - peckBox.height) / 3
+            // two pairs, a gap apart within each: Z Start over Z End at the
+            // top, as wide as each other; Clearance over Peck Depth at the
+            // bottom
+            readonly property real zBoxWidth: Math.max(zStartBox.implicitWidth, zEndBox.implicitWidth)
 
             ZPositionBox {
                 id: zStartBox
+                width: profileCanvas.zBoxWidth
                 x: profileCanvas.width - width - profileCanvas.boxGap
                 y: profileCanvas.boxGap
                 accent: root.zStartColor
@@ -208,8 +232,9 @@ Item {
 
             ZPositionBox {
                 id: zEndBox
+                width: profileCanvas.zBoxWidth
                 x: profileCanvas.width - width - profileCanvas.boxGap
-                y: zStartBox.y + zStartBox.height + profileCanvas.boxSpacing
+                y: zStartBox.y + zStartBox.height + profileCanvas.boxGap
                 accent: root.zEndColor
                 label: "Z End"
                 settingName: "drilling.z_end"
@@ -218,27 +243,29 @@ Item {
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
-            ZPositionBox {
-                id: zRetractBox
+            // how far in front of Z Start the drill starts and retracts to:
+            // a length, never negative, so no TeachIn
+            DimensionBox {
+                id: clearanceBox
                 x: profileCanvas.width - width - profileCanvas.boxGap
-                y: zEndBox.y + zEndBox.height + profileCanvas.boxSpacing
-                accent: root.zRetractColor
-                label: "Z Retract"
-                settingName: "drilling.z_retract"
-                value: root.zRetract
-                onValueEdited: function(value) { root.zRetract = value; root.save() }
+                y: peckBox.y - height - profileCanvas.boxGap
+                label: "Clearance"
+                dimensionColor: root.clearanceColor
+                settingName: "drilling.tool_clearance"
+                value: root.toolClearance
+                onValueEdited: function(value) { root.toolClearance = Math.abs(value); root.save() }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
-            DimensionBox {
+            PeckBox {
                 id: peckBox
                 x: profileCanvas.width - width - profileCanvas.boxGap
                 y: profileCanvas.height - height - profileCanvas.boxGap
-                label: "Peck Depth"
-                dimensionColor: root.peckColor
-                settingName: "drilling.peck_depth"
-                value: root.peckDepth
-                onValueEdited: function(value) { root.peckDepth = value; root.save() }
+                color: root.peckColor
+                peckDepth: root.peckDepth
+                dwellTime: root.dwellTime
+                onPeckDepthEdited: function(value) { root.peckDepth = value; root.save() }
+                onDwellTimeEdited: function(value) { root.dwellTime = value; root.save() }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 

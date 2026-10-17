@@ -2,6 +2,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import "."
 import theme 1.0
 
 Item {
@@ -24,7 +25,9 @@ Item {
         opData = data || {}
 
         // populate sub-panels
-        header.applyData(opData, (opData.parting_parameters || {}).first_feed_rate)
+        var pp = opData.parting_parameters || {}
+        header.feedRate2 = pp.second_feed_rate !== undefined ? Number(pp.second_feed_rate) : 0
+        header.applyData(opData, pp.first_feed_rate)
         partingParamsPanel.applyData(opIndex, (opData.parting_parameters || {}), opData)
         edgeBreakPanel.applyData(opIndex, (opData.edge_break || {}), opData)
     }
@@ -57,14 +60,16 @@ Item {
         anchors.margins: 10
         spacing: Theme.margin
 
-        // Parting has no M1; the header's feed rate is the first feed rate,
-        // the second one stays in Parting Parameters with where it starts
+        // Parting has no M1; both its feed rates are the header's, Fz1 and
+        // Fz2 - where the second starts stays in Parting Parameters
         OperationHeader {
             id: header
             hasM1: false
+            feedKind: SpeedsAndFeeds.FeedKind.Parting
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             onSpindleEdited: function(spindle) { root.save({spindle_parameters: spindle}) }
             onFeedRateEdited: function(value) { root.save({parting_parameters: {first_feed_rate: value}}) }
+            onFeedRate2Edited: function(value) { root.save({parting_parameters: {second_feed_rate: value}}) }
         }
 
         GridLayout {
