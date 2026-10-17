@@ -21,25 +21,17 @@ from __future__ import annotations
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal
 from PyQt6.QtGui import QColor
 
+# the drawn length - 3:1 to the width - the backplot's, so every drawing agrees
+from teachinlathe.programs.ui.backplot.actors.tool_outlines import blade_length
 from teachinlathe.tooling.model import insert_catalog
 from teachinlathe.tooling.model.data_types import BladeTool, SpindleDirection
 from teachinlathe.programs.ui.backplot.actors import palette
-
-#: The drawn blade's length: 10 mm for a 1 mm blade, 20 mm for a 5 mm one,
-#: in a straight line between and held at the ends beyond.
-_LENGTH_AT = ((1.0, 10.0), (5.0, 20.0))
 
 #: How the drawing is placed for each orientation: degrees turned
 #: counter-clockwise, and whether it is mirrored top to bottom first. At 0,
 #: unmirrored, the cutting end points up (+X), orientation 6's; 5 points it
 #: along +Z, 7 along -Z, 8 down - as the orientation pictures have them.
 _PLACEMENT = {6: (0.0, False), 5: (-90.0, False), 8: (0.0, True), 7: (90.0, False)}
-
-
-def blade_length(width: float) -> float:
-    (w0, l0), (w1, l1) = _LENGTH_AT
-    w = min(max(width, w0), w1)
-    return l0 + (w - w0) * (l1 - l0) / (w1 - w0)
 
 
 class BladeToolView(QObject):

@@ -1,6 +1,6 @@
-// ZPositionBox.qml — one Z position, with its TeachIn, laid over the
-// profile canvas; a target on the canvas points an arrow to it, in its
-// accent.
+// ZPositionBox.qml — one Z position (or, with ``axis`` "x", one X diameter),
+// with its TeachIn, laid over the profile canvas; a mark on the canvas
+// points an arrow to it, in its accent.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -13,6 +13,11 @@ CanvasBox {
     property string label: ""
     property real   value: 0.0
     property string settingName: ""
+    // "z", or "x": an X diameter, taught in as twice the radius read
+    property string axis: "z"
+    // the label column's width, so boxes stacked together line up
+    property real   labelWidth: labelText.implicitWidth
+    readonly property real labelImplicitWidth: labelText.implicitWidth
 
     signal valueEdited(real value)
     signal openNumPadRequested(var field)
@@ -22,7 +27,13 @@ CanvasBox {
     RowLayout {
         spacing: 20
 
-        Label { text: root.label; color: root.accent; font.pixelSize: Theme.fontBody }
+        Label {
+            id: labelText
+            Layout.preferredWidth: root.labelWidth
+            text: root.label
+            color: root.accent
+            font.pixelSize: Theme.fontBody
+        }
         NumpadField {
             id: valueField
             Layout.preferredWidth: 100
@@ -37,7 +48,8 @@ CanvasBox {
         }
         Button {
             text: "TeachIn"
-            onClicked: valueField.commit(positionsBridge.teachInZ())
+            onClicked: valueField.commit(root.axis === "x" ? positionsBridge.teachInX() * 2
+                                                           : positionsBridge.teachInZ())
         }
     }
 }

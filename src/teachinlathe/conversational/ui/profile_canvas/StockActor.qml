@@ -57,10 +57,18 @@ QtObject {
     }
 
     // The Z the stock is broken off at after Z End, in mm, or null.
+    // How far past Z End the break is, mm: ``break_after_setback`` when the
+    // workpiece gives it (Parting's, to keep a broken stock one diameter
+    // long), else five of the break's bends.
+    function zEndSetback() {
+        if (workpiece && workpiece.break_after_setback !== undefined && workpiece.break_after_setback !== null)
+            return Math.max(0, Number(workpiece.break_after_setback))
+        return 5 * Broken.reach(1.0) * Math.max(0, externalDiameter) / 2
+    }
+
     function zEndBreakZ() {
         if (breakAfterZ === null) return null
-        var bend = Broken.reach(1.0) * Math.max(0, externalDiameter) / 2
-        return Math.max(-Math.max(0, stockLength), breakAfterZ - 5 * bend)
+        return Math.max(-Math.max(0, stockLength), breakAfterZ - zEndSetback())
     }
 
     // the colours and pitch the stock is drawn in, whole or broken
@@ -163,7 +171,15 @@ QtObject {
                 if (!mirrorAcrossCenterline) return
                 style.hatch = pastProfileHatchColor
                 var face = facedTo !== null ? Math.min(facedTo, faceZ) : faceZ
-                Broken.paint(ctx, cx(face), cx(zEndBreak), cy(0), R, r, style)
+                if (breakMiddle) {
+                    // a stretch of its middle left out as well (Parting's,
+                    // far down the stock): the piece at the face broken off
+                    // at the gap; the far piece, broken at both its ends
+                    Broken.piece(ctx, cx(breakMiddle.near), cx(face), cy(0), R, r, true, false, style)
+                    Broken.piece(ctx, cx(zEndBreak), cx(breakMiddle.far), cy(0), R, r, true, true, style)
+                } else {
+                    Broken.paint(ctx, cx(face), cx(zEndBreak), cy(0), R, r, style)
+                }
                 return
             }
             if (breakZ !== null) {

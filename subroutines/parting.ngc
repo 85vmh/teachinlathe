@@ -1,7 +1,7 @@
 ;Parting
 O<parting> sub
 
-#<x_clearance>       = #1
+#<x_clearance>       = #1 ; radial
 #<x_start>           = #2
 #<x_end>             = #3
 #<z_pos>             = #4
@@ -15,6 +15,9 @@ G18 ; XZ Plane
 G21 ; Metric Units
 G90 ; Absolute Distance
 
+(the clearance is a radius, X a diameter: the blade starts and retracts here)
+#<x_clear> = [#<x_start> + 2 * #<x_clearance>]
+
     O100 IF [#<edge_break_type> EQ 0]
         G0 Z#<z_pos>
         G0 X#<x_start>
@@ -24,10 +27,10 @@ G90 ; Absolute Distance
     O100 ELSE
         ; Edge break in Z+ direction
         G0 Z#<z_pos>
-        G0 X[#<x_start> + #<x_clearance>]
+        G0 X#<x_clear>
         G95 F#<fz1>
         G1 X[#<x_start> - #<edge_break_value>]
-        G0 X[#<x_start> + #<x_clearance>]
+        G0 X#<x_clear>
         G0 Z[#<z_pos> + #<edge_break_value>]
         G1 X#<x_start>
 
@@ -42,5 +45,5 @@ G90 ; Absolute Distance
         G1 X#<fz2_x_pos> F#<fz1>
         G1 X#<x_end> F#<fz2>
     O100 ENDIF
-    G0 X[#<x_start> + #<x_clearance>]
+    G0 X#<x_clear>
 O<parting> endsub

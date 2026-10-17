@@ -5,8 +5,8 @@ import "shapes/blade.js" as BladeShape
 // A blade, small: InsertThumbnail's frame and red cross, the cross on the
 // middle of the blade's cutting end. It draws as BladeToolPreview does -
 // same corners, mirroring and turn - at the scale every insert thumbnail
-// does, so a blade sits beside a CCMT at their true sizes; it is centred on
-// its outline.
+// does - times ``scaleFactor``, 2 unless set, a blade being thin; it is
+// centred on its outline.
 Item {
     id: root
 
@@ -18,6 +18,10 @@ Item {
     property real crossArm: 10
     //: Space between the frame and the reference insert, in pixels.
     property real padding: 5
+    //: How much bigger than the insert thumbnails' common scale the blade
+    //: is drawn: a blade is thin, and at that scale hard to make out. The
+    //: backplot keeps it true to size.
+    property real scaleFactor: 2
 
     width: size
     height: size
@@ -35,7 +39,7 @@ Item {
     }
 
     readonly property real bladeWidth: view ? view.bladeWidth : 1.5
-    readonly property real bladeLength: view ? view.bladeLength : 11.25
+    readonly property real bladeLength: view ? view.bladeLength : 3 * bladeWidth
     readonly property real rotation_: view ? view.bladeRotation : 0
     readonly property bool mirrored: view ? view.bladeMirrored : false
 
@@ -60,7 +64,7 @@ Item {
         }
         return b
     }
-    readonly property real pxPerMm: (size - 2 * padding)
+    readonly property real pxPerMm: scaleFactor * (size - 2 * padding)
                                     / Math.max(2 * (view ? view.catalogReachMm : 16), 0.001)
     // Where the control point goes so the blade's outline is centred.
     readonly property point tip: Qt.point(

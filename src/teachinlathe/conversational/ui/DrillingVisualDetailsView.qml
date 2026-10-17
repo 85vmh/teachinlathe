@@ -4,8 +4,9 @@
 // starts and every peck retracts to. Its values in boxes down the right
 // edge; Z Start, Z End and the clearance's Z each drawn as a line across the
 // centre line, with an arrow from it to its box; each peck as the drill's
-// point, one of them dimensioned, to the Peck Depth / Dwell Time box. Edits the same data as DrillingDetailsView
-// and saves every change through the same updateDrilling slot.
+// point, one of them dimensioned, to the Peck Depth / Dwell Time box. Edits
+// the same data as DrillingDetailsView and saves every change through the
+// same updateDrilling slot.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -120,6 +121,8 @@ Item {
         ProfileCanvas {
             id: profileCanvas
             showTransitions: false
+            // no axes: the origin alone marks Z0
+            showAxes: false
             Layout.fillWidth: true
             Layout.fillHeight: true
             // pinch and the buttons zoom, a drag pans, a double tap fits

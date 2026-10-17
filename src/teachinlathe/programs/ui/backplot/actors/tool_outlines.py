@@ -147,15 +147,21 @@ def threading_insert(size, pitch, mirrored=False):
 
 # ── blades ──────────────────────────────────────────────────────────────────
 
-#: The drawn blade's length: 10 mm for a 1 mm blade, 20 mm for a 5 mm one -
-#: BladeToolView's ``_LENGTH_AT``.
-BLADE_LENGTH_AT = ((1.0, 10.0), (5.0, 20.0))
+#: The drawn blade's length, as a multiple of its width: 2:1. The one rule
+#: every drawing of a blade uses - here, BladeToolView's, the canvases'.
+BLADE_LENGTH_PER_WIDTH = 2.0
+
+#: The break across a blade's far end - a straight line with one zigzag in
+#: its middle third - as fractions of the width: where the zigzag starts and
+#: turns either side of the middle, and how far it reaches along the blade.
+#: blade.js's ``_breakLine``.
+BLADE_BREAK_OUTER = 0.18
+BLADE_BREAK_INNER = 0.06
+BLADE_BREAK_REACH = 0.3
 
 
 def blade_length(width):
-    (w0, l0), (w1, l1) = BLADE_LENGTH_AT
-    width = min(max(width, w0), w1)
-    return l0 + (width - w0) * (l1 - l0) / (w1 - w0)
+    return BLADE_LENGTH_PER_WIDTH * max(width, 0.0)
 
 
 def blade(width, left_radius, right_radius, control=0):
@@ -167,11 +173,24 @@ def blade(width, left_radius, right_radius, control=0):
     length = blade_length(width)
     left = min(max(left_radius, 0.0), half)
     right = min(max(right_radius, 0.0), half)
+    # the far end broken off, as a drawing breaks a long part: right to
+    # left, a zigzag in the middle
+    reach = BLADE_BREAK_REACH * width
+    far_end = [(half, -length),
+               (BLADE_BREAK_OUTER * width, -length),
+               (BLADE_BREAK_INNER * width, -length + reach),
+               (-BLADE_BREAK_INNER * width, -length - reach),
+               (-BLADE_BREAK_OUTER * width, -length)]
     loop = ([(-half, -length)]
             + _round_corner((-half, -length), (-half, 0.0), (half, 0.0), left)
             + _round_corner((-half, 0.0), (half, 0.0), (half, -length), right)
-            + [(half, -length)])
-    return Outline(loop=loop, fill=_fan(loop), hole=None, lines=[],
+            + far_end)
+    # fanned from the blade's middle, which sees all of the broken end
+    centre = (0.0, -length / 2)
+    fill = []
+    for i in range(len(loop)):
+        fill.extend([centre, loop[i], loop[(i + 1) % len(loop)]])
+    return Outline(loop=loop, fill=fill, hole=None, lines=[],
                    tip=(half * control, 0.0))
 
 

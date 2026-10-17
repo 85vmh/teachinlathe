@@ -23,8 +23,12 @@ import "arrow.js" as Arrow
 // arrowToRect is the box, in canvas px, or null for no leader; ``leaderAt``,
 // how far along from ``from`` the leader leaves, a fraction - 1/4 if not set;
 // ``arrowsOutside``, for a short one: the arrow line run on past both
-// extension lines, its heads outside them pointing in; ``noExtensionLines``,
-// for one drawn between lines already there.
+// extension lines, its heads outside them pointing in - with
+// ``leaderFromOutsideEnd`` "from" or "to", the leader leaves from the far end
+// of the outside arrow at that end, straight to the box; ``noExtensionLines``,
+// for one drawn between lines already there; ``extensionsCentred``, on a
+// diameter, the extension lines run on past the arrow as far as they come to
+// it, the arrow at their middle.
 QtObject {
     property var  dimensions: []
     property var  cx: null
@@ -47,7 +51,7 @@ QtObject {
     function _paintDimension(ctx, d) {
         // nothing to measure (a value not set yet): nothing drawn
         if (d.from === d.to) return
-        var a, b
+        var a, b, ends = null
         ctx.save()
         ctx.setLineDash([])
         ctx.strokeStyle = d.color
@@ -59,8 +63,11 @@ QtObject {
             var lineX = edge + d.offset
             var y0 = cy(d.from), y1 = cy(d.to)
             if (d.offset > 0) {
-                ctx.moveTo(edge + gap, y0); ctx.lineTo(lineX + overshoot, y0)
-                ctx.moveTo(edge + gap, y1); ctx.lineTo(lineX + overshoot, y1)
+                // with ``extensionsCentred``, run on past the arrow as far as
+                // they come to it, so the arrow is at their middle
+                var past = d.extensionsCentred ? Math.max(overshoot, d.offset - gap) : overshoot
+                ctx.moveTo(edge + gap, y0); ctx.lineTo(lineX + past, y0)
+                ctx.moveTo(edge + gap, y1); ctx.lineTo(lineX + past, y1)
             }
             a = { x: lineX, y: y0 }; b = { x: lineX, y: y1 }
         } else {
@@ -84,6 +91,7 @@ QtObject {
             var outB = { x: b.x + ux * run, y: b.y + uy * run }
             ctx.moveTo(outA.x, outA.y); ctx.lineTo(outB.x, outB.y)
             ctx.stroke()
+            ends = { from: outA, to: outB }
             _paintHead(ctx, outA, a)
             _paintHead(ctx, outB, b)
         } else {
@@ -94,8 +102,15 @@ QtObject {
         }
         ctx.restore()
 
-        if (d.arrowToRect)
-            _paintLeader(ctx, d, a, b)
+        if (d.arrowToRect) {
+            var end = ends && d.leaderFromOutsideEnd ? ends[d.leaderFromOutsideEnd] : null
+            if (end) {
+                if (startDots) Arrow.paintDot(ctx, end.x, end.y, d.color)
+                Arrow.paintToBox(ctx, end.x, end.y, d.arrowToRect, d.color, 0)
+            } else {
+                _paintLeader(ctx, d, a, b)
+            }
+        }
     }
 
     function _paintLeader(ctx, d, a, b) {

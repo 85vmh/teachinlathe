@@ -131,6 +131,8 @@ Item {
         ProfileCanvas {
             id: profileCanvas
             showTransitions: false
+            // no axes: the origin alone marks Z0
+            showAxes: false
             Layout.fillWidth: true
             Layout.fillHeight: true
             // pinch and the buttons zoom, a drag pans, a double tap fits

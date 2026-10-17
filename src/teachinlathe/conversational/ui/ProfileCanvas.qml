@@ -60,6 +60,10 @@ Canvas {
     // a dot where each arrow to a box starts as well as where it ends -
     // the markers' and the dimensions' leaders
     property bool   arrowStartDots: false
+    // the axes - the dashed Z0 line and the Z+ / X+ arrows; the operations
+    // leave them out, the origin alone marking Z0
+    property bool   showAxes: true
+    onShowAxesChanged: requestPaint()
     // how far in from the edges the ticks reach, px
     readonly property real tickBand: 7
     onArrowStartDotsChanged: requestPaint()
@@ -316,10 +320,13 @@ Canvas {
             b.fZMax = Math.max(b.fZMax, 0)
         } else if (stockLength > 0 && workpiece && workpiece.break_after_z !== undefined
                    && workpiece.break_after_z !== null) {
-            // Facing's, broken off after Z End: set back five bends, reaching
-            // out one more
+            // Facing's, broken off after Z End: set back five bends - or
+            // the workpiece's own setback - reaching out one more
+            var bendMm = Broken.reach(1.0) * stockDiameter / 2
+            var setback = workpiece.break_after_setback !== undefined && workpiece.break_after_setback !== null
+                          ? Math.max(0, Number(workpiece.break_after_setback)) : 5 * bendMm
             b.fZMin = Math.min(b.fZMin, Math.max(-stockLength,
-                               Number(workpiece.break_after_z) - 6 * Broken.reach(1.0) * stockDiameter / 2))
+                               Number(workpiece.break_after_z) - setback - bendMm))
             b.fZMax = Math.max(b.fZMax, 0)
         } else if (stockLength > 0) {
             b.fZMin = Math.min(b.fZMin, -stockLength)
@@ -401,7 +408,7 @@ Canvas {
         ticksActor.paint(ctx)
         stockActor.paint(ctx)
         centerLineActor.paint(ctx)
-        axesActor.paintZeroLine(ctx)
+        if (showAxes) axesActor.paintZeroLine(ctx)
         originActor.paint(ctx)
         pathActor.paint(ctx)
         stockToLeaveActor.paint(ctx)
@@ -417,7 +424,7 @@ Canvas {
         // with the stock drawn, X+ past its skin by its usual length
         axesActor.xAxisLength = _stockDrawn() ? _cy(Number(workpiece.external_diameter)) - _cy(0) + axesActor.axisLength
                                               : axesActor.axisLength
-        axesActor.paintArrows(ctx)
+        if (showAxes) axesActor.paintArrows(ctx)
     }
 
     // Whether StockActor draws any stock: not with the mirror off where the
