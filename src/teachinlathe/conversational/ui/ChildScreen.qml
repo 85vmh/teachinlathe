@@ -17,7 +17,7 @@ Item {
     // Facing's canvas mirrored or not: kept by conversationalQml, off for a
     // program just opened, then as the operator leaves it
     readonly property bool facingMirror: (typeof conversationalQml !== "undefined" && conversationalQml)
-                                         ? conversationalQml.facingMirror : false
+                                         ? conversationalQml.facingMirror : true
 
     property string titleText: (selectedProgram && (selectedProgram.name || (selectedProgram.header && selectedProgram.header.name)))
         ? "Editing: " + (selectedProgram.name || selectedProgram.header.name)

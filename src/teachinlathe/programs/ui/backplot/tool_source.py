@@ -34,6 +34,14 @@ def set_store(store):
     _store = store
 
 
+def tool_in(tool_no):
+    """The cutting tool clamped in holder ``tool_no``, or None."""
+    if _store is None or not tool_no or tool_no <= 0:
+        return None
+    holder = _store.find_holder(int(tool_no))
+    return _store.find_tool(holder.cutting_tool_id) if holder is not None else None
+
+
 def describe(tool_no):
     """The tool in holder ``tool_no``, as the actor draws it; ``{}`` for
     none."""

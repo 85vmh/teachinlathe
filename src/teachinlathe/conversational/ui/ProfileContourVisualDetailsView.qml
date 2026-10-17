@@ -20,6 +20,9 @@ Item {
     property var    primitives:  []
     property string profileType: "od"
     property var    workpiece:   ({})
+    // the tool the last Change Tool above puts in, as its Tool Library card
+    // shows it: {tool_no, card, view}; {} with none
+    property var    toolCard:    ({})
 
     // the values the boxes on the canvas show and edit
     property real   xStart: 0.0
@@ -82,6 +85,9 @@ Item {
         var stock = JSON.parse(JSON.stringify(profileOp.workpiece || {}))
         stock.break_after_profile = true
         workpiece   = stock
+        toolCard    = (typeof conversationalQml !== "undefined" && conversationalQml
+                       && conversationalQml.toolCardBefore)
+                      ? (conversationalQml.toolCardBefore(index) || {}) : {}
 
         // X Start defaults to the profile's largest diameter plus the retract
         var pp = opData.profiling_parameters || {}
@@ -220,6 +226,51 @@ Item {
                 onXStartEdited: function(value) { root.xStart = value; root.save() }
                 onZStartEdited: function(value) { root.zStart = value; root.save() }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            // the tool - a turning tool's insert or a blade - its control
+            // point on the start position, turned as its orientation has it,
+            // inside the ticks; in the fit too
+            fitExtraPositions: {
+                if (!canvasTool.drawn) return []
+                var pts = canvasTool.outlineFromTip, out = []
+                for (var i = 0; i < pts.length; i++)
+                    out.push({ x: root.xStart + 2 * pts[i].y, z: root.zStart + pts[i].x })
+                return out
+            }
+            onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
+            CanvasTool {
+                id: canvasTool
+                inset: profileCanvas.tickBand
+                card: root.toolCard && root.toolCard.card ? root.toolCard.card : ""
+                view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
+                pxPerMm: profileCanvas._scale
+                tipX: profileCanvas._cx(root.zStart)
+                tipY: profileCanvas._cy(root.xStart)
+            }
+
+            // the tool it cuts with, at the top, in the middle; tapped, to
+            // pick it - a turning tool for an OD profile, a boring bar for
+            // an ID one
+            ToolBox {
+                id: toolBox
+                x: (profileCanvas.width - width) / 2
+                y: profileCanvas.boxGap
+                toolCard: root.toolCard
+                onClicked: toolPicker.open()
+            }
+
+            ToolPickerPopup {
+                id: toolPicker
+                contentWidth: root.width
+                toolKinds: String(root.profileType).toLowerCase() === "id" ? ["Boring Tool"] : ["Turning Tool"]
+                currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
+                currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
+                                           ? root.toolCard.toolchange_position : "G28"
+                onToolChosen: function(toolNo, position) {
+                    if (typeof conversationalQml !== "undefined" && conversationalQml && conversationalQml.useToolBefore)
+                        conversationalQml.useToolBefore(root.opIndex, toolNo, position)
+                }
             }
 
             // zoom, fit to screen and mirror - top-left, as on every profile canvas

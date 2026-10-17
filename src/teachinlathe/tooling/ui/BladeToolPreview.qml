@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import theme 1.0
+import "shapes/blade.js" as BladeShape
 
 // The blade as it sits in the holder: the Z and X axes fixed through the
 // middle of the view, the middle of the blade's cutting end - its control
@@ -66,28 +67,17 @@ Rectangle {
 
             if (!root.editor)
                 return
-            var w = root.editor.bladeWidth, len = root.editor.bladeLength
-            var rl = root.editor.leftRadius, rr = root.editor.rightRadius
+            var w = root.editor.bladeWidth
             var k = root.pxPerMm
 
-            // The blade, in its own frame.
-            ctx.save()
-            ctx.translate(p.x, p.y)
-            ctx.rotate(-root.editor.bladeRotation * Math.PI / 180)
-            ctx.scale(k, root.editor.bladeMirrored ? k : -k)
-            ctx.beginPath()
-            ctx.moveTo(-w / 2, -len)
-            ctx.arcTo(-w / 2, 0, w / 2, 0, rl)
-            ctx.arcTo(w / 2, 0, w / 2, -len, rr)
-            ctx.lineTo(w / 2, -len)
-            ctx.closePath()
-            ctx.fillStyle = root.editor.bodyColor
-            ctx.fill()
-            ctx.lineJoin = "round"
-            ctx.lineWidth = 1.5 / k
-            ctx.strokeStyle = root.editor.edgeColor
-            ctx.stroke()
-            ctx.restore()
+            // The blade, as blade.js draws it everywhere.
+            BladeShape.paint(ctx, {
+                width: w, length: root.editor.bladeLength,
+                leftRadius: root.editor.leftRadius, rightRadius: root.editor.rightRadius,
+                rotation: root.editor.bladeRotation, mirrored: root.editor.bladeMirrored,
+                pxPerMm: k, tipX: p.x, tipY: p.y,
+                bodyColor: root.editor.bodyColor, edgeColor: root.editor.edgeColor, lineWidth: 1.5
+            })
 
             // Which corner is which, just behind each.
             ctx.fillStyle = Theme.foregroundMuted

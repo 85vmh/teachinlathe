@@ -23,6 +23,9 @@ Item {
     // the program header's stock, and the tool in when this drills
     property var    workpiece: ({})
     property var    tool: ({})
+    // the same tool as its Tool Library card shows it: {tool_no, card,
+    // view}; {} with none
+    property var    toolCard: ({})
 
     // the values the boxes on the canvas show and edit
     property real   zStart: 0.0
@@ -69,6 +72,7 @@ Item {
         var bridge = (typeof conversationalQml !== "undefined" && conversationalQml) ? conversationalQml : null
         workpiece = bridge ? (bridge.currentWorkpiece() || {}) : {}
         tool      = bridge ? (bridge.toolBefore(index) || {}) : {}
+        toolCard  = bridge && bridge.toolCardBefore ? (bridge.toolCardBefore(index) || {}) : {}
 
         var dp = opData.drilling_parameters || {}
         zStart    = dp.z_start    !== undefined ? Number(dp.z_start)    : 0
@@ -267,6 +271,29 @@ Item {
                 onPeckDepthEdited: function(value) { root.peckDepth = value; root.save() }
                 onDwellTimeEdited: function(value) { root.dwellTime = value; root.save() }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            // the tool it cuts with, at the top, in the middle; tapped, to
+            // pick it - only a drill
+            ToolBox {
+                id: toolBox
+                x: (profileCanvas.width - width) / 2
+                y: profileCanvas.boxGap
+                toolCard: root.toolCard
+                onClicked: toolPicker.open()
+            }
+
+            ToolPickerPopup {
+                id: toolPicker
+                contentWidth: root.width
+                toolKinds: ["Drill Tool"]
+                currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
+                currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
+                                           ? root.toolCard.toolchange_position : "G28"
+                onToolChosen: function(toolNo, position) {
+                    if (typeof conversationalQml !== "undefined" && conversationalQml && conversationalQml.useToolBefore)
+                        conversationalQml.useToolBefore(root.opIndex, toolNo, position)
+                }
             }
 
             // zoom, fit to screen and mirror - top-left, as on every profile canvas

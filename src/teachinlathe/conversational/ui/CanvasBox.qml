@@ -25,9 +25,12 @@ Rectangle {
     border.color: accent
     border.width: Arrow.lineWidth   // as thick as the arrows pointing to it
 
+    // tapped anywhere but on a control in it
+    signal clicked()
+
     // keeps taps and drags on the box from reaching the canvas under it,
     // which would pan it or fit it to the screen
-    MouseArea { anchors.fill: parent }
+    MouseArea { anchors.fill: parent; onClicked: root.clicked() }
 
     ColumnLayout {
         id: column

@@ -1,5 +1,6 @@
-// SpeedsAndFeeds.qml — spindle direction, speed mode, speed and feeds in one
-// row: M3/M4 | CSS/RPM | the speed for the mode | the feeds.
+// SpeedsAndFeeds.qml — speed mode, speed and feeds in one row: CSS/RPM |
+// the speed for the mode | the feeds. The spindle direction is the tool's
+// (onlyClockwise): shown as the M3 / M4 icon before the speed, not picked.
 // Edits an operation's spindle_parameters, and feeds the operation keeps
 // wherever it keeps them: each edit reports only what changed.
 //
@@ -14,6 +15,7 @@ import "."
 import touchable_input 1.0
 import "../../tooling/ui"
 import theme 1.0
+import common 1.0
 
 GroupBox {
     id: root
@@ -93,8 +95,10 @@ GroupBox {
     // one row of the speed area, and the width its label column keeps in either mode
     readonly property real speedRowHeight: maxSpeedField.implicitHeight
     readonly property real speedLabelWidth: Math.ceil(Math.max(cssLabelMetrics.advanceWidth,
-                                                               maxLabelMetrics.advanceWidth,
-                                                               rpmLabelMetrics.advanceWidth))
+                                                               directionIconSize + 6 + maxLabelMetrics.advanceWidth,
+                                                               directionIconSize + 6 + rpmLabelMetrics.advanceWidth))
+    // the M3 / M4 icon before the speed
+    readonly property real directionIconSize: 36
 
     component Separator: Rectangle {
         implicitWidth: Theme.hairline
@@ -108,21 +112,6 @@ GroupBox {
     RowLayout {
         anchors.fill: parent
         spacing: 0
-
-        // M3 above M4
-        SpindleDirectionPicker {
-            vertical: true
-            Layout.alignment: Qt.AlignVCenter
-            clockwise: root.direction === 1
-            onlyClockwise: root.onlyClockwise
-            onPicked: function(clockwise) {
-                root.direction = clockwise ? 1 : -1
-                root.emitSpindle()
-            }
-        }
-
-        // as far from the buttons as the box's edge is on their other side
-        Separator { Layout.leftMargin: root.leftPadding }
 
         // Each button level with the middle of a speed row: CSS with the
         // CSS value, RPM with the bottom row
@@ -160,9 +149,9 @@ GroupBox {
         // The speed for the mode. Both rows always take their place, so the
         // area is as wide and as tall in either mode: the CSS value is only
         // hidden in RPM mode, and the bottom row holds Max speed or Spindle speed.
-        TextMetrics { id: cssLabelMetrics; font.pixelSize: Theme.fontBody; text: "CSS value (Vc)" }
-        TextMetrics { id: maxLabelMetrics; font.pixelSize: Theme.fontBody; text: "Max speed" }
-        TextMetrics { id: rpmLabelMetrics; font.pixelSize: Theme.fontBody; text: "Spindle speed" }
+        TextMetrics { id: cssLabelMetrics; font.pixelSize: Theme.fontBody; text: "CSS (Vc)" }
+        TextMetrics { id: maxLabelMetrics; font.pixelSize: Theme.fontBody; text: "max" }
+        TextMetrics { id: rpmLabelMetrics; font.pixelSize: Theme.fontBody; text: "at" }
 
         GridLayout {
             id: speedGrid
@@ -175,7 +164,7 @@ GroupBox {
                 Layout.row: 0; Layout.column: 0
                 Layout.preferredWidth: root.speedLabelWidth
                 opacity: root.spindleMode === "css" ? 1 : 0
-                text: "CSS value (Vc)"
+                text: "CSS (Vc)"
                 font.pixelSize: Theme.fontBody
             }
             NumpadField {
@@ -197,11 +186,28 @@ GroupBox {
                 font.pixelSize: Theme.fontBody
             }
 
-            Label {
+            // the way the spindle turns, M3 or M4, then "at" the speed - or
+            // CSS's "max"
+            Row {
                 Layout.row: 1; Layout.column: 0
                 Layout.preferredWidth: root.speedLabelWidth
-                text: root.spindleMode === "css" ? "Max speed" : "Spindle speed"
-                font.pixelSize: Theme.fontBody
+                Layout.alignment: Qt.AlignVCenter
+                spacing: 6
+                Image {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: root.directionIconSize
+                    height: width
+                    source: Qt.resolvedUrl(Images.url(root.direction === 1 ? "spindle_m3.svg" : "spindle_m4.svg"))
+                    sourceSize.width: width
+                    sourceSize.height: height
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                }
+                Label {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.spindleMode === "css" ? "max" : "at"
+                    font.pixelSize: Theme.fontBody
+                }
             }
             NumpadField {
                 id: maxSpeedField

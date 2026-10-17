@@ -19,6 +19,9 @@ Item {
 
     // the program header's stock
     property var    workpiece: ({})
+    // the tool the last Change Tool above puts in, as its Tool Library card
+    // shows it: {tool_no, card, view}; {} with none
+    property var    toolCard: ({})
 
     // the values the boxes on the canvas show and edit
     property real   xStart: 0.0
@@ -28,9 +31,9 @@ Item {
     property real   doc: 0.0
     property real   retract: 0.0
     property bool   zEndBecomesNewZ0: false
-    // the canvas mirrored or not: off unless the editor says otherwise; the
+    // the canvas mirrored or not: on unless the editor says otherwise; the
     // mirror button changes it, and the editor keeps it for the next Facing
-    property bool   canvasMirror: false
+    property bool   canvasMirror: true
     onCanvasMirrorChanged: profileCanvas.mirrorAcrossCenterline = canvasMirror
 
     // what facing will cut with the values above
@@ -68,6 +71,9 @@ Item {
 
         workpiece = (typeof conversationalQml !== "undefined" && conversationalQml)
                     ? (conversationalQml.currentWorkpiece() || {}) : {}
+        toolCard = (typeof conversationalQml !== "undefined" && conversationalQml
+                    && conversationalQml.toolCardBefore)
+                   ? (conversationalQml.toolCardBefore(index) || {}) : {}
 
         var gp = opData.geometry_parameters || {}
         var cp = opData.cutting_parameters || {}
@@ -118,7 +124,7 @@ Item {
             selectable: false
             // the backplot's step (glnav's zoomin / zoomout)
             zoomStep: 1.1
-            mirrorAcrossCenterline: false
+            mirrorAcrossCenterline: true
             primitives: []
             // the header's stock, and in front of Z0 up to Z Start, the
             // material being faced off; mirrored, broken off after Z End
@@ -168,6 +174,51 @@ Item {
                 onDocEdited: function(value) { root.doc = value; root.save() }
                 onRetractEdited: function(value) { root.retract = value; root.save() }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            // the tool it cuts with, at the top, in the middle
+            ToolBox {
+                id: toolBox
+                x: (profileCanvas.width - width) / 2
+                y: profileCanvas.boxGap
+                toolCard: root.toolCard
+                onClicked: toolPicker.open()
+            }
+
+            // Facing cuts with a turning tool or a parting blade
+            ToolPickerPopup {
+                id: toolPicker
+                contentWidth: root.width
+                toolKinds: ["Turning Tool", "Parting Blade"]
+                currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
+                currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
+                                           ? root.toolCard.toolchange_position : "G28"
+                onToolChosen: function(toolNo, position) {
+                    if (typeof conversationalQml !== "undefined" && conversationalQml && conversationalQml.useToolBefore)
+                        conversationalQml.useToolBefore(root.opIndex, toolNo, position)
+                }
+            }
+
+            // the tool - a turning tool's insert or a blade - its control
+            // point on the start position, turned as its orientation has it,
+            // inside the ticks
+            // the tool in the fit too
+            fitExtraPositions: {
+                if (!canvasTool.drawn) return []
+                var pts = canvasTool.outlineFromTip, out = []
+                for (var i = 0; i < pts.length; i++)
+                    out.push({ x: root.xStart + 2 * pts[i].y, z: root.zStart + pts[i].x })
+                return out
+            }
+            onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
+            CanvasTool {
+                id: canvasTool
+                inset: profileCanvas.tickBand
+                card: root.toolCard && root.toolCard.card ? root.toolCard.card : ""
+                view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
+                pxPerMm: profileCanvas._scale
+                tipX: profileCanvas._cx(root.zStart)
+                tipY: profileCanvas._cy(root.xStart)
             }
 
             // the end position, and above it whether Z End becomes the new

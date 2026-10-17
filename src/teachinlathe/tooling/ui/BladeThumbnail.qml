@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import theme 1.0
+import "shapes/blade.js" as BladeShape
 
 // A blade, small: InsertThumbnail's frame and red cross, the cross on the
 // middle of the blade's cutting end. It draws as BladeToolPreview does -
@@ -38,19 +39,20 @@ Item {
     readonly property real rotation_: view ? view.bladeRotation : 0
     readonly property bool mirrored: view ? view.bladeMirrored : false
 
-    // A point of the blade's own frame, in mm, mirrored and turned as it is
-    // drawn and flipped to screen y - still in mm, about the control point.
-    function turned(x, y) {
-        if (mirrored) y = -y
-        var a = rotation_ * Math.PI / 180
-        return Qt.point(x * Math.cos(a) - y * Math.sin(a),
-                        -(x * Math.sin(a) + y * Math.cos(a)))
+    // the blade as blade.js draws it
+    function shape() {
+        return { width: bladeWidth, length: bladeLength,
+                 leftRadius: view ? view.leftRadius : 0, rightRadius: view ? view.rightRadius : 0,
+                 rotation: rotation_, mirrored: mirrored, pxPerMm: pxPerMm,
+                 tipX: tip.x, tipY: tip.y,
+                 bodyColor: view ? view.bodyColor : "#e5a93b", edgeColor: view ? view.edgeColor : "#674c1b",
+                 lineWidth: 1 }
     }
 
     // The turned blade's extent, in mm, about its control point.
     readonly property var bounds: {
-        var w = bladeWidth / 2, l = bladeLength
-        var verts = [turned(-w, 0), turned(w, 0), turned(w, -l), turned(-w, -l)]
+        var verts = BladeShape.corners({ width: bladeWidth, length: bladeLength,
+                                          rotation: rotation_, mirrored: mirrored })
         var b = { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity }
         for (var i = 0; i < verts.length; i++) {
             b.left = Math.min(b.left, verts[i].x); b.right = Math.max(b.right, verts[i].x)
@@ -82,22 +84,7 @@ Item {
             ctx.reset()
             if (!root.view)
                 return
-            var w = root.bladeWidth, len = root.bladeLength, k = root.pxPerMm
-            ctx.translate(root.tip.x, root.tip.y)
-            ctx.rotate(-root.rotation_ * Math.PI / 180)
-            ctx.scale(k, root.mirrored ? k : -k)
-            ctx.beginPath()
-            ctx.moveTo(-w / 2, -len)
-            ctx.arcTo(-w / 2, 0, w / 2, 0, root.view.leftRadius)
-            ctx.arcTo(w / 2, 0, w / 2, -len, root.view.rightRadius)
-            ctx.lineTo(w / 2, -len)
-            ctx.closePath()
-            ctx.fillStyle = root.view.bodyColor
-            ctx.fill()
-            ctx.lineJoin = "round"
-            ctx.lineWidth = 1 / k
-            ctx.strokeStyle = root.view.edgeColor
-            ctx.stroke()
+            BladeShape.paint(ctx, root.shape())
         }
     }
 

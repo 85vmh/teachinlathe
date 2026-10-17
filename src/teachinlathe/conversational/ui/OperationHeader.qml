@@ -1,7 +1,6 @@
 // OperationHeader.qml — the row at the top of an operation's details: Speeds
-// and Feeds in the width left, then Pause to Inspect, pauseWidth wide.
-// Operations without an M1 (hasM1: false) leave that width empty, so every
-// header lines up.
+// and Feeds as wide as it needs, then Pause to Inspect in the width left.
+// Operations without an M1 (hasM1: false) leave that width empty.
 // The feed rate is passed in and reported out as a number: each operation
 // keeps it in its own place (cutting_parameters, drilling_parameters, ...).
 import QtQuick 2.15
@@ -16,8 +15,11 @@ RowLayout {
 
     property alias rpmOnly: speedsAndFeeds.rpmOnly
     property alias feedEnabled: speedsAndFeeds.feedEnabled
-    // the only spindle direction the tool allows: true M3, false M4, null either
-    property alias onlyClockwise: speedsAndFeeds.onlyClockwise
+    // the only spindle direction the tool allows: true M3, false M4, null
+    // either. Unless set, the tool's the op's details carry
+    // (_tool_spindle_direction, 3 or 4, from the last Change Tool above)
+    property var onlyClockwise: null
+    property var _toolClockwise: null
     // what Speeds and Feeds' feeds column holds: SpeedsAndFeeds.FeedKind -
     // Standard (Fz), Parting (Fz1 and Fz2), Threading (Pitch and Starts)
     property alias feedKind: speedsAndFeeds.feedKind
@@ -26,8 +28,6 @@ RowLayout {
     property alias pitch: speedsAndFeeds.pitch
     property alias starts: speedsAndFeeds.starts
     property bool hasM1: true
-    // Pause to Inspect's width - or the empty place it keeps without an M1
-    readonly property real pauseWidth: 360
     // the width each Pause to Inspect button gets
     readonly property real pauseOptionWidth: m1Panel.optionWidth
 
@@ -41,6 +41,8 @@ RowLayout {
 
     function applyData(op, feedRate) {
         op = op || {}
+        var d = op._tool_spindle_direction
+        _toolClockwise = d === 3 ? true : d === 4 ? false : null
         speedsAndFeeds.applyData(op.spindle_parameters, feedRate)
         if (hasM1)
             m1Panel.applyData(op.m1_parameters || {})
@@ -48,8 +50,9 @@ RowLayout {
 
     SpeedsAndFeeds {
         id: speedsAndFeeds
-        // whatever width Pause to Inspect leaves, never less than it needs
-        Layout.fillWidth: true
+        onlyClockwise: (root.onlyClockwise === true || root.onlyClockwise === false)
+                       ? root.onlyClockwise : root._toolClockwise
+        // as wide as its contents need
         Layout.minimumWidth: implicitWidth
         onSpindleEdited: function(spindle) { root.spindleEdited(spindle) }
         onFeedRateEdited: function(value) { root.feedRateEdited(value) }
@@ -62,15 +65,16 @@ RowLayout {
     M1Parameters {
         id: m1Panel
         visible: root.hasM1
-        Layout.minimumWidth: root.pauseWidth
-        Layout.preferredWidth: root.pauseWidth
-        Layout.maximumWidth: root.pauseWidth
+        // whatever width Speeds and Feeds leaves
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
+        Layout.preferredWidth: 0
         Layout.preferredHeight: speedsAndFeeds.implicitHeight
         onSaveRequested: function(payload) { root.m1Edited(payload.m1_parameters) }
     }
 
     Item {
         visible: !root.hasM1
-        Layout.preferredWidth: root.pauseWidth
+        Layout.fillWidth: true
     }
 }

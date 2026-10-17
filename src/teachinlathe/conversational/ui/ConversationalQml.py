@@ -83,7 +83,7 @@ class ConversationalQml(QObject):
 
     def __init__(self, engine, app=None, parent=None):
         super().__init__(parent)
-        self._facing_mirror = False
+        self._facing_mirror = True
         self._engine = engine
         self._app = app
         self.root = None
@@ -358,6 +358,60 @@ class ConversationalQml(QObject):
         tool = dict(tool_source.describe(int(change.tool_no)) or {})
         tool["tool_no"] = int(change.tool_no)
         return tool
+
+    @pyqtSlot(int, result="QVariant")
+    def toolCardBefore(self, before_index):
+        """The tool the last Change Tool above ``before_index`` puts in, as
+        the Tool Library's card shows it: {tool_no, card, view} - card the
+        card's kind ("turning", ...), view its view (a TurningToolView, ...),
+        for ToolTitles.js and the insert drawings. {} with no Change Tool;
+        no card and no view when the holder is empty."""
+        from teachinlathe.programs.ui.backplot import tool_source
+        from teachinlathe.tooling.ui.tool_library_models import card_and_view
+        prog = self._get_current_program()
+        if not prog:
+            return {}
+        operations = (getattr(prog, "operations", []) or [])[:max(before_index, 0)]
+        change = next((o for o in reversed(operations) if getattr(o, "type", "") == "changeTool"), None)
+        if change is None:
+            return {}
+        card, view = card_and_view(tool_source.tool_in(int(change.tool_no)), self)
+        # kept until the next one is asked for: QML holds only a reference
+        old, self._tool_card_view = getattr(self, "_tool_card_view", None), view
+        if old is not None and old is not view:
+            old.deleteLater()
+        position = getattr(change, "toolchange_position", None)
+        return {"tool_no": int(change.tool_no), "card": card, "view": view,
+                "toolchange_position": getattr(position, "value", position) or "G28"}
+
+    @pyqtSlot(int, int, str)
+    def useToolBefore(self, op_index, tool_no, toolchange_position="G28"):
+        """Have the operation at ``op_index`` cut with tool ``tool_no``: the
+        Change Tool right above it changes to it, or one is put in right
+        above it - going to ``toolchange_position`` ("G28" or "G30") for the
+        change. Saved, and the operation's details shown again, with it."""
+        from teachinlathe.conversational.model.data_types import PredefinedPosition
+        from teachinlathe.conversational.model.program_commands import insert_default_operation
+        prog = self._get_current_program()
+        if not prog or op_index < 0 or tool_no <= 0:
+            return
+        ops = prog.operations
+        try:
+            position = PredefinedPosition(str(toolchange_position).upper())
+        except ValueError:
+            position = PredefinedPosition.G28
+        if op_index > 0 and getattr(ops[op_index - 1], "type", "") == "changeTool":
+            change = ops[op_index - 1]
+        else:
+            change = ops[insert_default_operation(prog, "changeTool", op_index)]
+            op_index += 1
+        change.tool_no = int(tool_no)
+        change.toolchange_position = position
+        self.current_op_index = op_index
+        self._save_current_program()
+        screen = getattr(self, "child_screen_item", None)
+        if screen is not None:
+            QTimer.singleShot(0, lambda s=screen, i=op_index: self.onDetailsRequested(s, i))
 
     @pyqtSlot(result="QVariant")
     def currentWorkpiece(self):
@@ -661,6 +715,17 @@ class ConversationalQml(QObject):
         data = self._attach_current_workpiece(build_details_payload(op))
         if not data:
             return
+        # the way the tool in by then turns - the last Change Tool's - which
+        # is the only way the operation's spindle may turn: 3 (M3), 4 (M4),
+        # 0 with none
+        try:
+            from teachinlathe.programs.ui.backplot import tool_source
+            before = self.current_program.operations[:index]
+            change = next((o for o in reversed(before) if getattr(o, "type", "") == "changeTool"), None)
+            tool = tool_source.tool_in(int(change.tool_no)) if change is not None else None
+            data["_tool_spindle_direction"] = int(tool.spindle_direction) if tool is not None else 0
+        except Exception as e:
+            print("tool spindle direction failed:", e)
         if getattr(op, "type", "") == "changeTool":
             # The tool already in by then: changing to it again is no change.
             ops = self.current_program.operations[:index]
@@ -837,7 +902,7 @@ class ConversationalQml(QObject):
         except Exception as e:
             print("[profiling] add finish failed:", e)
 
-    # Facing's canvas mirrored or not: off whenever a program is opened, then as
+    # Facing's canvas mirrored or not: on whenever a program is opened, then as
     # the operator leaves it for every Facing of that program - the editor
     # screen is rebuilt on the way back from the profile editor, so it is
     # kept here rather than there.
@@ -884,7 +949,7 @@ class ConversationalQml(QObject):
         self.current_program = program
         self.current_program_index = row_index
         self.current_op_index = -1
-        self._set_facing_mirror(False)
+        self._set_facing_mirror(True)
 
         selected_program = build_selected_program_summary(program)
         operations_model = build_operations_model(program)

@@ -60,10 +60,14 @@ Canvas {
     // a dot where each arrow to a box starts as well as where it ends -
     // the markers' and the dimensions' leaders
     property bool   arrowStartDots: false
+    // how far in from the edges the ticks reach, px
+    readonly property real tickBand: 7
     onArrowStartDotsChanged: requestPaint()
     // whether fitToScreen takes in the axial tool's whole length, or only
     // its point: a drill is long, and longer the bigger it is
     property bool   fitAxialToolLength: true
+    // more points fitToScreen takes in, as the positions: [{x: diameter, z}]
+    property var    fitExtraPositions: []
     // where the axial tool's pecks end, in mm, each drawn as its point, in
     // axialToolPeckColor
     property var    axialToolPecks: []
@@ -325,7 +329,7 @@ Canvas {
             b.fXMin = Math.min(b.fXMin, 0)
             b.fXMax = Math.max(b.fXMax, stockDiameter)
         }
-        var positions = [startPosition, endPosition].concat(markers || [])
+        var positions = [startPosition, endPosition].concat(markers || []).concat(fitExtraPositions || [])
         // the axial tool, from its point to its far end
         if (axialTool && Number(axialTool.diameter) > 0) {
             var toolZ = Number(axialTool.z) || 0
@@ -348,6 +352,10 @@ Canvas {
         var displayXMax = root.mirrorAcrossCenterline ?  Math.max(Math.abs(b.fXMin), Math.abs(b.fXMax)) / 2 : b.fXMax / 2
         if (fitDiameterMargin >= 0) {
             var edge = (profileDiameter + fitDiameterMargin) / 2
+            // the extra points - a tool at the start position - in as well,
+            // with a little room past them
+            for (var e = 0; e < (fitExtraPositions || []).length; e++)
+                edge = Math.max(edge, Math.abs(+fitExtraPositions[e].x || 0) / 2 + 2)
             displayXMin = root.mirrorAcrossCenterline ? -edge : 0
             displayXMax = edge
             marginX = 0

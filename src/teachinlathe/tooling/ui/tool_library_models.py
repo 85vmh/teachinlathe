@@ -82,6 +82,15 @@ class HolderRow:
     zOffset: str
 
 
+def card_and_view(tool, parent=None) -> tuple:
+    """(card kind, view) for a tool as the Tool Library's cards draw it -
+    a TurningToolView for a turning tool, say - ("", None) for none."""
+    if tool is None:
+        return "", None
+    card, view_class = _CARDS.get(tool.tool_type, ("summary", CuttingToolSummary))
+    return card, view_class(tool, parent)
+
+
 class MountedToolViews:
     """The views of the tools mounted in the holders, for a list that shows
     them. Its own - not the cutting-tool list's, which throws its away on

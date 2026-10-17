@@ -4,6 +4,7 @@
 // or leaves only the lower one.
 import QtQuick 2.15
 import common 1.0
+import theme 1.0
 import "../../programs/ui" as Programs
 
 Row {
@@ -13,7 +14,7 @@ Row {
     property bool showMirror: true       // false where there is no profile to mirror
 
     anchors { top: parent.top; left: parent.left; topMargin: 24; leftMargin: 24 }
-    spacing: 32
+    spacing: Theme.spacing
 
     Programs.BackplotIconButton {
         iconSource: Images.url("zoom-in.svg")
