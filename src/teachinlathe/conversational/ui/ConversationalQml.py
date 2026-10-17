@@ -342,6 +342,23 @@ class ConversationalQml(QObject):
             print("facingPreview failed:", e)
             return {"profile": [], "offset": [], "feeds": [], "rapids": [], "error": str(e)}
 
+    @pyqtSlot(int, result="QVariant")
+    def toolBefore(self, before_index):
+        """The tool the last Change Tool above ``before_index`` puts in, as
+        the backplot describes it (programs/ui/backplot/tool_source.py) with
+        its ``tool_no``, or {} with none."""
+        from teachinlathe.programs.ui.backplot import tool_source
+        prog = self._get_current_program()
+        if not prog:
+            return {}
+        operations = (getattr(prog, "operations", []) or [])[:max(before_index, 0)]
+        change = next((o for o in reversed(operations) if getattr(o, "type", "") == "changeTool"), None)
+        if change is None:
+            return {}
+        tool = dict(tool_source.describe(int(change.tool_no)) or {})
+        tool["tool_no"] = int(change.tool_no)
+        return tool
+
     @pyqtSlot(result="QVariant")
     def currentWorkpiece(self):
         """The current program header's workpiece, as its dict, or {}."""

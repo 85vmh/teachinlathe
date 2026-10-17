@@ -31,12 +31,15 @@ QtObject {
     // the profile alone
     readonly property bool breakAfterProfile: !!(workpiece && workpiece.break_after_profile)
                                               && !!renderSegs && renderSegs.length > 0
-    // Facing's: broken off after where the face ends up, Z End, in mm - set
-    // back by as far as the break bends in and then by twice the break's
-    // width, the faced-off stock in front of it not drawn - or null. The same
-    // rules as after a profile; only while mirrored
+    // Facing's and Drilling's: broken off after Z End, in mm - set back by
+    // as far as the break bends in and then by twice the break's width - or
+    // null. The same rules as after a profile; only while mirrored
     readonly property var breakAfterZ: workpiece && workpiece.break_after_z !== undefined
                                        && workpiece.break_after_z !== null ? Number(workpiece.break_after_z) : null
+    // Facing's: where the face ends up, in mm - the stock in front of it,
+    // faced off, not drawn - or null: the face where it is
+    readonly property var facedTo: workpiece && workpiece.faced_to !== undefined
+                                   && workpiece.faced_to !== null ? Number(workpiece.faced_to) : null
 
     // Where the profile ends, its smallest Z, in mm.
     function profileEndZ() {
@@ -153,12 +156,14 @@ QtObject {
                           lensFill: lensFillColor, lensHatch: lensHatchColor }
             if (zEndBreak !== null) {
                 // as after a profile: with the mirror off no stock; the
-                // stock from Z End back to the break - a tube's walls hatched
-                // light, a bar plain - and the faced-off stock in front of Z
-                // End, under the toolpath, not drawn: the background
+                // stock from its face back to the break - a tube's walls
+                // hatched light, a bar plain - and Facing's faced-off stock
+                // in front of Z End, under the toolpath, not drawn: the
+                // background
                 if (!mirrorAcrossCenterline) return
                 style.hatch = pastProfileHatchColor
-                Broken.paint(ctx, cx(Math.min(breakAfterZ, faceZ)), cx(zEndBreak), cy(0), R, r, style)
+                var face = facedTo !== null ? Math.min(facedTo, faceZ) : faceZ
+                Broken.paint(ctx, cx(face), cx(zEndBreak), cy(0), R, r, style)
                 return
             }
             if (breakZ !== null) {

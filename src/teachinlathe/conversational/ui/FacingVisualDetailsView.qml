@@ -127,6 +127,7 @@ Item {
                 var w = JSON.parse(JSON.stringify(root.workpiece || {}))
                 w.face_z = Math.max(0, root.zStart)
                 w.break_after_z = root.zEnd
+                w.faced_to = root.zEnd
                 return w
             }
             startPosition: ({ x: root.xStart, z: root.zStart })

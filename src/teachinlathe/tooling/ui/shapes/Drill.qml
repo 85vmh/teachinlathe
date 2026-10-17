@@ -1,4 +1,5 @@
 import QtQuick
+import "drill.js" as DrillShape
 
 /*
  * Drill.qml — burghiu elicoidal, parametric, văzut din lateral
@@ -23,6 +24,9 @@ import QtQuick
  * liniei): cele două margini ale fâșiei de lângă canal.
  *
  * Elice dreapta (RH) coboară de la stânga la dreapta "\", stânga (LH) urcă "/".
+ *
+ * Desenul e în drill.js, ca să-l poată desena la fel și canvasul unei
+ * operații (Drilling).
  */
 Item {
     id: root
@@ -81,77 +85,14 @@ Item {
         onPaint: {
             var ctx = getContext("2d")
             ctx.reset()
-            var k = root.pxPerMm, r = root.radius
-            var h = root.pointLength, fEnd = h + root.fluteLength, end = root.totalLength
-            if (r <= 0) return
-
-            ctx.save()
-            ctx.translate(root.tipPoint.x, root.tipPoint.y)
-            ctx.scale(k, k)                          // y în jos, ca pe ecran
-
-            function outline() {
-                ctx.beginPath()
-                ctx.moveTo(0, 0)
-                ctx.lineTo(h, -r)
-                ctx.lineTo(end, -r)
-                ctx.lineTo(end, r)
-                ctx.lineTo(h, r)
-                ctx.closePath()
-            }
-
-            outline()
-            ctx.fillStyle = root.bodyColor
-            ctx.fill()
-
-            // muchiile canalelor, tăiate la vârf + canale
-            ctx.save()
-            ctx.beginPath()
-            ctx.moveTo(0, 0)
-            ctx.lineTo(h, -r)
-            ctx.lineTo(fEnd, -r)
-            ctx.lineTo(fEnd, r)
-            ctx.lineTo(h, r)
-            ctx.closePath()
-            ctx.clip()
-            ctx.strokeStyle = root.edgeColor
-            ctx.lineWidth = root.helixLineWidth / k
-            var half = root.helixLead / 2, steps = 24
-            var sign = root.rightHand ? 1 : -1
-            // Perechea, la helixGapPx măsurați perpendicular pe linie: pe
-            // mijloc, unde linia face helixAngle cu axa, asta înseamnă
-            // gap / sin(unghi) de-a lungul axei.
-            var gap = root.helixGapPx / k
-                      / Math.sin(root.helixAngle * Math.PI / 180)  // mm, pe axă
-            function helixLine(x0) {
-                ctx.beginPath()
-                for (var i = 0; i <= steps; i++) {
-                    var t = i / steps
-                    var x = x0 + t * half
-                    var y = -sign * r * Math.cos(Math.PI * t)
-                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
-                }
-                ctx.stroke()
-            }
-            // de la o jumătate de pas înaintea vârfului, ca prima să intre
-            // în con, până după capătul canalelor
-            for (var x0 = fEnd - half * Math.ceil(fEnd / half + 1); x0 < fEnd; x0 += half) {
-                helixLine(x0)
-                helixLine(x0 + gap)
-            }
-            ctx.restore()
-
-            // capătul canalelor, unde începe coada
-            ctx.strokeStyle = root.edgeColor
-            ctx.lineWidth = 1 / k
-            ctx.beginPath()
-            ctx.moveTo(fEnd, -r); ctx.lineTo(fEnd, r)
-            ctx.stroke()
-
-            outline()
-            ctx.lineJoin = "round"
-            ctx.lineWidth = 1.5 / k
-            ctx.stroke()
-            ctx.restore()
+            DrillShape.paint(ctx, {
+                diameter: root.diameter, tipAngle: root.tipAngle, rightHand: root.rightHand,
+                helixAngle: root.helixAngle, helixLineWidth: root.helixLineWidth,
+                helixGapPx: root.helixGapPx, fluteLengthD: root.fluteLengthD,
+                shankLengthD: root.shankLengthD, length: root.length,
+                bodyColor: root.bodyColor, edgeColor: root.edgeColor,
+                pxPerMm: root.pxPerMm, tipX: root.tipPoint.x, tipY: root.tipPoint.y
+            })
         }
     }
 }

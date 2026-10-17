@@ -20,7 +20,8 @@ import "arrow.js" as Arrow
 //       a length: from Z ``from`` to Z ``to``, drawn ``offset`` px below
 //       diameter ``x`` - above it when ``offset`` is negative, as for the
 //       upper half's -D
-// arrowToRect is the box, in canvas px, or null for no leader.
+// arrowToRect is the box, in canvas px, or null for no leader; ``leaderAt``,
+// how far along from ``from`` the leader leaves, a fraction - 1/4 if not set.
 QtObject {
     property var  dimensions: []
     property var  cx: null
@@ -79,7 +80,8 @@ QtObject {
 
     function _paintLeader(ctx, d, a, b) {
         // a quarter of the way from the ``from`` end, and the short line from it
-        var start = { x: a.x + (b.x - a.x) / 4, y: a.y + (b.y - a.y) / 4 }
+        var at = d.leaderAt !== undefined ? d.leaderAt : 0.25
+        var start = { x: a.x + (b.x - a.x) * at, y: a.y + (b.y - a.y) * at }
         var stubEnd = d.axis === "x" ? { x: start.x + leaderStub, y: start.y }
                                      : { x: start.x, y: start.y + (d.offset < 0 ? -leaderStub : leaderStub) }
         ctx.save()

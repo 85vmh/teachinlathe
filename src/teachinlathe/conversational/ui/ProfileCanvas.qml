@@ -50,6 +50,19 @@ Canvas {
     // where it ends, likewise, in endPositionColor; null hides it
     property var    endPosition: null
     readonly property color endPositionColor: "#8e24aa"
+    // more targets, each with its arrow to a box: [{x: diameter, z, color,
+    // arrowToRect}], drawn by MarkersActor; fitted as the positions are
+    property var    markers: []
+    // the drill in the spindle, {diameter, tip_angle, right_hand, z}, its
+    // point at z on the centre line; null draws none
+    property var    drill: null
+    // where the drill's pecks end, in mm, each drawn as the drill's point,
+    // dotted in drillPeckColor
+    property var    drillPecks: []
+    // where the edges of what the pecks drill start: Z Start
+    property var    drillPecksFrom: null
+    property color  drillPeckColor: feedColor
+    onDrillPecksChanged: requestPaint()
     // what roughing will cut, {profile, offset, feeds, rapids}
     // as profileRoughingPreview returns it; null draws none of it
     property var    roughingPreview: null
@@ -219,6 +232,14 @@ Canvas {
         if (!_manualView) _scheduleFit()
         else              requestPaint()
     }
+    onMarkersChanged: {
+        if (!_manualView) _scheduleFit()
+        else              requestPaint()
+    }
+    onDrillChanged: {
+        if (!_manualView) _scheduleFit()
+        else              requestPaint()
+    }
     onEndPositionChanged: {
         if (!_manualView) _scheduleFit()
         else              requestPaint()
@@ -293,7 +314,13 @@ Canvas {
             b.fXMin = Math.min(b.fXMin, 0)
             b.fXMax = Math.max(b.fXMax, stockDiameter)
         }
-        var positions = [startPosition, endPosition]
+        var positions = [startPosition, endPosition].concat(markers || [])
+        // the drill, from its point to its far end
+        if (drill && Number(drill.diameter) > 0) {
+            var drillZ = Number(drill.z) || 0
+            positions.push({ x: Number(drill.diameter), z: drillZ })
+            positions.push({ x: Number(drill.diameter), z: drillZ + drillActor.length() })
+        }
         for (var p = 0; p < positions.length; p++) {
             if (!positions[p]) continue
             b.fZMax = Math.max(b.fZMax, +positions[p].z || 0)
@@ -362,8 +389,10 @@ Canvas {
         dimensionActor.paint(ctx)
         highlightActor.paint(ctx)
         diameterLeaderActor.paint(ctx)
+        drillActor.paint(ctx)
         startPositionActor.paint(ctx)
         endPositionActor.paint(ctx)
+        markersActor.paint(ctx)
         // the axes' arrows over everything, the arrows to the boxes too
         axesActor.paintArrows(ctx)
     }
@@ -469,6 +498,24 @@ Canvas {
         position: root.endPosition
         arrowToRect: root.endPositionArrowRect
         color: root.endPositionColor
+        cx: root._cx
+        cy: root._cy
+    }
+
+    MarkersActor {
+        id: markersActor
+        markers: root.markers
+        cx: root._cx
+        cy: root._cy
+    }
+
+    DrillActor {
+        id: drillActor
+        drill: root.drill
+        peckZs: root.drillPecks
+        peckFrom: root.drillPecksFrom
+        peckColor: root.drillPeckColor
+        scale: root._scale
         cx: root._cx
         cy: root._cy
     }

@@ -91,7 +91,7 @@ Item {
         } else if (data.type === "defineRadialProfile") {
             detailsLoader.source = "define_radial_profile/RadialProfileDetailsView.qml"
         } else if (data.type === "drilling") {
-            detailsLoader.source = "DrillingDetailsView.qml"
+            detailsLoader.source = "DrillingVisualDetailsView.qml"
         } else if (data.type === "threading") {
             detailsLoader.source = "ThreadingDetailsView.qml"
         } else if (data.type === "g33Threading") {
