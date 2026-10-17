@@ -100,6 +100,8 @@ Item {
         OperationHeader {
             id: header
             rpmOnly: true
+            // Pause to Inspect may also stay where the tool is
+            allowStayInPlace: true
             // only the way the tool in turns
             onlyClockwise: root.tool && root.tool.spindle_direction === 3 ? true
                          : root.tool && root.tool.spindle_direction === 4 ? false : null

@@ -189,13 +189,13 @@ Popup {
                 RowLayout {
                     spacing: 20
                     RadioButton {
-                        text: "Retract at <b>G28</b>"
+                        text: "Move to <b>G28</b>"
                         font.pixelSize: Theme.fontBody
                         checked: root.toolchangePosition === "G28"
                         onToggled: if (checked) root.toolchangePosition = "G28"
                     }
                     RadioButton {
-                        text: "Retract at <b>G30</b>"
+                        text: "Move to <b>G30</b>"
                         font.pixelSize: Theme.fontBody
                         checked: root.toolchangePosition === "G30"
                         onToggled: if (checked) root.toolchangePosition = "G30"

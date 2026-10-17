@@ -27,6 +27,7 @@ from teachinlathe.conversational.model.data_types import (
     MoveSequence,
     PositionAt,
     PositionDetails,
+    InspectPosition,
     PredefinedPosition,
     Parting,
     PartingParameters,
@@ -59,7 +60,7 @@ from teachinlathe.conversational.model.data_types import (
 
 def make_default_operation(op_type: str, order: int = 1):
     spindle_rpm = SpindleParameters(direction=-1, mode=SpindleMode.RPM, rpm_value=1000)
-    m1_default = M1Parameters(include_m1=False, inspect_position=PredefinedPosition.G28, stop_spindle=False)
+    m1_default = M1Parameters(include_m1=False, inspect_position=InspectPosition.G28, stop_spindle=False)
 
     if op_type == "changeTool":
         return ChangeTool(
@@ -135,7 +136,7 @@ def make_default_operation(op_type: str, order: int = 1):
             spindleParameters=spindle_rpm,
             cuttingParameters=KnurlingCuttingParameters(doc=0.5, retract=1.0, groovesCount=1),
             geometryParameters=KnurlingGeometryParameters(zStart=0.0, zEnd=0.0, xStart=0.0),
-            m1Parameters=M1Parameters(include_m1=True, inspect_position=PredefinedPosition.G28, stop_spindle=False),
+            m1Parameters=M1Parameters(include_m1=True, inspect_position=InspectPosition.G28, stop_spindle=False),
         )
     if op_type == "profiling":
         return Profiling(
@@ -158,7 +159,7 @@ def make_default_operation(op_type: str, order: int = 1):
                 pass_type=PassType.AXIAL,
             ),
             stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
-            m1Parameters=M1Parameters(include_m1=False, inspect_position=PredefinedPosition.G28, stop_spindle=False),
+            m1Parameters=M1Parameters(include_m1=False, inspect_position=InspectPosition.G28, stop_spindle=False),
         )
     if op_type == "profileContour":
         return ProfileContour(
@@ -185,7 +186,7 @@ def make_default_operation(op_type: str, order: int = 1):
             ),
             stockToLeave=StockToLeave(stockToLeaveX=0.5, stockToLeaveZ=0.2),
             stockToLeaveEnabled=False,
-            m1Parameters=M1Parameters(include_m1=False, inspect_position=PredefinedPosition.G28, stop_spindle=False),
+            m1Parameters=M1Parameters(include_m1=False, inspect_position=InspectPosition.G28, stop_spindle=False),
         )
     if op_type == "grooveFinishing":
         return GrooveFinishing(
@@ -213,7 +214,7 @@ def make_default_operation(op_type: str, order: int = 1):
             major_diameter=0.0, minor_diameter=0.0, z_start=0.0, z_end=0.0,
             initial_doc=0.3, retract=1.0, spring_passes=2, minimum_radial_increment=0.0,
             taper_type=0, compound_angle=29.0,
-            m1Parameters=M1Parameters(include_m1=False, inspect_position=PredefinedPosition.G28, stop_spindle=False),
+            m1Parameters=M1Parameters(include_m1=False, inspect_position=InspectPosition.G28, stop_spindle=False),
         )
     if op_type == "drilling":
         return Drilling(

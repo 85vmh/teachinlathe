@@ -9,6 +9,7 @@ O<drilling> sub
 #<rpm>               = #7
 #<feed>              = #8
 #<dwell>             = #9   (seconds at the bottom of each peck)
+#<spindle_dir>       = #10  (1 M3, -1 M4: how the spindle starts again after an inspection)
 
 (--- setup ---)
 G7   (Diameter mode)
@@ -56,7 +57,7 @@ O210 while [#<current_z> GT #<z_end>]
 
     (only before next peck and not after the last)
     O212 if [#<target_z> NE #<z_end>]
-      o<m1_handling> call [#<inspect_position>] [0] [#<retract>] [-1]
+      o<m1_handling> call [#<inspect_position>] [0] [#<retract>] [#<spindle_dir>]
     O212 endif
 
     (# advance to the depth just reached)

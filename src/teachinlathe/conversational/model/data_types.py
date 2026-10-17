@@ -47,6 +47,14 @@ class PredefinedPosition(str, Enum):
     G30 = "G30"
 
 
+class InspectPosition(str, Enum):
+    """Where Pause to Inspect stops: at the position stored in G28, at G30's,
+    or where the tool is (IN_PLACE - offered by Drilling and Tapping)."""
+    G28 = "G28"
+    G30 = "G30"
+    IN_PLACE = "IN_PLACE"
+
+
 class AfterLastOperation(str, Enum):
     DO_NOTHING = "do_nothing"
     G28 = "g28"
@@ -370,17 +378,17 @@ class PositionAt(Operation):
 @dataclass
 class M1Parameters:
     include_m1: bool
-    inspect_position: PredefinedPosition
+    inspect_position: InspectPosition
     stop_spindle: bool
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "M1Parameters":
         # backward compat: old JSON had x_inspect/z_inspect instead of inspect_position
-        inspect_raw = str(data.get("inspect_position", PredefinedPosition.G28.value))
+        inspect_raw = str(data.get("inspect_position", InspectPosition.G28.value)).upper()
         try:
-            inspect_position = PredefinedPosition(inspect_raw)
+            inspect_position = InspectPosition(inspect_raw)
         except ValueError:
-            inspect_position = PredefinedPosition.G28
+            inspect_position = InspectPosition.G28
         return M1Parameters(
             include_m1=bool(data.get("include_m1", True)),
             inspect_position=inspect_position,

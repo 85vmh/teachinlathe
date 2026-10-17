@@ -28,6 +28,8 @@ RowLayout {
     property alias pitch: speedsAndFeeds.pitch
     property alias starts: speedsAndFeeds.starts
     property bool hasM1: true
+    // Pause to Inspect's third choice, stay where the tool is
+    property alias allowStayInPlace: m1Panel.allowStayInPlace
     // the width each Pause to Inspect button gets
     readonly property real pauseOptionWidth: m1Panel.optionWidth
 

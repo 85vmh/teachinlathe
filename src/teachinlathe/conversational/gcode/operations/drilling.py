@@ -16,6 +16,9 @@ def generate_drilling_gcode(op: Drilling):
     # the drill starts, and every peck retracts, the clearance in front of
     # Z Start
     retract_z = drilling.zStart + abs(drilling.toolClearance)
+    # how the spindle turns - and starts again after Pause to Inspect: 1 M3,
+    # -1 M4
+    spindle_direction = 1 if spindle.direction == 1 else -1
 
     lines = list(build_spindle_gcode(spindle, line_prefix, force_rpm=True))
     lines.append(
@@ -28,6 +31,7 @@ def generate_drilling_gcode(op: Drilling):
         f"[{fmt(drilling.peckDepth)}] "
         f"[{0 if spindle.rpm_value is None else int(spindle.rpm_value)}] "
         f"[{drilling.feedRate}] "
-        f"[{fmt(max(0.0, drilling.dwellTime))}]"
+        f"[{fmt(max(0.0, drilling.dwellTime))}] "
+        f"[{spindle_direction}]"
     )
     return lines

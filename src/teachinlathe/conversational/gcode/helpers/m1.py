@@ -1,22 +1,25 @@
-from teachinlathe.conversational.model.data_types import M1Parameters, PredefinedPosition
+from teachinlathe.conversational.model.data_types import InspectPosition, M1Parameters
 
 
-def _inspect_position(value) -> PredefinedPosition:
+def _inspect_position(value) -> InspectPosition:
     if isinstance(value, M1Parameters):
-        return value.inspect_position
-    if not value:
-        return PredefinedPosition.G28
-    inspect_str = value.get("inspect_position", PredefinedPosition.G28.value)
+        raw = value.inspect_position
+    elif not value:
+        return InspectPosition.G28
+    else:
+        raw = value.get("inspect_position", InspectPosition.G28.value)
+    # its value: G28 / G30 as PredefinedPosition has them too
     try:
-        return PredefinedPosition(inspect_str)
+        return InspectPosition(str(getattr(raw, "value", raw)).upper())
     except ValueError:
-        return PredefinedPosition.G28
+        return InspectPosition.G28
 
 
 def inspect_position_int(m1_params) -> int:
-    """Return 0 for G28 or 1 for G30, for passing to LinuxCNC subroutines."""
+    """0 for G28, 1 for G30, 2 to stay where the tool is - what the LinuxCNC
+    subroutines (m1_handling.ngc) take."""
     pos = _inspect_position(m1_params)
-    return 0 if pos == PredefinedPosition.G28 else 1
+    return {InspectPosition.G28: 0, InspectPosition.G30: 1, InspectPosition.IN_PLACE: 2}[pos]
 
 
 def _code_comment(prefix, code, comment):
@@ -25,7 +28,8 @@ def _code_comment(prefix, code, comment):
 
 
 def emit_m1_block(m1_params, prefix: str) -> list:
-    """Build M1 pause-to-inspect G-code lines.
+    """Build M1 pause-to-inspect G-code lines: to G28 or G30 first, or an M1
+    where the tool is.
 
     Returns an empty list when include_m1 is falsy.
     """
@@ -44,7 +48,8 @@ def emit_m1_block(m1_params, prefix: str) -> list:
     lines = []
     if stop_spindle:
         lines.append(_code_comment(prefix, "M5", "stop the spindle"))
-    lines.append(f"{prefix}{pos.value}")
+    if pos is not InspectPosition.IN_PLACE:
+        lines.append(f"{prefix}{pos.value}")
     lines.append(f"{prefix}M1")
     lines.append("")
     return lines

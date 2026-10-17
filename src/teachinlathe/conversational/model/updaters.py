@@ -5,6 +5,7 @@ from teachinlathe.conversational.model.data_types import (
     GrooveRoughingStrategy,
     MoveSequence,
     PassType,
+    InspectPosition,
     PredefinedPosition,
     ProfilePrimitive,
     ProfilingType,
@@ -67,7 +68,7 @@ def apply_m1_update(m1, payload):
     _set_attr_if_present(m1, payload, "include_m1", coerce=bool)
     if "inspect_position" in payload and payload["inspect_position"] is not None:
         try:
-            m1.inspect_position = _coerce_enum(payload["inspect_position"], PredefinedPosition, lambda v: str(v).upper())
+            m1.inspect_position = _coerce_enum(payload["inspect_position"], InspectPosition, lambda v: str(v).upper())
         except Exception:
             pass
     _set_attr_if_present(m1, payload, "stop_spindle", coerce=bool)

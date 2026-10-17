@@ -1,6 +1,6 @@
 O<m1_handling> sub
 
-#<inspect_position>	= #1
+#<inspect_position>	= #1	(0 G28, 1 G30, 2 stay where the tool is)
 #<x_return>        	= #2
 #<z_return>        	= #3
 #<spindle_dir>	   	= #4	
@@ -15,7 +15,7 @@ O900 if [#5399 EQ 1]
 	M5
 	O899 if [#<inspect_position> EQ 0]
 		G28
-	O899 else
+	O899 elseif [#<inspect_position> EQ 1]
 		G30
 	O899 endif
 	#<resume_from_m1> = 1

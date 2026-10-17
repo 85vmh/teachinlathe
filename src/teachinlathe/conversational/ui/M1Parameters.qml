@@ -18,6 +18,9 @@ GroupBox {
     property bool   include_m1: true
     property string inspect_position: "G28"
     property bool   stop_spindle: false
+    // offer a third place to stop: where the tool is (IN_PLACE) - Drilling's
+    // and Tapping's
+    property bool   allowStayInPlace: false
 
     signal saveRequested(var payload)
 
@@ -81,10 +84,21 @@ GroupBox {
             opacity: includeBox.checked ? 1.0 : 0.5
 
             RadioButton {
+                id: rbInPlace
+                visible: root.allowStayInPlace
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                text: "Stay there"
+                font.pixelSize: Theme.fontBody
+                checked: root.inspect_position === "IN_PLACE"
+                onToggled: if (checked) { root.inspect_position = "IN_PLACE"; root.emitSave() }
+            }
+
+            RadioButton {
                 id: rbG28
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
-                text: "Retract at <b>G28</b>"
+                text: "Move to <b>G28</b>"
                 font.pixelSize: Theme.fontBody
                 checked: root.inspect_position === "G28"
                 onToggled: if (checked) { root.inspect_position = "G28"; root.emitSave() }
@@ -94,7 +108,7 @@ GroupBox {
                 id: rbG30
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
-                text: "Retract at <b>G30</b>"
+                text: "Move to <b>G30</b>"
                 font.pixelSize: Theme.fontBody
                 checked: root.inspect_position === "G30"
                 onToggled: if (checked) { root.inspect_position = "G30"; root.emitSave() }

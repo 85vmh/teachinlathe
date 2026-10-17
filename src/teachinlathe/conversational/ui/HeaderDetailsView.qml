@@ -196,9 +196,9 @@ Item {
 
                     Repeater {
                         model: [
-                            { value: "do_nothing", label: "Do nothing" },
-                            { value: "g28",        label: "Retract at <b>G28</b>" },
-                            { value: "g30",        label: "Retract at <b>G30</b>" }
+                            { value: "do_nothing", label: "Stay there" },
+                            { value: "g28",        label: "Move to <b>G28</b>" },
+                            { value: "g30",        label: "Move to <b>G30</b>" }
                         ]
                         // a stretch, then the button; the first without it
                         RowLayout {
