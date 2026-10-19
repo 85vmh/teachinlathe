@@ -187,7 +187,14 @@ ToolLibraryPane {
             readonly property real cardsY: cards.y
 
             function cardAt(position) { return cardRepeater.itemAt(position) }
-            function layoutCards() { list.forceLayout(); cards.forceLayout() }
+            // Inside out: the cards, then this column round them, then the
+            // list - else a category just unfolded still has its folded
+            // height, and the list its old length, until the next frame
+            function layoutCards() {
+                cards.forceLayout()
+                category.forceLayout()
+                list.forceLayout()
+            }
 
             // ── Category header ─────────────────────────────────────────
             Rectangle {
