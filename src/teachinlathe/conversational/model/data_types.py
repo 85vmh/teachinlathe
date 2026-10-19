@@ -143,10 +143,12 @@ class Header:
     name: str
     created_date: str
     last_edit: str
-    datum: int
+    datum: int  # the work offset's P number, 1 (G54) .. 6 (G59); saved as "G54".."G59"
     units: str
     workpiece: Workpiece
     after_last_operation: AfterLastOperation = AfterLastOperation.DO_NOTHING
+    # order of the operation open when G-code was last generated; 0 = header
+    last_operation: int = 0
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Header":
@@ -158,24 +160,44 @@ class Header:
                 str(data.get("after_last_operation", AfterLastOperation.DO_NOTHING.value)).lower())
         except ValueError:
             after_last = AfterLastOperation.DO_NOTHING
+        try:
+            last_operation = int(data.get("last_operation", 0) or 0)
+        except (TypeError, ValueError):
+            last_operation = 0
         return Header(
             name=data["name"],
             created_date=str(created_date),
             last_edit=data["last_edit"],
-            datum=data["datum"],
+            datum=Header.datum_from_value(data["datum"]),
             units=data["units"],
             workpiece=Workpiece.from_dict(data["workpiece"]),
-            after_last_operation=after_last
+            after_last_operation=after_last,
+            last_operation=last_operation
         )
+
+    @staticmethod
+    def datum_from_value(value: Any) -> int:
+        """P number from "G54".."G59", or from the bare 1..6 older programs saved."""
+        try:
+            text = str(value).strip().upper()
+            number = int(text[1:]) - 53 if text.startswith("G") else int(text)
+        except (TypeError, ValueError):
+            return 1
+        return number if 1 <= number <= 6 else 1
+
+    @property
+    def datum_code(self) -> str:
+        return f"G{53 + int(self.datum)}"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
             "created_date": self.created_date,
             "last_edit": self.last_edit,
-            "datum": self.datum,
+            "datum": self.datum_code,
             "units": self.units,
             "after_last_operation": self.after_last_operation.value,
+            "last_operation": self.last_operation,
             "workpiece": self.workpiece.to_dict()
         }
 

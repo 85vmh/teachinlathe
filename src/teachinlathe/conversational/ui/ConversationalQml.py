@@ -12,6 +12,7 @@ LOG = logging.getLogger(__name__)
 
 from teachinlathe.conversational.model.data_types import (
     AfterLastOperation,
+    Header,
     Program,
     Workpiece,
     operation_types,
@@ -628,6 +629,7 @@ class ConversationalQml(QObject):
         if not prog:
             print("[gcode] No current program selected.")
             return
+        self._remember_last_operation(prog)
         try:
             if getattr(self, "root", None):
                 QMetaObject.invokeMethod(self.root, "showBuildGcodeProgress")
@@ -662,6 +664,28 @@ class ConversationalQml(QObject):
                     mw.showGeneratedProgram(path)
             except Exception as e:
                 print("[gcode] showGeneratedProgram failed:", e)
+
+    def _remember_last_operation(self, prog):
+        """Stores the order of the open operation (0 for the header) so the
+        program reopens there. Not an edit, so last_edit is left alone."""
+        op = self._get_current_op(getattr(self, "current_op_index", -1))
+        last_operation = int(getattr(op, "order", 0) or 0) if op is not None else 0
+        if prog.header.last_operation == last_operation:
+            return
+        prog.header.last_operation = last_operation
+        try:
+            save_program_to_disk(prog, self.folder_path)
+        except Exception as e:
+            print("[gcode] Failed to save last operation:", e)
+
+    def _restore_last_operation(self, prog):
+        """Index of the operation whose order the header remembers, or -1 (header)."""
+        last_operation = getattr(getattr(prog, "header", None), "last_operation", 0)
+        if last_operation:
+            for i, op in enumerate(getattr(prog, "operations", []) or []):
+                if getattr(op, "order", None) == last_operation:
+                    return i
+        return -1
 
     def generate_gcode_for_program(self, program):
         from teachinlathe.conversational.gcode import build_ngc_from_program
@@ -948,7 +972,7 @@ class ConversationalQml(QObject):
 
         self.current_program = program
         self.current_program_index = row_index
-        self.current_op_index = -1
+        self.current_op_index = self._restore_last_operation(program)
         self._set_facing_mirror(True)
 
         selected_program = build_selected_program_summary(program)
@@ -965,6 +989,7 @@ class ConversationalQml(QObject):
             "showBack": True,
             "selectedProgram": selected_program,
             "operationsModel": operations_model,
+            "activeOpIndex": self.current_op_index,
         }
         print("openChildScreen for:", selected_program["name"], "ops:", len(operations_model))
         if replace_current and hasattr(self.root, "replaceScreen"):
@@ -1030,7 +1055,7 @@ class ConversationalQml(QObject):
                 header.units = str(hdr["units"])
             if "datum" in hdr:
                 try:
-                    header.datum = int(hdr["datum"])
+                    header.datum = Header.datum_from_value(hdr["datum"])
                 except Exception:
                     pass
             if "last_edit" in hdr and hdr["last_edit"] is not None:
