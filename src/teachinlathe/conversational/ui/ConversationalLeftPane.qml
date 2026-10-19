@@ -120,7 +120,10 @@ Rectangle {
             Qt.callLater(function() {
                 if (opsList.count <= 0)
                     return
-                opsList.positionViewAtIndex(opsList.count - 1, ListView.End)
+                opsList.positionViewAtEnd()
+                // once more, with the last rows now built: the first pass went by
+                // contentHeight's estimate, which the shorter header rows throw off
+                Qt.callLater(function() { opsList.positionViewAtEnd() })
             })
         })
     }
@@ -310,40 +313,24 @@ Rectangle {
                         }
                     }
 
-                    Rectangle {
-                        anchors { left: parent.left; right: parent.right; top: parent.top }
-                        height: Theme.buttonHeight
-                        visible: opsList.contentY > 0
-                        z: 1
-                        gradient: Gradient {
-                            orientation: Gradient.Vertical
-                            GradientStop { position: 0.0; color: Theme.surfaceAlt }
-                            GradientStop { position: 1.0; color: "transparent" }
-                        }
-                    }
-
-                    Rectangle {
-                        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                        height: Theme.buttonHeight
-                        visible: opsList.contentY + opsList.height < opsList.contentHeight - 1
-                        z: 1
-                        gradient: Gradient {
-                            orientation: Gradient.Vertical
-                            GradientStop { position: 0.0; color: "transparent" }
-                            GradientStop { position: 1.0; color: Theme.surfaceAlt }
-                        }
+                    ScrollFades {
+                        anchors.fill: parent
+                        flickable: opsList
+                        fadeHeight: Theme.buttonHeight
+                        color: Theme.surfaceAlt
                     }
                 }
 
+                // between the list and the Add New Operation bar
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: Theme.hairline
-                    color: Theme.surfaceAlt
+                    color: Theme.outline
                 }
 
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 80
+                    Layout.preferredHeight: 70
 
                     OperationIconTextButton {
                         anchors.centerIn: parent

@@ -212,6 +212,7 @@ class TeachInLatheApp(QObject):
         # The backplot draws the tool in the spindle as the library has it.
         backplot_tool_source.set_store(self.toolLibraryStore)
         self.toolsTabViewModel = ToolsTabViewModel(self.toolLibraryStore, self)
+        self.toolsTabViewModel.toastRequested.connect(self._show_app_toast)
         self.manualToolsViewModel = ManualToolsViewModel(
             self.toolLibraryStore, status_repository(), issue_mdi, self)
         self.numpadDialogViewModel = NumpadDialogViewModel(self)

@@ -18,6 +18,7 @@ Item {
     readonly property int selectingHolderId: viewModel ? viewModel.selectingHolderId : 0
 
     ToolHoldersPane {
+        id: toolHolders
         x: 0
         width: root.paneWidth
         height: root.height
@@ -27,6 +28,10 @@ Item {
         onUnmountRequested: function(holderId) { root.viewModel.unmountTool(holderId) }
         onToolRevealRequested: function(toolId) { cuttingTools.revealTool(toolId) }
         onAddRequested: if (root.viewModel) root.viewModel.addToolHolder()
+        onDeleteRequested: function(holderId) {
+            if (root.viewModel) root.viewModel.deleteToolHolder(holderId)
+        }
+        swipeEnabled: root.selectingHolderId === 0
     }
 
     // While a holder waits for a tool: a tap anywhere but the cutting-tool
@@ -45,11 +50,26 @@ Item {
         width: root.paneWidth
         height: root.height
         model: root.viewModel ? root.viewModel.cuttingToolsModel : null
+        swipeEnabled: root.selectingHolderId === 0
         onAddRequested: function(toolType) {
             if (root.viewModel) root.viewModel.addCuttingTool(toolType)
         }
         onToolTapped: function(toolId) {
             if (root.viewModel) root.viewModel.cuttingToolTapped(toolId)
+        }
+        // A mounted tool is not deleted: the view model says so in a toast
+        onDeleteRequested: function(toolId) {
+            if (root.viewModel) root.viewModel.deleteCuttingTool(toolId)
+        }
+    }
+
+    // One open at a time across both panes: while one is, a press anywhere
+    // else closes it before it can open another.
+    SwipeDismissArea {
+        openRow: toolHolders.openSwipeRow || cuttingTools.openSwipeRow
+        onDismissed: {
+            toolHolders.openSwipeRow = null
+            cuttingTools.openSwipeRow = null
         }
     }
 

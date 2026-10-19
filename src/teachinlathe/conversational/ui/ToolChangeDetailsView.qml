@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import "."
 import "../../tooling/ui"
 import theme 1.0
+import common 1.0
 
 Item {
     id: root
@@ -167,29 +168,11 @@ Item {
                 }
             }
 
-            // Fades at the list's ends, as the other lists have them.
-            Rectangle {
-                anchors { left: parent.left; right: parent.right; top: parent.top }
-                height: 80
-                visible: !toolsGrid.atYBeginning
-                z: 1
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop { position: 0.0; color: Theme.surface }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
-            }
-
-            Rectangle {
-                anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                height: 80
-                visible: !toolsGrid.atYEnd
-                z: 1
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: Theme.surface }
-                }
+            ScrollFades {
+                anchors.fill: parent
+                flickable: toolsGrid
+                fadeHeight: 80
+                color: Theme.surface
             }
 
             Label {

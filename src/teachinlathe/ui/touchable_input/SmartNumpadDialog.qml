@@ -13,6 +13,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
+import common 1.0
 
 Popup {
     id: root
@@ -203,30 +204,10 @@ Popup {
                 }
             }
 
-            // Top fade — appears when scrolled down
-            Rectangle {
-                anchors { left: parent.left; right: parent.right; top: parent.top }
-                height: Theme.buttonHeight
-                visible: optionsFlick.contentY > 0
-                z: 1
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop { position: 0.0; color: Theme.surfaceSunken }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
-            }
-
-            // Bottom fade — appears when more values extend below the viewport
-            Rectangle {
-                anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                height: Theme.buttonHeight
-                visible: optionsFlick.contentY + optionsFlick.height < optionsFlick.contentHeight - 1
-                z: 1
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 1.0; color: Theme.surfaceSunken }
-                }
+            ScrollFades {
+                anchors.fill: parent
+                flickable: optionsFlick
+                fadeHeight: Theme.buttonHeight
             }
         }
 

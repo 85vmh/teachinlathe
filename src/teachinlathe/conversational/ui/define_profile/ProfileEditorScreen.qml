@@ -471,28 +471,11 @@ Item {
                         }
                     }
 
-                    // Top fade
-                    Rectangle {
-                        anchors { left: parent.left; right: parent.right; top: parent.top }
-                        height: Theme.buttonHeight; z: 1
-                        visible: primScroll.contentItem.contentY > 0
-                        gradient: Gradient {
-                            orientation: Gradient.Vertical
-                            GradientStop { position: 0.0; color: Theme.surface }
-                            GradientStop { position: 1.0; color: "transparent" }
-                        }
-                    }
-
-                    // Bottom fade
-                    Rectangle {
-                        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                        height: Theme.buttonHeight; z: 1
-                        visible: primScroll.contentItem.contentY + primScroll.height < primScroll.contentHeight - 1
-                        gradient: Gradient {
-                            orientation: Gradient.Vertical
-                            GradientStop { position: 0.0; color: "transparent" }
-                            GradientStop { position: 1.0; color: Theme.surface }
-                        }
+                    ScrollFades {
+                        anchors.fill: parent
+                        flickable: primScroll.contentItem
+                        fadeHeight: Theme.buttonHeight
+                        color: Theme.surface
                     }
 
                     } // Item wrapper for scroll + fades

@@ -3,13 +3,15 @@ import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
 import theme 1.0
 import common 1.0
+import "../../conversational/ui"
 
 // The cutting tools, grouped by type. Each group's header folds the group
 // and has a "+" for adding a tool of that type; under it the group's tools
 // are cards, two to a row, filling left to right and then down. Tapping a
 // card opens the tool (or, while a holder waits for one, mounts it). The
 // title bar's buttons unfold or fold every group. A tool mounted in a
-// holder has its card outlined in blue.
+// holder has its card outlined in blue. A card swiped left shows Delete
+// (see SwipeRow).
 ToolLibraryPane {
     id: root
 
@@ -17,6 +19,12 @@ ToolLibraryPane {
 
     signal addRequested(string toolType)
     signal toolTapped(int toolId)
+    signal deleteRequested(int toolId)
+
+    //: Off while a holder waits for a tool, when a tap mounts it.
+    property bool swipeEnabled: true
+    //: The card swiped open to its Delete, or null.
+    property var openSwipeRow: null
 
     //: How far the cards are set in from their category's header.
     readonly property int toolIndent: Theme.margin
@@ -113,8 +121,8 @@ ToolLibraryPane {
         }
     ]
 
-    // A button the size and look of a category's "+", with an icon in place
-    // of the glyph, flooded with the same muted grey. Faded, and deaf to
+    // A button the size of a category's "+", outlined, with an icon flooded
+    // muted grey. Faded, and deaf to
     // taps, while there is nothing for it to do.
     component HeaderButton: Rectangle {
         id: button
@@ -166,6 +174,7 @@ ToolLibraryPane {
         model: root.model
         boundsBehavior: Flickable.StopAtBounds
         ScrollBar.vertical: ScrollBar {}
+        onMovementStarted: root.openSwipeRow = null
 
         delegate: Column {
             id: category
@@ -228,14 +237,14 @@ ToolLibraryPane {
                     width: Theme.buttonHeight
                     height: Theme.buttonHeight
                     radius: Theme.radius
-                    color: addArea.pressed ? Theme.accentSoft : "transparent"
+                    color: addArea.pressed ? Theme.primaryPressed : Theme.primary
                     border.width: Theme.hairline
-                    border.color: addArea.pressed ? Theme.accentBorder : Theme.outlineStrong
+                    border.color: addArea.pressed ? Theme.primaryPressed : Theme.primary
 
                     Text {
                         anchors.centerIn: parent
                         text: "+"
-                        color: Theme.foregroundMuted
+                        color: Theme.foregroundOnAccent
                         font.pixelSize: Theme.fontTitle
                         font.bold: true
                     }
@@ -269,10 +278,23 @@ ToolLibraryPane {
                     id: cardRepeater
                     model: cards.shown ? category.tools : []
 
-                    delegate: Item {
+                    delegate: SwipeRow {
+                        id: swipeRow
                         readonly property var toolView: modelData
                         width: cards.cardWidth
                         height: card.height
+
+                        duplicateEnabled: false
+                        actionGap: 4
+                        actionRadius: Theme.radius      // as the card's own corners
+                        swipeEnabled: root.swipeEnabled
+                        swipeSide: root.openSwipeRow === swipeRow ? 1 : 0
+                        onSwipeOpened: root.openSwipeRow = swipeRow
+                        onSwipeClosed: if (root.openSwipeRow === swipeRow) root.openSwipeRow = null
+                        onDeleteRequested: {
+                            root.openSwipeRow = null
+                            root.deleteRequested(toolView.cuttingToolId)
+                        }
 
                         Loader {
                             id: card
@@ -311,30 +333,9 @@ ToolLibraryPane {
         }
     }
 
-    // Fades at the list's ends, as the program list has them: shown while
-    // there is more to scroll to that way.
-    Rectangle {
-        anchors { left: list.left; right: list.right; top: list.top }
-        height: 100
-        visible: !list.atYBeginning
-        z: 1
-        gradient: Gradient {
-            orientation: Gradient.Vertical
-            GradientStop { position: 0.0; color: Theme.surfaceSunken }
-            GradientStop { position: 1.0; color: "transparent" }
-        }
-    }
-
-    Rectangle {
-        anchors { left: list.left; right: list.right; bottom: list.bottom }
-        height: 100
-        visible: !list.atYEnd
-        z: 1
-        gradient: Gradient {
-            orientation: Gradient.Vertical
-            GradientStop { position: 0.0; color: "transparent" }
-            GradientStop { position: 1.0; color: Theme.surfaceSunken }
-        }
+    ScrollFades {
+        anchors.fill: list
+        flickable: list
     }
 
     Component {

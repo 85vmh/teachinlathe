@@ -450,30 +450,9 @@ Item {
                     }
                 }
 
-                // Top fade
-                Rectangle {
-                    anchors { left: parent.left; right: parent.right; top: parent.top }
-                    height: 100
-                    visible: list.contentY > 0
-                    z: 1
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: Theme.surfaceSunken }
-                        GradientStop { position: 1.0; color: "transparent" }
-                    }
-                }
-
-                // Bottom fade
-                Rectangle {
-                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                    height: 100
-                    visible: list.contentY + list.height < list.contentHeight - 1
-                    z: 1
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 1.0; color: Theme.surfaceSunken }
-                    }
+                ScrollFades {
+                    anchors.fill: parent
+                    flickable: list
                 }
 
                 }  // Item wrapper

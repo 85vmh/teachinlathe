@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import theme 1.0
+import common 1.0
 
 // The Manual Turning screen's tools: the tool holders as LinuxCNC numbers
 // them, one to a row - all, or with the title bar's recent toggle on only
@@ -48,29 +49,9 @@ Rectangle {
         }
     }
 
-    // Fades at the list's ends, as the other lists have them - inside the
-    // border.
-    Rectangle {
-        anchors { left: list.left; right: list.right; top: list.top }
-        height: 80
-        visible: !list.atYBeginning
-        z: 1
-        gradient: Gradient {
-            orientation: Gradient.Vertical
-            GradientStop { position: 0.0; color: Theme.surfaceSunken }
-            GradientStop { position: 1.0; color: "transparent" }
-        }
-    }
-
-    Rectangle {
-        anchors { left: list.left; right: list.right; bottom: list.bottom }
-        height: 80
-        visible: !list.atYEnd
-        z: 1
-        gradient: Gradient {
-            orientation: Gradient.Vertical
-            GradientStop { position: 0.0; color: "transparent" }
-            GradientStop { position: 1.0; color: Theme.surfaceSunken }
-        }
+    ScrollFades {
+        anchors.fill: list
+        flickable: list
+        fadeHeight: 80
     }
 }

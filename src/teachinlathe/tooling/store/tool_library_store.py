@@ -98,6 +98,14 @@ class ToolLibraryStore:
         self.save_holders()
         return holder
 
+    def delete_holder(self, tool_holder_id: int) -> None:
+        """Remove an empty holder; one with a tool in it is not removed."""
+        holder = self._holder(tool_holder_id)
+        if holder.cutting_tool_id is not None:
+            raise ValueError(f"tool holder {tool_holder_id} has a tool mounted")
+        self.holders.remove(holder)
+        self.save_holders()
+
     def set_z_offset_place(self, tool_holder_id: int, place: Optional[ZOffsetPlace]) -> None:
         """Which point of the blade in the holder its Z offset is taken from."""
         self._holder(tool_holder_id).z_offset_place = place
@@ -140,6 +148,17 @@ class ToolLibraryStore:
                 break
         else:
             self.cutting_tools.append(tool)
+        self.save_cutting_tools()
+
+    def delete_cutting_tool(self, cutting_tool_id: int) -> None:
+        """Remove a cutting tool. One mounted in a holder is not removed:
+        the holder would be left naming a tool that is gone."""
+        if self.holder_of(cutting_tool_id) is not None:
+            raise ValueError(f"cutting tool {cutting_tool_id} is mounted")
+        tool = self.find_tool(cutting_tool_id)
+        if tool is None:
+            raise KeyError(f"no cutting tool {cutting_tool_id}")
+        self.cutting_tools.remove(tool)
         self.save_cutting_tools()
 
     def _invalidate_offsets(self, cutting_tool_id: int) -> None:

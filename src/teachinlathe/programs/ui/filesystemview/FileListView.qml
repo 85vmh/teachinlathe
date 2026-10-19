@@ -294,30 +294,10 @@ Item {
             }
         }
 
-        // Top fade — appears when content is scrolled above the viewport
-        Rectangle {
-            anchors { left: parent.left; right: parent.right; top: parent.top }
-            height: root.rowHeight
-            visible: fileList.contentY > 0
-            z: 1
-            gradient: Gradient {
-                orientation: Gradient.Vertical
-                GradientStop { position: 0.0; color: Theme.surfaceSunken }
-                GradientStop { position: 1.0; color: "transparent" }
-            }
-        }
-
-        // Bottom fade — appears when content extends below the viewport
-        Rectangle {
-            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-            height: root.rowHeight
-            visible: fileList.contentY + fileList.height < fileList.contentHeight - 1
-            z: 1
-            gradient: Gradient {
-                orientation: Gradient.Vertical
-                GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: 1.0; color: Theme.surfaceSunken }
-            }
+        ScrollFades {
+            anchors.fill: parent
+            flickable: fileList
+            fadeHeight: root.rowHeight
         }
 
         }  // Item wrapper

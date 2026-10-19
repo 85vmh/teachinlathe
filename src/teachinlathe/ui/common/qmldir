@@ -1,3 +1,4 @@
 singleton Images 1.0 Images.qml
 RapidOverrideSelector 1.0 RapidOverrideSelector.qml
 TeachInButton 1.0 TeachInButton.qml
+ScrollFades 1.0 ScrollFades.qml

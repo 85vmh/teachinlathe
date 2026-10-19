@@ -21,13 +21,26 @@ Item {
     property color contentColor: "transparent"
     property int contentBorderWidth: 0
     property color contentBorderColor: "transparent"
+    property real contentRadius: 0
 
     property int swipeSide: 0
     property bool swipeEnabled: true
     property bool deleteEnabled: true       // a list may offer only one of them
     property bool duplicateEnabled: true
     property int actionWidth: 100
+    property int actionGap: 0             // between the slid content and the button
+    property real actionRadius: 0
+    // How far the content slides to show a button whole
+    readonly property int revealWidth: actionWidth + actionGap
     property real swipeOffset: 0          // > 0 shows Delete, < 0 Duplicate
+    // Another SwipeRow this one's drags move in its place - one inside it,
+    // say - or null for itself
+    property var swipeTarget: null
+
+    // A drag in progress: where it started, and the side it keeps to
+    property bool _dragging: false
+    property real _dragStart: 0
+    property int _dragSide: 0
 
     signal deleteRequested()
     signal duplicateRequested()
@@ -41,19 +54,40 @@ Item {
     }
 
     function _settleSwipe() {
-        var side = swipeOffset > actionWidth / 2 ? 1
-                 : (swipeOffset < -actionWidth / 2 ? -1 : 0)
-        swipeOffset = side * actionWidth
+        var side = swipeOffset > revealWidth / 2 ? 1
+                 : (swipeOffset < -revealWidth / 2 ? -1 : 0)
+        swipeOffset = side * revealWidth
         if (side !== 0)
             swipeOpened(side)
         else
             swipeClosed()
     }
 
-    onSwipeSideChanged: swipeOffset = swipeSide * actionWidth
+    onSwipeSideChanged: swipeOffset = swipeSide * revealWidth
+
+    // Called on whichever row the drag moves: this one, or the one whose
+    // swipeTarget it is
+    function _beginDrag() {
+        _dragging = true
+        _dragStart = swipeOffset
+        _dragSide = Math.sign(_dragStart)
+    }
+
+    function _moveDrag(dx) {
+        var offset = Math.max(duplicateEnabled ? -revealWidth : 0,
+                              Math.min(deleteEnabled ? revealWidth : 0, _dragStart - dx))
+        if (_dragSide === 0)
+            _dragSide = Math.sign(offset)
+        swipeOffset = _dragSide > 0 ? Math.max(0, offset) : Math.min(0, offset)
+    }
+
+    function _endDrag() {
+        _dragging = false
+        _settleSwipe()
+    }
 
     Behavior on swipeOffset {
-        enabled: !swipeDrag.active
+        enabled: !root._dragging
         NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
     }
 
@@ -71,6 +105,7 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: root.actionWidth
+        radius: root.actionRadius
         color: actionArea.pressed ? pressedColor : baseColor
 
         Column {
@@ -145,6 +180,7 @@ Item {
         color: root.contentColor
         border.width: root.contentBorderWidth
         border.color: root.contentBorderColor
+        radius: root.contentRadius
     }
 
     DragHandler {
@@ -153,25 +189,17 @@ Item {
         // on even with neither button, so a sideways drag is never taken for a tap
         enabled: root.swipeEnabled
         yAxis.enabled: false
-        property real startOffset: 0
-        property int side: 0
+        // the row moved, kept for the whole drag
+        property var moving: null
         onActiveChanged: {
             if (active) {
-                startOffset = root.swipeOffset
-                side = Math.sign(startOffset)
-            } else {
-                root._settleSwipe()
+                moving = root.swipeTarget || root
+                moving._beginDrag()
+            } else if (moving) {
+                moving._endDrag()
+                moving = null
             }
         }
-        onTranslationChanged: {
-            if (!active)
-                return
-            var offset = Math.max(root.duplicateEnabled ? -root.actionWidth : 0,
-                                  Math.min(root.deleteEnabled ? root.actionWidth : 0,
-                                           startOffset - translation.x))
-            if (side === 0)
-                side = Math.sign(offset)
-            root.swipeOffset = side > 0 ? Math.max(0, offset) : Math.min(0, offset)
-        }
+        onTranslationChanged: if (active && moving) moving._moveDrag(translation.x)
     }
 }

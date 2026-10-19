@@ -70,6 +70,8 @@ class ToolsTabViewModel(QObject):
     #: The tool picked to mount is in another holder: (tool, its holder, the
     #: holder it is for). The screen asks, and calls mountTool if told to.
     mountMoveRequested = pyqtSignal(int, int, int)
+    #: A message for the app's toast.
+    toastRequested = pyqtSignal(str)
 
     def __init__(self, store: ToolLibraryStore, parent=None):
         super().__init__(parent)
@@ -138,6 +140,26 @@ class ToolsTabViewModel(QObject):
     @pyqtSlot(int)
     def unmountTool(self, tool_holder_id: int) -> None:
         self._store.mount(tool_holder_id, None)
+        self.refresh()
+
+    @pyqtSlot(int)
+    def deleteCuttingTool(self, cutting_tool_id: int) -> None:
+        """Delete a tool, unless it is mounted in a holder."""
+        if self._store.holder_of(cutting_tool_id) is not None:
+            self.toastRequested.emit("Unmount the tool from the holder before deleting")
+            return
+        self._store.delete_cutting_tool(cutting_tool_id)
+        self.refresh()
+
+    @pyqtSlot(int)
+    def deleteToolHolder(self, tool_holder_id: int) -> None:
+        """Delete an empty holder. The screen offers it only for one: a
+        holder with a tool swipes to unmount the tool first."""
+        try:
+            self._store.delete_holder(tool_holder_id)
+        except ValueError:
+            self.toastRequested.emit("Unmount the tool from the holder before deleting")
+            return
         self.refresh()
 
     @pyqtSlot()
