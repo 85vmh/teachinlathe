@@ -171,6 +171,39 @@ QtObject {
                 if (!mirrorAcrossCenterline) return
                 style.hatch = pastProfileHatchColor
                 var face = facedTo !== null ? Math.min(facedTo, faceZ) : faceZ
+                // G33's thread: from Z Start to Z End only what is inside its
+                // profile is stock - the grooves cut out, the profile its
+                // outline there
+                var thread = workpiece && workpiece.thread ? workpiece.thread : null
+                if (thread && thread.lower && thread.upper && thread.lower.length > 0
+                        && thread.lower.length === thread.upper.length) {
+                    var tFrom = Math.max(Number(thread.from), Number(thread.to))
+                    var tTo = Math.min(Number(thread.from), Number(thread.to))
+                    var span = 2 * R + 4
+                    style.material = function(c) {
+                        var farX = cx(-Math.max(0, stockLength)) - span
+                        // past the thread, and in front of it up to the face
+                        c.rect(farX, cy(0) - span, cx(tTo) - farX, 2 * span)
+                        if (tFrom < face) c.rect(cx(tFrom), cy(0) - span, cx(face) - cx(tFrom), 2 * span)
+                        // the middle left out: whole across the gap, as far
+                        // as the breaks reach either side of it
+                        if (breakMiddle) {
+                            var reachPx = Broken.reach(R)
+                            c.rect(cx(breakMiddle.far) - reachPx, cy(0) - span,
+                                   cx(breakMiddle.near) - cx(breakMiddle.far) + 2 * reachPx, 2 * span)
+                        }
+                        // within it, inside its profile, both halves
+                        // the near half's profile below, the far half's over
+                        for (var l = 0; l < thread.lower.length; l++) {
+                            var lo = thread.lower[l], up = thread.upper[l]
+                            c.moveTo(cx(+lo[0].z), cy(+lo[0].x))
+                            for (var p = 1; p < lo.length; p++) c.lineTo(cx(+lo[p].z), cy(+lo[p].x))
+                            for (p = up.length - 1; p >= 0; p--) c.lineTo(cx(+up[p].z), cy(+up[p].x))
+                            c.closePath()
+                        }
+                    }
+                    style.skinTo = cx(tTo)
+                }
                 if (breakMiddle) {
                     // a stretch of its middle left out as well (Parting's,
                     // far down the stock): the piece at the face broken off

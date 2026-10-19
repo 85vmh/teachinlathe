@@ -116,7 +116,9 @@ function faceEnd(x, cy, R) {
 // finished part, say), ``noWallHatch`` to leave a tube's walls plain and
 // ``inside(ctx)``, called after the fill, clipped to the piece's body; and
 // ``fillInside(ctx)`` to fill only some of the body, in the fill colour set,
-// and ``skinTo``, the canvas x the skin's lines stop at short of the right end.
+// and ``skinTo``, the canvas x the skin's lines stop at short of the right end;
+// ``material(ctx)``, paths (canvas px) for what is left of the stock - only
+// they are filled and a tube's walls hatched, within the body.
 function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
     if (R <= 0 || rightX <= leftX) return
     var solid = r <= 0
@@ -151,9 +153,15 @@ function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
     ctx.setLineDash([])
 
     // opaque, over the grid behind it - or only where ``fillInside(ctx)``
-    // fills, clipped to the body; the cut faces on a darker ground
+    // fills, or only over ``material(ctx)``'s paths, clipped to the body; the
+    // cut faces on a darker ground
     ctx.fillStyle = style.fill
-    if (style.fillInside) {
+    if (style.material) {
+        ctx.save()
+        body(); ctx.clip()
+        ctx.beginPath(); style.material(ctx); ctx.fill()
+        ctx.restore()
+    } else if (style.fillInside) {
         ctx.save()
         body(); ctx.clip()
         style.fillInside(ctx)
@@ -178,6 +186,7 @@ function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
         for (k = 0; k < bands.length; k++) {
             ctx.save()
             body(); ctx.clip()
+            if (style.material) { ctx.beginPath(); style.material(ctx); ctx.clip() }
             ctx.beginPath(); ctx.rect(leftX - R, bands[k][0], rightX - leftX + 2 * R, bands[k][1] - bands[k][0]); ctx.clip()
             hatch(ctx, leftX - R, bands[k][0], rightX + R, bands[k][1], style.hatchPitch, false)
             ctx.restore()
@@ -198,8 +207,11 @@ function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
     ctx.lineWidth = style.lineWidth || 1
     ctx.beginPath()
     var skinTo = style.skinTo !== undefined ? Math.min(style.skinTo, right.top[0]) : right.top[0]
-    ctx.moveTo(left.top[0], left.top[1]); ctx.lineTo(skinTo, right.top[1])
-    ctx.moveTo(left.bottom[0], left.bottom[1]); ctx.lineTo(skinTo, right.bottom[1])
+    // none at all when it would stop short of the piece's left end
+    if (skinTo > left.top[0]) {
+        ctx.moveTo(left.top[0], left.top[1]); ctx.lineTo(skinTo, right.top[1])
+        ctx.moveTo(left.bottom[0], left.bottom[1]); ctx.lineTo(skinTo, right.bottom[1])
+    }
     for (k = 0; k < broken.length; k++) {
         var arcs = broken[k].segs.concat(broken[k].lens[1])
         for (i = 0; i < arcs.length; i++) {

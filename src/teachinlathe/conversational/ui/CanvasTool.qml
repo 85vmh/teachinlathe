@@ -5,19 +5,22 @@
 //     shape, size, corner radius, colours, the turn its orientation and
 //     angles give it), its cutting tip there;
 //   - a blade (blade.js, from its BladeToolView: width, corners, mirroring
-//     and turn), the middle of its cutting end there.
+//     and turn), the middle of its cutting end there;
+//   - a threading insert (ThreadingInsert, from its ThreadingToolView: size,
+//     pitch, hand and turn), the tip of its tooth there.
 // The Tool Library draws with y up and the canvas has X growing down the
 // screen, so the drawing goes on as it is. Laid over the whole canvas,
 // clipped ``inset`` px in from its edges - inside the ticks.
 import QtQuick 2.15
+import theme 1.0
 import "../../tooling/ui/shapes"
 import "../../tooling/ui/shapes/blade.js" as BladeShape
 
 Item {
     id: root
 
-    property string card: ""          // "turning" or "blade", as the Tool Library's cards
-    property var  view: null          // TurningToolView or BladeToolView
+    property string card: ""          // "turning", "blade" or "threading", as the Tool Library's cards
+    property var  view: null          // TurningToolView, BladeToolView or ThreadingToolView
     property real pxPerMm: 1
     property real tipX: 0
     property real tipY: 0
@@ -25,8 +28,9 @@ Item {
 
     readonly property bool isInsert: card === "turning" && !!view
     readonly property bool isBlade: card === "blade" && !!view
+    readonly property bool isThreading: card === "threading" && !!view
     // whether it draws anything
-    readonly property bool drawn: isInsert || isBlade
+    readonly property bool drawn: isInsert || isBlade || (isThreading && threadingInsert.specValid)
 
     anchors.fill: parent
     anchors.margins: inset
@@ -36,6 +40,13 @@ Item {
     // flipped to screen y - as InsertThumbnail turns it.
     function turned(p) {
         var a = insert.orientation * Math.PI / 180
+        return Qt.point(p.x * Math.cos(a) - p.y * Math.sin(a),
+                        -(p.x * Math.sin(a) + p.y * Math.cos(a)))
+    }
+
+    // The same for the threading insert: its points come mirrored already.
+    function turnedThreading(p) {
+        var a = threadingInsert.orientation * Math.PI / 180
         return Qt.point(p.x * Math.cos(a) - p.y * Math.sin(a),
                         -(p.x * Math.sin(a) + p.y * Math.cos(a)))
     }
@@ -53,6 +64,15 @@ Item {
     // to take in.
     readonly property var outlineFromTip: {
         if (isBlade) return BladeShape.corners(_blade())
+        if (isThreading) {
+            if (!threadingInsert.specValid) return []
+            var tt = turnedThreading(threadingInsert.activeTip()), pts = threadingInsert.outlinePoints(), res = []
+            for (var j = 0; j < pts.length; j++) {
+                var q = turnedThreading(pts[j])
+                res.push({ x: q.x - tt.x, y: q.y - tt.y })
+            }
+            return res
+        }
         if (!isInsert) return []
         var o = insert.outline()
         var t = turned(insert.activeTip()), out = []
@@ -70,6 +90,10 @@ Item {
 
     // Its middle, in canvas px: an insert's centre - its hole, about which
     // the insert is drawn - or the middle of a blade's outline.
+    readonly property point threadingCentre: {
+        var t = turnedThreading(threadingInsert.activeTip())
+        return Qt.point(tipX - pxPerMm * t.x, tipY - pxPerMm * t.y)
+    }
     readonly property point centre: {
         if (isBlade) {
             var cs = outlineFromTip, sx = 0, sy = 0
@@ -98,6 +122,24 @@ Item {
         openHole: true
         bodyColor: root.isInsert ? root.view.insertBodyColor : "#e5a93b"
         edgeColor: root.isInsert ? root.view.insertEdgeColor : "#674c1b"
+    }
+
+    ThreadingInsert {
+        id: threadingInsert
+        visible: root.isThreading
+        // drawn about its own middle, the insert's centre
+        width: 2.2 * ic * root.pxPerMm + 4
+        height: width
+        x: root.threadingCentre.x - root.inset - width / 2
+        y: root.threadingCentre.y - root.inset - height / 2
+        insertSize: root.isThreading ? root.view.sizeCode : "16"
+        pitch: root.isThreading ? root.view.pitch : 1.5
+        hand: root.isThreading ? root.view.drawnHand : "R"
+        orientation: root.isThreading ? root.view.insertRotation : 0
+        pxPerMm: root.pxPerMm
+        bodyColor: root.isThreading ? root.view.insertBodyColor : "#e5a93b"
+        edgeColor: root.isThreading ? root.view.insertEdgeColor : "#674c1b"
+        holeColor: Theme.surface
     }
 
     Canvas {

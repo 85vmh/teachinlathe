@@ -6,6 +6,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import touchable_input 1.0
 import theme 1.0
+import common 1.0
 
 CanvasBox {
     id: root
@@ -15,6 +16,10 @@ CanvasBox {
     property string settingName: ""
     // "z", or "x": an X diameter, taught in as twice the radius read
     property string axis: "z"
+    // the button after the value: TeachIn, or - given ``actionText`` - an
+    // action of the screen's own, reported by actionRequested
+    property string actionText: ""
+    signal actionRequested()
     // the label column's width, so boxes stacked together line up
     property real   labelWidth: labelText.implicitWidth
     readonly property real labelImplicitWidth: labelText.implicitWidth
@@ -47,7 +52,12 @@ CanvasBox {
             onValueCommitted: root.valueEdited(Number(value))
         }
         Button {
-            text: "TeachIn"
+            visible: root.actionText !== ""
+            text: root.actionText
+            onClicked: root.actionRequested()
+        }
+        TeachInButton {
+            visible: root.actionText === ""
             onClicked: valueField.commit(root.axis === "x" ? positionsBridge.teachInX() * 2
                                                            : positionsBridge.teachInZ())
         }

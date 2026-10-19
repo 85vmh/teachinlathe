@@ -95,7 +95,7 @@ Item {
         } else if (data.type === "threading") {
             detailsLoader.source = "ThreadingDetailsView.qml"
         } else if (data.type === "g33Threading") {
-            detailsLoader.source = "ThreadingDetailsView.qml"
+            detailsLoader.source = "G33ThreadingVisualDetailsView.qml"
         } else if (data.type === "parting") {
             detailsLoader.source = "PartingVisualDetailsView.qml"
         } else if (data.type === "tapping") {

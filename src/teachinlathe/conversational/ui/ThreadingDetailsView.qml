@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import "."
 import touchable_input 1.0
 import theme 1.0
+import common 1.0
 
 Item {
     id: root
@@ -259,7 +260,7 @@ Item {
                                 onOpenRequested: root.openNumPadRequested(field)
                                 onValueCommitted: { root.zStart = value; root.emitSave() }
                             }
-                            Button { text: "TeachIn"; onClicked: tf_zStart.commit(positionsBridge.teachInZ()) }
+                            TeachInButton { onClicked: tf_zStart.commit(positionsBridge.teachInZ()) }
 
                             Label { text: "Z End"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                             NumpadField {
@@ -273,7 +274,7 @@ Item {
                                 onOpenRequested: root.openNumPadRequested(field)
                                 onValueCommitted: { root.zEnd = value; root.emitSave() }
                             }
-                            Button { text: "TeachIn"; onClicked: tf_zEnd.commit(positionsBridge.teachInZ()) }
+                            TeachInButton { onClicked: tf_zEnd.commit(positionsBridge.teachInZ()) }
                         }
 
                         Rectangle {
@@ -393,7 +394,7 @@ Item {
                                 root.emitSave()
                             }
                         }
-                        Button { text: "TeachIn"; onClicked: tf_teachDiam.commit(positionsBridge.teachInX() * 2) }
+                        TeachInButton { onClicked: tf_teachDiam.commit(positionsBridge.teachInX() * 2) }
 
                         // Row 2: Calculate diameter (Minor for OD, Major for ID)
                         Label {

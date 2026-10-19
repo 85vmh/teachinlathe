@@ -16,6 +16,7 @@ from typing import Optional
 
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
+from teachinlathe.app.app_identity import MACHINE_NAME
 from teachinlathe.core.machine_repository import machine_repository
 from teachinlathe.core.status_repository import status_repository
 from teachinlathe.core.tools_repository import tools_repository
@@ -43,6 +44,10 @@ class MachineViewModel(QObject):
         self.stateChanged.emit()
 
     # -- what the screens show --------------------------------------------
+
+    @pyqtProperty(str, constant=True)
+    def machineName(self) -> str:
+        return MACHINE_NAME
 
     @pyqtProperty(bool, notify=stateChanged)
     def estopOk(self):

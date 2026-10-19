@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import "."
 import touchable_input 1.0
 import theme 1.0
+import common 1.0
 
 GroupBox {
     id: root
@@ -74,7 +75,7 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.x_start = value; root.emitSave() }
         }
-        Button { text: "TeachIn"; onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2) }
+        TeachInButton { onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2) }
 
         Label { text: "Z Start"; font.pixelSize: Theme.fontBody }
         NumpadField {
@@ -88,7 +89,7 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.z_start = value; root.emitSave() }
         }
-        Button { text: "TeachIn"; onClicked: tf_z_start.commit(positionsBridge.teachInZ()) }
+        TeachInButton { onClicked: tf_z_start.commit(positionsBridge.teachInZ()) }
 
         Label { text: "Z End"; font.pixelSize: Theme.fontBody }
         NumpadField {
@@ -102,6 +103,6 @@ GroupBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: { root.z_end = value; root.emitSave() }
         }
-        Button { text: "TeachIn"; onClicked: tf_z_end.commit(positionsBridge.teachInZ()) }
+        TeachInButton { onClicked: tf_z_end.commit(positionsBridge.teachInZ()) }
     }
 }

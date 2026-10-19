@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import touchable_input 1.0
 import theme 1.0
+import common 1.0
 
 Rectangle {
     id: root
@@ -15,7 +16,7 @@ Rectangle {
     property string toggleText: "Enable Limit"
     property bool toggleEnabled: false
     property bool teachEnabled: true
-    property int minimumCardWidth: 220
+    property int inputWidth: 110
     property int buttonHeight: 48
     property int contentMargin: 8
     property int sectionSpacing: 8
@@ -44,7 +45,9 @@ Rectangle {
         return isNaN(numberValue) ? String(v) : numberValue.toFixed(3)
     }
 
-    width: Math.max(minimumCardWidth, toggleButton.implicitWidth + 32)
+    // as narrow as the value row - the field, then the TeachIn button - or
+    // the toggle's text, whichever is wider
+    width: Math.max(teachRow.implicitWidth, toggleButton.implicitWidth) + contentMargin * 2
     height: contentMargin * 2 + buttonHeight * 2 + sectionSpacing * 2 + 1
     radius: Theme.radius
     color: Theme.surfaceSunken
@@ -75,12 +78,14 @@ Rectangle {
         }
 
         RowLayout {
+            id: teachRow
             Layout.fillWidth: true
             spacing: Theme.spacingSmall
 
             NumpadField {
                 id: limitInput
-                Layout.preferredWidth: 110
+                Layout.fillWidth: true
+                Layout.preferredWidth: root.inputWidth
                 enabled: root.status === 1
                 value: root.value
                 settingName: root.settingName
@@ -96,12 +101,8 @@ Rectangle {
                 }
             }
 
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: root.buttonHeight
-                text: "TeachIn"
+            TeachInButton {
                 enabled: root.teachEnabled && root.status === 1
-                font.pixelSize: Theme.fontBody
                 onClicked: root.teachClicked()
             }
         }

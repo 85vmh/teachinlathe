@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 import "."
 import touchable_input 1.0
 import theme 1.0
+import common 1.0
 
 GroupBox {
     id: root
@@ -92,8 +93,7 @@ GroupBox {
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.z_start = value; root.emitSave() }
             }
-            Button {
-                text: "TeachIn"
+            TeachInButton {
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                 onClicked: tf_z_start.commit(positionsBridge.teachInZ())
             }
@@ -115,8 +115,7 @@ GroupBox {
                 onOpenRequested: root.openNumPadRequested(field)
                 onValueCommitted: { root.z_end = value; root.emitSave() }
             }
-            Button {
-                text: "TeachIn"
+            TeachInButton {
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                 onClicked: tf_z_end.commit(positionsBridge.teachInZ())
             }

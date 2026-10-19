@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import "."
 import touchable_input 1.0
 import theme 1.0
+import common 1.0
 
 Item {
     id: root
@@ -129,8 +130,7 @@ Item {
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.xPos = value; root.emitSave() }
                         }
-                        Button {
-                            text: "TeachIn"
+                        TeachInButton {
                             onClicked: tf_xPos.commit(positionsBridge.teachInX() * 2)
                         }
 
@@ -151,8 +151,7 @@ Item {
                             onOpenRequested: root.openNumPadRequested(field)
                             onValueCommitted: { root.zPos = value; root.emitSave() }
                         }
-                        Button {
-                            text: "TeachIn"
+                        TeachInButton {
                             onClicked: tf_zPos.commit(positionsBridge.teachInZ())
                         }
 

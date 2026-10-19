@@ -6,6 +6,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import touchable_input 1.0
 import theme 1.0
+import common 1.0
 
 CanvasBox {
     id: root
@@ -38,8 +39,7 @@ CanvasBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: root.xStartEdited(Number(value))
         }
-        Button {
-            text: "TeachIn"
+        TeachInButton {
             onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2)
         }
 
@@ -55,8 +55,7 @@ CanvasBox {
             onOpenRequested: root.openNumPadRequested(field)
             onValueCommitted: root.zStartEdited(Number(value))
         }
-        Button {
-            text: "TeachIn"
+        TeachInButton {
             onClicked: tf_z_start.commit(positionsBridge.teachInZ())
         }
     }

@@ -1,9 +1,20 @@
 from PyQt6.QtCore import QObject, pyqtSlot
 
+from teachinlathe.conversational.model.data_types import ThreadForm
+
 
 class ThreadingDetailsViewModel(QObject):
     EXTERNAL_THREAD_HEIGHT_FACTOR = 0.61344
     INTERNAL_THREAD_HEIGHT_FACTOR = 0.54127
+
+    @pyqtSlot(str, result=float)
+    def threadAngle(self, form):
+        """The included angle of a thread form's flanks, degrees - metric's
+        60 when the form is unknown."""
+        try:
+            return ThreadForm(str(form or "").lower()).angle
+        except ValueError:
+            return ThreadForm.METRIC.angle
 
     @pyqtSlot(str, "QVariant", "QVariant", "QVariant", result="QVariantMap")
     def calculateThreadDiameter(self, location, pitch, major_diameter, minor_diameter):

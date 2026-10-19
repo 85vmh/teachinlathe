@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import touchable_input 1.0
 import theme 1.0
+import common 1.0
 
 Rectangle {
     id: root
@@ -177,10 +178,9 @@ Rectangle {
             onValueCommitted: numberRow.committed(Number(value))
         }
 
-        Button {
+        TeachInButton {
             visible: numberRow.teachable
-            Layout.preferredWidth: numberRow.teachable ? 76 : 0
-            text: "TeachIn"
+            Layout.preferredWidth: numberRow.teachable ? implicitWidth : 0
             onClicked: numberRow.teachRequested()
         }
     }

@@ -15,7 +15,9 @@ import "arrow.js" as Arrow
 // break at the corner at Z ``z``, diameter ``x``, ``size`` mm along each
 // way - into the part, on its Z+ side - what it takes off filled in
 // ``fill``, and its mirror when ``mirror``; the arrow, if any, from its
-// middle.
+// middle; with ``polyline`` open lines through points {z, x} (x a diameter,
+// as drawn: negative over the centre line), one list per line - with
+// ``mirror``, each drawn below and over the centre line both.
 QtObject {
     // [{x: diameter, z, color, arrowToRect, line, top, bottom, arrowAt, dash, hline, half}]
     property var markers: []
@@ -46,12 +48,38 @@ QtObject {
                 _paintBlend(ctx, m)
                 continue
             }
+            if (m.polyline) {
+                _paintPolyline(ctx, m)
+                continue
+            }
             _one.position = { x: m.x || 0, z: m.z || 0 }
             _one.color = m.color || "#1565c0"
             _one.arrowToRect = m.arrowToRect || null
             _one.paint(ctx)
         }
         _one.position = null
+    }
+
+    function _paintPolyline(ctx, m) {
+        ctx.save()
+        ctx.setLineDash([])
+        ctx.strokeStyle = m.color || "#455a64"
+        ctx.lineWidth = m.lineWidth || 1.5
+        ctx.lineJoin = "miter"
+        var signs = m.mirror ? [1, -1] : [0]
+        ctx.beginPath()
+        for (var s = 0; s < signs.length; s++) {
+            for (var l = 0; l < m.polyline.length; l++) {
+                var pts = m.polyline[l]
+                for (var i = 0; i < pts.length; i++) {
+                    var x = signs[s] === 0 ? +pts[i].x : signs[s] * Math.abs(+pts[i].x)
+                    var px = cx(+pts[i].z), py = cy(x)
+                    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py)
+                }
+            }
+        }
+        ctx.stroke()
+        ctx.restore()
     }
 
     function _paintBlend(ctx, m) {

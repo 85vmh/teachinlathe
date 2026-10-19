@@ -30,6 +30,24 @@ class ThreadLocation(Enum):
     ID = "ID"
 
 
+class ThreadForm(str, Enum):
+    """A thread's form - its profile. Each has the included angle of its
+    flanks (``angle``, degrees); more forms to come."""
+    METRIC = "metric"
+    WHITWORTH = "whitworth"
+
+    @property
+    def angle(self) -> float:
+        return THREAD_FORM_ANGLES[self]
+
+
+#: The included angle between a thread's flanks, degrees, by form.
+THREAD_FORM_ANGLES = {
+    ThreadForm.METRIC: 60.0,
+    ThreadForm.WHITWORTH: 55.0,
+}
+
+
 class G33ThreadPassType(str, Enum):
     ROUGHING = "ROUGHING"
     SPRING = "SPRING"
