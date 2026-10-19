@@ -37,22 +37,13 @@ def duplicate_operation(program, src_index: int, insert_index: int):
     return idx
 
 
-def move_operation_up(program, index: int):
-    if index <= 0:
-        return None
+def move_operation(program, from_index: int, to_index: int):
     ops = program.operations
-    ops.insert(index - 1, ops.pop(index))
-    renumber_operations(ops)
-    return index - 1
-
-
-def move_operation_down(program, index: int):
-    if index >= len(program.operations) - 1:
+    if not (0 <= from_index < len(ops)) or not (0 <= to_index < len(ops)) or from_index == to_index:
         return None
-    ops = program.operations
-    ops.insert(index + 1, ops.pop(index))
+    ops.insert(to_index, ops.pop(from_index))
     renumber_operations(ops)
-    return index + 1
+    return to_index
 
 
 def delete_operation(program, index: int):

@@ -8,16 +8,12 @@ OperationRowDelegate {
     property int operationIndex: -1
     property var operationData: null
     property bool selected: false
-    property int operationsCount: 0
 
     width: parent ? parent.width : 400
     height: Theme.rowHeight
     rowIndex: operationIndex
     op: operationData
     isCurrentItem: selected
-    totalCount: operationsCount
-    isFirstItem: operationIndex === 0
-    isLastItem: operationIndex === (operationsCount - 1)
 
     Rectangle {
         anchors.left: parent.left

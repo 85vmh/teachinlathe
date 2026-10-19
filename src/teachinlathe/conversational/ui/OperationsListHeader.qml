@@ -7,12 +7,10 @@ import theme 1.0
 Rectangle {
     id: root
 
-    property bool reorderMode: false
     property int colOpNumW: 50
     property int colGenW: 80
     property int colTypeW: 200
     property int colOptW: 80
-    property int colDelW: 100
     property int headerFontSize: 14
     // the operations' rows' font, whose "[#NN]    " the title is indented by,
     // so it starts where the operation names do
@@ -74,20 +72,6 @@ Rectangle {
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WordWrap
                 maximumLineCount: 2
-                Layout.alignment: Qt.AlignVCenter
-            }
-            Divider { dividerColor: Theme.outline }
-
-            Label {
-                text: root.reorderMode ? "Change\nOrder" : "Delete"
-                font.bold: true
-                font.pixelSize: root.headerFontSize
-                color: Theme.foregroundStrong
-                Layout.minimumWidth: root.colDelW
-                Layout.preferredWidth: root.colDelW
-                Layout.maximumWidth: root.colDelW
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
                 Layout.alignment: Qt.AlignVCenter
             }
         }

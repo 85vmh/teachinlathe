@@ -5,11 +5,12 @@ import theme 1.0
 import "../../../conversational/ui"
 import common 1.0
 
-// Row 3 — Sortable file list with Name / Size / Modified / Actions columns.
+// Row 3 — Sortable file list with Name / Size / Modified columns. A file
+// swiped left shows Delete (see SwipeRow).
 Item {
     id: root
     property var viewModel
-    // The Actions column (delete). Off where the list only picks a file.
+    // Swipe to delete. Off where the list only picks a file.
     property bool showActions: true
 
     // ── Dimensions ─────────────────────────────────────────────────────────
@@ -17,8 +18,8 @@ Item {
     readonly property int headerHeight:    40
     readonly property int sizeColWidth:    96
     readonly property int modifiedColWidth: 150
-    // As wide as the operation list's delete column, with the same button.
-    readonly property int actionsColWidth: 80
+    // As wide as the operation list's Delete
+    readonly property int deleteWidth:     100
     readonly property int nameLeftMargin:  10
     readonly property int rowRightMargin:  18
 
@@ -38,23 +39,8 @@ Item {
     readonly property color rowHover:  Theme.selection
     readonly property color rowSelect: Theme.selection
 
-    // The file a delete button was tapped for, until the dialog answers.
-    property string _pendingDeletePath: ""
-    property string _pendingDeleteName: ""
-
-    function confirmDelete(relativePath, name) {
-        _pendingDeletePath = relativePath
-        _pendingDeleteName = name
-        deleteConfirmDialog.open()
-    }
-
-    ConfirmDialog {
-        id: deleteConfirmDialog
-        titleText: "Delete Program"
-        confirmText: "Delete"
-        messageText: "Delete '" + root._pendingDeleteName + "'?"
-        onConfirmed: if (root.viewModel) root.viewModel.deleteEntry(root._pendingDeletePath)
-    }
+    // The file row swiped open to its Delete
+    property int openSwipeIndex: -1
 
     ColumnLayout {
         anchors.fill: parent
@@ -131,27 +117,6 @@ Item {
                     }
                     MouseArea { anchors.fill: parent; onClicked: if (root.viewModel) root.viewModel.setSortColumn("modified") }
                 }
-
-                Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.headerSepColor; visible: root.showActions }
-
-                // Actions
-                Item {
-                    visible: root.showActions
-                    Layout.minimumWidth: root.actionsColWidth
-                    Layout.preferredWidth: root.actionsColWidth
-                    Layout.maximumWidth: root.actionsColWidth
-                    Layout.fillHeight: true
-                    // Centred between the separator and the row's right edge,
-                    // past the scroll bar's margin.
-                    Text {
-                        anchors.centerIn: parent
-                        anchors.horizontalCenterOffset: root.rowRightMargin / 2
-                        text: "Actions"
-                        color: root.headerTextColor
-                        font.pixelSize: root.headerFontSize
-                        font.bold: true
-                    }
-                }
             }
 
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: root.headerSepColor }
@@ -167,25 +132,46 @@ Item {
             anchors.fill: parent
             clip: true
             model: root.viewModel ? root.viewModel.entries : []
+            onModelChanged: root.openSwipeIndex = -1
+            onMovementStarted: root.openSwipeIndex = -1
 
             ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
-            delegate: Item {
+            delegate: SwipeRow {
+                id: fileRow
                 width: ListView.view.width
                 height: root.rowHeight
                 readonly property bool hasFolderCount: modelData.folderFileCountDisplay !== undefined
                                                        && modelData.folderFileCountDisplay !== ""
 
-                // Alternating background
-                Rectangle {
+                // Files only: not folders, and not on mounted media, which
+                // this list never deletes from
+                actionWidth: root.deleteWidth
+                duplicateEnabled: false
+                deleteEnabled: root.showActions && !modelData.isUp && !modelData.isDir
+                               && !(root.viewModel && root.viewModel.isInMountedMedia)
+                swipeSide: root.openSwipeIndex === index ? 1 : 0
+                onSwipeOpened: root.openSwipeIndex = index
+                onSwipeClosed: if (root.openSwipeIndex === index) root.openSwipeIndex = -1
+                onDeleteRequested: {
+                    root.openSwipeIndex = -1
+                    if (root.viewModel)
+                        root.viewModel.deleteEntry(modelData.relativePath)
+                }
+
+                contentColor: modelData.isSelected
+                              ? root.rowSelect
+                              : (rowArea.containsMouse
+                                 ? root.rowHover
+                                 : (index % 2 === 0 ? root.rowEven : root.rowOdd))
+                contentBorderWidth: modelData.isSelected ? 2 : 0
+                contentBorderColor: modelData.isSelected ? Theme.accent : "transparent"
+
+                MouseArea {
+                    id: rowArea
                     anchors.fill: parent
-                    color: modelData.isSelected
-                           ? root.rowSelect
-                           : (rowArea.containsMouse
-                              ? root.rowHover
-                              : (index % 2 === 0 ? root.rowEven : root.rowOdd))
-                    border.width: modelData.isSelected ? 2 : 0
-                    border.color: modelData.isSelected ? Theme.accent : "transparent"
+                    hoverEnabled: true
+                    onClicked: if (root.viewModel) root.viewModel.selectEntry(modelData.relativePath)
                 }
 
                 RowLayout {
@@ -193,12 +179,11 @@ Item {
                     anchors.leftMargin: root.nameLeftMargin
                     anchors.rightMargin: root.rowRightMargin
                     spacing: 0
-                    // Over the row's MouseArea, so the delete button takes its
-                    // own taps; the rest of the row lets them through to it.
-                    z: 1
 
-                    // Name column
+                    // Name column: its text stays put while the row slides
+                    // left over Delete
                     RowLayout {
+                        Layout.leftMargin: Math.max(0, fileRow.swipeOffset)
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         spacing: Theme.spacingSmall
@@ -288,34 +273,6 @@ Item {
                             font.pixelSize: root.metaFontSize
                         }
                     }
-
-                    Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.sepColor; visible: root.showActions }
-
-                    // Actions column — delete, for files; disabled on folders
-                    // and on mounted media, which this list never deletes from.
-                    Item {
-                        visible: root.showActions
-                        Layout.minimumWidth: root.actionsColWidth
-                        Layout.preferredWidth: root.actionsColWidth
-                        Layout.maximumWidth: root.actionsColWidth
-                        Layout.fillHeight: true
-
-                        // As the header: centred between the separator and
-                        // the row's right edge.
-                        PressableIconButton {
-                            anchors.centerIn: parent
-                            anchors.horizontalCenterOffset: root.rowRightMargin / 2
-                            visible: !modelData.isUp
-                            // resolved here: a relative path would otherwise be taken
-                            // from PressableIconButton's folder, where the Image is
-                            source: Images.url("delete_icon.svg")
-                            tint: Theme.danger
-                            borderTint: Theme.danger
-                            enabled: !modelData.isDir
-                                     && !(root.viewModel && root.viewModel.isInMountedMedia)
-                            onClicked: root.confirmDelete(modelData.relativePath, modelData.name)
-                        }
-                    }
                 }
 
                 // Row bottom separator
@@ -325,13 +282,6 @@ Item {
                     height: Theme.hairline
                     color: root.sepColor
                     opacity: 0.5
-                }
-
-                MouseArea {
-                    id: rowArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: if (root.viewModel) root.viewModel.selectEntry(modelData.relativePath)
                 }
             }
 
@@ -371,5 +321,10 @@ Item {
         }
 
         }  // Item wrapper
+    }
+
+    SwipeDismissArea {
+        openRow: root.openSwipeIndex >= 0 ? fileList.itemAtIndex(root.openSwipeIndex) : null
+        onDismissed: root.openSwipeIndex = -1
     }
 }

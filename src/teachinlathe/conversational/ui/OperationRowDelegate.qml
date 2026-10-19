@@ -1,12 +1,12 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import Qt5Compat.GraphicalEffects
 import "."   // for Divider.qml
 import theme 1.0
-import common 1.0
 
-Rectangle {
+// An operation in the program's list: swipes to Delete or Duplicate (see
+// SwipeRow), and lifts on a long press to be dragged to a new place.
+SwipeRow {
     id: root
 
     // Inputs from the ListView delegate
@@ -14,23 +14,20 @@ Rectangle {
     property int  rowIndex: -1
     property bool isCurrentItem: false
 
-    // Position info for enabling/disabling reorder buttons
-    property bool isFirstItem: false
-    property bool isLastItem: false
-    property int  totalCount: 0
-
-    // Column widths (last column fixed to 100px)
+    // Column widths
     property int colOpNumW: 50
     property int colGenW:   80
     property int colTypeW:  200
     property int colOptW:   80
-    property int colDelW:   100
-
-    // Edit/Reorder mode toggle
-    property bool editing: false
+    property int colDelW:   100       // the Delete and Duplicate swipe buttons
     property int itemFontSize: 16
 
-    property bool gcodeEnabled: !!(op && op.generate_gcode)
+    // Being dragged to a new place, after a long press
+    property bool lifted: false
+
+    // Bound to the operation, never set: the list hands a row another
+    // operation's data when operations move, and it must follow.
+    readonly property bool gcodeEnabled: !!(op && op.generate_gcode)
     readonly property int operationLabelMinW: colOpNumW + colTypeW
     readonly property string operationLabel: {
         var order = (op && op.order !== undefined) ? op.order : (rowIndex + 1)
@@ -39,32 +36,63 @@ Rectangle {
         return "[#" + orderText + "]    " + name
     }
 
-    // Icon sources / tints
-    property url  deleteIconSource:   Images.url("delete_icon.svg")
-    property url  moveUpIconSource:   Images.url("move_up_icon.svg")
-    property url  moveDownIconSource: Images.url("move_down_icon.svg")
-    property color deleteTint:   Theme.danger
-    property color reorderTint:  Theme.foregroundMuted
-
     // Signals back to parent
     signal generateToggled(int rowIndex, bool checked)
     signal optionalToggled(int rowIndex, bool checked)
     signal deleteClicked(int rowIndex)
-    signal moveUpRequested(int rowIndex)
-    signal moveDownRequested(int rowIndex)
+    signal duplicateClicked(int rowIndex)
     signal rowTapped(int rowIndex)
+    // Long pressed, the row lifts and follows the finger up or down: dy is
+    // how far it has been dragged, in scene pixels. The list moves the rows.
+    signal reorderStarted(int rowIndex)
+    signal reorderMoved(int rowIndex, real dy)
+    signal reorderFinished(int rowIndex)
 
     width: parent ? parent.width : 400
     height: Theme.rowHeight
-    radius: 0
-    color: isCurrentItem ? Theme.selection : (rowIndex % 2 === 0 ? Theme.surfaceSunken : Theme.outlineDisabled)
-    border.width: isCurrentItem ? 2 : 0
-    border.color: isCurrentItem ? Theme.accent : "transparent"
+    actionWidth: colDelW
+    swipeEnabled: !reorderArea.lifted
+    onDeleteRequested: deleteClicked(rowIndex)
+    onDuplicateRequested: duplicateClicked(rowIndex)
 
-    // Reusable icon button with press feedback, tint, and enabled state
-    Component {
-        id: pressableIcon
-        PressableIconButton {}
+    contentColor: root.lifted ? Theme.lifted
+                : root.isCurrentItem ? Theme.selection
+                : (root.rowIndex % 2 === 0 ? Theme.surfaceSunken : Theme.outlineDisabled)
+    contentBorderWidth: root.lifted || root.isCurrentItem ? 2 : 0
+    contentBorderColor: root.lifted ? Theme.warning : root.isCurrentItem ? Theme.accent : "transparent"
+
+    // Under the row's own controls, so a long press on a checkbox does not
+    // lift it. It takes the press, so it is also what selects the row.
+    MouseArea {
+        id: reorderArea
+        anchors.fill: parent
+        pressAndHoldInterval: 500
+        property bool lifted: false
+        property real startSceneY: 0
+
+        function finish() {
+            if (!lifted)
+                return
+            lifted = false
+            preventStealing = false
+            root.reorderFinished(rowIndex)
+        }
+
+        onPressAndHold: function(mouse) {
+            if (root.swipeOffset !== 0)
+                return
+            lifted = true
+            preventStealing = true      // the list must not take the drag over to scroll
+            startSceneY = mapToItem(null, mouse.x, mouse.y).y
+            root.reorderStarted(rowIndex)
+        }
+        onPositionChanged: function(mouse) {
+            if (lifted)
+                root.reorderMoved(rowIndex, mapToItem(null, mouse.x, mouse.y).y - startSceneY)
+        }
+        onClicked: root.rowTapped(rowIndex)   // not after a press and hold
+        onReleased: finish()
+        onCanceled: finish()
     }
 
     RowLayout {
@@ -79,7 +107,8 @@ Rectangle {
             Label {
                 id: typeLabel
                 anchors.fill: parent
-                anchors.leftMargin: 10
+                // stays put while the row slides left over Delete
+                anchors.leftMargin: 10 + Math.max(0, root.swipeOffset)
                 text: root.operationLabel
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
@@ -98,13 +127,13 @@ Rectangle {
             CheckBox {
                 id: genChk
                 anchors.centerIn: parent
-                checked: !!(op && op.generate_gcode)
+                checked: root.gcodeEnabled
                 onToggled: {
                     if (!op) return
-                    op.generate_gcode = checked
-                    root.gcodeEnabled = checked
-                    optCell.enabled   = checked
                     root.generateToggled(rowIndex, checked)
+                    // a click breaks the binding; the save above has already
+                    // put the new value in the operation
+                    checked = Qt.binding(function() { return root.gcodeEnabled })
                 }
             }
         }
@@ -113,6 +142,7 @@ Rectangle {
         // Optional Block
         Item {
             id: optCell
+            enabled: root.gcodeEnabled
             Layout.minimumWidth: colOptW
             Layout.preferredWidth: colOptW
             Layout.maximumWidth: colOptW
@@ -122,70 +152,10 @@ Rectangle {
                 checked: !!(op && op.is_optional_block)
                 onToggled: {
                     if (!op) return
-                    op.is_optional_block = checked
                     root.optionalToggled(rowIndex, checked)
-                }
-            }
-        }
-        Divider { }
-
-        // Delete / Reorder column (fixed 100px)
-        Item {
-            Layout.minimumWidth: colDelW
-            Layout.preferredWidth: colDelW
-            Layout.maximumWidth: colDelW
-            Layout.fillHeight: true
-
-            // NORMAL MODE: single delete icon centered
-            Loader {
-                anchors.centerIn: parent
-                active: !root.editing
-                sourceComponent: pressableIcon
-                onLoaded: {
-                    item.source = root.deleteIconSource
-                    item.tint   = root.deleteTint
-                    item.borderTint = root.deleteTint
-                    item.enabled = true
-                    item.clicked.connect(function() { root.deleteClicked(rowIndex) })
-                }
-            }
-
-            // EDIT MODE: two icons (up/down) side-by-side centered
-            Row {
-                anchors.centerIn: parent
-                spacing: 6
-                visible: root.editing
-
-                // Move Up
-                Loader {
-                    sourceComponent: pressableIcon
-                    onLoaded: {
-                        item.source  = root.moveUpIconSource
-                        item.tint    = root.reorderTint
-                        item.enabled = (root.totalCount > 1 && !root.isFirstItem)
-                        item.clicked.connect(function() { root.moveUpRequested(rowIndex) })
-                    }
-                }
-                // Move Down
-                Loader {
-                    sourceComponent: pressableIcon
-                    onLoaded: {
-                        item.source  = root.moveDownIconSource
-                        item.tint    = root.reorderTint
-                        item.enabled = (root.totalCount > 1 && !root.isLastItem)
-                        item.clicked.connect(function() { root.moveDownRequested(rowIndex) })
-                    }
+                    checked = Qt.binding(function() { return !!(root.op && root.op.is_optional_block) })
                 }
             }
         }
     }
-
-    // Sync initial enabled state on creation
-    Component.onCompleted: {
-        var en = !!(op && op.generate_gcode)
-        root.gcodeEnabled = en
-        optCell.enabled   = en
-    }
-
-    TapHandler { onTapped: root.rowTapped(rowIndex) }
 }

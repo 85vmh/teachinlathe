@@ -70,53 +70,6 @@ Popup {
             color: Theme.foreground
         }
 
-        // Duplicate Selected Operation button (centered)
-        Item {
-            width: column.width - column.padding * 2
-            height: root.buttonHeight
-
-            Button {
-                id: duplicateBtn
-                anchors.centerIn: parent
-                readonly property bool isSelected: root.selectedType === "__duplicate__"
-                width: root.buttonWidth * 2 + root.buttonSpacing
-                height: root.buttonHeight
-                text: "Duplicate Selected Operation"
-                font.pixelSize: root.buttonFontSize
-
-                background: Rectangle {
-                    radius: Theme.radiusSmall
-                    color: {
-                        if (duplicateBtn.isSelected) return Theme.selection
-                        if (duplicateBtn.pressed)    return Theme.accentSoft
-                        if (duplicateBtn.hovered)    return Theme.hover
-                        return Theme.surface
-                    }
-                    border.color: duplicateBtn.isSelected ? Theme.accentStrong
-                                                          : Theme.dialogBorder
-                    border.width: Theme.hairline
-                }
-                contentItem: Text {
-                    text: duplicateBtn.text
-                    font: duplicateBtn.font
-                    color: Theme.foreground
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                onClicked: {
-                    root.selectedType = (root.selectedType === "__duplicate__") ? "" : "__duplicate__"
-                }
-            }
-        }
-
-        // Separator between Duplicate button and operation type buttons
-        Rectangle {
-            width: column.width - column.padding * 2
-            height: Theme.hairline
-            color: Theme.separator
-        }
-
         // Operation type buttons
         Flow {
             id: flowArea
@@ -159,7 +112,6 @@ Popup {
                             root.operationChosen(modelData.type, 0)
                             root.close()
                         } else {
-                            // Selecting a type always clears duplicate selection
                             root.selectedType = (root.selectedType === modelData.type) ? "" : modelData.type
                         }
                     }

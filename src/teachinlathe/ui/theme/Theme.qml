@@ -116,6 +116,7 @@ QtObject {
     readonly property color accentSoft:    "#e1f0ff"   // 7 - pressed fill
     readonly property color accentBorder:  "#8ec5ff"   // 9 - pressed border
     readonly property color selection:     "#dbeafe"   // 10
+    readonly property color lifted:        "#fff3e0"   // a list row being dragged to a new place
     readonly property color hover:         "#eef3fb"   // 5
     readonly property color focusBorder:   "#2a7bff"   // NumpadField focus
 

@@ -25,8 +25,7 @@ from teachinlathe.conversational.model.program_commands import (
     duplicate_operation,
     duplicate_program,
     insert_default_operation,
-    move_operation_down,
-    move_operation_up,
+    move_operation,
 )
 from teachinlathe.conversational.store.program_store import save_program_to_disk
 from teachinlathe.conversational.model.qml_adapter import build_details_payload, build_operations_model, build_selected_program_summary
@@ -590,14 +589,12 @@ class ConversationalQml(QObject):
                 item.addOperationRequested.connect(self.onAddOperationRequested)
             if hasattr(item, "addProfilingFinishRequested"):
                 item.addProfilingFinishRequested.connect(self.onAddProfilingFinishRequested)
-            if hasattr(item, "reorderModeToggled"):
-                item.reorderModeToggled.connect(self.onReorderModeToggled)
-            if hasattr(item, "moveUpRequested"):
-                item.moveUpRequested.connect(self.onMoveUp)
-            if hasattr(item, "moveDownRequested"):
-                item.moveDownRequested.connect(self.onMoveDown)
+            if hasattr(item, "moveOperationRequested"):
+                item.moveOperationRequested.connect(self.onMoveOperation)
             if hasattr(item, "deleteOperationRequested"):
                 item.deleteOperationRequested.connect(self.onDeleteOperation)
+            if hasattr(item, "duplicateOperationRequested"):
+                item.duplicateOperationRequested.connect(self.onDuplicateOperation)
             if hasattr(item, "addOperationTypeChosen"):
                 item.addOperationTypeChosen.connect(self.onAddOperationTypeChosen)
             if hasattr(item, "openProfileEditorRequested"):
@@ -858,13 +855,10 @@ class ConversationalQml(QObject):
         if not prog:
             return
         try:
-            if op_type == "__duplicate__":
-                idx = duplicate_operation(prog, self.current_op_index, insert_index)
-            else:
-                if op_type not in operation_types:
-                    print(f"[operations] Unknown type: {op_type!r}")
-                    return
-                idx = insert_default_operation(prog, op_type, insert_index)
+            if op_type not in operation_types:
+                print(f"[operations] Unknown type: {op_type!r}")
+                return
+            idx = insert_default_operation(prog, op_type, insert_index)
             self.current_op_index = idx
             self._save_current_program()
             if op_type == "defineProfile":
@@ -885,34 +879,40 @@ class ConversationalQml(QObject):
     def onAddOperationRequested(self):
         print("[operations] Add New requested")
 
-    def onReorderModeToggled(self, on):
-        print(f"[operations] Reorder mode: {'ON' if on else 'OFF'}")
-
-    def onMoveUp(self, index: int):
+    def onMoveOperation(self, from_index: int, to_index: int):
+        """Dragged from one place to another; the selection stays on the operation it was on."""
         prog = self._get_current_program()
-        if not prog:
+        if not prog or move_operation(prog, from_index, to_index) is None:
             return
-        new_index = move_operation_up(prog, index)
-        if new_index is None:
-            return
-        self.current_op_index = new_index
-        self._save_current_program()
-
-    def onMoveDown(self, index: int):
-        prog = self._get_current_program()
-        if not prog:
-            return
-        new_index = move_operation_down(prog, index)
-        if new_index is None:
-            return
-        self.current_op_index = new_index
+        current = self.current_op_index
+        if current == from_index:
+            self.current_op_index = to_index
+        elif from_index < current <= to_index:
+            self.current_op_index = current - 1
+        elif to_index <= current < from_index:
+            self.current_op_index = current + 1
         self._save_current_program()
 
     def onDeleteOperation(self, index: int):
         prog = self._get_current_program()
         if not prog or not delete_operation(prog, index):
             return
-        self.current_op_index = -1
+        # the one above it, or the header for the first
+        self.current_op_index = index - 1
+        self._save_current_program()
+
+    def onDuplicateOperation(self, index: int):
+        """A copy of the operation, right after it; the selection stays where it was."""
+        prog = self._get_current_program()
+        if not prog:
+            return
+        try:
+            new_index = duplicate_operation(prog, index, index + 1)
+        except IndexError as e:
+            print("[operations] duplicate failed:", e)
+            return
+        if self.current_op_index >= new_index:
+            self.current_op_index += 1
         self._save_current_program()
 
     def onAddProfilingFinishRequested(self, index: int):

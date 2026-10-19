@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import Qt5Compat.GraphicalEffects
 import "."
 import theme 1.0
 import common 1.0
@@ -18,8 +17,9 @@ Item {
     property var programsModel
     property bool showBack: false
     property string selectedProgramId: ""
-    property int pendingDeleteIndex: -1
-    property string pendingDeleteName: ""
+    // The program row swiped open, and to which side: 1 Delete, -1 Duplicate
+    property int openSwipeIndex: -1
+    property int openSwipeSide: 0
     property string sortField: "last_edit"
     property bool createdAscending: true
     property bool lastEditAscending: false
@@ -44,75 +44,7 @@ Item {
     readonly property int colNameW: 360
     readonly property int colCreatedW: 150
     readonly property int colLastEditW: 150
-    readonly property int colActionsW: 180
     readonly property int cellFontPx: 16
-
-    Component {
-        id: iconButton
-        Rectangle {
-            id: btn
-            width: 56
-            height: Theme.headerHeight
-            radius: Theme.radius
-            color: mouseArea.pressed ? Theme.accentSoft : "transparent"
-            border.width: Theme.hairline
-            border.color: mouseArea.pressed ? Theme.accentBorder : btn.borderTint
-
-            property url iconSource: ""
-            property color tint: Theme.danger
-            // Named apart from the tint: the duplicate button beside this one
-            // is tinted too, and only the destructive one is outlined in its
-            // own colour.
-            property color borderTint: Theme.outlineStrong
-            signal clicked()
-
-            Image {
-                id: baseImg
-                anchors.centerIn: parent
-                source: btn.iconSource
-                sourceSize.width: 28
-                sourceSize.height: 28
-                visible: false
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-            }
-
-            ColorOverlay {
-                anchors.centerIn: baseImg
-                width: baseImg.width
-                height: baseImg.height
-                source: baseImg
-                color: btn.tint
-            }
-
-            MouseArea {
-                id: mouseArea
-                anchors.fill: parent
-                onClicked: btn.clicked()
-            }
-        }
-    }
-
-    ConfirmDialog {
-        id: deleteProgramDialog
-        titleText: "Delete Program"
-        confirmText: "Delete"
-        messageText: {
-            if (main.pendingDeleteName.length > 0)
-                return "Delete \"" + main.pendingDeleteName + "\"?"
-            return "Delete this program?"
-        }
-        onCancelled: {
-            main.pendingDeleteIndex = -1
-            main.pendingDeleteName = ""
-        }
-        onConfirmed: {
-            if (main.pendingDeleteIndex >= 0)
-                main.deleteProgramRequested(main.pendingDeleteIndex)
-            main.pendingDeleteIndex = -1
-            main.pendingDeleteName = ""
-        }
-    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -247,19 +179,6 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
-
-                        Label {
-                            text: "Actions"
-                            Layout.minimumWidth: main.colActionsW
-                            Layout.preferredWidth: main.colActionsW
-                            Layout.maximumWidth: main.colActionsW
-                            font.pixelSize: main.cellFontPx
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            Layout.alignment: Qt.AlignVCenter
-                        }
                     }
                 }
 
@@ -274,22 +193,42 @@ Item {
                     clip: true
                     model: main.programsModel || programsModel
                     currentIndex: -1
+                    onMovementStarted: main.openSwipeIndex = -1
                     ScrollBar.vertical: ScrollBar {
                         width: 18
                         policy: ScrollBar.AlwaysOn
                     }
 
-                    delegate: Rectangle {
+                    // Swiped left a program shows Delete, right Duplicate (see SwipeRow)
+                    delegate: SwipeRow {
                         id: rowRect
                         width: ListView.view ? ListView.view.width - 18 : 400
                         height: 100
-                        radius: 0
+                        actionWidth: height
+                        swipeSide: main.openSwipeIndex === index ? main.openSwipeSide : 0
 
-                        color: rowMouseArea.pressed
-                               ? Theme.selection
-                               : (index % 2 === 0 ? Theme.surfaceSunken : Theme.outlineDisabled)
-                        border.width: (selectedProgramId === programId || rowMouseArea.pressed) ? 1 : 0
-                        border.color: rowMouseArea.pressed ? Theme.accentBorder : (selectedProgramId === programId ? Theme.accentBorder : "transparent")
+                        contentColor: rowMouseArea.pressed
+                                      ? Theme.selection
+                                      : (index % 2 === 0 ? Theme.surfaceSunken : Theme.outlineDisabled)
+                        contentBorderWidth: (selectedProgramId === programId || rowMouseArea.pressed) ? 1 : 0
+                        contentBorderColor: rowMouseArea.pressed ? Theme.accentBorder : (selectedProgramId === programId ? Theme.accentBorder : "transparent")
+
+                        onSwipeOpened: function(side) {
+                            main.openSwipeSide = side
+                            main.openSwipeIndex = index
+                        }
+                        onSwipeClosed: {
+                            if (main.openSwipeIndex === index)
+                                main.openSwipeIndex = -1
+                        }
+                        onDeleteRequested: {
+                            main.openSwipeIndex = -1
+                            main.deleteProgramRequested(index)
+                        }
+                        onDuplicateRequested: {
+                            main.openSwipeIndex = -1
+                            main.duplicateProgramRequested(index)
+                        }
 
                         MouseArea {
                             id: rowMouseArea
@@ -507,47 +446,6 @@ Item {
                                 }
                             }
 
-                            Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
-
-                            Item {
-                                Layout.minimumWidth: main.colActionsW
-                                Layout.preferredWidth: main.colActionsW
-                                Layout.maximumWidth: main.colActionsW
-                                Layout.fillHeight: true
-                                z: 2
-
-                                Row {
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 24
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 20
-
-                                    Loader {
-                                        sourceComponent: iconButton
-                                        onLoaded: {
-                                            item.iconSource = Images.url("duplicate_item.svg")
-                                            item.tint = Theme.foregroundMuted
-                                            item.clicked.connect(function() {
-                                                main.duplicateProgramRequested(index)
-                                            })
-                                        }
-                                    }
-
-                                    Loader {
-                                        sourceComponent: iconButton
-                                        onLoaded: {
-                                            item.iconSource = Images.url("delete_icon.svg")
-                                            item.tint = Theme.danger
-                                            item.borderTint = Theme.danger
-                                            item.clicked.connect(function() {
-                                                main.pendingDeleteIndex = index
-                                                main.pendingDeleteName = programName
-                                                deleteProgramDialog.open()
-                                            })
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -581,5 +479,10 @@ Item {
                 }  // Item wrapper
             }
         }
+    }
+
+    SwipeDismissArea {
+        openRow: main.openSwipeIndex >= 0 ? list.itemAtIndex(main.openSwipeIndex) : null
+        onDismissed: main.openSwipeIndex = -1
     }
 }

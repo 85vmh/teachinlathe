@@ -12,7 +12,6 @@ Rectangle {
     property color tint: Theme.foregroundMuted
     property string text: ""
     property bool compact: false
-    property bool iconOnRight: false
     property int buttonHeight: Theme.buttonHeightSmall
     property int iconSize: 20
     property int fontPixelSize: Theme.fontBody
@@ -41,7 +40,6 @@ Rectangle {
         anchors.topMargin: root.vp
         anchors.bottomMargin: root.vp
         spacing: 6
-        layoutDirection: root.iconOnRight ? Qt.RightToLeft : Qt.LeftToRight
 
         Item {
             id: iconWrap

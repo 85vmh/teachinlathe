@@ -5,7 +5,7 @@ import theme 1.0
 
 // Row 4 — shown on mounted media only: [Copy to USB Stick Programs]
 // (disabled while copying), with a progress bar along the top while it copies.
-// Deleting is per file, from the list's Actions column.
+// Deleting is per file, a swipe on the list's rows.
 Rectangle {
     id: root
     property var viewModel

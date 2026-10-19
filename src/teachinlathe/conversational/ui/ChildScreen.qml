@@ -13,7 +13,6 @@ Item {
     property int activeOpIndex: -1
 
     property bool showBack: true
-    property bool reorderMode: false
     // Facing's canvas mirrored or not: kept by conversationalQml, off for a
     // program just opened, then as the operator leaves it
     readonly property bool facingMirror: (typeof conversationalQml !== "undefined" && conversationalQml)
@@ -55,10 +54,9 @@ Item {
     signal teachXRequested(int index)
     signal teachZRequested(int index)
     signal addOperationRequested()
-    signal reorderModeToggled(bool on)
-    signal moveUpRequested(int index)
-    signal moveDownRequested(int index)
+    signal moveOperationRequested(int fromIndex, int toIndex)
     signal deleteOperationRequested(int index)
+    signal duplicateOperationRequested(int index)
 
     width: parent ? parent.width : 1200
     height: parent ? parent.height : 800
@@ -126,7 +124,6 @@ Item {
                 operationsModel: operationEditor.operationsModel
                 programDatum: (operationEditor.selectedProgram && operationEditor.selectedProgram.datum) || 1
                 activeOpIndex: operationEditor.activeOpIndex
-                reorderMode: operationEditor.reorderMode
 
                 onProgramHeaderSelected: operationEditor.detailsRequested(-1)
                 onOperationSelected: function(index) {
@@ -135,10 +132,6 @@ Item {
                 onAddOperationRequested: operationEditor.addOperationRequested()
                 onOperationTypeChosen: function(type, insertIndex) {
                     operationEditor.addOperationTypeChosen(type, insertIndex)
-                }
-                onReorderModeToggled: function(on) {
-                    operationEditor.reorderMode = on
-                    operationEditor.reorderModeToggled(on)
                 }
                 onGenerateToggled: function(index, checked) {
                     operationEditor.toggleGenerateGcode(index, checked)
@@ -149,11 +142,11 @@ Item {
                 onDeleteOperationRequested: function(index) {
                     operationEditor.deleteOperationRequested(index)
                 }
-                onMoveUpRequested: function(index) {
-                    operationEditor.moveUpRequested(index)
+                onDuplicateOperationRequested: function(index) {
+                    operationEditor.duplicateOperationRequested(index)
                 }
-                onMoveDownRequested: function(index) {
-                    operationEditor.moveDownRequested(index)
+                onMoveOperationRequested: function(fromIndex, toIndex) {
+                    operationEditor.moveOperationRequested(fromIndex, toIndex)
                 }
             }
 
@@ -288,5 +281,10 @@ Item {
                 }
             }
         }
+    }
+
+    SwipeDismissArea {
+        openRow: leftPane.openSwipeRow
+        onDismissed: leftPane.openSwipeIndex = -1
     }
 }

@@ -11,30 +11,37 @@ Rectangle {
     property var operationsModel: []
     property int programDatum: 1          // the work offset's P number: 1 is G54
     property int activeOpIndex: -1
-    property bool reorderMode: false
 
     readonly property int colOpNumW: 50
     readonly property int colGenW: 80
     readonly property int colTypeW: 200
     readonly property int colOptW: 80
-    readonly property int colDelW: 100
+    readonly property int colDelW: 100    // the swipe buttons, and where the header's G54 sits
+    readonly property int rowH: Theme.rowHeight
     readonly property int opHeaderFontSize: 14
 
     property real _savedContentY: 0
     property bool _restoreScrollPending: false
     property bool _scrollToLastPending: false
-    property int _pendingDeleteIndex: -1
+    property int openSwipeIndex: -1       // the operation row swiped open...
+    property int openSwipeSide: 0         // ...and to which side: 1 Delete, -1 Duplicate
+
+    // Long press reorder: the row lifted, and how far it has been dragged
+    property int dragFrom: -1
+    property real dragDy: 0
+    readonly property int dragTo: dragFrom < 0 ? -1
+        : Math.max(0, Math.min(operationsModel.length - 1, dragFrom + Math.round(dragDy / rowH)))
+    property bool _dragAnimate: true
 
     signal programHeaderSelected()
     signal operationSelected(int index)
     signal addOperationRequested()
     signal operationTypeChosen(string type, int insertIndex)
-    signal reorderModeToggled(bool on)
     signal generateToggled(int index, bool checked)
     signal optionalToggled(int index, bool checked)
     signal deleteOperationRequested(int index)
-    signal moveUpRequested(int index)
-    signal moveDownRequested(int index)
+    signal duplicateOperationRequested(int index)
+    signal moveOperationRequested(int fromIndex, int toIndex)
 
     function _operationIndexToListIndex(index) {
         return index >= 0 ? index + 2 : 0
@@ -58,6 +65,7 @@ Rectangle {
     }
 
     function syncAfterOperationsModelChanged() {
+        openSwipeIndex = -1
         var targetY = _restoreScrollPending ? _savedContentY : opsList.contentY
         Qt.callLater(function() {
             if (_scrollToLastPending) {
@@ -74,6 +82,28 @@ Rectangle {
                 setCurrentOperationIndex(activeOpIndex)
             }
         })
+    }
+
+    function _finishReorder() {
+        var from = dragFrom
+        var to = dragTo
+        // the rows are already where the move puts them: no sliding back
+        _dragAnimate = false
+        if (from >= 0 && to >= 0 && to !== from) {
+            saveScrollPosition()
+            moveOperationRequested(from, to)
+        }
+        dragFrom = -1
+        dragDy = 0
+        Qt.callLater(function() { root._dragAnimate = true })
+    }
+
+    // The operation row showing its Delete or Duplicate, or null
+    readonly property var openSwipeRow: {
+        if (openSwipeIndex < 0)
+            return null
+        var cell = opsList.itemAtIndex(_operationIndexToListIndex(openSwipeIndex))
+        return cell ? cell.row : null
     }
 
     function openAddOperationPopup() {
@@ -97,31 +127,6 @@ Rectangle {
 
     onActiveOpIndexChanged: setCurrentOperationIndex(activeOpIndex)
     onOperationsModelChanged: syncAfterOperationsModelChanged()
-
-    ConfirmDialog {
-        id: deleteConfirmDialog
-        titleText: "Delete Operation"
-        confirmText: "Delete"
-        messageText: {
-            var idx = root._pendingDeleteIndex
-            if (idx >= 0 && idx < root.operationsModel.length) {
-                var name = root.operationsModel[idx].display_type
-                           || root.operationsModel[idx].type
-                           || "this operation"
-                return "Delete \"" + name + "\"?"
-            }
-            return "Delete this operation?"
-        }
-        onCancelled: root._pendingDeleteIndex = -1
-        onConfirmed: {
-            if (root._pendingDeleteIndex >= 0) {
-                root._scrollToLastPending =
-                    root._pendingDeleteIndex === root.operationsModel.length - 1
-                root.deleteOperationRequested(root._pendingDeleteIndex)
-                root._pendingDeleteIndex = -1
-            }
-        }
-    }
 
     Loader {
         id: addOpPopupLoader
@@ -183,6 +188,9 @@ Rectangle {
                         clip: true
                         model: root.operationsModel.length + 2
                         currentIndex: 0
+                        interactive: root.dragFrom < 0
+
+                        onMovementStarted: root.openSwipeIndex = -1
 
                         onCurrentIndexChanged: {
                             if (currentIndex === 0) {
@@ -193,8 +201,33 @@ Rectangle {
                         }
 
                         delegate: Item {
+                            id: cell
+                            property alias row: opRow
+                            // where long press reorder has this row now, against its place
+                            readonly property real reorderShift: {
+                                var i = operationIndex
+                                if (root.dragFrom < 0 || i < 0)
+                                    return 0
+                                if (i === root.dragFrom)
+                                    return root.dragDy
+                                if (root.dragFrom < i && i <= root.dragTo)
+                                    return -root.rowH
+                                if (root.dragTo <= i && i < root.dragFrom)
+                                    return root.rowH
+                                return 0
+                            }
+                            readonly property bool lifted: operationIndex >= 0 && operationIndex === root.dragFrom
+                            z: lifted ? 10 : 0
+                            scale: lifted ? 1.02 : 1
+                            transform: Translate {
+                                y: cell.reorderShift
+                                Behavior on y {
+                                    enabled: root._dragAnimate && !cell.lifted
+                                    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                                }
+                            }
                             width: ListView.view ? ListView.view.width : 400
-                            height: index === 1 ? 40 : 72
+                            height: index === 1 ? 40 : root.rowH
                             readonly property int operationIndex: index - 2
 
                             ProgramHeader {
@@ -209,28 +242,27 @@ Rectangle {
                             OperationsListHeader {
                                 anchors.fill: parent
                                 visible: index === 1
-                                reorderMode: root.reorderMode
                                 colOpNumW: root.colOpNumW
                                 colGenW: root.colGenW
                                 colTypeW: root.colTypeW
                                 colOptW: root.colOptW
-                                colDelW: root.colDelW
                                 headerFontSize: root.opHeaderFontSize
                             }
 
                             OperationListItem {
+                                id: opRow
                                 anchors.fill: parent
                                 visible: index >= 2
                                 operationIndex: parent.operationIndex
                                 operationData: index >= 2 ? root.operationsModel[parent.operationIndex] : null
                                 selected: opsList.currentIndex === index
-                                operationsCount: root.operationsModel.length
                                 colOpNumW: root.colOpNumW
                                 colGenW: root.colGenW
                                 colTypeW: root.colTypeW
                                 colOptW: root.colOptW
                                 colDelW: root.colDelW
-                                editing: root.reorderMode
+                                lifted: cell.lifted
+                                swipeSide: root.openSwipeIndex === operationIndex ? root.openSwipeSide : 0
 
                                 onGenerateToggled: function(i, checked) {
                                     root.saveScrollPosition()
@@ -241,14 +273,35 @@ Rectangle {
                                     root.optionalToggled(i, checked)
                                 }
                                 onDeleteClicked: function(i) {
-                                    root._pendingDeleteIndex = i
-                                    deleteConfirmDialog.open()
+                                    root.openSwipeIndex = -1
+                                    root._scrollToLastPending = i === root.operationsModel.length - 1
+                                    root.deleteOperationRequested(i)
                                 }
-                                onMoveUpRequested: function(i) {
-                                    root.moveUpRequested(i)
+                                onDuplicateClicked: function(i) {
+                                    root.openSwipeIndex = -1
+                                    root.saveScrollPosition()
+                                    root.duplicateOperationRequested(i)
                                 }
-                                onMoveDownRequested: function(i) {
-                                    root.moveDownRequested(i)
+                                onReorderStarted: function(i) {
+                                    root.openSwipeIndex = -1
+                                    root.dragDy = 0
+                                    root.dragFrom = i
+                                }
+                                onReorderMoved: function(i, dy) {
+                                    // kept within the list's first and last rows
+                                    root.dragDy = Math.max(-i * root.rowH,
+                                                           Math.min((root.operationsModel.length - 1 - i) * root.rowH, dy))
+                                }
+                                onReorderFinished: function(i) {
+                                    root._finishReorder()
+                                }
+                                onSwipeOpened: function(side) {
+                                    root.openSwipeSide = side
+                                    root.openSwipeIndex = operationIndex
+                                }
+                                onSwipeClosed: {
+                                    if (root.openSwipeIndex === operationIndex)
+                                        root.openSwipeIndex = -1
                                 }
                                 onRowTapped: function(i) {
                                     opsList.currentIndex = root._operationIndexToListIndex(i)
@@ -302,26 +355,6 @@ Rectangle {
                         iconSize: 36
                         fontPixelSize: 15
                         onClicked: root.openAddOperationPopup()
-                    }
-
-                    OperationIconTextButton {
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        iconSource: Images.url("reorder_icon.svg")
-                        text: "Reorder"
-                        tint: root.reorderMode ? "#1E88E5" : Theme.foregroundMuted
-                        compact: false
-                        iconOnRight: true
-                        enabled: root.operationsModel.length > 1
-                        buttonHeight: Theme.buttonHeightLarge
-                        iconSize: 36
-                        fontPixelSize: 15
-                        onClicked: {
-                            if (root.operationsModel.length <= 1)
-                                return
-                            root.reorderMode = !root.reorderMode
-                            root.reorderModeToggled(root.reorderMode)
-                        }
                     }
                 }
             }

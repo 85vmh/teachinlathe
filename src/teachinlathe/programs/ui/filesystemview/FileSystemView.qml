@@ -8,10 +8,10 @@ Rectangle {
     id: root
     property var viewModel
     property bool showActionBar: true
-    // The file list's Actions column (delete).
+    // The file list's swipe to delete.
     property bool showActions: true
     // The action bar only has something to offer on mounted media (copying
-    // to the USB stick); deleting is in the list's Actions column.
+    // to the USB stick); deleting is a swipe on the list's rows.
     readonly property bool actionBarShown: showActionBar
                                            && !!viewModel && viewModel.isInMountedMedia
 

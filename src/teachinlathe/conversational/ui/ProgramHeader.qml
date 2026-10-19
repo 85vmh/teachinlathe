@@ -11,7 +11,7 @@ Rectangle {
     property int  datum: 1               // the work offset's P number: 1 is G54 ... 6 is G59
     // as the operations' rows: their font, their "[#NN]" and gap, their margin
     property int  itemFontSize: 16
-    property int  colDelW: 100           // the operations' Delete column, at the right
+    property int  colDelW: 100           // the G54 sits centred half of this in from the right
 
     signal clicked()
 
@@ -35,7 +35,7 @@ Rectangle {
     }
 
     // the work coordinate system - the origin symbol and its G code in bold -
-    // centred on the operations' Delete column below
+    // near the right edge
     RowLayout {
         anchors.horizontalCenter: parent.right
         anchors.horizontalCenterOffset: -root.colDelW / 2
