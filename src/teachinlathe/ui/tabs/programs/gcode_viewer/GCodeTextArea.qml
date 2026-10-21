@@ -143,7 +143,9 @@ Rectangle {
         centerAnimation.start()
     }
 
-    function syncHighlight() {
+    // animated: scroll to the line rather than jump - when the line moves on,
+    // not when the text or the size changes under it.
+    function syncHighlight(animated) {
         var rect = root._highlightLineRect()
         if (!rect) {
             highlightRect.visible = false
@@ -152,7 +154,7 @@ Rectangle {
         }
         root._applyHighlightRect(rect)
         if (centerOnHighlight && !userDetachedFromHighlight) {
-            root.centerHighlight(false)
+            root.centerHighlight(animated === true)
         } else if (linesBelowHighlight > 0) {
             var lineStep = rect.height
             var targetBottom = flick.height - ((linesBelowHighlight + 1) * lineStep)
@@ -171,7 +173,7 @@ Rectangle {
             Qt.callLater(syncHighlight)
         }
     }
-    onHighlightLineChanged: Qt.callLater(syncHighlight)
+    onHighlightLineChanged: Qt.callLater(syncHighlight, true)
     onCenterOnHighlightChanged: {
         if (centerOnHighlight)
             userDetachedFromHighlight = false
@@ -224,7 +226,9 @@ Rectangle {
             target: flick
             property: "contentY"
             duration: 220
-            easing.type: Easing.InOutQuad
+            // Decelerating only: while a program runs the line moves on before
+            // the last scroll has finished, and each restart picks up at speed.
+            easing.type: Easing.OutCubic
             onStopped: {
                 root._programmaticScroll = false
                 root.updateRecenterButton()
@@ -309,6 +313,20 @@ Rectangle {
                 }
             }
         }
+    }
+
+    // Each part fades into its own background: the gutter's grey, the code's white.
+    ScrollFades {
+        anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+        width: 56
+        flickable: flick
+        color: "#f5f5f5"
+    }
+
+    ScrollFades {
+        anchors { left: parent.left; leftMargin: 56; right: parent.right; top: parent.top; bottom: parent.bottom }
+        flickable: flick
+        color: root.color
     }
 
     Button {
