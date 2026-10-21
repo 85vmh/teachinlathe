@@ -18,9 +18,7 @@ from PyQt6.QtQuick import QQuickView
 from teachinlathe.app.application import Application
 from teachinlathe.app.app_state import AppState
 from teachinlathe.app.app_identity import APPLICATION_DISPLAY_NAME
-from teachinlathe.app.dev_panel import DevPanelWindow
 from teachinlathe.app.touch_feedback import TouchFeedback
-from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.app.app_shell_qml import AppShellBridge
 from teachinlathe.ui.tabs.programs.backplot import register_qml_types as register_backplot_type
 from teachinlathe.ui.tabs.conversational.ConversationalViewModel import ConversationalViewModel
@@ -49,7 +47,6 @@ class AppWindow(QObject):
         self.application = application
 
         self.appRoot = None
-        self.devPanelWindow = None
 
         self.appState = AppState(self)
         self.fixture_repository = application.fixtures
@@ -62,9 +59,6 @@ class AppWindow(QObject):
         self._registerSingletons()
         self._loadScene()
         self._connectScreens()
-
-        self.latheComponent.comp.addListener(TeachInLatheComponent.PinDevMode, self.onDevModeChanged)
-        self.onDevModeChanged(self.latheComponent.comp.getPin(TeachInLatheComponent.PinDevMode).value)
 
         initial_fixture = self.fixture_repository.getCurrentFixture()
         if initial_fixture:
@@ -192,13 +186,3 @@ class AppWindow(QObject):
             self.conversationalViewModel.openProgramFile(os.path.abspath(json_path))
         except Exception as e:
             LOG.error("editConversationalProgramFromJson failed: %s", e)
-
-    def onDevModeChanged(self, value):
-        if value:
-            if self.devPanelWindow is None:
-                self.devPanelWindow = DevPanelWindow(self)
-            self.devPanelWindow.show()
-            self.devPanelWindow.raise_()
-            return
-        if self.devPanelWindow is not None:
-            self.devPanelWindow.hide()

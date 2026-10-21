@@ -8,6 +8,12 @@ import theme
 Rectangle {
     id: root
     required property var viewModel
+    // Space under the last frame. The pane sets it so the frame ends as far
+    // above the action bar as the backplot does.
+    property real bottomPadding: 10
+    readonly property real padding: 10
+    // The running file is never squeezed below this; past it, the stack scrolls.
+    readonly property real minimumCodeHeight: 260
     color: Theme.surface
 
     function startFrameAt(index) {
@@ -32,13 +38,13 @@ Rectangle {
         Item {
             id: scene
             width: root.width
-            height: contentColumn.height + 20
+            height: contentColumn.y + contentColumn.height + root.bottomPadding
 
             Column {
                 id: contentColumn
-                x: 10
-                y: 10
-                width: root.width - 20
+                x: root.padding
+                y: root.padding
+                width: root.width - 2 * root.padding
                 spacing: 10
 
                 Repeater {
@@ -54,16 +60,18 @@ Rectangle {
                     }
                 }
 
+                // Runs down to the bottom of the view, below the calling frames.
                 ProgramContentFrame {
                     id: activeFrame
                     width: contentColumn.width
+                    height: Math.max(implicitHeight + root.minimumCodeHeight,
+                                     root.height - contentColumn.y - y - root.bottomPadding)
                     visible: viewModel.activeExecutionContent !== ""
                     filePath: viewModel.activeExecutionFilePath
 
                     GCodeTextArea {
                         Layout.fillWidth: true
-                        width: contentColumn.width - 20
-                        height: Math.max(root.height - 40, 260)
+                        Layout.fillHeight: true
                         viewModel: root.viewModel
                         content: viewModel.activeExecutionContent
                         highlightLine: viewModel.executionHighlightVisible ? viewModel.activeExecutionMotionLine : 0

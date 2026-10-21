@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import tabs.programs
 import tabs.programs.program_loaded
 import tabs.programs.gcode_viewer.while_running
+import theme
 
 Rectangle {
     id: root
@@ -86,6 +87,8 @@ Rectangle {
 
         ProgramExecutionStack {
             viewModel: root.viewModel
+            // With the bar's own gap, the backplot's gap above the run bar.
+            bottomPadding: Math.max(0, Theme.spacingSmall - root.actionBarGap * root.actionBarReveal)
         }
     }
 }

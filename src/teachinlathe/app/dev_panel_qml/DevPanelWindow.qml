@@ -3,308 +3,192 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import theme
+import TeachInLathe
 
 Window {
     id: root
-    width: 520
-    height: 760
-    visible: false
+    width: 780
+    height: 600
+    visible: true
+    // The application is maximised and frameless: without this the panel
+    // goes behind it the first time the application is clicked.
+    flags: Qt.Window | Qt.WindowStaysOnTopHint
     title: "TeachInLathe Dev Panel"
     color: Theme.surfaceAlt
 
-    readonly property color panelBg: Theme.surface
-    readonly property color borderColor: Theme.separator
+    readonly property var vm: DevPanelViewModel
     readonly property color textColor: Theme.foregroundStrong
     readonly property color mutedText: "#64748b"
+    readonly property color darkFill: "#334155"
     readonly property color green: "#22c55e"
     readonly property color red: "#ef4444"
-    property string spindleLeverState: "neutral"
-    property real jogIncrement: 0.0
+    readonly property color amber: "#f59e0b"
 
-    function setSpindleLever(state) {
-        spindleLeverState = state
-        devPanelViewModel.setSpindleLever(state)
-    }
-
-    function setJogIncrement(value) {
-        jogIncrement = value
-        devPanelViewModel.setFloat("jog.increment", value)
-    }
-
-    ScrollView {
+    ColumnLayout {
         anchors.fill: parent
-        contentWidth: availableWidth
+        anchors.margins: 14
+        spacing: Theme.spacing
 
-        ColumnLayout {
-            width: root.width
+        // ── machine ─────────────────────────────────────────────────────────
+        RowLayout {
+            Layout.fillWidth: true
             spacing: Theme.spacing
-            anchors.margins: 14
 
-            Text {
+            PanelButton {
                 Layout.fillWidth: true
-                Layout.margins: 14
-                text: "TeachInLathe Dev Panel"
-                color: root.textColor
-                font.pixelSize: 24
-                font.bold: true
+                text: root.vm.estop ? "E-Stop\nPRESSED" : "E-Stop"
+                lit: root.vm.estop
+                litColor: root.red
+                onClicked: root.vm.setEstop(!root.vm.estop)
             }
 
-            Section {
-                title: "Cycle"
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.spacing
-
-                    MomentaryButton {
-                        Layout.fillWidth: true
-                        text: "Cycle Start"
-                        pinName: "button.cycle-start"
-                        activeColor: root.green
-                        ledActive: devPanelViewModel.cycleStartLed
-                    }
-
-                    MomentaryButton {
-                        Layout.fillWidth: true
-                        text: "Cycle Abort"
-                        pinName: "button.cycle-stop"
-                        activeColor: root.red
-                    }
-                }
+            PanelButton {
+                Layout.fillWidth: true
+                text: root.vm.powerOn ? "Power On" : (root.vm.ncReady ? "Power On\n(NC ready)" : "Power On\n(not ready)")
+                lit: root.vm.powerOn
+                litColor: root.green
+                enabled: root.vm.powerOn || (root.vm.ncReady && !root.vm.estop)
+                onClicked: root.vm.setPowerOn(!root.vm.powerOn)
             }
 
-            Section {
-                title: "Machine"
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 2
-                    columnSpacing: 12
-                    rowSpacing: 12
-
-                    ToggleControl {
-                        Layout.fillWidth: true
-                        text: "E-Stop"
-                        pinName: "button.estop"
-                        activeColor: root.red
-                    }
-
-                    ToggleControl {
-                        Layout.fillWidth: true
-                        text: "Single Block"
-                        pinName: "button.single-block"
-                    }
-
-                    MomentaryButton {
-                        Layout.fillWidth: true
-                        text: "Power On"
-                        pinName: "button.power-on"
-                        activeColor: root.green
-                    }
-
-                    MomentaryButton {
-                        Layout.fillWidth: true
-                        text: "Power Off"
-                        pinName: "button.power-off"
-                        activeColor: root.red
-                    }
-                }
+            PanelButton {
+                Layout.fillWidth: true
+                text: "Home Axes"
+                lit: pressed
+                litColor: root.darkFill
+                onPressedChanged: root.vm.setHomeAll(pressed)
             }
 
-            Section {
-                title: "Spindle"
+            PanelButton {
+                Layout.fillWidth: true
+                text: "Chuck Cover\n" + (root.vm.chuckCoverOpen ? "OPEN" : "closed")
+                lit: root.vm.chuckCoverOpen
+                litColor: root.amber
+                onClicked: root.vm.setChuckCoverOpen(!root.vm.chuckCoverOpen)
+            }
+
+            PanelButton {
+                Layout.fillWidth: true
+                text: root.vm.firstGear ? "Gear 1" : "Gear 2"
+                lit: root.vm.firstGear
+                litColor: root.darkFill
+                onClicked: root.vm.setFirstGear(!root.vm.firstGear)
+            }
+        }
+
+        // ── apron ───────────────────────────────────────────────────────────
+        Box {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            title: "Apron"
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 18
+
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: Theme.spacing
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.spacingSmall
-
-                        SelectButton {
-                            Layout.fillWidth: true
-                            text: "Reverse"
-                            selected: root.spindleLeverState === "reverse"
-                            onClicked: root.setSpindleLever("reverse")
-                        }
-
-                        SelectButton {
-                            Layout.fillWidth: true
-                            text: "Neutral"
-                            selected: root.spindleLeverState === "neutral"
-                            onClicked: root.setSpindleLever("neutral")
-                        }
-
-                        SelectButton {
-                            Layout.fillWidth: true
-                            text: "Forward"
-                            selected: root.spindleLeverState === "forward"
-                            onClicked: root.setSpindleLever("forward")
-                        }
-                    }
-
-                    GridLayout {
-                        Layout.fillWidth: true
-                        columns: 2
-                        columnSpacing: 12
-                        rowSpacing: 12
-
-                        ToggleControl {
-                            Layout.fillWidth: true
-                            text: "Cover Open"
-                            pinName: "spindle.cover-opened"
-                        }
-
-                        ToggleControl {
-                            Layout.fillWidth: true
-                            text: "First Gear"
-                            pinName: "spindle.is-first-gear"
-                        }
-                    }
-                }
-            }
-
-            Section {
-                title: "Overrides"
-                ColumnLayout {
-                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
                     spacing: 14
 
-                    PercentSlider {
+                    OverrideSlider {
                         Layout.fillWidth: true
                         label: "Feed Override"
-                        pinName: "override.feed"
                         from: 0
                         to: 120
-                        value: 100
+                        onPercentChanged: root.vm.setFeedOverride(percent)
                     }
 
-                    PercentSlider {
+                    OverrideSlider {
                         Layout.fillWidth: true
                         label: "Spindle Override"
-                        pinName: "override.spindle"
                         from: 50
                         to: 120
-                        value: 100
+                        onPercentChanged: root.vm.setSpindleOverride(percent)
                     }
-                }
-            }
 
-            Section {
-                title: "Jog"
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.spacing
-
-                    GridLayout {
+                    Selector {
                         Layout.fillWidth: true
-                        columns: 2
-                        columnSpacing: 12
-                        rowSpacing: 12
-
-                        MomentaryButton {
-                            Layout.fillWidth: true
-                            text: "X Clockwise"
-                            pinName: "jog.x-clockwise"
-                        }
-
-                        MomentaryButton {
-                            Layout.fillWidth: true
-                            text: "X Counterclockwise"
-                            pinName: "jog.x-counterclockwise"
-                        }
-
-                        MomentaryButton {
-                            Layout.fillWidth: true
-                            text: "Z Clockwise"
-                            pinName: "jog.z-clockwise"
-                        }
-
-                        MomentaryButton {
-                            Layout.fillWidth: true
-                            text: "Z Counterclockwise"
-                            pinName: "jog.z-counterclockwise"
-                        }
-
-                        MomentaryButton {
-                            Layout.fillWidth: true
-                            text: "X+"
-                            pinName: "joystick.x-plus"
-                        }
-
-                        MomentaryButton {
-                            Layout.fillWidth: true
-                            text: "X-"
-                            pinName: "joystick.x-minus"
-                        }
-
-                        MomentaryButton {
-                            Layout.fillWidth: true
-                            text: "Z+"
-                            pinName: "joystick.z-plus"
-                        }
-
-                        MomentaryButton {
-                            Layout.fillWidth: true
-                            text: "Z-"
-                            pinName: "joystick.z-minus"
-                        }
-
-                        MomentaryButton {
-                            Layout.fillWidth: true
-                            text: "Neutral"
-                            pinName: "joystick.neutral"
-                        }
-
-                        ToggleControl {
-                            Layout.fillWidth: true
-                            text: "Rapid"
-                            pinName: "joystick.rapid"
-                        }
+                        label: "Spindle"
+                        options: ["M3", "stop", "M4"]
+                        names: ["M3", "Stop", "M4"]
+                        current: root.vm.spindleLever
+                        onSelected: (option) => root.vm.setSpindleLever(option)
                     }
 
-                    Text {
-                        text: "Jog Increment"
-                        color: root.mutedText
-                        font.pixelSize: Theme.fontSmall
-                        font.bold: true
+                    Selector {
+                        Layout.fillWidth: true
+                        label: "Jog Increment"
+                        options: ["off", "0.1", "0.01", "0.001"]
+                        names: ["Off", "0.1", "0.01", "0.001"]
+                        current: root.vm.jogIncrement
+                        onSelected: (option) => root.vm.setJogIncrement(option)
                     }
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: Theme.spacingSmall
+                        Layout.topMargin: 6
+                        spacing: Theme.spacing
 
-                        SelectButton { Layout.fillWidth: true; text: "Off"; selected: root.jogIncrement === 0.0; onClicked: root.setJogIncrement(0.0) }
-                        SelectButton { Layout.fillWidth: true; text: "0.1"; selected: root.jogIncrement === 0.1; onClicked: root.setJogIncrement(0.1) }
-                        SelectButton { Layout.fillWidth: true; text: "0.01"; selected: root.jogIncrement === 0.01; onClicked: root.setJogIncrement(0.01) }
-                        SelectButton { Layout.fillWidth: true; text: "0.001"; selected: root.jogIncrement === 0.001; onClicked: root.setJogIncrement(0.001) }
+                        PanelButton {
+                            Layout.fillWidth: true
+                            text: "Cycle Abort"
+                            lit: pressed
+                            litColor: root.red
+                            onPressed: root.vm.pressCycleAbort()
+                            onReleased: root.vm.releaseCycleAbort()
+                            onCanceled: root.vm.releaseCycleAbort()
+                        }
+
+                        PanelButton {
+                            Layout.fillWidth: true
+                            text: "Cycle Start"
+                            // The button's lamp is program_state's LED output.
+                            lit: pressed || root.vm.cycleStartLed
+                            litColor: root.green
+                            onPressed: root.vm.pressCycleStart()
+                            onReleased: root.vm.releaseCycleStart()
+                            onCanceled: root.vm.releaseCycleStart()
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.alignment: Qt.AlignTop
+                    spacing: 14
+
+                    RowLayout {
+                        Layout.alignment: Qt.AlignHCenter
+                        spacing: 24
+                        Handwheel { axis: "x" }
+                        Handwheel { axis: "z" }
+                    }
+
+                    Joystick {
+                        Layout.alignment: Qt.AlignHCenter
                     }
                 }
             }
-
-            Item { Layout.preferredHeight: 14 }
         }
     }
 
-    component Section: Rectangle {
-        id: section
+    // ── components ──────────────────────────────────────────────────────────
+
+    component Box: Rectangle {
+        id: box
         property string title: ""
         default property alias content: body.data
-        Layout.fillWidth: true
-        Layout.leftMargin: 14
-        Layout.rightMargin: 14
         radius: Theme.radiusLarge
-        color: root.panelBg
-        border.color: root.borderColor
-        implicitHeight: sectionLayout.implicitHeight + 28
+        color: Theme.surface
+        border.color: Theme.separator
 
         ColumnLayout {
-            id: sectionLayout
             anchors.fill: parent
             anchors.margins: 14
             spacing: Theme.spacing
 
             Text {
-                Layout.fillWidth: true
-                text: section.title
+                text: box.title
                 color: root.textColor
                 font.pixelSize: Theme.fontLarge
                 font.bold: true
@@ -313,112 +197,211 @@ Window {
             ColumnLayout {
                 id: body
                 Layout.fillWidth: true
-                spacing: Theme.spacing
             }
+
+            Item { Layout.fillHeight: true }
         }
     }
 
-    component MomentaryButton: Button {
+    component PanelButton: Button {
         id: control
-        property string pinName: ""
-        property bool ledActive: false
-        property color activeColor: "#334155"
+        property bool lit: false
+        property color litColor: root.darkFill
         Layout.preferredHeight: 54
-        font.pixelSize: Theme.fontBody
-        font.bold: true
-        onPressedChanged: devPanelViewModel.setBit(pinName, pressed)
-        background: Rectangle {
-            radius: Theme.radiusLarge
-            color: control.ledActive || control.pressed ? control.activeColor : Theme.selection
-            border.color: control.ledActive || control.pressed ? Qt.darker(control.activeColor, 1.2) : root.borderColor
-        }
-        contentItem: Text {
-            text: control.text
-            color: control.ledActive || control.pressed ? Theme.surface : root.textColor
-            font: control.font
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            wrapMode: Text.WordWrap
-        }
-    }
-
-    component ToggleControl: CheckBox {
-        id: control
-        property string pinName: ""
-        property color activeColor: "#334155"
-        Layout.preferredHeight: 46
-        text: ""
-        onCheckedChanged: devPanelViewModel.setBit(pinName, checked)
-        indicator: Rectangle {
-            x: 0
-            y: (control.height - height) / 2
-            width: 48
-            height: 28
-            radius: 14
-            color: control.checked ? control.activeColor : Theme.separator
-            Rectangle {
-                width: 22
-                height: 22
-                radius: 11
-                x: control.checked ? 23 : 3
-                y: 3
-                color: Theme.surface
-            }
-        }
-        contentItem: Text {
-            text: control.text
-            color: root.textColor
-            font.pixelSize: Theme.fontBody
-            verticalAlignment: Text.AlignVCenter
-            leftPadding: 58
-        }
-    }
-
-    component SelectButton: Button {
-        id: control
-        property bool selected: false
-        Layout.preferredHeight: 46
         font.pixelSize: Theme.fontSmall
         font.bold: true
+        opacity: enabled ? 1.0 : 0.4
         background: Rectangle {
             radius: Theme.radiusLarge
-            color: control.selected ? "#334155" : Theme.selection
-            border.color: control.selected ? Theme.foregroundStrong : root.borderColor
+            color: control.lit ? control.litColor : Theme.selection
+            border.color: control.lit ? Qt.darker(control.litColor, 1.2) : Theme.separator
         }
         contentItem: Text {
             text: control.text
-            color: control.selected ? Theme.surface : root.textColor
+            color: control.lit ? Theme.surface : root.textColor
             font: control.font
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
     }
 
-    component PercentSlider: ColumnLayout {
-        id: control
+    component OverrideSlider: ColumnLayout {
+        id: overrideSlider
         property string label: ""
-        property string pinName: ""
-        property real from: 0
-        property real to: 120
-        property real value: 100
-        spacing: 6
+        property alias from: slider.from
+        property alias to: slider.to
+        readonly property int percent: Math.round(slider.value)
+        spacing: 4
 
         RowLayout {
             Layout.fillWidth: true
-            Text { text: control.label; color: root.textColor; font.pixelSize: Theme.fontSmall; font.bold: true }
+            Text { text: overrideSlider.label; color: root.textColor; font.pixelSize: Theme.fontSmall; font.bold: true }
             Item { Layout.fillWidth: true }
-            Text { text: Math.round(slider.value) + "%"; color: root.mutedText; font.pixelSize: Theme.fontSmall; font.bold: true }
+            Text { text: overrideSlider.percent + "%"; color: root.mutedText; font.pixelSize: Theme.fontSmall; font.bold: true }
         }
 
         Slider {
             id: slider
             Layout.fillWidth: true
-            from: control.from
-            to: control.to
-            value: control.value
-            stepSize: 1
-            onMoved: devPanelViewModel.setFloat(control.pinName, value / 100.0)
-            Component.onCompleted: devPanelViewModel.setFloat(control.pinName, value / 100.0)
+            stepSize: 5
+            snapMode: Slider.SnapAlways
+            value: 100
         }
+    }
+
+    component Selector: ColumnLayout {
+        id: selector
+        property string label: ""
+        property var options: []
+        property var names: []
+        property string current: ""
+        signal selected(string option)
+        spacing: 4
+
+        Text { text: selector.label; color: root.mutedText; font.pixelSize: Theme.fontSmall; font.bold: true }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 4
+            Repeater {
+                model: selector.options
+                PanelButton {
+                    required property int index
+                    required property string modelData
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    text: selector.names[index]
+                    lit: selector.current === modelData
+                    onClicked: selector.selected(modelData)
+                }
+            }
+        }
+    }
+
+    // Dragged round, or scrolled: one detent per 3.6 degrees, 100 a turn,
+    // and per wheel notch.
+    component Handwheel: Item {
+        id: wheel
+        property string axis: "x"
+        property real angle: 0
+        property real dragAngle: 0
+        readonly property real degreesPerDetent: 3.6
+        implicitWidth: 120
+        implicitHeight: 140
+
+        function turn(detents) {
+            if (detents === 0)
+                return
+            wheel.angle += detents * wheel.degreesPerDetent
+            root.vm.turnHandwheel(wheel.axis, detents)
+        }
+
+        function pointerAngle(x, y) {
+            return Math.atan2(y - face.height / 2, x - face.width / 2) * 180 / Math.PI
+        }
+
+        Rectangle {
+            id: face
+            width: 110
+            height: 110
+            anchors.horizontalCenter: parent.horizontalCenter
+            radius: width / 2
+            color: Theme.selection
+            border.color: Theme.separator
+            border.width: 2
+
+            Item {
+                anchors.fill: parent
+                rotation: wheel.angle
+                Repeater {
+                    model: 20
+                    Rectangle {
+                        required property int index
+                        x: face.width / 2 - 1
+                        y: 3
+                        width: 2
+                        height: index % 5 === 0 ? 10 : 5
+                        color: root.mutedText
+                        transform: Rotation { origin.x: 1; origin.y: face.height / 2 - 3; angle: index * 18 }
+                    }
+                }
+                Rectangle {
+                    width: 16
+                    height: 16
+                    radius: 8
+                    x: face.width / 2 - 8
+                    y: 18
+                    color: root.darkFill
+                }
+            }
+
+            Text {
+                anchors.centerIn: parent
+                text: wheel.axis.toUpperCase()
+                color: root.textColor
+                font.pixelSize: Theme.fontLarge
+                font.bold: true
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onPressed: (mouse) => wheel.dragAngle = wheel.pointerAngle(mouse.x, mouse.y)
+                onPositionChanged: (mouse) => {
+                    var now = wheel.pointerAngle(mouse.x, mouse.y)
+                    var delta = now - wheel.dragAngle
+                    if (delta > 180) delta -= 360
+                    if (delta < -180) delta += 360
+                    var detents = Math.trunc(delta / wheel.degreesPerDetent)
+                    if (detents !== 0) {
+                        wheel.dragAngle += detents * wheel.degreesPerDetent
+                        wheel.turn(detents)
+                    }
+                }
+                onWheel: (event) => wheel.turn(event.angleDelta.y > 0 ? 1 : (event.angleDelta.y < 0 ? -1 : 0))
+            }
+        }
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            text: "MPG " + wheel.axis.toUpperCase()
+            color: root.mutedText
+            font.pixelSize: Theme.fontSmall
+            font.bold: true
+        }
+    }
+
+    // Laid out as the Manual tab's joystick: X- up, X+ down, Z- left, Z+ right.
+    component Joystick: GridLayout {
+        columns: 3
+        rowSpacing: 6
+        columnSpacing: 6
+
+        Item { implicitWidth: 64; implicitHeight: 54 }
+        Direction { direction: "x-minus"; text: "X-" }
+        Item { implicitWidth: 64; implicitHeight: 54 }
+
+        Direction { direction: "z-minus"; text: "Z-" }
+        PanelButton {
+            Layout.preferredWidth: 64
+            text: "Rapid"
+            lit: root.vm.joystickRapid
+            litColor: root.amber
+            onPressedChanged: root.vm.setJoystickRapid(pressed)
+        }
+        Direction { direction: "z-plus"; text: "Z+" }
+
+        Item { implicitWidth: 64; implicitHeight: 54 }
+        Direction { direction: "x-plus"; text: "X+" }
+        Item { implicitWidth: 64; implicitHeight: 54 }
+    }
+
+    component Direction: PanelButton {
+        property string direction: ""
+        Layout.preferredWidth: 64
+        lit: root.vm.joystickDirection === direction
+        litColor: root.green
+        enabled: root.vm.joystickDirection === "" || lit
+        onClicked: root.vm.toggleJoystick(direction)
     }
 }

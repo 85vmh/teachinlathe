@@ -32,6 +32,7 @@ ezdxf = "^1.4.4"
 [tool.poetry.scripts]
 teachinlathe = "teachinlathe:main"
 teachinlathe-tool = "teachinlathe.app.debug_tools:main"
+teachinlathe-devpanel = "teachinlathe.app.dev_panel:main"
 
 [tool.versioneer]
 VCS = "git"
