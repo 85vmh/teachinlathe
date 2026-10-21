@@ -9,10 +9,10 @@ Item {
     anchors.fill: parent
     implicitHeight: contentColumn.implicitHeight + 20
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
 
     function applyData(index, data) {
@@ -55,7 +55,7 @@ Item {
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function(p) {
                     var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
+                    root.editor.save(merged)
                 }
             }
 
@@ -68,7 +68,7 @@ Item {
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function(p) {
                     var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
+                    root.editor.save(merged)
                 }
             }
 
@@ -81,7 +81,7 @@ Item {
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function(p) {
                     var merged = root.mergeIntoOp(p.payload || p)
-                    root.saveRequested({index: opIndex, payload: merged})
+                    root.editor.save(merged)
                 }
             }
         }

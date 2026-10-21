@@ -1490,9 +1490,8 @@ class _BackplotRenderer(QQuickFramebufferObject.Renderer):
 class LatheBackplotItem(QQuickFramebufferObject):
     """The QML-facing item. Instantiated from QML as ``LatheBackplot``.
 
-    The runtime store is injected from Python after construction, because QML
-    creates the item: ``ProgramsController`` hands over the same store the
-    rest of the Programs screen reads.
+    ProgramLoadedScreen.qml tells it which file to preview and what to do to
+    the view, as ProgramsViewModel says; nothing in Python holds it.
     """
 
     def __init__(self, parent=None):

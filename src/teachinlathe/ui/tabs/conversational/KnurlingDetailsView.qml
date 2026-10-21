@@ -8,10 +8,10 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
@@ -44,7 +44,7 @@ Item {
     }
 
     function save(payload) {
-        root.saveRequested({index: opIndex, payload: root.mergeIntoOp(payload)})
+        root.editor.save(root.mergeIntoOp(payload))
     }
 
     ColumnLayout {

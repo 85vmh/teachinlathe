@@ -2,7 +2,7 @@ import QtQuick 2.15
 import "../../tool_library/shapes/drill.js" as DrillShape
 import "../../tool_library/shapes/tap.js" as TapShape
 
-// The drill or tap in the spindle, on the centre line: its point at ``z``,
+// The drill or tap loaded, on the centre line: its point at ``z``,
 // its body running on towards +Z, drawn by the Tool Library's own drawing
 // (ui/tabs/tool_library/shapes) - one drawing of each, wherever it shows.
 QtObject {

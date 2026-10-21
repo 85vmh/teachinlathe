@@ -1,8 +1,7 @@
 // FacingVisualDetailsView.qml — Facing on the profile canvas, laid out as
 // Profile Roughing's: no profile, so the passes are drawn over the header's
-// stock, from the start position to the end position. Edits the same data
-// as FacingDetailsView and saves every change through the same updateFacing
-// slot.
+// stock, from the start position to the end position. Saves every change
+// through updateFacing.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -14,6 +13,8 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
 
@@ -37,11 +38,9 @@ Item {
     onCanvasMirrorChanged: profileCanvas.mirrorAcrossCenterline = canvasMirror
 
     // what facing will cut with the values above
-    readonly property var facingPreview: (opIndex >= 0 && typeof conversationalQml !== "undefined" && conversationalQml)
-                                         ? conversationalQml.facingPreview(_draftOp())
+    readonly property var facingPreview: (opIndex >= 0 && editor)
+                                         ? editor.preview(_draftOp())
                                          : null
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
@@ -62,18 +61,15 @@ Item {
     function save(op) {
         if (opIndex < 0 || !opData) return
         opData = op || _draftOp()
-        root.saveRequested({index: opIndex, payload: opData})
+        root.editor.save(opData)
     }
 
     function applyData(index, data) {
         opIndex = index
         opData  = data || {}
 
-        workpiece = (typeof conversationalQml !== "undefined" && conversationalQml)
-                    ? (conversationalQml.currentWorkpiece() || {}) : {}
-        toolCard = (typeof conversationalQml !== "undefined" && conversationalQml
-                    && conversationalQml.toolCardBefore)
-                   ? (conversationalQml.toolCardBefore(index) || {}) : {}
+        workpiece = editor ? (editor.workpiece || {}) : {}
+        toolCard = editor ? (editor.toolCard || {}) : {}
 
         var gp = opData.geometry_parameters || {}
         var cp = opData.cutting_parameters || {}
@@ -190,14 +186,15 @@ Item {
             // Facing cuts with a turning tool or a parting blade
             ToolPickerPopup {
                 id: toolPicker
+                toolsModel: root.editor ? root.editor.touchedOffTools : null
                 contentWidth: root.width
                 toolKinds: ["Turning Tool", "Parting Blade"]
                 currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
                 currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
                                            ? root.toolCard.toolchange_position : "G28"
                 onToolChosen: function(toolNo, position) {
-                    if (typeof conversationalQml !== "undefined" && conversationalQml && conversationalQml.useToolBefore)
-                        conversationalQml.useToolBefore(root.opIndex, toolNo, position)
+                    if (root.editor)
+                        root.editor.useTool(toolNo, position)
                 }
             }
 

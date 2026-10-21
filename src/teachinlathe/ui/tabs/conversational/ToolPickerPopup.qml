@@ -51,8 +51,8 @@ Popup {
     // on - it scrolls
     readonly property real visibleRows: 3.5
 
-    readonly property var toolsModel: typeof manualToolsViewModel !== "undefined" && manualToolsViewModel
-                                      ? manualToolsViewModel.touchedOffToolsModel : null
+    // The tools a program can change to (the operation editor's touchedOffTools).
+    property var toolsModel: null
 
     onAboutToShow: {
         selectedToolNo = currentToolNo

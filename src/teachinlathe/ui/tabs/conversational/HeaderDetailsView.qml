@@ -9,6 +9,8 @@ import "profile_canvas/brokenstock.js" as Broken
 
 Item {
     id: root
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     anchors.fill: parent
     property int fieldFontSize: 16
     readonly property int labelWidth: 150
@@ -37,7 +39,6 @@ Item {
     property real   stockLength:  (programData && programData.header && programData.header.workpiece && programData.header.workpiece.stock_length !== undefined) ? programData.header.workpiece.stock_length : 0.0
 
     // --- Bridge signals (same pattern as other detail views) ---
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
     signal openKeyboardRequested(var field)
 
@@ -85,7 +86,7 @@ Item {
                 }
             }
         }
-        root.saveRequested({ index: -1, payload: payload })
+        root.editor.save(payload)
     }
 
     // the insert type's dropdown, from the tool editors

@@ -127,8 +127,8 @@ class ProgramsToolFeedSpeedViewModel(QObject):
             return 0.0
 
     @pyqtProperty(str, notify=valuesChanged)
-    def currentToolText(self):
-        tool = int(getattr(self._snapshot, 'tool_in_spindle', 0) or 0)
+    def currentLoadedToolText(self):
+        tool = int(getattr(self._snapshot, 'current_loaded_tool', 0) or 0)
         return f"T{tool}"
 
     @pyqtProperty(str, notify=valuesChanged)

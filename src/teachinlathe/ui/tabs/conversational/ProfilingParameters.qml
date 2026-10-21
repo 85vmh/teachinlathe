@@ -1,4 +1,4 @@
-// CuttingGeometry.qml — two equal 3x2 grids side-by-side (Start | Spacer | End)
+// ProfilingParameters.qml — two equal 3x2 grids side-by-side (Start | Spacer | End)
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15

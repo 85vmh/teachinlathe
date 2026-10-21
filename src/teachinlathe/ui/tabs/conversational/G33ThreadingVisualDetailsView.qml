@@ -21,6 +21,8 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
 
@@ -53,13 +55,12 @@ Item {
     // the thread's form - metric for now (ThreadForm, data_types.py) - and
     // the included angle of its flanks
     property string threadForm: "metric"
-    readonly property real threadAngle: (typeof threadingDetailsViewModel !== "undefined" && threadingDetailsViewModel)
-                                        ? threadingDetailsViewModel.threadAngle(threadForm) : 60
+    readonly property real threadAngle: editor ? editor.threadAngle(threadForm) : 60
 
     // Minor Ø from Major Ø and the pitch (external)
     function calculateMinor() {
-        if (typeof threadingDetailsViewModel === "undefined" || !threadingDetailsViewModel) return
-        var r = threadingDetailsViewModel.calculateThreadDiameter("OD", pitch, majorDiameter, minorDiameter)
+        if (!root.editor) return
+        var r = root.editor.calculateThreadDiameter("OD", pitch, majorDiameter, minorDiameter)
         if (!r || !r.valid) return
         minorDiameter = Number(r.calculatedDiameter)
         save()
@@ -232,8 +233,6 @@ Item {
     // where the insert starts each pass: Clearance out from Major Ø, as
     // the G-code has it
     readonly property real startX: majorDiameter + retract
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
 
     // opData with the values edited in the boxes
@@ -255,16 +254,14 @@ Item {
     function save(op) {
         if (opIndex < 0 || !opData) return
         opData = op || _draftOp()
-        root.saveRequested({index: opIndex, payload: opData})
+        root.editor.save(opData)
     }
 
     function applyData(index, data) {
         opIndex = index
         opData  = data || {}
-
-        var bridge = (typeof conversationalQml !== "undefined" && conversationalQml) ? conversationalQml : null
-        workpiece = bridge ? (bridge.currentWorkpiece() || {}) : {}
-        toolCard  = bridge && bridge.toolCardBefore ? (bridge.toolCardBefore(index) || {}) : {}
+        workpiece = editor ? (editor.workpiece || {}) : {}
+        toolCard  = editor ? (editor.toolCard || {}) : {}
 
         pitch         = opData.pitch          !== undefined ? Number(opData.pitch) : 0
         starts        = opData.starts         !== undefined ? Math.max(1, Math.round(Number(opData.starts))) : 1
@@ -505,14 +502,16 @@ Item {
 
             ToolPickerPopup {
                 id: toolPicker
+
+                toolsModel: root.editor ? root.editor.touchedOffTools : null
                 contentWidth: root.width
                 toolKinds: ["OD Threading"]
                 currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
                 currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
                                            ? root.toolCard.toolchange_position : "G28"
                 onToolChosen: function(toolNo, position) {
-                    if (typeof conversationalQml !== "undefined" && conversationalQml && conversationalQml.useToolBefore)
-                        conversationalQml.useToolBefore(root.opIndex, toolNo, position)
+                    if (root.editor)
+                        root.editor.useTool(toolNo, position)
                 }
             }
 

@@ -22,7 +22,7 @@ class ProgramRuntimeSnapshot:
     state: int = 0
     paused: bool = False
     task_mode: int = 0
-    tool_in_spindle: int = 0
+    current_loaded_tool: int = 0
     tool_offset: tuple = field(default_factory=tuple)
     actual_position: tuple = field(default_factory=tuple)
     joint_actual_position: tuple = field(default_factory=tuple)
@@ -41,7 +41,7 @@ class ProgramRuntimeSnapshot:
 
     @property
     def preview_tool_signature(self):
-        return self.tool_in_spindle, self.tool_offset
+        return self.current_loaded_tool, self.tool_offset
 
 
 class ProgramRuntimeStore(QObject):
@@ -106,7 +106,7 @@ class ProgramRuntimeStore(QObject):
             state=int(getattr(stat, 'state', 0) or 0),
             paused=bool(getattr(stat, 'paused', False)),
             task_mode=int(getattr(stat, 'task_mode', 0) or 0),
-            tool_in_spindle=int(getattr(stat, 'tool_in_spindle', 0) or 0),
+            current_loaded_tool=int(getattr(stat, 'tool_in_spindle', 0) or 0),
             tool_offset=tuple(getattr(stat, 'tool_offset', ()) or ()),
             actual_position=tuple(getattr(stat, 'actual_position', ()) or ()),
             joint_actual_position=tuple(getattr(stat, 'joint_actual_position', ()) or ()),

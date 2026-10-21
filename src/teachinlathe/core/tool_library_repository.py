@@ -10,7 +10,7 @@ Two data sources, one truth each:
   written from the holders, the offsets as the file has them at that moment.
 * tool_holders.json and cutting_tools.json (LatheToolExtrasDataSource) have
   the rest: which tool is in which holder, what it is, whether the holder
-  was touched off with it, and which tool was in the spindle.
+  was touched off with it, and which tool was the current loaded one.
 
 Holder N is tool T<N> in pocket N; a holder with no tool has no line.
 
@@ -25,7 +25,7 @@ Column by column:
 * Q - the orientation: the insert's or the blade's, 7 on the axis.
 * the comment - the tool's name, and its own comment in brackets.
 
-LinuxCNC forgets the tool in the spindle across a restart; the operator does
+LinuxCNC forgets the current loaded tool across a restart; the operator does
 not, and the tool is still physically there. Once the machine is homed the
 remembered tool is put back with M61, if the spindle reads as empty.
 """
@@ -72,7 +72,7 @@ class ToolLibraryRepository(QObject):
     #: reads them again.
     toolsChanged = pyqtSignal()
     #: Another tool went into the spindle: it's number, 0 for none.
-    currentToolChanged = pyqtSignal(int)
+    currentLoadedToolChanged = pyqtSignal(int)
     #: A touch-off finished: the holder, and the axis - "x" or "z".
     touchedOff = pyqtSignal(int, str)
 
@@ -88,7 +88,7 @@ class ToolLibraryRepository(QObject):
         self.cutting_tools: List[CuttingTool] = extras.read_cutting_tools()
         self.holders: List[ToolHolder]
         self.holders, self._remembered_tool = extras.read_holders()
-        self._current = self._read_tool_in_spindle()
+        self._current = self._read_current_loaded_tool()
         # Until homing has had its chance to put the remembered tool back,
         # the empty spindle LinuxCNC starts with is not the operator's doing.
         self._restore_settled = False
@@ -102,7 +102,7 @@ class ToolLibraryRepository(QObject):
         self._write_tool_table()
         tool_table.changed.connect(self._on_tool_table_changed)
 
-        self._status.tool_in_spindle.notify(self._on_tool_in_spindle)
+        self._status.tool_in_spindle.notify(self._on_current_loaded_tool)
         # Homed and on, in either order - or already, when only the app
         # was restarted.
         self._status.all_axes_homed.notify(self._restore_tool)
@@ -113,8 +113,8 @@ class ToolLibraryRepository(QObject):
     # ── Queries ─────────────────────────────────────────────────────────────
 
     @property
-    def current_tool(self) -> int:
-        """The tool in the spindle, 0 for none."""
+    def current_loaded_tool(self) -> int:
+        """The current loaded tool, 0 for none."""
         return self._current
 
     @property
@@ -177,7 +177,7 @@ class ToolLibraryRepository(QObject):
         if holder.has_tool:
             raise ValueError(f"tool holder {tool_holder_id} has a tool mounted")
         if tool_holder_id == self._current:
-            raise ValueError(f"tool holder {tool_holder_id} is in the spindle")
+            raise ValueError(f"tool holder {tool_holder_id} holds the current loaded tool")
         self.holders.remove(holder)
         self._save_holders()
 
@@ -230,7 +230,7 @@ class ToolLibraryRepository(QObject):
     # ── The machine ─────────────────────────────────────────────────────────
 
     def load_tool(self, tool_holder_id: int) -> bool:
-        """Put a holder in the spindle - it is there already, physically."""
+        """Make a holder's tool the current loaded one - it is there already, physically."""
         holder = self.find_holder(tool_holder_id)
         if holder is None or not holder.has_tool:
             log.warning("T%s has no tool to load", tool_holder_id)
@@ -238,13 +238,13 @@ class ToolLibraryRepository(QObject):
         return self._commands.issue_mdi(f"M61 Q{tool_holder_id} G43")
 
     def touch_off(self, axis: str, value) -> bool:
-        """Touch the holder in the spindle off in `axis` ("x" or "z"):
+        """Touch the current loaded tool's holder off in `axis` ("x" or "z"):
         LinuxCNC works the offset out and writes it to the tool table. Once
         it has, the holder counts as touched off in that axis, and
         touchedOff says so."""
         holder = self.current_holder
         if holder is None or not holder.has_tool:
-            log.warning("no tool in the spindle to touch off")
+            log.warning("no current loaded tool to touch off")
             return False
         if not self._commands.issue_mdi(f"o<touch_off_{axis}> call [{value}]"):
             return False
@@ -276,7 +276,7 @@ class ToolLibraryRepository(QObject):
         self.toolsChanged.emit()
         self.touchedOff.emit(holder.tool_holder_id, touch_off["axis"])
 
-    def _on_tool_in_spindle(self, tool_number) -> None:
+    def _on_current_loaded_tool(self, tool_number) -> None:
         tool_number = int(tool_number or 0)
         if tool_number == self._current:
             return
@@ -287,10 +287,10 @@ class ToolLibraryRepository(QObject):
         if tool_number != 0 or self._restore_settled:
             self._remembered_tool = tool_number
         self._write_holders()
-        self.currentToolChanged.emit(tool_number)
+        self.currentLoadedToolChanged.emit(tool_number)
 
     def _restore_tool(self, *_args) -> None:
-        """Put the remembered tool back in the spindle once homing is done.
+        """Load the remembered tool again once homing is done.
         Only when the spindle reads as empty, so a real tool change is never
         second-guessed."""
         try:
@@ -311,7 +311,7 @@ class ToolLibraryRepository(QObject):
         if self._restore_in_flight:
             return
         self._restore_in_flight = True
-        log.info("putting back the tool that was in the spindle: T%d", remembered)
+        log.info("loading again the tool that was the current loaded one: T%d", remembered)
         # Delayed, because LinuxCNC is still settling the mode change that
         # finishing homing brings with it.
         QTimer.singleShot(RESTORE_TOOL_DELAY_MS, lambda: self._issue_restore(remembered))
@@ -322,7 +322,7 @@ class ToolLibraryRepository(QObject):
         finally:
             self._restore_in_flight = False
 
-    def _read_tool_in_spindle(self) -> int:
+    def _read_current_loaded_tool(self) -> int:
         try:
             return int(self._status.tool_in_spindle.value or 0)
         except Exception:

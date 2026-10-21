@@ -16,9 +16,13 @@ import theme 1.0
 // pane is the same one on both screens, so it is the one thing that moves
 // across rather than being swapped; on the loaded-program screen it carries
 // the DRO and tool/feed/speed over the code.
+//
+// Context property required: programsViewModel (ProgramsViewModel)
 Rectangle {
     id: root
     color: Theme.surface
+
+    readonly property var viewModel: programsViewModel
 
     // How long the strip takes to slide one pane across, in ms.
     readonly property int slideDurationMs: 300
@@ -31,8 +35,8 @@ Rectangle {
 
     // While running, the view is full screen (no app bar / bottom tabs) and
     // the internal screen tabs are hidden — only the loaded-program content shows.
-    readonly property bool running: programsViewModel.screenIndex === ProgramsScreen.Running
-    readonly property bool programShown: programsViewModel.screenIndex !== ProgramsScreen.Files
+    readonly property bool running: root.viewModel.running
+    readonly property bool programShown: root.viewModel.programShown
 
     // Panes are separated by the gap the split views had as their handle.
     readonly property real gap: 6
@@ -123,7 +127,7 @@ Rectangle {
         clip: true
 
         FileSystemView {
-            viewModel: fsViewModel
+            viewModel: root.viewModel.fileSystem
             x: -root.offset * root.stride
             width: root.paneWidth
             height: parent.height
@@ -161,13 +165,13 @@ Rectangle {
                         ProgramsDro {
                             Layout.fillHeight: true
                             Layout.preferredWidth: 600
-                            viewModel: programsViewModel
+                            viewModel: root.viewModel.dro
                         }
 
                         ProgramsToolFeedSpeed {
                             Layout.fillHeight: true
                             Layout.fillWidth: true
-                            viewModel: programsToolFeedSpeedViewModel
+                            viewModel: root.viewModel.toolFeedSpeed
                         }
                     }
                 }
@@ -175,14 +179,14 @@ Rectangle {
                 GCodeViewerPane {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    viewModel: programsViewModel
+                    viewModel: root.viewModel
                     actionBarReveal: root.reveal
                 }
             }
         }
 
         ProgramLoadedScreen {
-            viewModel: programsViewModel
+            viewModel: root.viewModel
             x: (2 - root.offset) * root.stride
             width: root.paneWidth
             height: parent.height

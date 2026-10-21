@@ -8,13 +8,13 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
     property int profileId: 0
     property var primitives: []
     property var workpiece: ({})
-
-    signal openRadialProfileEditorRequested(int opIndex, var opData)
 
     function applyData(index, data) {
         opIndex = index
@@ -54,7 +54,7 @@ Item {
                 anchors.rightMargin: 24
                 text: "Edit Radial Profile P" + root.profileId
                 height: 54
-                onClicked: root.openRadialProfileEditorRequested(root.opIndex, root.opData)
+                onClicked: root.editor.openEditor()
             }
 
             Rectangle {

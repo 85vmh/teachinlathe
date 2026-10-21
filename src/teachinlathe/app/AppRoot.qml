@@ -18,8 +18,8 @@ import "../ui/tabs/conversational"
  * their state across a tab change without anything being reparented, raised
  * or repainted by hand.
  *
- * Python finds the screens by objectName to connect their signals; the
- * view models themselves arrive as context properties.
+ * Each tab binds to its view model, which arrives as a context property;
+ * Python holds none of the screens.
  */
 Item {
     id: root
@@ -46,7 +46,6 @@ readonly property var tabOrder: ["manual", "tools", "conversational", "programs"
         currentIndex: root.machineReady ? 1 : 0
 
         NotReadyScreen {
-            objectName: "notReadyScreen"
             viewModel: root.ctxMachine
         }
 
@@ -59,17 +58,11 @@ readonly property var tabOrder: ["manual", "tools", "conversational", "programs"
 
                 ManualTurningRoot {}
 
-                ToolLibraryRoot {
-                    objectName: "toolsScreen"
-                }
+                ToolLibraryRoot {}
 
-                ConversationalTabRoot {
-                    objectName: "conversationalScreen"
-                }
+                ConversationalTabRoot {}
 
-                ProgramsTabRoot {
-                    objectName: "programsScreen"
-                }
+                ProgramsTabRoot {}
 
                 MachineSettingsScreen {
                     viewModel: root.ctxMachine

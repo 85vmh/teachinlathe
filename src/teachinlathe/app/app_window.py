@@ -12,25 +12,22 @@ import os
 
 from PyQt6.QtCore import QObject, Qt, QUrl
 from PyQt6.QtGui import QColor
-from PyQt6.QtQuick import QQuickItem, QQuickView
+from PyQt6.QtQuick import QQuickView
 
 from teachinlathe.app.application import Application
 from teachinlathe.app.app_state import AppState
 from teachinlathe.app.app_identity import APPLICATION_DISPLAY_NAME
 from teachinlathe.app.dev_panel import DevPanelWindow
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
-from teachinlathe.manual.logic.manual_turning_use_case import ManualTurningUseCase
 from teachinlathe.app.app_shell_qml import AppShellBridge
 from teachinlathe.ui.tabs.programs.backplot import register_qml_types as register_backplot_type
-from teachinlathe.ui.tabs.conversational.ConversationalQml import ConversationalQml
+from teachinlathe.ui.tabs.conversational.ConversationalViewModel import ConversationalViewModel
 from teachinlathe.ui.tabs.machine_settings.FixturesViewModel import FixturesViewModel
 from teachinlathe.ui.tabs.machine_settings.MachineViewModel import MachineViewModel
-from teachinlathe.ui.tabs.manual_turning import ManualTurningViewModel
-from teachinlathe.ui.tabs.manual_turning.TeachInLatheDroViewModel import TeachInLatheDroViewModel
+from teachinlathe.ui.tabs.manual_turning.ManualTabViewModel import ManualTabViewModel
 from teachinlathe.ui.common.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.ui import QML_IMPORT_DIR
-from teachinlathe.ui.tabs.programs.ProgramsController import ProgramsController
-from teachinlathe.ui.tabs.tool_library.ManualToolsViewModel import ManualToolsViewModel
+from teachinlathe.ui.tabs.programs.ProgramsViewModel import ProgramsViewModel
 from teachinlathe.ui.tabs.tool_library.ToolsTabViewModel import ToolsTabViewModel
 
 LOG = logging.getLogger(__name__)
@@ -75,35 +72,29 @@ class AppWindow(QObject):
         # First: the tabs are handed it, for full screen, toasts and tab switches.
         self.appShellBridge = AppShellBridge(self.appState, parent=self)
 
-        self.manualTurningUseCase = ManualTurningUseCase(
-            self.application.hal, self.application.status, self)
-        self.manualTurningViewModel = ManualTurningViewModel(self.manualTurningUseCase, self)
-        self.teachInLatheDroViewModel = TeachInLatheDroViewModel(self, self.application.tool_library)
-        tool_library = self.application.tool_library
-        self.toolsTabViewModel = ToolsTabViewModel(tool_library, self)
-        self.toolsTabViewModel.toastRequested.connect(self.appShellBridge.showToast)
-        self.manualToolsViewModel = ManualToolsViewModel(tool_library, self, self.application.hal)
+        self.manualTabViewModel = ManualTabViewModel(self)
+        self.toolsTabViewModel = ToolsTabViewModel(self.appShellBridge, self)
+        # The numpad the Manual and Tool Library screens open: it remembers
+        # the last value entered for each setting.
         self.numpadDialogViewModel = NumpadDialogViewModel(self)
 
         self.machineViewModel = MachineViewModel(self)
         self.fixturesViewModel = FixturesViewModel(self)
         self.fixturesViewModel.chuckLimitChanged.connect(self.onChuckLimitChanged)
 
-        self.programsController = ProgramsController(
-            self.appShellBridge, self.appState.navigationStore, self)
-        self.conversationalqml = ConversationalQml(self.view.engine(), self.appShellBridge, self)
-        self.conversationalqml.setAppState(self.appState)
+        self.programsViewModel = ProgramsViewModel(self.appShellBridge, self.appState.navigationStore, self)
+        self.conversationalViewModel = ConversationalViewModel(self.appShellBridge, self)
 
         # The two tabs hand programs to each other.
-        self.conversationalqml.gcodeGenerated.connect(self.showGeneratedProgram)
-        self.programsController.editConversationalProgramRequested.connect(
+        self.conversationalViewModel.gcodeGenerated.connect(self.showGeneratedProgram)
+        self.programsViewModel.editConversationalProgramRequested.connect(
             self.editConversationalProgramFromJson)
 
         for tab_id, controller in (
-            ("manual", self.manualToolsViewModel),
+            ("manual", self.manualTabViewModel),
             ("tools", self.toolsTabViewModel),
-            ("conversational", self.conversationalqml),
-            ("programs", self.programsController),
+            ("conversational", self.conversationalViewModel),
+            ("programs", self.programsViewModel),
         ):
             self.appShellBridge.addFeatureController(tab_id, controller)
 
@@ -127,20 +118,17 @@ class AppWindow(QObject):
         ctx.setContextProperty("navigationStore", self.appState.navigationStore)
         ctx.setContextProperty("appShellBridge", self.appShellBridge)
 
-        ctx.setContextProperty("manualViewModel", self.manualTurningViewModel)
+        ctx.setContextProperty("manualTabViewModel", self.manualTabViewModel)
         ctx.setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
-        ctx.setContextProperty("teachInDroViewModel", self.teachInLatheDroViewModel)
-        ctx.setContextProperty("manualToolsViewModel", self.manualToolsViewModel)
         ctx.setContextProperty("toolsTabViewModel", self.toolsTabViewModel)
 
         ctx.setContextProperty("machineViewModel", self.machineViewModel)
         ctx.setContextProperty("fixturesViewModel", self.fixturesViewModel)
 
-        ctx.setContextProperty("programsViewModel", self.programsController.viewmodel)
-        ctx.setContextProperty("fsViewModel", self.programsController.fs_viewmodel)
-        ctx.setContextProperty("programsDroViewModel", self.programsController.dro_viewmodel)
-        ctx.setContextProperty("programsToolFeedSpeedViewModel", self.programsController.tool_feed_speed_viewmodel)
-        ctx.setContextProperty("ProgramsScreen", self.programsController.programs_screen_enum)
+        ctx.setContextProperty("programsViewModel", self.programsViewModel)
+
+        ctx.setContextProperty("conversationalViewModel", self.conversationalViewModel)
+        ctx.setContextProperty("positionsBridge", self.conversationalViewModel.positionsBridge)
 
     def _loadScene(self):
         self.view.setSource(QUrl.fromLocalFile(os.path.join(QML_DIR, "AppRoot.qml")))
@@ -151,19 +139,7 @@ class AppWindow(QObject):
         if self.appRoot is None:
             raise RuntimeError("AppRoot.qml failed to load")
 
-    def _screen(self, object_name):
-        item = self.appRoot.findChild(QQuickItem, object_name)
-        if item is None:
-            LOG.error("QML item %r not found", object_name)
-        return item
-
     def _connectScreens(self):
-        conversational_root = self._screen("conversationalScreen")
-        if conversational_root is not None:
-            self.conversationalqml.attachRoot(conversational_root)
-
-        self.programsController.attachBackplot(self._screen("latheBackplot"))
-
         # QML follows navigationStore; this is what else has to follow it.
         self.appState.navigationStore.currentTabChanged.connect(self.onMainTabChanged)
         self.onMainTabChanged()
@@ -180,13 +156,13 @@ class AppWindow(QObject):
         self.view.close()
 
     def onChuckLimitChanged(self, z_minus_limit):
-        self.teachInLatheDroViewModel.setChuckLimit(float(z_minus_limit))
+        self.manualTabViewModel.dro.setChuckLimit(float(z_minus_limit))
 
     def onMainTabChanged(self):
         """The active tab changed - QML follows navigationStore, this is what
         has to happen on the machine side when it does."""
         tab_id = self.appState.navigationStore.currentTab or "manual"
-        self.teachInLatheDroViewModel.limitsHandler.setChuckLimitsActive(tab_id != "settings")
+        self.manualTabViewModel.dro.limitsHandler.setChuckLimitsActive(tab_id != "settings")
         self.appState.cncStore.addEvent("INFO", "navigation", f"Switched to {tab_id}")
 
     def showGeneratedProgram(self, ngc_path: str):
@@ -194,7 +170,7 @@ class AppWindow(QObject):
             return
         try:
             self.appState.activateTab("programs")
-            self.programsController.showFileInGeneratedPrograms(ngc_path)
+            self.programsViewModel.showFileInGeneratedPrograms(ngc_path)
         except Exception as e:
             LOG.error("showGeneratedProgram failed: %s", e)
 
@@ -203,7 +179,7 @@ class AppWindow(QObject):
             return
         try:
             self.appState.activateTab("conversational")
-            self.conversationalqml.openProgramFile(os.path.abspath(json_path))
+            self.conversationalViewModel.openProgramFile(os.path.abspath(json_path))
         except Exception as e:
             LOG.error("editConversationalProgramFromJson failed: %s", e)
 

@@ -13,9 +13,9 @@ class ManualTurningViewModel(QObject):
     handwheelValuesChanged = pyqtSignal()
     joystickStateChanged = pyqtSignal()
 
-    def __init__(self, use_case: ManualTurningUseCase, parent=None):
+    def __init__(self, parent=None, use_case: ManualTurningUseCase = None):
         super().__init__(parent)
-        self._use_case = use_case
+        self._use_case = ManualTurningUseCase(parent=self) if use_case is None else use_case
         self._numpad_settings = NumpadSettings.instance()
         self._spindle_mode = 0
         self._gear_suffix = "2"

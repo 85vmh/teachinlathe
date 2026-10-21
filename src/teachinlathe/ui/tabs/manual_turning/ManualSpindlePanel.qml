@@ -7,7 +7,7 @@ import theme 1.0
 
 Rectangle {
     id: root
-    property var viewModel: manualViewModel
+    property var viewModel: null
     readonly property string panelMode: viewModel ? viewModel.spindlePanelMode : "Editable"
     readonly property bool editableMode: panelMode === "Editable"
     readonly property bool runningMode: panelMode === "ReadOnly"

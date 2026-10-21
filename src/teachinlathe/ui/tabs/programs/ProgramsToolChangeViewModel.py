@@ -3,7 +3,8 @@ from __future__ import annotations
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
-from teachinlathe.core.tool_library_repository import designation, tool_library_repository
+from teachinlathe.core.tool_library_repository import tool_library_repository
+from teachinlathe.ui.tabs.tool_library.tool_library_models import card_and_view
 
 
 class ProgramsToolChangeViewModel(QObject):
@@ -19,11 +20,14 @@ class ProgramsToolChangeViewModel(QObject):
         self._cancel_ui_pressed = False
         self._cancel_button_pressed = False
         self._response_output = False
+        self._tool_card = ""
+        self._tool_view = None
         self._component = TeachInLatheComponent()
         self._tool_library = tool_library_repository()
-        self._tool_library.toolsChanged.connect(self.stateChanged)
+        self._tool_library.toolsChanged.connect(self._on_tools_changed)
         self._bind_hal()
         self._read_initial_hal_state()
+        self._refresh_tool_view()
 
     @pyqtProperty(bool, notify=stateChanged)
     def requested(self):
@@ -37,17 +41,31 @@ class ProgramsToolChangeViewModel(QObject):
     def toolNoText(self):
         return f"T{self._tool_no}" if self._tool_no > 0 else "T?"
 
+    # The tool mounted in the holder asked for, as the Manual Turning list
+    # names it (ToolTitles.listTitle): its card kind ("turning", ...) and its
+    # view; "" and None for an empty holder.
     @pyqtProperty(str, notify=stateChanged)
-    def toolDescription(self):
-        tool = self._tool_library.tool_in(self._tool_no)
-        return designation(tool) if tool is not None else ""
+    def toolCard(self):
+        return self._tool_card
+
+    @pyqtProperty(QObject, notify=stateChanged)
+    def toolView(self):
+        return self._tool_view
 
     @pyqtProperty(str, notify=stateChanged)
-    def toolSummary(self):
-        description = self.toolDescription
-        if description:
-            return f"{self.toolNoText} [{description}]"
-        return self.toolNoText
+    def toolComment(self):
+        tool = self._tool_library.tool_in(self._tool_no)
+        return tool.comment if tool is not None else ""
+
+    def _refresh_tool_view(self):
+        old = self._tool_view
+        self._tool_card, self._tool_view = card_and_view(self._tool_library.tool_in(self._tool_no), self)
+        if old is not None:
+            old.deleteLater()
+
+    def _on_tools_changed(self):
+        self._refresh_tool_view()
+        self.stateChanged.emit()
 
     @pyqtSlot()
     def confirmPressed(self):
@@ -75,7 +93,9 @@ class ProgramsToolChangeViewModel(QObject):
         tool_no = self._read_int_pin(TeachInLatheComponent.PinToolChangeToolNo, self._tool_no)
         changed = requested != self._requested or tool_no != self._tool_no
         self._requested = requested
-        self._tool_no = tool_no
+        if tool_no != self._tool_no:
+            self._tool_no = tool_no
+            self._refresh_tool_view()
         if not requested:
             self._confirm_ui_pressed = False
             self._confirm_button_pressed = False
@@ -120,6 +140,7 @@ class ProgramsToolChangeViewModel(QObject):
         if tool_no == self._tool_no:
             return
         self._tool_no = tool_no
+        self._refresh_tool_view()
         self.stateChanged.emit()
 
     def _on_cycle_start_changed(self, value=False):

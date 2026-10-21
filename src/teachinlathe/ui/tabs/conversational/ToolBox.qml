@@ -11,7 +11,7 @@ import "../tool_library/ToolTitles.js" as ToolTitles
 CanvasBox {
     id: root
 
-    // {tool_no, card, view} as conversationalQml.toolCardBefore gives it
+    // {tool_no, card, view} as the operation's editor gives it (editor.toolCard)
     property var toolCard: ({})
     // the inserts' colour - the backplot's, as the Tool Library draws them
     property color insertColor: "#e5a93b"

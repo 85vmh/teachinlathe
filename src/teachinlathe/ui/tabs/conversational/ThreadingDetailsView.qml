@@ -11,6 +11,8 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
     readonly property bool isG33Threading: opData && opData.type === "g33Threading"
@@ -25,8 +27,6 @@ Item {
                                                    : (root.roughingPassCount + " passes")
     readonly property bool showThreadLengthSummary: root.zStart !== root.zEnd
     readonly property string threadHandText: root.zStart > root.zEnd ? "RH" : "LH"
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
@@ -109,13 +109,13 @@ Item {
         })
         if (!root.isG33Threading)
             merged.depth_degression = root.depthDegression
-        root.saveRequested({ index: root.opIndex, payload: merged })
+        root.editor.save(merged)
     }
 
     function calculateThreadDiameter() {
-        if (typeof threadingDetailsViewModel === "undefined" || !threadingDetailsViewModel)
+        if (!root.editor)
             return
-        var result = threadingDetailsViewModel.calculateThreadDiameter(
+        var result = root.editor.calculateThreadDiameter(
             root.location,
             root.pitch,
             root.majorDiameter,
@@ -139,7 +139,7 @@ Item {
 
     // the header's spindle, M1 or pitch and starts, saved straight away
     function _saveFromHeader(part) {
-        root.saveRequested({ index: root.opIndex, payload: root.mergeIntoOp(part) })
+        root.editor.save(root.mergeIntoOp(part))
     }
 
     ColumnLayout {
@@ -185,7 +185,7 @@ Item {
                     onOpenNumPadRequested: root.openNumPadRequested(field)
                     onSaveRequested: function (p) {
                         var merged = root.mergeIntoOp(p.payload || p)
-                        root.saveRequested({ index: opIndex, payload: merged })
+                        root.editor.save(merged)
                     }
                 }
 

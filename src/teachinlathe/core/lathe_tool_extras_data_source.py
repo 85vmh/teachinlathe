@@ -30,7 +30,9 @@ log = logging.getLogger(__name__)
 TOOL_HOLDERS_FILE = "tool_holders.json"
 CUTTING_TOOLS_FILE = "cutting_tools.json"
 _HOLDERS_KEY = "tool_holders"
-_IN_SPINDLE_KEY = "tool_in_spindle"
+_CURRENT_LOADED_TOOL_KEY = "current_loaded_tool"
+#: The key the current loaded tool was saved under before; still read, never written.
+_OLD_CURRENT_LOADED_TOOL_KEY = "tool_in_spindle"
 
 #: Read from the tool table, never saved with the holder.
 _TBL_FIELDS = ("x_offset", "z_offset")
@@ -59,10 +61,10 @@ class LatheToolExtrasDataSource:
     def write_cutting_tools(self, tools: List[CuttingTool]) -> None:
         _write_json(self._tools_path, to_json(tools))
 
-    # ── Holders, and the tool in the spindle ────────────────────────────────
+    # ── Holders, and the current loaded tool ────────────────────────────────
 
     def read_holders(self) -> tuple[List[ToolHolder], int]:
-        """The holders, and the tool that was in the spindle (0 for none)."""
+        """The holders, and the tool that was the current loaded one (0 for none)."""
         raw = _read(self._holders_path)
         if raw is None:
             holders = seed_tool_holders()
@@ -70,15 +72,16 @@ class LatheToolExtrasDataSource:
             return holders, 0
         try:
             holders = [_holder_from_json(item) for item in raw[_HOLDERS_KEY]]
-            return holders, int(raw.get(_IN_SPINDLE_KEY, 0) or 0)
+            loaded = raw.get(_CURRENT_LOADED_TOOL_KEY, raw.get(_OLD_CURRENT_LOADED_TOOL_KEY, 0))
+            return holders, int(loaded or 0)
         except (ValueError, KeyError, TypeError, AttributeError) as exc:
             log.error("cannot read %s, the tool library starts empty: %s", self._holders_path, exc)
             return [], 0
 
-    def write_holders(self, holders: List[ToolHolder], tool_in_spindle: int) -> None:
+    def write_holders(self, holders: List[ToolHolder], current_loaded_tool: int) -> None:
         _write_json(self._holders_path, {
             _HOLDERS_KEY: [_holder_to_json(h) for h in holders],
-            _IN_SPINDLE_KEY: int(tool_in_spindle),
+            _CURRENT_LOADED_TOOL_KEY: int(current_loaded_tool),
         })
 
 

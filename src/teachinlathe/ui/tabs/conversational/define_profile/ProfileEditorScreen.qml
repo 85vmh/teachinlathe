@@ -10,9 +10,10 @@ import common 1.0
 Item {
     id: root
     objectName: "profileEditorScreen"
-    anchors.fill: parent
 
     // ── Public API ──────────────────────────────────────────────────────────────
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int    opIndex:             -1
     property var    opData:              null
     property int    profileId:           0
@@ -25,7 +26,6 @@ Item {
     property int    _pendingDeleteIndex: -1
 
     signal backRequested()
-    signal updateDefineProfile(int opIdx, var payload)
     signal openNumPadRequested(var field)
 
     // ── Data functions ──────────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ Item {
         merged.profile_type       = root.profileType
         merged.profile_primitives = root.primitives
         opData = merged
-        root.updateDefineProfile(root.opIndex, merged)
+        root.editor.save(merged)
     }
 
     function _renumber(arr) {

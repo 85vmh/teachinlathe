@@ -27,7 +27,6 @@ GroupBox {
     property real retract: 0.0
     property bool _loading: false
 
-    // compat cu FacingDetailsView:
     // cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
     function applyData(index, cuttingParams, fullOp) {
         _loading = true
@@ -53,7 +52,6 @@ GroupBox {
                 retract:   retract
             }
         }
-        // FacingDetailsView interceptează și face mergeIntoOp(p.payload || p)
         root.saveRequested({ index: opIndex, payload: payload })
     }
 

@@ -8,8 +8,9 @@ import theme 1.0
 Item {
     id: root
     objectName: "radialProfileEditorScreen"
-    anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
     property int profileId: 0
@@ -20,7 +21,6 @@ Item {
     property bool _loading: false
 
     signal backRequested()
-    signal updateDefineRadialProfile(int opIdx, var payload)
     signal openNumPadRequested(var field)
 
     function applyData(index, data) {
@@ -43,7 +43,7 @@ Item {
         merged.profile_type = root.profileType
         merged.profile_primitives = root._renumber(root.primitives)
         opData = merged
-        root.updateDefineRadialProfile(root.opIndex, merged)
+        root.editor.save(merged)
     }
 
     function _renumber(arr) {

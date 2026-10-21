@@ -53,7 +53,7 @@ Canvas {
     // more targets, each with its arrow to a box: [{x: diameter, z, color,
     // arrowToRect}], drawn by MarkersActor; fitted as the positions are
     property var    markers: []
-    // the drill or tap in the spindle, {kind, diameter, tip_angle,
+    // the drill or tap that is the current loaded tool, {kind, diameter, tip_angle,
     // right_hand, pitch, z} (AxialToolActor), its point at z on the centre
     // line; null draws none
     property var    axialTool: null

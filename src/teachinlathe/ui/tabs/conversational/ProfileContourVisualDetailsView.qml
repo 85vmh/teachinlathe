@@ -1,7 +1,6 @@
 // ProfileContourVisualDetailsView.qml — Profile Contour with a profile viewer,
-// laid out as Profile Roughing's. Edits the same data as
-// ProfileContourDetailsView and saves every change through the same
-// updateProfileContour slot.
+// laid out as Profile Roughing's. Saves every change through
+// updateProfileContour.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -13,6 +12,8 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
 
@@ -33,12 +34,9 @@ Item {
     property real   retract: 0.0
 
     // what the contour will cut with the values above
-    readonly property var contourPreview: (opIndex >= 0 && primitives.length > 0
-                                           && typeof conversationalQml !== "undefined" && conversationalQml)
-                                          ? conversationalQml.profileContourPreview(opIndex, _draftOp())
+    readonly property var contourPreview: (opIndex >= 0 && primitives.length > 0 && editor)
+                                          ? editor.preview(_draftOp())
                                           : null
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
@@ -69,15 +67,14 @@ Item {
     function save(op) {
         if (opIndex < 0 || !opData) return
         opData = op || _draftOp()
-        root.saveRequested({index: opIndex, payload: opData})
+        root.editor.save(opData)
     }
 
     function applyData(index, data) {
         opIndex = index
         opData  = data || {}
 
-        var profileOp = (typeof conversationalQml !== "undefined" && conversationalQml)
-                        ? (conversationalQml.lastProfileBefore(index) || {}) : {}
+        var profileOp = editor ? (editor.lastProfile || {}) : {}
         primitives  = JSON.parse(JSON.stringify(profileOp.profile_primitives || []))
         profileType = profileOp.profile_type !== undefined ? String(profileOp.profile_type) : "od"
         // the stock broken off right after the profile, as the Program
@@ -85,9 +82,7 @@ Item {
         var stock = JSON.parse(JSON.stringify(profileOp.workpiece || {}))
         stock.break_after_profile = true
         workpiece   = stock
-        toolCard    = (typeof conversationalQml !== "undefined" && conversationalQml
-                       && conversationalQml.toolCardBefore)
-                      ? (conversationalQml.toolCardBefore(index) || {}) : {}
+        toolCard    = editor ? (editor.toolCard || {}) : {}
 
         // X Start defaults to the profile's largest diameter plus the retract
         var pp = opData.profiling_parameters || {}
@@ -264,14 +259,16 @@ Item {
 
             ToolPickerPopup {
                 id: toolPicker
+
+                toolsModel: root.editor ? root.editor.touchedOffTools : null
                 contentWidth: root.width
                 toolKinds: String(root.profileType).toLowerCase() === "id" ? ["Boring Tool"] : ["Turning Tool"]
                 currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
                 currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
                                            ? root.toolCard.toolchange_position : "G28"
                 onToolChosen: function(toolNo, position) {
-                    if (typeof conversationalQml !== "undefined" && conversationalQml && conversationalQml.useToolBefore)
-                        conversationalQml.useToolBefore(root.opIndex, toolNo, position)
+                    if (root.editor)
+                        root.editor.useTool(toolNo, position)
                 }
             }
 

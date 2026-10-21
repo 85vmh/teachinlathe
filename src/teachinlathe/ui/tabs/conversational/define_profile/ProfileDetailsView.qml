@@ -11,6 +11,8 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int    opIndex:     -1
     property var    opData:      null
     property int    profileId:   0
@@ -18,10 +20,7 @@ Item {
     property bool   _loading:    false
     property var    primitives:  []
     property var    workpiece:   ({})
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
-    signal openProfileEditorRequested(int opIndex, var opData)
 
     function applyData(index, data) {
         _loading    = true
@@ -120,7 +119,7 @@ Item {
                     id: editProfileMa
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: root.openProfileEditorRequested(root.opIndex, root.opData)
+                    onClicked: root.editor.openEditor()
                 }
             }
 

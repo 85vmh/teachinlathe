@@ -12,7 +12,7 @@ from teachinlathe.tooling.model.data_types import (
     BladeTool, BoringTool, CuttingToolType, DrillingTool, ReamingTool, TappingTool,
     ThreadingTool, TurningTool,
 )
-from teachinlathe.core.tool_library_repository import ToolLibraryRepository
+from teachinlathe.core.tool_library_repository import ToolLibraryRepository, tool_library_repository
 from teachinlathe.ui.tabs.tool_library.tool_library_models import (
     CuttingToolCategoriesModel, ToolHolderListModel,
 )
@@ -73,15 +73,18 @@ class ToolsTabViewModel(QObject):
     #: A message for the app's toast.
     toastRequested = pyqtSignal(str)
 
-    def __init__(self, repository: ToolLibraryRepository, parent=None):
+    def __init__(self, shell=None, parent=None, repository: ToolLibraryRepository = None):
         super().__init__(parent)
-        self._repository = repository
+        self._repository = tool_library_repository() if repository is None else repository
+        repository = self._repository
+        if shell is not None:
+            self.toastRequested.connect(shell.showToast)
         self._holders_model = ToolHolderListModel(repository, self)
         self._cutting_tools_model = CuttingToolCategoriesModel(repository, self)
         # Offsets come in from the Manual Turning screen's touch-offs; the
-        # holder in the spindle cannot be deleted.
+        # current loaded tool's holder cannot be deleted.
         repository.toolsChanged.connect(self.refresh)
-        repository.currentToolChanged.connect(self.refresh)
+        repository.currentLoadedToolChanged.connect(self.refresh)
         self._editor = None
         # The editor last closed. The screen showing it is still sliding out
         # when it closes, so it is deleted when the next one opens instead.
@@ -152,11 +155,11 @@ class ToolsTabViewModel(QObject):
 
     @pyqtSlot(int)
     def deleteToolHolder(self, tool_holder_id: int) -> None:
-        """Delete an empty holder that is not in the spindle. The screen
+        """Delete an empty holder that is not the current loaded tool's. The screen
         offers it only for one: a holder with a tool swipes to unmount the
-        tool first, and the one in the spindle does not swipe at all."""
-        if tool_holder_id == self._repository.current_tool:
-            self.toastRequested.emit("The holder in the spindle cannot be deleted")
+        tool first, and the current loaded tool's does not swipe at all."""
+        if tool_holder_id == self._repository.current_loaded_tool:
+            self.toastRequested.emit("The current loaded tool's holder cannot be deleted")
             return
         try:
             self._repository.delete_holder(tool_holder_id)

@@ -40,7 +40,7 @@ Rectangle {
             spacing: Theme.spacingSmall
 
             Text {
-                text: root.viewModel ? root.viewModel.currentToolText : "T0"
+                text: root.viewModel ? root.viewModel.currentLoadedToolText : "T0"
                 color: Theme.foreground
                 font.pixelSize: 26
                 verticalAlignment: Text.AlignVCenter

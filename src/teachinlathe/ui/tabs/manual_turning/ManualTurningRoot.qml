@@ -10,8 +10,7 @@
 //   Right: ManualToolList — fixed width (toolListWidth), full height
 //
 // Context properties required (set by app_window.py):
-//   manualViewModel, teachInDroViewModel, manualToolsViewModel, appState,
-//   cncStore, navigationStore, appShellBridge
+//   manualTabViewModel (ManualTabViewModel), numpadDialogViewModel, appShellBridge
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -21,6 +20,10 @@ import theme 1.0
 
 Item {
     id: root
+
+    // turning (spindle, feed, joystick, handwheels), dro and tools, each
+    // handed to its panels below.
+    readonly property var viewModel: (typeof manualTabViewModel !== "undefined") ? manualTabViewModel : null
 
     // ── Color constants ───────────────────────────────────────────────
     readonly property color pageBackgroundColor: Theme.surface
@@ -42,7 +45,7 @@ Item {
 
     // A blade touched off in Z: which of its points was it?
     Connections {
-        target: typeof manualToolsViewModel !== "undefined" ? manualToolsViewModel : null
+        target: root.viewModel ? root.viewModel.tools : null
         function onBladePlaceRequested(bladeWidth) {
             bladeZ0ReferenceDialog.bladeWidth = Number(bladeWidth || 0)
             bladeZ0ReferenceDialog.open()
@@ -74,8 +77,8 @@ Item {
 
         // -1 the left corner, 0 the middle, 1 the right corner.
         function choose(place) {
-            if (typeof manualToolsViewModel !== "undefined" && manualToolsViewModel)
-                manualToolsViewModel.setBladePlace(place)
+            if (root.viewModel)
+                root.viewModel.tools.setBladePlace(place)
             close()
         }
 
@@ -160,6 +163,7 @@ Item {
 
             // DRO (fixed height — two axis readouts)
             TeachInLatheDroRoot {
+                viewModel: root.viewModel ? root.viewModel.dro : null
                 Layout.fillWidth: true
                 Layout.minimumHeight: root.droHeight
                 Layout.preferredHeight: root.droHeight
@@ -170,6 +174,7 @@ Item {
 
             // Limits (scalable — fills all remaining vertical space)
             LimitsPanel {
+                viewModel: root.viewModel ? root.viewModel.dro : null
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 onOpenNumPadRequested: root.openNumpad(field)
@@ -186,7 +191,7 @@ Item {
                 // "Spindle" label
                 Text {
                     x: spindlePanel.x + 70; y: 0; width: 106; height: parent.height
-                    text: manualViewModel ? manualViewModel.spindleTitle : "Spindle"
+                    text: root.viewModel ? root.viewModel.turning.spindleTitle : "Spindle"
                     font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -194,7 +199,7 @@ Item {
                 // Spindle override %
                 Text {
                     x: spindlePanel.x + 185; y: 0; width: 71; height: parent.height
-                    text: manualViewModel ? (manualViewModel.spindleOverridePercent + "%") : "0%"
+                    text: root.viewModel ? (root.viewModel.turning.spindleOverridePercent + "%") : "0%"
                     font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -218,7 +223,7 @@ Item {
                 // Feed override %
                 Text {
                     x: joystickFeedFrame.x + 361; y: 0; width: 76; height: parent.height
-                    text: manualViewModel ? (manualViewModel.feedOverridePercent + "%") : "0%"
+                    text: root.viewModel ? (root.viewModel.turning.feedOverridePercent + "%") : "0%"
                     font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -234,6 +239,7 @@ Item {
 
                 ManualHandwheelsPanel {
                     id: handwheelsPanel
+                    viewModel: root.viewModel ? root.viewModel.turning : null
                     Layout.preferredWidth: root.handwheelsPanelWidth
                     Layout.fillHeight: true
                 }
@@ -241,7 +247,7 @@ Item {
                 // Joystick + Feed share a single bordered box
                 Rectangle {
                     id: joystickFeedFrame
-                    readonly property bool angleFeedActive: manualViewModel ? manualViewModel.angleFeedActive : false
+                    readonly property bool angleFeedActive: root.viewModel ? root.viewModel.turning.angleFeedActive : false
                     property color frameBorderColor: root.cardBorderColor
                     property real glowOpacity: 0
                     readonly property int glowDurationMs: 200
@@ -365,14 +371,14 @@ Item {
 
                         ManualJoystickPanel {
                             id: joystickPanel
-                            objectName: "manualJoystickPanel"
                             Layout.preferredWidth: root.joystickPanelWidth
                             Layout.fillHeight: true
-                            viewModel: manualViewModel
+                            viewModel: root.viewModel ? root.viewModel.turning : null
                         }
 
                         ManualFeedPanel {
                             id: feedPanel
+                            viewModel: root.viewModel ? root.viewModel.turning : null
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             onOpenNumPadRequested: root.openNumpad(field)
@@ -382,6 +388,7 @@ Item {
 
                 ManualSpindlePanel {
                     id: spindlePanel
+                    viewModel: root.viewModel ? root.viewModel.turning : null
                     Layout.preferredWidth: root.spindlePanelWidth
                     Layout.fillHeight: true
                     onOpenNumPadRequested: root.openNumpad(field)
@@ -393,7 +400,7 @@ Item {
             id: toolList
             Layout.preferredWidth: root.toolListWidth
             Layout.fillHeight: true
-            viewModel: typeof manualToolsViewModel !== "undefined" ? manualToolsViewModel : null
+            viewModel: root.viewModel ? root.viewModel.tools : null
         }
     }
 }

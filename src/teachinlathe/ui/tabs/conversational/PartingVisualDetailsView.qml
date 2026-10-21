@@ -7,8 +7,7 @@
 // across the centre line on the blade's right, the clearance dimensioned
 // above X Start - each with an arrow to its box down the right edge. A new
 // Parting starts at the stock's outside, ends at its bore, and slows to Fz2
-// a blade's width before the end. Edits the same data as PartingDetailsView
-// and saves through the same updateParting slot.
+// a blade's width before the end. Saves through updateParting.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -21,6 +20,8 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
 
@@ -77,8 +78,6 @@ Item {
     // the middle of the blade's cutting end - Z Position is its right side -
     // where it is drawn
     readonly property real bladeZ: zDrawn - bladeWidth / 2
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
 
     // opData with the values edited in the boxes
@@ -102,16 +101,14 @@ Item {
     function save(op) {
         if (opIndex < 0 || !opData) return
         opData = op || _draftOp()
-        root.saveRequested({index: opIndex, payload: opData})
+        root.editor.save(opData)
     }
 
     function applyData(index, data) {
         opIndex = index
         opData  = data || {}
-
-        var bridge = (typeof conversationalQml !== "undefined" && conversationalQml) ? conversationalQml : null
-        workpiece = bridge ? (bridge.currentWorkpiece() || {}) : {}
-        toolCard  = bridge && bridge.toolCardBefore ? (bridge.toolCardBefore(index) || {}) : {}
+        workpiece = editor ? (editor.workpiece || {}) : {}
+        toolCard  = editor ? (editor.toolCard || {}) : {}
 
         var pp = opData.parting_parameters || {}
         xStart = pp.x_start !== undefined ? Number(pp.x_start) : 0
@@ -413,14 +410,16 @@ Item {
 
             ToolPickerPopup {
                 id: toolPicker
+
+                toolsModel: root.editor ? root.editor.touchedOffTools : null
                 contentWidth: root.width
                 toolKinds: ["Parting Blade"]
                 currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
                 currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
                                            ? root.toolCard.toolchange_position : "G28"
                 onToolChosen: function(toolNo, position) {
-                    if (typeof conversationalQml !== "undefined" && conversationalQml && conversationalQml.useToolBefore)
-                        conversationalQml.useToolBefore(root.opIndex, toolNo, position)
+                    if (root.editor)
+                        root.editor.useTool(toolNo, position)
                 }
             }
 

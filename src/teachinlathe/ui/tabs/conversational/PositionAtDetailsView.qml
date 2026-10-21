@@ -10,10 +10,10 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
-
-    signal saveRequested(var updated)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
     signal openNumPadRequested(var field)
@@ -42,20 +42,17 @@ Item {
 
     function emitSave() {
         if (_loading) return
-        saveRequested({
-            index: opIndex,
-            payload: {
-                order: (opData && opData.order !== undefined) ? opData.order : 0,
-                type: "positionAt",
-                generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
-                is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-                position_details: {
-                    x_pos: xPos,
-                    z_pos: zPos,
-                    move_sequence: moveSeq,
-                    stop_spindle_before_positioning: stopSpindleBeforePositioning,
-                    include_m0: includeM0
-                }
+        root.editor.save({
+            order: (opData && opData.order !== undefined) ? opData.order : 0,
+            type: "positionAt",
+            generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
+            is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
+            position_details: {
+                x_pos: xPos,
+                z_pos: zPos,
+                move_sequence: moveSeq,
+                stop_spindle_before_positioning: stopSpindleBeforePositioning,
+                include_m0: includeM0
             }
         })
     }

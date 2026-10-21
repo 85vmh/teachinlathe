@@ -19,7 +19,8 @@ import "../conversational"
 // reads "No tool mounted - Tap to mount a tool"; tapping it asks for the
 // tool to mount, which is then picked in the cutting-tool list
 // (selectingHolderId says which holder is waiting). The offsets are Manual
-// Turning's column: "Not set", orange, until touched off.
+// Turning's column: "Not set", orange, until touched off. The current
+// loaded tool's holder is selected, as in Manual Turning's list.
 //
 // Swiped left (see SwipeRow), a holder with a tool slides its box over a
 // Delete that unmounts the tool; an empty one slides the whole card over a
@@ -118,9 +119,10 @@ ToolLibraryPane {
                     width: holders.itemWidth
                     height: content.implicitHeight + 2 * root.cardPadding
                     contentRadius: Theme.radius
-                    contentColor: Theme.surface
-                    contentBorderColor: Theme.outline
-                    contentBorderWidth: Theme.hairline
+                    // The current loaded tool's holder, selected as in Manual Turning's list.
+                    contentColor: model.isCurrentLoadedTool ? Theme.selection : Theme.surface
+                    contentBorderColor: model.isCurrentLoadedTool ? Theme.accent : Theme.outline
+                    contentBorderWidth: model.isCurrentLoadedTool ? 2 : Theme.hairline
 
                     // Read here: inside the Loader below, `model` is not this one.
                     readonly property int holderId: model.holderId
@@ -129,9 +131,9 @@ ToolLibraryPane {
 
                     // With a tool, a swipe anywhere on the card moves the
                     // tool's box: the tool goes before the holder can. The
-                    // holder in the spindle stays: only its tool comes out.
+                    // current loaded tool's holder stays: only its tool comes out.
                     swipeTarget: toolBox.hasTool ? toolBox : null
-                    swipeEnabled: root.swipeEnabled && (toolBox.hasTool || !model.inSpindle)
+                    swipeEnabled: root.swipeEnabled && (toolBox.hasTool || !model.isCurrentLoadedTool)
                     duplicateEnabled: false
                     actionGap: 4
                     actionRadius: Theme.radius

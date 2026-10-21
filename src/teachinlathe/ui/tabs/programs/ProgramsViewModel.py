@@ -1,18 +1,51 @@
+"""The Programs tab's view model.
+
+Two screens over one strip of panes - the file system, and the loaded
+program with its backplot - and which of them is up (``screenIndex``); the
+program running, completed or aborted; the app shell's header for each.
+The file browser, the DRO and the tool/feed/speed row have view models of
+their own, as properties of this one.
+
+The backplot is a scene-graph item QML makes. It is told what to preview by
+``previewFile`` and the preview* / gremlin* signals, which
+ProgramLoadedScreen.qml passes on to it; nothing here holds it.
+"""
+
+import logging
 import os
 
-from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
+from teachinlathe.core.ini_repository import ini_repository
+from teachinlathe.ui.tabs.programs.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.ui.tabs.programs.filesystemview.FileSystemBridge import FileSystemBridge, load_or_reload_program
+from teachinlathe.ui.tabs.programs.ProgramsDroViewModel import ProgramsDroViewModel
+from teachinlathe.ui.tabs.programs.ProgramsToolFeedSpeedViewModel import ProgramsToolFeedSpeedViewModel
 
 from teachinlathe.programs.model.program_runtime import ProgramRuntimeStore
 from teachinlathe.programs.model.program_stack import ProgramCallStackResolver
 from teachinlathe.programs.model.programs_action_source import ProgramsActionSource
 from teachinlathe.programs.model.programs_screen import ProgramsScreen
 from teachinlathe.programs.model.run_time_tracker import RunTimeTracker
-from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.programs.logic.programs_use_case import ProgramsUseCase
 from teachinlathe.ui.tabs.programs.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
 
 Screen = ProgramsScreen
+
+LOG = logging.getLogger(__name__)
+
+USB_STICK_SUBFOLDER = "USB Stick Programs"
+
+
+def program_locations(ini):
+    """The folders the file browser lists, in the order it lists them."""
+    return [
+        FileSystemLocation("Generated Programs", ini.conversational_gcode_dir, LocationType.GENERATED),
+        FileSystemLocation("USB Stick Programs",
+                           os.path.join(ini.program_prefix, USB_STICK_SUBFOLDER), LocationType.USB_STICK),
+        FileSystemLocation("SyncThing Programs", os.path.expanduser("~/Sync"), LocationType.SYNCTHING),
+        FileSystemLocation("Home", os.path.expanduser("~"), LocationType.HOME),
+    ]
 
 
 class ProgramsViewModel(QObject):
@@ -33,18 +66,30 @@ class ProgramsViewModel(QObject):
     gremlinZoomOutRequested = pyqtSignal()
     gremlinClearRequested = pyqtSignal()
     gremlinFitRequested = pyqtSignal()
+    headerStateChanged = pyqtSignal()
+    # Edit, on a generated program: the conversational program behind it.
+    editConversationalProgramRequested = pyqtSignal(str)
+    previewFileChanged = pyqtSignal()
+    # A program about to be loaded: drop the backplot's cached preview of it.
+    previewInvalidated = pyqtSignal(str)
+    previewPollRequested = pyqtSignal()
 
-    def __init__(self, folders, navigation_store, parent=None):
+    def __init__(self, shell, navigation_store, parent=None, ini=None, use_case=None):
         super().__init__(parent)
+        self._shell = shell
         self._navigation_store = navigation_store
-        self._bridge = FileSystemBridge(folders, self)
+        self._preview_file = ''
+        self._pending_fit_path = ''
+        ini = ini_repository() if ini is None else ini
+        locations = program_locations(ini)
+        self._bridge = FileSystemBridge([(loc.name, loc.root_path) for loc in locations], self)
         self._runtime_store = ProgramRuntimeStore(self)
         self._call_stack_resolver = ProgramCallStackResolver(self)
         self._actions = ProgramsActionSource(self._runtime_store, self)
         self._tool_change = ProgramsToolChangeViewModel(self)
         self._screen_index = Screen.FileSystem
         self._run_tracker = RunTimeTracker(self)
-        self._component = TeachInLatheComponent()
+        self._machine = ProgramsUseCase(parent=self) if use_case is None else use_case
         self._program_completed = False
         self._program_completed_name = ""
         self._was_active = False
@@ -79,6 +124,36 @@ class ProgramsViewModel(QObject):
         self._sync_program_completed_from_hal()
         self._refresh_execution_view()
 
+        self._file_system = FileSystemViewModel(
+            locations, self, json_folder_path=ini.conversational_json_dir)
+        self._file_system.fileSelected.connect(self._bridge.selectFileByAbsolutePath)
+        self._file_system.fileOpenRequested.connect(self.openFileByAbsolutePath)
+        self._file_system.selectionChanged.connect(self.headerStateChanged)
+        self._file_system.navigationChanged.connect(self.headerStateChanged)
+        # A failed file operation is reported the way the rest of the app
+        # reports one: a toast, plus an entry in the events drawer.
+        self._file_system.deleteFailed.connect(lambda msg: self._shell.showToast("Delete failed: %s" % msg))
+        self._file_system.copyFailed.connect(lambda msg: self._shell.showToast("Copy failed: %s" % msg))
+
+        self._dro = ProgramsDroViewModel(self)
+        self._tool_feed_speed = ProgramsToolFeedSpeedViewModel(self._runtime_store, self)
+
+        self.programLoadRequested.connect(self._prepare_preview_for_load)
+        self.enterRunFullScreenRequested.connect(self._shell.enterProgramRunFullScreen)
+        self.exitRunFullScreenRequested.connect(self._shell.exitFullScreen)
+        self.switchToManualRequested.connect(lambda: self._shell.activateTab("manual"))
+        self.screenIndexChanged.connect(lambda _index: self.headerStateChanged.emit())
+        self.currentFilePathChanged.connect(self._on_current_file_changed)
+        self._actions.stateChanged.connect(self.headerStateChanged)
+        self._runtime_store.machineFileChanged.connect(self._on_machine_file_changed)
+        # callLevelChanged is deliberately not connected. It used to re-fit the
+        # plot to the window, but the call level changes on every subroutine
+        # call and return, and every conversational operation is a subroutine -
+        # so the operator's zoom and pan were thrown away at each operation
+        # boundary. Stepping into a subroutine does not change the geometry on
+        # screen, so there is nothing to re-fit.
+        self._set_preview_file(self.currentFilePath)
+
     @property
     def bridge(self):
         return self._bridge
@@ -94,6 +169,32 @@ class ProgramsViewModel(QObject):
     @pyqtProperty(QObject, constant=True)
     def toolChange(self):
         return self._tool_change
+
+    @pyqtProperty(QObject, constant=True)
+    def fileSystem(self):
+        return self._file_system
+
+    @pyqtProperty(QObject, constant=True)
+    def dro(self):
+        return self._dro
+
+    @pyqtProperty(QObject, constant=True)
+    def toolFeedSpeed(self):
+        return self._tool_feed_speed
+
+    @pyqtProperty(bool, notify=screenIndexChanged)
+    def programShown(self):
+        """The loaded program, rather than the file system."""
+        return self._screen_index != Screen.FileSystem
+
+    @pyqtProperty(bool, notify=screenIndexChanged)
+    def running(self):
+        return self._screen_index == Screen.ProgramRunning
+
+    @pyqtProperty(str, notify=previewFileChanged)
+    def previewFile(self):
+        """The file the backplot previews."""
+        return self._preview_file
 
     @pyqtProperty('QVariantList', constant=True)
     def folderNames(self):
@@ -268,17 +369,9 @@ class ProgramsViewModel(QObject):
 
     # ── Running full-screen state machine ─────────────────────────────
     def _bind_program_completion_hal(self):
-        comp = self._component.comp
-        for pin_name, callback in (
-            (TeachInLatheComponent.PinProgramCompleted, self._on_program_completed_changed),
-            (TeachInLatheComponent.PinButtonCycleStart, self._on_cycle_start_button_changed),
-            (TeachInLatheComponent.PinButtonCycleStop, self._on_cycle_stop_button_changed),
-            (TeachInLatheComponent.PinProgramAborted, self._on_program_aborted_changed),
-        ):
-            try:
-                comp.addListener(pin_name, callback)
-            except Exception as e:
-                print(f"[ProgramsViewModel] failed to bind HAL pin {pin_name}: {e}")
+        self._machine.programCompletedChanged.connect(self._on_program_completed_changed)
+        self._machine.cycleStartPressed.connect(self._on_cycle_start_pressed)
+        self._machine.programAborted.connect(self._close_completed_program_screen)
 
     def _on_abort_triggered(self):
         self._abort_requested = True
@@ -352,35 +445,20 @@ class ProgramsViewModel(QObject):
         if self._program_completed:
             self._close_completed_program_screen()
 
-    def _on_cycle_start_button_changed(self, value=False):
-        pressed = self._read_bool_pin(TeachInLatheComponent.PinButtonCycleStart, bool(value))
-        if not pressed or not self._program_completed:
-            return
-        self._run_completed_program_again()
-
-    def _on_cycle_stop_button_changed(self, value=False):
-        if self._read_bool_pin(TeachInLatheComponent.PinButtonCycleStop, bool(value)):
-            self._set_program_loaded(False)
+    def _on_cycle_start_pressed(self):
+        if self._program_completed:
+            self._run_completed_program_again()
 
     def _set_program_loaded(self, loaded):
-        self._component.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = bool(loaded)
+        self._machine.set_program_loaded(loaded)
 
     def _on_current_tab_changed(self):
-        # The machine may only start a program while the operator is looking at it.
-        self._component.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = \
-            self._navigation_store.currentTab == "programs"
+        self._machine.set_ready_to_run(self._navigation_store.currentTab == "programs")
 
-    def _on_program_completed_changed(self, value=False):
-        completed = self._read_bool_pin(TeachInLatheComponent.PinProgramCompleted, bool(value))
+    def _on_program_completed_changed(self, completed):
         if completed and not self._program_completed_name:
             self._set_program_completed_name(os.path.basename(self.currentFilePath or '') or 'Program')
         self._set_program_completed_state(completed)
-
-    def _on_program_aborted_changed(self, value=False):
-        aborted = self._read_bool_pin(TeachInLatheComponent.PinProgramAborted, bool(value))
-        if not aborted:
-            return
-        self._close_completed_program_screen()
 
     def _run_completed_program_again(self):
         self._set_program_completed_state(False)
@@ -397,8 +475,7 @@ class ProgramsViewModel(QObject):
         self.switchToManualRequested.emit()
 
     def _sync_program_completed_from_hal(self):
-        completed = self._read_bool_pin(TeachInLatheComponent.PinProgramCompleted, self._program_completed)
-        self._set_program_completed_state(completed)
+        self._set_program_completed_state(self._machine.program_completed)
 
     def _set_program_completed_name(self, name):
         name = str(name or "Program")
@@ -418,12 +495,6 @@ class ProgramsViewModel(QObject):
             return
         self._program_completed = completed
         self.programCompletedStateChanged.emit()
-
-    def _read_bool_pin(self, pin_name, default=False):
-        try:
-            return bool(self._component.comp.getPin(pin_name).value)
-        except Exception:
-            return bool(default)
 
     def _is_showing_machine_file(self, machine_file=''):
         editor_path = os.path.abspath(self.currentFilePath) if self.currentFilePath else ''
@@ -503,3 +574,115 @@ class ProgramsViewModel(QObject):
         self._main_highlight_line = main_highlight_line
         self._is_execution_context_current_program = is_executing_current_program
         self.executionViewChanged.emit()
+
+    # ── the backplot ────────────────────────────────────────────────────────
+
+    def _set_preview_file(self, path):
+        path = path or ''
+        if path != self._preview_file:
+            self._preview_file = path
+            self.previewFileChanged.emit()
+
+    def _on_current_file_changed(self, path):
+        self._set_preview_file(path)
+        self.headerStateChanged.emit()
+
+    def _prepare_preview_for_load(self, path):
+        self._pending_fit_path = os.path.abspath(path) if path else ''
+        # The preview follows this file from now on, not whatever the
+        # interpreter happens to have open: while the program runs it dips
+        # into subroutines, and a subroutine does not parse on its own.
+        self._set_preview_file(path)
+        if self._pending_fit_path:
+            LOG.info('Programs: invalidating preview for %s', self._pending_fit_path)
+            self.previewInvalidated.emit(self._pending_fit_path)
+            QTimer.singleShot(0, self._refresh_preview_after_load)
+        else:
+            self.gremlinClearRequested.emit()
+
+    def _refresh_preview_after_load(self):
+        snapshot = self._runtime_store.snapshot
+        if self._actions.isActive or snapshot.call_level > 0:
+            LOG.info('Programs: skipped preview refresh while program is active')
+            self._pending_fit_path = ''
+            return
+        self.previewPollRequested.emit()
+        self._pending_fit_path = ''
+        QTimer.singleShot(150, self.gremlinFitRequested.emit)
+
+    def _on_machine_file_changed(self, path):
+        """Fit the view when a new program reaches the machine - and only then.
+
+        The interpreter's file also changes as it steps into subroutines, and
+        re-fitting on those would move the plot under the operator mid-run.
+        """
+        machine_path = os.path.abspath(path) if path else ''
+        if not machine_path:
+            return
+        program = self.currentFilePath or ''
+        if program and machine_path != os.path.abspath(program):
+            return
+        if self._pending_fit_path and machine_path != self._pending_fit_path:
+            return
+        QTimer.singleShot(150, self.gremlinFitRequested.emit)
+        self._pending_fit_path = ''
+
+    # ── the app shell's header ──────────────────────────────────────────────
+
+    def getHeaderState(self):
+        left_actions = []
+        right_actions = []
+        title = 'Machine FileSystem'
+        if self._screen_index != Screen.FileSystem:
+            left_actions.append({"id": "back", "text": "← Back to FileSystem", "enabled": True})
+            title = f'Loaded Program [{os.path.basename(self.currentFilePath or "") or "No file loaded"}]'
+            # Cycle Start lives up here until the program is going; from then
+            # on the view is full screen and Feed Hold / Resume and Cycle
+            # Abort sit under the backplot. It lights with the machine's
+            # cycle-start LED, so it blinks when the machine wants it pressed.
+            if not self._actions.isActive:
+                right_actions.append({
+                    "id": "cycle_start",
+                    "text": "Cycle Start",
+                    "enabled": bool(self._actions.startAction.enabled),
+                    "active": bool(self._actions.cycleStartLedActive),
+                })
+        else:
+            if self._file_system.isInGeneratedPrograms:
+                left_actions.append({
+                    "id": "edit_program",
+                    "text": "← Back to Conversational",
+                    "enabled": bool(self._file_system.canEditSelectedGeneratedProgram),
+                })
+            right_actions.append({
+                "id": "load_program",
+                "text": "Load Program",
+                "enabled": bool(self._file_system.selectedIsFile
+                                and not self._file_system.isInMountedMedia),
+            })
+        return {
+            "title": title,
+            "left_actions": left_actions,
+            "right_actions": right_actions,
+        }
+
+    def triggerHeaderAction(self, action_id):
+        if action_id == "back":
+            self.showFilesScreen()
+        elif action_id == "cycle_start":
+            self.triggerCycleStart()
+        elif action_id == "load_program":
+            self._file_system.openSelectedFile()
+        elif action_id == "edit_program":
+            json_path = self._file_system.selectedGeneratedJsonPathForEdit()
+            if json_path:
+                self.editConversationalProgramRequested.emit(json_path)
+        elif action_id == "toggle_optional_stop":
+            self._actions.setOptionalStopEnabled(not self._actions.optionalStopAction.checked)
+        elif action_id == "toggle_block_delete":
+            self._actions.setBlockDeleteEnabled(not self._actions.blockDeleteAction.checked)
+
+    def showFileInGeneratedPrograms(self, ngc_path):
+        """A program just generated: selected in Generated Programs."""
+        self.showFilesScreen()
+        self._file_system.showFileInGeneratedPrograms(os.path.abspath(ngc_path))

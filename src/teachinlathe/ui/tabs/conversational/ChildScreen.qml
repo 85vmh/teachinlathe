@@ -8,15 +8,11 @@ Item {
     id: operationEditor
     objectName: "childScreen"
 
-    property var selectedProgram: null
-    property var operationsModel: []
-    property int activeOpIndex: -1
-
-    property bool showBack: true
-    // Facing's canvas mirrored or not: kept by conversationalQml, off for a
-    // program just opened, then as the operator leaves it
-    readonly property bool facingMirror: (typeof conversationalQml !== "undefined" && conversationalQml)
-                                         ? conversationalQml.facingMirror : true
+    required property var selectedProgram
+    required property var operationsModel
+    required property int activeOpIndex
+    // The selected operation's editor view model (or the header's), or null.
+    required property var editor
 
     property string titleText: (selectedProgram && (selectedProgram.name || (selectedProgram.header && selectedProgram.header.name)))
         ? "Editing: " + (selectedProgram.name || selectedProgram.header.name)
@@ -28,87 +24,55 @@ Item {
     signal toggleGenerateGcode(int index, bool checked)
     signal toggleOptionalBlock(int index, bool checked)
     signal detailsRequested(int index)
-    signal updateToolChange(int index, var payload)
-    signal updatePositionAt(int index, var payload)
-    signal updateDefineProfile(int index, var payload)
-    signal updateDefineRadialProfile(int index, var payload)
-    signal openProfileEditorRequested(int opIndex, var opData)
-    signal openRadialProfileEditorRequested(int opIndex, var opData)
-    signal updateFacing(int index, var payload)
-    signal updateKnurling(int index, var payload)
-    signal updateProfiling(int index, var payload)
-    signal updateProfileRoughing(int index, var payload)
-    signal updateProfileContour(int index, var payload)
-    signal updateGrooveRoughing(int index, var payload)
-    signal updateGrooveFinishing(int index, var payload)
-    signal addProfileContourRequested(int index)
-    signal updateDrilling(int index, var payload)
-    signal updateThreading(int index, var payload)
-    signal updateG33Threading(int index, var payload)
-    signal updateParting(int index, var payload)
-    signal updateTapping(int index, var payload)
-    signal updateHeader(var payload)
-    signal addProfilingFinishRequested(int index)
     signal openNumPadRequested(var field)
     signal openKeyboardRequested(var field)
-    signal teachXRequested(int index)
-    signal teachZRequested(int index)
-    signal addOperationRequested()
     signal moveOperationRequested(int fromIndex, int toIndex)
     signal deleteOperationRequested(int index)
     signal duplicateOperationRequested(int index)
 
-    width: parent ? parent.width : 1200
-    height: parent ? parent.height : 800
+    // The details pane for each kind of editor.
+    readonly property var editorViews: ({
+        "header": "HeaderDetailsView.qml",
+        "changeTool": "ToolChangeDetailsView.qml",
+        "positionAt": "PositionAtDetailsView.qml",
+        "facing": "FacingVisualDetailsView.qml",
+        "knurling": "KnurlingDetailsView.qml",
+        "profiling": "ProfilingDetailsView.qml",
+        "profileRoughing": "ProfileRoughingVisualDetailsView.qml",
+        "profileContour": "ProfileContourVisualDetailsView.qml",
+        "grooveRoughing": "GrooveRoughingDetailsView.qml",
+        "grooveFinishing": "GrooveFinishingDetailsView.qml",
+        "defineProfile": "define_profile/ProfileDetailsView.qml",
+        "importDxfProfile": "define_profile/ProfileDetailsView.qml",
+        "defineRadialProfile": "define_radial_profile/RadialProfileDetailsView.qml",
+        "drilling": "DrillingVisualDetailsView.qml",
+        "threading": "ThreadingDetailsView.qml",
+        "g33Threading": "G33ThreadingVisualDetailsView.qml",
+        "parting": "PartingVisualDetailsView.qml",
+        "tapping": "TappingVisualDetailsView.qml"
+    })
 
-    function receiveDetailsData(index, data) {
-        if (index === -1) {
-            detailsLoader.source = "HeaderDetailsView.qml"
-        } else if (!data || !data.type) {
-            detailsLoader.source = ""
-        } else if (data.type === "changeTool") {
-            detailsLoader.source = "ToolChangeDetailsView.qml"
-        } else if (data.type === "positionAt") {
-            detailsLoader.source = "PositionAtDetailsView.qml"
-        } else if (data.type === "facing") {
-            detailsLoader.source = "FacingVisualDetailsView.qml"
-        } else if (data.type === "knurling") {
-            detailsLoader.source = "KnurlingDetailsView.qml"
-        } else if (data.type === "profiling") {
-            detailsLoader.source = "ProfilingDetailsView.qml"
-        } else if (data.type === "profileRoughing") {
-            detailsLoader.source = "ProfileRoughingVisualDetailsView.qml"
-        } else if (data.type === "profileContour") {
-            detailsLoader.source = "ProfileContourVisualDetailsView.qml"
-        } else if (data.type === "grooveRoughing") {
-            detailsLoader.source = "GrooveRoughingDetailsView.qml"
-        } else if (data.type === "grooveFinishing") {
-            detailsLoader.source = "GrooveFinishingDetailsView.qml"
-        } else if (data.type === "defineProfile" || data.type === "importDxfProfile") {
-            detailsLoader.source = "define_profile/ProfileDetailsView.qml"
-        } else if (data.type === "defineRadialProfile") {
-            detailsLoader.source = "define_radial_profile/RadialProfileDetailsView.qml"
-        } else if (data.type === "drilling") {
-            detailsLoader.source = "DrillingVisualDetailsView.qml"
-        } else if (data.type === "threading") {
-            detailsLoader.source = "ThreadingDetailsView.qml"
-        } else if (data.type === "g33Threading") {
-            detailsLoader.source = "G33ThreadingVisualDetailsView.qml"
-        } else if (data.type === "parting") {
-            detailsLoader.source = "PartingVisualDetailsView.qml"
-        } else if (data.type === "tapping") {
-            detailsLoader.source = "TappingVisualDetailsView.qml"
-        } else {
-            detailsLoader.source = ""
-        }
+    // A new editor: the pane for its kind - kept when it is the same kind,
+    // so the pane keeps its scroll - then the editor's operation in it.
+    function showEditor() {
+        var view = editor ? (editorViews[editor.operationType] || "") : ""
+        if (view === "" || !String(detailsLoader.source).endsWith("/" + view))
+            detailsLoader.source = view
+        var shown = editor
         Qt.callLater(function () {
-            if (detailsLoader.item && data && data.type === "facing" && detailsLoader.item.canvasMirror !== undefined)
-                detailsLoader.item.canvasMirror = operationEditor.facingMirror
-            if (detailsLoader.item && detailsLoader.item.applyData) {
-                detailsLoader.item.applyData(index, data)
-            }
+            var item = detailsLoader.item
+            if (!item || !shown || shown !== operationEditor.editor)
+                return
+            item.editor = shown
+            if (shown.canvasMirror !== undefined && item.canvasMirror !== undefined)
+                item.canvasMirror = shown.canvasMirror
+            if (item.applyData)
+                item.applyData(shown.opIndex, shown.operation)
         })
     }
+
+    onEditorChanged: showEditor()
+    Component.onCompleted: showEditor()
 
     ColumnLayout {
         anchors.fill: parent
@@ -129,7 +93,6 @@ Item {
                 onOperationSelected: function(index) {
                     operationEditor.detailsRequested(index)
                 }
-                onAddOperationRequested: operationEditor.addOperationRequested()
                 onOperationTypeChosen: function(type, insertIndex) {
                     operationEditor.addOperationTypeChosen(type, insertIndex)
                 }
@@ -195,62 +158,10 @@ Item {
                     ignoreUnknownSignals: true
                     enabled: !!target
 
-                    // only Facing's view has it
+                    // only Facing's view has it; its editor keeps it for the next Facing
                     function onCanvasMirrorChanged() {
-                        if (typeof conversationalQml !== "undefined" && conversationalQml)
-                            conversationalQml.facingMirror = target.canvasMirror
-                    }
-
-                    function onSaveRequested(updated) {
-                        if (!updated || !updated.payload) return
-                        var t = updated.payload.type || ""
-                        if (updated.index === -1) {
-                            if (operationEditor.updateHeader)
-                                operationEditor.updateHeader(updated.payload)
-                            return
-                        }
-                        if (t === "changeTool" && operationEditor.updateToolChange)
-                            operationEditor.updateToolChange(updated.index, updated.payload)
-                        else if (t === "positionAt" && operationEditor.updatePositionAt)
-                            operationEditor.updatePositionAt(updated.index, updated.payload)
-                        else if ((t === "defineProfile" || t === "importDxfProfile") && operationEditor.updateDefineProfile)
-                            operationEditor.updateDefineProfile(updated.index, updated.payload)
-                        else if (t === "defineRadialProfile" && operationEditor.updateDefineRadialProfile)
-                            operationEditor.updateDefineRadialProfile(updated.index, updated.payload)
-                        else if (t === "facing" && operationEditor.updateFacing)
-                            operationEditor.updateFacing(updated.index, updated.payload)
-                        else if (t === "knurling" && operationEditor.updateKnurling)
-                            operationEditor.updateKnurling(updated.index, updated.payload)
-                        else if (t === "profiling" && operationEditor.updateProfiling)
-                            operationEditor.updateProfiling(updated.index, updated.payload)
-                        else if (t === "profileRoughing" && operationEditor.updateProfileRoughing)
-                            operationEditor.updateProfileRoughing(updated.index, updated.payload)
-                        else if (t === "profileContour" && operationEditor.updateProfileContour)
-                            operationEditor.updateProfileContour(updated.index, updated.payload)
-                        else if (t === "grooveRoughing" && operationEditor.updateGrooveRoughing)
-                            operationEditor.updateGrooveRoughing(updated.index, updated.payload)
-                        else if (t === "grooveFinishing" && operationEditor.updateGrooveFinishing)
-                            operationEditor.updateGrooveFinishing(updated.index, updated.payload)
-                        else if (t === "drilling" && operationEditor.updateDrilling)
-                            operationEditor.updateDrilling(updated.index, updated.payload)
-                        else if (t === "threading")
-                            operationEditor.updateThreading(updated.index, updated.payload)
-                        else if (t === "g33Threading")
-                            operationEditor.updateG33Threading(updated.index, updated.payload)
-                        else if (t === "parting")
-                            operationEditor.updateParting(updated.index, updated.payload)
-                        else if (t === "tapping")
-                            operationEditor.updateTapping(updated.index, updated.payload)
-                        else if (operationEditor.updateOperation)
-                            operationEditor.updateOperation(updated.index, updated.payload)
-                    }
-
-                    function onTeachXRequested(i) {
-                        operationEditor.teachXRequested(i)
-                    }
-
-                    function onTeachZRequested(i) {
-                        operationEditor.teachZRequested(i)
+                        if (operationEditor.editor && operationEditor.editor.canvasMirror !== undefined)
+                            operationEditor.editor.canvasMirror = target.canvasMirror
                     }
 
                     function onOpenNumPadRequested(field) {
@@ -259,24 +170,6 @@ Item {
 
                     function onOpenKeyboardRequested(field) {
                         operationEditor.openKeyboardRequested(field)
-                    }
-
-                    function onAddFinishRequested(i) {
-                        if (operationEditor.addProfilingFinishRequested)
-                            operationEditor.addProfilingFinishRequested(i)
-                    }
-
-                    function onAddProfileContourRequested(i) {
-                        if (operationEditor.addProfileContourRequested)
-                            operationEditor.addProfileContourRequested(i)
-                    }
-
-                    function onOpenProfileEditorRequested(opIdx, opData) {
-                        operationEditor.openProfileEditorRequested(opIdx, opData)
-                    }
-
-                    function onOpenRadialProfileEditorRequested(opIdx, opData) {
-                        operationEditor.openRadialProfileEditorRequested(opIdx, opData)
                     }
                 }
             }

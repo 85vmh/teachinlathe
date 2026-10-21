@@ -50,9 +50,10 @@ manual/          → logic/ (manual_turning_use_case.py: spindle lever, joystick
                    machine_limits.py: teach-in limits)
 machine/         → model/ (fixtures)
 tooling/         → model/ (tool types, catalogs)
-programs/        → model/ (program runtime)
-conversational/  → model/ (data_types.py: domain dataclasses) + store/ + gcode/ (G-code generation)
-ui/tabs/         → manual_turning/, tool_library/ (+ shapes/), conversational/ (ConversationalQml.py,
+programs/        → model/ (program runtime) + logic/ (programs_use_case.py: the HAL pins of a program run)
+conversational/  → model/ (data_types.py: domain dataclasses) + logic/ (conversational_use_case.py: what is
+                   done to programs) + store/ (JSON and DXF files) + gcode/ (G-code generation)
+ui/tabs/         → manual_turning/, tool_library/ (+ shapes/), conversational/ (ConversationalViewModel.py,
                    the QML editor, profile definition canvases), programs/ (file browser, G-code
                    viewer, backplot/), machine_settings/
 ui/              → shared QML modules: theme, common (Images singleton + images/, touchable_input/)
@@ -73,26 +74,32 @@ Operation subtypes: ChangeTool, Facing, Profiling, Drilling, Tapping, Parting, T
 Each TurnableOperation contains: SpindleParameters, CuttingParameters, GeometryParameters, M1Parameters, EdgeBreak
 ```
 
-Programs are stored as JSON files in `conversational/`. The `Operation` registry maps string keys to classes:
+Programs are stored as JSON files in `conversational/` (`PROGRAMS_DIR` in `conversational_use_case.py`). The `Operation` registry maps string keys to classes:
 
 ```python
 operation_types = {"facing": Facing, "drilling": Drilling, ...}
 ```
 
 Data flow for edits:
-1. User fills in QML form → QML emits a signal (e.g. `updateFacing(data)`)
-2. `ConversationalQml._hook_screen_item()` connects QML signals to Python slots
-3. Python slot patches the in-memory `current_program` dataclass
-4. `_save_current_program()` serializes to JSON and reloads to keep model consistent
+1. Selecting an operation makes its editor view model (`ConversationalViewModel.editor`, one class per
+   operation type in `OperationEditorViewModel.py`); `ChildScreen` loads the matching `*DetailsView.qml`
+   and hands it the editor (`editor` property, then `applyData(editor.opIndex, editor.operation)`)
+2. User fills in the form → the editor calls `editor.save(payload)`
+3. `ConversationalUseCase` patches the in-memory `current_program` dataclass (`_updaters`)
+4. `_save_current_program()` has the use case write it to JSON; the screens follow the view model's properties
 5. `ProgramListModel` (a `QAbstractListModel`) refreshes the QML ListView
 
 ### QML ↔ Python Bridge
 
-`ConversationalQml` drives `ConversationalTabRoot.qml` (created by `AppRoot.qml`), which uses a `Loader` to swap between screens. Navigation history is maintained in Python.
+`ConversationalViewModel` (published to QML as `conversationalViewModel`) holds which screens are open
+(`screens`: programs → program → profile editor / DXF import), and `ConversationalTabRoot.qml` keeps a
+`StackView` in step with it - the Tool Library pattern; see `~/Work/prompts/Tab architecture.md`.
 
-- **Python → QML:** context properties (`programsModel`, `showBack`) and direct property sets on the root item
-- **QML → Python:** typed signals declared in QML (`signal updateFacing(var data)`) connected to Python slots in `_hook_screen_item()`
-- Screen state is passed as a `params` object when calling `loadScreen()` from Python
+- **Python → QML:** view model properties the screens are bound to (`required property` on `MainScreen` and
+  `ChildScreen`), and signals (`detailsReady`, `gcodeGenerationStarted`, `dxfImportFailed`, ...)
+- **QML → Python:** the screens' signals, connected to view model slots in `ConversationalTabRoot.qml`;
+  an operation's editor calls its own view model (`editor.save`, `editor.preview`, `editor.useTool`, ...)
+- Python holds no QML item: no `findChild`, `objectName` or `invokeMethod`
 
 ### HAL Component
 
@@ -103,17 +110,17 @@ Data flow for edits:
 - `ConversationalTabRoot.qml` — navigation shell
 - `MainScreen.qml` — program list
 - `ChildScreen.qml` — operation list editor for a single program
-- `*DetailsView.qml` — per-operation parameter editor (e.g. `FacingDetailsView.qml`)
+- `*DetailsView.qml` / `*VisualDetailsView.qml` — per-operation parameter editor (e.g. `FacingVisualDetailsView.qml`)
 - `*Parameters.qml` — reusable parameter sub-components (e.g. `CuttingParameters.qml`, `SpindleParameters.qml`)
 
 ### Auto-Save Pattern
 
-Every `*DetailsView.qml` emits a signal when the user changes a value. The corresponding Python slot patches only the relevant fields on the in-memory dataclass, then calls `_save_current_program()`. This is the established pattern for all new operation types.
+Every `*DetailsView.qml` calls `editor.save(payload)` with the whole operation when the user changes a value. The use case patches the relevant fields on the in-memory dataclass, then `_save_current_program()` writes it. This is the established pattern for all new operation types.
 
 ### Adding a New Operation Type
 
 1. Add a dataclass in `conversational/model/data_types.py` (subclass `TurnableOperation`)
 2. Register it in `operation_types` dict
 3. Create `<Op>DetailsView.qml` and any `<Op>Parameters.qml` reusable components in `ui/tabs/conversational/`, and its generator in `conversational/gcode/operations/`
-4. Add the signal/slot pair in `ConversationalQml._hook_screen_item()` and implement the slot
-5. Wire the new operation into `ChildScreen.qml`
+4. Add its editor view model to `OperationEditorViewModel.py` (and `EDITORS`), its view to `editorViews` in
+   `ChildScreen.qml`, and its edit to `ConversationalUseCase._updaters`; the view saves with `editor.save(payload)`

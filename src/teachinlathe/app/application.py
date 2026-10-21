@@ -3,7 +3,7 @@
 Built once at start-up, before any screen, in the order they need each
 other - the status channel before what listens to it, the HAL component
 before anything reads its pins - so that what has to happen from the first
-moment does: the tool library putting the tool back in the spindle once the
+moment does: the tool library loading the remembered tool again once the
 machine is homed, say, whichever screen is showing.
 
 The view models are not made here: they belong to the screens that bind

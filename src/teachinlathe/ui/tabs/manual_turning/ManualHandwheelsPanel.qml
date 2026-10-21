@@ -5,7 +5,7 @@ import theme 1.0
 
 Rectangle {
     id: root
-    property var viewModel: manualViewModel
+    property var viewModel: null
 
     color: Theme.surfaceSunken
     border.color: Theme.outline

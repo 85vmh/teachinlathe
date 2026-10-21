@@ -7,8 +7,6 @@
 //            hang below the line, into the corners the cross leaves free.
 //   Row 2 — Tool Limits cross: Limit X- (top) | Z-/label/Z+ (middle) | Limit X+ (bottom)
 //            An arrow from the label to each limit's box.
-//
-// Context property required: teachInDroViewModel
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -23,7 +21,7 @@ Rectangle {
     border.width: Theme.hairline
     radius: Theme.radius
 
-    property var viewModel: teachInDroViewModel
+    property var viewModel: null
     signal openNumPadRequested(Item field)
 
     //: The arrow heads' length along the line, and their width.

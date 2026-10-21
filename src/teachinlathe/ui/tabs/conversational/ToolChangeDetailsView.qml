@@ -10,10 +10,10 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
 
     property bool _loading: false
@@ -42,27 +42,23 @@ Item {
 
     function emitSave() {
         if (_loading) return
-        saveRequested({
-            index: opIndex,
-            payload: {
-                order: (opData && opData.order !== undefined) ? opData.order : 0,
-                type: "changeTool",
-                generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
-                is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-                tool_no: toolNo,
-                tool_orientation: toolOrient,
-                back_angle: backAngle,
-                front_angle: frontAngle,
-                toolchange_position: toolchangePosition
-            }
+        root.editor.save({
+            order: (opData && opData.order !== undefined) ? opData.order : 0,
+            type: "changeTool",
+            generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
+            is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
+            tool_no: toolNo,
+            tool_orientation: toolOrient,
+            back_angle: backAngle,
+            front_angle: frontAngle,
+            toolchange_position: toolchangePosition
         })
     }
 
     //: ToolHolderCard's height: its thumbnail and the padding round it.
     readonly property int cardHeight: 136
 
-    readonly property var toolsModel: typeof manualToolsViewModel !== "undefined" && manualToolsViewModel
-                                      ? manualToolsViewModel.touchedOffToolsModel : null
+    readonly property var toolsModel: editor ? editor.touchedOffTools : null
 
     //: In from the view's sides; only the separator runs edge to edge.
     readonly property int sideMargin: 10

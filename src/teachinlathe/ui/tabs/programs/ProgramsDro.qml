@@ -61,8 +61,8 @@ Rectangle {
 
         AutoAxisDro {
             axisLabel: "X"
-            position: programsDroViewModel.xPosition
-            dtg: programsDroViewModel.xDistanceToGo
+            position: root.viewModel.xPosition
+            dtg: root.viewModel.xDistanceToGo
             axisLabelWidth: root.axisLabelWidth
             valueBoxWidth: root.valueBoxWidth
             valueBoxHeight: root.valueBoxHeight
@@ -73,8 +73,8 @@ Rectangle {
 
         AutoAxisDro {
             axisLabel: "Z"
-            position: programsDroViewModel.zPosition
-            dtg: programsDroViewModel.zDistanceToGo
+            position: root.viewModel.zPosition
+            dtg: root.viewModel.zDistanceToGo
             axisLabelWidth: root.axisLabelWidth
             valueBoxWidth: root.valueBoxWidth
             valueBoxHeight: root.valueBoxHeight

@@ -16,8 +16,7 @@ Rectangle {
     readonly property int currentMode: viewModel && viewModel.hasExecutionStack
         ? GCodeViewerPane.ProgramWithStack
         : GCodeViewerPane.ProgramWithoutStack
-    readonly property bool actionBarVisible: !!viewModel
-        && viewModel.screenIndex !== ProgramsScreen.Files
+    readonly property bool actionBarVisible: !!viewModel && viewModel.programShown
     // How much of the bottom action bar is in, 0..1: it rises from the
     // bottom edge, pushing the code up. ProgramsTabRoot animates this; left
     // alone it just follows actionBarVisible.

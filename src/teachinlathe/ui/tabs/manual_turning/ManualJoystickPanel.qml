@@ -4,7 +4,6 @@ import theme 1.0
 Rectangle {
     id: root
 
-    objectName: "manualJoystickPanel"
     width: 260
     height: 230
     color: Theme.surfaceSunken

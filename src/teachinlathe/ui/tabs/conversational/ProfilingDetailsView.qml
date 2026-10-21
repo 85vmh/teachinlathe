@@ -9,18 +9,16 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
-
-    signal saveRequested(var updated)
 
     signal openNumPadRequested(var field)
 
     signal teachXRequested(int index)
 
     signal teachZRequested(int index)
-
-    signal addFinishRequested(int index)
 
     function applyData(index, data) {
         opIndex = index
@@ -51,7 +49,7 @@ Item {
     }
 
     function save(payload) {
-        root.saveRequested({index: opIndex, payload: root.mergeIntoOp(payload)})
+        root.editor.save(root.mergeIntoOp(payload))
     }
 
     IntValidator    { id: intVal }
@@ -96,7 +94,7 @@ Item {
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: root.openNumPadRequested(field)
                 onSaveRequested: function (p) { root.save(p.payload || p) }
-                onAddFinishRequested: root.addFinishRequested(opIndex)
+                onAddFinishRequested: root.editor.addFinish()
             }
         }
 

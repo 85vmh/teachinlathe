@@ -4,9 +4,8 @@
 // starts and every peck retracts to. Its values in boxes down the right
 // edge; Z Start, Z End and the clearance's Z each drawn as a line across the
 // centre line, with an arrow from it to its box; each peck as the drill's
-// point, one of them dimensioned, to the Peck Depth / Dwell Time box. Edits
-// the same data as DrillingDetailsView and saves every change through the
-// same updateDrilling slot.
+// point, one of them dimensioned, to the Peck Depth / Dwell Time box. Saves
+// every change through updateDrilling.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -18,6 +17,8 @@ Item {
     id: root
     anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
 
@@ -42,8 +43,6 @@ Item {
     readonly property color zEndColor:     profileCanvas.endPositionColor
     readonly property color clearanceColor: "#00838f"
     readonly property color peckColor:     profileCanvas.feedColor
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
 
     // opData with the values edited in the boxes
@@ -63,17 +62,15 @@ Item {
     function save(op) {
         if (opIndex < 0 || !opData) return
         opData = op || _draftOp()
-        root.saveRequested({index: opIndex, payload: opData})
+        root.editor.save(opData)
     }
 
     function applyData(index, data) {
         opIndex = index
         opData  = data || {}
-
-        var bridge = (typeof conversationalQml !== "undefined" && conversationalQml) ? conversationalQml : null
-        workpiece = bridge ? (bridge.currentWorkpiece() || {}) : {}
-        tool      = bridge ? (bridge.toolBefore(index) || {}) : {}
-        toolCard  = bridge && bridge.toolCardBefore ? (bridge.toolCardBefore(index) || {}) : {}
+        workpiece = editor ? (editor.workpiece || {}) : {}
+        tool      = editor ? (editor.tool || {}) : {}
+        toolCard  = editor ? (editor.toolCard || {}) : {}
 
         var dp = opData.drilling_parameters || {}
         zStart    = dp.z_start    !== undefined ? Number(dp.z_start)    : 0
@@ -290,14 +287,16 @@ Item {
 
             ToolPickerPopup {
                 id: toolPicker
+
+                toolsModel: root.editor ? root.editor.touchedOffTools : null
                 contentWidth: root.width
                 toolKinds: ["Drill Tool"]
                 currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
                 currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
                                            ? root.toolCard.toolchange_position : "G28"
                 onToolChosen: function(toolNo, position) {
-                    if (typeof conversationalQml !== "undefined" && conversationalQml && conversationalQml.useToolBefore)
-                        conversationalQml.useToolBefore(root.opIndex, toolNo, position)
+                    if (root.editor)
+                        root.editor.useTool(toolNo, position)
                 }
             }
 

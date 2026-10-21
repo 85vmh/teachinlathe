@@ -86,7 +86,20 @@ Item {
                 // buttons rather than QPushButtons positioned by hand.
                 LatheBackplot {
                     id: backplot
-                    objectName: "latheBackplot"
+                    Component.onCompleted: if (root.viewModel) setProgramFile(root.viewModel.previewFile)
+
+                    // What to preview, and what to do to the view, as the
+                    // view model says.
+                    Connections {
+                        target: root.viewModel
+                        function onPreviewFileChanged() { backplot.setProgramFile(root.viewModel.previewFile) }
+                        function onPreviewInvalidated(path) { backplot.invalidatePreview(path) }
+                        function onPreviewPollRequested() { backplot.poll() }
+                        function onGremlinZoomInRequested() { backplot.zoomIn() }
+                        function onGremlinZoomOutRequested() { backplot.zoomOut() }
+                        function onGremlinClearRequested() { backplot.clearPlot() }
+                        function onGremlinFitRequested() { backplot.fitToWindow() }
+                    }
                     // three fingers swiped this far clear the plot
                     clearSwipeDistance: root.clearSwipeDistance
                     anchors.fill: parent
@@ -185,7 +198,7 @@ Item {
             RunControlBar {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 90
-                visible: root.viewModel ? root.viewModel.screenIndex === ProgramsScreen.Running : false
+                visible: root.viewModel ? root.viewModel.running : false
                 viewModel: root.viewModel
             }
         }

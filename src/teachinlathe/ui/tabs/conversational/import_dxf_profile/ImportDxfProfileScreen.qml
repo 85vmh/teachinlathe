@@ -8,11 +8,13 @@ import theme 1.0
 Item {
     id: root
     objectName: "importDxfProfileScreen"
-    anchors.fill: parent
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
-    property var fileSystemViewModel: dxfProfileFileSystemViewModel
+    // The DXF Profiles folder (ConversationalViewModel.dxfFileSystemViewModel).
+    property var fileSystemViewModel: null
     property string selectedPath: ""
     property string errorMessage: ""
     property var previewPrimitives: []
@@ -20,7 +22,6 @@ Item {
 
     signal backRequested()
     signal headerRefreshRequested()
-    signal importDxfProfileRequested(int opIndex, string dxfFilePath)
 
     function applyData(index, data) {
         opIndex = index
@@ -40,7 +41,7 @@ Item {
 
     function importSelectedDxf() {
         if (selectedPath.length > 0)
-            root.importDxfProfileRequested(root.opIndex, root.selectedPath)
+            root.editor.importDxf(root.selectedPath)
     }
 
     function loadPreview(path) {
@@ -48,7 +49,7 @@ Item {
         errorMessage = ""
         if (!path || path.length === 0)
             return
-        var result = conversationalQml.previewDxfProfile(path)
+        var result = root.editor.previewDxf(path)
         if (result && result.ok) {
             previewPrimitives = result.primitives || []
             profileType = result.profileType || profileType

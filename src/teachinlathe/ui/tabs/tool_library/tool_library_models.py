@@ -80,7 +80,7 @@ class HolderRow:
     toolView: Any        # the view the thumbnail reads, or None
     xOffset: str         # as shown: "123.123", or empty until touched off
     zOffset: str
-    inSpindle: bool      # the holder in the spindle, which cannot be deleted
+    isCurrentLoadedTool: bool      # the current loaded tool's holder, which cannot be deleted
 
 
 def card_and_view(tool, parent=None) -> tuple:
@@ -153,7 +153,7 @@ class ToolHolderListModel(DataclassListModel):
                 toolView=view,
                 xOffset=offset_text(holder, "x"),
                 zOffset=offset_text(holder, "z"),
-                inSpindle=holder.tool_holder_id == self._repository.current_tool,
+                isCurrentLoadedTool=holder.tool_holder_id == self._repository.current_loaded_tool,
             ))
         self.setRows(rows)
         self._views.end()

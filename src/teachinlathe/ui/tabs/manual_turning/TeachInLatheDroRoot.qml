@@ -7,7 +7,7 @@ Rectangle {
 
     color: Theme.surface
 
-    property var viewModel: teachInDroViewModel
+    property var viewModel: null
 
     signal toastRequested(string message)
     signal openNumPadRequested(var field)

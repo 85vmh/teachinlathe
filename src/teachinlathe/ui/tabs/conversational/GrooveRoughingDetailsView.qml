@@ -9,10 +9,10 @@ Item {
     anchors.fill: parent
     implicitHeight: contentColumn.implicitHeight + 20
 
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
     property int opIndex: -1
     property var opData: null
-
-    signal saveRequested(var updated)
     signal openNumPadRequested(var field)
 
     function applyData(index, data) {
@@ -43,7 +43,7 @@ Item {
     }
 
     function save(payload) {
-        root.saveRequested({index: opIndex, payload: root.mergeIntoOp(payload)})
+        root.editor.save(root.mergeIntoOp(payload))
     }
 
     ColumnLayout {

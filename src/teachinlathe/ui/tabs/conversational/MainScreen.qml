@@ -14,9 +14,9 @@ Item {
         z: -1
     }
 
-    property var programsModel
-    property bool showBack: false
-    property string selectedProgramId: ""
+    required property var programsModel
+    // The program last opened, outlined in the list.
+    required property string selectedProgramId
     // The program row swiped open, and to which side: 1 Delete, -1 Duplicate
     property int openSwipeIndex: -1
     property int openSwipeSide: 0
@@ -29,7 +29,6 @@ Item {
     signal deleteProgramRequested(int index)
     signal duplicateProgramRequested(int index)
 
-    anchors.fill: parent
 
     function applyDefaultSort() {
         if (main.programsModel && main.programsModel.sortPrograms)

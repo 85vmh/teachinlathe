@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import theme 1.0
+import "../../tool_library/ToolTitles.js" as ToolTitles
 
 // A Popup in the window's overlay, not an Item in the screen.
 //
@@ -79,10 +80,13 @@ Popup {
             Text {
                 Layout.fillWidth: true
                 textFormat: Text.RichText
+                // The tool as the Manual Turning list names it, its comment after.
+                readonly property string toolTitle: !root.viewModel || !root.viewModel.toolView ? ""
+                    : ToolTitles.listTitle(root.viewModel.toolCard, root.viewModel.toolView, Theme)
+                      + (root.viewModel.toolComment === "" ? ""
+                         : " (" + root.escapeHtml(root.viewModel.toolComment) + ")")
                 text: "Please load <b>" + root.escapeHtml(root.viewModel ? root.viewModel.toolNoText : "T?") + "</b>"
-                    + ((root.viewModel && root.viewModel.toolDescription.length > 0)
-                        ? " [" + root.escapeHtml(root.viewModel.toolDescription) + "]"
-                        : "")
+                    + (toolTitle.length > 0 ? " [" + toolTitle + "]" : "")
                 font.pixelSize: Theme.fontLarge
                 color: root.textColor
                 wrapMode: Text.WordWrap
