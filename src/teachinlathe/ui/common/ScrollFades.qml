@@ -17,7 +17,7 @@ Item {
     id: root
 
     property Flickable flickable: null
-    property real fadeHeight: 100
+    readonly property real fadeHeight: Theme.scrollFadeHeight
     //: What the list's rows fade into: the background behind the list.
     property color color: Theme.surfaceSunken
 

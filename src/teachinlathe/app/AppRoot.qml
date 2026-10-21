@@ -32,6 +32,12 @@ Item {
 
     readonly property bool machineReady: ctxMachine ? ctxMachine.machineReady : false
 
+    TouchFeedbackOverlay {
+        parent: root.Overlay.overlay
+        anchors.fill: parent
+        controller: TouchFeedback
+    }
+
     // MainTabs order, as the bottom bar lists them.
 readonly property var tabOrder: ["manual", "tools", "conversational", "programs", "settings"]
     readonly property int currentTabIndex: {

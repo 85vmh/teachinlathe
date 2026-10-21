@@ -297,7 +297,6 @@ Item {
         ScrollFades {
             anchors.fill: parent
             flickable: fileList
-            fadeHeight: root.rowHeight
         }
 
         }  // Item wrapper

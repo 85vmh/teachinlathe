@@ -30,6 +30,8 @@ SETTINGS_FILE = 'teachinlathe_settings.json'
 JOG_SPEED = 'machine.jog.linear-speed'
 JOG_SPEED_PERCENTAGE = 'machine.jog.linear-speed-percentage'
 RAPID_PERCENTAGE = 'rapid_speeds.percentage'
+HIDE_POINTER = 'interface.hide-pointer'
+SHOW_TOUCHES = 'interface.show-touches'
 
 
 @dataclass(frozen=True)
@@ -77,6 +79,8 @@ class SettingsRepository(QObject):
 
     def _default_specs(self) -> Dict[str, SettingSpec]:
         return {
+            HIDE_POINTER: SettingSpec(default=False, value_type=bool),
+            SHOW_TOUCHES: SettingSpec(default=False, value_type=bool),
             RAPID_PERCENTAGE: SettingSpec(
                 default=50, value_type=int, min_value=0, max_value=100,
                 description='Rapid speed, as a percentage of maximum'),

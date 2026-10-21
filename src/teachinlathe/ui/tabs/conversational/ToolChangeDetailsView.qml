@@ -166,7 +166,6 @@ Item {
             ScrollFades {
                 anchors.fill: parent
                 flickable: toolsGrid
-                fadeHeight: 80
                 color: Theme.surface
             }
 

@@ -5,3 +5,4 @@ AppShellEventsDrawer 1.0 AppShellEventsDrawer.qml
 AppShellToastOverlay 1.0 AppShellToastOverlay.qml
 AppShellTopBar 1.0 AppShellTopBar.qml
 ShellActionButton 1.0 ShellActionButton.qml
+TouchFeedbackOverlay 1.0 TouchFeedbackOverlay.qml

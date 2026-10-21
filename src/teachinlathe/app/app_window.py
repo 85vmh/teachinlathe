@@ -19,6 +19,7 @@ from teachinlathe.app.application import Application
 from teachinlathe.app.app_state import AppState
 from teachinlathe.app.app_identity import APPLICATION_DISPLAY_NAME
 from teachinlathe.app.dev_panel import DevPanelWindow
+from teachinlathe.app.touch_feedback import TouchFeedback
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.app.app_shell_qml import AppShellBridge
 from teachinlathe.ui.tabs.programs.backplot import register_qml_types as register_backplot_type
@@ -111,6 +112,7 @@ class AppWindow(QObject):
         self.view.setResizeMode(QQuickView.ResizeMode.SizeRootObjectToView)
         self.view.setColor(QColor("#efefef"))
         self.view.setFlag(Qt.WindowType.FramelessWindowHint)
+        self.touchFeedback = TouchFeedback(self.view, parent=self)
 
         # Every QML directory is a module named after its path from one of
         # these - `import theme`, `import tabs.conversational`,
@@ -122,6 +124,7 @@ class AppWindow(QObject):
         """What the screens bind to, as singletons of the TeachInLathe module:
         `import TeachInLathe`, then `ProgramsViewModel.running`, say."""
         for name, instance in (
+            ("TouchFeedback", self.touchFeedback),
             ("NavigationStore", self.appState.navigationStore),
             ("AppShellBridge", self.appShellBridge),
             ("ManualTabViewModel", self.manualTabViewModel),

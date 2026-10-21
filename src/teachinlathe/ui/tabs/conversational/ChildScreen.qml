@@ -114,7 +114,7 @@ Item {
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredWidth: 6.5
+                Layout.preferredWidth: 7
                 Layout.fillHeight: true
                 color: Theme.surface
                 radius: Theme.radius

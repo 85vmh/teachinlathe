@@ -207,7 +207,6 @@ Popup {
             ScrollFades {
                 anchors.fill: parent
                 flickable: optionsFlick
-                fadeHeight: Theme.buttonHeight
             }
         }
 

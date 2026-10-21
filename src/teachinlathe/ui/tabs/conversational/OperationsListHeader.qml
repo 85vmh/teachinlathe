@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import common
 
 Rectangle {
     id: root
@@ -15,12 +16,16 @@ Rectangle {
     // so it starts where the operation names do
     property int itemFontSize: 16
 
+    signal addOperationRequested()
+
     TextMetrics { id: orderPrefix; font.pixelSize: root.itemFontSize; text: "[#00]    " }
 
     width: parent ? parent.width : 400
-    height: Theme.buttonHeight
+    height: Theme.rowHeight
     radius: 0
-    color: Theme.separator
+    color: Theme.hover
+    border.width: 2
+    border.color: Theme.dialogBorder
 
     Item {
         anchors.fill: parent
@@ -29,17 +34,38 @@ Rectangle {
             anchors.fill: parent
             spacing: 0
 
-            Label {
-                text: "Program Operations"
-                font.bold: true
-                font.pixelSize: root.headerFontSize
-                color: Theme.foregroundStrong
-                Layout.leftMargin: 10 + orderPrefix.advanceWidth
+            Item {
                 Layout.minimumWidth: root.colOpNumW + root.colTypeW
                 Layout.fillWidth: true
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-                Layout.alignment: Qt.AlignVCenter
+                Layout.fillHeight: true
+
+                Label {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10 + orderPrefix.advanceWidth
+                    anchors.right: addButton.left
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Program Operations"
+                    font.bold: true
+                    font.pixelSize: root.headerFontSize
+                    color: Theme.foregroundStrong
+                    elide: Text.ElideRight
+                }
+
+                OperationIconTextButton {
+                    id: addButton
+                    anchors.right: parent.right
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    iconSource: Images.url("add_op_icon.svg")
+                    text: "Add New"
+                    tint: Theme.success
+                    color: Theme.surface
+                    buttonHeight: Theme.buttonHeight
+                    iconSize: 28
+                    fontPixelSize: 15
+                    onClicked: root.addOperationRequested()
+                }
             }
             Divider { dividerColor: Theme.outline }
 

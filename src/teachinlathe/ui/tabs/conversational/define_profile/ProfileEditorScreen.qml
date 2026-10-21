@@ -474,7 +474,6 @@ Item {
                     ScrollFades {
                         anchors.fill: parent
                         flickable: primScroll.contentItem
-                        fadeHeight: Theme.buttonHeight
                         color: Theme.surface
                     }
 

@@ -59,6 +59,7 @@ QtObject {
     readonly property int headerHeight:  56   // screen headers
     readonly property int barHeight:     64   // the app bar and the tab bar
     readonly property int barHeightSmall: 42  // the rapid-override strip
+    readonly property int scrollFadeHeight: 40 // scrolling lists, top and bottom
     readonly property int hairline:       1   // separators
 
     // Four steps, from what is actually drawn: 6 (41 uses), 8 (29), 4 (12),

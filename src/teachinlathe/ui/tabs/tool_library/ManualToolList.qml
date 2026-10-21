@@ -86,6 +86,5 @@ Rectangle {
     ScrollFades {
         anchors.fill: list
         flickable: list
-        fadeHeight: 80
     }
 }

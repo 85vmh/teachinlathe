@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import app_shell_qml as Shell
 import theme
+import TeachInLathe
 
 // The Machine Settings tab. Replaces the .ui's settingsTab.
 Rectangle {
@@ -26,6 +27,24 @@ Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             spacing: 20
+
+            GroupPanel {
+                title: "Touchscreen"
+                Layout.fillWidth: true
+
+                content: ColumnLayout {
+                    CheckBox {
+                        text: "Hide pointer"
+                        checked: TouchFeedback.hidePointer
+                        onToggled: TouchFeedback.hidePointer = checked
+                    }
+                    CheckBox {
+                        text: "Show touches"
+                        checked: TouchFeedback.showTouches
+                        onToggled: TouchFeedback.showTouches = checked
+                    }
+                }
+            }
 
             GroupPanel {
                 title: "Predefined Positions"

@@ -42,20 +42,12 @@ Rectangle {
     signal duplicateOperationRequested(int index)
     signal moveOperationRequested(int fromIndex, int toIndex)
 
-    function _operationIndexToListIndex(index) {
-        return index >= 0 ? index + 2 : 0
-    }
-
-    function _listIndexToOperationIndex(index) {
-        return index >= 2 ? index - 2 : -1
-    }
-
     function selectedOperationIndex() {
-        return _listIndexToOperationIndex(opsList.currentIndex)
+        return opsList.currentIndex
     }
 
     function setCurrentOperationIndex(index) {
-        opsList.currentIndex = _operationIndexToListIndex(index)
+        opsList.currentIndex = index
     }
 
     function saveScrollPosition() {
@@ -101,7 +93,7 @@ Rectangle {
     readonly property var openSwipeRow: {
         if (openSwipeIndex < 0)
             return null
-        var cell = opsList.itemAtIndex(_operationIndexToListIndex(openSwipeIndex))
+        var cell = opsList.itemAtIndex(openSwipeIndex)
         return cell ? cell.row : null
     }
 
@@ -121,7 +113,7 @@ Rectangle {
                     return
                 opsList.positionViewAtEnd()
                 // once more, with the last rows now built: the first pass went by
-                // contentHeight's estimate, which the shorter header rows throw off
+                // contentHeight's estimate before all delegates were built
                 Qt.callLater(function() { opsList.positionViewAtEnd() })
             })
         })
@@ -154,7 +146,7 @@ Rectangle {
     }
 
     Layout.fillWidth: true
-    Layout.preferredWidth: 3.5
+    Layout.preferredWidth: 3
     Layout.fillHeight: true
     color: Theme.surface
     radius: Theme.radius
@@ -178,7 +170,32 @@ Rectangle {
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 8
-                spacing: 6
+                spacing: 0
+
+                ProgramHeader {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: root.rowH
+                    Layout.bottomMargin: 4
+                    datum: root.programDatum
+                    colDelW: root.colDelW
+                    selected: opsList.currentIndex < 0
+                    onClicked: {
+                        opsList.currentIndex = -1
+                        root.programHeaderSelected()
+                    }
+                }
+
+                OperationsListHeader {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: root.rowH
+                    Layout.bottomMargin: 4
+                    colOpNumW: root.colOpNumW
+                    colGenW: root.colGenW
+                    colTypeW: root.colTypeW
+                    colOptW: root.colOptW
+                    headerFontSize: root.opHeaderFontSize
+                    onAddOperationRequested: root.openAddOperationPopup()
+                }
 
                 Item {
                     Layout.fillWidth: true
@@ -188,18 +205,15 @@ Rectangle {
                         id: opsList
                         anchors.fill: parent
                         clip: true
-                        model: root.operationsModel.length + 2
-                        currentIndex: 0
+                        model: root.operationsModel.length
+                        currentIndex: -1
                         interactive: root.dragFrom < 0
 
                         onMovementStarted: root.openSwipeIndex = -1
 
                         onCurrentIndexChanged: {
-                            if (currentIndex === 0) {
-                                root.programHeaderSelected()
-                            } else if (currentIndex >= 2) {
-                                root.operationSelected(root._listIndexToOperationIndex(currentIndex))
-                            }
+                            if (currentIndex >= 0)
+                                root.operationSelected(currentIndex)
                         }
 
                         delegate: Item {
@@ -229,34 +243,14 @@ Rectangle {
                                 }
                             }
                             width: ListView.view ? ListView.view.width : 400
-                            height: index === 1 ? 40 : root.rowH
-                            readonly property int operationIndex: index - 2
-
-                            ProgramHeader {
-                                anchors.fill: parent
-                                visible: index === 0
-                                datum: root.programDatum
-                                colDelW: root.colDelW
-                                selected: opsList.currentIndex === 0
-                                onClicked: opsList.currentIndex = 0
-                            }
-
-                            OperationsListHeader {
-                                anchors.fill: parent
-                                visible: index === 1
-                                colOpNumW: root.colOpNumW
-                                colGenW: root.colGenW
-                                colTypeW: root.colTypeW
-                                colOptW: root.colOptW
-                                headerFontSize: root.opHeaderFontSize
-                            }
+                            height: root.rowH
+                            readonly property int operationIndex: index
 
                             OperationListItem {
                                 id: opRow
                                 anchors.fill: parent
-                                visible: index >= 2
                                 operationIndex: parent.operationIndex
-                                operationData: index >= 2 ? root.operationsModel[parent.operationIndex] : null
+                                operationData: root.operationsModel[parent.operationIndex]
                                 selected: opsList.currentIndex === index
                                 colOpNumW: root.colOpNumW
                                 colGenW: root.colGenW
@@ -306,7 +300,7 @@ Rectangle {
                                         root.openSwipeIndex = -1
                                 }
                                 onRowTapped: function(i) {
-                                    opsList.currentIndex = root._operationIndexToListIndex(i)
+                                    opsList.currentIndex = i
                                 }
                             }
                         }
@@ -315,35 +309,12 @@ Rectangle {
                     ScrollFades {
                         anchors.fill: parent
                         flickable: opsList
-                        fadeHeight: Theme.buttonHeight
                         color: Theme.surfaceAlt
                     }
                 }
 
-                // between the list and the Add New Operation bar
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Theme.hairline
-                    color: Theme.outline
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 70
-
-                    OperationIconTextButton {
-                        anchors.centerIn: parent
-                        iconSource: Images.url("add_op_icon.svg")
-                        text: "Add New Operation"
-                        tint: Theme.success
-                        compact: false
-                        buttonHeight: Theme.buttonHeightLarge
-                        iconSize: 36
-                        fontPixelSize: 15
-                        onClicked: root.openAddOperationPopup()
-                    }
-                }
             }
         }
+
     }
 }
