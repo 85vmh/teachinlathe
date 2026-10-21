@@ -43,6 +43,8 @@ Item {
     // the boxes' and their marks' colours
     readonly property color zStartColor:  "#1565c0"
     readonly property color zEndColor:    profileCanvas.endPositionColor
+    //: The way the thread is cut, from Z Start to Z End.
+    readonly property color travelColor:  Theme.success
     readonly property color majorColor:   "#00838f"
     readonly property color minorColor:   profileCanvas.feedColor
     readonly property color retractColor: "#6d4c41"
@@ -340,10 +342,13 @@ Item {
             // the Z lines across the centre line, past the stock
             readonly property real zLineDiameter: Math.max(root.majorDiameter, 10) * 1.2
             markers: [
-                { line: true, x: zLineDiameter, z: root.zStartDrawn, color: root.zStartColor,
-                  arrowToRect: zStartBox.rect },
-                { line: true, x: zLineDiameter, z: root.zEndDrawn, color: root.zEndColor,
-                  arrowToRect: zEndBox.rect },
+                { line: true, x: zLineDiameter, z: root.zStartDrawn, color: root.zStartColor },
+                { line: true, x: zLineDiameter, z: root.zEndDrawn, color: root.zEndColor },
+                // the way the thread is cut, across the lines' top ends, to
+                // Z End; from its middle the leader to the Z Start / End box
+                { travel: true, x: -zLineDiameter, from: root.zStartDrawn, to: root.zEndDrawn,
+                  z: (root.zStartDrawn + root.zEndDrawn) / 2, color: root.travelColor,
+                  leaderColor: root.zStartColor, arrowToRect: zRangeBox.rect },
                 // the thread: its profile under the centre line, the far
                 // half's over it, and the helix joining them
                 { polyline: root.threadLower, color: "#455a64" },
@@ -398,47 +403,36 @@ Item {
 
             // The boxes stack down the right edge, each as wide as it needs;
             // the drawing is fitted into what the widest leaves free.
-            readonly property real boxWidth: Math.max(zStartBox.implicitWidth, zEndBox.implicitWidth,
+            readonly property real boxWidth: Math.max(zRangeBox.implicitWidth,
                                                       majorBox.implicitWidth, minorBox.implicitWidth,
                                                       retractBox.implicitWidth, docBox.implicitWidth)
             readonly property real boxGap: Theme.spacingLarge
             fitInsetRight: boxWidth + boxGap
 
-            // top to bottom: Z Start, Z End, Major Ø, Minor Ø together, a gap
-            // apart; Retract and DOC at the bottom. The position boxes as
-            // wide as each other, their labels lined up
-            readonly property real positionBoxWidth: Math.max(zStartBox.implicitWidth, zEndBox.implicitWidth,
+            // top to bottom: Z Start and Z End in one box, Major Ø, Minor Ø
+            // together, a gap apart; Retract and DOC at the bottom. The
+            // position boxes as wide as each other, their labels lined up
+            readonly property real positionBoxWidth: Math.max(zRangeBox.implicitWidth,
                                                               majorBox.implicitWidth, minorBox.implicitWidth)
-            readonly property real positionLabelWidth: Math.max(zStartBox.labelImplicitWidth,
-                                                                zEndBox.labelImplicitWidth,
+            readonly property real positionLabelWidth: Math.max(zRangeBox.labelImplicitWidth,
                                                                 majorBox.labelImplicitWidth,
                                                                 minorBox.labelImplicitWidth)
 
-            ZPositionBox {
-                id: zStartBox
+            ZRangeBox {
+                id: zRangeBox
                 width: profileCanvas.positionBoxWidth
                 labelWidth: profileCanvas.positionLabelWidth
                 x: profileCanvas.width - width - profileCanvas.boxGap
                 y: profileCanvas.boxGap
                 accent: root.zStartColor
-                label: "Z Start"
-                settingName: "threading.z_start"
-                value: root.zStart
-                onValueEdited: function(value) { root.zStart = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            ZPositionBox {
-                id: zEndBox
-                width: profileCanvas.positionBoxWidth
-                labelWidth: profileCanvas.positionLabelWidth
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: zStartBox.y + zStartBox.height + profileCanvas.boxGap
-                accent: root.zEndColor
-                label: "Z End"
-                settingName: "threading.z_end"
-                value: root.zEnd
-                onValueEdited: function(value) { root.zEnd = value; root.save() }
+                startColor: root.zStartColor
+                endColor: root.zEndColor
+                startSettingName: "threading.z_start"
+                endSettingName: "threading.z_end"
+                zStart: root.zStart
+                zEnd: root.zEnd
+                onZStartEdited: function(value) { root.zStart = value; root.save() }
+                onZEndEdited: function(value) { root.zEnd = value; root.save() }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -447,7 +441,7 @@ Item {
                 width: profileCanvas.positionBoxWidth
                 labelWidth: profileCanvas.positionLabelWidth
                 x: profileCanvas.width - width - profileCanvas.boxGap
-                y: zEndBox.y + zEndBox.height + profileCanvas.boxGap
+                y: zRangeBox.y + zRangeBox.height + profileCanvas.boxGap
                 axis: "x"
                 accent: root.majorColor
                 label: "Major Ø"

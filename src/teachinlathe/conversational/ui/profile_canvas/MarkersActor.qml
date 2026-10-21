@@ -17,7 +17,11 @@ import "arrow.js" as Arrow
 // ``fill``, and its mirror when ``mirror``; the arrow, if any, from its
 // middle; with ``polyline`` open lines through points {z, x} (x a diameter,
 // as drawn: negative over the centre line), one list per line - with
-// ``mirror``, each drawn below and over the centre line both.
+// ``mirror``, each drawn below and over the centre line both; with
+// ``travel`` the way a cut goes: horizontal, at diameter ``x``, from Z
+// ``from`` to Z ``to``, arrowheads along it pointing to ``to`` - and, with
+// ``arrowToRect``, a line up from its middle to the box's height, then from
+// a dot there the arrow to the box, in ``leaderColor``.
 QtObject {
     // [{x: diameter, z, color, arrowToRect, line, top, bottom, arrowAt, dash, hline, half}]
     property var markers: []
@@ -52,12 +56,60 @@ QtObject {
                 _paintPolyline(ctx, m)
                 continue
             }
+            if (m.travel) {
+                _paintTravel(ctx, m)
+                continue
+            }
             _one.position = { x: m.x || 0, z: m.z || 0 }
             _one.color = m.color || "#1565c0"
             _one.arrowToRect = m.arrowToRect || null
             _one.paint(ctx)
         }
         _one.position = null
+    }
+
+    function _paintTravel(ctx, m) {
+        var color = m.color || "#2e7d32"
+        var py = cy(+m.x || 0)
+        var from = cx(+m.from || 0), to = cx(+m.to || 0)
+        var length = Math.abs(to - from)
+        if (!(length > 0)) return
+        var dir = to > from ? 1 : -1
+        ctx.save()
+        ctx.setLineDash([])
+        ctx.strokeStyle = color
+        ctx.fillStyle = color
+        ctx.lineWidth = Arrow.lineWidth
+        ctx.beginPath()
+        ctx.moveTo(from, py)
+        ctx.lineTo(to, py)
+        ctx.stroke()
+        // a head every ``spacing`` px or so, the last on ``to``
+        var count = Math.max(1, Math.floor(length / (m.spacing || 48)))
+        for (var i = 1; i <= count; i++) {
+            var tip = from + dir * length * i / count
+            var base = tip - dir * Arrow.headLength
+            ctx.beginPath()
+            ctx.moveTo(tip, py)
+            ctx.lineTo(base, py - Arrow.headHalfWidth)
+            ctx.lineTo(base, py + Arrow.headHalfWidth)
+            ctx.closePath()
+            ctx.fill()
+        }
+        if (m.arrowToRect) {
+            // up from the middle to the box's height, then on to the box
+            var leader = m.leaderColor || color
+            var mid = (from + to) / 2
+            var knee = Arrow.anchorOf(m.arrowToRect).y
+            if (knee > py) knee = py - 2 * Arrow.headLength   // a box below: just up a little
+            ctx.strokeStyle = leader
+            ctx.beginPath()
+            ctx.moveTo(mid, py)
+            ctx.lineTo(mid, knee)
+            ctx.stroke()
+            Arrow.paintToBox(ctx, mid, knee, m.arrowToRect, leader, 0, true)
+        }
+        ctx.restore()
     }
 
     function _paintPolyline(ctx, m) {
