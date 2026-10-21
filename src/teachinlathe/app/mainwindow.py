@@ -17,44 +17,27 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtQuick import QQuickItem, QQuickView
 
 from teachinlathe.core.command_repository import issue_mdi
-from teachinlathe.core.machine_repository import machine_repository
-from teachinlathe.core.status_repository import status_repository
-from teachinlathe.core import ini_repository
 
+from teachinlathe.app.application import Application
 from teachinlathe.app.app_state import AppState
 from teachinlathe.app.app_identity import APPLICATION_DISPLAY_NAME
 from teachinlathe.app.dev_panel import DevPanelWindow
-from teachinlathe.machine.model.fixtures import LatheFixturesRepository
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual.logic.manual_lathe import ManualLathe
 from teachinlathe.app.app_shell_qml import AppShellBridge
-from teachinlathe.programs.ui.backplot import register_qml_types as register_backplot_type
-from teachinlathe.programs.ui.backplot import tool_source as backplot_tool_source
-from teachinlathe.conversational.ui.ConversationalQml import ConversationalQml
-from teachinlathe.machine.ui.FixturesViewModel import FixturesViewModel
-from teachinlathe.machine.ui.MachineViewModel import MachineViewModel
-from teachinlathe.manual.ui import ManualTurningViewModel
-from teachinlathe.manual.ui.TeachInLatheDroViewModel import TeachInLatheDroViewModel
-from teachinlathe.ui.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
+from teachinlathe.ui.tabs.programs.backplot import register_qml_types as register_backplot_type
+from teachinlathe.ui.tabs.conversational.ConversationalQml import ConversationalQml
+from teachinlathe.ui.tabs.machine_settings.FixturesViewModel import FixturesViewModel
+from teachinlathe.ui.tabs.machine_settings.MachineViewModel import MachineViewModel
+from teachinlathe.ui.tabs.manual_turning import ManualTurningViewModel
+from teachinlathe.ui.tabs.manual_turning.TeachInLatheDroViewModel import TeachInLatheDroViewModel
+from teachinlathe.ui.common.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.ui import QML_IMPORT_DIR
-from teachinlathe.programs.ui.ProgramsController import ProgramsController
-from teachinlathe.tooling.store.tool_table_sync import ToolTableSync
-from teachinlathe.tooling.ui.ManualToolsViewModel import ManualToolsViewModel
-from teachinlathe.tooling.ui.ToolsTabViewModel import ToolsTabViewModel
-from teachinlathe.tooling.store.tool_library_store import ToolLibraryStore
+from teachinlathe.ui.tabs.programs.ProgramsController import ProgramsController
+from teachinlathe.ui.tabs.tool_library.ManualToolsViewModel import ManualToolsViewModel
+from teachinlathe.ui.tabs.tool_library.ToolsTabViewModel import ToolsTabViewModel
 
 LOG = logging.getLogger(__name__)
-
-INI = ini_repository()
-STATUS = status_repository()
-MACHINE = machine_repository()
-LINUXCNC_CMD = linuxcnc.command()
-STAT = linuxcnc.stat()
-PROGRAM_PREFIX = INI.program_prefix
-# Base folder for conversational outputs (user-configurable).
-CONVERSATIONAL_OUTPUT_BASE = PROGRAM_PREFIX
-CONVERSATIONAL_GCODE_BASE = CONVERSATIONAL_OUTPUT_BASE
-CONVERSATIONAL_JSON_BASE = CONVERSATIONAL_OUTPUT_BASE
 
 QML_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -160,8 +143,9 @@ class ManualJoystickController(QObject):
 class TeachInLatheApp(QObject):
     """Owns the QML scene and everything behind it."""
 
-    def __init__(self, parent=None):
+    def __init__(self, application: Application, parent=None):
         super().__init__(parent)
+        self.application = application
 
         self.mainSelectedTab = MainTabs.MANUAL_TURNING
         self.lastSpindleRpm = 0
@@ -177,9 +161,9 @@ class TeachInLatheApp(QObject):
         self.devPanelWindow = None
 
         self.appState = AppState(self)
-        self.fixture_repository = LatheFixturesRepository()
+        self.fixture_repository = application.fixtures
         self.manualLathe = ManualLathe()
-        self.latheComponent = TeachInLatheComponent()
+        self.latheComponent = application.hal
 
         # The view exists first: the view models register themselves on its
         # engine's root context as they are built.
@@ -204,17 +188,10 @@ class TeachInLatheApp(QObject):
         """Everything QML binds to, built before the scene is loaded."""
         self.manualTurningViewModel = ManualTurningViewModel(self.manualLathe, self)
         self.teachInLatheDroViewModel = TeachInLatheDroViewModel(self)
-        # The tool library's files live next to the tool table, which is
-        # written from its holders - at start, and after every change.
-        self.toolLibraryStore = ToolLibraryStore(os.path.dirname(INI.tool_table_file))
-        self.toolTableSync = ToolTableSync(self.toolLibraryStore, INI.tool_table_file)
-        self.toolTableSync.sync()
-        # The backplot draws the tool in the spindle as the library has it.
-        backplot_tool_source.set_store(self.toolLibraryStore)
-        self.toolsTabViewModel = ToolsTabViewModel(self.toolLibraryStore, self)
+        tool_library = self.application.tool_library
+        self.toolsTabViewModel = ToolsTabViewModel(tool_library, self)
         self.toolsTabViewModel.toastRequested.connect(self._show_app_toast)
-        self.manualToolsViewModel = ManualToolsViewModel(
-            self.toolLibraryStore, status_repository(), issue_mdi, self)
+        self.manualToolsViewModel = ManualToolsViewModel(tool_library, self)
         self.numpadDialogViewModel = NumpadDialogViewModel(self)
 
         self.manualJoystickController = ManualJoystickController(self.manualTurningViewModel, self)
@@ -240,12 +217,14 @@ class TeachInLatheApp(QObject):
         )
 
     def _buildProgramsController(self):
-        from teachinlathe.programs.ui.filesystemview import (
+        from teachinlathe.ui.tabs.programs.filesystemview import (
             FileSystemLocation, LocationType,
         )
-        gcode_folder = os.path.join(CONVERSATIONAL_GCODE_BASE, "Conversational Gcode")
-        json_folder = os.path.join(CONVERSATIONAL_JSON_BASE, "Conversational Json")
-        usb_stick_folder = os.path.join(CONVERSATIONAL_GCODE_BASE, "USB Stick Programs")
+        # Conversational output goes under the INI's program prefix.
+        output_base = self.application.ini.program_prefix
+        gcode_folder = os.path.join(output_base, "Conversational Gcode")
+        json_folder = os.path.join(output_base, "Conversational Json")
+        usb_stick_folder = os.path.join(output_base, "USB Stick Programs")
         locations = [
             FileSystemLocation("Generated Programs", gcode_folder, LocationType.GENERATED),
             FileSystemLocation("USB Stick Programs", usb_stick_folder, LocationType.USB_STICK),
@@ -383,17 +362,18 @@ class TeachInLatheApp(QObject):
         self.onDevModeChanged(comp.getPin(TeachInLatheComponent.PinDevMode).value)
 
     def _wireStatus(self):
+        status = self.application.status
         # spindle override, initial value and updates
-        self.onSpindleOverrideChanged(STATUS.spindle[0].override.value)
-        STATUS.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
+        self.onSpindleOverrideChanged(status.spindle[0].override.value)
+        status.spindle[0].override.signal.connect(self.onSpindleOverrideChanged)
 
         # feed override, initial value and updates
-        self.onFeedOverrideChanged(STATUS.feedrate.value)
-        STATUS.feedrate.signal.connect(self.onFeedOverrideChanged)
+        self.onFeedOverrideChanged(status.feedrate.value)
+        status.feedrate.signal.connect(self.onFeedOverrideChanged)
 
-        self.onTaskModeChanged(STATUS.task_mode)
-        STATUS.task_mode.signal.connect(self.onTaskModeChanged)
-        STATUS.state.signal.connect(self.onStateChanged)
+        self.onTaskModeChanged(status.task_mode)
+        status.task_mode.signal.connect(self.onTaskModeChanged)
+        status.state.signal.connect(self.onStateChanged)
 
         self.handle_spindle_mode(self.getSpindleModeIndex)
 
@@ -632,14 +612,12 @@ class TeachInLatheApp(QObject):
 
     def setXOffset(self, value):
         print("setXOffset", value)
-        if issue_mdi('o<touch_off_x> call [{}]'.format(value).strip()):
-            self.manualToolsViewModel.captureTouchOff("x")
+        self.application.tool_library.touch_off("x", value)
 
     def setZOffset(self, value):
         print("setZOffset", value)
         # A blade is asked which of its points this was once the offset is in.
-        if issue_mdi('o<touch_off_z> call [{}]'.format(value).strip()):
-            self.manualToolsViewModel.captureTouchOff("z")
+        self.application.tool_library.touch_off("z", value)
 
     def onSetG28(self):
         issue_mdi("G28.1")

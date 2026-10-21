@@ -9,9 +9,6 @@ from teachinlathe.conversational.model.data_types import (
     Program,
 )
 from teachinlathe.conversational.model.qml_adapter import display_name_for_op, axial_tool_label
-from teachinlathe.tooling.store.tool_entry import ToolType, make_tool
-from teachinlathe.tooling.store.tool_extras_store import ToolExtrasStore
-from teachinlathe.tooling.store.tool_table_file import parse_tbl
 
 from .operations import OPERATION_GENERATORS
 
@@ -103,39 +100,33 @@ def _resolve_previous_tool_change(operations, before_index=None):
     return None
 
 
-def _tool_table_path():
-    from teachinlathe.core import ini_repository
-    return ini_repository().tool_table_file
-
-
 def _resolve_tool_payload(tool_no, fallback_orientation=0):
+    """What a groove operation reads of the tool a Change Tool puts in: its
+    number and orientation and, for a blade, its width and corners - from
+    the Tool Library."""
     if not tool_no:
         return {}
-    path = _tool_table_path()
-    if not path or not os.path.isfile(path):
-        return {"t": int(tool_no), "q": int(fallback_orientation or 0)}
+    from teachinlathe.core.tool_library_repository import tool_library_repository
+    from teachinlathe.tooling.model.data_types import BladeTool
+    payload = {"t": int(tool_no), "q": int(fallback_orientation or 0)}
     try:
-        extras_store = ToolExtrasStore(path)
-        for base in parse_tbl(path):
-            if int(base.t) != int(tool_no):
-                continue
-            extras = extras_store.get(base.t)
-            try:
-                tool_type = ToolType(extras.get("tool_type", ToolType.GENERIC.value))
-            except ValueError:
-                tool_type = ToolType.GENERIC
-            tool = make_tool(base, tool_type, extras)
-            return tool.to_display_dict()
+        tool = tool_library_repository().tool_in(int(tool_no))
     except Exception as exc:
         print(f"[gcode_builder] tool lookup failed for T{tool_no}: {exc}")
-    return {"t": int(tool_no), "q": int(fallback_orientation or 0)}
-
+        return payload
+    if isinstance(tool, BladeTool):
+        payload.update({"q": tool.orientation, "tool_type": "parting_blade",
+                        "width": tool.blade_width, "left_radius": tool.left_radius,
+                        "right_radius": tool.right_radius})
+    elif tool is not None and hasattr(tool, "orientation"):
+        payload["q"] = int(tool.orientation)
+    return payload
 
 
 def _resolve_tap_pitch(operations, op_index):
     """The pitch of the tap the last Change Tool above ``op_index`` puts in,
     from the Tool Library; None when it is not a tap or cannot be found."""
-    from teachinlathe.programs.ui.backplot import tool_source
+    from teachinlathe.ui.tabs.programs.backplot import tool_source
     tool_change = _resolve_previous_tool_change(operations, op_index)
     if tool_change is None:
         return None

@@ -21,7 +21,7 @@ from teachinlathe.tooling.model.data_types import (  # noqa: E402
 from teachinlathe.tooling.store.tool_library_store import (  # noqa: E402
     CUTTING_TOOLS_FILE, TOOL_HOLDERS_FILE, ToolLibraryStore,
 )
-from teachinlathe.tooling.ui.tool_library_models import (  # noqa: E402
+from teachinlathe.ui.tabs.tool_library.tool_library_models import (  # noqa: E402
     CuttingToolTreeModel, ToolHolderListModel,
 )
 

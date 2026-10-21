@@ -1,7 +1,7 @@
 """What the tool library starts with on a machine that has none yet.
 
-A few tools of every kind, and holders in each state a holder can be in:
-empty, holding a tool that has not been touched off, and ready.
+A few tools of every kind, and holders with some of them mounted. None is
+touched off: offsets are taken on the machine, never assumed.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from typing import List
 from teachinlathe.tooling.model.data_types import (
     BladeTool, BoringTool, CuttingTool, DrillingTool, HolderOrientation,
     InsertSpec, ReamingTool, SolidBody, SpindleDirection, TappingTool,
-    ThreadingTool, ToolHolder, TurningTool, TwistDirection, ZOffsetPlace,
+    ThreadingTool, ToolHolder, TurningTool, TwistDirection,
 )
 
 
@@ -51,14 +51,10 @@ def seed_cutting_tools() -> List[CuttingTool]:
 
 def seed_tool_holders() -> List[ToolHolder]:
     return [
-        ToolHolder(1, HolderOrientation.RADIAL, cutting_tool_id=1,
-                   x_offset=123.123, z_offset=45.678),
+        ToolHolder(1, HolderOrientation.RADIAL, cutting_tool_id=1),
         ToolHolder(2, HolderOrientation.RADIAL, cutting_tool_id=2),
-        ToolHolder(3, HolderOrientation.AXIAL, cutting_tool_id=4,
-                   x_offset=98.765, z_offset=60.5),
-        ToolHolder(4, HolderOrientation.RADIAL, cutting_tool_id=6,
-                   x_offset=110.0, z_offset=52.25, z_offset_place=ZOffsetPlace.LEFT),
+        ToolHolder(3, HolderOrientation.AXIAL, cutting_tool_id=4),
+        ToolHolder(4, HolderOrientation.RADIAL, cutting_tool_id=6),
         ToolHolder(5, HolderOrientation.AXIAL),
-        ToolHolder(6, HolderOrientation.RADIAL, cutting_tool_id=8,
-                   x_offset=115.4, z_offset=48.0),
+        ToolHolder(6, HolderOrientation.RADIAL, cutting_tool_id=8),
     ]

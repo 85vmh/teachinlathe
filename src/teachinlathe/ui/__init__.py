@@ -1,8 +1,10 @@
-"""QML and assets shared by every feature.
+"""The UI: a directory per tab under ``tabs/``, and the QML and assets they
+share.
 
-Each directory here is a QML module, so a screen anywhere in the package can
-say ``import theme 1.0``, ``import touchable_input 1.0`` or ``import common 1.0``
-once :data:`QML_IMPORT_DIR` is on its engine's import path.
+The shared directories are QML modules, so a screen anywhere in the package
+can say ``import theme 1.0``, ``import common 1.0`` or
+``import common.touchable_input 1.0`` once :data:`QML_IMPORT_DIR` is on its
+engine's import path.
 """
 
 import os

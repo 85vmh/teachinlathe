@@ -238,7 +238,7 @@ def test_homing_is_allowed_once_the_machine_is_on(repo):
 
 def machine_view_model(repo_result):
     from teachinlathe.core.tools_repository import ToolsRepository
-    from teachinlathe.machine.ui.MachineViewModel import MachineViewModel
+    from teachinlathe.ui.tabs.machine_settings.MachineViewModel import MachineViewModel
     r, stat, status, _, _ = repo_result
     return MachineViewModel(machine=r, status=status, tools=ToolsRepository()), stat, status
 

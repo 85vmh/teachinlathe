@@ -1,7 +1,7 @@
 """The threading inserts the tool editor offers: ER and IR laydown inserts,
 by size and pitch.
 
-The pitches are the ones ``tooling/ui/shapes/ThreadingInsert.qml`` has a
+The pitches are the ones ``ui/tabs/tool_library/shapes/ThreadingInsert.qml`` has a
 tooth for (its ``pitchTable``) - the drawing cannot show any other - so the
 two lists have to be kept in step by hand.
 """

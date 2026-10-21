@@ -27,7 +27,7 @@ def axial_tool_label(op_type, operations, index):
     kind = {"drilling": "drill", "tapping": "tap"}.get(op_type)
     if kind is None:
         return None
-    from teachinlathe.programs.ui.backplot import tool_source
+    from teachinlathe.ui.tabs.programs.backplot import tool_source
     change = next((o for o in reversed((operations or [])[:max(index, 0)])
                    if getattr(o, "type", "") == "changeTool"), None)
     tool = tool_source.describe(int(getattr(change, "tool_no", 0) or 0)) if change is not None else {}

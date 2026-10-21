@@ -315,30 +315,44 @@ class TappingTool(CuttingTool):
 class ToolHolder:
     """A station a cutting tool is clamped in.
 
-    The offsets belong to the holder *with* its cutting tool: they are
-    cleared whenever the cutting tool changes, and the holder cannot be used
-    until they are set again. `z_offset_place` is only meaningful for
-    blades, which can be touched off on either corner or in the middle.
+    The holder is the tool LinuxCNC knows as T<tool_holder_id>: its line in
+    the tool table is written from it. The offsets are that line's X and Z -
+    the tool table is where they live, and only touching off sets them; they
+    are kept here as read from it, never saved with the holder.
 
-    The holder is the tool LinuxCNC knows as T<tool_holder_id>: it is what
-    the tool table is written from. `last_loaded` is when it last went into
-    the spindle, a Unix time, for the recently used list.
+    Whether an offset can be trusted is the holder's own: `x_touched` and
+    `z_touched` say the axis was touched off with the cutting tool it holds
+    now. Mounting another tool, or changing the one mounted in a way that
+    moves its tip, clears them, and the holder cannot be used until both are
+    set again. `z_offset_place` is only meaningful for blades, which can be
+    touched off on either corner or in the middle. `last_loaded` is when it
+    last went into the spindle, a Unix time, for the recently used list.
     """
 
     tool_holder_id: int
     orientation: HolderOrientation = HolderOrientation.RADIAL
     cutting_tool_id: Optional[int] = None
-    x_offset: Optional[float] = None
-    z_offset: Optional[float] = None
+    x_touched: bool = False
+    z_touched: bool = False
     z_offset_place: Optional[ZOffsetPlace] = None
     last_loaded: Optional[float] = None
+    x_offset: float = 0.0
+    z_offset: float = 0.0
 
     def mount(self, cutting_tool_id: Optional[int]) -> None:
         """Clamp another cutting tool in (None empties the holder). Offsets
-        taken with the previous tool no longer apply."""
+        taken with the previous tool no longer apply: the tool table gets
+        zeros for them."""
         self.cutting_tool_id = cutting_tool_id
-        self.x_offset = None
-        self.z_offset = None
+        self.x_offset = 0.0
+        self.z_offset = 0.0
+        self.invalidate_offsets()
+
+    def invalidate_offsets(self) -> None:
+        """The tool's tip moved: it has to be touched off again. The values
+        stay in the tool table until it is."""
+        self.x_touched = False
+        self.z_touched = False
         self.z_offset_place = None
 
     @property
@@ -347,4 +361,4 @@ class ToolHolder:
 
     @property
     def is_ready(self) -> bool:
-        return self.has_tool and self.x_offset is not None and self.z_offset is not None
+        return self.has_tool and self.x_touched and self.z_touched

@@ -5,7 +5,7 @@ import theme 1.0
 /*
  * The TeachIn button beside a position field: the TeachIn icon, 48 px square
  * - the height of the NumpadField it sits next to. Drawn as the canvas's zoom
- * buttons are (programs/ui/BackplotIconButton.qml): surfaceAlt, a hairline
+ * buttons are (ui/tabs/programs/BackplotIconButton.qml): surfaceAlt, a hairline
  * border, the selection colour while pressed.
  */
 Button {

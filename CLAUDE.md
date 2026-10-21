@@ -8,18 +8,21 @@ TeachInLathe is a **PyQt6-based Virtual Control Panel (VCP)** for LinuxCNC CNC l
 
 ## Commands
 
+Nothing is installed for development: the app runs straight from this checkout, with `src/`
+on `PYTHONPATH`. The LinuxCNC build in use is the run-in-place tree `~/Work/linuxcnc-dev4`;
+its `lib/python` is the one to use (the system `dist-packages` `hal` lacks `hal.Type`).
+
 ```bash
-# Install for development
-pip install -e .
+# Start LinuxCNC with TeachInLathe from this checkout (~/Work/teachinlathe.sh: puts src/ on
+# PYTHONPATH and a throwaway `teachinlathe` launcher on PATH for the INI's DISPLAY line)
+~/Work/teachinlathe.sh
 
-# Run the VCP (requires LinuxCNC environment)
-teachinlathe --ini=/path/to/config.ini
+# Run the tests
+PYTHONPATH=/home/cnc/Work/linuxcnc-dev4/lib/python:src QT_QPA_PLATFORM=offscreen python3 -m pytest tests
 
-# Build Debian package
+# Install on a machine without a checkout (pip install from the repo), or build the .deb
+./install.sh
 ./build_deb.sh
-
-# Run the tests (pytest; needs LinuxCNC's Python modules on the path)
-PYTHONPATH=/path/to/linuxcnc/lib/python:src QT_QPA_PLATFORM=offscreen python3 -m pytest tests
 ```
 
 There is no linter configured for this project.
@@ -32,24 +35,30 @@ There is no linter configured for this project.
 
 ### Package Layout
 
-The package (`src/teachinlathe/`) is organised by feature. Each feature splits into
-`model/` (domain), `store/` (files on disk), `ui/` (QML + ViewModels) as it needs them.
+The package (`src/teachinlathe/`) keeps each feature's domain in its own package
+(`model/`, `logic/`, `store/`, `gcode/` as it needs them) and all of the UI (QML + ViewModels)
+under `ui/`: one directory per tab in `ui/tabs/`, and what they share in `ui/common/` and `ui/theme/`.
 
 ```
-app/             → mainwindow.py (wires all tabs together), AppRoot.qml, app shell, dev panel, logging
+app/             → application.py (Application: builds the HAL component and the repositories at
+                   start-up), mainwindow.py (wires all tabs together), AppRoot.qml, app shell, dev panel, logging
 core/            → repositories: the only layer that talks to LinuxCNC (HAL, INI, status, commands);
-                   lathe_hal_component.py is the singleton owning all HAL pin definitions
-manual/          → logic/ (manual_lathe.py: jog/spindle, joystick, teach-in limits) + ui/
-machine/         → model/ (fixtures) + ui/
-tooling/         → model/ (tool types, catalogs) + store/ (tool library JSON, .tbl) + ui/ (+ ui/shapes)
-programs/        → model/ (program runtime) + ui/ (file browser, G-code viewer, backplot/)
+                   lathe_hal_component.py is the singleton owning all HAL pin definitions;
+                   tool_library_repository.py is the only way to the tool table and the tool library
+                   files (through ToolTblFileDataSource and LatheToolExtrasDataSource)
+manual/          → logic/ (manual_lathe.py: jog/spindle, joystick, teach-in limits)
+machine/         → model/ (fixtures)
+tooling/         → model/ (tool types, catalogs)
+programs/        → model/ (program runtime)
 conversational/  → model/ (data_types.py: domain dataclasses) + store/ + gcode/ (G-code generation)
-                   + ui/ (ConversationalQml.py, the QML editor, profile definition canvases)
-ui/              → shared QML modules: theme, touchable_input, common (Images singleton + images/)
+ui/tabs/         → manual_turning/, tool_library/ (+ shapes/), conversational/ (ConversationalQml.py,
+                   the QML editor, profile definition canvases), programs/ (file browser, G-code
+                   viewer, backplot/), machine_settings/
+ui/              → shared QML modules: theme, common (Images singleton + images/, touchable_input/)
 ```
 
-Shared QML is imported by module name (`import theme 1.0`, `import touchable_input 1.0`,
-`import common 1.0`); `teachinlathe.ui.QML_IMPORT_DIR` is on every engine's import path.
+Shared QML is imported by module name (`import theme 1.0`, `import common 1.0`,
+`import common.touchable_input 1.0`); `teachinlathe.ui.QML_IMPORT_DIR` is on every engine's import path.
 All images live in `ui/common/images/` and are referenced as `Images.url("name.svg")` in QML or
 through `teachinlathe.ui.common.images` in Python — never by a relative path.
 
@@ -88,7 +97,7 @@ Data flow for edits:
 
 `TeachInLatheComponent` is a singleton. All HAL pins (joystick axes, spindle direction, tool-change handshake, axis limits, etc.) are defined there. `app/mainwindow.py` registers listener callbacks on these pins; `manual/logic/manual_lathe.py` uses them to drive jog commands.
 
-### QML File Conventions (conversational/ui)
+### QML File Conventions (ui/tabs/conversational)
 
 - `Root.qml` — navigation shell
 - `MainScreen.qml` — program list
@@ -104,6 +113,6 @@ Every `*DetailsView.qml` emits a signal when the user changes a value. The corre
 
 1. Add a dataclass in `conversational/model/data_types.py` (subclass `TurnableOperation`)
 2. Register it in `operation_types` dict
-3. Create `<Op>DetailsView.qml` and any `<Op>Parameters.qml` reusable components in `conversational/ui/`, and its generator in `conversational/gcode/operations/`
+3. Create `<Op>DetailsView.qml` and any `<Op>Parameters.qml` reusable components in `ui/tabs/conversational/`, and its generator in `conversational/gcode/operations/`
 4. Add the signal/slot pair in `ConversationalQml._hook_screen_item()` and implement the slot
 5. Wire the new operation into `ChildScreen.qml`

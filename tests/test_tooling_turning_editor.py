@@ -21,10 +21,10 @@ from teachinlathe.tooling.model.data_types import (  # noqa: E402
 from teachinlathe.tooling.store.tool_library_store import (  # noqa: E402
     CUTTING_TOOLS_FILE, ToolLibraryStore,
 )
-from teachinlathe.tooling.ui.ToolsTabViewModel import (  # noqa: E402
+from teachinlathe.ui.tabs.tool_library.ToolsTabViewModel import (  # noqa: E402
     HeaderAction, ToolsTabViewModel,
 )
-from teachinlathe.tooling.ui.TurningToolEditorViewModel import (  # noqa: E402
+from teachinlathe.ui.tabs.tool_library.TurningToolEditorViewModel import (  # noqa: E402
     TURNING_ORIENTATIONS, TurningToolEditorViewModel, new_turning_tool,
 )
 

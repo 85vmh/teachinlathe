@@ -129,18 +129,22 @@ def main(argv=None):
     wake.start(200)
     wake.timeout.connect(lambda: None)
 
-    from teachinlathe.app.mainwindow import MyMainWindow
+    from teachinlathe.app.application import Application
 
     if stopping:
         log.info("interrupted while starting up")
         return 0
 
-    window = MyMainWindow()
+    application = Application()
+    # Imported only now: some screen modules reach for the HAL component as
+    # they load, and it is the application's to create.
+    from teachinlathe.app.mainwindow import MyMainWindow
+    window = MyMainWindow(application)
 
     # Again, on purpose. Creating a HAL component replaces the SIGTERM
     # handler with the one that raises KeyboardInterrupt - LinuxCNC's binding
-    # does that so a userspace component dies when told to - and the window
-    # creates ours. Left alone, `kill` would tear the process down mid-loop
+    # does that so a userspace component dies when told to - and the
+    # application creates ours. Left alone, `kill` would tear the process down mid-loop
     # and leave the HAL component registered, blocking the next start.
     install_signal_handlers()
 

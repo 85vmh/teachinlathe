@@ -1,4 +1,4 @@
-"""The backplot's three-finger swipe (programs/ui/backplot/touch_gestures.py).
+"""The backplot's three-finger swipe (ui/tabs/programs/backplot/touch_gestures.py).
 
 Events are sent straight to a window the swipe filters: the filter sees them
 before Qt Quick tries to deliver them, so no touch device needs registering.
@@ -22,7 +22,7 @@ from PyQt6.QtGui import (QEventPoint, QGuiApplication, QInputDevice,  # noqa: E4
                          QNativeGestureEvent, QPointingDevice, QTouchEvent)
 from PyQt6.QtQuick import QQuickItem, QQuickWindow  # noqa: E402
 
-from teachinlathe.programs.ui.backplot.touch_gestures import ThreeFingerSwipe  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.touch_gestures import ThreeFingerSwipe  # noqa: E402
 
 DISTANCE = 80
 # The plot is the right half of an 800 x 600 window.

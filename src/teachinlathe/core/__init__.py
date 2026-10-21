@@ -20,6 +20,7 @@ from .settings_repository import (
     SettingSpec, SettingsRepository, get_setting, set_setting, settings_repository,
 )
 from .status_repository import StatusChannel, StatusRepository, status_repository
+from .tool_library_repository import ToolLibraryRepository, tool_library_repository
 
 __all__ = [
     "Axis",
@@ -36,6 +37,7 @@ __all__ = [
     "SettingsRepository",
     "StatusChannel",
     "StatusRepository",
+    "ToolLibraryRepository",
     "command_repository",
     "get_setting",
     "hal_component",
@@ -47,5 +49,6 @@ __all__ = [
     "set_setting",
     "settings_repository",
     "status_repository",
+    "tool_library_repository",
     "unload_all",
 ]

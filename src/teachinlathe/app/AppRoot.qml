@@ -3,11 +3,11 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 import "app_shell_qml"
-import "../machine/ui"
-import "../manual/ui"
-import "../programs/ui"
-import "../tooling/ui"
-import "../conversational/ui" as Conversational
+import "../ui/tabs/machine_settings"
+import "../ui/tabs/manual_turning"
+import "../ui/tabs/programs"
+import "../ui/tabs/tool_library"
+import "../ui/tabs/conversational" as Conversational
 
 /*
  * The whole window.

@@ -28,7 +28,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-HOST_PATH = (SRC / "teachinlathe" / "programs" / "ui" / "backplot"
+HOST_PATH = (SRC / "teachinlathe" / "ui" / "tabs" / "programs" / "backplot"
              / "lathe_backplot_item.py")
 
 
@@ -178,7 +178,7 @@ def test_the_line_weight_report_formats():
     the values became tuples and a ``", ".join`` over them raised inside
     ``realize()``. A format string is code, and this one is run by nothing
     except the machine starting up."""
-    from teachinlathe.programs.ui.backplot.lathe_backplot_item import (
+    from teachinlathe.ui.tabs.programs.backplot.lathe_backplot_item import (
         line_weight_report)
 
     for expanded in (0.0, 3.0):
@@ -188,8 +188,8 @@ def test_the_line_weight_report_formats():
 
 
 def test_the_report_names_every_font_actually_used():
-    from teachinlathe.programs.ui.backplot.actors import text
-    from teachinlathe.programs.ui.backplot.lathe_backplot_item import (
+    from teachinlathe.ui.tabs.programs.backplot.actors import text
+    from teachinlathe.ui.tabs.programs.backplot.lathe_backplot_item import (
         line_weight_report)
 
     message = line_weight_report(0.0)
@@ -198,7 +198,7 @@ def test_the_report_names_every_font_actually_used():
 
 
 def test_the_report_says_which_line_path_is_in_use():
-    from teachinlathe.programs.ui.backplot.lathe_backplot_item import (
+    from teachinlathe.ui.tabs.programs.backplot.lathe_backplot_item import (
         line_weight_report)
 
     assert "native GL lines" in line_weight_report(0.0)
@@ -255,7 +255,7 @@ def test_the_fingerprint_still_carries_what_does_change_the_picture():
 def test_pixel_grid_rounding(quantum, moved, expected):
     """A move too small to show must compare equal, and an unmeasurable frame
     must fall back to redrawing rather than freeze the plot."""
-    from teachinlathe.programs.ui.backplot.lathe_backplot_item import (
+    from teachinlathe.ui.tabs.programs.backplot.lathe_backplot_item import (
         _on_pixel_grid)
 
     before = (1.0, 2.0, 3.0)
@@ -265,7 +265,7 @@ def test_pixel_grid_rounding(quantum, moved, expected):
 
 
 def test_pixel_grid_keeps_every_axis():
-    from teachinlathe.programs.ui.backplot.lathe_backplot_item import (
+    from teachinlathe.ui.tabs.programs.backplot.lathe_backplot_item import (
         _on_pixel_grid)
 
     position = tuple(float(n) for n in range(9))

@@ -29,20 +29,20 @@ glcanon_scene = pytest.importorskip(
     "rs274.glcanon_scene",
     reason="needs a LinuxCNC with the split-out preview renderer")
 
-from teachinlathe.programs.ui.backplot.actors import (  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.actors import (  # noqa: E402
     origin, screen, sizing, text)
-from teachinlathe.programs.ui.backplot.actors.units import mm, to_mm  # noqa: E402
-from teachinlathe.programs.ui.backplot.actors.centerline import (  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.actors.units import mm, to_mm  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.actors.centerline import (  # noqa: E402
     CenterlineActor)
-from teachinlathe.programs.ui.backplot.actors.grid import GridActor  # noqa: E402
-from teachinlathe.programs.ui.backplot.actors.insert_tool import (  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.actors.grid import GridActor  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.actors.insert_tool import (  # noqa: E402
     InsertActor, _offset, _rotate, _to_plane)
-from teachinlathe.programs.ui.backplot.actors.origin import OriginActor  # noqa: E402
-from teachinlathe.programs.ui.backplot.actors.stock import StockActor  # noqa: E402
-from teachinlathe.programs.ui.backplot.actors.ticks import TicksActor  # noqa: E402
-from teachinlathe.programs.ui.backplot.actors.axis_arrows import (  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.actors.origin import OriginActor  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.actors.stock import StockActor  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.actors.ticks import TicksActor  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.actors.axis_arrows import (  # noqa: E402
     AxisArrowsActor)
-from teachinlathe.programs.ui.backplot.actors.axis_letters import (  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.actors.axis_letters import (  # noqa: E402
     AxisLettersActor)
 
 
@@ -257,7 +257,7 @@ def test_origin_draws_a_backing_disc_quadrants_and_a_ring():
 def test_the_empty_quadrants_are_filled_with_the_background():
     """Left clear, the centreline and the face datum cross underneath and
     their dashes read as part of the symbol."""
-    from teachinlathe.programs.ui.backplot.actors import origin as origin_module
+    from teachinlathe.ui.tabs.programs.backplot.actors import origin as origin_module
 
     ctx = lathe_frame()
     OriginActor().draw(ctx)
@@ -585,7 +585,7 @@ def canon_with(program):
 
 
 def test_rapids_draw_only_the_traverse_moves():
-    from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+    from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 
     ctx = lathe_frame()
     # Segments: 0->1 feed, 1->2 traverse, 2->3 feed, 3->4 traverse.
@@ -599,7 +599,7 @@ def test_rapids_draw_only_the_traverse_moves():
 
 
 def test_rapids_are_dashed_not_solid():
-    from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+    from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 
     ctx = lathe_frame()
     ctx.canon = canon_with(program_with([1, 0]))
@@ -609,7 +609,7 @@ def test_rapids_are_dashed_not_solid():
 
 
 def test_rapids_draw_nothing_without_a_program():
-    from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+    from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 
     ctx = lathe_frame()
     ctx.canon = None
@@ -618,7 +618,7 @@ def test_rapids_draw_nothing_without_a_program():
 
 
 def test_rapids_draw_nothing_when_the_program_has_none():
-    from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+    from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 
     ctx = lathe_frame()
     ctx.canon = canon_with(program_with([1, 1, 1]))
@@ -629,7 +629,7 @@ def test_rapids_draw_nothing_when_the_program_has_none():
 def test_the_rapids_are_read_once_per_program():
     """Reading them is numpy over the whole program; it belongs on a load,
     not on a frame."""
-    from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+    from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 
     ctx = lathe_frame()
     ctx.canon = canon_with(program_with([1, 0, 1, 0]))
@@ -639,7 +639,7 @@ def test_the_rapids_are_read_once_per_program():
 
 
 def test_a_new_program_is_read_again():
-    from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+    from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 
     ctx = lathe_frame()
     actor = RapidsActor()
@@ -652,7 +652,7 @@ def test_a_new_program_is_read_again():
 def test_the_dashes_are_rebuilt_only_when_the_zoom_changes():
     """They are a pixel length, so the scale decides them - but a drag of the
     zoom must not rebuild on every frame of it."""
-    from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+    from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 
     actor = RapidsActor()
     segments = np.array([[[0.0, 0.0, 0.0], [0.0, 0.0, 10.0]]])
@@ -664,7 +664,7 @@ def test_the_dashes_are_rebuilt_only_when_the_zoom_changes():
 
 def test_a_program_that_rapids_too_often_draws_them_solid():
     """Dashing is per-segment Python. A solid rapid beats a zoom that lurches."""
-    from teachinlathe.programs.ui.backplot.actors import rapids
+    from teachinlathe.ui.tabs.programs.backplot.actors import rapids
 
     actor = rapids.RapidsActor()
     many = np.array([[[0.0, 0.0, float(i)], [0.0, 0.0, float(i) + 1.0]]
@@ -675,7 +675,7 @@ def test_a_program_that_rapids_too_often_draws_them_solid():
 def test_the_rapids_follow_the_programs_own_transform():
     """Not the actors' stack: these are the program's vertices, and
     preview_mvp is what upstream draws them with."""
-    from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+    from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 
     assert RapidsActor.FOLLOW_PROGRAM_ORIGIN is False
     assert RapidsActor.DEPTH_WRITE is False
@@ -688,7 +688,7 @@ FEED, ARC, TRAVERSE = 1, 2, 0
 
 def hatch_points(ctx):
     """Just the hatching, told apart from the stock outline by its colour."""
-    from teachinlathe.programs.ui.backplot.actors import palette
+    from teachinlathe.ui.tabs.programs.backplot.actors import palette
 
     return [point for line, colour, _alpha in ctx.prim.lines
             if colour == palette.HATCH for point in line]
@@ -705,7 +705,7 @@ BAR = {"stock_length": 60.0, "external_diameter": 40.0}
 
 
 def test_the_profile_is_the_smallest_radius_a_cut_reached():
-    from teachinlathe.programs.ui.backplot.actors import profile
+    from teachinlathe.ui.tabs.programs.backplot.actors import profile
 
     ctx = lathe_frame()
     ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
@@ -719,7 +719,7 @@ def test_the_profile_is_the_smallest_radius_a_cut_reached():
 
 def test_the_profile_ignores_rapids():
     """A rapid over the bar cuts nothing."""
-    from teachinlathe.programs.ui.backplot.actors import profile
+    from teachinlathe.ui.tabs.programs.backplot.actors import profile
 
     ctx = lathe_frame()
     points = [(mm(5.0), 0.0, 0.0), (mm(5.0), 0.0, mm(-30.0))]
@@ -728,7 +728,7 @@ def test_the_profile_ignores_rapids():
 
 
 def test_the_profile_takes_arc_moves_as_cuts():
-    from teachinlathe.programs.ui.backplot.actors import profile
+    from teachinlathe.ui.tabs.programs.backplot.actors import profile
 
     ctx = lathe_frame()
     points = [(mm(8.0), 0.0, 0.0), (mm(8.0), 0.0, mm(-30.0))]
@@ -739,7 +739,7 @@ def test_the_profile_takes_arc_moves_as_cuts():
 
 def test_a_plunge_pulls_in_the_column_it_is_at():
     """A move at constant Z spans no columns to interpolate across."""
-    from teachinlathe.programs.ui.backplot.actors import profile
+    from teachinlathe.ui.tabs.programs.backplot.actors import profile
 
     ctx = lathe_frame()
     points = [(mm(20.0), 0.0, mm(-15.0)), (mm(6.0), 0.0, mm(-15.0))]
@@ -789,7 +789,7 @@ def test_the_bar_hatches_whole_with_no_program():
 def test_the_grid_is_drawn_transparent():
     """GL floors a line width at one pixel, so the profile editor's 0.5px
     hairline can only be matched by making a full-width line partly clear."""
-    from teachinlathe.programs.ui.backplot.actors import palette
+    from teachinlathe.ui.tabs.programs.backplot.actors import palette
 
     ctx = lathe_frame()
     GridActor().draw(ctx)
@@ -800,7 +800,7 @@ def test_the_grid_is_drawn_transparent():
 
 def test_the_centreline_is_drawn_transparent():
     """A datum sitting under the drawing, not geometry in it."""
-    from teachinlathe.programs.ui.backplot.actors import palette
+    from teachinlathe.ui.tabs.programs.backplot.actors import palette
 
     ctx = lathe_frame()
     CenterlineActor().draw(ctx)
@@ -820,7 +820,7 @@ def test_an_alpha_in_a_colour_tuple_would_be_ignored():
     """Stated so it is not reached for: the colours here are rgb, and the
     fourth element of one is read by nothing. Transparency is the separate
     argument the two actors above pass."""
-    from teachinlathe.programs.ui.backplot.actors import palette
+    from teachinlathe.ui.tabs.programs.backplot.actors import palette
 
     for name in ("GRID", "CENTERLINE", "AXIS_Z", "AXIS_X", "STOCK", "HATCH",
                  "FEED", "TRAVERSE", "ORIGIN", "INSERT_BODY", "INSERT_EDGE"):
@@ -833,7 +833,7 @@ def test_an_alpha_in_a_colour_tuple_would_be_ignored():
 def test_tick_labels_never_overlap(zoom, labels):
     """Zooming out used to walk them into each other: the step ladder had no
     bottom rung, so the labels closed up without the step ever coarsening."""
-    from teachinlathe.programs.ui.backplot.actors import stepping
+    from teachinlathe.ui.tabs.programs.backplot.actors import stepping
 
     ctx = lathe_frame(zoom=zoom)
     TicksActor().draw(ctx)
@@ -897,7 +897,7 @@ class FakeAtlas:
 
 @pytest.fixture
 def fake_atlas(monkeypatch):
-    from teachinlathe.programs.ui.backplot.actors import text as text_module
+    from teachinlathe.ui.tabs.programs.backplot.actors import text as text_module
 
     built = FakeAtlas()
     monkeypatch.setattr(text_module, "atlas", lambda font="tick": built)
@@ -1030,7 +1030,7 @@ def random_moves(count, seed=7):
 
 @pytest.mark.parametrize("count", [1, 7, 200, 3000])
 def test_the_vectorised_profile_matches_the_obvious_one(count):
-    from teachinlathe.programs.ui.backplot.actors import profile
+    from teachinlathe.ui.tabs.programs.backplot.actors import profile
 
     starts, ends = random_moves(count)
     z_start, z_end = mm(-60), 0.0
@@ -1045,7 +1045,7 @@ def test_the_vectorised_profile_matches_the_obvious_one(count):
 
 def test_chunking_does_not_change_the_answer(monkeypatch):
     """A slice boundary must fall between moves, not through one."""
-    from teachinlathe.programs.ui.backplot.actors import profile
+    from teachinlathe.ui.tabs.programs.backplot.actors import profile
 
     starts, ends = random_moves(400)
     z_start, z_end = mm(-60), 0.0
@@ -1063,7 +1063,7 @@ def test_chunking_does_not_change_the_answer(monkeypatch):
 def test_a_move_reaching_the_whole_bar_still_fits_one_chunk(monkeypatch):
     """The slice loop has to make progress even when one move alone is over
     the cap, or it spins."""
-    from teachinlathe.programs.ui.backplot.actors import profile
+    from teachinlathe.ui.tabs.programs.backplot.actors import profile
 
     monkeypatch.setattr(profile, "CHUNK", 4)
     starts = np.array([[mm(5), 0.0, mm(-60)]])
@@ -1143,7 +1143,7 @@ def test_the_profile_cache_survives_a_recycled_address():
 
 
 def test_the_rapids_cache_survives_a_recycled_address():
-    from teachinlathe.programs.ui.backplot.actors.rapids import RapidsActor
+    from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 
     ctx = lathe_frame()
     actor = RapidsActor()
