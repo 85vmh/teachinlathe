@@ -17,6 +17,8 @@ Item {
     // Whether the loaded-program screen is the one on show (it stays visible
     // while the strip slides away from it).
     property bool shown: true
+    // How far the bar under the code has reached across under the backplot, 0..1.
+    property real runBarReveal: 0
     // Where the code pane is, relative to this pane: the toasts centre over it.
     property real codePaneX: 0
     property real codePaneWidth: width
@@ -193,13 +195,12 @@ Item {
                 }
             }
 
-            // Cycle Abort and Feed Hold / Resume, while the program runs - the
-            // same height as the options bar under the code, so the two line up.
-            RunControlBar {
+            // Room for the bar under the code, which reaches across under
+            // the backplot while the program runs (ProgramsTabRoot draws it).
+            Item {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 90
-                visible: root.viewModel.running
-                viewModel: root.viewModel
+                Layout.preferredHeight: Math.max(0, (Theme.barHeight + parent.spacing) * root.runBarReveal - parent.spacing)
+                visible: root.runBarReveal > 0
             }
         }
     }

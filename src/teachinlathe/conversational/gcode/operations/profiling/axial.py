@@ -89,7 +89,6 @@ def emit_axial_roughing(
             lines.append(f"{prefix}G1 Z{fmt(cut_z)}")
             lines.append(f"{prefix}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
             lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
-            lines.append("(End of OD pass)")
             if include_m1:
                 lines.append(
                     f"{prefix}o<m1_handling> call "
@@ -98,7 +97,7 @@ def emit_axial_roughing(
                     f"[{fmt(entry_z)}] "
                     f"[{spindle_direction}]"
                 )
-                lines.append("")
+            lines.append("")
         else:
             # ID: 3-move approach to avoid crashing into bore wall.
             lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
@@ -107,7 +106,6 @@ def emit_axial_roughing(
             lines.append(f"{prefix}G1 Z{fmt(cut_z)}")
             lines.append(f"{prefix}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
             lines.append(f"{prefix}G0 Z{fmt(entry_z)}")
-            lines.append("(End of ID pass)")
             if include_m1:
                 lines.append(
                     f"{prefix}o<m1_handling> call "
@@ -116,6 +114,6 @@ def emit_axial_roughing(
                     f"[{fmt(entry_z)}] "
                     f"[{spindle_direction}]"
                 )
-                lines.append("")
+            lines.append("")
 
     lines.append("")

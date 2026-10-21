@@ -106,12 +106,11 @@ def emit_radial_roughing(
             lines.append(f"{prefix}G1 X{fmt(cut_x)}")
             lines.append(f"{prefix}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
             lines.append(f"{prefix}G0 X{fmt(context.x_safe)}")
-            lines.append("(End of OD pass)")
             if include_m1:
                 _emit_m1_handling_at_safe_diameter(
                     lines, prefix, m1_params, context.x_safe, exit_z, spindle_direction
                 )
-                lines.append("")
+            lines.append("")
         else:
             # ID: tool moves to x_start (bore entry), cuts outward to cut_x.
             # cut_x is the offset-profile boundary (profile_x - stock_x).
@@ -125,12 +124,11 @@ def emit_radial_roughing(
             lines.append(f"{prefix}G1 X{fmt(cut_x)}")
             lines.append(f"{prefix}G0 X{fmt(exit_x)} Z{fmt(exit_z)}")
             lines.append(f"{prefix}G0 X{fmt(context.x_safe)}")
-            lines.append("(End of ID pass)")
             if include_m1:
                 _emit_m1_handling_at_safe_diameter(
                     lines, prefix, m1_params, context.x_safe, exit_z, spindle_direction
                 )
-                lines.append("")
+            lines.append("")
 
     lines.append(f"{prefix}G0 X{fmt(context.x_safe)} Z{fmt(context.z_start)}")
     lines.append("")

@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.programs
-import tabs.programs.program_loaded
 import tabs.programs.gcode_viewer.while_running
 import theme
 
@@ -19,10 +18,11 @@ Rectangle {
         : GCodeViewerPane.ProgramWithoutStack
     readonly property bool actionBarVisible: viewModel.programShown
     // How much of the bottom action bar is in, 0..1: it rises from the
-    // bottom edge, pushing the code up. ProgramsTabRoot animates this; left
-    // alone it just follows actionBarVisible.
+    // bottom edge, pushing the code up. ProgramsTabRoot animates this and
+    // draws the bar itself - it reaches past this pane while a program runs -
+    // so here there is only the room it takes.
     property real actionBarReveal: actionBarVisible ? 1 : 0
-    readonly property int actionBarHeight: 90
+    readonly property int actionBarHeight: Theme.barHeight
     readonly property int actionBarGap: 6
 
     color: "#ffffff"
@@ -43,20 +43,11 @@ Rectangle {
             }
         }
 
-        // The bar sits at the top of a slot that grows from nothing, so it
-        // comes up from below rather than unfolding.
+        // Where the bar comes up from below.
         Item {
             Layout.fillWidth: true
             Layout.preferredHeight: (root.actionBarHeight + root.actionBarGap) * root.actionBarReveal
             visible: root.actionBarReveal > 0
-            clip: true
-
-            ProgramBottomActionBar {
-                y: root.actionBarGap
-                width: parent.width
-                height: root.actionBarHeight
-                viewModel: root.viewModel
-            }
         }
     }
 

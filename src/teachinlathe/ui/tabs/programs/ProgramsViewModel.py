@@ -119,6 +119,12 @@ class ProgramsViewModel(QObject):
         self._actions.stateChanged.connect(self._on_running_state_changed)
         self._actions.abortTriggered.connect(self._on_abort_triggered)
         self._actions.cycleStartObserved.connect(self._on_cycle_start_observed)
+        # The code views grey out the M1 stops while Break on M1 is off, and
+        # the "/" blocks while Skip "/" Blocks is on.
+        self._actions.optionalStopAction.checkedChanged.connect(self._bridge.setOptionalStop)
+        self._bridge.setOptionalStop(self._actions.optionalStopAction.checked)
+        self._actions.blockDeleteAction.checkedChanged.connect(self._bridge.setBlockDelete)
+        self._bridge.setBlockDelete(self._actions.blockDeleteAction.checked)
 
         self._bind_program_completion_hal()
         self._sync_program_completed_from_hal()

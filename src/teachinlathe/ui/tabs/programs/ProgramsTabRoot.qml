@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.programs.filesystemview
 import tabs.programs.gcode_viewer
+import tabs.programs.program_loaded
 import theme
 import TeachInLathe
 
@@ -49,6 +50,17 @@ Rectangle {
     // to the loaded program they come in after the slide; on the way back
     // they go first.
     property real reveal: programShown ? 1 : 0
+    // How far the bar under the code reaches across under the backplot, 0..1:
+    // all the way while a program runs, with Cycle Abort and Feed Hold at its
+    // end.
+    property real runBar: running ? 1 : 0
+    Behavior on runBar {
+        enabled: root._animate
+        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+    }
+    // The bar's height, and the gap above it - the code pane leaves that room.
+    readonly property int barHeight: Theme.barHeight
+    readonly property int barGap: 6
     // The DRO row's height, and the gap between it and the code.
     readonly property int droRowHeight: 220
     readonly property int droRowGap: Theme.spacingSmall
@@ -193,10 +205,25 @@ Rectangle {
             // off screen on the files screen; the backplot need not render there
             visible: root.offset > 0
             shown: root.programShown
+            runBarReveal: root.runBar
             // its toasts centre over the code pane, one stride to its left
             codePaneX: -root.stride
             codePaneWidth: root.paneWidth
             z: 1
+        }
+
+        // Under the code, coming up from below as the code makes room for it;
+        // while a program runs it widens to the right across the backplot's
+        // pane as well.
+        ProgramBottomActionBar {
+            viewModel: root.viewModel
+            x: codeColumn.x
+            y: parent.height - (root.barHeight + root.barGap) * root.reveal + root.barGap
+            width: root.paneWidth + root.stride * root.runBar
+            height: root.barHeight
+            visible: root.reveal > 0
+            runControlsReveal: root.runBar
+            z: 2
         }
     }
 }

@@ -41,6 +41,11 @@ OWORD_KEYWORD_PATTERN = re.compile(r"\b(?:SUB|ENDSUB|CALL)\b", re.IGNORECASE)
 WORD_PATTERN = re.compile(r"\b([A-Z])([+-]?(?:\d+(?:\.\d*)?|\.\d+))\b", re.IGNORECASE)
 NAMED_PARAMETER_PATTERN = re.compile(r"<[^>]+>")
 EXPRESSION_PATTERN = re.compile(r"\[[^\]]+\]")
+# The call that stops at an M1, in the generated programs: it does nothing
+# unless Break on M1 is on, so with it off the line is shown as a comment is.
+M1_HANDLING_CALL_PATTERN = re.compile(r"^\s*O<m1_handling>\s*CALL\b", re.IGNORECASE)
+# A block LinuxCNC skips while Skip "/" Blocks is on: shown as a comment then.
+BLOCK_DELETE_PATTERN = re.compile(r"^\s*/")
 THEME_PATH = os.path.join(os.path.dirname(__file__), "gcode_syntax_theme.json")
 
 
@@ -101,6 +106,7 @@ class _DocumentHighlighter(QSyntaxHighlighter):
     def _build_formats(self):
         formats = {
             "comment": self._fmt("comment", italic=True),
+            "inactive": self._fmt("comment"),
             "oword": self._fmt("oword", bold=True),
             "oword_keyword": self._fmt("oword_keyword", bold=True),
             "named_parameter": self._fmt("named_parameter"),
@@ -175,6 +181,10 @@ class _DocumentHighlighter(QSyntaxHighlighter):
             self.setFormat(start, end - start, self._formats[format_name])
 
     def highlightBlock(self, text):
+        if ((not self._parent.optional_stop and M1_HANDLING_CALL_PATTERN.match(text))
+                or (self._parent.block_delete and BLOCK_DELETE_PATTERN.match(text))):
+            self.setFormat(0, len(text), self._formats["inactive"])
+            return
         comment_ranges = self._highlight_comments(text)
         self._apply_pattern(text, OWORD_PATTERN, "oword", comment_ranges)
         self._apply_pattern(text, OWORD_KEYWORD_PATTERN, "oword_keyword", comment_ranges)
@@ -187,6 +197,39 @@ class GCodeSyntaxHighlighter(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._highlighters = []
+        self._optional_stop = True
+        self._block_delete = False
+
+    @property
+    def optional_stop(self):
+        return self._optional_stop
+
+    @property
+    def block_delete(self):
+        return self._block_delete
+
+    def set_optional_stop(self, enabled):
+        """Break on M1 on or off: the m1_handling calls are shown as live
+        code while it is on, greyed out like a comment while it is off."""
+        enabled = bool(enabled)
+        if enabled != self._optional_stop:
+            self._optional_stop = enabled
+            self._rehighlight()
+
+    def set_block_delete(self, enabled):
+        """Skip "/" Blocks on or off: the lines starting with "/" are greyed
+        out like a comment while it is on, shown as live code while it is off."""
+        enabled = bool(enabled)
+        if enabled != self._block_delete:
+            self._block_delete = enabled
+            self._rehighlight()
+
+    def _rehighlight(self):
+        for highlighter in list(self._highlighters):
+            try:
+                highlighter.rehighlight()
+            except RuntimeError:
+                self._highlighters.remove(highlighter)
 
     def attach_document(self, text_document):
         if text_document is None:

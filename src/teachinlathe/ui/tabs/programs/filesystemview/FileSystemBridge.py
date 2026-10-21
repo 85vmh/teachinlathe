@@ -136,6 +136,12 @@ class FileSystemBridge(QObject):
     def attachHighlighter(self, quick_document):
         self._syntax_highlighter.attach(quick_document)
 
+    def setOptionalStop(self, enabled):
+        self._syntax_highlighter.set_optional_stop(enabled)
+
+    def setBlockDelete(self, enabled):
+        self._syntax_highlighter.set_block_delete(enabled)
+
     @pyqtSlot(str)
     def selectFileByAbsolutePath(self, path: str) -> None:
         """Select a file by its absolute path and display its content."""

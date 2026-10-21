@@ -4,31 +4,20 @@ import QtQuick.Layouts
 import tabs.programs
 import theme
 
-// The program options under the code: Break on M1 and Skip "/" Blocks.
-// Cycle Start is in the app bar until the program is going; Feed Hold /
-// Resume and Cycle Abort are under the backplot while it runs (RunControlBar).
+// The bar under the code: the program options, Break on M1 and Skip "/"
+// Blocks. While the program runs the bar reaches across under the backplot
+// too (ProgramsTabRoot widens it) and Cycle Abort and Feed Hold / Resume come
+// in at its right end; Cycle Start is in the app bar until then.
 Rectangle {
     id: root
 
     required property var viewModel
+    // How far the run controls are in, 0..1: they fade in as the bar widens.
+    property real runControlsReveal: 0
 
     readonly property var actions: viewModel.actions
-
-    property bool breakOnM1Active: actions ? actions.optionalStopAction.checked : false
-    property bool breakOnM1Enabled: actions ? actions.optionalStopAction.enabled : false
-    property var breakOnM1Clicked: function() {
-        if (actions) {
-            actions.setOptionalStopEnabled(!root.breakOnM1Active)
-        }
-    }
-
-    property bool skipOptionalBlocksActive: actions ? actions.blockDeleteAction.checked : false
-    property bool skipOptionalBlocksEnabled: actions ? actions.blockDeleteAction.enabled : false
-    property var skipOptionalBlocksClicked: function() {
-        if (actions) {
-            actions.setBlockDeleteEnabled(!root.skipOptionalBlocksActive)
-        }
-    }
+    // The pause action is "active" while the program is paused.
+    readonly property bool paused: actions ? actions.pauseResumeAction.active : false
 
     color: Theme.surfaceSunken
     radius: Theme.radius
@@ -41,20 +30,48 @@ Rectangle {
             leftMargin: 16
             verticalCenter: parent.verticalCenter
         }
-        spacing: Theme.spacingLarge
+        spacing: 2 * Theme.spacingLarge
 
-        BottomActionButton {
-            text: "Break\non M1"
-            enabled: root.breakOnM1Enabled
-            checked: root.breakOnM1Active
-            onClicked: root.breakOnM1Clicked()
+        LedToggleButton {
+            text: "Break on M1"
+            enabled: root.actions ? root.actions.optionalStopAction.enabled : false
+            checked: root.actions ? root.actions.optionalStopAction.checked : false
+            onClicked: root.actions.setOptionalStopEnabled(!checked)
         }
 
-        BottomActionButton {
-            text: "Skip \/\nBlocks"
-            enabled: root.skipOptionalBlocksEnabled
-            checked: root.skipOptionalBlocksActive
-            onClicked: root.skipOptionalBlocksClicked()
+        LedToggleButton {
+            text: "Skip / Blocks"
+            enabled: root.actions ? root.actions.blockDeleteAction.enabled : false
+            checked: root.actions ? root.actions.blockDeleteAction.checked : false
+            onClicked: root.actions.setBlockDeleteEnabled(!checked)
+        }
+    }
+
+    RowLayout {
+        anchors {
+            right: parent.right
+            rightMargin: 16
+            verticalCenter: parent.verticalCenter
+        }
+        spacing: 2 * Theme.spacingLarge
+        // in over the second half of the bar's widening, once there is room
+        opacity: Math.max(0, root.runControlsReveal * 2 - 1)
+        visible: opacity > 0
+
+        RunActionButton {
+            text: "Cycle Abort"
+            fill: Theme.danger
+            pressedFill: Theme.dangerPressed
+            edge: "#ef5350"
+            enabled: root.actions ? root.actions.stopAction.enabled : false
+            onClicked: root.viewModel.triggerCycleAbort()
+        }
+
+        RunActionButton {
+            text: root.paused ? "Feed Resume" : "Feed Hold"
+            enabled: root.actions ? root.actions.pauseResumeAction.enabled : false
+            active: root.actions ? root.actions.cycleStartLedActive : false
+            onClicked: root.actions.triggerPauseResume()
         }
     }
 }
