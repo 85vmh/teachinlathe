@@ -21,22 +21,12 @@ Item {
     default property alias content: contentArea.data
 
     // Set while a screen is showing full screen: the program run view takes
-    // the whole window, the gremlin view keeps the title bar.
-    property bool chromeTopHidden: false
-    property bool chromeBottomHidden: false
+    // the whole window, the profile editors keep the title bar.
+    readonly property bool chromeTopHidden: appShellBridge ? appShellBridge.chromeTopHidden : false
+    readonly property bool chromeBottomHidden: appShellBridge ? appShellBridge.chromeBottomHidden : false
 
     readonly property int barHeight: Theme.barHeight
     readonly property int contentPadding: 6
-
-    function hideChrome(hideTop, hideBottom) {
-        chromeTopHidden = hideTop
-        chromeBottomHidden = hideBottom
-    }
-
-    function showChrome() {
-        chromeTopHidden = false
-        chromeBottomHidden = false
-    }
 
     ColumnLayout {
         anchors.fill: parent

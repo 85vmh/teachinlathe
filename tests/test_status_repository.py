@@ -250,7 +250,7 @@ def test_signal_is_an_alias_for_valueChanged(repo):
     stat = grouped_stat()
     r = repo(stat)
     seen = []
-    # the older spelling, still used by mainwindow
+    # the older spelling, still used by app_window
     r.task_mode.signal.connect(seen.append)
     r.spindle[0].override.signal.connect(lambda v: seen.append(("s", v)))
 
@@ -281,7 +281,7 @@ class Listener:
     def on_changed(self):                      # lathe_tool_table.refreshModel
         self.no_arg += 1
 
-    def on_value(self, value):                 # mainwindow.onTaskModeChanged
+    def on_value(self, value):                 # AppWindow.onFeedOverrideChanged
         self.one_arg.append(value)
 
     def on_optional(self, value=None):         # DroViewModel.updateValues

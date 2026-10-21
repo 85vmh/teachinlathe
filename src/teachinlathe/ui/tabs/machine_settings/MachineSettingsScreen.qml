@@ -12,11 +12,6 @@ Rectangle {
     property var fixturesViewModel: null
     property var positionsViewModel: null
 
-    signal setG28()
-    signal goToG28()
-    signal setG30()
-    signal goToG30()
-
     color: Theme.surfaceAlt
 
     Flickable {
@@ -38,11 +33,11 @@ Rectangle {
 
                 content: RowLayout {
                     spacing: 10
-                    Shell.ShellActionButton { text: "Set G28";   onClicked: root.setG28() }
-                    Shell.ShellActionButton { text: "Go to G28"; onClicked: root.goToG28() }
+                    Shell.ShellActionButton { text: "Set G28";   onClicked: if (root.viewModel) root.viewModel.setG28() }
+                    Shell.ShellActionButton { text: "Go to G28"; onClicked: if (root.viewModel) root.viewModel.goToG28() }
                     Rectangle { width: 1; Layout.fillHeight: true; color: Theme.separator }
-                    Shell.ShellActionButton { text: "Set G30";   onClicked: root.setG30() }
-                    Shell.ShellActionButton { text: "Go to G30"; onClicked: root.goToG30() }
+                    Shell.ShellActionButton { text: "Set G30";   onClicked: if (root.viewModel) root.viewModel.setG30() }
+                    Shell.ShellActionButton { text: "Go to G30"; onClicked: if (root.viewModel) root.viewModel.goToG30() }
                     Item { Layout.fillWidth: true }
                 }
             }

@@ -11,8 +11,11 @@ import os
 
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
+from teachinlathe.core.ini_repository import ini_repository
 from teachinlathe.programs.model.programs_screen import ProgramsScreen, ProgramsScreenEnum
-from teachinlathe.ui.tabs.programs.filesystemview import FileSystemViewModel
+from teachinlathe.ui.tabs.programs.filesystemview import (
+    FileSystemLocation, FileSystemViewModel, LocationType,
+)
 from teachinlathe.ui.tabs.programs.ProgramsDroViewModel import ProgramsDroViewModel
 from teachinlathe.ui.tabs.programs.ProgramsToolFeedSpeedViewModel import \
     ProgramsToolFeedSpeedViewModel
@@ -20,27 +23,50 @@ from teachinlathe.ui.tabs.programs.ProgramsViewModel import ProgramsViewModel
 
 LOG = logging.getLogger(__name__)
 
+USB_STICK_SUBFOLDER = "USB Stick Programs"
+
+
+def program_locations(ini):
+    """The folders the file browser lists, in the order it lists them."""
+    return [
+        FileSystemLocation("Generated Programs", ini.conversational_gcode_dir, LocationType.GENERATED),
+        FileSystemLocation("USB Stick Programs",
+                           os.path.join(ini.program_prefix, USB_STICK_SUBFOLDER), LocationType.USB_STICK),
+        FileSystemLocation("SyncThing Programs", os.path.expanduser("~/Sync"), LocationType.SYNCTHING),
+        FileSystemLocation("Home", os.path.expanduser("~"), LocationType.HOME),
+    ]
+
 
 class ProgramsController(QObject):
     headerStateChanged = pyqtSignal()
+    # Edit, on a generated program: the conversational program behind it.
+    editConversationalProgramRequested = pyqtSignal(str)
 
-    def __init__(self, locations, app, parent=None, json_folder_path=''):
+    def __init__(self, shell, navigation_store, parent=None, ini=None):
         super().__init__(parent)
-        self._app = app
+        self._shell = shell
         self._backplot = None
         self._pending_fit_path = ''
 
+        ini = ini_repository() if ini is None else ini
+        locations = program_locations(ini)
         folders = [(loc.name, loc.root_path) for loc in locations]
-        self.viewmodel = ProgramsViewModel(folders, self)
+        self.viewmodel = ProgramsViewModel(folders, navigation_store, self)
 
         self.fs_viewmodel = FileSystemViewModel(
-            locations, self, json_folder_path=json_folder_path)
+            locations, self, json_folder_path=ini.conversational_json_dir)
         self.fs_viewmodel.fileSelected.connect(
             self.viewmodel.bridge.selectFileByAbsolutePath)
         self.fs_viewmodel.fileOpenRequested.connect(
             self.viewmodel.openFileByAbsolutePath)
         self.fs_viewmodel.selectionChanged.connect(self._emit_header_state_changed)
         self.fs_viewmodel.navigationChanged.connect(self._emit_header_state_changed)
+        # A failed file operation is reported the way the rest of the app
+        # reports one: a toast, plus an entry in the events drawer.
+        self.fs_viewmodel.deleteFailed.connect(
+            lambda msg: self._shell.showToast("Delete failed: %s" % msg))
+        self.fs_viewmodel.copyFailed.connect(
+            lambda msg: self._shell.showToast("Copy failed: %s" % msg))
 
         self.dro_viewmodel = ProgramsDroViewModel(self)
         self.tool_feed_speed_viewmodel = ProgramsToolFeedSpeedViewModel(
@@ -50,6 +76,7 @@ class ProgramsController(QObject):
         self.viewmodel.programLoadRequested.connect(self._prepare_preview_for_load)
         self.viewmodel.enterRunFullScreenRequested.connect(self._enter_run_full_screen)
         self.viewmodel.exitRunFullScreenRequested.connect(self._exit_run_full_screen)
+        self.viewmodel.switchToManualRequested.connect(lambda: self._shell.activateTab("manual"))
         self.viewmodel.screenIndexChanged.connect(
             lambda _index: self._emit_header_state_changed())
         self.viewmodel.currentFilePathChanged.connect(self._on_current_file_changed)
@@ -145,12 +172,10 @@ class ProgramsController(QObject):
     # ── full screen ─────────────────────────────────────────────────────────
 
     def _enter_run_full_screen(self):
-        if self._app is not None:
-            self._app.enterProgramRunFullScreen()
+        self._shell.enterProgramRunFullScreen()
 
     def _exit_run_full_screen(self):
-        if self._app is not None:
-            self._app.exitFullScreen()
+        self._shell.exitFullScreen()
 
     # ── the app shell's header ──────────────────────────────────────────────
 
@@ -208,9 +233,8 @@ class ProgramsController(QObject):
             self.fs_viewmodel.openSelectedFile()
         elif action_id == "edit_program":
             json_path = self.fs_viewmodel.selectedGeneratedJsonPathForEdit()
-            if not json_path or self._app is None:
-                return
-            self._app.editConversationalProgramFromJson(json_path)
+            if json_path:
+                self.editConversationalProgramRequested.emit(json_path)
         elif action_id == "toggle_optional_stop":
             actions = self.viewmodel.actions
             actions.setOptionalStopEnabled(not actions.optionalStopAction.checked)

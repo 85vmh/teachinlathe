@@ -80,12 +80,14 @@ class ConversationalQml(QObject):
 
     headerStateChanged = pyqtSignal()
     facingMirrorChanged = pyqtSignal()
+    # A program's G-code was written, at this path: it is shown in Programs.
+    gcodeGenerated = pyqtSignal(str)
 
-    def __init__(self, engine, app=None, parent=None):
+    def __init__(self, engine, shell=None, parent=None):
         super().__init__(parent)
         self._facing_mirror = True
         self._engine = engine
-        self._app = app
+        self._shell = shell
         self.root = None
         self._context = engine.rootContext()
         self.folder_path = "/home/cnc/Work/teachinlathe/conversational"
@@ -140,10 +142,10 @@ class ConversationalQml(QObject):
             print("setAppState failed:", e)
 
     def attachRoot(self, root_item):
-        """Take the Root.qml instance the application created."""
+        """Take the ConversationalTabRoot.qml instance the application created."""
         self.root = root_item
         if not self.root:
-            LOG.error("conversational: no Root.qml item")
+            LOG.error("conversational: no ConversationalTabRoot.qml item")
             return
 
         main_url = QUrl.fromLocalFile(os.path.join(self.base_dir, "MainScreen.qml")).toString()
@@ -655,12 +657,7 @@ class ConversationalQml(QObject):
                 print("[gcode] close progress failed:", e)
 
         if path:
-            try:
-                mw = self._app
-                if mw and hasattr(mw, "showGeneratedProgram"):
-                    mw.showGeneratedProgram(path)
-            except Exception as e:
-                print("[gcode] showGeneratedProgram failed:", e)
+            self.gcodeGenerated.emit(path)
 
     def _remember_last_operation(self, prog):
         """Stores the order of the open operation (0 for the header) so the
@@ -686,13 +683,9 @@ class ConversationalQml(QObject):
 
     def generate_gcode_for_program(self, program):
         from teachinlathe.conversational.gcode import build_ngc_from_program
-        from teachinlathe.app import mainwindow as mw
 
-        base_dir = getattr(mw, "CONVERSATIONAL_OUTPUT_BASE", None) \
-            or getattr(mw, "CONVERSATIONAL_GCODE_BASE", None) \
-            or getattr(self, "folder_path", os.getcwd())
-        json_dir = os.path.join(base_dir, "Conversational Json")
-        gcode_dir = os.path.join(base_dir, "Conversational Gcode")
+        json_dir = ini_repository().conversational_json_dir
+        gcode_dir = ini_repository().conversational_gcode_dir
         base_name = getattr(getattr(program, "header", None), "name", getattr(program, "id", "program"))
         base_name = "".join(c for c in str(base_name) if c.isalnum() or c in ("-", "_", " ")).strip()
         base_name = base_name.replace(" ", "_")
@@ -1385,7 +1378,7 @@ class ConversationalQml(QObject):
     def onOpenNumPadRequested(self, field):
         """Called from QML when a NumpadField was tapped.
 
-        Opens the QML SmartNumpadDialog (hosted in Root.qml). The dialog reads
+        Opens the QML SmartNumpadDialog (hosted in ConversationalTabRoot.qml). The dialog reads
         its options/title from numpad_settings.json and writes the value back
         into the field via field.commit().
         """
@@ -1427,9 +1420,8 @@ class ConversationalQml(QObject):
         self._profile_editor_active = True
         self._emit_header_state_changed()
 
-        main_window = self._app
-        if hasattr(main_window, "enterContentFullScreen"):
-            main_window.enterContentFullScreen()
+        if self._shell is not None:
+            self._shell.enterContentFullScreen()
             self._in_profile_editor_full_screen = True
         import_url = QUrl.fromLocalFile(
             os.path.join(self.base_dir, "import_dxf_profile", "ImportDxfProfileScreen.qml")
@@ -1492,9 +1484,8 @@ class ConversationalQml(QObject):
         self._profile_editor_active = True
         self._emit_header_state_changed()
 
-        main_window = self._app
-        if hasattr(main_window, "enterContentFullScreen"):
-            main_window.enterContentFullScreen()
+        if self._shell is not None:
+            self._shell.enterContentFullScreen()
             self._in_profile_editor_full_screen = True
         editor_url = QUrl.fromLocalFile(
             os.path.join(self.base_dir, "define_profile", "ProfileEditorScreen.qml")
@@ -1544,9 +1535,8 @@ class ConversationalQml(QObject):
         self._profile_editor_active = True
         self._emit_header_state_changed()
 
-        main_window = self._app
-        if hasattr(main_window, "enterContentFullScreen"):
-            main_window.enterContentFullScreen()
+        if self._shell is not None:
+            self._shell.enterContentFullScreen()
             self._in_profile_editor_full_screen = True
         editor_url = QUrl.fromLocalFile(
             os.path.join(self.base_dir, "define_radial_profile", "RadialProfileEditorScreen.qml")
@@ -1638,9 +1628,8 @@ class ConversationalQml(QObject):
         self._profile_editor_active = False
         self._dxf_import_flow_active = False
         self._emit_header_state_changed()
-        main_window = self._app
-        if hasattr(main_window, "exitFullScreen"):
-            main_window.exitFullScreen()
+        if self._shell is not None:
+            self._shell.exitFullScreen()
         try:
             self.root.setProperty("history", list(getattr(self, "_dxf_import_base_history", [])))
         except Exception:
@@ -1661,9 +1650,8 @@ class ConversationalQml(QObject):
             self._in_profile_editor_full_screen = False
             self._profile_editor_active = False
             self._emit_header_state_changed()
-            main_window = self._app
-            if hasattr(main_window, "exitFullScreen"):
-                main_window.exitFullScreen()
+            if self._shell is not None:
+                self._shell.exitFullScreen()
         self.root.goBack()
         if returning_to_dxf_import:
             self._profile_editor_title = "Import DXF Profile"

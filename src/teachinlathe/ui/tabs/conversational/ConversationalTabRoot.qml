@@ -5,7 +5,6 @@ import common.touchable_input 1.0
 Item {
     id: root
     objectName: "root"
-    anchors.fill: parent
 
     // Navigation state (stack of { url, params })
     property var history: []

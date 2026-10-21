@@ -3,6 +3,7 @@ from enum import Enum
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from teachinlathe.core.command_repository import issue_mdi
 from teachinlathe.core.status_repository import status_repository
+from teachinlathe.core.tool_library_repository import tool_library_repository
 
 from teachinlathe.core.positions_repository import Positions
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
@@ -17,8 +18,7 @@ class LimitStatus(Enum):
 
 
 class TeachInLatheDroViewModel(QObject):
-    xPrimaryDroClicked = pyqtSignal(float)
-    zPrimaryDroClicked = pyqtSignal(float)
+    touchOffValueInputRequested = pyqtSignal(str)
     droChanged = pyqtSignal()
     limitsChanged = pyqtSignal()
     actionRejected = pyqtSignal(str)
@@ -35,8 +35,9 @@ class TeachInLatheDroViewModel(QObject):
         "chuck": "smart_numpad.chuck-limit",
     }
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, tool_library=None):
         super().__init__(parent)
+        self._tool_library = tool_library_repository() if tool_library is None else tool_library
         self.limitsHandler = MachineLimitsHandler()
         self.latheComponent = TeachInLatheComponent()
         self.setDefaultMachineLimits(self.limitsHandler.getDefaultMachineLimits())
@@ -186,13 +187,18 @@ class TeachInLatheDroViewModel(QObject):
     def xPrimaryClicked(self):
         if not self._can_run_primary_click():
             return
-        self.xPrimaryDroClicked.emit(float(self._x_primary_value))
+        self.touchOffValueInputRequested.emit("x")
 
     @pyqtSlot()
     def zPrimaryClicked(self):
         if not self._can_run_primary_click():
             return
-        self.zPrimaryDroClicked.emit(float(self._z_primary_value))
+        self.touchOffValueInputRequested.emit("z")
+
+    @pyqtSlot(str, "QVariant")
+    def touchOff(self, axis, value):
+        # A blade is asked which of its points this was once the offset is in.
+        self._tool_library.touch_off(str(axis), value)
 
     @pyqtSlot(str)
     def teachLimit(self, key):

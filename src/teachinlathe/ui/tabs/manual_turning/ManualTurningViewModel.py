@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 from teachinlathe.core.settings_repository import settings_repository
 
-from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
+from teachinlathe.manual.logic.manual_turning_use_case import ManualTurningUseCase
 from teachinlathe.ui.common.touchable_input.numpad_settings import NumpadSettings
 
 
@@ -13,10 +13,9 @@ class ManualTurningViewModel(QObject):
     handwheelValuesChanged = pyqtSignal()
     joystickStateChanged = pyqtSignal()
 
-    def __init__(self, manual_lathe, parent=None):
+    def __init__(self, use_case: ManualTurningUseCase, parent=None):
         super().__init__(parent)
-        self._manual_lathe = manual_lathe
-        self._lathe_component = TeachInLatheComponent()
+        self._use_case = use_case
         self._numpad_settings = NumpadSettings.instance()
         self._spindle_mode = 0
         self._gear_suffix = "2"
@@ -54,6 +53,43 @@ class ManualTurningViewModel(QObject):
         self._set_setting_backed_value("_input_feed", self._feed_setting_name, self._input_feed)
         self._input_feed = self._format_feed_value(self._input_feed)
         self._update_actual_feed()
+        self._follow_machine()
+
+    def _follow_machine(self):
+        """Show what the machine is doing, and tell it what the screen holds."""
+        uc = self._use_case
+        uc.spindleRunningChanged.connect(self.setSpindleRunning)
+        uc.spindleCoverOpenedChanged.connect(self.setSpindleCoverOpened)
+        uc.spindleResetRequiredChanged.connect(self.setSpindleResetRequired)
+        uc.spindleAngleChanged.connect(self.setSpindleAngle)
+        uc.actualRpmChanged.connect(self.setActualRpm)
+        uc.gearChanged.connect(lambda gear: self.setGearSuffix(str(gear)))
+        uc.spindleOverrideChanged.connect(self.setSpindleOverride)
+        uc.feedOverrideChanged.connect(self.setFeedOverride)
+        uc.feedingChanged.connect(self.setFeeding)
+        uc.joystickResetRequiredChanged.connect(self.setJoystickResetRequired)
+        uc.joystickStateChanged.connect(self.setJoystickState)
+        uc.joystickRapidChanged.connect(self.setJoystickRapid)
+        uc.angleFeedChanged.connect(self._on_angle_feed_changed)
+        uc.jogIncrementChanged.connect(self.setJogIncrement)
+        uc.handwheelsChanged.connect(self._on_handwheels_changed)
+
+        self.setGearSuffix(str(uc.gear))
+        self.setSpindleRunning(uc.spindle_running)
+        self.setSpindleCoverOpened(uc.spindle_cover_opened)
+        self.setSpindleResetRequired(uc.spindle_reset_required)
+        self.setSpindleAngle(uc.spindle_angle)
+        self.setSpindleOverride(uc.spindle_override)
+        self.setFeedOverride(uc.feed_override)
+        self.setFeeding(uc.feeding)
+        self.setJoystickResetRequired(uc.joystick_reset_required)
+        self._on_handwheels_changed()
+
+        uc.set_spindle_mode(self._spindle_mode)
+        uc.set_spindle_rpm(self._input_rpm)
+        uc.set_spindle_css(self._input_css)
+        uc.set_max_spindle_rpm(self._input_max_rpm)
+        uc.set_feed_per_rev(self._input_feed)
 
     def _setting_value(self, setting_name: str, default):
         return settings_repository().get(setting_name, default)
@@ -271,7 +307,7 @@ class ManualTurningViewModel(QObject):
         if self._spindle_mode == mode:
             return
         self._spindle_mode = mode
-        self._manual_lathe.onSpindleModeChanged(mode)
+        self._use_case.set_spindle_mode(mode)
         self.spindleModeChanged.emit()
         self.spindleValuesChanged.emit()
 
@@ -286,8 +322,8 @@ class ManualTurningViewModel(QObject):
         self._max_rpm_setting_name = f"spindle.css_max_rpm_{suffix}"
         self._set_setting_backed_value("_input_rpm", self._rpm_setting_name, self._input_rpm)
         self._set_setting_backed_value("_input_max_rpm", self._max_rpm_setting_name, self._input_max_rpm)
-        self._manual_lathe.onInputRpmChanged(self._input_rpm)
-        self._manual_lathe.onMaxSpindleRpmChanged(self._input_max_rpm)
+        self._use_case.set_spindle_rpm(self._input_rpm)
+        self._use_case.set_max_spindle_rpm(self._input_max_rpm)
         self.spindleValuesChanged.emit()
 
     @pyqtSlot(str)
@@ -295,26 +331,26 @@ class ManualTurningViewModel(QObject):
         # Persistence of the chosen value is handled by NumpadDialogViewModel
         # (writes last_value into numpad_settings.json).
         self._input_rpm = str(value)
-        self._manual_lathe.onInputRpmChanged(self._input_rpm)
+        self._use_case.set_spindle_rpm(self._input_rpm)
         self.spindleValuesChanged.emit()
 
     @pyqtSlot(str)
     def setInputCss(self, value):
         self._input_css = str(value)
-        self._manual_lathe.onInputCssChanged(self._input_css)
+        self._use_case.set_spindle_css(self._input_css)
         self._update_actual_css()
         self.spindleValuesChanged.emit()
 
     @pyqtSlot(str)
     def setInputMaxRpm(self, value):
         self._input_max_rpm = str(value)
-        self._manual_lathe.onMaxSpindleRpmChanged(self._input_max_rpm)
+        self._use_case.set_max_spindle_rpm(self._input_max_rpm)
         self.spindleValuesChanged.emit()
 
     @pyqtSlot(str)
     def setInputFeed(self, value):
         self._input_feed = self._format_feed_value(value)
-        self._manual_lathe.onInputFeedChanged(self._input_feed)
+        self._use_case.set_feed_per_rev(self._input_feed)
         self._update_actual_feed()
         self.feedValuesChanged.emit()
 
@@ -327,18 +363,17 @@ class ManualTurningViewModel(QObject):
 
     @pyqtSlot(bool)
     def setXHandwheelEnabled(self, enabled):
-        enabled = bool(enabled)
-        if self._x_handwheel_enabled == enabled:
-            return
-        self._x_handwheel_enabled = enabled
-        self.handwheelValuesChanged.emit()
+        self._use_case.set_handwheel_enabled("x", enabled)
 
     @pyqtSlot(bool)
     def setZHandwheelEnabled(self, enabled):
-        enabled = bool(enabled)
-        if self._z_handwheel_enabled == enabled:
-            return
-        self._z_handwheel_enabled = enabled
+        self._use_case.set_handwheel_enabled("z", enabled)
+
+    def _on_handwheels_changed(self):
+        handwheels = self._use_case.handwheels
+        self._handwheels_allowed = handwheels.allowed
+        self._x_handwheel_enabled = handwheels.x_enabled
+        self._z_handwheel_enabled = handwheels.z_enabled
         self.handwheelValuesChanged.emit()
 
     def setActualRpm(self, value):
@@ -413,43 +448,23 @@ class ManualTurningViewModel(QObject):
             self._jog_increment = str(value)
         self.handwheelValuesChanged.emit()
 
-    def setHandwheelsAllowed(self, allowed):
-        self._handwheels_allowed = bool(allowed)
-        self.handwheelValuesChanged.emit()
-
-    def setHandwheelStates(self, x_enabled, z_enabled):
-        self._x_handwheel_enabled = bool(x_enabled)
-        self._z_handwheel_enabled = bool(z_enabled)
-        self.handwheelValuesChanged.emit()
-
-    def _set_angle_feed_active(self, enabled):
-        enabled = bool(enabled)
-        if self._angle_feed_active == enabled:
-            return
-        self._angle_feed_active = enabled
-        self._manual_lathe.onTaperTurningChanged(enabled)
-        try:
-            self._lathe_component.comp.getPin(TeachInLatheComponent.PinIsAngleFeed).value = enabled
-        except Exception:
-            pass
+    def _on_angle_feed_changed(self, enabled):
+        self._angle_feed_active = bool(enabled)
         self.joystickStateChanged.emit()
 
     @pyqtSlot()
     def toggleAngleFeedFromJoystick(self):
         if not self._allows_joystick_touch:
             return
-        self._set_angle_feed_active(not self._angle_feed_active)
+        self._use_case.set_angle_feed(not self._angle_feed_active)
 
     @pyqtSlot(bool)
     def setAngleFeedActive(self, enabled):
-        self._set_angle_feed_active(enabled)
+        self._use_case.set_angle_feed(enabled)
 
     @pyqtSlot()
     def resetAngleFeed(self):
-        self._set_angle_feed_active(False)
-
-    def isAngleFeedActive(self):
-        return self._angle_feed_active
+        self._use_case.set_angle_feed(False)
 
     def setJoystickState(self, state):
         value = state.value if hasattr(state, "value") else int(state or 0)

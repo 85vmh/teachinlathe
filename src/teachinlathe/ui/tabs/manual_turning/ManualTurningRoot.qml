@@ -9,9 +9,9 @@
 //                              Joystick + Feed, Spindle
 //   Right: ManualToolList — fixed width (toolListWidth), full height
 //
-// Context properties required (set by mainwindow.py):
+// Context properties required (set by app_window.py):
 //   manualViewModel, teachInDroViewModel, manualToolsViewModel, appState,
-//   cncStore, navigationStore
+//   cncStore, navigationStore, appShellBridge
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -147,11 +147,6 @@ Item {
 
     // ── Signals bubbled up from children ─────────────────────────────
     signal openNumPadRequested(Item field)
-    signal toastRequested(string message)
-
-    signal xToggled(bool enabled)
-
-    signal zToggled(bool enabled)
 
     RowLayout {
         anchors.fill: parent
@@ -169,7 +164,7 @@ Item {
                 Layout.minimumHeight: root.droHeight
                 Layout.preferredHeight: root.droHeight
                 Layout.maximumHeight: root.droHeight
-                onToastRequested: function(message) { root.toastRequested(message) }
+                onToastRequested: function(message) { appShellBridge.showToast(message) }
                 onOpenNumPadRequested: function(field) { root.openNumpad(field) }
             }
 
@@ -241,8 +236,6 @@ Item {
                     id: handwheelsPanel
                     Layout.preferredWidth: root.handwheelsPanelWidth
                     Layout.fillHeight: true
-                    onXToggled: root.xToggled(enabled)
-                    onZToggled: root.zToggled(enabled)
                 }
 
                 // Joystick + Feed share a single bordered box

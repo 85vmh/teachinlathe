@@ -16,6 +16,7 @@ from typing import Any, List
 
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
+from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.core.tool_library_repository import ToolLibraryRepository
 from teachinlathe.tooling.model.data_types import BladeTool, ToolHolder, ZOffsetPlace
 from teachinlathe.ui.common.images import image_url
@@ -57,7 +58,7 @@ class ManualToolsViewModel(QObject):
     #: A blade was touched off in Z: which of its points was it? (its width)
     bladePlaceRequested = pyqtSignal(float)
 
-    def __init__(self, repository: ToolLibraryRepository, parent=None):
+    def __init__(self, repository: ToolLibraryRepository, parent=None, hal=None):
         super().__init__(parent)
         self._repository = repository
         self._model = ManualToolListModel(self)
@@ -71,6 +72,11 @@ class ManualToolsViewModel(QObject):
         repository.toolsChanged.connect(self.refresh)
         repository.currentToolChanged.connect(self._on_current_tool_changed)
         repository.touchedOff.connect(self._on_touched_off)
+
+        # No tool change while the joystick is feeding.
+        comp = (TeachInLatheComponent() if hal is None else hal).comp
+        comp.addListener(TeachInLatheComponent.PinJoystickIsFeeding, self.setFeeding)
+        self._feeding = bool(comp.getPin(TeachInLatheComponent.PinJoystickIsFeeding).value)
         self.refresh()
 
     # ── What the screen shows ───────────────────────────────────────────────

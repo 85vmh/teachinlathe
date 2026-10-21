@@ -21,6 +21,10 @@ log = logging.getLogger(__name__)
 
 NC_FILES_FALLBACK = "~/linuxcnc/nc_files"
 
+#: Where conversational programs are exported to, under the program prefix.
+CONVERSATIONAL_GCODE_SUBFOLDER = "Conversational Gcode"
+CONVERSATIONAL_JSON_SUBFOLDER = "Conversational Json"
+
 #: Axis letters in the order LinuxCNC reports positions in.
 AXIS_LETTERS = "xyzabcuvw"
 
@@ -117,6 +121,17 @@ class IniRepository:
         log.warning("'%s' does not exist either, using the home directory",
                     NC_FILES_FALLBACK)
         return os.path.expanduser("~/")
+
+    @property
+    def conversational_gcode_dir(self) -> str:
+        """Where the G-code generated from conversational programs goes."""
+        return os.path.join(self.program_prefix, CONVERSATIONAL_GCODE_SUBFOLDER)
+
+    @property
+    def conversational_json_dir(self) -> str:
+        """Where the conversational program behind each generated file is
+        copied, for the Programs tab to open it again for editing."""
+        return os.path.join(self.program_prefix, CONVERSATIONAL_JSON_SUBFOLDER)
 
     @property
     def tool_table_file(self) -> str:

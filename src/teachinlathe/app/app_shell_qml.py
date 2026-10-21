@@ -17,6 +17,7 @@ class AppShellBridge(QObject):
     eventsChanged = pyqtSignal()
     statusSummaryChanged = pyqtSignal()
     toastChanged = pyqtSignal()
+    chromeChanged = pyqtSignal()
 
     def __init__(self, app_state, feature_controllers=None, parent=None):
         super().__init__(parent)
@@ -30,6 +31,8 @@ class AppShellBridge(QObject):
         self._status_summary = ""
         self._toast_text = ""
         self._toast_visible = False
+        self._chrome_top_hidden = False
+        self._chrome_bottom_hidden = False
         self._toast_timer = QTimer(self)
         self._toast_timer.setSingleShot(True)
         self._toast_timer.setInterval(3000)
@@ -46,12 +49,21 @@ class AppShellBridge(QObject):
         self._cnc_store.lastCommandChanged.connect(self._refresh_status_summary)
 
         for controller in self._feature_controllers.values():
-            signal = getattr(controller, "headerStateChanged", None)
-            if signal is not None:
-                signal.connect(self._refresh)
+            self._follow_header_state(controller)
 
         self._refresh()
         self._refresh_status_summary()
+
+    def addFeatureController(self, tab_id, controller):
+        """For a tab built after the bridge, because it is handed the bridge."""
+        self._feature_controllers[tab_id] = controller
+        self._follow_header_state(controller)
+        self._refresh()
+
+    def _follow_header_state(self, controller):
+        signal = getattr(controller, "headerStateChanged", None)
+        if signal is not None:
+            signal.connect(self._refresh)
 
     @pyqtProperty(str, notify=currentTabChanged)
     def currentTab(self):
@@ -92,6 +104,37 @@ class AppShellBridge(QObject):
     @pyqtProperty(bool, notify=toastChanged)
     def toastVisible(self):
         return self._toast_visible
+
+    @pyqtProperty(bool, notify=chromeChanged)
+    def chromeTopHidden(self):
+        return self._chrome_top_hidden
+
+    @pyqtProperty(bool, notify=chromeChanged)
+    def chromeBottomHidden(self):
+        return self._chrome_bottom_hidden
+
+    # ── full screen ─────────────────────────────────────────────────────────
+    # Nothing is reparented or moved: the bars are items that stop being
+    # visible, and the layout gives their space back.
+
+    def enterContentFullScreen(self):
+        """Hide only the bottom nav; the title bar stays visible."""
+        self._set_chrome_hidden(top=False, bottom=True)
+
+    def enterProgramRunFullScreen(self):
+        """Full window (covers title bar + bottom tab bar) for a running program."""
+        self._set_chrome_hidden(top=True, bottom=True)
+
+    def exitFullScreen(self):
+        """Restore the title bar and the bottom nav."""
+        self._set_chrome_hidden(top=False, bottom=False)
+
+    def _set_chrome_hidden(self, top, bottom):
+        if (self._chrome_top_hidden, self._chrome_bottom_hidden) == (top, bottom):
+            return
+        self._chrome_top_hidden = top
+        self._chrome_bottom_hidden = bottom
+        self.chromeChanged.emit()
 
     @pyqtSlot(str)
     def activateTab(self, tab_id):

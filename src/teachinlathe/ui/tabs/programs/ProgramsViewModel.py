@@ -34,8 +34,9 @@ class ProgramsViewModel(QObject):
     gremlinClearRequested = pyqtSignal()
     gremlinFitRequested = pyqtSignal()
 
-    def __init__(self, folders, parent=None):
+    def __init__(self, folders, navigation_store, parent=None):
         super().__init__(parent)
+        self._navigation_store = navigation_store
         self._bridge = FileSystemBridge(folders, self)
         self._runtime_store = ProgramRuntimeStore(self)
         self._call_stack_resolver = ProgramCallStackResolver(self)
@@ -61,6 +62,11 @@ class ProgramsViewModel(QObject):
         self._bridge.fileContentChanged.connect(self._on_file_content_changed)
         self._bridge.screenChangeRequested.connect(self._set_screen_index)
         self._bridge.programLoadRequested.connect(self.programLoadRequested)
+        self.programLoadRequested.connect(lambda _path: self._set_program_loaded(True))
+        self.ensureProgramLoadedRequested.connect(lambda: self._set_program_loaded(True))
+
+        self._navigation_store.currentTabChanged.connect(self._on_current_tab_changed)
+        self._on_current_tab_changed()
 
         self._runtime_store.snapshotChanged.connect(self._on_runtime_snapshot_changed)
         self._runtime_store.machineFileChanged.connect(lambda _path: self.runningStateChanged.emit())
@@ -266,6 +272,7 @@ class ProgramsViewModel(QObject):
         for pin_name, callback in (
             (TeachInLatheComponent.PinProgramCompleted, self._on_program_completed_changed),
             (TeachInLatheComponent.PinButtonCycleStart, self._on_cycle_start_button_changed),
+            (TeachInLatheComponent.PinButtonCycleStop, self._on_cycle_stop_button_changed),
             (TeachInLatheComponent.PinProgramAborted, self._on_program_aborted_changed),
         ):
             try:
@@ -350,6 +357,18 @@ class ProgramsViewModel(QObject):
         if not pressed or not self._program_completed:
             return
         self._run_completed_program_again()
+
+    def _on_cycle_stop_button_changed(self, value=False):
+        if self._read_bool_pin(TeachInLatheComponent.PinButtonCycleStop, bool(value)):
+            self._set_program_loaded(False)
+
+    def _set_program_loaded(self, loaded):
+        self._component.comp.getPin(TeachInLatheComponent.PinProgramLoaded).value = bool(loaded)
+
+    def _on_current_tab_changed(self):
+        # The machine may only start a program while the operator is looking at it.
+        self._component.comp.getPin(TeachInLatheComponent.PinIsReadyToRunProgram).value = \
+            self._navigation_store.currentTab == "programs"
 
     def _on_program_completed_changed(self, value=False):
         completed = self._read_bool_pin(TeachInLatheComponent.PinProgramCompleted, bool(value))

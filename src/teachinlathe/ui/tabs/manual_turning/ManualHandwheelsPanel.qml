@@ -7,9 +7,6 @@ Rectangle {
     id: root
     property var viewModel: manualViewModel
 
-    signal xToggled(bool enabled)
-    signal zToggled(bool enabled)
-
     color: Theme.surfaceSunken
     border.color: Theme.outline
     border.width: Theme.hairline
@@ -86,7 +83,7 @@ Rectangle {
         axisLabel: "X"
         enabled: viewModel ? viewModel.handwheelsAllowed : true
         checked: viewModel ? viewModel.xHandwheelEnabled : true
-        onClicked: root.xToggled(checked)
+        onClicked: if (root.viewModel) root.viewModel.setXHandwheelEnabled(checked)
     }
 
     HandwheelToggle {
@@ -95,6 +92,6 @@ Rectangle {
         axisLabel: "Z"
         enabled: viewModel ? viewModel.handwheelsAllowed : true
         checked: viewModel ? viewModel.zHandwheelEnabled : true
-        onClicked: root.zToggled(checked)
+        onClicked: if (root.viewModel) root.viewModel.setZHandwheelEnabled(checked)
     }
 }

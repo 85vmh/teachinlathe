@@ -138,8 +138,8 @@ def main(argv=None):
     application = Application()
     # Imported only now: some screen modules reach for the HAL component as
     # they load, and it is the application's to create.
-    from teachinlathe.app.mainwindow import MyMainWindow
-    window = MyMainWindow(application)
+    from teachinlathe.app.app_window import AppWindow
+    window = AppWindow(application)
 
     # Again, on purpose. Creating a HAL component replaces the SIGTERM
     # handler with the one that raises KeyboardInterrupt - LinuxCNC's binding

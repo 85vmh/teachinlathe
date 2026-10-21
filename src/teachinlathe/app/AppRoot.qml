@@ -7,7 +7,7 @@ import "../ui/tabs/machine_settings"
 import "../ui/tabs/manual_turning"
 import "../ui/tabs/programs"
 import "../ui/tabs/tool_library"
-import "../ui/tabs/conversational" as Conversational
+import "../ui/tabs/conversational"
 
 /*
  * The whole window.
@@ -38,9 +38,6 @@ readonly property var tabOrder: ["manual", "tools", "conversational", "programs"
         return idx < 0 ? 0 : idx
     }
 
-    function hideChrome(hideTop, hideBottom) { shell.hideChrome(hideTop, hideBottom) }
-    function showChrome() { shell.showChrome() }
-
     StackLayout {
         anchors.fill: parent
         // Shown until the machine is out of E-stop, powered and homed. The
@@ -60,22 +57,14 @@ readonly property var tabOrder: ["manual", "tools", "conversational", "programs"
                 anchors.fill: parent
                 currentIndex: root.currentTabIndex
 
-                ManualTurningRoot {
-                    objectName: "manualScreen"
-                }
+                ManualTurningRoot {}
 
                 ToolLibraryRoot {
                     objectName: "toolsScreen"
                 }
 
-                // Root.qml anchors itself to its parent, from when it was the
-                // root of a QQuickWidget scene sized to the view. A plain Item
-                // for it to fill keeps that working, because anchoring an item
-                // the StackLayout manages directly is undefined behaviour.
-                Item {
-                    Conversational.Root {
-                        objectName: "conversationalScreen"
-                    }
+                ConversationalTabRoot {
+                    objectName: "conversationalScreen"
                 }
 
                 ProgramsTabRoot {
@@ -83,7 +72,6 @@ readonly property var tabOrder: ["manual", "tools", "conversational", "programs"
                 }
 
                 MachineSettingsScreen {
-                    objectName: "settingsScreen"
                     viewModel: root.ctxMachine
                     fixturesViewModel: root.ctxFixtures
                 }

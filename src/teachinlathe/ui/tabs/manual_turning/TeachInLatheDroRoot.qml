@@ -31,6 +31,40 @@ Rectangle {
         }
     }
 
+    // The value measured with the current tool: a diameter in X, the
+    // distance to Z0 in Z.
+    component TouchOffField: QtObject {
+        property string axis
+        property string settingName
+        property string description
+        property var value: 0.0
+
+        function commit(v) {
+            value = v
+            if (root.viewModel) {
+                root.viewModel.touchOff(axis, v)
+            }
+            return true
+        }
+
+        function defocus() {
+        }
+    }
+
+    TouchOffField {
+        id: xTouchOffField
+        axis: "x"
+        settingName: "smart_numpad.x-offset"
+        description: "Measured diameter with current tool"
+    }
+
+    TouchOffField {
+        id: zTouchOffField
+        axis: "z"
+        settingName: "smart_numpad.z-offset"
+        description: "Distance to Z0 with current tool"
+    }
+
     ManualModeAxisDro {
         id: xDro
         x: 0
@@ -73,6 +107,9 @@ Rectangle {
         }
         function onSetDatumValueInputRequested() {
             root.openNumPadRequested(zDatumField)
+        }
+        function onTouchOffValueInputRequested(axis) {
+            root.openNumPadRequested(axis === "x" ? xTouchOffField : zTouchOffField)
         }
     }
 }

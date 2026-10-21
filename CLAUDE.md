@@ -41,12 +41,13 @@ under `ui/`: one directory per tab in `ui/tabs/`, and what they share in `ui/com
 
 ```
 app/             → application.py (Application: builds the HAL component and the repositories at
-                   start-up), mainwindow.py (wires all tabs together), AppRoot.qml, app shell, dev panel, logging
+                   start-up), app_window.py (AppWindow: the QML scene, wires all tabs together), AppRoot.qml, app shell, dev panel, logging
 core/            → repositories: the only layer that talks to LinuxCNC (HAL, INI, status, commands);
                    lathe_hal_component.py is the singleton owning all HAL pin definitions;
                    tool_library_repository.py is the only way to the tool table and the tool library
                    files (through ToolTblFileDataSource and LatheToolExtrasDataSource)
-manual/          → logic/ (manual_lathe.py: jog/spindle, joystick, teach-in limits)
+manual/          → logic/ (manual_turning_use_case.py: spindle lever, joystick, handwheels, angle feed;
+                   machine_limits.py: teach-in limits)
 machine/         → model/ (fixtures)
 tooling/         → model/ (tool types, catalogs)
 programs/        → model/ (program runtime)
@@ -87,7 +88,7 @@ Data flow for edits:
 
 ### QML ↔ Python Bridge
 
-`ConversationalQml` (`QQuickWidget`) loads `Root.qml`, which uses a `Loader` to swap between screens. Navigation history is maintained in Python.
+`ConversationalQml` drives `ConversationalTabRoot.qml` (created by `AppRoot.qml`), which uses a `Loader` to swap between screens. Navigation history is maintained in Python.
 
 - **Python → QML:** context properties (`programsModel`, `showBack`) and direct property sets on the root item
 - **QML → Python:** typed signals declared in QML (`signal updateFacing(var data)`) connected to Python slots in `_hook_screen_item()`
@@ -95,11 +96,11 @@ Data flow for edits:
 
 ### HAL Component
 
-`TeachInLatheComponent` is a singleton. All HAL pins (joystick axes, spindle direction, tool-change handshake, axis limits, etc.) are defined there. `app/mainwindow.py` registers listener callbacks on these pins; `manual/logic/manual_lathe.py` uses them to drive jog commands.
+`TeachInLatheComponent` is a singleton. All HAL pins (joystick axes, spindle direction, tool-change handshake, axis limits, etc.) are defined there. Each feature's use case listens to and writes the pins it needs (e.g. `manual/logic/manual_turning_use_case.py` for spindle, joystick and handwheels); view models get the machine through their use case.
 
 ### QML File Conventions (ui/tabs/conversational)
 
-- `Root.qml` — navigation shell
+- `ConversationalTabRoot.qml` — navigation shell
 - `MainScreen.qml` — program list
 - `ChildScreen.qml` — operation list editor for a single program
 - `*DetailsView.qml` — per-operation parameter editor (e.g. `FacingDetailsView.qml`)
