@@ -446,6 +446,7 @@ class LatheBackplotCanon(_HostBase):
         self.current_view = 'y'
         self._pending_default_view = False
         self._last_preview_tool_signature = None
+        self._last_preview_wcs_signature = None
         # The program the Programs screen loaded, which is not always the file
         # the interpreter is reading - see poll().
         self._program_file = ''
@@ -985,6 +986,35 @@ class LatheBackplotCanon(_HostBase):
         glcanon.GlCanonDraw.realize(self)
         self._report_line_weights()
 
+    @staticmethod
+    def _wcs_signature(stat):
+        return (stat.g5x_index, tuple(stat.g5x_offset), stat.rotation_xy)
+
+    @staticmethod
+    def _refresh_preview_wcs(parameter_file, stat):
+        """Update only the preview's temporary parameters from live status.
+
+        Touch off changes the interpreter's WCS before the parameter file on
+        disk is saved. Re-parsing that file alone would keep the old origin.
+        Keep other coordinate systems and user parameters from the copy.
+        """
+        parameters = {}
+        if os.path.exists(parameter_file):
+            with open(parameter_file, encoding="utf-8") as handle:
+                for line in handle:
+                    fields = line.split()
+                    if fields:
+                        parameters[int(fields[0])] = fields[1]
+        index = int(stat.g5x_index)
+        parameters[5220] = str(index)
+        base = 5200 + 20 * index
+        for axis, value in enumerate(stat.g5x_offset, 1):
+            parameters[base + axis] = format(value, ".17g")
+        parameters[base + 10] = format(stat.rotation_xy, ".17g")
+        with open(parameter_file, "w", encoding="utf-8") as handle:
+            for number, value in sorted(parameters.items()):
+                handle.write(f"{number} {value}\n")
+
     def _build_preview_initcodes(self, stat):
         initcodes = []
 
@@ -1069,6 +1099,7 @@ class LatheBackplotCanon(_HostBase):
         try:
             self._last_preview_tool_signature = (
                 stat.tool_in_spindle, tuple(stat.tool_offset))
+            self._last_preview_wcs_signature = self._wcs_signature(stat)
             random = int(self.inifile.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
             arcdivision = int(self.inifile.find("DISPLAY", "ARCDIVISION") or 64)
             canon = StatCanon(
@@ -1080,6 +1111,7 @@ class LatheBackplotCanon(_HostBase):
             temp_parameter = os.path.join(td, os.path.basename(parameter or "linuxcnc.var"))
             if parameter:
                 shutil.copy(parameter, temp_parameter)
+            self._refresh_preview_wcs(temp_parameter, stat)
             canon.parameter_file = temp_parameter
 
             initcodes = self._build_preview_initcodes(stat)
@@ -1154,9 +1186,14 @@ class LatheBackplotCanon(_HostBase):
             self._pending_default_view = True
             return True
 
-        if (self._current_file
-                and task_mode != linuxcnc.MODE_AUTO
-                and tool_signature != self._last_preview_tool_signature):
+        tool_changed = (task_mode != linuxcnc.MODE_AUTO
+                        and tool_signature != self._last_preview_tool_signature)
+        # A redraw cannot move geometry already parsed in machine coordinates.
+        # Wait until MDI has finished; also refresh in AUTO when it is idle,
+        # but never re-parse on WCS changes made by a running/paused program.
+        wcs_changed = (stat.interp_state == linuxcnc.INTERP_IDLE
+                       and self._wcs_signature(stat) != self._last_preview_wcs_signature)
+        if self._current_file and (tool_changed or wcs_changed):
             self._reload_preview(self._current_file, sync_task=False)
             self._pending_default_view = True
             return True
