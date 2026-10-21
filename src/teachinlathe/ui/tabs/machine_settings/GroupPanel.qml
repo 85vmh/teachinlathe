@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 
 // A titled box, the QML counterpart of the .ui's QGroupBox.
 Rectangle {

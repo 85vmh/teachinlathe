@@ -1,8 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
-import common.touchable_input 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
+import common.touchable_input
 
 // Add or edit a turning tool. The form is on the left, the insert as it
 // will sit in the holder on the right. Everything is written to `editor`
@@ -72,7 +72,7 @@ Item {
         enabled: root.editor ? root.editor.anglesEditable : false
         opacity: enabled ? 1.0 : 0.6
         value: read()
-        onOpenRequested: numpad.openFor(field, settingName, description)
+        onOpenRequested: function(field, settingName) { numpad.openFor(field, settingName, description) }
         onValueCommitted: function(v) {
             if (v !== null) write(v)
             value = Qt.binding(read)

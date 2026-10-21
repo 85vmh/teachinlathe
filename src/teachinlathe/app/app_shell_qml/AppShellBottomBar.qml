@@ -1,13 +1,14 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
+import TeachInLathe
 
 Rectangle {
     id: root
     color: Theme.surfaceAlt
-    readonly property string currentTab: appShellBridge ? appShellBridge.currentTab : ""
-    readonly property bool logsExpanded: appShellBridge ? appShellBridge.logsExpanded : false
+    readonly property string currentTab: AppShellBridge.currentTab
+    readonly property bool logsExpanded: AppShellBridge.logsExpanded
 
     Rectangle {
         anchors.left: parent.left
@@ -55,7 +56,7 @@ Rectangle {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: if (appShellBridge) appShellBridge.activateTab(modelData.id)
+                    onClicked: AppShellBridge.activateTab(modelData.id)
                 }
             }
         }
@@ -77,7 +78,7 @@ Rectangle {
             MouseArea {
                 id: eventsArea
                 anchors.fill: parent
-                onClicked: if (appShellBridge) appShellBridge.toggleLogs()
+                onClicked: AppShellBridge.toggleLogs()
             }
         }
     }

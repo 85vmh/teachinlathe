@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 
 // Reusable value box shared by ProgramsDro (axis positions) and
 // ProgramsToolFeedSpeed (feed / spindle). Keeps the "box" styling in one place.

@@ -1,7 +1,7 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
 import "../../tool_library/ToolTitles.js" as ToolTitles
 
 // A Popup in the window's overlay, not an Item in the screen.
@@ -26,10 +26,10 @@ Popup {
     // A tool change is answered at the machine, with CycleStart or CycleAbort.
     // Nothing on screen dismisses it - a stray tap must not.
     closePolicy: Popup.NoAutoClose
-    visible: viewModel ? viewModel.requested : false
+    visible: viewModel.requested
     padding: 0
 
-    property var viewModel
+    required property var viewModel
     readonly property color textColor: Theme.foreground
     readonly property color confirmColor: Theme.success
     readonly property color cancelColor: Theme.danger
@@ -85,7 +85,7 @@ Popup {
                     : ToolTitles.listTitle(root.viewModel.toolCard, root.viewModel.toolView, Theme)
                       + (root.viewModel.toolComment === "" ? ""
                          : " (" + root.escapeHtml(root.viewModel.toolComment) + ")")
-                text: "Please load <b>" + root.escapeHtml(root.viewModel ? root.viewModel.toolNoText : "T?") + "</b>"
+                text: "Please load <b>" + root.escapeHtml(root.viewModel.toolNoText) + "</b>"
                     + (toolTitle.length > 0 ? " [" + toolTitle + "]" : "")
                 font.pixelSize: Theme.fontLarge
                 color: root.textColor
@@ -118,9 +118,9 @@ Popup {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onPressed: if (root.viewModel) root.viewModel.confirmPressed()
-                        onReleased: if (root.viewModel) root.viewModel.confirmReleased()
-                        onCanceled: if (root.viewModel) root.viewModel.confirmReleased()
+                        onPressed: root.viewModel.confirmPressed()
+                        onReleased: root.viewModel.confirmReleased()
+                        onCanceled: root.viewModel.confirmReleased()
                     }
                 }
 
@@ -154,9 +154,9 @@ Popup {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onPressed: if (root.viewModel) root.viewModel.cancelPressed()
-                        onReleased: if (root.viewModel) root.viewModel.cancelReleased()
-                        onCanceled: if (root.viewModel) root.viewModel.cancelReleased()
+                        onPressed: root.viewModel.cancelPressed()
+                        onReleased: root.viewModel.cancelReleased()
+                        onCanceled: root.viewModel.cancelReleased()
                     }
                 }
 

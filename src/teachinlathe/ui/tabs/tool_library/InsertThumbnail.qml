@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import theme 1.0
-import "shapes"
+import QtQuick
+import theme
+import tabs.tool_library.shapes
 
 // A turning tool's insert, small: drawn as the editor draws it - same
 // shape, colours, open hole and turn - centred in a framed square. Every

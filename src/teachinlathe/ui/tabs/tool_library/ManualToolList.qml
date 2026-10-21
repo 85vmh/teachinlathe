@@ -1,7 +1,7 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import theme
+import common
 
 // The Manual Turning screen's tools: the tool holders as LinuxCNC numbers
 // them, one to a row - all, or with the title bar's recent toggle on only
@@ -12,7 +12,7 @@ import common 1.0
 Rectangle {
     id: root
 
-    property var viewModel: null        // ManualToolsViewModel
+    required property var viewModel        // ManualToolsViewModel
 
     readonly property int listSpacing: Theme.spacingSmall
     // How long scrolling the current loaded tool into view takes, in ms.
@@ -20,7 +20,7 @@ Rectangle {
 
     // The current loaded tool into view, if it is not all in view already.
     function showCurrentLoadedTool() {
-        var row = root.viewModel ? root.viewModel.currentLoadedToolRow : -1
+        var row = root.viewModel.currentLoadedToolRow
         if (row < 0 || row >= list.count || list.height <= 0)
             return
         scrollToCurrentLoadedTool.stop()
@@ -57,7 +57,7 @@ Rectangle {
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         ScrollBar.vertical: ScrollBar {}
-        model: root.viewModel ? root.viewModel.toolsModel : null
+        model: root.viewModel.toolsModel
 
         delegate: ToolHolderCard {
             width: ListView.view.width

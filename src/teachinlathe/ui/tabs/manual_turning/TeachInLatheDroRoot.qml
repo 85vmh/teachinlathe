@@ -1,13 +1,13 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import theme
 
 Rectangle {
     id: root
 
     color: Theme.surface
 
-    property var viewModel: null
+    required property var viewModel
 
     signal toastRequested(string message)
     signal openNumPadRequested(var field)
@@ -71,14 +71,14 @@ Rectangle {
         y: 10
         width: parent.width
         axisLabel: "X"
-        primaryValue: root.viewModel ? root.viewModel.xPrimaryValue : "+0000.000"
-        secondaryValue: root.viewModel ? root.viewModel.xSecondaryValue : "+0000.000"
-        secondaryVisible: root.viewModel ? root.viewModel.xSecondaryVisible : false
-        unit: root.viewModel ? root.viewModel.units : "mm"
-        onPrimaryClicked: if (root.viewModel) root.viewModel.xPrimaryClicked()
-        onZeroClicked: if (root.viewModel) root.viewModel.xZeroClicked()
-        isAbs: root.viewModel ? root.viewModel.xIsAbs : true
-        onAbsRelClicked: if (root.viewModel) root.viewModel.xAbsRelClicked()
+        primaryValue: root.viewModel.xPrimaryValue
+        secondaryValue: root.viewModel.xSecondaryValue
+        secondaryVisible: root.viewModel.xSecondaryVisible
+        unit: root.viewModel.units
+        onPrimaryClicked: root.viewModel.xPrimaryClicked()
+        onZeroClicked: root.viewModel.xZeroClicked()
+        isAbs: root.viewModel.xIsAbs
+        onAbsRelClicked: root.viewModel.xAbsRelClicked()
     }
 
     ManualModeAxisDro {
@@ -87,17 +87,17 @@ Rectangle {
         y: 97
         width: parent.width
         axisLabel: "Z"
-        primaryValue: root.viewModel ? root.viewModel.zPrimaryValue : "+0000.000"
-        secondaryValue: root.viewModel ? root.viewModel.zSecondaryValue : "+0000.000"
-        secondaryVisible: root.viewModel ? root.viewModel.zSecondaryVisible : false
-        unit: root.viewModel ? root.viewModel.units : "mm"
-        onPrimaryClicked: if (root.viewModel) root.viewModel.zPrimaryClicked()
-        onZeroClicked: if (root.viewModel) root.viewModel.zZeroClicked()
-        isAbs: root.viewModel ? root.viewModel.zIsAbs : true
-        onAbsRelClicked: if (root.viewModel) root.viewModel.zAbsRelClicked()
+        primaryValue: root.viewModel.zPrimaryValue
+        secondaryValue: root.viewModel.zSecondaryValue
+        secondaryVisible: root.viewModel.zSecondaryVisible
+        unit: root.viewModel.units
+        onPrimaryClicked: root.viewModel.zPrimaryClicked()
+        onZeroClicked: root.viewModel.zZeroClicked()
+        isAbs: root.viewModel.zIsAbs
+        onAbsRelClicked: root.viewModel.zAbsRelClicked()
         setDatumVisible: true
-        onSetDatumClicked: if (root.viewModel) root.viewModel.zSetDatumClicked()
-        onSetDatumLongPressed: if (root.viewModel) root.viewModel.zSetDatumLongPressed()
+        onSetDatumClicked: root.viewModel.zSetDatumClicked()
+        onSetDatumLongPressed: root.viewModel.zSetDatumLongPressed()
     }
 
     Connections {

@@ -1,10 +1,9 @@
 // HeaderDetailsView.qml
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 import "profile_canvas/brokenstock.js" as Broken
 
 Item {
@@ -150,8 +149,8 @@ Item {
                         titleText: "Program name"
                         text: root.programName
                         commitUpdatesText: false
-                        onOpenRequested: root.openKeyboardRequested(field)
-                        onValueCommitted: {
+                        onOpenRequested: function(field) { root.openKeyboardRequested(field) }
+                        onValueCommitted: function(value) {
                             root.programName = value
                             root.emitSave()
                         }

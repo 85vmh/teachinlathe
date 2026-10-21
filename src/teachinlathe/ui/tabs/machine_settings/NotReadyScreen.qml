@@ -1,15 +1,15 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import "../../../app/app_shell_qml" as Shell
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Layouts
+import app_shell_qml as Shell
+import theme
+import common
 
 // Shown until the machine is out of E-stop, powered and homed. Replaces the
 // .ui's pageNotReady.
 Rectangle {
     id: root
 
-    property var viewModel: null
+    required property var viewModel
 
     color: Theme.surfaceAlt
 
@@ -42,7 +42,7 @@ Rectangle {
             }
 
             Text {
-                text: root.viewModel ? root.viewModel.machineName : ""
+                text: root.viewModel.machineName
                 font.pixelSize: 44
                 font.bold: true
                 color: Theme.foreground
@@ -63,20 +63,20 @@ Rectangle {
                     spacing: Theme.spacingLarge
 
                     StatusRow {
-                        ok: root.viewModel ? root.viewModel.estopOk : false
-                        text: root.viewModel ? root.viewModel.estopText : ""
+                        ok: root.viewModel.estopOk
+                        text: root.viewModel.estopText
                     }
                     StatusRow {
-                        ok: root.viewModel ? root.viewModel.powerOk : false
-                        text: root.viewModel ? root.viewModel.powerText : ""
+                        ok: root.viewModel.powerOk
+                        text: root.viewModel.powerText
                     }
                     StatusRow {
-                        ok: root.viewModel ? root.viewModel.xHomed : false
-                        text: root.viewModel ? root.viewModel.xHomedText : ""
+                        ok: root.viewModel.xHomed
+                        text: root.viewModel.xHomedText
                     }
                     StatusRow {
-                        ok: root.viewModel ? root.viewModel.zHomed : false
-                        text: root.viewModel ? root.viewModel.zHomedText : ""
+                        ok: root.viewModel.zHomed
+                        text: root.viewModel.zHomedText
                     }
                 }
             }
@@ -106,14 +106,14 @@ Rectangle {
                     text: "Home X"
                     implicitWidth: 150
                     implicitHeight: Theme.headerHeight
-                    enabled: root.viewModel ? root.viewModel.canHome : false
+                    enabled: root.viewModel.canHome
                     onClicked: root.viewModel.homeAxis("x")
                 }
                 Shell.ShellActionButton {
                     text: "Home Z"
                     implicitWidth: 150
                     implicitHeight: Theme.headerHeight
-                    enabled: root.viewModel ? root.viewModel.canHome : false
+                    enabled: root.viewModel.canHome
                     onClicked: root.viewModel.homeAxis("z")
                 }
             }

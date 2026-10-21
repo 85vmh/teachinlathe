@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import theme 1.0
-import "../conversational"
+import QtQuick
+import theme
+import tabs.conversational
 
 // The Tool Library's first screen: the tool holders on the left, the
 // cutting tools that can be clamped in them on the right.
@@ -10,26 +10,26 @@ import "../conversational"
 Item {
     id: root
 
-    property var viewModel: null
+    required property var viewModel
 
     // The gap the Programs tab leaves between its panes.
     readonly property real gap: 6
     readonly property real paneWidth: Math.max(0, (width - gap) / 2)
-    readonly property int selectingHolderId: viewModel ? viewModel.selectingHolderId : 0
+    readonly property int selectingHolderId: viewModel.selectingHolderId
 
     ToolHoldersPane {
         id: toolHolders
         x: 0
         width: root.paneWidth
         height: root.height
-        model: root.viewModel ? root.viewModel.holdersModel : null
+        model: root.viewModel.holdersModel
         selectingHolderId: root.selectingHolderId
         onMountRequested: function(holderId) { root.viewModel.beginMount(holderId) }
         onUnmountRequested: function(holderId) { root.viewModel.unmountTool(holderId) }
         onToolRevealRequested: function(toolId) { cuttingTools.revealTool(toolId) }
-        onAddRequested: if (root.viewModel) root.viewModel.addToolHolder()
+        onAddRequested: root.viewModel.addToolHolder()
         onDeleteRequested: function(holderId) {
-            if (root.viewModel) root.viewModel.deleteToolHolder(holderId)
+            root.viewModel.deleteToolHolder(holderId)
         }
         swipeEnabled: root.selectingHolderId === 0
     }
@@ -49,17 +49,17 @@ Item {
         x: root.paneWidth + root.gap
         width: root.paneWidth
         height: root.height
-        model: root.viewModel ? root.viewModel.cuttingToolsModel : null
+        model: root.viewModel.cuttingToolsModel
         swipeEnabled: root.selectingHolderId === 0
         onAddRequested: function(toolType) {
-            if (root.viewModel) root.viewModel.addCuttingTool(toolType)
+            root.viewModel.addCuttingTool(toolType)
         }
         onToolTapped: function(toolId) {
-            if (root.viewModel) root.viewModel.cuttingToolTapped(toolId)
+            root.viewModel.cuttingToolTapped(toolId)
         }
         // A mounted tool is not deleted: the view model says so in a toast
         onDeleteRequested: function(toolId) {
-            if (root.viewModel) root.viewModel.deleteCuttingTool(toolId)
+            root.viewModel.deleteCuttingTool(toolId)
         }
     }
 

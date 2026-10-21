@@ -1,9 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 
 GroupBox {
     id: root
@@ -58,8 +57,8 @@ GroupBox {
             validatorObject: dblVal
             formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.peck_depth = value; root.emitSave() }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.peck_depth = value; root.emitSave() }
         }
         Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
 
@@ -71,8 +70,8 @@ GroupBox {
             validatorObject: dblVal
             formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.retract = value; root.emitSave() }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.retract = value; root.emitSave() }
         }
         Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
 
@@ -84,8 +83,8 @@ GroupBox {
             validatorObject: dblVal
             formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.dwell_time = value; root.emitSave() }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.dwell_time = value; root.emitSave() }
         }
         Label { text: "(sec)"; font.pixelSize: Theme.fontBody }
     }

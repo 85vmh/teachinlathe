@@ -1,0 +1,6 @@
+module tabs.conversational.define_radial_profile
+GrooveProfileCard 1.0 GrooveProfileCard.qml
+RadialProfileCanvas 1.0 RadialProfileCanvas.qml
+RadialProfileDetailsView 1.0 RadialProfileDetailsView.qml
+RadialProfileEditorScreen 1.0 RadialProfileEditorScreen.qml
+RepeatProfileCard 1.0 RepeatProfileCard.qml

@@ -1,23 +1,23 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import "../../../app/app_shell_qml" as Shell
-import theme 1.0
+import QtQuick
+import QtQuick.Layouts
+import app_shell_qml as Shell
+import theme
 
 // The row of LinuxCNC diagnostic utilities, shown on both machine screens.
 Flow {
     id: root
 
-    property var viewModel: null
+    required property var viewModel
 
     spacing: Theme.spacingSmall
 
     Repeater {
-        model: root.viewModel ? root.viewModel.tools : []
+        model: root.viewModel.tools
 
         delegate: Shell.ShellActionButton {
             text: modelData.label
             secondary: true
-            enabled: root.viewModel ? root.viewModel.canLaunchTool(modelData.key) : false
+            enabled: root.viewModel.canLaunchTool(modelData.key)
             onClicked: root.viewModel.launchTool(modelData.key)
         }
     }

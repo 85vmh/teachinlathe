@@ -1,13 +1,13 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common
+import theme
 
 Rectangle {
     id: root
-    property var viewModel: null
-    readonly property string panelMode: viewModel ? viewModel.feedPanelMode : "Editable"
+    required property var viewModel
+    readonly property string panelMode: viewModel.feedPanelMode
     readonly property bool readOnlyMode: panelMode === "ReadOnly"
     readonly property bool resetRequiredMode: panelMode === "ResetRequired"
     readonly property color warningColor: Theme.warning
@@ -39,18 +39,18 @@ Rectangle {
                 ManualValueRow {
                     label: "Set feed:"
                     unit: "mm/rev"
-                    settingName: viewModel ? viewModel.feedSettingName : ""
-                    value: viewModel ? viewModel.inputFeed : "0.1"
+                    settingName: viewModel.feedSettingName
+                    value: viewModel.inputFeed
                     editable: !root.readOnlyMode
-                    onOpenNumPadRequested: root.openNumPadRequested(field)
-                    onCommitted: if (viewModel) viewModel.setInputFeed(String(value))
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    onCommitted: function(value) { viewModel.setInputFeed(String(value)) }
                 }
 
                 ManualValueRow {
                     visible: root.readOnlyMode
                     label: "Actual feed:"
                     unit: "mm/rev"
-                    value: viewModel ? viewModel.actualFeed : "0.0"
+                    value: viewModel.actualFeed
                     editable: false
                     valueBold: true
                 }
@@ -61,10 +61,10 @@ Rectangle {
                     Layout.fillWidth: true
                     label: "Rapid Speed"
                     maxSpeed: 6000
-                    value: viewModel ? viewModel.rapidOverride : 50
+                    value: viewModel.rapidOverride
                     fillAvailableWidth: true
                     onSelected: function(v) {
-                        if (viewModel) viewModel.setRapidOverride(v)
+                        viewModel.setRapidOverride(v)
                     }
                 }
             }
@@ -78,7 +78,7 @@ Rectangle {
 
                     Text {
                         Layout.fillWidth: true
-                        text: viewModel ? viewModel.feedPanelMessageTitle : ""
+                        text: viewModel.feedPanelMessageTitle
                         color: root.warningTitleColor
                         font.pixelSize: Theme.fontTitle
                         font.bold: true
@@ -89,7 +89,7 @@ Rectangle {
 
                     Text {
                         Layout.fillWidth: true
-                        text: viewModel ? viewModel.feedPanelMessageBody : ""
+                        text: viewModel.feedPanelMessageBody
                         color: root.warningBaseColor
                         font.pixelSize: Theme.fontLarge
                         horizontalAlignment: Text.AlignHCenter

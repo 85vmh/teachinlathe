@@ -1,11 +1,11 @@
 // PeckBox.qml — Drilling's Peck Depth and, under it, the Dwell Time at the
 // bottom of each peck, picked from a list; laid over the profile canvas, the
 // peck's dimension on the canvas pointing to it, in its colour.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 
 CanvasBox {
     id: root
@@ -39,7 +39,7 @@ CanvasBox {
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: root.peckDepthEdited(Number(value))
+            onValueCommitted: function(value) { root.peckDepthEdited(Number(value)) }
         }
         Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
 

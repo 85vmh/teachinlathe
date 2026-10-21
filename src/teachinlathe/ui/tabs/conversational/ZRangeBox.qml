@@ -1,12 +1,13 @@
 // ZRangeBox.qml — a Z Start and a Z End together, each with its TeachIn,
 // laid over the profile canvas: one box, which the travel between them on
 // the canvas points an arrow to.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+import common
+import TeachInLathe
 
 CanvasBox {
     id: root
@@ -52,10 +53,10 @@ CanvasBox {
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: root.zStartEdited(Number(value))
+            onValueCommitted: function(value) { root.zStartEdited(Number(value)) }
         }
         TeachInButton {
-            onClicked: startField.commit(positionsBridge.teachInZ())
+            onClicked: startField.commit(PositionsBridge.teachInZ())
         }
 
         Label {
@@ -75,10 +76,10 @@ CanvasBox {
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: root.zEndEdited(Number(value))
+            onValueCommitted: function(value) { root.zEndEdited(Number(value)) }
         }
         TeachInButton {
-            onClicked: endField.commit(positionsBridge.teachInZ())
+            onClicked: endField.commit(PositionsBridge.teachInZ())
         }
     }
 }

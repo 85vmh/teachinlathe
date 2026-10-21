@@ -1,9 +1,9 @@
 // G33CuttingParams.qml
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 
 ColumnLayout {
     property var detailsRoot: null
@@ -23,8 +23,8 @@ ColumnLayout {
             value: detailsRoot ? detailsRoot.initialDoc : 0.0
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: if (detailsRoot) detailsRoot.openNumPadRequested(field)
-            onValueCommitted: {
+            onOpenRequested: function(field) { if (detailsRoot) detailsRoot.openNumPadRequested(field) }
+            onValueCommitted: function(value) {
                 if (detailsRoot) {
                     detailsRoot.initialDoc = value
                     detailsRoot.emitSave()
@@ -50,8 +50,8 @@ ColumnLayout {
             value: detailsRoot ? detailsRoot.retract : 0.0
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: if (detailsRoot) detailsRoot.openNumPadRequested(field)
-            onValueCommitted: {
+            onOpenRequested: function(field) { if (detailsRoot) detailsRoot.openNumPadRequested(field) }
+            onValueCommitted: function(value) {
                 if (detailsRoot) {
                     detailsRoot.retract = value
                     detailsRoot.emitSave()
@@ -71,8 +71,8 @@ ColumnLayout {
             value: detailsRoot ? detailsRoot.compoundAngle : 0.0
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: if (detailsRoot) detailsRoot.openNumPadRequested(field)
-            onValueCommitted: {
+            onOpenRequested: function(field) { if (detailsRoot) detailsRoot.openNumPadRequested(field) }
+            onValueCommitted: function(value) {
                 if (detailsRoot) {
                     detailsRoot.compoundAngle = value
                     detailsRoot.emitSave()
@@ -92,8 +92,8 @@ ColumnLayout {
             value: detailsRoot ? detailsRoot.springPasses : 0
             formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
             hAlign: Text.AlignRight
-            onOpenRequested: if (detailsRoot) detailsRoot.openNumPadRequested(field)
-            onValueCommitted: {
+            onOpenRequested: function(field) { if (detailsRoot) detailsRoot.openNumPadRequested(field) }
+            onValueCommitted: function(value) {
                 if (detailsRoot) {
                     detailsRoot.springPasses = Math.round(value)
                     detailsRoot.emitSave()

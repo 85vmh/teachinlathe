@@ -1,11 +1,11 @@
 // ProfileDetailsView.qml — canvas-only view; full editing opens ProfileEditorScreen via navigation
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
-import "../"
-import theme 1.0
-import common 1.0
+import tabs.conversational
+import theme
+import common
 
 Item {
     id: root

@@ -1,9 +1,9 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "../../programs/filesystemview"
-import "../"
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.programs.filesystemview
+import tabs.conversational
+import theme
 
 Item {
     id: root
@@ -14,7 +14,7 @@ Item {
     property int opIndex: -1
     property var opData: null
     // The DXF Profiles folder (ConversationalViewModel.dxfFileSystemViewModel).
-    property var fileSystemViewModel: null
+    required property var fileSystemViewModel
     property string selectedPath: ""
     property string errorMessage: ""
     property var previewPrimitives: []
@@ -62,7 +62,7 @@ Item {
     Connections {
         target: root.fileSystemViewModel
         function onSelectionChanged() {
-            var path = root.fileSystemViewModel ? root.fileSystemViewModel.selectedAbsolutePath : ""
+            var path = root.fileSystemViewModel.selectedAbsolutePath
             root.selectedPath = path || ""
             root.loadPreview(root.selectedPath)
             root.headerRefreshRequested()

@@ -1,10 +1,10 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+import common
+import TeachInLathe
 
 Item {
     id: root
@@ -124,11 +124,11 @@ Item {
                             formatter: function (v) {
                                 return (v == null) ? "" : Number(v).toFixed(3)
                             }
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.xPos = value; root.emitSave() }
+                            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                            onValueCommitted: function(value) { root.xPos = value; root.emitSave() }
                         }
                         TeachInButton {
-                            onClicked: tf_xPos.commit(positionsBridge.teachInX() * 2)
+                            onClicked: tf_xPos.commit(PositionsBridge.teachInX() * 2)
                         }
 
                         Label {
@@ -145,11 +145,11 @@ Item {
                             formatter: function (v) {
                                 return (v == null) ? "" : Number(v).toFixed(3)
                             }
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.zPos = value; root.emitSave() }
+                            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                            onValueCommitted: function(value) { root.zPos = value; root.emitSave() }
                         }
                         TeachInButton {
-                            onClicked: tf_zPos.commit(positionsBridge.teachInZ())
+                            onClicked: tf_zPos.commit(PositionsBridge.teachInZ())
                         }
 
                         Item { Layout.preferredHeight: 1 }

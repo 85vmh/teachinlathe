@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 
 /*
  * The fades at a scrolling list's top and bottom: each shown while there is

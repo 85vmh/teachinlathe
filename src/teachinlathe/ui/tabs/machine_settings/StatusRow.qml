@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 
 // One machine-state line: a lamp that lights when something is wrong, and the
 // text that says what. The .ui lit its LEDs on the fault, not on the good

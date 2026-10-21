@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 
 Rectangle {
     id: root
@@ -8,11 +8,11 @@ Rectangle {
     height: 230
     color: Theme.surfaceSunken
 
-    property var viewModel: null
-    property int joystickState: viewModel ? viewModel.joystickState : 0
-    property bool rapidMode: viewModel ? viewModel.joystickRapid : false
-    property bool allowsTouchInteraction: viewModel ? viewModel.allowsJoystickTouch : true
-    property bool angleFeedActive: viewModel ? viewModel.angleFeedActive : false
+    required property var viewModel
+    property int joystickState: viewModel.joystickState
+    property bool rapidMode: viewModel.joystickRapid
+    property bool allowsTouchInteraction: viewModel.allowsJoystickTouch
+    property bool angleFeedActive: viewModel.angleFeedActive
     property real currentRotation: 0
     property real rotationTarget: angleFeedActive ? 45 : 0
     property bool rotationActive: false
@@ -37,7 +37,7 @@ Rectangle {
 
     signal angleFeedClicked()
 
-    onAngleFeedClicked: if (root.viewModel) root.viewModel.toggleAngleFeedFromJoystick()
+    onAngleFeedClicked: root.viewModel.toggleAngleFeedFromJoystick()
 
     function setJoystickState(state) {
         if (root.viewModel)

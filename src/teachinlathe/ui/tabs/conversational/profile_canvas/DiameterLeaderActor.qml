@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 // The leader from a selected cylindrical stretch to its diameter tag: a line
 // from the profile (anchor) out to the tag (end), with the arrowhead on the

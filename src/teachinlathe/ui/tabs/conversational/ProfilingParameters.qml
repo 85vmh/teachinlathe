@@ -1,11 +1,11 @@
 // ProfilingParameters.qml — two equal 3x2 grids side-by-side (Start | Spacer | End)
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+import common
+import TeachInLathe
 
 GroupBox {
     id: root
@@ -91,8 +91,8 @@ GroupBox {
                         return (v == null) ? "" : Number(v)
                     }
                     hAlign: Text.AlignRight
-                    onOpenRequested: root.openNumPadRequested(field)
-                    onValueCommitted: { root.profile_id = value; root.emitSave() }
+                    onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                    onValueCommitted: function(value) { root.profile_id = value; root.emitSave() }
                 }
         }
 
@@ -127,12 +127,12 @@ GroupBox {
                     return (v == null) ? "" : Number(v).toFixed(3)
                 }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.x_start = value; root.emitSave() }
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) { root.x_start = value; root.emitSave() }
             }
             TeachInButton {
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2)
+                onClicked: tf_x_start.commit(PositionsBridge.teachInX() * 2)
             }
 
             // Row 2
@@ -152,12 +152,12 @@ GroupBox {
                     return (v == null) ? "" : Number(v).toFixed(3)
                 }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.z_start = value; root.emitSave() }
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) { root.z_start = value; root.emitSave() }
             }
             TeachInButton {
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                onClicked: tf_z_start.commit(positionsBridge.teachInZ())
+                onClicked: tf_z_start.commit(PositionsBridge.teachInZ())
             }
         }
     }

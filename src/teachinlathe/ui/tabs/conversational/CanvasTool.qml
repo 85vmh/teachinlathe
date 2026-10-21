@@ -11,9 +11,9 @@
 // The Tool Library draws with y up and the canvas has X growing down the
 // screen, so the drawing goes on as it is. Laid over the whole canvas,
 // clipped ``inset`` px in from its edges - inside the ticks.
-import QtQuick 2.15
-import theme 1.0
-import "../tool_library/shapes"
+import QtQuick
+import theme
+import tabs.tool_library.shapes
 import "../tool_library/shapes/blade.js" as BladeShape
 
 Item {

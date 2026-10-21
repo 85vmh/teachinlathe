@@ -1,13 +1,14 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
-import "app_shell_qml"
-import "../ui/tabs/machine_settings"
-import "../ui/tabs/manual_turning"
-import "../ui/tabs/programs"
-import "../ui/tabs/tool_library"
-import "../ui/tabs/conversational"
+import app_shell_qml
+import tabs.machine_settings
+import tabs.manual_turning
+import tabs.programs
+import tabs.tool_library
+import tabs.conversational
+import TeachInLathe
 
 /*
  * The whole window.
@@ -26,15 +27,15 @@ Item {
 
     // Reaching the context properties from here, where nothing shadows them,
     // so they can be bound to screen properties of the same name below.
-    readonly property var ctxMachine: machineViewModel
-    readonly property var ctxFixtures: fixturesViewModel
+    readonly property var ctxMachine: MachineViewModel
+    readonly property var ctxFixtures: FixturesViewModel
 
     readonly property bool machineReady: ctxMachine ? ctxMachine.machineReady : false
 
     // MainTabs order, as the bottom bar lists them.
 readonly property var tabOrder: ["manual", "tools", "conversational", "programs", "settings"]
     readonly property int currentTabIndex: {
-        var idx = tabOrder.indexOf(navigationStore ? navigationStore.currentTab : "manual")
+        var idx = tabOrder.indexOf(NavigationStore.currentTab || "manual")
         return idx < 0 ? 0 : idx
     }
 

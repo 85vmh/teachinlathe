@@ -1,5 +1,5 @@
 pragma Singleton
-import QtQuick 2.15
+import QtQuick
 
 /*
  * Every image and icon lives in images/ beside this file, in one flat folder.

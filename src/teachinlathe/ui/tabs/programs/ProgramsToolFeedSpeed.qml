@@ -1,7 +1,7 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
 
 // Sits to the right of ProgramsDro, above the gremlin. Shows the current /
 // upcoming tool, movement speed and spindle state. Calculations live in the
@@ -9,7 +9,7 @@ import theme 1.0
 Rectangle {
     id: root
 
-    property var viewModel
+    required property var viewModel
 
     // --- Metrics (kept in sync with ProgramsDro so rows line up) -----------
     property int headerHeight: 30
@@ -40,7 +40,7 @@ Rectangle {
             spacing: Theme.spacingSmall
 
             Text {
-                text: root.viewModel ? root.viewModel.currentLoadedToolText : "T0"
+                text: root.viewModel.currentLoadedToolText
                 color: Theme.foreground
                 font.pixelSize: 26
                 verticalAlignment: Text.AlignVCenter
@@ -55,7 +55,7 @@ Rectangle {
             }
 
             Text {
-                text: root.viewModel ? root.viewModel.nextToolText : "T-"
+                text: root.viewModel.nextToolText
                 color: Theme.foreground
                 font.pixelSize: 26
                 verticalAlignment: Text.AlignVCenter
@@ -74,7 +74,7 @@ Rectangle {
 
                 Text {
                     Layout.fillWidth: true
-                    text: root.viewModel ? root.viewModel.movementLetter : "-"
+                    text: root.viewModel.movementLetter
                     color: Theme.foreground
                     font.pixelSize: 40
                     horizontalAlignment: Text.AlignHCenter
@@ -83,7 +83,7 @@ Rectangle {
 
                 Text {
                     Layout.alignment: Qt.AlignRight | Qt.AlignBottom
-                    text: "(" + (root.viewModel ? root.viewModel.movementOverridePercent : 0) + "%)"
+                    text: "(" + (root.viewModel.movementOverridePercent) + "%)"
                     color: Theme.foregroundSubtle
                     font.pixelSize: Theme.fontSmall
                 }
@@ -94,12 +94,12 @@ Rectangle {
                 Layout.preferredHeight: root.inputHeight
                 Layout.alignment: Qt.AlignVCenter
                 fontSize: 25
-                text: root.viewModel ? root.viewModel.movementValueText : "0.00"
+                text: root.viewModel.movementValueText
             }
 
             Text {
                 Layout.preferredWidth: root.unitsWidth
-                text: root.viewModel ? root.viewModel.movementUnitsText : "mm/rev"
+                text: root.viewModel.movementUnitsText
                 color: Theme.foregroundSubtle
                 font.pixelSize: Theme.fontTitle
                 verticalAlignment: Text.AlignVCenter
@@ -127,7 +127,7 @@ Rectangle {
 
                 Text {
                     Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
-                    text: "(" + (root.viewModel ? root.viewModel.spindleOverridePercent : 0) + "%)"
+                    text: "(" + (root.viewModel.spindleOverridePercent) + "%)"
                     color: Theme.foregroundSubtle
                     font.pixelSize: Theme.fontSmall
                 }
@@ -136,14 +136,14 @@ Rectangle {
             // RPM mode — single box, same height as the feed box.
             RowLayout {
                 Layout.alignment: Qt.AlignVCenter
-                visible: !(root.viewModel && root.viewModel.spindleIsCss)
+                visible: !(root.viewModel.spindleIsCss)
                 spacing: Theme.spacingSmall
 
                 OutlinedValue {
                     Layout.preferredWidth: root.valueBoxWidth
                     Layout.preferredHeight: root.inputHeight
                     fontSize: 25
-                    text: root.viewModel ? root.viewModel.spindleRpmText : "0"
+                    text: root.viewModel.spindleRpmText
                 }
 
                 Text {
@@ -158,7 +158,7 @@ Rectangle {
             // CSS mode — two shorter boxes (RPM + surface speed), tighter spacing.
             ColumnLayout {
                 Layout.alignment: Qt.AlignVCenter
-                visible: root.viewModel && root.viewModel.spindleIsCss
+                visible: root.viewModel.spindleIsCss
                 spacing: root.cssSpacing
 
                 RowLayout {
@@ -168,7 +168,7 @@ Rectangle {
                         Layout.preferredWidth: root.valueBoxWidth
                         Layout.preferredHeight: root.cssInputHeight
                         fontSize: 18
-                        text: root.viewModel ? root.viewModel.spindleRpmText : "0"
+                        text: root.viewModel.spindleRpmText
                     }
 
                     Text {
@@ -187,7 +187,7 @@ Rectangle {
                         Layout.preferredWidth: root.valueBoxWidth
                         Layout.preferredHeight: root.cssInputHeight
                         fontSize: 18
-                        text: root.viewModel ? root.viewModel.cssValueText : "0"
+                        text: root.viewModel.cssValueText
                     }
 
                     Text {

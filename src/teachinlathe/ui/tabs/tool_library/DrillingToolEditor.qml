@@ -1,8 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
-import common.touchable_input 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
+import common.touchable_input
 
 // Add or edit a drill: the form on the left, the drill as it sits on the
 // right. There is no orientation to pick - a drill is always at 7, on the
@@ -135,7 +135,7 @@ Item {
                             formatter: root.mmText
                             readonly property var read: function() { return root.editor ? root.editor.diameter : null }
                             value: read()
-                            onOpenRequested: numpad.openFor(diameterField, settingName, description)
+                            onOpenRequested: function(field, settingName) { numpad.openFor(diameterField, settingName, description) }
                             onValueCommitted: function(v) {
                                 if (v !== null) root.editor.setDiameter(v)
                                 value = Qt.binding(read)

@@ -1,7 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
+import TeachInLathe
 
 /*
  * The application chrome: title bar, the content area, the bottom tab bar,
@@ -22,8 +23,8 @@ Item {
 
     // Set while a screen is showing full screen: the program run view takes
     // the whole window, the profile editors keep the title bar.
-    readonly property bool chromeTopHidden: appShellBridge ? appShellBridge.chromeTopHidden : false
-    readonly property bool chromeBottomHidden: appShellBridge ? appShellBridge.chromeBottomHidden : false
+    readonly property bool chromeTopHidden: AppShellBridge.chromeTopHidden
+    readonly property bool chromeBottomHidden: AppShellBridge.chromeBottomHidden
 
     readonly property int barHeight: Theme.barHeight
     readonly property int contentPadding: 6
@@ -36,7 +37,7 @@ Item {
             id: topBar
             Layout.fillWidth: true
             Layout.preferredHeight: root.barHeight
-            visible: (navigationStore ? navigationStore.headerVisible : true)
+            visible: NavigationStore.headerVisible
                      && !root.chromeTopHidden
         }
 
@@ -65,7 +66,7 @@ Item {
     // by resizeEvent; anchoring it to the content host does the same job.
     AppShellEventsDrawer {
         id: drawer
-        visible: navigationStore ? navigationStore.logsExpanded : false
+        visible: NavigationStore.logsExpanded
         width: Math.min(Math.max(420, root.width / 2), Math.max(0, root.width - 24))
         height: Math.max(0, Math.min(300, contentHost.height - 24)) || 220
         x: root.width - width - 12

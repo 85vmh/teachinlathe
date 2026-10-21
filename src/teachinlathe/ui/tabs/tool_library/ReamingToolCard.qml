@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 import "ToolTitles.js" as ToolTitles
 
 // One reamer as a card, laid out as DrillingToolCard is:

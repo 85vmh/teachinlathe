@@ -4,7 +4,7 @@ import QtQuick
  * WNMG.qml — trigon 80°, negativă dublu-fețe — 6 muchii, degroșare
  *
  * Utilizare:
- *     import "Inserts"          // sau: import Inserts
+ *     import tabs.tool_library.shapes
  *
  *     WNMG {
  *         size: WNMG.Size.S08

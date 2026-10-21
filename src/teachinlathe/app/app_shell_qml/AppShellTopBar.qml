@@ -1,7 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
+import TeachInLathe
 
 Rectangle {
     id: root
@@ -9,9 +10,9 @@ Rectangle {
     border.color: Theme.separator
     border.width: 0
 
-    readonly property var leftActions: appShellBridge ? appShellBridge.leftActions : []
-    readonly property var rightActions: appShellBridge ? appShellBridge.rightActions : []
-    readonly property string titleText: appShellBridge ? appShellBridge.title : ""
+    readonly property var leftActions: AppShellBridge.leftActions
+    readonly property var rightActions: AppShellBridge.rightActions
+    readonly property string titleText: AppShellBridge.title
 
     Rectangle {
         anchors.left: parent.left
@@ -34,7 +35,7 @@ Rectangle {
                 text: modelData.text || ""
                 enabled: modelData.enabled !== false
                 secondary: modelData.id === "back" || modelData.id === "edit_program"
-                onClicked: if (appShellBridge) appShellBridge.triggerHeaderAction(modelData.id || "")
+                onClicked: AppShellBridge.triggerHeaderAction(modelData.id || "")
             }
         }
     }
@@ -68,7 +69,7 @@ Rectangle {
                 checked: !!modelData.checked
                 checkable: !!modelData.checked
                 active: !!modelData.active
-                onClicked: if (appShellBridge) appShellBridge.triggerHeaderAction(modelData.id || "")
+                onClicked: AppShellBridge.triggerHeaderAction(modelData.id || "")
             }
         }
     }

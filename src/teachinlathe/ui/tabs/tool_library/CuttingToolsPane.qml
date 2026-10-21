@@ -1,9 +1,9 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
-import theme 1.0
-import common 1.0
-import "../conversational"
+import theme
+import common
+import tabs.conversational
 
 // The cutting tools, grouped by type. Each group's header folds the group
 // and has a "+" for adding a tool of that type; under it the group's tools

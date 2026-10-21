@@ -4,7 +4,7 @@ import QtQuick
  * CCMT.qml — romb 80°, pozitivă, o singură față — finisare/semifinisare
  *
  * Utilizare:
- *     import "Inserts"          // sau: import Inserts
+ *     import tabs.tool_library.shapes
  *
  *     CCMT {
  *         size: CCMT.Size.S09

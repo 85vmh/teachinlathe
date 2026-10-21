@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import theme 1.0
-import "shapes"
+import QtQuick
+import theme
+import tabs.tool_library.shapes
 
 // A tap, small, as DrillThumbnail draws a drill: InsertThumbnail's frame
 // and red cross, the cross on the middle of the tap's end. It draws at the

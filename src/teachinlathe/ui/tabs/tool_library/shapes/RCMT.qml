@@ -4,7 +4,7 @@ import QtQuick
  * RCMT.qml — rotundă, pozitivă — copiere, avansuri mari
  *
  * Utilizare:
- *     import "Inserts"          // sau: import Inserts
+ *     import tabs.tool_library.shapes
  *
  *     RCMT {
  *         size: RCMT.Size.S10

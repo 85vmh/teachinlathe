@@ -1,11 +1,11 @@
 // DepthOfCutBox.qml — depth of cut (Ap) and retract, laid over the profile
 // canvas, labelled in the colours the toolpath draws cuts and rapids in.
 // showDoc: false leaves retract alone, for a single pass.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 
 CanvasBox {
     id: root
@@ -38,8 +38,8 @@ CanvasBox {
             value: root.doc
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: root.docEdited(Number(value))
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.docEdited(Number(value)) }
         }
         Label { visible: root.showDoc; text: "(mm)"; font.pixelSize: Theme.fontBody }
 
@@ -51,8 +51,8 @@ CanvasBox {
             value: root.retract
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: root.retractEdited(Number(value))
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.retractEdited(Number(value)) }
         }
         Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
     }

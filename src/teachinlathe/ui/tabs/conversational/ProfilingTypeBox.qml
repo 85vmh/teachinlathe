@@ -1,10 +1,10 @@
 // ProfilingTypeBox.qml — how a profile is roughed (pass type), laid over the
 // profile canvas. The 45° passes are offered for ID profiles only, in a
 // second column.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
 
 CanvasBox {
     id: root

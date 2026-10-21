@@ -12,6 +12,7 @@ import os
 
 from PyQt6.QtCore import QObject, Qt, QUrl
 from PyQt6.QtGui import QColor
+from PyQt6.QtQml import qmlRegisterSingletonInstance
 from PyQt6.QtQuick import QQuickView
 
 from teachinlathe.app.application import Application
@@ -26,6 +27,7 @@ from teachinlathe.ui.tabs.machine_settings.FixturesViewModel import FixturesView
 from teachinlathe.ui.tabs.machine_settings.MachineViewModel import MachineViewModel
 from teachinlathe.ui.tabs.manual_turning.ManualTabViewModel import ManualTabViewModel
 from teachinlathe.ui.common.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
+from teachinlathe.app import APP_QML_IMPORT_DIR
 from teachinlathe.ui import QML_IMPORT_DIR
 from teachinlathe.ui.tabs.programs.ProgramsViewModel import ProgramsViewModel
 from teachinlathe.ui.tabs.tool_library.ToolsTabViewModel import ToolsTabViewModel
@@ -33,6 +35,9 @@ from teachinlathe.ui.tabs.tool_library.ToolsTabViewModel import ToolsTabViewMode
 LOG = logging.getLogger(__name__)
 
 QML_DIR = os.path.dirname(os.path.abspath(__file__))
+
+#: The QML module the view models are singletons of.
+QML_MODULE = "TeachInLathe"
 
 
 class AppWindow(QObject):
@@ -53,7 +58,7 @@ class AppWindow(QObject):
         # engine's root context as they are built.
         self._createView()
         self._buildViewModels()
-        self._publishContext()
+        self._registerSingletons()
         self._loadScene()
         self._connectScreens()
 
@@ -107,28 +112,30 @@ class AppWindow(QObject):
         self.view.setColor(QColor("#efefef"))
         self.view.setFlag(Qt.WindowType.FramelessWindowHint)
 
-        # So every screen can say `import theme 1.0` whatever directory it is
-        # in, rather than counting ".." back to it.
+        # Every QML directory is a module named after its path from one of
+        # these - `import theme`, `import tabs.conversational`,
+        # `import app_shell_qml` - whatever directory the importing file is in.
         self.view.engine().addImportPath(QML_IMPORT_DIR)
+        self.view.engine().addImportPath(APP_QML_IMPORT_DIR)
 
-    def _publishContext(self):
-        ctx = self.view.engine().rootContext()
-        ctx.setContextProperty("appState", self.appState)
-        ctx.setContextProperty("cncStore", self.appState.cncStore)
-        ctx.setContextProperty("navigationStore", self.appState.navigationStore)
-        ctx.setContextProperty("appShellBridge", self.appShellBridge)
-
-        ctx.setContextProperty("manualTabViewModel", self.manualTabViewModel)
-        ctx.setContextProperty("numpadDialogViewModel", self.numpadDialogViewModel)
-        ctx.setContextProperty("toolsTabViewModel", self.toolsTabViewModel)
-
-        ctx.setContextProperty("machineViewModel", self.machineViewModel)
-        ctx.setContextProperty("fixturesViewModel", self.fixturesViewModel)
-
-        ctx.setContextProperty("programsViewModel", self.programsViewModel)
-
-        ctx.setContextProperty("conversationalViewModel", self.conversationalViewModel)
-        ctx.setContextProperty("positionsBridge", self.conversationalViewModel.positionsBridge)
+    def _registerSingletons(self):
+        """What the screens bind to, as singletons of the TeachInLathe module:
+        `import TeachInLathe`, then `ProgramsViewModel.running`, say."""
+        for name, instance in (
+            ("NavigationStore", self.appState.navigationStore),
+            ("AppShellBridge", self.appShellBridge),
+            ("ManualTabViewModel", self.manualTabViewModel),
+            ("ToolsTabViewModel", self.toolsTabViewModel),
+            ("ConversationalViewModel", self.conversationalViewModel),
+            ("ProgramsViewModel", self.programsViewModel),
+            ("MachineViewModel", self.machineViewModel),
+            ("FixturesViewModel", self.fixturesViewModel),
+            # Used by more than one tab: the numpad the Manual and Tool Library
+            # screens open, and the machine's position for the Teach buttons.
+            ("NumpadDialogViewModel", self.numpadDialogViewModel),
+            ("PositionsBridge", self.conversationalViewModel.positionsBridge),
+        ):
+            qmlRegisterSingletonInstance(QML_MODULE, 1, 0, name, instance)
 
     def _loadScene(self):
         self.view.setSource(QUrl.fromLocalFile(os.path.join(QML_DIR, "AppRoot.qml")))

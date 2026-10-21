@@ -20,6 +20,9 @@ its `lib/python` is the one to use (the system `dist-packages` `hal` lacks `hal.
 # Run the tests
 PYTHONPATH=/home/cnc/Work/linuxcnc-dev4/lib/python:src QT_QPA_PLATFORM=offscreen python3 -m pytest tests
 
+# Rewrite the qmldirs after adding, renaming or removing a QML file (--check: report only)
+tools/update_qmldir.py
+
 # Install on a machine without a checkout (pip install from the repo), or build the .deb
 ./install.sh
 ./build_deb.sh
@@ -59,8 +62,22 @@ ui/tabs/         → manual_turning/, tool_library/ (+ shapes/), conversational/
 ui/              → shared QML modules: theme, common (Images singleton + images/, touchable_input/)
 ```
 
-Shared QML is imported by module name (`import theme 1.0`, `import common 1.0`,
-`import common.touchable_input 1.0`); `teachinlathe.ui.QML_IMPORT_DIR` is on every engine's import path.
+Every directory with QML is a QML module (a `qmldir` listing its components), named after its path from an
+import directory: `import theme`, `import common.touchable_input`, `import tabs.conversational`,
+`import app_shell_qml`. The import directories are `teachinlathe.ui.QML_IMPORT_DIR` and
+`teachinlathe.app.APP_QML_IMPORT_DIR`, on every engine's import path. Imports carry no version
+(`import QtQuick`, not `import QtQuick 2.15`), and QML files never import a directory by relative path
+(`import "../programs"`); only `.js` files are imported by path. A QML file added, renamed or removed means its
+directory's `qmldir` changes: run `tools/update_qmldir.py` (`--check` only reports, exit 1 when one is out of date).
+
+The view models reach QML as singletons of the `TeachInLathe` module, registered in `AppWindow._registerSingletons()`
+(`import TeachInLathe`, then `ProgramsViewModel.running`): one per tab (`ManualTabViewModel`, `ToolsTabViewModel`,
+`ConversationalViewModel`, `ProgramsViewModel`, `MachineViewModel` + `FixturesViewModel`), the shell's
+`NavigationStore` and `AppShellBridge`, and `NumpadDialogViewModel` and `PositionsBridge`, which several tabs use.
+There are no context properties.
+
+A component that cannot work without its view model declares it `required property var viewModel` and does
+not test it for null; every instance sets it. Only `SmartNumpadDialog` keeps a default (the singleton).
 All images live in `ui/common/images/` and are referenced as `Images.url("name.svg")` in QML or
 through `teachinlathe.ui.common.images` in Python — never by a relative path.
 
@@ -91,7 +108,7 @@ Data flow for edits:
 
 ### QML ↔ Python Bridge
 
-`ConversationalViewModel` (published to QML as `conversationalViewModel`) holds which screens are open
+`ConversationalViewModel` (the `ConversationalViewModel` singleton in QML) holds which screens are open
 (`screens`: programs → program → profile editor / DXF import), and `ConversationalTabRoot.qml` keeps a
 `StackView` in step with it - the Tool Library pattern; see `~/Work/prompts/Tab architecture.md`.
 

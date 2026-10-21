@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import theme 1.0
-import "shapes"
+import QtQuick
+import theme
+import tabs.tool_library.shapes
 
 // A drill, small: InsertThumbnail's frame and red cross, the cross on the
 // drill's point. It draws at the scale every insert thumbnail does - the

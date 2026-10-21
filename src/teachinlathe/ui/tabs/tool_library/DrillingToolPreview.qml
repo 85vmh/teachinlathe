@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import theme 1.0
-import "shapes"
+import QtQuick
+import theme
+import tabs.tool_library.shapes
 
 // The drill as it sits on the spindle axis: the Z and X axes through the
 // middle of the view, the drill's point - its control point - where they

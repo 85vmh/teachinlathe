@@ -2,10 +2,10 @@
 // tool the last Change Tool above puts in, as "T1" and its title as the
 // Manual Turning list has it ("Turning CCMT 060204"), or "Select the tool"
 // while there is none - in the inserts' colour.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
 import "../tool_library/ToolTitles.js" as ToolTitles
 
 CanvasBox {

@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import theme 1.0
-import "shapes"
+import QtQuick
+import theme
+import tabs.tool_library.shapes
 
 // The reamer as it sits on the spindle axis, as DrillingToolPreview shows a
 // drill: the Z and X axes through the middle of the view, the middle of the

@@ -1,9 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 
 GroupBox {
     id: root
@@ -70,8 +69,8 @@ GroupBox {
             validatorObject: groovesVal
             formatter: function(v) { return (v == null) ? "" : String(Math.max(1, Math.round(Number(v)))) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.grooves_count = Math.max(1, Math.round(value)); root.emitSave() }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.grooves_count = Math.max(1, Math.round(value)); root.emitSave() }
         }
         Item {}
 
@@ -83,8 +82,8 @@ GroupBox {
             validatorObject: dblVal
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.doc = value; root.emitSave() }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.doc = value; root.emitSave() }
         }
         Label { text: "(mm/radius)"; font.pixelSize: Theme.fontBody }
 
@@ -96,8 +95,8 @@ GroupBox {
             validatorObject: dblVal
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.retract = value; root.emitSave() }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.retract = value; root.emitSave() }
         }
         Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
     }

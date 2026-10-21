@@ -1,8 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import ".."
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.programs
+import theme
 
 // Under the backplot while the program runs (the full-screen view): Cycle
 // Abort, and Feed Hold / Feed Resume. Cycle Start is not here - before the
@@ -11,9 +11,9 @@ import theme 1.0
 Rectangle {
     id: root
 
-    property var viewModel
+    required property var viewModel
 
-    readonly property var actions: viewModel ? viewModel.actions : null
+    readonly property var actions: viewModel.actions
     // The pause action is "active" while the program is paused.
     readonly property bool paused: actions ? actions.pauseResumeAction.active : false
 
@@ -39,7 +39,7 @@ Rectangle {
             normalFillRimColor:    "#ef9a9a"
             activeFillCenterColor: Theme.danger
             activeFillRimColor:    "#ef9a9a"
-            onClicked: if (root.viewModel) root.viewModel.triggerCycleAbort()
+            onClicked: root.viewModel.triggerCycleAbort()
         }
 
         MachineRoundButton {

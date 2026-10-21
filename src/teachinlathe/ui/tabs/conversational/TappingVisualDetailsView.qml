@@ -6,12 +6,11 @@
 // clearance's Z each drawn as a line across the centre line; each peck as a
 // line across the tap's diameter, one of them dimensioned. Saves every
 // change through updateTapping.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import "profile_canvas"
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational.profile_canvas
+import theme
 
 Item {
     id: root

@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import "arrow.js" as Arrow
 
 // Dimensions, as on a drawing: a short extension line at each end and a

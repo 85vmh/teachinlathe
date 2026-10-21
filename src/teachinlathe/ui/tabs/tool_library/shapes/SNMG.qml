@@ -4,7 +4,7 @@ import QtQuick
  * SNMG.qml — pătrat 90°, negativă dublu-fețe — 8 muchii, degroșare
  *
  * Utilizare:
- *     import "Inserts"          // sau: import Inserts
+ *     import tabs.tool_library.shapes
  *
  *     SNMG {
  *         size: SNMG.Size.S12

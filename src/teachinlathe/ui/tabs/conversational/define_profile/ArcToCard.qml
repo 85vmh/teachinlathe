@@ -1,11 +1,11 @@
 // ArcToCard.qml
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "../"
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational
+import common.touchable_input
+import theme
+import common
 
 Rectangle {
     id: root
@@ -160,8 +160,8 @@ Rectangle {
                 value: primData.arc_radius !== undefined ? primData.arc_radius : 10
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) {
                     var d = JSON.parse(JSON.stringify(primData))
                     d.arc_radius = value
                     root.primUpdated(primIdx, d)
@@ -178,8 +178,8 @@ Rectangle {
                 value: primData.x_center !== undefined ? primData.x_center : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) {
                     var d = JSON.parse(JSON.stringify(primData))
                     d.x_center = value
                     root.primUpdated(primIdx, d)
@@ -196,8 +196,8 @@ Rectangle {
                 value: primData.z_center !== undefined ? primData.z_center : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) {
                     var d = JSON.parse(JSON.stringify(primData))
                     d.z_center = value
                     root.primUpdated(primIdx, d)
@@ -214,8 +214,8 @@ Rectangle {
                 value: primData.x_end !== undefined ? primData.x_end : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) {
                     var d = JSON.parse(JSON.stringify(primData))
                     d.x_end = value
                     root.primUpdated(primIdx, d)
@@ -232,8 +232,8 @@ Rectangle {
                 value: primData.z_end !== undefined ? primData.z_end : 0
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) {
                     var d = JSON.parse(JSON.stringify(primData))
                     d.z_end = value
                     root.primUpdated(primIdx, d)

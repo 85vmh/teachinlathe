@@ -1,0 +1,6 @@
+module tabs.programs.program_loaded
+BottomActionButton 1.0 BottomActionButton.qml
+MachineRoundButton 1.0 MachineRoundButton.qml
+ProgramBottomActionBar 1.0 ProgramBottomActionBar.qml
+RunControlBar 1.0 RunControlBar.qml
+ToolChangeDialog 1.0 ToolChangeDialog.qml

@@ -1,12 +1,13 @@
 // ZPositionBox.qml — one Z position (or, with ``axis`` "x", one X diameter),
 // with its TeachIn, laid over the profile canvas; a mark on the canvas
 // points an arrow to it, in its accent.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+import common
+import TeachInLathe
 
 CanvasBox {
     id: root
@@ -49,7 +50,7 @@ CanvasBox {
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: root.valueEdited(Number(value))
+            onValueCommitted: function(value) { root.valueEdited(Number(value)) }
         }
         Button {
             visible: root.actionText !== ""
@@ -58,8 +59,8 @@ CanvasBox {
         }
         TeachInButton {
             visible: root.actionText === ""
-            onClicked: valueField.commit(root.axis === "x" ? positionsBridge.teachInX() * 2
-                                                           : positionsBridge.teachInZ())
+            onClicked: valueField.commit(root.axis === "x" ? PositionsBridge.teachInX() * 2
+                                                           : PositionsBridge.teachInZ())
         }
     }
 }

@@ -4,7 +4,7 @@ import QtQuick
  * TCMT.qml — triunghi 60°, pozitivă — uz general pe mașini mici
  *
  * Utilizare:
- *     import "Inserts"          // sau: import Inserts
+ *     import tabs.tool_library.shapes
  *
  *     TCMT {
  *         size: TCMT.Size.S16

@@ -1,12 +1,13 @@
 // StartPositionBox.qml — X Start / Z Start of a profile operation, laid over
 // the profile canvas; with other labels and accent, any X / Z position, as
 // Facing's end position.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+import common
+import TeachInLathe
 
 CanvasBox {
     id: root
@@ -36,11 +37,11 @@ CanvasBox {
             value: root.xStart
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: root.xStartEdited(Number(value))
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.xStartEdited(Number(value)) }
         }
         TeachInButton {
-            onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2)
+            onClicked: tf_x_start.commit(PositionsBridge.teachInX() * 2)
         }
 
         Label { text: root.zLabel; color: root.accent; font.pixelSize: Theme.fontBody }
@@ -52,11 +53,11 @@ CanvasBox {
             value: root.zStart
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: root.zStartEdited(Number(value))
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.zStartEdited(Number(value)) }
         }
         TeachInButton {
-            onClicked: tf_z_start.commit(positionsBridge.teachInZ())
+            onClicked: tf_z_start.commit(PositionsBridge.teachInZ())
         }
     }
 }

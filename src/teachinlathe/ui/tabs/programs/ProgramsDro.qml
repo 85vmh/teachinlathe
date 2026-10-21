@@ -1,11 +1,11 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
 
 Rectangle {
     id: root
-    property var viewModel
+    required property var viewModel
     property int axisLabelWidth: 44
     property int valueBoxWidth: 240
     property int valueBoxHeight: 60

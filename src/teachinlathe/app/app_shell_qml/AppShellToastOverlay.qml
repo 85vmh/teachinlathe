@@ -1,13 +1,14 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import theme
+import TeachInLathe
 
 Item {
     id: root
 
     Rectangle {
         id: toast
-        visible: appShellBridge ? appShellBridge.toastVisible : false
+        visible: AppShellBridge.toastVisible
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 200
@@ -19,7 +20,7 @@ Item {
         Text {
             id: toastText
             anchors.centerIn: parent
-            text: appShellBridge ? appShellBridge.toastText : ""
+            text: AppShellBridge.toastText
             color: Theme.surface
             font.pixelSize: Theme.fontLarge
             horizontalAlignment: Text.AlignHCenter

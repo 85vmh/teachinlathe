@@ -1,22 +1,22 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import ".."
-import "../program_loaded"
-import "while_running"
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.programs
+import tabs.programs.program_loaded
+import tabs.programs.gcode_viewer.while_running
 
 Rectangle {
     id: root
 
     enum ViewerMode { ProgramWithoutStack, ProgramWithStack }
 
-    property var viewModel
+    required property var viewModel
 
-    readonly property bool executionHighlightVisible: !!viewModel && viewModel.executionHighlightVisible
-    readonly property int currentMode: viewModel && viewModel.hasExecutionStack
+    readonly property bool executionHighlightVisible: viewModel.executionHighlightVisible
+    readonly property int currentMode: viewModel.hasExecutionStack
         ? GCodeViewerPane.ProgramWithStack
         : GCodeViewerPane.ProgramWithoutStack
-    readonly property bool actionBarVisible: !!viewModel && viewModel.programShown
+    readonly property bool actionBarVisible: viewModel.programShown
     // How much of the bottom action bar is in, 0..1: it rises from the
     // bottom edge, pushing the code up. ProgramsTabRoot animates this; left
     // alone it just follows actionBarVisible.
@@ -63,7 +63,7 @@ Rectangle {
         id: viewerComponent
 
         ProgramContentFrame {
-            filePath: viewModel ? viewModel.currentFilePath : ""
+            filePath: viewModel.currentFilePath
             Layout.fillWidth: true
             Layout.fillHeight: true
 
@@ -71,8 +71,8 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 viewModel: root.viewModel
-                content: viewModel ? viewModel.currentFileContent : ""
-                highlightLine: root.executionHighlightVisible && viewModel ? viewModel.mainHighlightLine : 0
+                content: viewModel.currentFileContent
+                highlightLine: root.executionHighlightVisible && viewModel.mainHighlightLine
                 highlightColor: "#3A86FF"
                 highlightWidth: 1
                 centerOnHighlight: root.executionHighlightVisible

@@ -4,14 +4,13 @@
 // the operation can use. Tapping one selects it; Use Tool hands its T number
 // on, with where the tool change goes - G28 or G30 - picked between the
 // buttons; Cancel closes.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import QtQml.Models 2.15
-import "."
-import "../tool_library"
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQml.Models
+import tabs.tool_library
 import "../tool_library/ToolTitles.js" as ToolTitles
-import theme 1.0
+import theme
 
 Popup {
     id: root

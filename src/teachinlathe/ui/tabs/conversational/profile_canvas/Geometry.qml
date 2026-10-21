@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 QtObject {
     function resolveLineEndpoint(startX, startZ, p) {

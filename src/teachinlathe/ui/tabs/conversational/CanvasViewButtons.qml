@@ -2,10 +2,10 @@
 // corner: zoom in and out (the backplot's: held down, they repeat), fit to
 // screen, and mirror, which draws the upper half above the centre line too
 // or leaves only the lower one.
-import QtQuick 2.15
-import common 1.0
-import theme 1.0
-import "../programs" as Programs
+import QtQuick
+import common
+import theme
+import tabs.programs as Programs
 
 Row {
     id: root

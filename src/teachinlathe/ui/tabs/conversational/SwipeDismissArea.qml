@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 // Laid over a screen whose list has a SwipeRow open: a press anywhere else
 // only closes it, and one on the row's Delete or Duplicate goes through.

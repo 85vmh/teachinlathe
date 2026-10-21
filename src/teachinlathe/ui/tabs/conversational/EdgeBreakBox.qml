@@ -3,11 +3,11 @@
 // the blend's icon (Define Profile's) - nothing for none - and opens wider,
 // each kind with its name; then its size, and (mm).
 import QtQuick
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+import common
 
 CanvasBox {
     id: root
@@ -151,7 +151,7 @@ CanvasBox {
             formatter: function (v) { return (v == null || root.blendType === "none") ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: root._emit(root.blendType, Math.abs(Number(value)))
+            onValueCommitted: function(value) { root._emit(root.blendType, Math.abs(Number(value))) }
         }
         Label { text: "(mm)"; font.pixelSize: Theme.fontBody; opacity: valueField.opacity }
     }

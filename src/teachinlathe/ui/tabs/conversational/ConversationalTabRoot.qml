@@ -1,9 +1,10 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import common.touchable_input 1.0
-import "define_profile" as DefineProfile
-import "define_radial_profile" as DefineRadialProfile
-import "import_dxf_profile" as ImportDxfProfile
+import QtQuick
+import QtQuick.Controls
+import common.touchable_input
+import tabs.conversational.define_profile as DefineProfile
+import tabs.conversational.define_radial_profile as DefineRadialProfile
+import tabs.conversational.import_dxf_profile as ImportDxfProfile
+import TeachInLathe
 
 // The Conversational tab: a stack of screens, kept in step with the view
 // model's `screens` - the program list at the bottom, the program open in
@@ -11,11 +12,10 @@ import "import_dxf_profile" as ImportDxfProfile
 // The view model decides what is open; this pushes and pops to match, binds
 // each screen to it and connects the screen's signals to its slots.
 //
-// Context property required: conversationalViewModel (ConversationalViewModel)
 Item {
     id: root
 
-    readonly property var viewModel: (typeof conversationalViewModel !== "undefined") ? conversationalViewModel : null
+    readonly property var viewModel: ConversationalViewModel
 
     // The names of the screens on the stack, bottom to top, as last synced.
     property var _names: []
@@ -41,7 +41,7 @@ Item {
 
     // Pop to what the stack and the view model still share, then push the rest.
     function syncStack() {
-        var target = root.viewModel ? root.viewModel.screens : []
+        var target = root.viewModel.screens
         var keep = 0
         while (keep < root._names.length && keep < target.length && root._names[keep] === target[keep])
             keep++
@@ -172,7 +172,7 @@ Item {
 
     SmartNumpadDialog {
         id: numpadDialog
-        viewModel: root.viewModel ? root.viewModel.numpadViewModel : null
+        viewModel: root.viewModel.numpadViewModel
     }
     Loader {
         id: keyboardDialogLoader

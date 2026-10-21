@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import "arrow.js" as Arrow
 
 // Any number of marks, each with its arrow to its box. A mark is a target,

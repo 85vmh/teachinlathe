@@ -1,18 +1,18 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "../conversational"
-import "../tool_library"
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational
+import tabs.tool_library
+import theme
 
 Rectangle {
     id: root
-    property var viewModel: null
-    readonly property string panelMode: viewModel ? viewModel.spindlePanelMode : "Editable"
+    required property var viewModel
+    readonly property string panelMode: viewModel.spindlePanelMode
     readonly property bool editableMode: panelMode === "Editable"
     readonly property bool runningMode: panelMode === "ReadOnly"
     readonly property bool readOnlyMode: !editableMode
-    readonly property int selectedSpindleMode: viewModel ? viewModel.spindleMode : 0
+    readonly property int selectedSpindleMode: viewModel.spindleMode
     readonly property int headerHeight: 50
     //: The column right of the RPM/CSS content, past a divider: M4 at the
     //: top, M3 at the bottom.
@@ -55,8 +55,8 @@ Rectangle {
         anchors.top: parent.top
         anchors.topMargin: 1
         height: root.headerHeight
-        currentIndex: viewModel ? viewModel.spindleMode : 0
-        onCurrentIndexChanged: if (viewModel) viewModel.setSpindleMode(currentIndex)
+        currentIndex: viewModel.spindleMode
+        onCurrentIndexChanged: viewModel.setSpindleMode(currentIndex)
         background: Rectangle {
             color: Theme.surfaceSunken
         }
@@ -116,7 +116,7 @@ Rectangle {
             anchors.right: parent.right
             anchors.top: parent.top
             height: root.headerHeight - 1
-            text: "Spindle Mode: " + (viewModel ? viewModel.spindleModeLabel : "RPM")
+            text: "Spindle Mode: " + (viewModel.spindleModeLabel)
             color: Theme.foreground
             font.pixelSize: Theme.fontLarge
             font.bold: true
@@ -165,11 +165,11 @@ Rectangle {
                     ManualValueRow {
                         label: "Set RPM:"
                         unit: "rev/min"
-                        settingName: viewModel ? viewModel.rpmSettingName : ""
-                        value: viewModel ? viewModel.inputRpm : "0"
+                        settingName: viewModel.rpmSettingName
+                        value: viewModel.inputRpm
                         editable: true
-                        onOpenNumPadRequested: root.openNumPadRequested(field)
-                        onCommitted: if (viewModel) viewModel.setInputRpm(String(value))
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                        onCommitted: function(value) { viewModel.setInputRpm(String(value)) }
                     }
                 }
             }
@@ -184,21 +184,21 @@ Rectangle {
                     ManualValueRow {
                         label: "Max RPM:"
                         unit: "rev/min"
-                        settingName: viewModel ? viewModel.maxRpmSettingName : ""
-                        value: viewModel ? viewModel.inputMaxRpm : "0"
+                        settingName: viewModel.maxRpmSettingName
+                        value: viewModel.inputMaxRpm
                         editable: true
-                        onOpenNumPadRequested: root.openNumPadRequested(field)
-                        onCommitted: if (viewModel) viewModel.setInputMaxRpm(String(value))
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                        onCommitted: function(value) { viewModel.setInputMaxRpm(String(value)) }
                     }
 
                     ManualValueRow {
                         label: "Set CSS:"
                         unit: "m/min"
-                        settingName: viewModel ? viewModel.cssSettingName : ""
-                        value: viewModel ? viewModel.inputCss : "0"
+                        settingName: viewModel.cssSettingName
+                        value: viewModel.inputCss
                         editable: true
-                        onOpenNumPadRequested: root.openNumPadRequested(field)
-                        onCommitted: if (viewModel) viewModel.setInputCss(String(value))
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                        onCommitted: function(value) { viewModel.setInputCss(String(value)) }
                     }
                 }
             }
@@ -208,13 +208,13 @@ Rectangle {
                 ManualValueRow {
                     label: "Set RPM:"
                     unit: "rev/min"
-                    value: viewModel ? viewModel.inputRpm : "0"
+                    value: viewModel.inputRpm
                     editable: false
                 }
                 ManualValueRow {
                     label: "Actual RPM:"
                     unit: "rev/min"
-                    value: viewModel ? viewModel.actualRpm : "0"
+                    value: viewModel.actualRpm
                     editable: false
                     valueBold: true
                 }
@@ -226,26 +226,26 @@ Rectangle {
                 ManualValueRow {
                     label: "Max RPM:"
                     unit: "rev/min"
-                    value: viewModel ? viewModel.inputMaxRpm : "0"
+                    value: viewModel.inputMaxRpm
                     editable: false
                 }
                 ManualValueRow {
                     label: "Actual RPM:"
                     unit: "rev/min"
-                    value: viewModel ? viewModel.actualRpm : "0"
+                    value: viewModel.actualRpm
                     editable: false
                     valueBold: true
                 }
                 ManualValueRow {
                     label: "Set CSS:"
                     unit: "m/min"
-                    value: viewModel ? viewModel.inputCss : "0"
+                    value: viewModel.inputCss
                     editable: false
                 }
                 ManualValueRow {
                     label: "Actual CSS:"
                     unit: "m/min"
-                    value: viewModel ? viewModel.actualCss : "0"
+                    value: viewModel.actualCss
                     editable: false
                     valueBold: true
                 }
@@ -260,7 +260,7 @@ Rectangle {
 
                     Text {
                         Layout.fillWidth: true
-                        text: viewModel ? viewModel.spindlePanelMessageTitle : ""
+                        text: viewModel.spindlePanelMessageTitle
                         color: root.warningTitleColor
                         font.pixelSize: Theme.fontTitle
                         font.bold: true
@@ -271,7 +271,7 @@ Rectangle {
 
                     Text {
                         Layout.fillWidth: true
-                        text: viewModel ? viewModel.spindlePanelMessageBody : ""
+                        text: viewModel.spindlePanelMessageBody
                         color: Theme.foreground
                         font.pixelSize: Theme.fontLarge
                         horizontalAlignment: Text.AlignHCenter
@@ -327,7 +327,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                value: viewModel ? viewModel.spindleAngleText : "0.0°"
+                value: viewModel.spindleAngleText
             }
         }
     }

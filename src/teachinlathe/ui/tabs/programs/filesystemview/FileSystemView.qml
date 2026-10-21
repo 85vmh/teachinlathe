@@ -1,19 +1,19 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Layouts
+import theme
 
 // Main filesystem browser panel — 4-row layout.
 // Receives a FileSystemViewModel exposed from Python as 'viewModel'.
 Rectangle {
     id: root
-    property var viewModel
+    required property var viewModel
     property bool showActionBar: true
     // The file list's swipe to delete.
     property bool showActions: true
     // The action bar only has something to offer on mounted media (copying
     // to the USB stick); deleting is a swipe on the list's rows.
     readonly property bool actionBarShown: showActionBar
-                                           && !!viewModel && viewModel.isInMountedMedia
+                                           && viewModel.isInMountedMedia
 
     color: Theme.surfaceSunken
     radius: Theme.radius

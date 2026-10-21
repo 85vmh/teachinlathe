@@ -1,5 +1,5 @@
 pragma Singleton
-import QtQuick 2.15
+import QtQuick
 
 /*
  * The design tokens the UI is drawn from.

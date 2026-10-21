@@ -1,15 +1,15 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
-import "../../conversational"
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
+import tabs.conversational
+import common
 
 // Row 3 — Sortable file list with Name / Size / Modified columns. A file
 // swiped left shows Delete (see SwipeRow).
 Item {
     id: root
-    property var viewModel
+    required property var viewModel
     // Swipe to delete. Off where the list only picks a file.
     property bool showActions: true
 
@@ -73,7 +73,7 @@ Item {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
-                    MouseArea { anchors.fill: parent; onClicked: if (root.viewModel) root.viewModel.setSortColumn("name") }
+                    MouseArea { anchors.fill: parent; onClicked: root.viewModel.setSortColumn("name") }
                 }
 
                 Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.headerSepColor }
@@ -94,7 +94,7 @@ Item {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
-                    MouseArea { anchors.fill: parent; onClicked: if (root.viewModel) root.viewModel.setSortColumn("size") }
+                    MouseArea { anchors.fill: parent; onClicked: root.viewModel.setSortColumn("size") }
                 }
 
                 Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: root.headerSepColor }
@@ -115,7 +115,7 @@ Item {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
-                    MouseArea { anchors.fill: parent; onClicked: if (root.viewModel) root.viewModel.setSortColumn("modified") }
+                    MouseArea { anchors.fill: parent; onClicked: root.viewModel.setSortColumn("modified") }
                 }
             }
 
@@ -131,7 +131,7 @@ Item {
             id: fileList
             anchors.fill: parent
             clip: true
-            model: root.viewModel ? root.viewModel.entries : []
+            model: root.viewModel.entries
             onModelChanged: root.openSwipeIndex = -1
             onMovementStarted: root.openSwipeIndex = -1
 
@@ -149,7 +149,7 @@ Item {
                 actionWidth: root.deleteWidth
                 duplicateEnabled: false
                 deleteEnabled: root.showActions && !modelData.isUp && !modelData.isDir
-                               && !(root.viewModel && root.viewModel.isInMountedMedia)
+                               && !(root.viewModel.isInMountedMedia)
                 swipeSide: root.openSwipeIndex === index ? 1 : 0
                 onSwipeOpened: root.openSwipeIndex = index
                 onSwipeClosed: if (root.openSwipeIndex === index) root.openSwipeIndex = -1
@@ -171,7 +171,7 @@ Item {
                     id: rowArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: if (root.viewModel) root.viewModel.selectEntry(modelData.relativePath)
+                    onClicked: root.viewModel.selectEntry(modelData.relativePath)
                 }
 
                 RowLayout {

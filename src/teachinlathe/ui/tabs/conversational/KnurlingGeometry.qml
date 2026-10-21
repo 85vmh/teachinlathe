@@ -1,10 +1,10 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+import common
+import TeachInLathe
 
 GroupBox {
     id: root
@@ -72,10 +72,10 @@ GroupBox {
             value: root.x_start
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.x_start = value; root.emitSave() }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.x_start = value; root.emitSave() }
         }
-        TeachInButton { onClicked: tf_x_start.commit(positionsBridge.teachInX() * 2) }
+        TeachInButton { onClicked: tf_x_start.commit(PositionsBridge.teachInX() * 2) }
 
         Label { text: "Z Start"; font.pixelSize: Theme.fontBody }
         NumpadField {
@@ -86,10 +86,10 @@ GroupBox {
             value: root.z_start
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.z_start = value; root.emitSave() }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.z_start = value; root.emitSave() }
         }
-        TeachInButton { onClicked: tf_z_start.commit(positionsBridge.teachInZ()) }
+        TeachInButton { onClicked: tf_z_start.commit(PositionsBridge.teachInZ()) }
 
         Label { text: "Z End"; font.pixelSize: Theme.fontBody }
         NumpadField {
@@ -100,9 +100,9 @@ GroupBox {
             value: root.z_end
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.z_end = value; root.emitSave() }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.z_end = value; root.emitSave() }
         }
-        TeachInButton { onClicked: tf_z_end.commit(positionsBridge.teachInZ()) }
+        TeachInButton { onClicked: tf_z_end.commit(PositionsBridge.teachInZ()) }
     }
 }

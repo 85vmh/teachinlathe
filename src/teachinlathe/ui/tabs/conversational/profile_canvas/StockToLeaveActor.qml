@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import "arrow.js" as Arrow
 
 // The profile offset by stock to leave - what roughing stops at - on both

@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Layouts
+import theme
 
 // One of the Tool Library's two panes: a titled, outlined box. Whatever is
 // declared inside it fills the space under the title; whatever is put in

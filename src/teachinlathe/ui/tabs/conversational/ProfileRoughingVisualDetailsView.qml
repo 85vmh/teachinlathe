@@ -1,11 +1,10 @@
 // ProfileRoughingVisualDetailsView.qml — Profile Roughing with a profile viewer.
 // Saves every change through updateProfileRoughing.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import "profile_canvas"
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational.profile_canvas
+import theme
 
 Item {
     id: root

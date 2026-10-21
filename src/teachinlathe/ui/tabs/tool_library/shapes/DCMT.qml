@@ -4,7 +4,7 @@ import QtQuick
  * DCMT.qml — romb 55°, pozitivă — profilare, acces în unghi
  *
  * Utilizare:
- *     import "Inserts"          // sau: import Inserts
+ *     import tabs.tool_library.shapes
  *
  *     DCMT {
  *         size: DCMT.Size.S11

@@ -1,9 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "." // NumpadField.qml
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 
 Item {
     id: root
@@ -83,7 +82,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                 onSaveRequested: function (p) { root.save(p.payload || p) }
             }
 
@@ -92,7 +91,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                 onSaveRequested: function (p) { root.save(p.payload || p) }
                 onAddFinishRequested: root.editor.addFinish()
             }
@@ -111,7 +110,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                 onSaveRequested: function (p) { root.save(p.payload || p) }
             }
 

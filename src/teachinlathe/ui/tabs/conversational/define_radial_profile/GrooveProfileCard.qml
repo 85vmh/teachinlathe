@@ -1,9 +1,10 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+import common
+import TeachInLathe
 
 Rectangle {
     id: root
@@ -111,10 +112,10 @@ Rectangle {
             angleValue: root._fieldValue("right_flank", "angle", 0)
             blendData: root._blend("right_flank", "start_blend")
             settingPrefix: "radial_profile.right_flank"
-            onFieldCommitted: root._commit(section, key, value)
-            onBlendTypeCommitted: root._commitBlend(section, blend, blendType, "", 0)
-            onBlendValueCommitted: root._commitBlend(section, blend, null, key, value)
-            onOpenNumPadRequested: root.openNumPadRequested(field)
+            onFieldCommitted: function(section, key, value) { root._commit(section, key, value) }
+            onBlendTypeCommitted: function(section, blend, blendType) { root._commitBlend(section, blend, blendType, "", 0) }
+            onBlendValueCommitted: function(section, blend, key, value) { root._commitBlend(section, blend, null, key, value) }
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
         }
 
         BottomSection {
@@ -123,10 +124,10 @@ Rectangle {
             xEndRight: root._fieldValue("bottom", "x_end_right", 20)
             leftBlend: root._blend("bottom", "blend_left")
             rightBlend: root._blend("bottom", "blend_right")
-            onFieldCommitted: root._commit("bottom", key, value)
-            onBlendTypeCommitted: root._commitBlend("bottom", blend, blendType, "", 0)
-            onBlendValueCommitted: root._commitBlend("bottom", blend, null, key, value)
-            onOpenNumPadRequested: root.openNumPadRequested(field)
+            onFieldCommitted: function(key, value) { root._commit("bottom", key, value) }
+            onBlendTypeCommitted: function(blend, blendType) { root._commitBlend("bottom", blend, blendType, "", 0) }
+            onBlendValueCommitted: function(blend, key, value) { root._commitBlend("bottom", blend, null, key, value) }
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
         }
 
         FlankSection {
@@ -139,10 +140,10 @@ Rectangle {
             angleValue: root._fieldValue("left_flank", "angle", 0)
             blendData: root._blend("left_flank", "start_blend")
             settingPrefix: "radial_profile.left_flank"
-            onFieldCommitted: root._commit(section, key, value)
-            onBlendTypeCommitted: root._commitBlend(section, blend, blendType, "", 0)
-            onBlendValueCommitted: root._commitBlend(section, blend, null, key, value)
-            onOpenNumPadRequested: root.openNumPadRequested(field)
+            onFieldCommitted: function(section, key, value) { root._commit(section, key, value) }
+            onBlendTypeCommitted: function(section, blend, blendType) { root._commitBlend(section, blend, blendType, "", 0) }
+            onBlendValueCommitted: function(section, blend, key, value) { root._commitBlend(section, blend, null, key, value) }
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
         }
     }
 
@@ -174,8 +175,8 @@ Rectangle {
             value: numberRow.value
             formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: numberRow.openNumPadRequested(field)
-            onValueCommitted: numberRow.committed(Number(value))
+            onOpenRequested: function(field) { numberRow.openNumPadRequested(field) }
+            onValueCommitted: function(value) { numberRow.committed(Number(value)) }
         }
 
         TeachInButton {
@@ -236,8 +237,8 @@ Rectangle {
             value: root._blendValue(blendRoot.blendData, "chamfer_width")
             formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: blendRoot.openNumPadRequested(field)
-            onValueCommitted: blendRoot.blendValueCommitted("chamfer_width", Number(value))
+            onOpenRequested: function(field) { blendRoot.openNumPadRequested(field) }
+            onValueCommitted: function(value) { blendRoot.blendValueCommitted("chamfer_width", Number(value)) }
         }
         Label {
             text: "(mm)"
@@ -262,8 +263,8 @@ Rectangle {
             value: root._blendValue(blendRoot.blendData, "fillet_radius")
             formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: blendRoot.openNumPadRequested(field)
-            onValueCommitted: blendRoot.blendValueCommitted("fillet_radius", Number(value))
+            onOpenRequested: function(field) { blendRoot.openNumPadRequested(field) }
+            onValueCommitted: function(value) { blendRoot.blendValueCommitted("fillet_radius", Number(value)) }
         }
         Label {
             text: "(mm)"
@@ -304,25 +305,25 @@ Rectangle {
                     label: "X Start"
                     settingName: flankRoot.settingPrefix + ".x_start"
                     value: flankRoot.xValue
-                    onOpenNumPadRequested: flankRoot.openNumPadRequested(field)
-                    onCommitted: flankRoot.fieldCommitted(flankRoot.sectionName, "x_start", value)
-                    onTeachRequested: flankRoot.fieldCommitted(flankRoot.sectionName, "x_start", positionsBridge.teachInX() * 2)
+                    onOpenNumPadRequested: function(field) { flankRoot.openNumPadRequested(field) }
+                    onCommitted: function(value) { flankRoot.fieldCommitted(flankRoot.sectionName, "x_start", value) }
+                    onTeachRequested: flankRoot.fieldCommitted(flankRoot.sectionName, "x_start", PositionsBridge.teachInX() * 2)
                 }
                 NumberRow {
                     label: "Z Start"
                     settingName: flankRoot.settingPrefix + ".z_start"
                     value: flankRoot.zValue
-                    onOpenNumPadRequested: flankRoot.openNumPadRequested(field)
-                    onCommitted: flankRoot.fieldCommitted(flankRoot.sectionName, "z_start", value)
-                    onTeachRequested: flankRoot.fieldCommitted(flankRoot.sectionName, "z_start", positionsBridge.teachInZ())
+                    onOpenNumPadRequested: function(field) { flankRoot.openNumPadRequested(field) }
+                    onCommitted: function(value) { flankRoot.fieldCommitted(flankRoot.sectionName, "z_start", value) }
+                    onTeachRequested: flankRoot.fieldCommitted(flankRoot.sectionName, "z_start", PositionsBridge.teachInZ())
                 }
                 NumberRow {
                     label: "Angle"
                     settingName: flankRoot.settingPrefix + ".angle"
                     value: flankRoot.angleValue
                     teachable: false
-                    onOpenNumPadRequested: flankRoot.openNumPadRequested(field)
-                    onCommitted: flankRoot.fieldCommitted(flankRoot.sectionName, "angle", value)
+                    onOpenNumPadRequested: function(field) { flankRoot.openNumPadRequested(field) }
+                    onCommitted: function(value) { flankRoot.fieldCommitted(flankRoot.sectionName, "angle", value) }
                 }
             }
 
@@ -331,9 +332,9 @@ Rectangle {
                 title: "Start Blend"
                 blendData: flankRoot.blendData
                 settingPrefix: flankRoot.settingPrefix + ".start_blend"
-                onBlendTypeCommitted: flankRoot.blendTypeCommitted(flankRoot.sectionName, flankRoot.blendKey, blendType)
-                onBlendValueCommitted: flankRoot.blendValueCommitted(flankRoot.sectionName, flankRoot.blendKey, key, value)
-                onOpenNumPadRequested: flankRoot.openNumPadRequested(field)
+                onBlendTypeCommitted: function(blendType) { flankRoot.blendTypeCommitted(flankRoot.sectionName, flankRoot.blendKey, blendType) }
+                onBlendValueCommitted: function(key, value) { flankRoot.blendValueCommitted(flankRoot.sectionName, flankRoot.blendKey, key, value) }
+                onOpenNumPadRequested: function(field) { flankRoot.openNumPadRequested(field) }
             }
         }
     }
@@ -368,18 +369,18 @@ Rectangle {
                     label: "X End Left"
                     settingName: "radial_profile.bottom.x_end_left"
                     value: bottomRoot.xEndLeft
-                    onOpenNumPadRequested: bottomRoot.openNumPadRequested(field)
-                    onCommitted: bottomRoot.fieldCommitted("x_end_left", value)
-                    onTeachRequested: bottomRoot.fieldCommitted("x_end_left", positionsBridge.teachInX() * 2)
+                    onOpenNumPadRequested: function(field) { bottomRoot.openNumPadRequested(field) }
+                    onCommitted: function(value) { bottomRoot.fieldCommitted("x_end_left", value) }
+                    onTeachRequested: bottomRoot.fieldCommitted("x_end_left", PositionsBridge.teachInX() * 2)
                 }
 
                 BlendEditor {
                     title: "Left Flank Blend"
                     blendData: bottomRoot.leftBlend
                     settingPrefix: "radial_profile.bottom.blend_left"
-                    onBlendTypeCommitted: bottomRoot.blendTypeCommitted("blend_left", blendType)
-                    onBlendValueCommitted: bottomRoot.blendValueCommitted("blend_left", key, value)
-                    onOpenNumPadRequested: bottomRoot.openNumPadRequested(field)
+                    onBlendTypeCommitted: function(blendType) { bottomRoot.blendTypeCommitted("blend_left", blendType) }
+                    onBlendValueCommitted: function(key, value) { bottomRoot.blendValueCommitted("blend_left", key, value) }
+                    onOpenNumPadRequested: function(field) { bottomRoot.openNumPadRequested(field) }
                 }
             }
 
@@ -392,18 +393,18 @@ Rectangle {
                     label: "X End Right"
                     settingName: "radial_profile.bottom.x_end_right"
                     value: bottomRoot.xEndRight
-                    onOpenNumPadRequested: bottomRoot.openNumPadRequested(field)
-                    onCommitted: bottomRoot.fieldCommitted("x_end_right", value)
-                    onTeachRequested: bottomRoot.fieldCommitted("x_end_right", positionsBridge.teachInX() * 2)
+                    onOpenNumPadRequested: function(field) { bottomRoot.openNumPadRequested(field) }
+                    onCommitted: function(value) { bottomRoot.fieldCommitted("x_end_right", value) }
+                    onTeachRequested: bottomRoot.fieldCommitted("x_end_right", PositionsBridge.teachInX() * 2)
                 }
 
                 BlendEditor {
                     title: "Right Flank Blend"
                     blendData: bottomRoot.rightBlend
                     settingPrefix: "radial_profile.bottom.blend_right"
-                    onBlendTypeCommitted: bottomRoot.blendTypeCommitted("blend_right", blendType)
-                    onBlendValueCommitted: bottomRoot.blendValueCommitted("blend_right", key, value)
-                    onOpenNumPadRequested: bottomRoot.openNumPadRequested(field)
+                    onBlendTypeCommitted: function(blendType) { bottomRoot.blendTypeCommitted("blend_right", blendType) }
+                    onBlendValueCommitted: function(key, value) { bottomRoot.blendValueCommitted("blend_right", key, value) }
+                    onOpenNumPadRequested: function(field) { bottomRoot.openNumPadRequested(field) }
                 }
             }
         }

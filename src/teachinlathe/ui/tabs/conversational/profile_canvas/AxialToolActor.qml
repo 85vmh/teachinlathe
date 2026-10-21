@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import "../../tool_library/shapes/drill.js" as DrillShape
 import "../../tool_library/shapes/tap.js" as TapShape
 

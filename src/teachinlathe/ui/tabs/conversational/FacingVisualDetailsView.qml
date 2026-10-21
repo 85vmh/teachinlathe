@@ -2,12 +2,11 @@
 // Profile Roughing's: no profile, so the passes are drawn over the header's
 // stock, from the start position to the end position. Saves every change
 // through updateFacing.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import "profile_canvas"
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational.profile_canvas
+import theme
 
 Item {
     id: root

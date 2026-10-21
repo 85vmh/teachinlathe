@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import "../"
+import QtQuick
+import tabs.conversational
 
 Item {
     id: root

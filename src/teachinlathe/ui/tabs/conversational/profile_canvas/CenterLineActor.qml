@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 
 // The centre line, across the whole canvas: in the Z axis's green, dashed
 // long - short like the Z0 line.

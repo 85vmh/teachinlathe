@@ -1,0 +1,9 @@
+module tabs.programs.filesystemview
+ActionBar 1.0 ActionBar.qml
+FileBrowserPane 1.0 FileBrowserPane.qml
+FileListView 1.0 FileListView.qml
+FileSystemScreen 1.0 FileSystemScreen.qml
+FileSystemView 1.0 FileSystemView.qml
+LocationBar 1.0 LocationBar.qml
+NavigationBar 1.0 NavigationBar.qml
+ProgramsScreenTabs 1.0 ProgramsScreenTabs.qml

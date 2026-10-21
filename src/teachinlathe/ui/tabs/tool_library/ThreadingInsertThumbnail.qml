@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import theme 1.0
-import "shapes"
+import QtQuick
+import theme
+import tabs.tool_library.shapes
 
 // A threading tool's insert, small: InsertThumbnail's frame and red tip
 // cross around a ThreadingInsert. It draws at the scale every turning

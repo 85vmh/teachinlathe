@@ -1,8 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
-import theme 1.0
-import common 1.0
+import theme
+import common
 
 // A list row that swipes, as on a phone: dragged left, its content slides over
 // a Delete button behind it at the right; dragged right, over a Duplicate one

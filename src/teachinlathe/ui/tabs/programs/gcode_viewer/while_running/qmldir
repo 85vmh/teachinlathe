@@ -1,0 +1,3 @@
+module tabs.programs.gcode_viewer.while_running
+ProgramCallFrameCard 1.0 ProgramCallFrameCard.qml
+ProgramExecutionStack 1.0 ProgramExecutionStack.qml

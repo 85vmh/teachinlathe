@@ -1,7 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
+import TeachInLathe
 
 Rectangle {
     id: root
@@ -9,8 +10,8 @@ Rectangle {
     border.color: Theme.outlineInverse
     border.width: Theme.hairline
 
-    readonly property string statusSummary: appShellBridge ? appShellBridge.statusSummary : ""
-    readonly property var events: appShellBridge ? appShellBridge.events : []
+    readonly property string statusSummary: AppShellBridge.statusSummary
+    readonly property var events: AppShellBridge.events
 
     ColumnLayout {
         anchors.fill: parent
@@ -32,7 +33,7 @@ Rectangle {
 
             Button {
                 text: "Clear"
-                onClicked: if (appShellBridge) appShellBridge.clearEvents()
+                onClicked: AppShellBridge.clearEvents()
             }
         }
 

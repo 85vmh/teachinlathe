@@ -6,12 +6,11 @@
 // centre line, with an arrow from it to its box; each peck as the drill's
 // point, one of them dimensioned, to the Peck Depth / Dwell Time box. Saves
 // every change through updateDrilling.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import "profile_canvas"
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational.profile_canvas
+import theme
 
 Item {
     id: root

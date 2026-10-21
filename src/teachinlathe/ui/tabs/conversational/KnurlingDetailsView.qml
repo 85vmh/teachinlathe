@@ -1,8 +1,7 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
 
 Item {
     id: root
@@ -73,7 +72,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                 onTeachXRequested: root.teachXRequested(opIndex)
                 onTeachZRequested: root.teachZRequested(opIndex)
                 onSaveRequested: function(p) { root.save(p) }
@@ -84,7 +83,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
-                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                 onSaveRequested: function(p) { root.save(p.payload || p) }
             }
         }

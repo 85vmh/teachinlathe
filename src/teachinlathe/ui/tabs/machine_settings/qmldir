@@ -1,0 +1,7 @@
+module tabs.machine_settings
+FixtureCard 1.0 FixtureCard.qml
+GroupPanel 1.0 GroupPanel.qml
+MachineSettingsScreen 1.0 MachineSettingsScreen.qml
+NotReadyScreen 1.0 NotReadyScreen.qml
+StatusRow 1.0 StatusRow.qml
+ToolsRow 1.0 ToolsRow.qml

@@ -3,10 +3,9 @@
 // Operations without an M1 (hasM1: false) leave that width empty.
 // The feed rate is passed in and reported out as a number: each operation
 // keeps it in its own place (cutting_parameters, drilling_parameters, ...).
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import "."
-import theme 1.0
+import QtQuick
+import QtQuick.Layouts
+import theme
 
 RowLayout {
     id: root

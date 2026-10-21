@@ -1,0 +1,13 @@
+module tabs.manual_turning
+HandwheelToggle 1.0 HandwheelToggle.qml
+LimitsPanel 1.0 LimitsPanel.qml
+ManualFeedPanel 1.0 ManualFeedPanel.qml
+ManualHandwheelsPanel 1.0 ManualHandwheelsPanel.qml
+ManualJoystickPanel 1.0 ManualJoystickPanel.qml
+ManualModeAxisDro 1.0 ManualModeAxisDro.qml
+ManualSpindleAngle 1.0 ManualSpindleAngle.qml
+ManualSpindlePanel 1.0 ManualSpindlePanel.qml
+ManualTurningRoot 1.0 ManualTurningRoot.qml
+ManualValueRow 1.0 ManualValueRow.qml
+TeachInLatheDroRoot 1.0 TeachInLatheDroRoot.qml
+TeachableLimit 1.0 TeachableLimit.qml

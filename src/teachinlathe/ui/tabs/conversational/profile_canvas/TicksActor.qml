@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 import "axisbreak.js" as AxisBreak
 
 QtObject {

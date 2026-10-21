@@ -1,8 +1,7 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
 
 Item {
     id: root
@@ -52,7 +51,7 @@ Item {
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
-                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                 onSaveRequested: function(p) {
                     var merged = root.mergeIntoOp(p.payload || p)
                     root.editor.save(merged)
@@ -65,7 +64,7 @@ Item {
                 Layout.column: 1
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
-                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                 onSaveRequested: function(p) {
                     var merged = root.mergeIntoOp(p.payload || p)
                     root.editor.save(merged)
@@ -78,7 +77,7 @@ Item {
                 Layout.column: 0
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
-                onOpenNumPadRequested: root.openNumPadRequested(field)
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                 onSaveRequested: function(p) {
                     var merged = root.mergeIntoOp(p.payload || p)
                     root.editor.save(merged)

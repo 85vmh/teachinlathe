@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 
 // A cutting tool of a kind that has no card of its own yet: one line.
 Rectangle {

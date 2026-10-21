@@ -1,0 +1,2 @@
+module dev_panel_qml
+DevPanelWindow 1.0 DevPanelWindow.qml

@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import "../../../app/app_shell_qml" as Shell
-import theme 1.0
+import QtQuick
+import app_shell_qml as Shell
+import theme
 
 // One chuck / fixture. Selecting it makes it the active fixture, which is what
 // sets the chuck Z-minus limit the machine is held to.

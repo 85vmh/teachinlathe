@@ -1,9 +1,9 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+import common
 
 Rectangle {
     id: root
@@ -93,8 +93,8 @@ Rectangle {
                 hAlign: Text.AlignRight
                 formatter: root.formatLimitValue
                 parser: function(s) { return String(s) }
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: {
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) {
                     var formattedValue = root.formatLimitValue(value)
                     limitInput.value = formattedValue
                     root.committed(formattedValue)

@@ -1,11 +1,11 @@
 // UndercutDin509BlendCard.qml
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "../"
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational
+import common.touchable_input
+import theme
+import common
 
 Rectangle {
     id: root
@@ -117,8 +117,8 @@ Rectangle {
                 value: root._undercutValue("undercut_radius", 0.4)
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: root._commitUndercutField("undercut_radius", value)
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) { root._commitUndercutField("undercut_radius", value) }
             }
 
             Label { text: "Depth"; font.pixelSize: szFont; Layout.fillWidth: true }
@@ -131,8 +131,8 @@ Rectangle {
                 value: root._undercutValue("undercut_depth", 0.4)
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: root._commitUndercutField("undercut_depth", value)
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) { root._commitUndercutField("undercut_depth", value) }
             }
 
             Label { text: "Length"; font.pixelSize: szFont; Layout.fillWidth: true }
@@ -145,8 +145,8 @@ Rectangle {
                 value: root._undercutValue("undercut_length", 2.5)
                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: root._commitUndercutField("undercut_length", value)
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) { root._commitUndercutField("undercut_length", value) }
             }
         }
 

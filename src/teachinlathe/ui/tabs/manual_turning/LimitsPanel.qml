@@ -7,11 +7,11 @@
 //            hang below the line, into the corners the cross leaves free.
 //   Row 2 — Tool Limits cross: Limit X- (top) | Z-/label/Z+ (middle) | Limit X+ (bottom)
 //            An arrow from the label to each limit's box.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0   // NumpadField
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input   // NumpadField
+import theme
 
 Rectangle {
     id: root
@@ -21,7 +21,7 @@ Rectangle {
     border.width: Theme.hairline
     radius: Theme.radius
 
-    property var viewModel: null
+    required property var viewModel
     signal openNumPadRequested(Item field)
 
     //: The arrow heads' length along the line, and their width.
@@ -188,17 +188,17 @@ Rectangle {
 
                     NumpadField {
                         Layout.fillWidth: true
-                        value: root.viewModel ? root.viewModel.chuckValue : "--none--"
+                        value: root.viewModel.chuckValue
                         settingName: "smart_numpad.chuck-limit"
                         description: "Chuck limit"
                         hAlign: Text.AlignRight
                         formatter: root.formatLimitValue
                         parser: function(s) { return String(s) }
-                        onOpenRequested: root.openNumPadRequested(field)
-                        onValueCommitted: {
+                        onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                        onValueCommitted: function(value) {
                             var formattedValue = root.formatLimitValue(value)
                             value = formattedValue
-                            if (root.viewModel) root.viewModel.commitLimit("chuck", formattedValue)
+                            root.viewModel.commitLimit("chuck", formattedValue)
                         }
                     }
                 }
@@ -211,16 +211,16 @@ Rectangle {
                 anchors.rightMargin: 16
                 y: machineRow.cardTop
                 title: "Tailstock Limit"
-                value: root.viewModel ? root.viewModel.tailstockValue : "--none--"
+                value: root.viewModel.tailstockValue
                 settingName: "smart_numpad.tailstock-limit"
                 description: "Tailstock limit"
-                status: root.viewModel ? root.viewModel.tailstockStatus : 1
-                toggleText: root.viewModel ? root.viewModel.tailstockToggleText : "Enable Limit"
-                toggleEnabled: root.viewModel ? root.viewModel.tailstockToggleEnabled : false
-                onTeachClicked: if (root.viewModel) root.viewModel.teachLimit("tailstock")
-                onToggleClicked: if (root.viewModel) root.viewModel.toggleLimit("tailstock")
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onCommitted: if (root.viewModel) root.viewModel.commitLimit("tailstock", value)
+                status: root.viewModel.tailstockStatus
+                toggleText: root.viewModel.tailstockToggleText
+                toggleEnabled: root.viewModel.tailstockToggleEnabled
+                onTeachClicked: root.viewModel.teachLimit("tailstock")
+                onToggleClicked: root.viewModel.toggleLimit("tailstock")
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                onCommitted: function(value) { root.viewModel.commitLimit("tailstock", value) }
             }
         }
 
@@ -330,16 +330,16 @@ Rectangle {
                 anchors.top: parent.top
                 anchors.topMargin: parent.xEdgeMargin
                 title: "Limit X-"
-                value: root.viewModel ? root.viewModel.xMinusValue : "--none--"
+                value: root.viewModel.xMinusValue
                 settingName: "smart_numpad.x-minus-limit"
                 description: "Tool limit on X-"
-                status: root.viewModel ? root.viewModel.xMinusStatus : 1
-                toggleText: root.viewModel ? root.viewModel.xMinusToggleText : "Enable Limit"
-                toggleEnabled: root.viewModel ? root.viewModel.xMinusToggleEnabled : false
-                onTeachClicked: if (root.viewModel) root.viewModel.teachLimit("xMinus")
-                onToggleClicked: if (root.viewModel) root.viewModel.toggleLimit("xMinus")
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onCommitted: if (root.viewModel) root.viewModel.commitLimit("xMinus", value)
+                status: root.viewModel.xMinusStatus
+                toggleText: root.viewModel.xMinusToggleText
+                toggleEnabled: root.viewModel.xMinusToggleEnabled
+                onTeachClicked: root.viewModel.teachLimit("xMinus")
+                onToggleClicked: root.viewModel.toggleLimit("xMinus")
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                onCommitted: function(value) { root.viewModel.commitLimit("xMinus", value) }
             }
 
             // Limit X+ (bottom edge, horizontally centered)
@@ -349,16 +349,16 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: parent.xEdgeMargin
                 title: "Limit X+"
-                value: root.viewModel ? root.viewModel.xPlusValue : "--none--"
+                value: root.viewModel.xPlusValue
                 settingName: "smart_numpad.x-plus-limit"
                 description: "Tool limit on X+"
-                status: root.viewModel ? root.viewModel.xPlusStatus : 1
-                toggleText: root.viewModel ? root.viewModel.xPlusToggleText : "Enable Limit"
-                toggleEnabled: root.viewModel ? root.viewModel.xPlusToggleEnabled : false
-                onTeachClicked: if (root.viewModel) root.viewModel.teachLimit("xPlus")
-                onToggleClicked: if (root.viewModel) root.viewModel.toggleLimit("xPlus")
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onCommitted: if (root.viewModel) root.viewModel.commitLimit("xPlus", value)
+                status: root.viewModel.xPlusStatus
+                toggleText: root.viewModel.xPlusToggleText
+                toggleEnabled: root.viewModel.xPlusToggleEnabled
+                onTeachClicked: root.viewModel.teachLimit("xPlus")
+                onToggleClicked: root.viewModel.toggleLimit("xPlus")
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                onCommitted: function(value) { root.viewModel.commitLimit("xPlus", value) }
             }
 
             // Limit Z- (zArrowLength left of "Tool Limits", vertically centered)
@@ -368,16 +368,16 @@ Rectangle {
                 anchors.rightMargin: parent.zArrowLength
                 anchors.verticalCenter: parent.verticalCenter
                 title: "Limit Z-"
-                value: root.viewModel ? root.viewModel.zMinusValue : "--none--"
+                value: root.viewModel.zMinusValue
                 settingName: "smart_numpad.z-minus-limit"
                 description: "Tool limit on Z-"
-                status: root.viewModel ? root.viewModel.zMinusStatus : 1
-                toggleText: root.viewModel ? root.viewModel.zMinusToggleText : "Enable Limit"
-                toggleEnabled: root.viewModel ? root.viewModel.zMinusToggleEnabled : false
-                onTeachClicked: if (root.viewModel) root.viewModel.teachLimit("zMinus")
-                onToggleClicked: if (root.viewModel) root.viewModel.toggleLimit("zMinus")
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onCommitted: if (root.viewModel) root.viewModel.commitLimit("zMinus", value)
+                status: root.viewModel.zMinusStatus
+                toggleText: root.viewModel.zMinusToggleText
+                toggleEnabled: root.viewModel.zMinusToggleEnabled
+                onTeachClicked: root.viewModel.teachLimit("zMinus")
+                onToggleClicked: root.viewModel.toggleLimit("zMinus")
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                onCommitted: function(value) { root.viewModel.commitLimit("zMinus", value) }
             }
 
             // Limit Z+ (zArrowLength right of "Tool Limits", vertically centered)
@@ -387,16 +387,16 @@ Rectangle {
                 anchors.leftMargin: parent.zArrowLength
                 anchors.verticalCenter: parent.verticalCenter
                 title: "Limit Z+"
-                value: root.viewModel ? root.viewModel.zPlusValue : "--none--"
+                value: root.viewModel.zPlusValue
                 settingName: "smart_numpad.z-plus-limit"
                 description: "Tool limit on Z+"
-                status: root.viewModel ? root.viewModel.zPlusStatus : 1
-                toggleText: root.viewModel ? root.viewModel.zPlusToggleText : "Enable Limit"
-                toggleEnabled: root.viewModel ? root.viewModel.zPlusToggleEnabled : false
-                onTeachClicked: if (root.viewModel) root.viewModel.teachLimit("zPlus")
-                onToggleClicked: if (root.viewModel) root.viewModel.toggleLimit("zPlus")
-                onOpenNumPadRequested: root.openNumPadRequested(field)
-                onCommitted: if (root.viewModel) root.viewModel.commitLimit("zPlus", value)
+                status: root.viewModel.zPlusStatus
+                toggleText: root.viewModel.zPlusToggleText
+                toggleEnabled: root.viewModel.zPlusToggleEnabled
+                onTeachClicked: root.viewModel.teachLimit("zPlus")
+                onToggleClicked: root.viewModel.toggleLimit("zPlus")
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                onCommitted: function(value) { root.viewModel.commitLimit("zPlus", value) }
             }
         }
     }

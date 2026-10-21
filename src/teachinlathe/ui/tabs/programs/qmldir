@@ -1,0 +1,10 @@
+module tabs.programs
+AutoAxisDro 1.0 AutoAxisDro.qml
+BackplotIconButton 1.0 BackplotIconButton.qml
+OutlinedValue 1.0 OutlinedValue.qml
+ProgramButton 1.0 ProgramButton.qml
+ProgramContentFrame 1.0 ProgramContentFrame.qml
+ProgramLoadedScreen 1.0 ProgramLoadedScreen.qml
+ProgramsDro 1.0 ProgramsDro.qml
+ProgramsTabRoot 1.0 ProgramsTabRoot.qml
+ProgramsToolFeedSpeed 1.0 ProgramsToolFeedSpeed.qml

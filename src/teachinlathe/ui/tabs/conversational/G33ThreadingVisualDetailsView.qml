@@ -9,13 +9,12 @@
 // retract) and DOC in boxes of their own; the threading insert on Z Start,
 // Clearance out from Major Ø. Edits the same data as ThreadingDetailsView and
 // saves every change through the same updateG33Threading slot.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import "profile_canvas"
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational.profile_canvas
 import "profile_canvas/brokenstock.js" as Broken
-import theme 1.0
+import theme
 
 Item {
     id: root

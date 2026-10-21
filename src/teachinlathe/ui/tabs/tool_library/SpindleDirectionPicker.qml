@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import theme 1.0
-import common 1.0
+import QtQuick
+import theme
+import common
 
 // The spindle direction a cutting tool is used with: two square icon
 // buttons, M3 then M4, as tall as an input field, the chosen one blue as

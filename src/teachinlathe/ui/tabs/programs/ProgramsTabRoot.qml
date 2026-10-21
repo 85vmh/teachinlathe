@@ -1,9 +1,10 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "filesystemview"
-import "gcode_viewer"
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.programs.filesystemview
+import tabs.programs.gcode_viewer
+import theme
+import TeachInLathe
 
 // The Programs tab is one strip of three equal panes, two of them on screen:
 //
@@ -17,12 +18,11 @@ import theme 1.0
 // across rather than being swapped; on the loaded-program screen it carries
 // the DRO and tool/feed/speed over the code.
 //
-// Context property required: programsViewModel (ProgramsViewModel)
 Rectangle {
     id: root
     color: Theme.surface
 
-    readonly property var viewModel: programsViewModel
+    readonly property var viewModel: ProgramsViewModel
 
     // How long the strip takes to slide one pane across, in ms.
     readonly property int slideDurationMs: 300

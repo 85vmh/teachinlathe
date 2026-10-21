@@ -1,10 +1,9 @@
 // ProfilingOptions.qml
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 
 GroupBox {
     id: root
@@ -148,8 +147,8 @@ GroupBox {
                             validatorObject: DoubleValidator { notation: DoubleValidator.StandardNotation }
                             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.radial = value; root.emitSave() }
+                            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                            onValueCommitted: function(value) { root.radial = value; root.emitSave() }
                         }
                         Label {
                             text: "(mm)"
@@ -170,8 +169,8 @@ GroupBox {
                             validatorObject: DoubleValidator { notation: DoubleValidator.StandardNotation }
                             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.axial = value; root.emitSave() }
+                            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                            onValueCommitted: function(value) { root.axial = value; root.emitSave() }
                         }
                         Label {
                             text: "(mm)"
@@ -209,8 +208,8 @@ GroupBox {
                                 bottom: 1
                             }
                             hAlign: Text.AlignRight
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: {
+                            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                            onValueCommitted: function(value) {
                                 root.finish_passes = Math.max(1, Math.round(value))
                                 root.emitSave()
                             }
@@ -230,8 +229,8 @@ GroupBox {
                                 bottom: 0
                             }
                             hAlign: Text.AlignRight
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: {
+                            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                            onValueCommitted: function(value) {
                                 root.spring_passes = Math.max(0, Math.round(value))
                                 root.emitSave()
                             }

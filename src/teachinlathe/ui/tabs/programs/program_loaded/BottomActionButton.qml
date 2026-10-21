@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 
 // Rectangular checkable action button — QML port of the app-shell header
 // button (#appShellActionButton QSS), so Break-on-M1 / Skip-Blocks keep the

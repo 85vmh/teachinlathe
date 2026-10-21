@@ -1,16 +1,16 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Layouts
+import theme
+import common
 
 // Row 1 — Horizontal location selector.
 // Buttons are equally wide, mutually exclusive. A button is highlighted only
 // when the browser is at the root of that location.
 Rectangle {
     id: root
-    property var viewModel
+    required property var viewModel
 
-    readonly property var locs: viewModel ? viewModel.locations : []
+    readonly property var locs: viewModel.locations
 
     color: Theme.surfaceSunken
     implicitHeight: 60

@@ -8,13 +8,12 @@
 // above X Start - each with an arrow to its box down the right edge. A new
 // Parting starts at the stock's outside, ends at its bore, and slows to Fz2
 // a blade's width before the end. Saves through updateParting.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import "profile_canvas"
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational.profile_canvas
 import "profile_canvas/brokenstock.js" as Broken
-import theme 1.0
+import theme
 
 Item {
     id: root

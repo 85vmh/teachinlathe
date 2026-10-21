@@ -8,14 +8,13 @@
 //   Standard   Feed rate (Fz)
 //   Parting    Feed rate (Fz1) over Feed rate (Fz2)
 //   Threading  Pitch over Starts
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import "../tool_library"
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import tabs.tool_library
+import theme
+import common
 
 GroupBox {
     id: root
@@ -176,8 +175,8 @@ GroupBox {
                 value: root.css_value
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.css_value = value; root.emitSpindle() }
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) { root.css_value = value; root.emitSpindle() }
             }
             Label {
                 Layout.row: 0; Layout.column: 2
@@ -218,8 +217,8 @@ GroupBox {
                 value: root.css_max_rpm
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.css_max_rpm = value; root.emitSpindle() }
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) { root.css_max_rpm = value; root.emitSpindle() }
             }
             NumpadField {
                 Layout.row: 1; Layout.column: 1
@@ -229,8 +228,8 @@ GroupBox {
                 value: root.rpm_value
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
-                onOpenRequested: root.openNumPadRequested(field)
-                onValueCommitted: { root.rpm_value = value; root.emitSpindle() }
+                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                onValueCommitted: function(value) { root.rpm_value = value; root.emitSpindle() }
             }
             Label {
                 Layout.row: 1; Layout.column: 2
@@ -272,7 +271,7 @@ GroupBox {
                 formatter: function (v) { return (v == null || !root.feedEnabled) ? "" : String(Number(Number(v).toFixed(3))) }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: { root.feed_rate = value; root.feedRateEdited(value) }
+                onValueCommitted: function(value) { root.feed_rate = value; root.feedRateEdited(value) }
             }
             NumpadField {
                 visible: parent.threading
@@ -283,7 +282,7 @@ GroupBox {
                 formatter: function (v) { return (v == null) ? "" : String(Number(Number(v).toFixed(3))) }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: { root.pitch = value; root.pitchEdited(value) }
+                onValueCommitted: function(value) { root.pitch = value; root.pitchEdited(value) }
             }
             Label {
                 text: parent.threading ? "(mm)" : "(mm/rev)"
@@ -307,7 +306,7 @@ GroupBox {
                 formatter: function (v) { return (v == null || !root.feedEnabled) ? "" : String(Number(Number(v).toFixed(3))) }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: { root.feed_rate2 = value; root.feedRate2Edited(value) }
+                onValueCommitted: function(value) { root.feed_rate2 = value; root.feedRate2Edited(value) }
             }
             NumpadField {
                 visible: parent.threading
@@ -318,7 +317,7 @@ GroupBox {
                 formatter: function (v) { return (v == null) ? "" : String(Math.round(Number(v))) }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: { root.starts = Math.max(1, Math.round(value)); root.startsEdited(root.starts) }
+                onValueCommitted: function(value) { root.starts = Math.max(1, Math.round(value)); root.startsEdited(root.starts) }
             }
             Label {
                 visible: parent.parting || parent.threading

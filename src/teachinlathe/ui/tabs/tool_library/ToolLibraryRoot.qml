@@ -1,17 +1,16 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import theme
+import TeachInLathe
 
 // The Tool Library tab: a stack of screens. The library itself is always at
 // the bottom; adding or editing a cutting tool pushes its screen on top,
 // and the top bar's Back and Save take it off again.
 //
-// Context property required: toolsTabViewModel (ToolsTabViewModel)
 Item {
     id: root
 
-    readonly property var viewModel: (typeof toolsTabViewModel !== "undefined")
-                                     ? toolsTabViewModel : null
+    readonly property var viewModel: ToolsTabViewModel
 
     StackView {
         id: stack

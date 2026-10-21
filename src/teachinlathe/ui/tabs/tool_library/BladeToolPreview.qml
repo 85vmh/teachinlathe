@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 import "shapes/blade.js" as BladeShape
 
 // The blade as it sits in the holder: the Z and X axes fixed through the

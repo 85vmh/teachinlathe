@@ -4,7 +4,7 @@ import QtQuick
  * VBMT.qml — romb 35°, pozitivă — profilare fină, unghiuri strânse
  *
  * Utilizare:
- *     import "Inserts"          // sau: import Inserts
+ *     import tabs.tool_library.shapes
  *
  *     VBMT {
  *         size: VBMT.Size.S16

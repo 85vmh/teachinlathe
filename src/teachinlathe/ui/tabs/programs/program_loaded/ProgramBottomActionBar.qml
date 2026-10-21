@@ -1,8 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import ".."
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.programs
+import theme
 
 // The program options under the code: Break on M1 and Skip "/" Blocks.
 // Cycle Start is in the app bar until the program is going; Feed Hold /
@@ -10,9 +10,9 @@ import theme 1.0
 Rectangle {
     id: root
 
-    property var viewModel
+    required property var viewModel
 
-    readonly property var actions: viewModel ? viewModel.actions : null
+    readonly property var actions: viewModel.actions
 
     property bool breakOnM1Active: actions ? actions.optionalStopAction.checked : false
     property bool breakOnM1Enabled: actions ? actions.optionalStopAction.enabled : false

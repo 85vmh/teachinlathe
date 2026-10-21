@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import common 1.0
+import QtQuick
+import common
 
 // The spindle direction a cutting tool is used with, as its M code's icon:
 // M3 or M4, no button round it. `clockwise` is M3; null draws nothing.

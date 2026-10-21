@@ -1,9 +1,9 @@
 // CanvasBox.qml — a titled box laid over the profile canvas, which an
 // overlay on the canvas points an arrow to.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
 import "profile_canvas/arrow.js" as Arrow
 
 Rectangle {

@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 // The roughing toolpath, on the lower half only: the cuts solid - the final
 // contour pass among them - every other pass with small arrowheads every

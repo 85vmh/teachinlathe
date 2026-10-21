@@ -2,11 +2,11 @@
 // Draws a lathe profile from a list of primitives (startPoint / lineTo / arcTo).
 // Coordinate convention: Z+ → right, X+ → down (lathe radial, outward = positive).
 // Scale and origin are computed from fixed viewport margins.
-import QtQuick 2.15
-import theme 1.0
-import "profile_canvas"
+import QtQuick
+import theme
+import tabs.conversational.profile_canvas
 import "profile_canvas/brokenstock.js" as Broken
-import common.touchable_input 1.0
+import common.touchable_input
 
 Canvas {
     id: root

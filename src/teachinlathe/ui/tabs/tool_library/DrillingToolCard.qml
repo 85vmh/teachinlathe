@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Layouts
+import theme
 import "ToolTitles.js" as ToolTitles
 
 // One drill as a card, laid out as ThreadingToolCard is:

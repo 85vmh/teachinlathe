@@ -1,14 +1,14 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import ".."
-import theme 1.0
+import QtQuick
+import QtQuick.Layouts
+import tabs.programs
+import theme
 
 // Row 4 — shown on mounted media only: [Copy to USB Stick Programs]
 // (disabled while copying), with a progress bar along the top while it copies.
 // Deleting is per file, a swipe on the list's rows.
 Rectangle {
     id: root
-    property var viewModel
+    required property var viewModel
 
     color: Theme.surfaceSunken
     implicitHeight: 60
@@ -21,11 +21,11 @@ Rectangle {
         anchors.right: parent.right
         height: 3
         color: Theme.outlineDisabled
-        visible: root.viewModel ? root.viewModel.isCopying : false
+        visible: root.viewModel.isCopying
 
         Rectangle {
             height: parent.height
-            width: parent.width * (root.viewModel ? root.viewModel.copyProgress : 0)
+            width: parent.width * (root.viewModel.copyProgress)
             color: "#4ec9b0"
             Behavior on width { NumberAnimation { duration: 80 } }
         }
@@ -45,9 +45,9 @@ Rectangle {
             enabled: root.viewModel
                      ? (root.viewModel.selectedIsFile && !root.viewModel.isCopying)
                      : false
-            text: (root.viewModel ? root.viewModel.isCopying : false)
+            text: (root.viewModel.isCopying)
                   ? "Copying…" : "Copy to USB Stick Programs"
-            onClicked: if (root.viewModel) root.viewModel.copySelectedToUsbStickPrograms()
+            onClicked: root.viewModel.copySelectedToUsbStickPrograms()
         }
 
     }

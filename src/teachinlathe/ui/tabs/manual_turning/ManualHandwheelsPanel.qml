@@ -1,11 +1,11 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
 
 Rectangle {
     id: root
-    property var viewModel: null
+    required property var viewModel
 
     color: Theme.surfaceSunken
     border.color: Theme.outline
@@ -20,7 +20,7 @@ Rectangle {
         height: 50
 
         RowLayout {
-            visible: viewModel ? viewModel.handwheelsAllowed : true
+            visible: viewModel.handwheelsAllowed
             anchors.fill: parent
             anchors.leftMargin: 10
             anchors.rightMargin: 10
@@ -37,7 +37,7 @@ Rectangle {
             }
 
             Text {
-                text: viewModel ? viewModel.jogIncrement : "0.001"
+                text: viewModel.jogIncrement
                 color: Theme.foregroundStrong
                 font.pixelSize: Theme.fontLarge
                 font.bold: true
@@ -58,7 +58,7 @@ Rectangle {
         }
 
         Text {
-            visible: !(viewModel ? viewModel.handwheelsAllowed : true)
+            visible: !(viewModel.handwheelsAllowed)
             anchors.fill: parent
             text: "Disabled"
             color: Theme.warning
@@ -81,17 +81,17 @@ Rectangle {
         x: 20
         y: 60
         axisLabel: "X"
-        enabled: viewModel ? viewModel.handwheelsAllowed : true
-        checked: viewModel ? viewModel.xHandwheelEnabled : true
-        onClicked: if (root.viewModel) root.viewModel.setXHandwheelEnabled(checked)
+        enabled: viewModel.handwheelsAllowed
+        checked: viewModel.xHandwheelEnabled
+        onClicked: root.viewModel.setXHandwheelEnabled(checked)
     }
 
     HandwheelToggle {
         x: 115
         y: 145
         axisLabel: "Z"
-        enabled: viewModel ? viewModel.handwheelsAllowed : true
-        checked: viewModel ? viewModel.zHandwheelEnabled : true
-        onClicked: if (root.viewModel) root.viewModel.setZHandwheelEnabled(checked)
+        enabled: viewModel.handwheelsAllowed
+        checked: viewModel.zHandwheelEnabled
+        onClicked: root.viewModel.setZHandwheelEnabled(checked)
     }
 }

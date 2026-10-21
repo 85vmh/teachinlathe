@@ -1,9 +1,9 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import QtQuick.Controls 2.15
-import ".."
-import "../gcode_viewer"
-import theme 1.0
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import tabs.programs
+import tabs.programs.gcode_viewer
+import theme
 
 Item {
     id: root

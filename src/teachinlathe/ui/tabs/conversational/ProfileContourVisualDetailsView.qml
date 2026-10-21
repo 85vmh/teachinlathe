@@ -1,12 +1,11 @@
 // ProfileContourVisualDetailsView.qml — Profile Contour with a profile viewer,
 // laid out as Profile Roughing's. Saves every change through
 // updateProfileContour.
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import "profile_canvas"
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational.profile_canvas
+import theme
 
 Item {
     id: root

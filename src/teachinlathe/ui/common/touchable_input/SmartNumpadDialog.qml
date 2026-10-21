@@ -1,7 +1,7 @@
 // SmartNumpadDialog.qml — QML numpad dialog.
 //
-// Driven by the `viewModel` property, which defaults to the
-// `numpadDialogViewModel` context property. Open it with:
+// Driven by the `viewModel` property, which defaults to the app's
+// NumpadDialogViewModel singleton (module TeachInLathe). Open it with:
 //     dialog.openFor(field, settingName, descriptionOverride)
 // where `field` is a NumpadField. On accept it writes the value back via
 // field.commit(value) and persists it via viewModel.commitValue().
@@ -9,11 +9,12 @@
 // Two modes:
 //   • "select"  — predefined value buttons (when the JSON entry has options)
 //   • "numpad"  — numeric keypad (default / "Other values..." / no options)
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
+import common
+import TeachInLathe
 
 Popup {
     id: root
@@ -21,8 +22,7 @@ Popup {
     // Which numpad view model drives this dialog. Each screen has its own
     // (the manual tab persists the last value, conversational does not), so
     // it is passed in rather than read from a single context property.
-    property var viewModel: (typeof numpadDialogViewModel !== "undefined")
-                            ? numpadDialogViewModel : null
+    property var viewModel: NumpadDialogViewModel
 
     // ── State for the currently edited field ──────────────────────────
     property var    targetField: null

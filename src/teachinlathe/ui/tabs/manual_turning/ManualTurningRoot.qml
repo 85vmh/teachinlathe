@@ -9,21 +9,20 @@
 //                              Joystick + Feed, Spindle
 //   Right: ManualToolList — fixed width (toolListWidth), full height
 //
-// Context properties required (set by app_window.py):
-//   manualTabViewModel (ManualTabViewModel), numpadDialogViewModel, appShellBridge
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "../tool_library"
-import common.touchable_input 1.0   // SmartNumpadDialog, NumpadField
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.tool_library
+import common.touchable_input   // SmartNumpadDialog, NumpadField
+import theme
+import TeachInLathe
 
 Item {
     id: root
 
     // turning (spindle, feed, joystick, handwheels), dro and tools, each
     // handed to its panels below.
-    readonly property var viewModel: (typeof manualTabViewModel !== "undefined") ? manualTabViewModel : null
+    readonly property var viewModel: ManualTabViewModel
 
     // ── Color constants ───────────────────────────────────────────────
     readonly property color pageBackgroundColor: Theme.surface
@@ -45,7 +44,7 @@ Item {
 
     // A blade touched off in Z: which of its points was it?
     Connections {
-        target: root.viewModel ? root.viewModel.tools : null
+        target: root.viewModel.tools
         function onBladePlaceRequested(bladeWidth) {
             bladeZ0ReferenceDialog.bladeWidth = Number(bladeWidth || 0)
             bladeZ0ReferenceDialog.open()
@@ -163,21 +162,21 @@ Item {
 
             // DRO (fixed height — two axis readouts)
             TeachInLatheDroRoot {
-                viewModel: root.viewModel ? root.viewModel.dro : null
+                viewModel: root.viewModel.dro
                 Layout.fillWidth: true
                 Layout.minimumHeight: root.droHeight
                 Layout.preferredHeight: root.droHeight
                 Layout.maximumHeight: root.droHeight
-                onToastRequested: function(message) { appShellBridge.showToast(message) }
+                onToastRequested: function(message) { AppShellBridge.showToast(message) }
                 onOpenNumPadRequested: function(field) { root.openNumpad(field) }
             }
 
             // Limits (scalable — fills all remaining vertical space)
             LimitsPanel {
-                viewModel: root.viewModel ? root.viewModel.dro : null
+                viewModel: root.viewModel.dro
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                onOpenNumPadRequested: root.openNumpad(field)
+                onOpenNumPadRequested: function(field) { root.openNumpad(field) }
             }
 
             // Section headers (fixed height), each placed over its panel
@@ -191,7 +190,7 @@ Item {
                 // "Spindle" label
                 Text {
                     x: spindlePanel.x + 70; y: 0; width: 106; height: parent.height
-                    text: root.viewModel ? root.viewModel.turning.spindleTitle : "Spindle"
+                    text: root.viewModel.turning.spindleTitle
                     font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -239,7 +238,7 @@ Item {
 
                 ManualHandwheelsPanel {
                     id: handwheelsPanel
-                    viewModel: root.viewModel ? root.viewModel.turning : null
+                    viewModel: root.viewModel.turning
                     Layout.preferredWidth: root.handwheelsPanelWidth
                     Layout.fillHeight: true
                 }
@@ -247,7 +246,7 @@ Item {
                 // Joystick + Feed share a single bordered box
                 Rectangle {
                     id: joystickFeedFrame
-                    readonly property bool angleFeedActive: root.viewModel ? root.viewModel.turning.angleFeedActive : false
+                    readonly property bool angleFeedActive: root.viewModel.turning.angleFeedActive
                     property color frameBorderColor: root.cardBorderColor
                     property real glowOpacity: 0
                     readonly property int glowDurationMs: 200
@@ -373,25 +372,25 @@ Item {
                             id: joystickPanel
                             Layout.preferredWidth: root.joystickPanelWidth
                             Layout.fillHeight: true
-                            viewModel: root.viewModel ? root.viewModel.turning : null
+                            viewModel: root.viewModel.turning
                         }
 
                         ManualFeedPanel {
                             id: feedPanel
-                            viewModel: root.viewModel ? root.viewModel.turning : null
+                            viewModel: root.viewModel.turning
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            onOpenNumPadRequested: root.openNumpad(field)
+                            onOpenNumPadRequested: function(field) { root.openNumpad(field) }
                         }
                     }
                 }
 
                 ManualSpindlePanel {
                     id: spindlePanel
-                    viewModel: root.viewModel ? root.viewModel.turning : null
+                    viewModel: root.viewModel.turning
                     Layout.preferredWidth: root.spindlePanelWidth
                     Layout.fillHeight: true
-                    onOpenNumPadRequested: root.openNumpad(field)
+                    onOpenNumPadRequested: function(field) { root.openNumpad(field) }
                 }
             }
         }
@@ -400,7 +399,7 @@ Item {
             id: toolList
             Layout.preferredWidth: root.toolListWidth
             Layout.fillHeight: true
-            viewModel: root.viewModel ? root.viewModel.tools : null
+            viewModel: root.viewModel.tools
         }
     }
 }

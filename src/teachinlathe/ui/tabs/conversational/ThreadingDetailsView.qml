@@ -1,11 +1,11 @@
 // ThreadingDetailsView.qml
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+import common
+import TeachInLathe
 
 Item {
     id: root
@@ -182,7 +182,7 @@ Item {
                     visible: !root.isG33Threading
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
-                    onOpenNumPadRequested: root.openNumPadRequested(field)
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                     onSaveRequested: function (p) {
                         var merged = root.mergeIntoOp(p.payload || p)
                         root.editor.save(merged)
@@ -211,8 +211,8 @@ Item {
                             value: root.pitch
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.pitch = value; root.emitSave() }
+                            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                            onValueCommitted: function(value) { root.pitch = value; root.emitSave() }
                         }
                         Label { text: "(mm)"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter }
 
@@ -224,8 +224,8 @@ Item {
                             value: root.starts
                             formatter: function(v) { return (v == null) ? "1" : String(Math.max(1, Math.round(Number(v)))) }
                             hAlign: Text.AlignRight
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: { root.starts = Math.max(1, Math.round(value)); root.emitSave() }
+                            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                            onValueCommitted: function(value) { root.starts = Math.max(1, Math.round(value)); root.emitSave() }
                         }
                         Item {}
                     }
@@ -257,10 +257,10 @@ Item {
                                 value: root.zStart
                                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                                 hAlign: Text.AlignRight
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.zStart = value; root.emitSave() }
+                                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                                onValueCommitted: function(value) { root.zStart = value; root.emitSave() }
                             }
-                            TeachInButton { onClicked: tf_zStart.commit(positionsBridge.teachInZ()) }
+                            TeachInButton { onClicked: tf_zStart.commit(PositionsBridge.teachInZ()) }
 
                             Label { text: "Z End"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }
                             NumpadField {
@@ -271,10 +271,10 @@ Item {
                                 value: root.zEnd
                                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                                 hAlign: Text.AlignRight
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.zEnd = value; root.emitSave() }
+                                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                                onValueCommitted: function(value) { root.zEnd = value; root.emitSave() }
                             }
-                            TeachInButton { onClicked: tf_zEnd.commit(positionsBridge.teachInZ()) }
+                            TeachInButton { onClicked: tf_zEnd.commit(PositionsBridge.teachInZ()) }
                         }
 
                         Rectangle {
@@ -387,14 +387,14 @@ Item {
                             value: root.location === "OD" ? root.majorDiameter : root.minorDiameter
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: {
+                            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                            onValueCommitted: function(value) {
                                 if (root.location === "OD") root.majorDiameter = value
                                 else root.minorDiameter = value
                                 root.emitSave()
                             }
                         }
-                        TeachInButton { onClicked: tf_teachDiam.commit(positionsBridge.teachInX() * 2) }
+                        TeachInButton { onClicked: tf_teachDiam.commit(PositionsBridge.teachInX() * 2) }
 
                         // Row 2: Calculate diameter (Minor for OD, Major for ID)
                         Label {
@@ -411,8 +411,8 @@ Item {
                             value: root.location === "OD" ? root.minorDiameter : root.majorDiameter
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
-                            onOpenRequested: root.openNumPadRequested(field)
-                            onValueCommitted: {
+                            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                            onValueCommitted: function(value) {
                                 if (root.location === "OD") root.minorDiameter = value
                                 else root.majorDiameter = value
                                 root.emitSave()

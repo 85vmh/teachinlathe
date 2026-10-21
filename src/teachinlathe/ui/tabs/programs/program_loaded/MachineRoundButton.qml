@@ -1,6 +1,6 @@
 // MachineRoundButton.qml — round machine-style button with concave gradient
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 
 Item {
     id: root

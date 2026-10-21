@@ -1,3 +1,4 @@
+module common.touchable_input
 KeyboardField 1.0 KeyboardField.qml
 NumpadField 1.0 NumpadField.qml
 QwertyKeyboardDialog 1.0 QwertyKeyboardDialog.qml

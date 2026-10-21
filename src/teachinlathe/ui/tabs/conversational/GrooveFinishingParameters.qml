@@ -1,9 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 
 GroupBox {
     id: root
@@ -54,8 +53,8 @@ GroupBox {
             validatorObject: intVal
             formatter: function(v) { return v == null ? "" : String(Math.round(Number(v))) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: { root.profile_id = Math.round(value); root.emitSave() }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.profile_id = Math.round(value); root.emitSave() }
         }
         Label { text: ""; font.pixelSize: Theme.fontBody }
 

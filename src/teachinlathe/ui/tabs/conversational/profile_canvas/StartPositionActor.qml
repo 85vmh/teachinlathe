@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import "arrow.js" as Arrow
 
 // Where roughing starts (X Start / Z Start): a small target at the start

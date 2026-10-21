@@ -1,8 +1,7 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."   // for Divider.qml
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import theme
 
 // An operation in the program's list: swipes to Delete or Duplicate (see
 // SwipeRow), and lifts on a long press to be dragged to a new place.

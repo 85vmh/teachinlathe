@@ -1,8 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 
 Rectangle {
     id: root
@@ -56,8 +56,8 @@ Rectangle {
             value: primData.repeat_primitive_id !== undefined ? primData.repeat_primitive_id : 1
             formatter: function(v) { return v == null ? "" : String(Math.round(Number(v))) }
             hAlign: Text.AlignHCenter
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: root._commit("repeat_primitive_id", Math.round(value))
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root._commit("repeat_primitive_id", Math.round(value)) }
         }
 
         Label { text: "Count"; font.pixelSize: Theme.fontSmall }
@@ -68,8 +68,8 @@ Rectangle {
             value: primData.repeat_count !== undefined ? primData.repeat_count : 1
             formatter: function(v) { return v == null ? "" : String(Math.round(Number(v))) }
             hAlign: Text.AlignHCenter
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: root._commit("repeat_count", Math.round(value))
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root._commit("repeat_count", Math.round(value)) }
         }
 
         Label { text: "Z Offset"; font.pixelSize: Theme.fontSmall }
@@ -81,8 +81,8 @@ Rectangle {
             value: primData.z_offset !== undefined ? primData.z_offset : 0
             formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: root.openNumPadRequested(field)
-            onValueCommitted: root._commit("z_offset", Number(value))
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root._commit("z_offset", Number(value)) }
         }
 
         Item { Layout.fillWidth: true }

@@ -1,6 +1,5 @@
-import QtQuick 2.15
-import "."
-import theme 1.0
+import QtQuick
+import theme
 
 OperationRowDelegate {
     id: root

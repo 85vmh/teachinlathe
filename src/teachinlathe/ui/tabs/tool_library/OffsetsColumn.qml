@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 
 // A holder's offsets, as a column: "Offsets" centred over X and Z, each
 // value to the right. A missing value reads "Not set"; while either is

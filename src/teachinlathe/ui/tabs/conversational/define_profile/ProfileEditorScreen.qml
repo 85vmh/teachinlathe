@@ -1,11 +1,11 @@
 // ProfileEditorScreen.qml — full-screen editor for Define Profile primitives
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "../"
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational
+import common.touchable_input
+import theme
+import common
 
 Item {
     id: root
@@ -323,8 +323,8 @@ Item {
                                 value: root.profileId
                                 formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
                                 hAlign: Text.AlignHCenter
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.profileId = Math.round(value); root.emitSave() }
+                                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                                onValueCommitted: function(value) { root.profileId = Math.round(value); root.emitSave() }
                             }
                         }
 

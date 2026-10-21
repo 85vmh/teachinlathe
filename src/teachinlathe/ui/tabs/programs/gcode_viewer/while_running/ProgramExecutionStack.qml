@@ -1,13 +1,13 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import ".."
-import "../.."
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.programs.gcode_viewer
+import tabs.programs
+import theme
 
 Rectangle {
     id: root
-    property var viewModel
+    required property var viewModel
     color: Theme.surface
 
     function startFrameAt(index) {
@@ -43,7 +43,7 @@ Rectangle {
 
                 Repeater {
                     id: frameRepeater
-                    model: viewModel ? viewModel.executionFrames : []
+                    model: viewModel.executionFrames
 
                     delegate: ProgramCallFrameCard {
                         width: contentColumn.width
@@ -57,19 +57,19 @@ Rectangle {
                 ProgramContentFrame {
                     id: activeFrame
                     width: contentColumn.width
-                    visible: !!viewModel && viewModel.activeExecutionContent !== ""
-                    filePath: viewModel ? viewModel.activeExecutionFilePath : ""
+                    visible: viewModel.activeExecutionContent !== ""
+                    filePath: viewModel.activeExecutionFilePath
 
                     GCodeTextArea {
                         Layout.fillWidth: true
                         width: contentColumn.width - 20
                         height: Math.max(root.height - 40, 260)
                         viewModel: root.viewModel
-                        content: viewModel ? viewModel.activeExecutionContent : ""
-                        highlightLine: viewModel && viewModel.executionHighlightVisible ? viewModel.activeExecutionMotionLine : 0
+                        content: viewModel.activeExecutionContent
+                        highlightLine: viewModel.executionHighlightVisible ? viewModel.activeExecutionMotionLine : 0
                         highlightColor: "#3A86FF"
                         highlightWidth: 1
-                        centerOnHighlight: !!viewModel && viewModel.executionHighlightVisible
+                        centerOnHighlight: viewModel.executionHighlightVisible
                         emptyText: ""
                     }
                 }

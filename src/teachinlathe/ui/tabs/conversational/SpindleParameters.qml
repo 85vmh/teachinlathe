@@ -1,11 +1,10 @@
 // SpindleParameters.qml (two-column: direction buttons, radio-mode switch; top-aligned)
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "."
-import common.touchable_input 1.0
-import "../tool_library"
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import tabs.tool_library
+import theme
 
 GroupBox {
     id: root
@@ -188,8 +187,8 @@ GroupBox {
                                 validatorObject: IntValidator {
                                 }
                                 hAlign: Text.AlignRight
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.rpm_value = value; root.emitSave() }
+                                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                                onValueCommitted: function(value) { root.rpm_value = value; root.emitSave() }
                             }
                             Label {
                                 text: "(rpm)"
@@ -230,8 +229,8 @@ GroupBox {
                                     return (v == null) ? "" : Number(v).toFixed(1)
                                 }
                                 hAlign: Text.AlignRight
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.css_value = value; root.emitSave() }
+                                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                                onValueCommitted: function(value) { root.css_value = value; root.emitSave() }
                             }
                             Label {
                                 text: "(m/min)"
@@ -252,8 +251,8 @@ GroupBox {
                                 validatorObject: IntValidator {
                                 }
                                 hAlign: Text.AlignRight
-                                onOpenRequested: root.openNumPadRequested(field)
-                                onValueCommitted: { root.css_max_rpm = value; root.emitSave() }
+                                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                                onValueCommitted: function(value) { root.css_max_rpm = value; root.emitSave() }
                             }
                             Label {
                                 text: "(rpm)"

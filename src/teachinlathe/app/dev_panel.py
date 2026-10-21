@@ -6,6 +6,7 @@ from PyQt6.QtCore import QObject, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
 from PyQt6.QtQml import QQmlApplicationEngine
 
 from teachinlathe.core.hal_repository import hal_component
+from teachinlathe.app import APP_QML_IMPORT_DIR
 from teachinlathe.ui import QML_IMPORT_DIR
 
 
@@ -128,6 +129,7 @@ class DevPanelWindow(QObject):
         qml_dir = os.path.join(os.path.dirname(__file__), "dev_panel_qml")
         self._engine = QQmlApplicationEngine(self)
         self._engine.addImportPath(QML_IMPORT_DIR)
+        self._engine.addImportPath(APP_QML_IMPORT_DIR)
         self._engine.rootContext().setContextProperty("devPanelViewModel", self._view_model)
         self._engine.load(QUrl.fromLocalFile(os.path.join(qml_dir, "DevPanelWindow.qml")))
 

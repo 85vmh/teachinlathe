@@ -1,10 +1,10 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "program_loaded"
-import TeachInLathe.Backplot 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.programs.program_loaded
+import TeachInLathe.Backplot
+import theme
+import common
 
 // The loaded-program screen's own pane - the backplot, and under it the run
 // controls while the program runs - on the right of the strip
@@ -13,7 +13,7 @@ import common 1.0
 Item {
     id: root
     objectName: "programLoadedScreen"
-    property var viewModel
+    required property var viewModel
     // Whether the loaded-program screen is the one on show (it stays visible
     // while the strip slides away from it).
     property bool shown: true
@@ -27,7 +27,7 @@ Item {
     property string toolChangedToastMessage: ""
 
     function toolChangeViewModel() {
-        return root.viewModel ? root.viewModel.toolChange : null
+        return root.viewModel.toolChange
     }
 
     function escapeHtml(value) {
@@ -198,7 +198,7 @@ Item {
             RunControlBar {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 90
-                visible: root.viewModel ? root.viewModel.running : false
+                visible: root.viewModel.running
                 viewModel: root.viewModel
             }
         }
@@ -207,7 +207,7 @@ Item {
     // No geometry here any more: it is a Popup in the window's overlay, so it
     // centres on the screen and dims all of it.
     ToolChangeDialog {
-        viewModel: root.viewModel ? root.viewModel.toolChange : null
+        viewModel: root.viewModel.toolChange
     }
 
     Connections {
@@ -249,7 +249,7 @@ Item {
 
     Rectangle {
         id: programCompletedToast
-        visible: root.shown && (root.viewModel ? root.viewModel.programCompletedVisible : false)
+        visible: root.shown && (root.viewModel.programCompletedVisible)
         z: 1300
         x: root.codePaneX + Math.max(0, (root.codePaneWidth - width) / 2)
         y: Math.max(0, root.height - 220 - height)
@@ -266,11 +266,10 @@ Item {
             // The two actions are links: tapping either does what the
             // machine's button would.
             text: "<div align=\"center\"><b>Program Completed</b><br/>"
-                + "[" + root.escapeHtml(root.viewModel ? root.viewModel.programCompletedName : "") + "]<br/><br/><br/><br/>"
+                + "[" + root.escapeHtml(root.viewModel.programCompletedName) + "]<br/><br/><br/><br/>"
                 + "Press <a href=\"cycle_start\"><font color=\"#22c55e\"><b>Cycle Start</b></font></a> to run again the same program.<br/><br/>"
                 + "Press <a href=\"cycle_abort\"><font color=\"#ef4444\"><b>Cycle Abort</b></font></a> to close this screen.</div>"
             onLinkActivated: function(link) {
-                if (!root.viewModel) return
                 if (link === "cycle_start") root.viewModel.triggerCycleStart()
                 else if (link === "cycle_abort") root.viewModel.closeCompletedProgram()
             }

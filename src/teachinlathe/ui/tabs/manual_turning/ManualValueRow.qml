@@ -1,8 +1,8 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import common.touchable_input 1.0
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
 
 RowLayout {
     id: root
@@ -37,8 +37,8 @@ RowLayout {
         hAlign: Text.AlignHCenter
         formatter: function(v) { return (v === null || v === undefined) ? "" : String(v) }
         parser: function(s) { return String(s) }
-        onOpenRequested: root.openNumPadRequested(field)
-        onValueCommitted: root.committed(value)
+        onOpenRequested: function(field) { root.openNumPadRequested(field) }
+        onValueCommitted: function(value) { root.committed(value) }
     }
 
     Text {

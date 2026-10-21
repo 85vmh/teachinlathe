@@ -1,11 +1,11 @@
 // LineToCard.qml
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "../"
-import common.touchable_input 1.0
-import theme 1.0
-import common 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational
+import common.touchable_input
+import theme
+import common
 
 Rectangle {
     id: root
@@ -251,11 +251,11 @@ Rectangle {
                     value: root._fieldValue(root._firstFieldName)
                     formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                     hAlign: Text.AlignRight
-                    onOpenRequested: {
+                    onOpenRequested: function(field) {
                         root.tapped()
                         root.openNumPadRequested(field)
                     }
-                    onValueCommitted: root._updateField(root._firstFieldName, value)
+                    onValueCommitted: function(value) { root._updateField(root._firstFieldName, value) }
                 }
 
                 Label { text: root._secondLabel; font.pixelSize: szFont; Layout.fillWidth: true }
@@ -268,11 +268,11 @@ Rectangle {
                     value: root._fieldValue(root._secondFieldName)
                     formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                     hAlign: Text.AlignRight
-                    onOpenRequested: {
+                    onOpenRequested: function(field) {
                         root.tapped()
                         root.openNumPadRequested(field)
                     }
-                    onValueCommitted: root._updateField(root._secondFieldName, value)
+                    onValueCommitted: function(value) { root._updateField(root._secondFieldName, value) }
                 }
             }
 

@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import theme 1.0
+import QtQuick
+import theme
 import "shapes/blade.js" as BladeShape
 
 // A blade, small: InsertThumbnail's frame and red cross, the cross on the

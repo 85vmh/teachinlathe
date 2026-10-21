@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import theme 1.0
-import "shapes"
+import QtQuick
+import theme
+import tabs.tool_library.shapes
 
 // The threading insert as it sits in the holder: the Z and X axes fixed
 // through the middle of the view, the insert's tooth tip where they cross.

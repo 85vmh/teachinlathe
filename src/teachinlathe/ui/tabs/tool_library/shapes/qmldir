@@ -1,9 +1,13 @@
-module Inserts
-TurningInsertBase 1.0 TurningInsertBase.qml
+module tabs.tool_library.shapes
 CCMT 1.0 CCMT.qml
 DCMT 1.0 DCMT.qml
-VBMT 1.0 VBMT.qml
-TCMT 1.0 TCMT.qml
-WNMG 1.0 WNMG.qml
-SNMG 1.0 SNMG.qml
+Drill 1.0 Drill.qml
 RCMT 1.0 RCMT.qml
+Reamer 1.0 Reamer.qml
+SNMG 1.0 SNMG.qml
+TCMT 1.0 TCMT.qml
+Tap 1.0 Tap.qml
+ThreadingInsert 1.0 ThreadingInsert.qml
+TurningInsertBase 1.0 TurningInsertBase.qml
+VBMT 1.0 VBMT.qml
+WNMG 1.0 WNMG.qml

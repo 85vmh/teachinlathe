@@ -1,15 +1,15 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import "../../../app/app_shell_qml" as Shell
-import theme 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import app_shell_qml as Shell
+import theme
 
 // The Machine Settings tab. Replaces the .ui's settingsTab.
 Rectangle {
     id: root
 
-    property var viewModel: null
-    property var fixturesViewModel: null
+    required property var viewModel
+    required property var fixturesViewModel
     property var positionsViewModel: null
 
     color: Theme.surfaceAlt
@@ -33,11 +33,11 @@ Rectangle {
 
                 content: RowLayout {
                     spacing: 10
-                    Shell.ShellActionButton { text: "Set G28";   onClicked: if (root.viewModel) root.viewModel.setG28() }
-                    Shell.ShellActionButton { text: "Go to G28"; onClicked: if (root.viewModel) root.viewModel.goToG28() }
+                    Shell.ShellActionButton { text: "Set G28";   onClicked: root.viewModel.setG28() }
+                    Shell.ShellActionButton { text: "Go to G28"; onClicked: root.viewModel.goToG28() }
                     Rectangle { width: 1; Layout.fillHeight: true; color: Theme.separator }
-                    Shell.ShellActionButton { text: "Set G30";   onClicked: if (root.viewModel) root.viewModel.setG30() }
-                    Shell.ShellActionButton { text: "Go to G30"; onClicked: if (root.viewModel) root.viewModel.goToG30() }
+                    Shell.ShellActionButton { text: "Set G30";   onClicked: root.viewModel.setG30() }
+                    Shell.ShellActionButton { text: "Go to G30"; onClicked: root.viewModel.goToG30() }
                     Item { Layout.fillWidth: true }
                 }
             }
@@ -62,7 +62,7 @@ Rectangle {
 
                             delegate: FixtureCard {
                                 fixture: modelData
-                                onSelected: root.fixturesViewModel.selectFixture(index)
+                                onSelected: function(index) { root.fixturesViewModel.selectFixture(index) }
                                 onTeachRequested: root.fixturesViewModel.teachZMinusLimit()
                             }
                         }
