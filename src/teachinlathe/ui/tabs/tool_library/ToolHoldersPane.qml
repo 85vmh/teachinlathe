@@ -51,6 +51,25 @@ ToolLibraryPane {
     readonly property int perRow: 2
     //: Above and below the box, inside the holder's card.
     readonly property int cardPadding: 4
+    readonly property int scrollDurationMs: 250
+
+    function showCurrentHolder() {
+        if (!flick.visible || flick.height <= 0)
+            return
+        for (var i = 0; i < holderRepeater.count; ++i) {
+            var holder = holderRepeater.itemAt(i)
+            if (!holder || !holder.isCurrentLoadedTool)
+                continue
+            var centerY = holder.mapToItem(flick.contentItem, 0, holder.height / 2).y
+            var maxY = Math.max(0, flick.contentHeight - flick.height)
+            var target = Math.max(0, Math.min(maxY, centerY - flick.height / 2))
+            scrollToCurrentHolder.stop()
+            scrollToCurrentHolder.from = flick.contentY
+            scrollToCurrentHolder.to = target
+            scrollToCurrentHolder.start()
+            return
+        }
+    }
 
     // The holder numbers' column: as wide as the widest, "H99".
     TextMetrics {
@@ -102,16 +121,19 @@ ToolLibraryPane {
         boundsBehavior: Flickable.StopAtBounds
         ScrollBar.vertical: ScrollBar {}
         onMovementStarted: root.openSwipeRow = null
+        onContentHeightChanged: if (visible) Qt.callLater(root.showCurrentHolder)
 
         Flow {
             id: holders
             width: flick.width
+            height: childrenRect.height
             spacing: Theme.spacingSmall
 
             // Whole pixels: a half one at the right edge is clipped off.
             readonly property real itemWidth: Math.floor((width - (root.perRow - 1) * spacing) / root.perRow)
 
             Repeater {
+                id: holderRepeater
                 model: root.model
 
                 delegate: SwipeRow {
@@ -128,6 +150,7 @@ ToolLibraryPane {
                     readonly property int holderId: model.holderId
                     readonly property int toolId: model.toolId
                     readonly property bool selecting: root.selectingHolderId === model.holderId
+                    readonly property bool isCurrentLoadedTool: model.isCurrentLoadedTool
 
                     // With a tool, a swipe anywhere on the card moves the
                     // tool's box: the tool goes before the holder can. The
@@ -327,6 +350,32 @@ ToolLibraryPane {
     ScrollFades {
         anchors.fill: flick
         flickable: flick
+    }
+
+    Connections {
+        target: root.model
+        function onDataChanged() { Qt.callLater(root.showCurrentHolder) }
+        function onModelReset() { Qt.callLater(root.showCurrentHolder) }
+        function onRowsInserted() { Qt.callLater(root.showCurrentHolder) }
+        function onRowsRemoved() { Qt.callLater(root.showCurrentHolder) }
+    }
+
+    onVisibleChanged: if (visible) Qt.callLater(showCurrentHolder)
+    onHeightChanged: Qt.callLater(showCurrentHolder)
+    onWidthChanged: Qt.callLater(showCurrentHolder)
+    onModelChanged: Qt.callLater(function() {
+        // The initial model can arrive after Component.onCompleted, and the
+        // Flow needs a layout pass before its delegates have final positions.
+        Qt.callLater(root.showCurrentHolder)
+    })
+    Component.onCompleted: Qt.callLater(showCurrentHolder)
+
+    NumberAnimation {
+        id: scrollToCurrentHolder
+        target: flick
+        property: "contentY"
+        duration: root.scrollDurationMs
+        easing.type: Easing.OutCubic
     }
 
     Component { id: insertThumbnail; InsertThumbnail { size: root.thumbnailSize; padding: 10; framed: false } }

@@ -305,9 +305,21 @@ class ConversationalViewModel(QObject):
             LOG.error("openProgramFile: failed to load %s: %s", json_path, e)
             return
 
-        row_index = self.model.indexOfFilename(json_path)
+        row_index = next(
+            (i for i, existing in enumerate(self.model._programs) if existing.id == program.id),
+            -1,
+        )
         if row_index >= 0:
-            self.model.setProgramAt(row_index, program)
+            existing = self.model.get(row_index)
+            existing_edit = str(existing.header.last_edit or "")
+            imported_edit = str(program.header.last_edit or "")
+            if imported_edit > existing_edit:
+                # Recover any edits saved to the generated JSON copy before
+                # autosaves were redirected to the persistent program file.
+                program.filename = existing.filename
+                self.model.setProgramAt(row_index, program)
+            else:
+                program = existing
         else:
             row_index = self.model.appendProgram(program)
         self._open_program(program, row_index if row_index >= 0 else None)

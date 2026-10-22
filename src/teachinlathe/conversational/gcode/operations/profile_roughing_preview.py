@@ -1,8 +1,7 @@
 """What Profile Roughing will cut, for drawing on the profile canvas.
 
-Uses the same setup as generate_profile_roughing_gcode and reads the moves
-from the G-code it generates, so the preview shows what the machine will do.
-All X values are diameters.
+The moves come from the tool-aware plan (profiling.machining), which the
+G-code is to be written from as well. All X values are diameters.
 """
 
 import math
@@ -11,8 +10,8 @@ import re
 from .profile_roughing import (
     _resolve_profile,
     build_roughing_setup,
-    generate_profile_roughing_gcode,
     parse_profile_roughing_config,
+    plan_profile_roughing,
 )
 from .profiling.geometry import ToolpathArc
 
@@ -109,25 +108,48 @@ def gcode_moves(lines, start=_ROUGHING_START):
 
 
 def build_profile_roughing_preview(op):
-    """{profile, offset, feeds, rapids, error} for an operation
-    dict carrying its profile in ``_resolved_profile``:
+    """{profile, offset, feeds, rapids, residual, warnings, error} for
+    an operation dict carrying its profile in ``_resolved_profile`` and its
+    tool in ``_resolved_cutting_tool``:
 
     profile     the finished profile, as [{x, z}]
     offset      the profile offset by stock-to-leave, clipped to X Start, as [{x, z}]
     feeds       the cuts, the final contour pass included, as [{x0, z0, x1, z1, pass, contour}]
     rapids      the rapid moves between them (retracts included), likewise
+    residual    the material left for another tool, as [[{x, z}]]
+    warnings    what the plan could not do, as [str]
     error       why there is nothing to show, or ""
+
+    The moves are planned by profiling.machining (plan_profile_roughing), tool
+    and all; the G-code is to be written from the same plan.
     """
     config = parse_profile_roughing_config(op)
     ctx, roughing_path, error = build_roughing_setup(op, config)
+    empty = {"profile": [], "offset": [], "feeds": [], "rapids": [],
+             "residual": [], "warnings": [], "error": error or ""}
     if error:
-        return {"profile": [], "offset": [], "feeds": [], "rapids": [], "error": error}
+        return empty
     _, profile_path = _resolve_profile(op)
-    feeds, rapids = gcode_moves(generate_profile_roughing_gcode(op))
+    plan = plan_profile_roughing(op)
+    if plan.error:
+        return {**empty, "error": plan.error}
+
+    feeds, rapids = [], []
+    # the contour as drawn on the profile: along it, not compensated - the
+    # backplot shows the compensated one, as the machine moves
+    for move in plan.drawn_moves:
+        line = {"x0": 2 * move.r0, "z0": move.z0, "x1": 2 * move.r1, "z1": move.z1}
+        if move.feed:
+            feeds.append({**line, "pass": move.pass_no, "contour": move.contour})
+        elif (line["x0"], line["z0"]) != (line["x1"], line["z1"]):
+            rapids.append(line)
+
     return {
         "profile": flatten_path(profile_path),
         "offset": flatten_path(roughing_path),
         "feeds": feeds,
         "rapids": rapids,
+        "residual": [[{"x": 2 * r, "z": z} for z, r in region] for region in plan.residual],
+        "warnings": list(plan.warnings),
         "error": "",
     }

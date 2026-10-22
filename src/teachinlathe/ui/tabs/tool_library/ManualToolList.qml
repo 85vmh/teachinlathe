@@ -18,14 +18,15 @@ Rectangle {
     // How long scrolling the current loaded tool into view takes, in ms.
     readonly property int scrollDurationMs: 250
 
-    // The current loaded tool into view, if it is not all in view already.
+    // Center the current loaded tool when the list has room; at either end,
+    // ListView.Center stops at the closest scroll boundary.
     function showCurrentLoadedTool() {
         var row = root.viewModel.currentLoadedToolRow
         if (row < 0 || row >= list.count || list.height <= 0)
             return
         scrollToCurrentLoadedTool.stop()
         var from = list.contentY
-        list.positionViewAtIndex(row, ListView.Contain)
+        list.positionViewAtIndex(row, ListView.Center)
         var to = list.contentY
         if (Math.abs(to - from) < 1)
             return

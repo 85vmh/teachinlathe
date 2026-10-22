@@ -101,7 +101,7 @@ class DevPanelViewModel(QObject):
         self._estop = False
         self._power_on = False
         self._spindle_lever = "stop"
-        self._jog_increment = "off"
+        self._jog_increment = "0.1"
         self._joystick = ""
         self._rapid = False
         self._chuck_cover = False

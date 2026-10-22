@@ -33,9 +33,20 @@ Item {
     property string passType: "axial"
 
     // what roughing will cut with the values above
-    readonly property var roughingPreview: (opIndex >= 0 && primitives.length > 0 && editor)
-                                           ? editor.preview(_draftOp())
-                                           : null
+    // Worked out a moment after the values settle, not on each one: the
+    // plan checks every move against the insert, and opening the operation
+    // sets the values one after another.
+    property var roughingPreview: null
+    readonly property string _previewKey: (opIndex >= 0 && primitives.length > 0 && editor)
+                                          ? JSON.stringify(_draftOp()) : ""
+    on_PreviewKeyChanged: previewTimer.restart()
+    Timer {
+        id: previewTimer
+        interval: 150
+        onTriggered: root.roughingPreview = root._previewKey !== ""
+                                            ? root.editor.preview(JSON.parse(root._previewKey))
+                                            : null
+    }
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
@@ -154,6 +165,37 @@ Item {
                 anchors.fill: parent
                 color: "transparent"
                 border.color: Theme.outline; border.width: Theme.hairline
+            }
+
+            // What the plan could not do - a tool that cannot reach a pocket,
+            // or no plan at all - in the bottom left corner, clear of the zoom
+            // buttons.
+            Rectangle {
+                readonly property var preview: root.roughingPreview
+                readonly property string message: !preview ? ""
+                    : preview.error ? preview.error
+                    : (preview.warnings || []).join("\n")
+                visible: message !== ""
+                x: Theme.spacingLarge
+                y: profileCanvas.height - height - Theme.spacingLarge
+                width: Math.min(noteText.implicitWidth + 2 * Theme.spacing,
+                                profileCanvas.width - profileCanvas.boxWidth - 3 * Theme.spacingLarge)
+                height: noteText.implicitHeight + 2 * Theme.spacingSmall
+                radius: Theme.radius
+                color: preview && preview.error ? Theme.dangerSoft : "#fff3e0"
+                border.color: preview && preview.error ? Theme.danger : "#ef6c00"
+                border.width: Theme.hairline
+
+                Text {
+                    id: noteText
+                    x: Theme.spacing
+                    y: Theme.spacingSmall
+                    width: parent.width - 2 * Theme.spacing
+                    text: parent.message
+                    color: Theme.foreground
+                    font.pixelSize: Theme.fontSmall
+                    wrapMode: Text.Wrap
+                }
             }
 
             // The boxes stack down the right edge, each as wide as it needs;

@@ -11,6 +11,7 @@ HighlightActor 1.0 HighlightActor.qml
 MarkersActor 1.0 MarkersActor.qml
 OriginActor 1.0 OriginActor.qml
 PathActor 1.0 PathActor.qml
+ResidualActor 1.0 ResidualActor.qml
 StartPositionActor 1.0 StartPositionActor.qml
 StockActor 1.0 StockActor.qml
 StockToLeaveActor 1.0 StockToLeaveActor.qml

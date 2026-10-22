@@ -82,13 +82,15 @@ Canvas {
     // how far back from a peck's Z its mark reaches the axial tool's edges,
     // in mm - see AxialToolActor.peckBack
     function axialToolPeckBack() { return axialToolActor.peckBack() }
-    // what roughing will cut, {profile, offset, feeds, rapids}
-    // as profileRoughingPreview returns it; null draws none of it
+    // what roughing will cut, {profile, offset, feeds, rapids} - and with a
+    // tool-aware plan {residual, warnings, error} too - as
+    // profileRoughingPreview returns it; null draws none of it
     property var    roughingPreview: null
     // the roughing overlays' colours, for boxes that label their values to match
     readonly property color feedColor:        "#2e7d32"
     readonly property color rapidColor:       "#777777"   // the backplot's rapids
     readonly property color stockToLeaveColor: "#ef6c00"
+    readonly property color residualColor:    "#d32f2f"
     // boxes laid over the canvas that the overlays point arrows to, as
     // {x, y, width, height} in canvas px; null draws no arrow
     property var    startPositionArrowRect: null
@@ -412,6 +414,7 @@ Canvas {
         originActor.paint(ctx)
         pathActor.paint(ctx)
         stockToLeaveActor.paint(ctx)
+        residualActor.paint(ctx)
         toolpathActor.paint(ctx)
         dimensionActor.paint(ctx)
         highlightActor.paint(ctx)
@@ -587,6 +590,14 @@ Canvas {
         rapids: root.roughingPreview ? root.roughingPreview.rapids : []
         feedColor: root.feedColor
         rapidColor: root.rapidColor
+        cx: root._cx
+        cy: root._cy
+    }
+
+    ResidualActor {
+        id: residualActor
+        regions: root.roughingPreview && root.roughingPreview.residual ? root.roughingPreview.residual : []
+        color: root.residualColor
         cx: root._cx
         cy: root._cy
     }

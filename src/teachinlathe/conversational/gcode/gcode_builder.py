@@ -123,6 +123,21 @@ def _resolve_tool_payload(tool_no, fallback_orientation=0):
     return payload
 
 
+def _resolve_cutting_tool(tool_no):
+    """The cutting tool in holder ``tool_no`` as the Tool Library stores it
+    (CuttingTool.to_json) - what Profile Roughing plans its moves with; {}
+    with none."""
+    if not tool_no:
+        return {}
+    from teachinlathe.core.tool_library_repository import tool_library_repository
+    try:
+        tool = tool_library_repository().tool_in(int(tool_no))
+    except Exception as exc:
+        print(f"[gcode_builder] tool lookup failed for T{tool_no}: {exc}")
+        return {}
+    return tool.to_json() if tool is not None else {}
+
+
 def _resolve_tap_pitch(operations, op_index):
     """The pitch of the tap the last Change Tool above ``op_index`` puts in,
     from the Tool Library; None when it is not a tap or cannot be found."""
@@ -142,6 +157,10 @@ def _build_operation_payload(op, program, op_index=None):
         profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)
         profile_op = _resolve_profile_operation(profile_id, program.operations, op_index)
         payload["_resolved_profile"] = profile_op.to_dict() if profile_op else {}
+    if op.type == "profileRoughing":
+        tool_change = _resolve_previous_tool_change(program.operations, op_index)
+        payload["_resolved_cutting_tool"] = _resolve_cutting_tool(
+            getattr(tool_change, "tool_no", 0) if tool_change is not None else 0)
     if op.type in ("grooveRoughing", "grooveFinishing"):
         if op.type == "grooveFinishing":
             profile_id = int(getattr(op.finishingParameters, "profile_id", 0) or 0)

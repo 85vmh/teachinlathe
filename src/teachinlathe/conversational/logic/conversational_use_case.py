@@ -103,6 +103,8 @@ class ConversationalUseCase:
     def __init__(self, programs_dir: str = PROGRAMS_DIR, ini=None) -> None:
         self.programs_dir = programs_dir
         self._ini = ini_repository() if ini is None else ini
+        # The last few Profile Roughing previews, by all that went into them.
+        self._roughing_previews = {}
         # The edit each operation type takes, and the class it must be.
         self._updaters = {
             "changeTool": (None, self._update_tool_change),
@@ -477,7 +479,30 @@ class ConversationalUseCase:
             build_profile_roughing_preview,
         )
         op_data["_resolved_profile"] = self.last_profile_before(program, op_index)
-        return build_profile_roughing_preview(op_data)
+        op_data["_resolved_cutting_tool"] = self.cutting_tool_before(program, op_index)
+        # Planning checks every move against the insert and takes up to a
+        # second: the last few answers are kept, keyed by all that went in.
+        import json
+        key = json.dumps(op_data, sort_keys=True, default=str)
+        cache = self._roughing_previews
+        if key not in cache:
+            if len(cache) >= 8:
+                cache.pop(next(iter(cache)))
+            cache[key] = build_profile_roughing_preview(op_data)
+        return cache[key]
+
+    def cutting_tool_before(self, program: Optional[Program], before_index: int) -> dict:
+        """The cutting tool the last Change Tool above ``before_index`` puts
+        in, as the Tool Library stores it (CuttingTool.to_json); {} with none."""
+        change = self.change_tool_before(program, before_index)
+        if change is None:
+            return {}
+        from teachinlathe.ui.tabs.programs.backplot import tool_source
+        try:
+            tool = tool_source.tool_in(int(change.tool_no))
+        except Exception:
+            return {}
+        return tool.to_json() if tool is not None else {}
 
     def profile_contour_preview(self, program, op_index: int, op_data: dict) -> dict:
         """What the Profile Contour at ``op_index`` would cut with ``op_data``,

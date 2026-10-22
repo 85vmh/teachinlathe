@@ -7,6 +7,7 @@ and PassType (AXIAL / RADIAL / DIAGONAL_*).
 from teachinlathe.conversational.model.data_types import PassType, ProfileRoughingConfig, ProfilingType
 
 from ..helpers.spindle import build_spindle_gcode
+from ..config import fmt
 from ..helpers.utils import get_float
 from .profiling.geometry import (
     StartPoint,
@@ -14,11 +15,7 @@ from .profiling.geometry import (
     build_profile_segments,
     build_render_path,
 )
-from .profiling.axial import emit_axial_roughing
-from .profiling.contour import emit_roughing_contour_pass
 from .profiling.context import make_id_context, make_od_context
-from .profiling.diagonal import emit_diagonal_roughing
-from .profiling.radial import emit_radial_roughing
 
 
 def _pass_type_label(pass_type: PassType) -> str:
@@ -94,16 +91,6 @@ def _profile_extents(path):
     return x_min, x_max, z_min
 
 
-def _path_z_min(path):
-    z_vals = []
-    for element in path:
-        if isinstance(element, StartPoint):
-            z_vals.append(element.z)
-        else:
-            z_vals.append(element.end_z)
-    return min(z_vals) if z_vals else 0.0
-
-
 _NO_PROFILE = "no valid profile found"
 _NO_ROUGHING_PROFILE = "no valid roughing profile after stock/clipping"
 
@@ -140,6 +127,10 @@ def build_roughing_setup(op, config):
 
 
 def generate_profile_roughing_gcode(op):
+    """The G-code of a Profile Roughing: the moves of its tool-aware plan
+    (plan_profile_roughing) as the machine makes them - compensated for the
+    insert's nose, every one checked against the part and what is left of
+    the stock. The profile canvas draws the same plan."""
     if hasattr(op, "to_dict"):
         op = op.to_dict()
 
@@ -147,31 +138,192 @@ def generate_profile_roughing_gcode(op):
     spindle = op.get("spindle_parameters", {}) or {}
     m1_params = op.get("m1_parameters", {}) or {}
     spindle_direction = int(spindle.get("direction", 0) or 0)
+    prefix = config.optional_prefix
 
     lines = []
-    lines.extend(build_spindle_gcode(spindle, config.optional_prefix))
-    lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
+    lines.extend(build_spindle_gcode(spindle, prefix))
+    lines.append(f"{prefix}G95 F{config.feed_rate}")
     lines.append("")
 
-    ctx, roughing_path, error = build_roughing_setup(op, config)
-    if error:
-        lines.append(f"( ERROR: Profile Roughing -- {error} )")
+    plan = plan_profile_roughing(op)
+    if plan.error:
+        lines.append(f"( ERROR: Profile Roughing -- {plan.error} )")
         return lines
 
-    # z_cut_deepest is used by radial and diagonal strategies.
-    z_cut_deepest = _path_z_min(roughing_path)
-
+    if plan.tool is not None and plan.tool.known:
+        lines.append(f"( Planned for {plan.tool.label}, nose R{fmt(plan.tool.nose_radius)} )")
+    for warning in plan.warnings:
+        lines.append(f"( {warning} )")
     lines.append(f"(----------Profiling Type: {_pass_type_label(config.pass_type)}----------)")
-
-    if config.pass_type == PassType.AXIAL:
-        emit_axial_roughing(lines, ctx, roughing_path, m1_params, spindle_direction)
-
-    elif config.pass_type == PassType.RADIAL:
-        emit_radial_roughing(lines, ctx, roughing_path, z_cut_deepest, m1_params, spindle_direction)
-
-    elif config.pass_type in (PassType.DIAGONAL_INTERIOR, PassType.DIAGONAL_EXTERIOR):
-        emit_diagonal_roughing(lines, ctx, roughing_path, ctx.x_limit, z_cut_deepest, config.pass_type)
-
-    emit_roughing_contour_pass(lines, ctx, roughing_path)
-
+    _emit_moves(lines, plan.moves, prefix, config, m1_params, spindle_direction)
     return lines
+
+
+def _emit_moves(lines, moves, prefix, config, m1_params, spindle_direction):
+    """``moves`` as G0 / G1, the contour's runs of short chords fitted back
+    into G2 / G3 arcs where they lie on one."""
+    from ..helpers.m1 import inspect_position_int
+
+    include_m1 = bool(m1_params.get("include_m1", False)) if m1_params else False
+    position = None
+    contour = []                    # (z, r) points of the contour run under way
+
+    def flush_contour():
+        if len(contour) > 1:
+            for gcode in _fit_arcs(contour):
+                lines.append(f"{prefix}{gcode}")
+        contour.clear()
+
+    in_contour = False
+    for move in moves:
+        if move.contour and move.feed:
+            if not in_contour:
+                lines.append(f"( Contour with StockToLeave[radial={fmt(config.stock_x)} "
+                             f"axial={fmt(config.stock_z)}] )")
+                in_contour = True
+            if not contour:
+                if position != (move.z0, move.r0):
+                    lines.append(f"{prefix}G0 X{fmt(2 * move.r0)} Z{fmt(move.z0)}")
+                contour.append((move.z0, move.r0))
+            contour.append((move.z1, move.r1))
+            position = (move.z1, move.r1)
+            continue
+        flush_contour()
+        if (move.z0, move.r0) == (move.z1, move.r1):
+            if position is None:                    # the start position
+                lines.append(f"{prefix}G0 X{fmt(2 * move.r1)} Z{fmt(move.z1)}")
+                position = (move.z1, move.r1)
+            continue
+        if position != (move.z0, move.r0):
+            lines.append(f"{prefix}G0 X{fmt(2 * move.r0)} Z{fmt(move.z0)}")
+        word = "G1" if move.feed else "G0"
+        lines.append(f"{prefix}{word} X{fmt(2 * move.r1)} Z{fmt(move.z1)}")
+        position = (move.z1, move.r1)
+        if move.pass_end:
+            if include_m1:
+                lines.append(
+                    f"{prefix}o<m1_handling> call "
+                    f"[{inspect_position_int(m1_params)}] "
+                    f"[{fmt(2 * move.r1)}] "
+                    f"[{fmt(move.z1)}] "
+                    f"[{spindle_direction}]"
+                )
+            lines.append("")
+    flush_contour()
+    lines.append("")
+
+
+#: How far a chord of the contour may be from the arc it is written as, in mm.
+ARC_FIT_TOLERANCE = 0.003
+
+
+def _fit_arcs(points):
+    """G1 / G2 / G3 words along ``points`` [(z, r)]: each longest run of
+    four or more points on one circle - within ARC_FIT_TOLERANCE, turning
+    one way - as an arc, the rest as lines. X as a diameter, I and K as
+    radial and axial distances from the arc's start to its centre."""
+    import math
+
+    words = []
+    i, n = 0, len(points)
+    while i < n - 1:
+        best = None
+        j = i + 3
+        while j < n:
+            arc = _circle(points[i], points[(i + j) // 2], points[j])
+            if arc is None or not _on_arc(points[i:j + 1], arc):
+                break
+            best = (j, arc)
+            j += 1
+        if best is not None:
+            j, (cz, cr, radius, clockwise) = best
+            z0, r0 = points[i]
+            z1, r1 = points[j]
+            word = "G2" if clockwise else "G3"
+            words.append(f"{word} X{fmt(2 * r1)} Z{fmt(z1)} I{fmt(cr - r0)} K{fmt(cz - z0)}")
+            i = j
+        else:
+            z1, r1 = points[i + 1]
+            words.append(f"G1 X{fmt(2 * r1)} Z{fmt(z1)}")
+            i += 1
+    return words
+
+
+def _circle(a, b, c):
+    """The circle through three (z, r) points as (cz, cr, radius, clockwise),
+    clockwise as seen with Z to the right and X up; None when they are in a
+    line or the circle is too big to be worth an arc."""
+    import math
+    (ax, ay), (bx, by), (cx, cy) = a, b, c
+    d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by))
+    if abs(d) < 1e-12:
+        return None
+    ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay)
+          + (cx * cx + cy * cy) * (ay - by)) / d
+    uy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx)
+          + (cx * cx + cy * cy) * (bx - ax)) / d
+    radius = math.hypot(ax - ux, ay - uy)
+    if radius > 500.0:
+        return None
+    cross = (bx - ax) * (cy - by) - (by - ay) * (cx - bx)
+    return ux, uy, radius, cross < 0
+
+
+def _on_arc(points, arc):
+    """Whether every point, and every chord's middle, is on ``arc`` within
+    the tolerance, the points going round it one way only."""
+    import math
+    cz, cr, radius, clockwise = arc
+    previous = None
+    for k, (z, r) in enumerate(points):
+        if abs(math.hypot(z - cz, r - cr) - radius) > ARC_FIT_TOLERANCE:
+            return False
+        if k:
+            pz, pr = points[k - 1]
+            mz, mr = (z + pz) / 2, (r + pr) / 2
+            if abs(math.hypot(mz - cz, mr - cr) - radius) > ARC_FIT_TOLERANCE:
+                return False
+            turn = math.atan2(r - cr, z - cz) - math.atan2(pr - cr, pz - cz)
+            turn = (turn + math.pi) % (2 * math.pi) - math.pi
+            if (turn < 0) != clockwise or abs(turn) > math.pi / 2:
+                return False
+            if previous is not None and abs(turn) < 1e-9:
+                return False
+            previous = turn
+    return True
+
+
+def resolve_tool_shape(op, sharp=False):
+    """The insert the Change Tool above puts in, as ``_resolved_cutting_tool``
+    carries it (the Tool Library's JSON); None when there is none to go by.
+    ``sharp``: with its corner not rounded - see insert_tool_shape."""
+    from teachinlathe.tooling.model.data_types import CuttingTool
+    from .profiling.machining import insert_tool_shape
+
+    raw = op.get("_resolved_cutting_tool") or None
+    if not raw:
+        return None
+    try:
+        return insert_tool_shape(CuttingTool.from_json(raw), sharp=sharp)
+    except Exception:
+        return None
+
+
+def plan_profile_roughing(op):
+    """The tool-aware plan of a Profile Roughing - see profiling.machining -
+    for an operation dict carrying its profile in ``_resolved_profile`` and
+    its tool in ``_resolved_cutting_tool``."""
+    from .profiling.machining import RoughingPlan, RoughingSetup, plan_roughing
+
+    if hasattr(op, "to_dict"):
+        op = op.to_dict()
+    config = parse_profile_roughing_config(op)
+    segments, path = _resolve_profile(op)
+    if not segments or not isinstance(segments[0], StartPoint) or len(path) < 2:
+        return RoughingPlan(error=_NO_PROFILE)
+    setup = RoughingSetup(
+        x_start=config.x_start, z_start=config.z_start, doc=config.doc,
+        retract=config.retract, stock_x=config.stock_x, stock_z=config.stock_z,
+        profiling_type=config.profiling_type, pass_type=config.pass_type)
+    return plan_roughing(setup, path, resolve_tool_shape(op),
+                         drawn_tool=resolve_tool_shape(op, sharp=True))
