@@ -7,9 +7,23 @@ import TeachInLathe
 
 Window {
     id: root
-    width: 300
-    property bool collapsed: false
-    height: collapsed ? 60 : 820
+    width: 250
+    minimumWidth: 250
+    maximumWidth: 250
+    property bool manualExpanded: false
+    property bool automaticExpanded: false
+    readonly property int contentMargin: 10
+    readonly property int bottomSpacing: Theme.spacingSmall
+    readonly property int topButtonHeight: 36
+    readonly property int sectionHeaderHeight: 40
+    readonly property int panelHeight: Math.ceil(
+        2 * contentMargin + bottomSpacing + topControls.implicitHeight + Theme.hairline
+        + coverControls.implicitHeight + 2 * sectionHeaderHeight
+        + Theme.spacingSmall * (4 + (manualExpanded ? 1 : 0)
+                                             + (automaticExpanded ? 1 : 0))
+        + (manualExpanded ? manualBody.implicitHeight : 0)
+        + (automaticExpanded ? automaticBody.implicitHeight : 0))
+    height: panelHeight
     visible: true
     // The application is maximised and frameless: without this the panel
     // goes behind it the first time the application is clicked.
@@ -26,204 +40,231 @@ Window {
     readonly property color amber: "#f59e0b"
 
     ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 14
-        spacing: Theme.spacing
+        id: panelContent
+        x: root.contentMargin
+        y: root.contentMargin
+        width: root.width - 2 * root.contentMargin
+        height: root.panelHeight - 2 * root.contentMargin - root.bottomSpacing
+        spacing: Theme.spacingSmall
 
         RowLayout {
+            id: topControls
             Layout.fillWidth: true
-            Layout.preferredHeight: 30
-
-            Text {
+            spacing: Theme.spacingSmall
+            PanelButton {
                 Layout.fillWidth: true
-                text: root.title
-                color: root.textColor
-                font.pixelSize: Theme.fontSmall
-                font.bold: true
-                verticalAlignment: Text.AlignVCenter
+                Layout.preferredHeight: root.topButtonHeight
+                text: root.vm.estop ? "E-Stop\nPRESSED" : "E-Stop"
+                lit: root.vm.estop
+                litColor: root.red
+                onClicked: root.vm.setEstop(!root.vm.estop)
             }
-
-            ToolButton {
-                text: root.collapsed ? "□" : "−"
-                onClicked: root.collapsed = !root.collapsed
-                Accessible.name: root.collapsed ? "Expand developer panel" : "Minimize developer panel"
+            PanelButton {
+                Layout.fillWidth: true
+                Layout.preferredHeight: root.topButtonHeight
+                text: "PwrOn"
+                lit: root.vm.powerOn
+                litColor: root.green
+                enabled: root.vm.powerOn || (root.vm.ncReady && !root.vm.estop)
+                onClicked: root.vm.setPowerOn(!root.vm.powerOn)
+            }
+            PanelButton {
+                Layout.fillWidth: true
+                Layout.preferredHeight: root.topButtonHeight
+                text: "HomeAll"
+                lit: pressed
+                litColor: root.darkFill
+                onPressedChanged: root.vm.setHomeAll(pressed)
             }
         }
 
-        ColumnLayout {
+        Rectangle {
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            spacing: Theme.spacing
-            visible: !root.collapsed
+            Layout.preferredHeight: Theme.hairline
+            color: Theme.separator
+        }
 
-            // Row 1: machine controls.
-            RowLayout {
+        RowLayout {
+            id: coverControls
+            Layout.fillWidth: true
+            spacing: Theme.spacingSmall
+            PanelButton {
                 Layout.fillWidth: true
+                Layout.preferredHeight: root.topButtonHeight
+                text: "Chuck Cover\n" + (root.vm.chuckCoverOpen ? "Open" : "Closed")
+                lit: root.vm.chuckCoverOpen
+                litColor: root.amber
+                onClicked: root.vm.setChuckCoverOpen(!root.vm.chuckCoverOpen)
+            }
+            PanelButton {
+                Layout.fillWidth: true
+                Layout.preferredHeight: root.topButtonHeight
+                text: root.vm.firstGear ? "Gear 1" : "Gear 2"
+                lit: root.vm.firstGear
+                litColor: root.darkFill
+                onClicked: root.vm.setFirstGear(!root.vm.firstGear)
+            }
+        }
+
+        SectionHeader {
+            text: "Manual Operation"
+            expanded: root.manualExpanded
+            onClicked: root.manualExpanded = !root.manualExpanded
+        }
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredHeight: root.manualExpanded ? manualBody.implicitHeight : 0
+            clip: true
+
+            ColumnLayout {
+                id: manualBody
+                width: parent.width
                 spacing: Theme.spacingSmall
+                visible: root.manualExpanded
 
-                PanelButton {
+                Selector {
                     Layout.fillWidth: true
-                    text: root.vm.estop ? "E-Stop\nPRESSED" : "E-Stop"
-                    lit: root.vm.estop
-                    litColor: root.red
-                    onClicked: root.vm.setEstop(!root.vm.estop)
+                    label: "Jog Increment"
+                    options: ["off", "0.1", "0.01", "0.001"]
+                    names: ["Off", "0.1", "0.01", "0.001"]
+                    current: root.vm.jogIncrement
+                    onSelected: (option) => root.vm.setJogIncrement(option)
                 }
-                PanelButton {
+
+                RowLayout {
                     Layout.fillWidth: true
-                    text: "Power ON"
-                    lit: root.vm.powerOn
-                    litColor: root.green
-                    enabled: root.vm.powerOn || (root.vm.ncReady && !root.vm.estop)
-                    onClicked: root.vm.setPowerOn(!root.vm.powerOn)
+                    Layout.preferredHeight: 130
+                    spacing: Theme.spacingSmall
+                    Handwheel { Layout.fillWidth: true; axis: "x" }
+                    Handwheel { Layout.fillWidth: true; axis: "z" }
                 }
-                PanelButton {
+
+                RowLayout {
                     Layout.fillWidth: true
-                    text: "Home Axes"
-                    lit: pressed
-                    litColor: root.darkFill
-                    onPressedChanged: root.vm.setHomeAll(pressed)
+                    Layout.preferredHeight: 156
+                    spacing: Theme.spacingSmall
+                    Joystick { Layout.alignment: Qt.AlignVCenter }
+                    Rectangle {
+                        Layout.preferredWidth: Theme.hairline
+                        Layout.fillHeight: true
+                        color: Theme.separator
+                    }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        spacing: Theme.spacingSmall
+                        PanelButton {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            text: "Rev"
+                            lit: root.vm.spindleLever === "M4"
+                            litColor: root.red
+                            onClicked: root.vm.setSpindleLever("M4")
+                        }
+                        PanelButton {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            text: "Stop"
+                            lit: root.vm.spindleLever === "stop"
+                            onClicked: root.vm.setSpindleLever("stop")
+                        }
+                        PanelButton {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            text: "Fwd"
+                            lit: root.vm.spindleLever === "M3"
+                            litColor: root.green
+                            onClicked: root.vm.setSpindleLever("M3")
+                        }
+                    }
                 }
             }
+        }
 
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: Theme.hairline
-                color: Theme.separator
-            }
+        SectionHeader {
+            text: "Automatic Operation"
+            expanded: root.automaticExpanded
+            onClicked: root.automaticExpanded = !root.automaticExpanded
+        }
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredHeight: root.automaticExpanded ? automaticBody.implicitHeight : 0
+            clip: true
 
-            // Row 2: cover and spindle gear.
-            RowLayout {
-                Layout.fillWidth: true
+            ColumnLayout {
+                id: automaticBody
+                width: parent.width
                 spacing: Theme.spacingSmall
-                PanelButton {
+                visible: root.automaticExpanded
+
+                OverrideSlider {
                     Layout.fillWidth: true
-                    text: "Chuck Cover " + (root.vm.chuckCoverOpen ? "Open" : "Closed")
-                    lit: root.vm.chuckCoverOpen
-                    litColor: root.amber
-                    onClicked: root.vm.setChuckCoverOpen(!root.vm.chuckCoverOpen)
+                    label: "Feed Override"
+                    from: 0
+                    to: 120
+                    onPercentChanged: root.vm.setFeedOverride(percent)
                 }
-                PanelButton {
+                OverrideSlider {
                     Layout.fillWidth: true
-                    text: root.vm.firstGear ? "Gear 1" : "Gear 2"
-                    lit: root.vm.firstGear
-                    litColor: root.darkFill
-                    onClicked: root.vm.setFirstGear(!root.vm.firstGear)
+                    label: "Spindle Override"
+                    from: 50
+                    to: 120
+                    onPercentChanged: root.vm.setSpindleOverride(percent)
                 }
-            }
-
-            // Row 3: jog increment, with 0.1 selected initially.
-            Selector {
-                Layout.fillWidth: true
-                label: "Jog Increment"
-                options: ["off", "0.1", "0.01", "0.001"]
-                names: ["Off", "0.1", "0.01", "0.001"]
-                current: root.vm.jogIncrement
-                onSelected: (option) => root.vm.setJogIncrement(option)
-            }
-
-            // Row 4: X and Z manual pulse generators.
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 140
-                spacing: Theme.spacing
-                Handwheel { Layout.fillWidth: true; axis: "x" }
-                Handwheel { Layout.fillWidth: true; axis: "z" }
-            }
-
-            OverrideSlider {
-                Layout.fillWidth: true
-                label: "Feed Override"
-                from: 0
-                to: 120
-                onPercentChanged: root.vm.setFeedOverride(percent)
-            }
-            OverrideSlider {
-                Layout.fillWidth: true
-                label: "Spindle Override"
-                from: 50
-                to: 120
-                onPercentChanged: root.vm.setSpindleOverride(percent)
-            }
-
-            // Joystick beside the vertical spindle direction controls.
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Layout.minimumHeight: 174
-                spacing: Theme.spacingSmall
-
-                Joystick {
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
                 Rectangle {
-                    Layout.preferredWidth: Theme.hairline
-                    Layout.fillHeight: true
-                    Layout.minimumHeight: 160
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Theme.hairline
                     color: Theme.separator
                 }
-
-                ColumnLayout {
-                    Layout.fillHeight: true
-                    Layout.preferredWidth: stopButton.implicitWidth
-                    Layout.minimumWidth: stopButton.implicitWidth
-                    Layout.maximumWidth: stopButton.implicitWidth
+                RowLayout {
+                    Layout.fillWidth: true
                     spacing: Theme.spacingSmall
                     PanelButton {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        text: "Rev"
-                        lit: root.vm.spindleLever === "M4"
+                        text: "Cycle Abort"
+                        lit: pressed
                         litColor: root.red
-                        onClicked: root.vm.setSpindleLever("M4")
-                    }
-                    PanelButton {
-                        id: stopButton
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        text: "Stop"
-                        lit: root.vm.spindleLever === "stop"
-                        onClicked: root.vm.setSpindleLever("stop")
+                        onPressed: root.vm.pressCycleAbort()
+                        onReleased: root.vm.releaseCycleAbort()
+                        onCanceled: root.vm.releaseCycleAbort()
                     }
                     PanelButton {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        text: "Fwd"
-                        lit: root.vm.spindleLever === "M3"
+                        text: "Cycle Start"
+                        lit: pressed || root.vm.cycleStartLed
                         litColor: root.green
-                        onClicked: root.vm.setSpindleLever("M3")
+                        onPressed: root.vm.pressCycleStart()
+                        onReleased: root.vm.releaseCycleStart()
+                        onCanceled: root.vm.releaseCycleStart()
                     }
                 }
             }
+        }
+    }
 
-            // Final row: cycle controls.
-            Rectangle {
+    component SectionHeader: Button {
+        id: section
+        property bool expanded: true
+        Layout.fillWidth: true
+        Layout.preferredHeight: root.sectionHeaderHeight
+        font.pixelSize: Theme.fontSmall
+        font.bold: true
+        background: Rectangle {
+            radius: Theme.radius
+            color: section.pressed ? Theme.selection : Theme.surface
+            border.color: Theme.separator
+        }
+        contentItem: RowLayout {
+            Text {
                 Layout.fillWidth: true
-                Layout.preferredHeight: Theme.hairline
-                color: Theme.separator
+                text: section.text
+                color: root.textColor
+                font: section.font
             }
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.spacing
-                PanelButton {
-                    Layout.fillWidth: true
-                    text: "Cycle Abort"
-                    lit: pressed
-                    litColor: root.red
-                    onPressed: root.vm.pressCycleAbort()
-                    onReleased: root.vm.releaseCycleAbort()
-                    onCanceled: root.vm.releaseCycleAbort()
-                }
-                PanelButton {
-                    Layout.fillWidth: true
-                    text: "Cycle Start"
-                    lit: pressed || root.vm.cycleStartLed
-                    litColor: root.green
-                    onPressed: root.vm.pressCycleStart()
-                    onReleased: root.vm.releaseCycleStart()
-                    onCanceled: root.vm.releaseCycleStart()
-                }
+            Text {
+                text: section.expanded ? "▾" : "▸"
+                color: root.textColor
+                font.pixelSize: Theme.fontBody
             }
         }
     }
@@ -317,8 +358,8 @@ Window {
         property real angle: 0
         property real dragAngle: 0
         readonly property real degreesPerDetent: 3.6
-        implicitWidth: 120
-        implicitHeight: 140
+        implicitWidth: 104
+        implicitHeight: 130
 
         function turn(detents) {
             if (detents === 0)
@@ -333,8 +374,8 @@ Window {
 
         Rectangle {
             id: face
-            width: 110
-            height: 110
+            width: 96
+            height: 96
             anchors.horizontalCenter: parent.horizontalCenter
             radius: width / 2
             color: Theme.selection
@@ -408,13 +449,14 @@ Window {
         rowSpacing: 6
         columnSpacing: 6
 
-        Item { implicitWidth: 54; implicitHeight: 54 }
+        Item { implicitWidth: 42; implicitHeight: 48 }
         Direction { direction: "x-minus"; text: "X-" }
-        Item { implicitWidth: 54; implicitHeight: 54 }
+        Item { implicitWidth: 42; implicitHeight: 48 }
 
         Direction { direction: "z-minus"; text: "Z-" }
         PanelButton {
-            Layout.preferredWidth: 54
+            Layout.preferredWidth: 42
+            Layout.preferredHeight: 48
             text: "Rapid"
             lit: root.vm.joystickRapid
             litColor: root.amber
@@ -422,14 +464,15 @@ Window {
         }
         Direction { direction: "z-plus"; text: "Z+" }
 
-        Item { implicitWidth: 54; implicitHeight: 54 }
+        Item { implicitWidth: 42; implicitHeight: 48 }
         Direction { direction: "x-plus"; text: "X+" }
-        Item { implicitWidth: 54; implicitHeight: 54 }
+        Item { implicitWidth: 42; implicitHeight: 48 }
     }
 
     component Direction: PanelButton {
         property string direction: ""
-        Layout.preferredWidth: 54
+        Layout.preferredWidth: 42
+        Layout.preferredHeight: 48
         lit: root.vm.joystickDirection === direction
         litColor: root.green
         enabled: root.vm.joystickDirection === "" || lit

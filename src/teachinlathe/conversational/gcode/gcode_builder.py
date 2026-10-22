@@ -100,17 +100,28 @@ def _resolve_previous_tool_change(operations, before_index=None):
     return None
 
 
+#: Where tools are looked up while a program is built: a ToolSnapshot when
+#: building away from the application (plan_worker), else the Tool Library.
+_TOOLS = None
+
+
+def _tools():
+    if _TOOLS is not None:
+        return _TOOLS
+    from teachinlathe.core.tool_library_repository import tool_library_repository
+    return tool_library_repository()
+
+
 def _resolve_tool_payload(tool_no, fallback_orientation=0):
     """What a groove operation reads of the tool a Change Tool puts in: its
     number and orientation and, for a blade, its width and corners - from
     the Tool Library."""
     if not tool_no:
         return {}
-    from teachinlathe.core.tool_library_repository import tool_library_repository
     from teachinlathe.tooling.model.data_types import BladeTool
     payload = {"t": int(tool_no), "q": int(fallback_orientation or 0)}
     try:
-        tool = tool_library_repository().tool_in(int(tool_no))
+        tool = _tools().tool_in(int(tool_no))
     except Exception as exc:
         print(f"[gcode_builder] tool lookup failed for T{tool_no}: {exc}")
         return payload
@@ -129,9 +140,8 @@ def _resolve_cutting_tool(tool_no):
     with none."""
     if not tool_no:
         return {}
-    from teachinlathe.core.tool_library_repository import tool_library_repository
     try:
-        tool = tool_library_repository().tool_in(int(tool_no))
+        tool = _tools().tool_in(int(tool_no))
     except Exception as exc:
         print(f"[gcode_builder] tool lookup failed for T{tool_no}: {exc}")
         return {}
@@ -145,7 +155,7 @@ def _resolve_tap_pitch(operations, op_index):
     tool_change = _resolve_previous_tool_change(operations, op_index)
     if tool_change is None:
         return None
-    tool = tool_source.describe(int(getattr(tool_change, "tool_no", 0) or 0))
+    tool = tool_source.describe(int(getattr(tool_change, "tool_no", 0) or 0), _tools())
     if tool.get("kind") != "tap" or not tool.get("pitch"):
         return None
     return float(tool["pitch"])
@@ -161,6 +171,14 @@ def _build_operation_payload(op, program, op_index=None):
         tool_change = _resolve_previous_tool_change(program.operations, op_index)
         payload["_resolved_cutting_tool"] = _resolve_cutting_tool(
             getattr(tool_change, "tool_no", 0) if tool_change is not None else 0)
+        if getattr(op, "restMaterial", False):
+            # what it starts from: the roughings of the same profile above it
+            profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)
+            payload["_resolved_previous_roughing"] = [
+                _build_operation_payload(prev, program, index)
+                for index, prev in enumerate(program.operations[:op_index or 0])
+                if prev.type == "profileRoughing"
+                and int(getattr(prev.profilingParameters, "profile_id", 0) or 0) == profile_id]
     if op.type in ("grooveRoughing", "grooveFinishing"):
         if op.type == "grooveFinishing":
             profile_id = int(getattr(op.finishingParameters, "profile_id", 0) or 0)
@@ -205,11 +223,24 @@ def _display_name_for_operation(op, operations=None, index=None):
         profiling_type=profiling_type,
         profile_type=profile_type,
         tool_label=axial_tool_label(op_type, operations, index) if operations is not None else None,
+        rest=bool(getattr(op, "restMaterial", False)),
     )
 
 
 
-def build_ngc_from_program(program: Program, output_dir=None, output_path=None, source_json=None):
+def build_ngc_from_program(program: Program, output_dir=None, output_path=None, source_json=None,
+                           tools=None):
+    """Writes the program's .ngc and returns its path. ``tools``: a
+    ToolSnapshot to look tools up in instead of the Tool Library."""
+    global _TOOLS
+    _TOOLS = tools
+    try:
+        return _build_ngc(program, output_dir, output_path, source_json)
+    finally:
+        _TOOLS = None
+
+
+def _build_ngc(program, output_dir, output_path, source_json):
     if not isinstance(program, Program):
         raise TypeError("build_ngc_from_program expects a parsed Program")
 

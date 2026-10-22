@@ -42,12 +42,27 @@ Rectangle {
     signal duplicateOperationRequested(int index)
     signal moveOperationRequested(int fromIndex, int toIndex)
 
+    function sourceIndexAt(visibleIndex) {
+        return visibleIndex >= 0 && visibleIndex < operationsModel.length
+            ? operationsModel[visibleIndex].source_index : -1
+    }
+
+    function visibleIndexForSource(sourceIndex) {
+        if (sourceIndex < 0)
+            return -1
+        for (var i = 0; i < operationsModel.length; ++i) {
+            if (operationsModel[i].source_index === sourceIndex)
+                return i
+        }
+        return -1
+    }
+
     function selectedOperationIndex() {
-        return opsList.currentIndex
+        return sourceIndexAt(opsList.currentIndex)
     }
 
     function setCurrentOperationIndex(index) {
-        opsList.currentIndex = index
+        opsList.currentIndex = visibleIndexForSource(index)
     }
 
     function saveScrollPosition() {
@@ -59,6 +74,9 @@ Rectangle {
         openSwipeIndex = -1
         var targetY = _restoreScrollPending ? _savedContentY : opsList.contentY
         Qt.callLater(function() {
+            // the screen may have been closed since (see ChildScreen.showEditor)
+            if (!opsList)
+                return
             if (_scrollToLastPending) {
                 _restoreScrollPending = false
                 _scrollToLastPending = false
@@ -82,11 +100,11 @@ Rectangle {
         _dragAnimate = false
         if (from >= 0 && to >= 0 && to !== from) {
             saveScrollPosition()
-            moveOperationRequested(from, to)
+            moveOperationRequested(sourceIndexAt(from), sourceIndexAt(to))
         }
         dragFrom = -1
         dragDy = 0
-        Qt.callLater(function() { root._dragAnimate = true })
+        Qt.callLater(function() { if (root) root._dragAnimate = true })
     }
 
     // The operation row showing its Delete or Duplicate, or null
@@ -109,12 +127,12 @@ Rectangle {
     function scrollToLastItem() {
         Qt.callLater(function() {
             Qt.callLater(function() {
-                if (opsList.count <= 0)
+                if (!opsList || opsList.count <= 0)
                     return
                 opsList.positionViewAtEnd()
                 // once more, with the last rows now built: the first pass went by
                 // contentHeight's estimate before all delegates were built
-                Qt.callLater(function() { opsList.positionViewAtEnd() })
+                Qt.callLater(function() { if (opsList) opsList.positionViewAtEnd() })
             })
         })
     }
@@ -139,7 +157,9 @@ Rectangle {
         onLoaded: {
             if (item) {
                 item.operationsCount = root.operationsModel.length
-                item.currentOpIndex = root.selectedOperationIndex()
+                var current = root.operationsModel[opsList.currentIndex]
+                item.insertAboveIndex = current ? current.group_start_index : 0
+                item.insertBelowIndex = current ? current.source_index + 1 : -1
                 if (item.open) item.open()
             }
         }
@@ -213,7 +233,7 @@ Rectangle {
 
                         onCurrentIndexChanged: {
                             if (currentIndex >= 0)
-                                root.operationSelected(currentIndex)
+                                root.operationSelected(root.sourceIndexAt(currentIndex))
                         }
 
                         delegate: Item {
@@ -262,21 +282,21 @@ Rectangle {
 
                                 onGenerateToggled: function(i, checked) {
                                     root.saveScrollPosition()
-                                    root.generateToggled(i, checked)
+                                    root.generateToggled(root.sourceIndexAt(i), checked)
                                 }
                                 onOptionalToggled: function(i, checked) {
                                     root.saveScrollPosition()
-                                    root.optionalToggled(i, checked)
+                                    root.optionalToggled(root.sourceIndexAt(i), checked)
                                 }
                                 onDeleteClicked: function(i) {
                                     root.openSwipeIndex = -1
                                     root._scrollToLastPending = i === root.operationsModel.length - 1
-                                    root.deleteOperationRequested(i)
+                                    root.deleteOperationRequested(root.sourceIndexAt(i))
                                 }
                                 onDuplicateClicked: function(i) {
                                     root.openSwipeIndex = -1
                                     root.saveScrollPosition()
-                                    root.duplicateOperationRequested(i)
+                                    root.duplicateOperationRequested(root.sourceIndexAt(i))
                                 }
                                 onReorderStarted: function(i) {
                                     root.openSwipeIndex = -1

@@ -117,6 +117,9 @@ def build_profile_roughing_preview(op):
     feeds       the cuts, the final contour pass included, as [{x0, z0, x1, z1, pass, contour}]
     rapids      the rapid moves between them (retracts included), likewise
     residual    the material left for another tool, as [[{x, z}]]
+    restOffered whether a rest roughing can be added for it: there is some,
+                and a tool that cut this one - not a rest roughing still
+                waiting for its tool
     warnings    what the plan could not do, as [str]
     error       why there is nothing to show, or ""
 
@@ -134,11 +137,13 @@ def build_profile_roughing_preview(op):
     if plan.error:
         return {**empty, "error": plan.error}
 
+    # the contour where the nose touches - along the profile and its stock -
+    # not at the compensated point: the backplot shows that, as the machine
+    # moves it
     feeds, rapids = [], []
-    # the contour as drawn on the profile: along it, not compensated - the
-    # backplot shows the compensated one, as the machine moves
-    for move in plan.drawn_moves:
-        line = {"x0": 2 * move.r0, "z0": move.z0, "x1": 2 * move.r1, "z1": move.z1}
+    for move in plan.moves:
+        z0, r0, z1, r1 = move.drawn or (move.z0, move.r0, move.z1, move.r1)
+        line = {"x0": 2 * r0, "z0": z0, "x1": 2 * r1, "z1": z1}
         if move.feed:
             feeds.append({**line, "pass": move.pass_no, "contour": move.contour})
         elif (line["x0"], line["z0"]) != (line["x1"], line["z1"]):
@@ -146,10 +151,13 @@ def build_profile_roughing_preview(op):
 
     return {
         "profile": flatten_path(profile_path),
-        "offset": flatten_path(roughing_path),
+        # the stock to leave as the plan keeps to it: across the profile on
+        # every face, the ones turned toward the chuck too
+        "offset": [{"x": 2 * r, "z": z} for z, r in plan.allowance] or flatten_path(roughing_path),
         "feeds": feeds,
         "rapids": rapids,
         "residual": [[{"x": 2 * r, "z": z} for z, r in region] for region in plan.residual],
+        "restOffered": bool(plan.residual and plan.tool is not None and plan.tool.known),
         "warnings": list(plan.warnings),
         "error": "",
     }

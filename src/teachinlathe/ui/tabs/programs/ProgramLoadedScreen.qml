@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 import tabs.programs.program_loaded
 import TeachInLathe.Backplot
 import theme
@@ -19,9 +20,6 @@ Item {
     property bool shown: true
     // How far the bar under the code has reached across under the backplot, 0..1.
     property real runBarReveal: 0
-    // Where the code pane is, relative to this pane: the toasts centre over it.
-    property real codePaneX: 0
-    property real codePaneWidth: width
     // How far three fingers have to travel together, in px, for the swipe
     // that clears the plot.
     readonly property int clearSwipeDistance: 80
@@ -50,7 +48,7 @@ Item {
     function toolChangedMessage(toolNo) {
         var displayToolNo = toolNo > 0 ? toolNo : "?"
         return "<div align=\"center\"><b>Tool " + displayToolNo + " loaded</b><br/><br/>"
-            + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to resume the program</div>"
+            + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to resume the motion</div>"
     }
 
     function showToolChangedToast(toolNo) {
@@ -216,20 +214,34 @@ Item {
         function onToolChangedPulsed(toolNo) { root.showToolChangedToast(toolNo) }
     }
 
+    // The program waits, paused, for Cycle Start after a tool change: the
+    // toast that says so stays until the motion resumes - or the program is
+    // stopped - not for a fixed time. Only when no pause comes does it go
+    // after a few seconds.
+    readonly property var pauseResume: root.viewModel.actions ? root.viewModel.actions.pauseResumeAction : null
+    Connections {
+        target: root.pauseResume
+        function onActiveChanged(active) { if (!active) root.toolChangedToastVisible = false }
+    }
+
     Timer {
         id: toolChangedToastTimer
         interval: 5000
         repeat: false
-        onTriggered: root.toolChangedToastVisible = false
+        onTriggered: if (!(root.pauseResume && root.pauseResume.active)) root.toolChangedToastVisible = false
     }
 
     Rectangle {
         id: toolChangedToast
+        // Over the whole window, in its middle - wherever the strip has slid
+        // this screen to: a position worked out from this screen's own went
+        // stale as it moved.
+        parent: Overlay.overlay
+        anchors.centerIn: parent
         visible: root.toolChangedToastVisible && root.shown
         z: 1200
-        x: root.codePaneX + Math.max(0, (root.codePaneWidth - width) / 2)
-        y: Math.max(0, root.height - 200 - height)
-        width: Math.min(root.codePaneWidth, toolChangedToastText.implicitWidth + 100)
+        width: Math.min(parent ? parent.width - 32 : root.width,
+                        toolChangedToastText.implicitWidth + 100)
         height: toolChangedToastText.implicitHeight + 50
         radius: Theme.radiusLarge
         color: "#cc303030"
@@ -250,11 +262,13 @@ Item {
 
     Rectangle {
         id: programCompletedToast
+        // in the middle of the window, as the tool-changed toast
+        parent: Overlay.overlay
+        anchors.centerIn: parent
         visible: root.shown && (root.viewModel.programCompletedVisible)
         z: 1300
-        x: root.codePaneX + Math.max(0, (root.codePaneWidth - width) / 2)
-        y: Math.max(0, root.height - 220 - height)
-        width: Math.min(root.codePaneWidth, programCompletedToastText.implicitWidth + 100)
+        width: Math.min(parent ? parent.width - 32 : root.width,
+                        programCompletedToastText.implicitWidth + 100)
         height: programCompletedToastText.implicitHeight + 50
         radius: Theme.radiusLarge
         color: "#ff303030"
@@ -264,16 +278,10 @@ Item {
             anchors.centerIn: parent
             width: parent.width - 32
             textFormat: Text.RichText
-            // The two actions are links: tapping either does what the
-            // machine's button would.
             text: "<div align=\"center\"><b>Program Completed</b><br/>"
                 + "[" + root.escapeHtml(root.viewModel.programCompletedName) + "]<br/><br/><br/><br/>"
-                + "Press <a href=\"cycle_start\"><font color=\"#22c55e\"><b>Cycle Start</b></font></a> to run again the same program.<br/><br/>"
-                + "Press <a href=\"cycle_abort\"><font color=\"#ef4444\"><b>Cycle Abort</b></font></a> to close this screen.</div>"
-            onLinkActivated: function(link) {
-                if (link === "cycle_start") root.viewModel.triggerCycleStart()
-                else if (link === "cycle_abort") root.viewModel.closeCompletedProgram()
-            }
+                + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to run again the same program.<br/><br/>"
+                + "Press <font color=\"#ef4444\"><b>Cycle Abort</b></font> to close this screen.</div>"
             color: Theme.surface
             font.pixelSize: Theme.fontLarge
             horizontalAlignment: Text.AlignHCenter

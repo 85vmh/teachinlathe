@@ -19,7 +19,8 @@ Popup {
     signal operationChosen(string type, int insertIndex)
 
     property int    operationsCount:  0
-    property int    currentOpIndex:   -1
+    property int    insertAboveIndex: 0
+    property int    insertBelowIndex: 0
     property string selectedType:     ""
     property int    buttonsPerRow:    4
     readonly property int buttonWidth: 180
@@ -37,7 +38,6 @@ Popup {
     }
 
     property var options: [
-        { label: "Tool Change",      type: "changeTool"      },
         { label: "Position At",      type: "positionAt"      },
         { label: "Facing",           type: "facing"          },
         { label: "G33 Knurling",     type: "knurling"        },
@@ -154,8 +154,7 @@ Popup {
                     font.pixelSize: root.buttonFontSize
                     enabled: root.selectedType !== ""
                     onClicked: {
-                        var idx = Math.max(0, root.currentOpIndex)
-                        root.operationChosen(root.selectedType, idx)
+                        root.operationChosen(root.selectedType, root.insertAboveIndex)
                         root.close()
                     }
                 }
@@ -167,7 +166,7 @@ Popup {
                     font.pixelSize: root.buttonFontSize
                     enabled: root.selectedType !== ""
                     onClicked: {
-                        root.operationChosen(root.selectedType, root.currentOpIndex + 1)
+                        root.operationChosen(root.selectedType, root.insertBelowIndex)
                         root.close()
                     }
                 }

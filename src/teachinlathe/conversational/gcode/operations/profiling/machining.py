@@ -22,8 +22,12 @@ Geometry is in radius space: z, and r = X / 2. ID is planned as OD with r
 mirrored (r -> -r), tool and all, and mirrored back: the material then always
 lies below the profile and the tool comes from above.
 
-What is not modelled: the holder. Only the insert is checked; a holder wider
-than its insert can still hit a shoulder.
+What is not modelled: the holder. The insert stands for it with its two
+cutting edges carried on, past their ends, as straight lines (``EDGE_REACH``):
+the lead and the back angle the tool is set at. So the tool goes down no slope
+steeper than its back angle, and is never taken to fit into a neck behind a
+peak because the insert alone is short enough to - what the holder behind it
+would not. A holder wider than those lines can still hit a shoulder.
 """
 
 from __future__ import annotations
@@ -49,11 +53,17 @@ ARC_TOLERANCE = 0.002
 #: this are rounding, not collisions; in mm and mm².
 TOLERANCE = 0.005
 MIN_AREA = 1e-3
+#: A cut taking off less than this, on average along it, is not worth making;
+#: in mm.
+MIN_CUT = 0.01
 #: How far round the insert is swung either way to keep clear of what it
 #: passes, in degrees.
 CLEARANCE_DEGREES = 2.0
 #: The insert's nose rounded with this many chords per corner.
 NOSE_SEGMENTS = 24
+#: How far the insert's cutting edges are carried on past their ends, to
+#: stand for the holder behind them; in mm.
+EDGE_REACH = 200.0
 
 
 # ── the tool ────────────────────────────────────────────────────────────────
@@ -63,19 +73,17 @@ class ToolShape:
     """The insert as an outline around its control point, in (z, r), as the
     real tool sits - not mirrored for ID."""
     outline: Tuple[Pt, ...]          # the insert itself, for drawing
-    envelope: Tuple[Pt, ...]         # outline swung by the clearance, convex
+    envelope: Tuple[Pt, ...]         # outline with its edges carried on, swung by the clearance, convex
     nose_radius: float
     label: str
     known: bool = True               # False: no insert to go by (see square_tool)
+    #: the nose's centre, from the control point
+    centre: Pt = (0.0, 0.0)
 
 
-def insert_tool_shape(tool, clearance_degrees: float = CLEARANCE_DEGREES,
-                      sharp: bool = False) -> Optional[ToolShape]:
+def insert_tool_shape(tool, clearance_degrees: float = CLEARANCE_DEGREES) -> Optional[ToolShape]:
     """The shape of a Tool Library TurningTool (boring bars too); None for
-    any other kind of tool. ``sharp``: the insert with its corner not
-    rounded, hung from the corner - the tool the profile is drawn for, whose
-    path runs along the profile; a round insert has no corner and stays as
-    it is."""
+    any other kind of tool."""
     from teachinlathe.tooling.model import insert_catalog, tool_angles
     from teachinlathe.tooling.model.data_types import TurningTool
     from teachinlathe.ui.tabs.programs.backplot.actors.geometry import circle_loop, rounded_polygon
@@ -87,16 +95,16 @@ def insert_tool_shape(tool, clearance_degrees: float = CLEARANCE_DEGREES,
     rotation = math.radians(tool_angles.insert_rotation(
         tool.orientation, tool.front_angle, tool.back_angle,
         tool_angles.direction_degrees(tip)))
+    edges = []                          # the cutting corner's two neighbours
     if insert.is_round:
         loop = circle_loop(insert.ic / 2.0, 8 * NOSE_SEGMENTS)
-    elif sharp:
-        loop, _cutting = insert.outline()
     else:
         verts, _cutting = insert.outline()
         loop = rounded_polygon(verts, insert.nose_radius, NOSE_SEGMENTS)
-    sharp = sharp and not insert.is_round
-    nose = tip if sharp else insert.nose_centre()
-    radius = insert.ic / 2.0 if insert.is_round else (0.0 if sharp else insert.nose_radius)
+        index = verts.index(tip)
+        edges = [verts[(index - 1) % len(verts)], verts[(index + 1) % len(verts)]]
+    nose = insert.nose_centre()
+    radius = insert.ic / 2.0 if insert.is_round else insert.nose_radius
 
     def place(point):
         # backplot.actors.insert_tool: hung from the sharp tip, turned, then
@@ -112,8 +120,14 @@ def insert_tool_shape(tool, clearance_degrees: float = CLEARANCE_DEGREES,
     control = _control_point(centre, radius, tip_dir)
     outline = [(z - control[0], r - control[1]) for z, r in outline]
     centre = (centre[0] - control[0], centre[1] - control[1])
-    envelope = _swung(outline, centre, clearance_degrees)
-    return ToolShape(tuple(outline), tuple(envelope), radius, insert.iso_code)
+    reach = list(outline)
+    corner = place(tip)
+    for neighbour in map(place, edges):
+        dz, dr = neighbour[0] - corner[0], neighbour[1] - corner[1]
+        length = math.hypot(dz, dr)
+        reach += [(z + EDGE_REACH * dz / length, r + EDGE_REACH * dr / length) for z, r in outline]
+    envelope = _swung(reach, centre, clearance_degrees)
+    return ToolShape(tuple(outline), tuple(envelope), radius, insert.iso_code, centre=centre)
 
 
 def square_tool() -> ToolShape:
@@ -233,15 +247,18 @@ class Move:
     pocket: bool = False
     #: the last move of a pass, its retract included: where an M1 stop goes
     pass_end: bool = False
+    #: a contour move as the profile drawing shows it, (z0, r0, z1, r1): where
+    #: the nose touches - along the profile and its stock - rather than the
+    #: compensated point the machine is programmed to
+    drawn: Optional[Tuple[float, float, float, float]] = None
 
 
 @dataclass
 class RoughingPlan:
     moves: List[Move] = field(default_factory=list)
-    #: the same moves with the contour as the profile drawing shows it: run
-    #: by the insert's sharp corner, along the profile and its stock, not
-    #: compensated for the nose - the moves above are what the machine does
-    drawn_moves: List[Move] = field(default_factory=list)
+    #: the profile offset by the stock to leave, from its start to its end, as
+    #: (z, r) points: the line the contour keeps to
+    allowance: List[Pt] = field(default_factory=list)
     #: what is left to cut once the operation is done, beyond the stock to
     #: leave: (z, r) outlines, as the machine has them
     residual: List[List[Pt]] = field(default_factory=list)
@@ -267,37 +284,34 @@ class RoughingSetup:
 
 
 def plan_roughing(setup: RoughingSetup, profile_path, tool: Optional[ToolShape],
-                  stock_before=None, drawn_tool: Optional[ToolShape] = None) -> RoughingPlan:
+                  stock_before=None, rest: bool = False,
+                  sliver_radius: float = 0.0) -> RoughingPlan:
     """The moves of a Profile Roughing against ``profile_path`` - the finished
     profile as build_render_path gives it - with ``tool`` (None: square_tool).
 
     ``stock_before`` is the material there is to cut, as a shapely shape in
     (z, r); by default from X Start to the profile's smallest diameter (OD) or
-    its largest (ID), from Z Start back.
+    its largest (ID), from Z Start back. ``rest``: what is left by another
+    roughing - the contour then runs only where there is material - and
+    ``sliver_radius`` the nose radius of the tool that left it: what that
+    nose's corners and the slivers between its passes leave is not cut again.
     """
-    plan = _Planner(setup, profile_path, tool, stock_before).plan()
-    plan.drawn_moves = list(plan.moves)
-    if drawn_tool is not None and plan.moves and not plan.error:
-        drawn = _Planner(setup, profile_path, drawn_tool, stock_before)
-        chain = drawn._contour_chain()
-        if len(chain) > 1:
-            first = next(i for i, m in enumerate(plan.moves) if m.contour) if any(
-                m.contour for m in plan.moves) else None
-            if first is not None:
-                last = max(i for i, m in enumerate(plan.moves) if m.contour)
-                pass_no = plan.moves[first].pass_no
-                start = (plan.moves[first].z0, drawn.sign * plan.moves[first].r0)
-                lead = [start] + chain
-                contour = [Move(a[0], drawn.sign * a[1], b[0], drawn.sign * b[1], True,
-                                pass_no=pass_no, contour=True)
-                           for a, b in zip(lead, lead[1:])]
-                plan.drawn_moves = plan.moves[:first] + contour + plan.moves[last + 1:]
-    return plan
+    return _Planner(setup, profile_path, tool, stock_before, rest, sliver_radius).plan()
+
+
+def plan_leftover(setup: RoughingSetup, profile_path, stock_before,
+                  nose_radius: float = 0.0) -> RoughingPlan:
+    """No moves, only what there is to cut - for a rest roughing that has no
+    tool yet. ``nose_radius``: the last tool's, whose corners are not counted
+    as left over."""
+    return _Planner(setup, profile_path, None, stock_before, True, nose_radius)._result()
 
 
 class _Planner:
-    def __init__(self, setup, profile_path, tool, stock_before):
+    def __init__(self, setup, profile_path, tool, stock_before, rest=False, sliver_radius=0.0):
         self.setup = setup
+        self.rest = rest
+        self.sliver_radius = sliver_radius
         self.is_id = setup.profiling_type == ProfilingType.ID
         self.sign = -1.0 if self.is_id else 1.0
         self.tool = tool or square_tool()
@@ -342,8 +356,16 @@ class _Planner:
                 material = material.difference(box(z_face, r_floor, self.z_start + 1.0, r_face))
         else:
             material = _mirror(stock_before) if self.is_id else stock_before
+            # what another operation left, without the rounding slivers its
+            # cuts leave along their edges
+            material = material.buffer(-MIN_CUT).buffer(MIN_CUT)
         self.material = material
         self.to_remove = _difference(material, self.part_allow)
+        if stock_before is not None:
+            # only what the roughing before reports as left (see _result)
+            self.to_remove = unary_union([
+                piece for piece in getattr(self.to_remove, "geoms", [self.to_remove])
+                if self._worth_cutting(piece)]) if not self.to_remove.is_empty else self.to_remove
         self.remaining = self.to_remove
         self.moves: List[Move] = []
         self.pass_no = 0
@@ -387,6 +409,12 @@ class _Planner:
 
     def _removes(self, a: Pt, b: Pt) -> float:
         return sweep(self.envelope, a, b).intersection(self.remaining).area
+
+    def _cuts(self, a: Pt, b: Pt) -> bool:
+        """Whether a move from ``a`` to ``b`` takes off anything worth it: on
+        average at least MIN_CUT thick along it, not a rounding sliver."""
+        length = math.hypot(b[0] - a[0], b[1] - a[1])
+        return self._removes(a, b) >= max(MIN_AREA, length * MIN_CUT)
 
     def _free_runs(self, a: Pt, b: Pt) -> List[Tuple[Pt, Pt]]:
         """The stretches of the line from ``a`` to ``b`` outside the obstacle,
@@ -460,7 +488,7 @@ class _Planner:
             if not runs or Point(runs[0][0]).distance(Point(start)) > 1e-6:
                 continue                       # the stock face is out of reach here
             end = runs[0][1]
-            if self._removes(start, end) < MIN_AREA:
+            if not self._cuts(start, end):
                 continue
             if not self._feed_clear(start, end):
                 self.warnings.append(f"pass at {v:.3f} skipped: it would cut into the stock to leave")
@@ -468,8 +496,10 @@ class _Planner:
             u_end = end[0] if at(1, 0)[0] == 1 else end[1]
             entry = at(u_start + ret, v + ret)
             exit_ = at(u_end + ret, v + ret)
-            self._go(position, entry)
-            self._add(entry, start, False)
+            if not self._go(position, entry):
+                continue
+            # the lead-in at the feed when it touches material left there
+            self._add(entry, start, not self._rapid_clear(entry, start), pass_no=self.pass_no)
             self._add(start, end, True, pass_no=self.pass_no)
             self.pass_no += 1
             if self._rapid_clear(end, exit_):
@@ -490,7 +520,7 @@ class _Planner:
         """Rapid from ``a`` to ``b`` by the first of these whose every leg is
         clear: straight; out in front of the face at this diameter, along it,
         in; out to the safe diameter, across, in; out, over to the safe Z in
-        front of the face, along it, in."""
+        front of the face, along it, in. False, and no move, when none is."""
         z_safe = self.z_start + self.retract
         routes = [
             [a, b],
@@ -500,11 +530,12 @@ class _Planner:
         ]
         for route in routes:
             if all(self._rapid_clear(p, q) for p, q in zip(route, route[1:])):
-                break
-        else:
-            self.warnings.append(f"no clear rapid from {self._label(a)} to {self._label(b)}")
-        for p, q in zip(route, route[1:]):
-            self._add(p, q, False)
+                for p, q in zip(route, route[1:]):
+                    self._add(p, q, False)
+                return True
+        # nothing gets there without going through material: no rapid at all,
+        # the move it was for is not made
+        return False
 
     def _lift(self, a: Pt) -> Pt:
         """Straight out to the safe diameter, the way a pass leaves; toward
@@ -550,11 +581,12 @@ class _Planner:
                 p, q = q, p                                    # p: the outer end
             for run in self._free_runs(p, q):
                 start, end = (run[1], run[0]) if exterior else run
-                if self._removes(start, end) < MIN_AREA or not self._feed_clear(start, end):
+                if not self._cuts(start, end) or not self._feed_clear(start, end):
                     continue
                 entry = (start[0] + ret, start[1] + ret)
-                self._go(position, entry)
-                self._add(entry, start, False)
+                if not self._go(position, entry):
+                    continue
+                self._add(entry, start, not self._rapid_clear(entry, start), pass_no=self.pass_no)
                 self._add(start, end, True, pass_no=self.pass_no)
                 self.pass_no += 1
                 position = self._lift(end)
@@ -583,6 +615,8 @@ class _Planner:
         for core in sorted(pockets, key=lambda p: -p.bounds[2]):
             # the pocket: what is left around its deep core, up to its top
             pocket = core.buffer(self.doc).intersection(self.remaining)
+            if pocket.is_empty:
+                continue
             z_lo, r_lo, z_hi, r_hi = pocket.bounds
             # on the same levels as the passes from the face
             for r in [v for v in self._levels(self.r_start, core.bounds[1]) if v < r_hi]:
@@ -595,8 +629,10 @@ class _Planner:
 
     def _pocket_pass(self, run, r, pocket, top):
         """One level of a pocket: plunged into at the run's highest point the
-        tool goes straight down to, from ``top`` - just over the pocket - then
-        along the run, and back out over the cut it has made."""
+        tool goes straight down to, then along the run. It comes from where
+        the pass before left it - still in the pocket, just off its cut -
+        along at that height to over this plunge, or else from ``top``, just
+        over the pocket; and it leaves the cut just off it, for the next."""
         start, end = run
         if sweep(self.envelope, start, end).intersection(
                 self.remaining.intersection(pocket)).area < MIN_AREA:
@@ -611,38 +647,48 @@ class _Planner:
         else:
             return
         entry, bottom = (z, top), (z, r)
+        # over the plunge: straight across from where the last pass left the
+        # tool when that is still in this pocket and the way is clear,
+        # otherwise over the pocket
+        here = self.position
+        over = (z, here[1])
+        across = (r < here[1] <= top + 1e-9
+                  and self.obstacle.intersection(LineString([over, bottom])).length < 1e-6
+                  and self._rapid_clear(here, over))
+        high = over if across else entry
         # down fast to just over what is still there, then at the feed
-        low = min(r + self.retract, top)
-        lo, hi = low, top
-        if not self._rapid_clear(entry, (z, lo)):
+        low = min(r + self.retract, high[1])
+        lo, hi = low, high[1]
+        if not self._rapid_clear(high, (z, lo)):
             for _ in range(12):
                 mid = (lo + hi) / 2
-                if self._rapid_clear(entry, (z, mid)):
+                if self._rapid_clear(high, (z, mid)):
                     hi = mid
                 else:
                     lo = mid
             low = hi
         if not (self._feed_clear((z, low), bottom) and self._feed_clear(bottom, end)):
             return
-        self._go(self.position, entry)
-        self._add(entry, (z, low), False)
+        if across:
+            self._add(here, over, False)
+        elif not self._go(self.position, entry):
+            return
+        self._add(high, (z, low), False)
         self._add((z, low), bottom, True, pass_no=self.pass_no, pocket=True)
         self._add(bottom, end, True, pass_no=self.pass_no, pocket=True)
         self.pass_no += 1
-        # out: up off the floor, back over the cut, up over the pocket; the way
-        # it came in when that is in the way
-        lifted, over = (end[0] + self.retract, r + self.retract), (z, r + self.retract)
-        if (lifted[1] <= top and self._rapid_clear(end, lifted)
-                and self._rapid_clear(lifted, over)):
+        # out: just off the cut, as a pass from the face leaves it - the next
+        # pass goes on from there; the way it came in when that is in the way
+        lifted = (end[0] + self.retract, r + self.retract)
+        if lifted[1] <= top and self._rapid_clear(end, lifted):
             self._add(end, lifted, False)
-            self._add(lifted, over, False)
-            self._add(over, entry, False)
+            self.position = lifted
         else:
             if self._rapid_clear(end, bottom):
                 self._add(end, bottom, False)
             self._add(bottom, entry, False)
+            self.position = entry
         self._end_pass()
-        self.position = entry
 
     # ── the contour ─────────────────────────────────────────────────────────
 
@@ -661,15 +707,86 @@ class _Planner:
         if len(chain) < 2:
             self.warnings.append("no contour: the tool reaches none of the profile")
             return
+        drawn = self._drawn(chain)
         approach = self._contour_approach(chain)
-        self._go(self.position, approach)
-        for a, b in zip([approach] + chain[:-1], chain):
-            self._add(a, b, True, pass_no=self.pass_no, contour=True)
-        self.pass_no += 1
-        self.position = self._lift(chain[-1])
+        segments = list(zip(chain, chain[1:], drawn, drawn[1:]))
+        if not self.rest:
+            if not self._go(self.position, approach):
+                self.warnings.append("no contour: no clear way to its start")
+                return
+            self._add_drawn(approach, chain[0], approach, drawn[0])
+            for a, b, da, db in segments:
+                self._add_drawn(a, b, da, db)
+            self.pass_no += 1
+            self.position = self._lift(chain[-1])
+            return
+        # rest material: only the stretches with something left to cut, each
+        # gone to and left as a pass is
+        cuts = [self._cuts(a, b) for a, b, _da, _db in segments]
+        k = 0
+        while k < len(segments):
+            if not cuts[k]:
+                k += 1
+                continue
+            # from the stretch before it, which cuts nothing: the tool goes in
+            # at the feed rather than being stood on what is left
+            run = [segments[k - 1]] if k > 0 else []
+            while k < len(segments) and cuts[k]:
+                run.append(segments[k])
+                k += 1
+            start = run[0][0]
+            if not self._go(self.position, start):
+                # from straight over it, down at the feed
+                over = (start[0], start[1] + self.retract)
+                if not self._go(self.position, over):
+                    continue
+                self._add(over, start, True, pass_no=self.pass_no, contour=True)
+            for a, b, da, db in run:
+                self._add_drawn(a, b, da, db)
+            self.pass_no += 1
+            self.position = self._lift(run[-1][1])
+
+    def _add_drawn(self, a: Pt, b: Pt, da: Pt, db: Pt):
+        self._add(a, b, True, pass_no=self.pass_no, contour=True)
+        if self.moves and self.moves[-1].contour:
+            self.moves[-1].drawn = (da[0], self.sign * da[1], db[0], self.sign * db[1])
+
+    def _drawn(self, chain: List[Pt]) -> List[Pt]:
+        """Where the nose touches along ``chain``: its centre, pushed its
+        radius toward what it cuts - the obstacle lies to the left of the
+        chain. On the profile that is the profile and its stock; where the
+        tool bridges what it cannot enter, the edge of what it cuts."""
+        if not self.tool.known:
+            return list(chain)
+        centre = self._m(self.tool.centre)
+        radius = self.tool.nose_radius
+        normals = []
+        for a, b in zip(chain, chain[1:]):
+            dz, dr = b[0] - a[0], b[1] - a[1]
+            length = math.hypot(dz, dr) or 1.0
+            normals.append((-dr / length, dz / length))
+        points = []
+        for i, p in enumerate(chain):
+            around = normals[max(0, i - 1):i + 1] or normals[-1:]
+            nz = sum(n[0] for n in around)
+            nr = sum(n[1] for n in around)
+            length = math.hypot(nz, nr) or 1.0
+            points.append((p[0] + centre[0] + radius * nz / length,
+                           p[1] + centre[1] + radius * nr / length))
+        return points
 
     def _contour_chain(self) -> List[Pt]:
-        polygons = getattr(self.obstacle, "geoms", [self.obstacle])
+        return self._boundary_chain(self.obstacle)
+
+    def allowance_chain(self) -> List[Pt]:
+        """The profile offset by the stock to leave, from its start to its
+        end, as the machine has it."""
+        return [self._m(p) for p in self._boundary_chain(self.part_allow)]
+
+    def _boundary_chain(self, shape) -> List[Pt]:
+        """The edge of ``shape`` along the profile: from the top of its start
+        to its end point, the tailstock side first."""
+        polygons = getattr(shape, "geoms", [shape])
         main = max(polygons, key=lambda p: p.area)
         ring = list(main.exterior.coords)[:-1]
         if not Polygon(ring).exterior.is_ccw:
@@ -698,23 +815,30 @@ class _Planner:
 
     # ── what is left ────────────────────────────────────────────────────────
 
+    def _worth_cutting(self, piece) -> bool:
+        """Whether a piece of what is left is left for another tool: not in
+        front of the face (facing's), not a sliver nor the corner a nose
+        leaves - this tool's or the one's before it."""
+        if piece.is_empty or piece.area < MIN_AREA:
+            return False
+        if piece.bounds[0] >= self.profile[0][0] - TOLERANCE:
+            return False
+        sliver = max(self.tool.nose_radius if self.tool.known else 0.0, self.sliver_radius)
+        return not piece.buffer(-max(0.05, sliver / 2)).is_empty
+
     def _result(self) -> RoughingPlan:
         remaining = self.remaining
         residual = []
-        z_face = self.profile[0][0]
         for piece in getattr(remaining, "geoms", [remaining]):
-            if piece.is_empty or piece.area < MIN_AREA:
-                continue
-            if piece.bounds[0] >= z_face - TOLERANCE:
-                continue                    # in front of the face: facing's
-            if piece.buffer(-max(0.05, self.tool.nose_radius / 2)).is_empty:
-                continue                    # a sliver, or the corner a nose leaves
-            residual.append([self._m(p) for p in piece.exterior.coords])
+            if self._worth_cutting(piece):
+                residual.append([self._m(p) for p in piece.exterior.coords])
         stock_after = _difference(self.material, _difference(self.to_remove, self.remaining))
         if residual:
-            self.warnings.append(f"{len(residual)} region(s) left for another tool")
+            count = len(residual)
+            self.warnings.append(f"{count} region{'' if count == 1 else 's'} left for another tool")
         return RoughingPlan(
             moves=self.moves,
+            allowance=self.allowance_chain(),
             residual=residual,
             to_remove=_mirror(self.to_remove) if self.is_id else self.to_remove,
             remaining_stock=_mirror(stock_after) if self.is_id else stock_after,

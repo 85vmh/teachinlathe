@@ -182,7 +182,9 @@ class AppWindow(QObject):
         if not json_path or not os.path.isfile(json_path):
             return
         try:
-            self.appState.activateTab("conversational")
+            # Opened while the tab is still out of sight, so it is there when
+            # the tab comes up rather than sliding in after it.
             self.conversationalViewModel.openProgramFile(os.path.abspath(json_path))
+            self.appState.activateTab("conversational")
         except Exception as e:
             LOG.error("editConversationalProgramFromJson failed: %s", e)

@@ -40,9 +40,11 @@ def axial_tool_label(op_type, operations, index):
     return f"(M{_number(tool['diameter'])} x {_number(tool['pitch'])}mm)"
 
 
-def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, strategy=None, profiling_type=None, profile_type=None, tool_label=None):
+def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, strategy=None, profiling_type=None, profile_type=None, tool_label=None, rest=False):
     op_type_value = (op_type or "").strip()
     if op_type_value == "changeTool":
+        if tool_no is not None and int(tool_no) <= 0:
+            return "Tool Change (choose a tool)"
         return f"Tool Change (T{tool_no})" if tool_no is not None else "Tool Change"
     if op_type_value == "positionAt":
         return "Position At"
@@ -69,7 +71,8 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
     if op_type_value == "profileRoughing":
         pt = str(profiling_type or "od").lower()
         prefix = "OD" if pt == "od" else "ID"
-        return f"{prefix} Profile Roughing (P{profile_id})" if profile_id is not None else f"{prefix} Profile Roughing"
+        name = f"{prefix} Profile Roughing (P{profile_id})" if profile_id is not None else f"{prefix} Profile Roughing"
+        return name + " · Rest" if rest else name
     if op_type_value == "profileContour":
         pt = str(profiling_type or "od").lower()
         prefix = "OD" if pt == "od" else "ID"
@@ -94,13 +97,37 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
 def build_operations_model(program):
     out = []
     operations = getattr(program, "operations", []) or []
+    inherited_tool = None
+    pending_tool = None
+    group_start = None
+    tool_picker_types = {
+        "facing", "profileRoughing", "profileContour", "drilling",
+        "tapping", "parting", "g33Threading",
+    }
     for index, op in enumerate(operations):
+        op_type = getattr(op, "type", "")
+        if op_type == "changeTool":
+            if group_start is None:
+                group_start = index
+            pending_tool = int(getattr(op, "tool_no", 0) or 0)
+            continue
+
+        tool_label = ""
+        if pending_tool is not None:
+            if op_type in tool_picker_types and pending_tool > 0 and pending_tool != inherited_tool:
+                tool_label = f"T{pending_tool}"
+            inherited_tool = pending_tool
         item = {
-            "order": getattr(op, "order", None),
-            "type": getattr(op, "type", ""),
+            "order": len(out) + 1,
+            "source_index": index,
+            "group_start_index": group_start if group_start is not None else index,
+            "tool_label": tool_label,
+            "type": op_type,
             "generate_gcode": bool(getattr(op, "generate_gcode", False)),
             "is_optional_block": bool(getattr(op, "is_optional_block", False)),
         }
+        pending_tool = None
+        group_start = None
         tool_no = getattr(op, "tool_no", None)
         pitch = getattr(op, "pitch", None)
         profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
@@ -121,6 +148,7 @@ def build_operations_model(program):
             item["type"], tool_no=tool_no, pitch=pitch, profile_id=profile_id,
             strategy=strategy, profiling_type=profiling_type, profile_type=profile_type,
             tool_label=axial_tool_label(item["type"], operations, index),
+            rest=bool(getattr(op, "restMaterial", False)),
         )
         out.append(item)
     return out

@@ -10,7 +10,7 @@ An editor is made for one operation at one place in the program. Selecting
 another operation, or coming back to this one, makes a new one.
 """
 
-from PyQt6.QtCore import QObject, pyqtProperty, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.conversational.model.data_types import ThreadForm
 
@@ -143,10 +143,27 @@ class ProfileFollowingEditorViewModel(ToolOperationEditorViewModel):
 class ProfileRoughingEditorViewModel(ProfileFollowingEditorViewModel):
     update_type = "profileRoughing"
 
-    @pyqtSlot("QVariant", result="QVariant")
-    def preview(self, op_data):
-        return self._tab.preview(
-            lambda op: self._use_case.profile_roughing_preview(self._program, self._index, op), op_data)
+    #: A preview asked for with requestPreview, once worked out.
+    previewReady = pyqtSignal("QVariant")
+
+    def __init__(self, tab, program, index, operation, parent=None):
+        super().__init__(tab, program, index, operation, parent)
+        #: what the last request went in with: an answer for an older one is
+        #: not passed on
+        self.wanted_preview = None
+
+    @pyqtSlot("QVariant")
+    def requestPreview(self, op_data):
+        """What roughing would cut with ``op_data``, to ``previewReady``: the
+        plan takes up to a second, so it is worked out in the planning worker
+        and the screen goes on meanwhile."""
+        self._tab.request_roughing_preview(self, self._index, op_data)
+
+    @pyqtSlot()
+    def addRestRoughing(self):
+        """For what this roughing leaves: a Change Tool with no tool yet and,
+        after it, a copy of this roughing on rest material - opened."""
+        self._tab.add_rest_roughing(self._index)
 
 
 class ProfileContourEditorViewModel(ProfileFollowingEditorViewModel):

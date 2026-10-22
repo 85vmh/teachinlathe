@@ -98,43 +98,6 @@ class MachineViewModel(QObject):
         """
         return self.estopOk and self.powerOk and self.xHomed and self.zHomed
 
-    @pyqtProperty(bool, notify=stateChanged)
-    def canHome(self):
-        return self._machine.can_home()[0]
-
-    @pyqtProperty(str, notify=stateChanged)
-    def homeDisabledReason(self):
-        return self._machine.can_home()[1]
-
-    @pyqtProperty(bool, notify=stateChanged)
-    def canPowerOn(self):
-        return self._machine.can_power_on()[0]
-
-    @pyqtProperty(str, notify=stateChanged)
-    def powerDisabledReason(self):
-        return self._machine.can_power_on()[1]
-
-    # -- what the screens do ----------------------------------------------
-
-    @pyqtSlot()
-    def toggleEstop(self):
-        self._machine.toggle_estop()
-
-    @pyqtSlot()
-    def togglePower(self):
-        if not self._machine.is_on and not self.canPowerOn:
-            log.warning("refusing to power on: %s", self.powerDisabledReason)
-            return
-        self._machine.toggle_power()
-
-    @pyqtSlot(str)
-    def homeAxis(self, axis):
-        self._machine.home_axis(str(axis))
-
-    @pyqtSlot()
-    def homeAll(self):
-        self._machine.home_all()
-
     # -- the predefined positions -----------------------------------------
 
     @pyqtSlot()

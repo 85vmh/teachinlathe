@@ -59,6 +59,10 @@ Item {
             detailsLoader.source = view
         var shown = editor
         Qt.callLater(function () {
+            // gone by now when the screen was closed straight after - opening
+            // a program from the Programs tab replaces this one at once
+            if (!detailsLoader)
+                return
             var item = detailsLoader.item
             if (!item || !shown || shown !== operationEditor.editor)
                 return

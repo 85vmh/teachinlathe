@@ -49,12 +49,13 @@ Item {
         if (keep === 0)
             stack.clear(StackView.Immediate)
         else if (keep < stack.depth)
-            stack.pop(stack.get(keep - 1))
+            stack.pop(stack.get(keep - 1), root.visible ? StackView.Transition : StackView.Immediate)
 
         var names = root._names.slice(0, keep)
         // More than one screen at once - the first sync, or a program opened
-        // from elsewhere - lands in place rather than sliding in step by step.
-        var immediate = stack.depth === 0 || target.length - keep > 1
+        // from elsewhere - lands in place rather than sliding in step by step,
+        // as does anything that changes while the tab is not on screen.
+        var immediate = stack.depth === 0 || target.length - keep > 1 || !root.visible
         for (var i = keep; i < target.length; ++i) {
             if (immediate)
                 stack.push(screenComponents[target[i]], {}, StackView.Immediate)

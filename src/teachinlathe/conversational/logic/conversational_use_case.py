@@ -103,8 +103,6 @@ class ConversationalUseCase:
     def __init__(self, programs_dir: str = PROGRAMS_DIR, ini=None) -> None:
         self.programs_dir = programs_dir
         self._ini = ini_repository() if ini is None else ini
-        # The last few Profile Roughing previews, by all that went into them.
-        self._roughing_previews = {}
         # The edit each operation type takes, and the class it must be.
         self._updaters = {
             "changeTool": (None, self._update_tool_change),
@@ -189,6 +187,22 @@ class ConversationalUseCase:
         Programs tab opens again for editing. Returns the .ngc path."""
         from teachinlathe.conversational.gcode import build_ngc_from_program
 
+        gcode_dir, json_path = self.export_program(program)
+        return build_ngc_from_program(program, output_dir=gcode_dir, source_json=json_path)
+
+    def gcode_job(self, program: Program):
+        """What building the program's G-code away from the application
+        takes (plan_worker's ``generate_gcode``): the program, written out
+        as for generate_gcode, and the Tool Library as it is now."""
+        from teachinlathe.core.tool_library_repository import tool_library_repository
+        from teachinlathe.tooling.model.tool_snapshot import ToolSnapshot
+
+        gcode_dir, json_path = self.export_program(program)
+        return program, gcode_dir, json_path, ToolSnapshot.of(tool_library_repository())
+
+    def export_program(self, program: Program):
+        """Writes the copy of the program the Programs tab opens again for
+        editing; returns (the G-code folder, that copy's path)."""
         json_dir = self._ini.conversational_json_dir
         gcode_dir = self._ini.conversational_gcode_dir
         base_name = program.header.name or program.id or "program"
@@ -211,8 +225,7 @@ class ConversationalUseCase:
         # restart. The exported copy is passed as source_json instead, so the
         # .ngc still carries the ( Program: <file>.json ) comment that the
         # Programs screen reads to enable Edit.
-
-        return build_ngc_from_program(program, output_dir=gcode_dir, source_json=json_path)
+        return gcode_dir, json_path
 
     # ── operations ──────────────────────────────────────────────────────────
 
@@ -241,6 +254,19 @@ class ConversationalUseCase:
 
     def add_profiling_finish(self, program: Program, index: int) -> int:
         return add_profiling_finish(program, index)
+
+    def add_rest_roughing(self, program: Program, index: int) -> int:
+        """For what the Profile Roughing at ``index`` leaves: right after it,
+        a Change Tool with no tool chosen yet and a copy of the roughing set
+        to rest material. Returns where the copy went."""
+        source = self.operation(program, index)
+        if not isinstance(source, ProfileRoughing):
+            raise ValueError(f"operation {index} is not a Profile Roughing")
+        change_index = insert_default_operation(program, "changeTool", index + 1)
+        program.operations[change_index].tool_no = 0
+        rest_index = duplicate_operation(program, index, change_index + 1)
+        program.operations[rest_index].restMaterial = True
+        return rest_index
 
     def use_tool_before(self, program: Program, op_index: int, tool_no: int,
                         toolchange_position: str = "G28") -> Optional[int]:
@@ -474,22 +500,45 @@ class ConversationalUseCase:
 
     def profile_roughing_preview(self, program, op_index: int, op_data: dict) -> dict:
         """What the Profile Roughing at ``op_index`` would cut with ``op_data``,
-        against the last profile above it; see build_profile_roughing_preview."""
+        against the last profile above it; see build_profile_roughing_preview.
+        Worked out here, on the caller's thread - the editor has it done in
+        the planning worker (plan_worker) instead."""
         from teachinlathe.conversational.gcode.operations.profile_roughing_preview import (
             build_profile_roughing_preview,
         )
+        return build_profile_roughing_preview(self.resolve_profile_roughing(program, op_index, op_data))
+
+    def resolve_profile_roughing(self, program, op_index: int, op_data: dict) -> dict:
+        """``op_data`` with all its preview needs from the program: the
+        profile, the tool - and for rest material the roughings above it.
+        Plain values only, so it can go to the planning worker as it is."""
+        op_data = dict(op_data)
         op_data["_resolved_profile"] = self.last_profile_before(program, op_index)
         op_data["_resolved_cutting_tool"] = self.cutting_tool_before(program, op_index)
-        # Planning checks every move against the insert and takes up to a
-        # second: the last few answers are kept, keyed by all that went in.
-        import json
-        key = json.dumps(op_data, sort_keys=True, default=str)
-        cache = self._roughing_previews
-        if key not in cache:
-            if len(cache) >= 8:
-                cache.pop(next(iter(cache)))
-            cache[key] = build_profile_roughing_preview(op_data)
-        return cache[key]
+        if op_data.get("rest_material"):
+            op_data["_resolved_previous_roughing"] = self.roughings_before(program, op_index)
+        return op_data
+
+    def roughings_before(self, program: Optional[Program], before_index: int) -> list:
+        """The Profile Roughings above ``before_index`` that cut the same
+        profile as the one there, in order, each as an operation dict with its
+        profile and tool resolved - what a rest roughing starts from."""
+        if program is None:
+            return []
+        ops = program.operations
+        own = ops[before_index] if 0 <= before_index < len(ops) else None
+        profile_id = int(getattr(getattr(own, "profilingParameters", None), "profile_id", 0) or 0)
+        out = []
+        for index, op in enumerate(ops[:max(before_index, 0)]):
+            if not isinstance(op, ProfileRoughing):
+                continue
+            if int(getattr(op.profilingParameters, "profile_id", 0) or 0) != profile_id:
+                continue
+            data = op.to_dict()
+            data["_resolved_profile"] = self.last_profile_before(program, index)
+            data["_resolved_cutting_tool"] = self.cutting_tool_before(program, index)
+            out.append(data)
+        return out
 
     def cutting_tool_before(self, program: Optional[Program], before_index: int) -> dict:
         """The cutting tool the last Change Tool above ``before_index`` puts
@@ -557,6 +606,7 @@ class ConversationalUseCase:
         apply_profile_roughing_strategy_update(op.profileRoughingStrategy, p.get("profile_roughing_strategy"))
         apply_stock_to_leave_update(op.stockToLeave, p.get("stock_to_leave"))
         apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
+        _set_if_given(op, p, "rest_material", "restMaterial", bool)
 
     @staticmethod
     def _update_profile_contour(op, p):

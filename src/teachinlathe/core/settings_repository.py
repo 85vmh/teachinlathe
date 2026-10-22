@@ -32,6 +32,7 @@ JOG_SPEED_PERCENTAGE = 'machine.jog.linear-speed-percentage'
 RAPID_PERCENTAGE = 'rapid_speeds.percentage'
 HIDE_POINTER = 'interface.hide-pointer'
 SHOW_TOUCHES = 'interface.show-touches'
+GCODE_PROGRESS_DELAY_MS = 'interface.gcode-progress-delay-ms'
 
 
 @dataclass(frozen=True)
@@ -81,6 +82,10 @@ class SettingsRepository(QObject):
         return {
             HIDE_POINTER: SettingSpec(default=False, value_type=bool),
             SHOW_TOUCHES: SettingSpec(default=False, value_type=bool),
+            GCODE_PROGRESS_DELAY_MS: SettingSpec(
+                default=200, value_type=int, min_value=0, max_value=10000,
+                description='How long generating G-code goes on before its progress '
+                            'dialog is shown, in milliseconds'),
             RAPID_PERCENTAGE: SettingSpec(
                 default=50, value_type=int, min_value=0, max_value=100,
                 description='Rapid speed, as a percentage of maximum'),

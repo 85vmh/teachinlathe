@@ -33,9 +33,12 @@ Item {
     property string passType: "axial"
 
     // what roughing will cut with the values above
-    // Worked out a moment after the values settle, not on each one: the
-    // plan checks every move against the insert, and opening the operation
-    // sets the values one after another.
+    // Rest material: it cuts what the roughings above it leave, keeping to
+    // their stock to leave and start position - neither is set here.
+    readonly property bool restMaterial: !!(opData && opData.rest_material)
+
+    // Asked for a moment after the values settle, not on each one: opening
+    // the operation sets them one after another.
     property var roughingPreview: null
     readonly property string _previewKey: (opIndex >= 0 && primitives.length > 0 && editor)
                                           ? JSON.stringify(_draftOp()) : ""
@@ -43,9 +46,18 @@ Item {
     Timer {
         id: previewTimer
         interval: 150
-        onTriggered: root.roughingPreview = root._previewKey !== ""
-                                            ? root.editor.preview(JSON.parse(root._previewKey))
-                                            : null
+        onTriggered: {
+            if (root._previewKey === "")
+                root.roughingPreview = null
+            else
+                root.editor.requestPreview(JSON.parse(root._previewKey))
+        }
+    }
+    // worked out in the planning worker, off the GUI thread: the screen goes
+    // on - an opening program's slide too - and the drawing follows
+    Connections {
+        target: root.editor
+        function onPreviewReady(preview) { root.roughingPreview = preview }
     }
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
@@ -156,10 +168,10 @@ Item {
             primitives:  root.primitives
             profileType: root.profileType
             workpiece:   root.workpiece
-            startPosition: root.primitives.length > 0 ? { x: root.xStart, z: root.zStart } : null
+            startPosition: root.primitives.length > 0 && !root.restMaterial ? { x: root.xStart, z: root.zStart } : null
             roughingPreview: root.roughingPreview
             startPositionArrowRect: startBox.rect
-            stockToLeaveArrowRect:  stockBox.rect
+            stockToLeaveArrowRect:  root.restMaterial ? null : stockBox.rect
 
             Rectangle {
                 anchors.fill: parent
@@ -169,12 +181,17 @@ Item {
 
             // What the plan could not do - a tool that cannot reach a pocket,
             // or no plan at all - in the bottom left corner, clear of the zoom
-            // buttons.
+            // buttons. With material left for another tool, tapping it adds a
+            // rest roughing for that, after a Change Tool to choose the tool in.
             Rectangle {
+                id: note
                 readonly property var preview: root.roughingPreview
+                readonly property bool offersRest: !!preview && !preview.error && !!preview.restOffered
+                    && !!root.editor
                 readonly property string message: !preview ? ""
                     : preview.error ? preview.error
                     : (preview.warnings || []).join("\n")
+                      + (offersRest ? "\nTap to rough it with another tool" : "")
                 visible: message !== ""
                 x: Theme.spacingLarge
                 y: profileCanvas.height - height - Theme.spacingLarge
@@ -196,6 +213,33 @@ Item {
                     font.pixelSize: Theme.fontSmall
                     wrapMode: Text.Wrap
                 }
+
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: note.offersRest
+                    onClicked: root.editor.addRestRoughing()
+                }
+            }
+
+            // over the note: what this operation cuts, when it is a rest roughing
+            Rectangle {
+                visible: root.restMaterial && root.primitives.length > 0
+                x: Theme.spacingLarge
+                y: (note.visible ? note.y : profileCanvas.height - Theme.spacingLarge) - height - Theme.spacingSmall
+                width: restText.implicitWidth + 2 * Theme.spacing
+                height: restText.implicitHeight + 2 * Theme.spacingSmall
+                radius: Theme.radius
+                color: Theme.selection
+                border.color: Theme.accent
+                border.width: Theme.hairline
+
+                Text {
+                    id: restText
+                    anchors.centerIn: parent
+                    text: "Rest material: what the roughing above leaves, to its stock to leave"
+                    color: Theme.foreground
+                    font.pixelSize: Theme.fontSmall
+                }
             }
 
             // The boxes stack down the right edge, each as wide as it needs;
@@ -206,8 +250,11 @@ Item {
             // top to bottom: strategy, stock to leave, Ap / retract, start -
             // the first at the top, the last at the bottom, the space between
             // them shared out equally
-            readonly property real boxSpacing: (height - 2 * boxGap - strategyBox.height - stockBox.height
-                                                - docBox.height - startBox.height) / 3
+            // A rest roughing has neither stock to leave nor start of its own:
+            // Ap / retract go right under the strategy.
+            readonly property real boxSpacing: root.restMaterial ? boxGap
+                : (height - 2 * boxGap - strategyBox.height - stockBox.height
+                   - docBox.height - startBox.height) / 3
             fitInsetRight: root.primitives.length > 0 ? boxWidth + boxGap : 0
 
             ProfilingTypeBox {
@@ -222,7 +269,7 @@ Item {
 
             StockToLeaveBox {
                 id: stockBox
-                visible: root.primitives.length > 0
+                visible: root.primitives.length > 0 && !root.restMaterial
                 x: profileCanvas.width - width - profileCanvas.boxGap
                 y: strategyBox.y + strategyBox.height + profileCanvas.boxSpacing
                 labelColor: profileCanvas.stockToLeaveColor
@@ -237,7 +284,8 @@ Item {
                 id: docBox
                 visible: root.primitives.length > 0
                 x: profileCanvas.width - width - profileCanvas.boxGap
-                y: stockBox.y + stockBox.height + profileCanvas.boxSpacing
+                y: root.restMaterial ? strategyBox.y + strategyBox.height + profileCanvas.boxSpacing
+                                     : stockBox.y + stockBox.height + profileCanvas.boxSpacing
                 docColor: profileCanvas.feedColor
                 retractColor: profileCanvas.rapidColor
                 doc: root.doc

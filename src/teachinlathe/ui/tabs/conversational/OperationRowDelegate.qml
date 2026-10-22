@@ -105,13 +105,28 @@ SwipeRow {
             Layout.fillHeight: true
             Label {
                 id: typeLabel
-                anchors.fill: parent
+                anchors.left: parent.left
+                anchors.right: toolNumber.visible ? toolNumber.left : parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
                 // stays put while the row slides left over Delete
                 anchors.leftMargin: 10 + Math.max(0, root.swipeOffset)
+                anchors.rightMargin: toolNumber.visible ? 8 : 0
                 text: root.operationLabel
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: root.itemFontSize
+                color: root.gcodeEnabled ? "black" : Theme.outlineStrong
+            }
+            Label {
+                id: toolNumber
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                visible: !!(root.op && root.op.tool_label)
+                text: visible ? root.op.tool_label : ""
+                font.pixelSize: root.itemFontSize
+                font.bold: true
                 color: root.gcodeEnabled ? "black" : Theme.outlineStrong
             }
         }

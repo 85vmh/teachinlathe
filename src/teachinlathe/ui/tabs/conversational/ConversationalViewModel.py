@@ -17,17 +17,23 @@ The selected operation's editor has a view model of its own, ``editor``
 (OperationEditorViewModel.py). Nothing here holds a QML item.
 """
 
+import json
 import logging
 import os
 import time
 
-from PyQt6.QtCore import (QCoreApplication, QEventLoop, QObject, QTimer, pyqtProperty, pyqtSignal,
-                          pyqtSlot)
+from PyQt6 import sip
+from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.conversational.logic.conversational_use_case import ConversationalUseCase
+from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
 from teachinlathe.conversational.model.data_types import Program
 from teachinlathe.conversational.model.qml_adapter import build_operations_model, build_selected_program_summary
+from teachinlathe.conversational.model.program_commands import (
+    delete_visible_operation, duplicate_visible_operation, move_visible_operation,
+)
 from teachinlathe.core.positions_bridge import PositionsBridge
+from teachinlathe.core.settings_repository import GCODE_PROGRESS_DELAY_MS, settings_repository
 from teachinlathe.ui.common.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.ui.tabs.conversational.OperationEditorViewModel import EMPTY_PREVIEW, editor_for
 from teachinlathe.ui.tabs.conversational.ProgramListModel import ProgramListModel
@@ -44,8 +50,9 @@ DXF_IMPORT = "dxfImport"
 # Shown over the program, full screen but for the title bar.
 EDITOR_SCREENS = (PROFILE_EDITOR, RADIAL_PROFILE_EDITOR, DXF_IMPORT)
 
-# The generation progress dialog stays up at least this long, so it is seen.
-GCODE_PROGRESS_MIN_S = 0.3
+# The generation progress dialog, once shown (after the
+# GCODE_PROGRESS_DELAY_MS setting), stays up at least this long, so it is seen.
+GCODE_PROGRESS_MIN_MS = 300
 
 
 def to_py(obj):
@@ -98,6 +105,16 @@ class ConversationalViewModel(QObject):
         self.current_op_index = -1
 
         self.model = ProgramListModel(self.use_case.load_programs())
+
+        # The Profile Roughing previews are worked out in a process of their
+        # own (see plan_worker), started now so it is ready by the first one;
+        # the last few answers are kept, by all that went into them.
+        self._planner = BackgroundPlanner(self)
+        self._planner.finished.connect(self._on_plan_finished)
+        self._previews = {}
+        self._preview_requests = {}     # request id -> (key, editor)
+        self._gcode_request = None      # the G-code being generated, by the worker
+        self._gcode_progress_shown = None   # when its dialog was shown
 
         self._numpad_view_model = NumpadDialogViewModel(self, persist=False)
         # The machine's position, for the Teach buttons; app_window publishes it.
@@ -328,6 +345,13 @@ class ConversationalViewModel(QObject):
         self.current_program = program
         self.current_program_index = row_index
         self.current_op_index = self.use_case.last_operation_index(program)
+        if (0 <= self.current_op_index < len(program.operations)
+                and getattr(program.operations[self.current_op_index], "type", "") == "changeTool"):
+            next_visible = next((i for i in range(self.current_op_index + 1, len(program.operations))
+                                 if getattr(program.operations[i], "type", "") != "changeTool"), None)
+            previous_visible = next((i for i in range(self.current_op_index - 1, -1, -1)
+                                     if getattr(program.operations[i], "type", "") != "changeTool"), -1)
+            self.current_op_index = next_visible if next_visible is not None else previous_visible
         self._set_facing_mirror(True)
         LOG.info("opening %s, %d operations", program.header.name, len(program.operations))
         # A fresh editor, whatever was open before.
@@ -412,31 +436,49 @@ class ConversationalViewModel(QObject):
 
     @pyqtSlot()
     def generateGcode(self):
+        """Has the planning worker generate the open program's G-code; the
+        progress dialog only if that takes longer than the setting says."""
         prog = self.current_program
         if not prog:
             LOG.warning("generate G-code: no program open")
             return
+        if self._gcode_request is not None:
+            return
         self.use_case.remember_last_operation(prog, self.current_op_index)
-        self.gcodeGenerationStarted.emit()
-        QCoreApplication.processEvents()
-
-        start = time.monotonic()
-        path = None
         try:
-            path = self.use_case.generate_gcode(prog)
-            LOG.info("G-code generated: %s", path)
+            job = self.use_case.gcode_job(prog)
         except Exception as e:
             LOG.error("G-code generation failed: %s", e)
-        finally:
-            elapsed = time.monotonic() - start
-            if elapsed < GCODE_PROGRESS_MIN_S:
-                loop = QEventLoop()
-                QTimer.singleShot(int((GCODE_PROGRESS_MIN_S - elapsed) * 1000), loop.quit)
-                loop.exec()
-            self.gcodeGenerationFinished.emit()
+            return
+        request_id = self._planner.submit("gcode", "generate_gcode", *job)
+        self._gcode_request = request_id
+        self._gcode_progress_shown = None
+        QTimer.singleShot(int(settings_repository().get(GCODE_PROGRESS_DELAY_MS)),
+                          lambda: self._show_gcode_progress(request_id))
 
-        if path:
-            self.gcodeGenerated.emit(path)
+    def _show_gcode_progress(self, request_id):
+        if self._gcode_request == request_id:
+            self._gcode_progress_shown = time.monotonic()
+            self.gcodeGenerationStarted.emit()
+
+    def _on_gcode_generated(self, ok, result):
+        self._gcode_request = None
+        if ok:
+            LOG.info("G-code generated: %s", result)
+        else:
+            LOG.error("G-code generation failed: %s", result)
+        path = result if ok else None
+        if self._gcode_progress_shown is None:
+            if path:
+                self.gcodeGenerated.emit(path)
+            return
+        shown_ms = (time.monotonic() - self._gcode_progress_shown) * 1000
+
+        def finish():
+            self.gcodeGenerationFinished.emit()
+            if path:
+                self.gcodeGenerated.emit(path)
+        QTimer.singleShot(max(0, int(GCODE_PROGRESS_MIN_MS - shown_ms)), finish)
 
     @pyqtSlot(int, bool)
     def setGenerateGcode(self, index, checked):
@@ -478,24 +520,28 @@ class ConversationalViewModel(QObject):
     def moveOperation(self, from_index, to_index):
         """Dragged from one place to another; the selection stays on the operation it was on."""
         prog = self.current_program
-        if not prog or not self.use_case.move_operation(prog, from_index, to_index):
+        if not prog:
             return
-        current = self.current_op_index
-        if current == from_index:
-            self.current_op_index = to_index
-        elif from_index < current <= to_index:
-            self.current_op_index = current - 1
-        elif to_index <= current < from_index:
-            self.current_op_index = current + 1
+        selected = (prog.operations[self.current_op_index]
+                    if 0 <= self.current_op_index < len(prog.operations) else None)
+        if move_visible_operation(prog, from_index, to_index) is None:
+            return
+        self.current_op_index = next((i for i, op in enumerate(prog.operations)
+                                      if op is selected), -1)
         self._save_current_program()
 
     @pyqtSlot(int)
     def deleteOperation(self, index):
         prog = self.current_program
-        if not prog or not self.use_case.delete_operation(prog, index):
+        previous = index - 1
+        if prog:
+            while (previous >= 0
+                   and getattr(prog.operations[previous], "type", "") == "changeTool"):
+                previous -= 1
+        if not prog or not delete_visible_operation(prog, index):
             return
         # the one above it, or the header for the first
-        self.current_op_index = index - 1
+        self.current_op_index = previous
         self._save_current_program()
 
     @pyqtSlot(int)
@@ -504,13 +550,15 @@ class ConversationalViewModel(QObject):
         prog = self.current_program
         if not prog:
             return
+        selected = (prog.operations[self.current_op_index]
+                    if 0 <= self.current_op_index < len(prog.operations) else None)
         try:
-            new_index = self.use_case.duplicate_operation(prog, index)
+            duplicate_visible_operation(prog, index)
         except IndexError as e:
             LOG.error("duplicate operation failed: %s", e)
             return
-        if self.current_op_index >= new_index:
-            self.current_op_index += 1
+        self.current_op_index = next((i for i, op in enumerate(prog.operations)
+                                      if op is selected), -1)
         self._save_current_program()
 
     # ── what the operation editors ask of the tab ───────────────────────────
@@ -548,6 +596,19 @@ class ConversationalViewModel(QObject):
         # The operation moved down, under its new Change Tool: a new editor.
         QTimer.singleShot(0, lambda: self.showDetails(new_index))
 
+    def add_rest_roughing(self, index):
+        if self.current_program is None:
+            return
+        try:
+            new_index = self.use_case.add_rest_roughing(self.current_program, index)
+        except Exception as e:
+            LOG.error("add rest roughing failed: %s", e)
+            return
+        self.current_op_index = new_index
+        self._save_current_program()
+        # opened on the new roughing, where its tool is chosen
+        QTimer.singleShot(0, lambda: self.showDetails(new_index))
+
     def add_profiling_finish(self, index):
         prog = self.current_program
         if not prog:
@@ -558,6 +619,43 @@ class ConversationalViewModel(QObject):
             LOG.error("add profiling finish failed: %s", e)
             return
         self._save_current_program()
+
+    def request_roughing_preview(self, editor, op_index, op_data):
+        """The preview of the Profile Roughing at ``op_index`` with the
+        editor's draft, to ``editor.previewReady`` once worked out - at once
+        when known, otherwise from the planning worker."""
+        try:
+            resolved = self.use_case.resolve_profile_roughing(
+                self.current_program, op_index, to_py(op_data) or {})
+        except Exception as e:
+            LOG.error("preview failed: %s", e)
+            editor.previewReady.emit(dict(EMPTY_PREVIEW, error=str(e)))
+            return
+        key = json.dumps(resolved, sort_keys=True, default=str)
+        editor.wanted_preview = key
+        if key in self._previews:
+            editor.previewReady.emit(self._previews[key])
+            return
+        request_id = self._planner.submit("roughing-preview", "profile_roughing_preview", resolved)
+        self._preview_requests[request_id] = (key, editor)
+
+    def _on_plan_finished(self, request_id, ok, result):
+        if request_id == self._gcode_request:
+            self._on_gcode_generated(ok, result)
+            return
+        key, editor = self._preview_requests.pop(request_id, (None, None))
+        if key is None:
+            return
+        if not ok:
+            LOG.error("preview failed: %s", result)
+            result = dict(EMPTY_PREVIEW, error=str(result))
+        else:
+            if len(self._previews) >= 16:
+                self._previews.pop(next(iter(self._previews)))
+            self._previews[key] = result
+        # the editor may be gone - another operation selected - or want a newer one
+        if editor is not None and not sip.isdeleted(editor) and editor.wanted_preview == key:
+            editor.previewReady.emit(result)
 
     @staticmethod
     def preview(build, op_data):

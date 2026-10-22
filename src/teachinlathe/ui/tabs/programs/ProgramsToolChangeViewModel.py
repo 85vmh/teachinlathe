@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.core.tool_library_repository import tool_library_repository
@@ -20,6 +20,10 @@ class ProgramsToolChangeViewModel(QObject):
         self._cancel_ui_pressed = False
         self._cancel_button_pressed = False
         self._response_output = False
+        # The tool the request is for - the request's number goes back to 0
+        # as the change completes - and whether its toast has been asked for.
+        self._requested_tool = 0
+        self._announced = False
         self._tool_card = ""
         self._tool_view = None
         self._component = TeachInLatheComponent()
@@ -128,7 +132,17 @@ class ProgramsToolChangeViewModel(QObject):
         if requested == self._requested:
             return
         self._requested = requested
-        if not requested:
+        if requested:
+            self._announced = False
+            if self._tool_no > 0:
+                self._requested_tool = self._tool_no
+        else:
+            # Done, one way or the other. Seen by its result rather than by the
+            # Cycle Start that confirmed it: the button is read every 100 ms,
+            # and a short press - the dev panel's - can fall between two
+            # reads, while program_state, in real time, does not miss it.
+            tool = self._requested_tool
+            QTimer.singleShot(300, lambda: self._announce_if_loaded(tool))
             self._confirm_ui_pressed = False
             self._confirm_button_pressed = False
             self._cancel_ui_pressed = False
@@ -140,6 +154,8 @@ class ProgramsToolChangeViewModel(QObject):
         if tool_no == self._tool_no:
             return
         self._tool_no = tool_no
+        if tool_no > 0:
+            self._requested_tool = tool_no
         self._refresh_tool_view()
         self.stateChanged.emit()
 
@@ -171,10 +187,25 @@ class ProgramsToolChangeViewModel(QObject):
             canceled_output,
         )
         self._response_output = response_output
-        if response_pulsed:
+        if response_pulsed and not self._announced:
+            self._announced = True
             self.toolChangedPulsed.emit(self._tool_no)
         if emit:
             self.stateChanged.emit()
+
+    def _announce_if_loaded(self, tool):
+        """The toast for a change the confirming press of was not seen: the
+        tool asked for is in the spindle - not when it was cancelled."""
+        if self._announced or tool <= 0 or self._requested:
+            return
+        from teachinlathe.core.status_repository import status_repository
+        try:
+            loaded = int(status_repository().stat.tool_in_spindle)
+        except Exception:
+            return
+        if loaded == tool:
+            self._announced = True
+            self.toolChangedPulsed.emit(tool)
 
     def _set_pin(self, pin_name, value):
         try:

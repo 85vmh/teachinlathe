@@ -206,9 +206,6 @@ Rectangle {
             visible: root.offset > 0
             shown: root.programShown
             runBarReveal: root.runBar
-            // its toasts centre over the code pane, one stride to its left
-            codePaneX: -root.stride
-            codePaneWidth: root.paneWidth
             z: 1
         }
 

@@ -1234,6 +1234,10 @@ class ProfileRoughing(TurnableOperation):
     profileRoughingStrategy: ProfileRoughingStrategy
     stockToLeave: StockToLeave
     m1Parameters: M1Parameters
+    #: Rest material: cuts what the Profile Roughings above it on the same
+    #: profile leave, with their stock to leave and start position, rather
+    #: than a bar of its own - for a tool that reaches where theirs did not.
+    restMaterial: bool = False
 
     @classmethod
     def from_dict(cls, data: dict) -> "ProfileRoughing":
@@ -1255,6 +1259,7 @@ class ProfileRoughing(TurnableOperation):
             profileRoughingStrategy=profile_roughing_strategy,
             stockToLeave=stock_to_leave,
             m1Parameters=m1_parameters,
+            restMaterial=bool(data.get("rest_material", False)),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -1266,6 +1271,7 @@ class ProfileRoughing(TurnableOperation):
             "profile_roughing_strategy": self.profileRoughingStrategy.to_dict(),
             "stock_to_leave": self.stockToLeave.to_dict(),
             "m1_parameters": self.m1Parameters.to_dict(),
+            "rest_material": bool(self.restMaterial),
         })
         return base
 

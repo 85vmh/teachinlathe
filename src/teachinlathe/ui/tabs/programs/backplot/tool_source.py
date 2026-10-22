@@ -38,12 +38,12 @@ def tool_in(tool_no):
     return _repository().tool_in(int(tool_no))
 
 
-def describe(tool_no):
+def describe(tool_no, repository=None):
     """The tool in holder ``tool_no``, as the actor draws it; ``{}`` for
-    none."""
+    none. ``repository``: where to look it up, the Tool Library if not given."""
     if not tool_no or tool_no <= 0:
         return {}
-    repository = _repository()
+    repository = repository or _repository()
     holder = repository.find_holder(int(tool_no))
     tool = repository.tool_in(int(tool_no))
     if tool is None:

@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import app_shell_qml as Shell
 import theme
 import common
 
@@ -18,8 +17,8 @@ Rectangle {
         anchors.margins: 32
         spacing: Theme.margin
 
-        // logo, machine name, state box and buttons, in one column the
-        // state box's width
+        // logo, machine name and state box, in one column the state box's
+        // width
         ColumnLayout {
             id: brandColumn
             Layout.alignment: Qt.AlignHCenter
@@ -78,43 +77,6 @@ Rectangle {
                         ok: root.viewModel.zHomed
                         text: root.viewModel.zHomedText
                     }
-                }
-            }
-
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: Theme.spacing
-
-                Shell.ShellActionButton {
-                    text: "E-Stop"
-                    implicitWidth: 150
-                    implicitHeight: Theme.headerHeight
-                    onClicked: root.viewModel.toggleEstop()
-                }
-                Shell.ShellActionButton {
-                    text: "Power"
-                    implicitWidth: 150
-                    implicitHeight: Theme.headerHeight
-                    // Powering on with the E-stop engaged does nothing; say so
-                    // rather than letting the press fail silently.
-                    enabled: root.viewModel
-                             ? (root.viewModel.powerOk || root.viewModel.canPowerOn)
-                             : false
-                    onClicked: root.viewModel.togglePower()
-                }
-                Shell.ShellActionButton {
-                    text: "Home X"
-                    implicitWidth: 150
-                    implicitHeight: Theme.headerHeight
-                    enabled: root.viewModel.canHome
-                    onClicked: root.viewModel.homeAxis("x")
-                }
-                Shell.ShellActionButton {
-                    text: "Home Z"
-                    implicitWidth: 150
-                    implicitHeight: Theme.headerHeight
-                    enabled: root.viewModel.canHome
-                    onClicked: root.viewModel.homeAxis("z")
                 }
             }
         }

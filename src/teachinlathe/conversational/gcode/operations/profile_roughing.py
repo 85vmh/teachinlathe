@@ -4,6 +4,8 @@ Dispatches to the shared profiling/ strategies based on ProfilingType (OD/ID)
 and PassType (AXIAL / RADIAL / DIAGONAL_*).
 """
 
+import dataclasses
+
 from teachinlathe.conversational.model.data_types import PassType, ProfileRoughingConfig, ProfilingType
 
 from ..helpers.spindle import build_spindle_gcode
@@ -147,16 +149,22 @@ def generate_profile_roughing_gcode(op):
 
     plan = plan_profile_roughing(op)
     if plan.error:
-        lines.append(f"( ERROR: Profile Roughing -- {plan.error} )")
+        lines.append(_comment(f"ERROR: Profile Roughing -- {plan.error}"))
         return lines
 
     if plan.tool is not None and plan.tool.known:
-        lines.append(f"( Planned for {plan.tool.label}, nose R{fmt(plan.tool.nose_radius)} )")
+        lines.append(_comment(f"Planned for {plan.tool.label}, nose R{fmt(plan.tool.nose_radius)}"))
     for warning in plan.warnings:
-        lines.append(f"( {warning} )")
+        lines.append(_comment(warning))
     lines.append(f"(----------Profiling Type: {_pass_type_label(config.pass_type)}----------)")
     _emit_moves(lines, plan.moves, prefix, config, m1_params, spindle_direction)
     return lines
+
+
+def _comment(text):
+    """``text`` as a G-code comment. LinuxCNC refuses a comment with another
+    one in it, so the brackets ``text`` may have are made square."""
+    return "( " + str(text).replace("(", "[").replace(")", "]") + " )"
 
 
 def _emit_moves(lines, moves, prefix, config, m1_params, spindle_direction):
@@ -293,10 +301,9 @@ def _on_arc(points, arc):
     return True
 
 
-def resolve_tool_shape(op, sharp=False):
+def resolve_tool_shape(op):
     """The insert the Change Tool above puts in, as ``_resolved_cutting_tool``
-    carries it (the Tool Library's JSON); None when there is none to go by.
-    ``sharp``: with its corner not rounded - see insert_tool_shape."""
+    carries it (the Tool Library's JSON); None when there is none to go by."""
     from teachinlathe.tooling.model.data_types import CuttingTool
     from .profiling.machining import insert_tool_shape
 
@@ -304,26 +311,95 @@ def resolve_tool_shape(op, sharp=False):
     if not raw:
         return None
     try:
-        return insert_tool_shape(CuttingTool.from_json(raw), sharp=sharp)
+        return insert_tool_shape(CuttingTool.from_json(raw))
     except Exception:
         return None
+
+
+#: Plans already worked out, by everything that went into them: a rest
+#: roughing plans each roughing above it first, and the editor asks again for
+#: every value changed.
+_PLANS = {}
+_PLANS_KEPT = 16
+
+_NO_SOURCE = "rest material, but no Profile Roughing of this profile above it"
+_CHOOSE_TOOL = "Choose the tool in the Change Tool above to cut what is left"
 
 
 def plan_profile_roughing(op):
     """The tool-aware plan of a Profile Roughing - see profiling.machining -
     for an operation dict carrying its profile in ``_resolved_profile`` and
-    its tool in ``_resolved_cutting_tool``."""
-    from .profiling.machining import RoughingPlan, RoughingSetup, plan_roughing
+    its tool in ``_resolved_cutting_tool``.
+
+    Rest material (``rest_material``): it starts from what the Profile
+    Roughings above it on the same profile leave - given, in order, as
+    ``_resolved_previous_roughing``, each an operation dict as this takes -
+    and keeps to the stock to leave and the start position of the last one
+    that is not rest material itself, its source."""
+    import json
 
     if hasattr(op, "to_dict"):
         op = op.to_dict()
+    key = json.dumps(op, sort_keys=True, default=str)
+    plan = _PLANS.get(key)
+    if plan is None:
+        plan = _plan(op)
+        if len(_PLANS) >= _PLANS_KEPT:
+            _PLANS.pop(next(iter(_PLANS)))
+        _PLANS[key] = plan
+    return plan
+
+
+def _plan(op):
+    from .profiling.machining import RoughingPlan, RoughingSetup, plan_leftover, plan_roughing
+
     config = parse_profile_roughing_config(op)
     segments, path = _resolve_profile(op)
     if not segments or not isinstance(segments[0], StartPoint) or len(path) < 2:
         return RoughingPlan(error=_NO_PROFILE)
+    rest = bool(op.get("rest_material", False))
+    stock_before, last_tool = None, None
+    if rest:
+        source, stock_before, last_tool = _rest_start(op.get("_resolved_previous_roughing") or [])
+        if source is None:
+            return RoughingPlan(error=_NO_SOURCE)
+        # the source's stock to leave and start position: the same finished
+        # size, and the same bar
+        source_config = parse_profile_roughing_config(source)
+        config = dataclasses.replace(
+            config, x_start=source_config.x_start, z_start=source_config.z_start,
+            stock_x=source_config.stock_x, stock_z=source_config.stock_z)
     setup = RoughingSetup(
         x_start=config.x_start, z_start=config.z_start, doc=config.doc,
         retract=config.retract, stock_x=config.stock_x, stock_z=config.stock_z,
         profiling_type=config.profiling_type, pass_type=config.pass_type)
-    return plan_roughing(setup, path, resolve_tool_shape(op),
-                         drawn_tool=resolve_tool_shape(op, sharp=True))
+    tool = resolve_tool_shape(op)
+    if rest and tool is None:
+        plan = plan_leftover(setup, path, stock_before,
+                             last_tool.nose_radius if last_tool is not None else 0.0)
+        plan.warnings.insert(0, _CHOOSE_TOOL)
+        return plan
+    return plan_roughing(setup, path, tool, stock_before, rest=rest,
+                         sliver_radius=last_tool.nose_radius if rest and last_tool is not None else 0.0)
+
+
+def _rest_start(previous):
+    """(source, stock, tool) for a rest roughing below the roughings
+    ``previous``: the last of them that is not rest material, the material all
+    of them together leave and the last tool that cut it - or
+    (None, None, None) with no source."""
+    source, stock, tool = None, None, None
+    for index, prev in enumerate(previous):
+        if not prev.get("rest_material", False):
+            source, stock = prev, None
+        elif source is None:
+            continue
+        else:
+            # a rest roughing too: it starts from those above it in turn
+            prev = {**prev, "_resolved_previous_roughing": previous[:index]}
+        plan = plan_profile_roughing(prev)
+        if plan.error or plan.remaining_stock is None:
+            continue
+        stock = plan.remaining_stock
+        tool = plan.tool
+    return source, stock, tool

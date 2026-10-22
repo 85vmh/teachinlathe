@@ -113,6 +113,8 @@ class ProgramListModel(QAbstractListModel):
         op_type = getattr(op, "type", "") or ""
         if op_type == "changeTool":
             tool_no = getattr(op, "tool_no", None)
+            if tool_no is not None and int(tool_no) <= 0:
+                return "Tool Change (choose a tool)"
             return f"Tool Change (T{tool_no})" if tool_no is not None else "Tool Change"
         if op_type == "positionAt":
             return "Position At"
@@ -141,7 +143,8 @@ class ProgramListModel(QAbstractListModel):
             profiling_type = getattr(getattr(op, "profileRoughingStrategy", None), "profiling_type", None)
             pt = profiling_type.value if hasattr(profiling_type, "value") else str(profiling_type or "od").lower()
             prefix = "OD" if pt == "od" else "ID"
-            return f"{prefix} Profile Roughing (P{profile_id})" if profile_id is not None else f"{prefix} Profile Roughing"
+            name = f"{prefix} Profile Roughing (P{profile_id})" if profile_id is not None else f"{prefix} Profile Roughing"
+            return name + " · Rest" if getattr(op, "restMaterial", False) else name
         if op_type == "profileContour":
             profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
             profiling_type = getattr(getattr(op, "profileContourStrategy", None), "profiling_type", None)
