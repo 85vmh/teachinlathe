@@ -1,9 +1,9 @@
 """Shared roughing context for OD and ID profile roughing.
 
 RoughingContext captures the direction-dependent parameters that differ between
-OD (exterior) and ID (interior) profiling. All roughing strategies (axial,
-radial, diagonal) accept a RoughingContext so the same algorithm works for
-both directions.
+OD (exterior) and ID (interior) profiling, so the same code works for both:
+Profile Contour's pass, and the roughing path Profile Roughing's preview
+offsets.
 
 Key symmetry
 ------------
@@ -17,9 +17,8 @@ ID: x_safe = x_start - retract  (safe is toward bore centre / small X)
     x_direction = +1             (X increases toward profile)
     stock_x_sign = -1            (profile queries shift profile left to leave stock)
 
-ProfileRoughing builds one shared roughing path from geo_x_shift / geo_z_shift
-and clips it to X Start before dispatching to axial, radial, diagonal, and
-contour strategies.
+ProfileRoughing builds its roughing path from geo_x_shift / geo_z_shift and
+clips it to X Start; the passes themselves are planned by profiling/machining.py.
 """
 
 from dataclasses import dataclass

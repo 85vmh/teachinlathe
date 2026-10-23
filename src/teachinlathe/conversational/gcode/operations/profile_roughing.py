@@ -1,7 +1,9 @@
 """G-code generator for Profile Roughing (OD and ID).
 
-Dispatches to the shared profiling/ strategies based on ProfilingType (OD/ID)
-and PassType (AXIAL / RADIAL / DIAGONAL_*).
+The moves are planned by profiling/machining.py, tool and all, for the
+ProfilingType (OD/ID) and PassType (AXIAL / RADIAL / DIAGONAL_*); this reads
+the operation, finds its profile and tool, keeps the plans made, and writes the
+G-code of a plan.
 """
 
 import dataclasses
