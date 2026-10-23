@@ -23,6 +23,7 @@ from teachinlathe.conversational.gcode.operations.profile_roughing_preview impor
     gcode_moves,
 )
 from teachinlathe.conversational.gcode.operations.profiling import machining
+from teachinlathe.conversational.gcode.operations.profiling import plan as plan_module
 from teachinlathe.conversational.gcode.operations.profiling.machining import (
     MIN_AREA,
     TOLERANCE,
@@ -154,14 +155,28 @@ def _slanted(m):
     return abs(m.z1 - m.z0) > 1e-6 and abs(m.r1 - m.r0) > 1e-6
 
 
-def _at_45(m):
-    return abs(abs(m.z1 - m.z0) - abs(m.r1 - m.r0)) < 1e-6
+def _angle():
+    """The diagonal passes' angle from the Z axis, in radians - the constant
+    they are planned with (45° as these were checked on the screen)."""
+    return math.radians(plan_module.DIAGONAL_ANGLE)
+
+
+def _at_diagonal_angle(m):
+    return (abs(m.z1 - m.z0) > 1e-6
+            and abs(abs(m.r1 - m.r0) / abs(m.z1 - m.z0) - math.tan(_angle())) < 1e-6)
+
+
+def _level(m):
+    """Which of the parallel diagonal lines a move starts on: how far along
+    the normal to them, (sin, cos) of their angle, in the planning frame
+    (r is -X/2 for ID)."""
+    return m.z0 * math.sin(_angle()) - m.r0 * math.cos(_angle())
 
 
 def _diagonal_cuts(plan):
-    """The 45° cuts, in the order they are made."""
+    """The diagonal cuts, in the order they are made."""
     return [m for m in plan.moves
-            if m.feed and not m.contour and _slanted(m) and _at_45(m) and abs(m.z1 - m.z0) > 0.05]
+            if m.feed and not m.contour and _slanted(m) and _at_diagonal_angle(m) and abs(m.z1 - m.z0) > 0.05]
 
 
 def _final_contour(plan):
@@ -242,12 +257,15 @@ def test_45_degree_passes_are_one_depth_of_cut_apart(profile, pass_type):
     island behind a shoulder."""
     op, plan, _planner, _s = planned(profile, pass_type)
     doc = op["cutting_parameters"]["doc"]
-    # the level a pass keeps to: z + r in the planning frame (r is -X/2 for ID)
-    levels = [m.z0 - m.r0 for m in _diagonal_cuts(plan)]
-    gaps = [(a - b) / math.sqrt(2) for a, b in zip(levels, levels[1:])]
+    cuts = _diagonal_cuts(plan)
+    gaps = [(_level(a) - _level(b), a, b) for a, b in zip(cuts, cuts[1:])]
 
     assert len(gaps) > 10
-    assert all(abs(g - doc) < 1e-3 or g < 0 for g in gaps), gaps
+    for gap, a, b in gaps:
+        # or the same line again past the profile in its way: the two cut
+        # apart, part between them
+        same_line_on = abs(gap) < 1e-6 and max(a.z1, a.z0) > max(b.z1, b.z0) and min(a.z0, a.z1) > max(b.z0, b.z1) - 1e-6
+        assert abs(gap - doc) < 1e-3 or gap < 0 or same_line_on, (gap, a, b)
 
 
 @pytest.mark.parametrize("profile", ["id_steps", "id_groove"])
@@ -263,12 +281,12 @@ def test_45_degree_passes_cut_the_way_their_arrow_points(profile, pass_type, tow
         assert math.copysign(1, m.r1 - m.r0) == toward_x
 
 
-@pytest.mark.parametrize("pass_type,comment", [("diagonal_interior", "45° Passes toward interior"),
-                                              ("diagonal_exterior", "45° Passes toward exterior")])
-def test_45_degree_gcode_says_the_way_the_passes_cut(pass_type, comment):
+@pytest.mark.parametrize("pass_type,toward", [("diagonal_interior", "interior"),
+                                             ("diagonal_exterior", "exterior")])
+def test_45_degree_gcode_says_the_way_the_passes_cut(pass_type, toward):
     lines = generate_profile_roughing_gcode(operation("id_steps", pass_type))
 
-    assert any(comment in line for line in lines)
+    assert any(f"{plan_module.DIAGONAL_ANGLE:g}° Passes toward {toward}" in line for line in lines)
 
 
 @pytest.mark.parametrize("pass_type", DIAGONAL)
@@ -300,7 +318,7 @@ def test_id_rapids_move_one_axis_at_a_time(profile, pass_type):
 
     slanted = [m for m in plan.moves if not m.feed and _slanted(m)]
     if pass_type in DIAGONAL:
-        assert all(_at_45(m) for m in slanted)
+        assert all(_at_diagonal_angle(m) for m in slanted)
     else:
         assert slanted == []
 

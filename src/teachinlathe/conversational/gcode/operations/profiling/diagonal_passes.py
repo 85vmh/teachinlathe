@@ -1,5 +1,6 @@
-"""45° passes: walked along the stock's edge - its face and the profile, or X Start
-and the profile back - a depth of cut on from one to the next."""
+"""Diagonal passes - at DIAGONAL_ANGLE from the Z axis, 45° by default: walked
+along the stock's edge - its face and the profile, or X Start and the profile
+back - a depth of cut on from one to the next."""
 
 from __future__ import annotations
 
@@ -14,7 +15,17 @@ from .plan import Move
 
 
 class DiagonalPasses:
-    """45° passes - one part of _Planner (planner.py)."""
+    """Diagonal passes - one part of _Planner (planner.py)."""
+
+    def _diagonal_off_face(self, p):
+        """Off ``p`` along Z, toward the face, by as much as keeps the way
+        back alongside a pass parallel to it: the retract at 45°."""
+        return (p[0] + self.retract * math.sqrt(0.5) / self.diagonal_sin, p[1])
+
+    def _diagonal_off_start(self, p):
+        """Off ``p`` along X, toward X Start, likewise: the retract at 45°.
+        Both lie a retract times sin 45° off the pass, square to it."""
+        return (p[0], p[1] + self.retract * math.sqrt(0.5) / self.diagonal_cos)
 
     def _diagonal_passes(self):
         """45° passes on fixed lines from the X Start corner, each run from the
@@ -35,14 +46,13 @@ class DiagonalPasses:
         self.moves.append(Move(position[0], self.sign * position[1], position[0],
                                self.sign * position[1], False))
         toward_x_start = self.setup.pass_type == PassType.DIAGONAL_INTERIOR
-        off_face, off_start = self._off_face, self._off_start
+        off_face, off_start = self._diagonal_off_face, self._diagonal_off_start
 
         step = self.doc
         while step < 2 * span + self.doc:
-            a = (self.z_start - step, self.r_start)            # X Start side
             b = (self.z_start, self.r_start - step)            # face side
-            far_a = (a[0] - FAR, a[1] + FAR)
-            far_b = (b[0] + FAR, b[1] - FAR)
+            far_a = (b[0] - FAR * self.diagonal_cos, b[1] + FAR * self.diagonal_sin)
+            far_b = (b[0] + FAR * self.diagonal_cos, b[1] - FAR * self.diagonal_sin)
             # from the X Start side down toward the face, inside the stock box
             segment = LineString([far_a, far_b]).intersection(
                 box(z_min - 1.0, r_limit, self.z_start, self.r_start))
@@ -150,9 +160,8 @@ class DiagonalPasses:
     def _walk_toward_x_start(self, walk: EdgeWalk, position) -> bool:
         """The passes toward X Start (↖) along ``walk``, and the contour a
         stretch at a time - see _diagonal_passes_along_profile."""
-        ret = self.retract
         level, at, along, next_start, edge = walk.level, walk.at, walk.along, walk.next_start, walk.edge
-        off_face, off_start = self._off_face, self._off_start
+        off_face, off_start = self._diagonal_off_face, self._diagonal_off_start
 
         def on_face(p):
             return p[0] >= self.z_start - TOLERANCE
@@ -169,7 +178,7 @@ class DiagonalPasses:
             k, u = found
             start = at(k, u)
             if on_face(start):
-                entry = (start[0] + ret, start[1])
+                entry = off_face(start)
                 if not self._go(here, entry):
                     i, t, prev, after = k, u, start, level(start)
                     made = False
@@ -193,7 +202,7 @@ class DiagonalPasses:
             made = False
             if start[1] >= self.r_start - TOLERANCE:
                 continue
-            far = (start[0] - (self.r_start - start[1]), self.r_start)
+            far = (start[0] - (self.r_start - start[1]) * self.diagonal_cos / self.diagonal_sin, self.r_start)
             runs = self._free_runs(start, far)
             if not runs or math.hypot(runs[0][0][0] - start[0], runs[0][0][1] - start[1]) > 1e-3:
                 continue                     # the profile in the way straight away
@@ -208,7 +217,7 @@ class DiagonalPasses:
             # the pass
             # - in front of its start, or where the profile is in the way
             # there, over it; failing both, back down the cut itself
-            exit_ = self._first_clear(end, [(end[0], end[1] + ret), (end[0] + ret, end[1])])
+            exit_ = self._first_clear(end, [off_start(end), off_face(end)])
             if exit_ is not None:
                 self._add(end, exit_, False)
                 here = exit_
@@ -239,7 +248,7 @@ class DiagonalPasses:
         and the contour, a stretch at a time. True when the profile is
         contoured whole, False when the tool could not get on with it."""
         level, at, along, next_start, edge = walk.level, walk.at, walk.along, walk.next_start, walk.edge
-        off_face, off_start = self._off_face, self._off_start
+        off_face, off_start = self._diagonal_off_face, self._diagonal_off_start
 
         # no deeper than the contour runs out to Z Start, in front of the face
         r_limit = max(min(r for _z, r in self.profile) + self.setup.stock_x, self._extension_r())
@@ -302,10 +311,10 @@ class DiagonalPasses:
                 continue
             # toward the face, until the profile, Z Start or the profile's
             # largest diameter (less the radial stock), whichever comes first
-            z_to = min(self.z_start, start[0] + (start[1] - r_limit))
+            z_to = min(self.z_start, start[0] + (start[1] - r_limit) * self.diagonal_cos / self.diagonal_sin)
             if z_to <= start[0] + TOLERANCE:
                 continue
-            runs = self._free_runs(start, (z_to, start[1] - (z_to - start[0])))
+            runs = self._free_runs(start, (z_to, start[1] - (z_to - start[0]) * self.diagonal_sin / self.diagonal_cos))
             if not runs or math.hypot(runs[0][0][0] - start[0], runs[0][0][1] - start[1]) > 1e-3:
                 continue                     # the profile in the way straight away
             end = runs[0][1]

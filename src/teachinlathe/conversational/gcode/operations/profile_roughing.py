@@ -26,12 +26,20 @@ log = logging.getLogger(__name__)
 
 
 def _pass_type_label(pass_type: PassType) -> str:
+    angle = f"{_diagonal_angle():g}°"
     return {
         PassType.AXIAL: "Axial Passes",
         PassType.RADIAL: "Radial Passes",
-        PassType.DIAGONAL_INTERIOR: "45° Passes toward interior",
-        PassType.DIAGONAL_EXTERIOR: "45° Passes toward exterior",
+        PassType.DIAGONAL_INTERIOR: f"{angle} Passes toward interior",
+        PassType.DIAGONAL_EXTERIOR: f"{angle} Passes toward exterior",
     }.get(pass_type, str(pass_type.value if hasattr(pass_type, "value") else pass_type))
+
+
+def _diagonal_angle() -> float:
+    """The angle diagonal passes run at: the constant for now (profiling.plan),
+    read when planning, not when this module was loaded."""
+    from .profiling import plan
+    return plan.DIAGONAL_ANGLE
 
 
 def parse_profile_roughing_config(op) -> ProfileRoughingConfig:
@@ -366,7 +374,7 @@ def plan_profile_roughing(op):
 
     if hasattr(op, "to_dict"):
         op = op.to_dict()
-    key = json.dumps(op, sort_keys=True, default=str)
+    key = json.dumps([op, _diagonal_angle()], sort_keys=True, default=str)
     plan = _PLANS.get(key)
     if plan is None:
         plan = _plan(op)
@@ -398,7 +406,8 @@ def _plan(op):
     setup = RoughingSetup(
         x_start=config.x_start, z_start=config.z_start, doc=config.doc,
         retract=config.retract, stock_x=config.stock_x, stock_z=config.stock_z,
-        profiling_type=config.profiling_type, pass_type=config.pass_type)
+        profiling_type=config.profiling_type, pass_type=config.pass_type,
+        diagonal_angle=_diagonal_angle())
     tool = resolve_tool_shape(op)
     if rest and tool is None:
         plan = plan_leftover(setup, path, stock_before,

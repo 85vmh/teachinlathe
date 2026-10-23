@@ -47,6 +47,13 @@ class RoughingPlan:
     warnings: List[str] = field(default_factory=list)
     error: str = ""
 
+#: The angle the diagonal passes run at, from the Z axis, in degrees - as the
+#: part has it, on the radius: 45° is as far along Z as across X/2.
+DIAGONAL_ANGLE = 45.0
+#: The angles a diagonal pass may run at.
+DIAGONAL_ANGLE_RANGE = (30.0, 60.0)
+
+
 @dataclass(frozen=True)
 class RoughingSetup:
     x_start: float
@@ -57,3 +64,10 @@ class RoughingSetup:
     stock_z: float
     profiling_type: ProfilingType
     pass_type: PassType
+    #: the diagonal passes' angle from the Z axis, in degrees
+    diagonal_angle: float = DIAGONAL_ANGLE
+
+    def __post_init__(self):
+        low, high = DIAGONAL_ANGLE_RANGE
+        if not low <= self.diagonal_angle <= high:
+            raise ValueError(f"diagonal angle {self.diagonal_angle}° is not within {low:g}..{high:g}°")

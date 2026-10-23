@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from shapely.geometry import LineString, Point, Polygon
 
 from .shapes import Pt, FAR, TOLERANCE, _simplify
@@ -131,15 +131,17 @@ class Edge:
         if self.moves and self.moves[-1].contour:
             self.moves[-1].drawn = (da[0], self.sign * da[1], db[0], self.sign * db[1])
 
-    def _add_pass(self, a: Pt, b: Pt, toward: Pt = (-math.sqrt(0.5), -math.sqrt(0.5))):
+    def _add_pass(self, a: Pt, b: Pt, toward: Optional[Pt] = None):
         """A pass from ``a`` to ``b``, drawn at the edge it leaves: where the
         nose reaches furthest ``toward`` what is still to cut (a unit vector
-        square to the pass; a 45° pass's by default) - not at the control
+        square to the pass; a diagonal pass's by default) - not at the control
         point, which lies outside the nose wherever the pass ends against a
         slope or an arc."""
         self._add(a, b, True, pass_no=self.pass_no)
         if not self.tool.known or not self.moves:
             return
+        if toward is None:
+            toward = (-self.diagonal_sin, -self.diagonal_cos)
         centre = self._m(self.tool.centre)
         radius = self.tool.nose_radius
         dz, dr = centre[0] + radius * toward[0], centre[1] + radius * toward[1]

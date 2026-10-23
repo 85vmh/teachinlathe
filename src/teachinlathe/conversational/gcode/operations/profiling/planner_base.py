@@ -31,6 +31,10 @@ class PlannerBase:
                          else list(self.tool.envelope))
         self.doc = setup.doc if setup.doc > 0 else 0.5
         self.retract = abs(setup.retract)
+        # the diagonal passes run along (-cos, sin) - toward Z- and X Start -
+        # and the other way; (sin, cos) is square to them
+        angle = math.radians(setup.diagonal_angle)
+        self.diagonal_sin, self.diagonal_cos = math.sin(angle), math.cos(angle)
 
         self.z_start = setup.z_start
         self.r_start = self.sign * setup.x_start / 2.0       # mirrored frame

@@ -64,6 +64,8 @@ from .tool_shape import (  # noqa: F401
     _swung,
 )
 from .plan import (  # noqa: F401
+    DIAGONAL_ANGLE,
+    DIAGONAL_ANGLE_RANGE,
     Move,
     RoughingPlan,
     RoughingSetup,
