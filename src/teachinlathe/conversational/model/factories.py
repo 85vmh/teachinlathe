@@ -153,7 +153,7 @@ def make_default_operation(op_type: str, order: int = 1):
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
             spindleParameters=spindle_rpm,
             cuttingParameters=CuttingParameters(feedRate=0.1, doc=0.5, retract=1.0),
-            profilingParameters=ProfilingParameters(profile_id=1, xStart=0.0, zStart=0.0),
+            profilingParameters=ProfilingParameters(profile_id=1, xStart=0.0, zStart=2.0),
             profileRoughingStrategy=ProfileRoughingStrategy(
                 profiling_type=ProfilingType.OD,
                 pass_type=PassType.AXIAL,

@@ -63,6 +63,10 @@ Canvas {
     // the axes - the dashed Z0 line and the Z+ / X+ arrows; the operations
     // leave them out, the origin alone marking Z0
     property bool   showAxes: true
+    // the dashed X axis through the origin; with the axes, and on its own
+    // where they are left out
+    property bool   showZeroLine: showAxes
+    onShowZeroLineChanged: requestPaint()
     onShowAxesChanged: requestPaint()
     // how far in from the edges the ticks reach, px
     readonly property real tickBand: 7
@@ -397,6 +401,44 @@ Canvas {
         requestPaint()
     }
 
+    // ── Moving the view: the last drawing moved, not drawn again ──────────────
+    // While a drag, a pinch or the wheel moves the view, what was last drawn
+    // is shown moved and scaled to it - one image, however much is drawn -
+    // and drawn again, sharp, once the gesture ends. Everything placed over
+    // the canvas follows the view as it moves, from _originX/_originY/_scale.
+    // Only where there is much to draw (snapshotWhileMoving); elsewhere the
+    // view is drawn whole as it moves.
+    property bool snapshotWhileMoving: false
+    property bool _viewMoving: false
+    property var  _snapshot: null
+    // the view the canvas was last drawn at, whole
+    property real _drawnOriginX: 0
+    property real _drawnOriginY: 0
+    property real _drawnScale:   1
+
+    function _beginViewMove() {
+        if (_viewMoving || !snapshotWhileMoving) return
+        // the drawing is kept in device pixels: all of it, on a scaled
+        // screen too, not its top-left width x height of them
+        var ratio = Screen.devicePixelRatio
+        _snapshot = getContext("2d").getImageData(0, 0, Math.round(width * ratio), Math.round(height * ratio))
+        _viewMoving = true
+    }
+
+    function _endViewMove() {
+        if (!_viewMoving) return
+        _viewMoving = false
+        _snapshot = null
+        requestPaint()
+    }
+
+    // the wheel has no end: the gesture ends once it stops turning
+    Timer {
+        id: wheelSettle
+        interval: 150
+        onTriggered: root._endViewMove()
+    }
+
     // ── Paint dispatcher ───────────────────────────────────────────────────────
     onPaint: {
         // a fit still waiting: made now, before anything is drawn
@@ -404,13 +446,23 @@ Canvas {
         var ctx = getContext("2d")
         ctx.clearRect(0, 0, width, height)
         backgroundActor.paint(ctx)
+        if (_viewMoving && _snapshot) {
+            // a pixel p of the drawing is at world (p - drawnOrigin) / drawnScale,
+            // so now at origin + (p - drawnOrigin) * k
+            var k = _scale / _drawnScale
+            ctx.drawImage(_snapshot, _originX - _drawnOriginX * k, _originY - _drawnOriginY * k,
+                          width * k, height * k)
+            return
+        }
+        _drawnOriginX = _originX
+        _drawnOriginY = _originY
+        _drawnScale   = _scale
         // not placed yet, and not zoomed or panned by hand: the background alone
         if (!_fitted && !_manualView) return
         gridActor.paint(ctx)
-        ticksActor.paint(ctx)
         stockActor.paint(ctx)
         centerLineActor.paint(ctx)
-        if (showAxes) axesActor.paintZeroLine(ctx)
+        if (showZeroLine) axesActor.paintZeroLine(ctx)
         originActor.paint(ctx)
         pathActor.paint(ctx)
         stockToLeaveActor.paint(ctx)
@@ -423,6 +475,8 @@ Canvas {
         startPositionActor.paint(ctx)
         endPositionActor.paint(ctx)
         markersActor.paint(ctx)
+        // the ticks along the edges over what is drawn, as a ruler laid on it
+        ticksActor.paint(ctx)
         // the axes' arrows over everything, the arrows to the boxes too;
         // with the stock drawn, X+ past its skin by its usual length
         axesActor.xAxisLength = _stockDrawn() ? _cy(Number(workpiece.external_diameter)) - _cy(0) + axesActor.axisLength
@@ -515,6 +569,7 @@ Canvas {
         cy: root._cy
         mirrorAcrossCenterline: root.mirrorAcrossCenterline
         showTransitions: root.showTransitions
+        profileType: root.profileType
     }
 
     DiameterLeaderActor {
@@ -767,6 +822,7 @@ Canvas {
         property real _worldXAtStart: 0
 
         onPinchStarted: function(pinch) {
+            root._beginViewMove()
             _scaleAtStart  = root._scale
             _worldZAtStart = (pinch.startCenter.x - root._originX) / root._scale
             _worldXAtStart = (pinch.startCenter.y - root._originY) / root._scale
@@ -782,6 +838,8 @@ Canvas {
             root._scale   = newScale
             root.requestPaint()
         }
+
+        onPinchFinished: root._endViewMove()
 
         // ── Mouse: pan + zoom + click + double-click fit ──────────────────────────
         MouseArea {
@@ -809,6 +867,7 @@ Canvas {
                 if (!_wasDrag && (Math.abs(dx) > _DEAD_ZONE || Math.abs(dy) > _DEAD_ZONE)) {
                     _wasDrag = true
                     root._manualView = true
+                    root._beginViewMove()
                 }
                 if (_wasDrag) {
                     root._originX = _originXAtDragStart + dx
@@ -816,6 +875,9 @@ Canvas {
                     root.requestPaint()
                 }
             }
+
+            onReleased: if (_wasDrag) root._endViewMove()
+            onCanceled: root._endViewMove()
 
             onClicked: function(mouse) {
                 if (_wasDrag || !root.selectable) return
@@ -858,6 +920,8 @@ Canvas {
 
                 var newScale = Math.max(0.05, Math.min(200.0, root._scale * factor))
 
+                root._beginViewMove()
+                wheelSettle.restart()
                 // keep the world point under the cursor fixed
                 root._originX = wheel.x - worldZ * newScale
                 root._originY = wheel.y - worldX * newScale

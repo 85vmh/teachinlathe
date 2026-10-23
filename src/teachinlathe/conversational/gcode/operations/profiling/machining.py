@@ -32,6 +32,7 @@ would not. A holder wider than those lines can still hit a shoulder.
 
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass, field
 from typing import List, Optional, Sequence, Tuple
@@ -42,6 +43,8 @@ from shapely.ops import unary_union
 from teachinlathe.conversational.model.data_types import PassType, ProfilingType
 
 from .geometry import StartPoint, ToolpathArc
+
+log = logging.getLogger(__name__)
 
 Pt = Tuple[float, float]
 
@@ -399,16 +402,16 @@ class _Planner:
         """Whether a rapid from ``a`` to ``b`` meets neither the part nor the
         material still there."""
         swept = sweep(self.envelope, a, b)
-        return (swept.intersection(self.remaining).area < MIN_AREA
-                and swept.intersection(self.part_inside).area < MIN_AREA)
+        return (_intersection(swept, self.remaining).area < MIN_AREA
+                and _intersection(swept, self.part_inside).area < MIN_AREA)
 
     def _feed_clear(self, a: Pt, b: Pt) -> bool:
         """Whether a cut from ``a`` to ``b`` stays off the stock to leave."""
         swept = sweep(self.envelope, a, b)
-        return swept.intersection(self.part_allow_inside).area < MIN_AREA
+        return _intersection(swept, self.part_allow_inside).area < MIN_AREA
 
     def _removes(self, a: Pt, b: Pt) -> float:
-        return sweep(self.envelope, a, b).intersection(self.remaining).area
+        return _intersection(sweep(self.envelope, a, b), self.remaining).area
 
     def _cuts(self, a: Pt, b: Pt) -> bool:
         """Whether a move from ``a`` to ``b`` takes off anything worth it: on
@@ -447,15 +450,25 @@ class _Planner:
             self.warnings.append("No turning tool in a Change Tool above: roughing only what "
                                  "any tool reaches, pockets and undercuts left")
         if self.setup.pass_type == PassType.RADIAL:
-            self._passes(lambda u, v: (v, u), u_start=self.r_start, u_far=self._r_min() - 1.0,
+            # in front of the face no deeper than the contour runs out to Z
+            # Start; behind it the profile stops them
+            z_face = self.profile[0][0] + self.setup.stock_z
+            self._passes(lambda u, v: (v, u), u_start=self.r_start,
+                         u_far=lambda v: self._extension_r() if v > z_face + TOLERANCE else self._r_min() - 1.0,
                          v_start=self.z_start, v_end=self._z_min())
         elif self.setup.pass_type in (PassType.DIAGONAL_INTERIOR, PassType.DIAGONAL_EXTERIOR):
-            self._diagonal_passes()
+            self._diagonal_passes_along_profile()
         else:
-            self._passes(lambda u, v: (u, v), u_start=self.z_start, u_far=self._z_min() - 1.0,
-                         v_start=self.r_start, v_end=self._r_min())
+            # no level deeper than the contour runs out to Z Start: one would
+            # cut only in front of the face, past it
+            self._passes(lambda u, v: (u, v), u_start=self.z_start, u_far=lambda v: self._z_min() - 1.0,
+                         v_start=self.r_start, v_end=max(self._r_min(), self._extension_r()))
         chain = self._contour_chain()
-        self._pockets(chain)
+        # 45° passes leave nothing to be cut along the axes
+        if self.setup.pass_type not in (PassType.DIAGONAL_INTERIOR, PassType.DIAGONAL_EXTERIOR):
+            self._pockets(chain)
+        # after the 45° passes - the profile contoured along the way - a
+        # contour of its own still, from the back to the front
         self._contour(chain)
         return self._result()
 
@@ -474,17 +487,28 @@ class _Planner:
             levels.append(v_end)
         return levels
 
+    def _extension_r(self) -> float:
+        """The radius (mirrored frame) the contour runs out to Z Start at:
+        no pass goes deeper than it in front of the face."""
+        chain = self._contour_chain()
+        return chain[0][1] if chain else min(r for _z, r in self.profile) + self.setup.stock_x
+
     def _passes(self, at, u_start, u_far, v_start, v_end):
-        """Passes along u, from u_start toward u_far, one level of v at a
-        time from v_start down to v_end - (u, v) is (z, r) for axial passes
-        and (r, z) for radial ones; ``at`` turns (u, v) into (z, r)."""
+        """Passes along u, from u_start toward u_far (of the level), one level
+        of v at a time from v_start down to v_end - (u, v) is (z, r) for
+        axial passes and (r, z) for radial ones; ``at`` turns (u, v) into
+        (z, r). Where a pass ends on the profile it goes on along it, a
+        contour, back up to the level of the pass before - the step between
+        them cut there, not left to the contour at the end."""
         ret = self.retract
         position = at(u_start + ret, v_start + ret)
         self.moves.append(Move(position[0], self.sign * position[1],
                                position[0], self.sign * position[1], False))
+        v_of = (lambda p: p[1]) if at(0, 1)[1] == 1 else (lambda p: p[0])
+        v_before = v_start                     # the level of the pass before
         for v in self._levels(v_start, v_end):
             start = at(u_start, v)
-            runs = self._free_runs(start, at(u_far, v))
+            runs = self._free_runs(start, at(u_far(v), v))
             if not runs or Point(runs[0][0]).distance(Point(start)) > 1e-6:
                 continue                       # the stock face is out of reach here
             end = runs[0][1]
@@ -500,14 +524,22 @@ class _Planner:
                 continue
             # the lead-in at the feed when it touches material left there
             self._add(entry, start, not self._rapid_clear(entry, start), pass_no=self.pass_no)
-            self._add(start, end, True, pass_no=self.pass_no)
+            # drawn at the nose's edge toward the next level
+            self._add_pass(start, end, at(0, -1))
+            # on along the profile up to the level before, when it ends on it
+            for a, b, da, db in self._step_up(end, v_before, v_of):
+                self._add_drawn(a, b, da, db)
+                end = b
+                exit_ = (b[0] + ret, b[1] + ret)
+            v_before = v
             self.pass_no += 1
             if self._rapid_clear(end, exit_):
                 self._add(end, exit_, False)
                 position = exit_
             else:
                 position = end
-            back = at(u_start + ret, v + ret)
+            # straight back out, at the level it left off at
+            back = at(u_start + ret, v_of(position))
             if self._rapid_clear(position, back):
                 self._add(position, back, False)
                 position = back
@@ -515,6 +547,74 @@ class _Planner:
                 position = self._lift(position)
             self._end_pass()
         self.position = position
+
+    def _step_up(self, end: Pt, v_before: float, v_of) -> List[Tuple[Pt, Pt, Pt, Pt]]:
+        """From ``end``, where a pass meets the profile, along the contour
+        the way the level ``v_of`` comes back up, to ``v_before`` - the level
+        of the pass before - or to where the profile turns away from it
+        again: the stretches (a, b) with where the nose touches (da, db).
+        None when the pass does not end on the contour."""
+        chain = self._contour_chain()
+        if len(chain) < 2:
+            return []
+        drawn = self._drawn(chain)
+        best, at_i = None, -1
+        for i, (a, b) in enumerate(zip(chain, chain[1:])):
+            d = LineString([a, b]).distance(Point(end))
+            if best is None or d < best:
+                best, at_i = d, i
+        if best is None or best > 1e-3:
+            return []
+        a, b = chain[at_i], chain[at_i + 1]
+        length = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
+        t = ((end[0] - a[0]) * (b[0] - a[0]) + (end[1] - a[1]) * (b[1] - a[1])) / (length * length)
+        t = min(1.0, max(0.0, t))
+        tol = 1e-9
+
+        def point(i, u):
+            p, q = chain[i], chain[i + 1]
+            return (p[0] + u * (q[0] - p[0]), p[1] + u * (q[1] - p[1]))
+
+        def touch(i, u):
+            p, q = drawn[i]
+            return (p[0] + u * (q[0] - p[0]), p[1] + u * (q[1] - p[1]))
+
+        # which way along the chain the level comes back up
+        forward = v_of(b) > v_of(end) + tol
+        backward = v_of(a) > v_of(end) + tol
+        if not forward and not backward:
+            return []
+        step = 1 if forward and (not backward or v_of(b) >= v_of(a)) else -1
+        out = []
+        i, u = at_i, t
+        while 0 <= i < len(chain) - 1:
+            u_to = 1.0 if step > 0 else 0.0
+            here, there = point(i, u), point(i, u_to)
+            if v_of(there) < v_of(here) - tol:
+                break                          # turning away from it again
+            if v_of(there) >= v_before - tol:
+                span = v_of(there) - v_of(here)
+                u_to = u + (u_to - u) * ((v_before - v_of(here)) / span if span > tol else 1.0)
+                there = point(i, u_to)
+                if math.hypot(there[0] - here[0], there[1] - here[1]) > 1e-9:
+                    out.append((here, there, touch(i, u), touch(i, u_to)))
+                break
+            if math.hypot(there[0] - here[0], there[1] - here[1]) > 1e-9:
+                out.append((here, there, touch(i, u), touch(i, u_to)))
+            i += step
+            u = 0.0 if step > 0 else 1.0
+        return out
+
+    def _go_x_then_z(self, a: Pt, b: Pt):
+        """Rapid from ``a`` to ``b`` along X first, then along Z - never both
+        at once - when both legs are clear; else as _go finds a way."""
+        corner = (a[0], b[1])
+        legs = [(a, corner), (corner, b)]
+        if all(self._rapid_clear(p, q) for p, q in legs):
+            for p, q in legs:
+                self._add(p, q, False)
+            return True
+        return self._go(a, b)
 
     def _go(self, a: Pt, b: Pt):
         """Rapid from ``a`` to ``b`` by the first of these whose every leg is
@@ -556,14 +656,28 @@ class _Planner:
 
     def _diagonal_passes(self):
         """45° passes, as profiling.diagonal lays them out, each run from the
-        stock edge until it meets the obstacle."""
+        stock edge until it meets the obstacle, and toward the profile's
+        largest diameter no further than it (less the radial stock).
+
+        Each pass comes in and leaves along an axis, a retract off its ends:
+        at its end on the face side along Z, at its end on the X Start side
+        along X. Between the two, back the way it cut, a retract off it - in
+        line with both - for the next pass."""
         ret = self.retract
         z_min, r_min = self._z_min(), self._r_min()
+        r_limit = min(r for _z, r in self.profile) + self.setup.stock_x
         span = max(self.r_start - r_min, self.z_start - z_min)
         position = (self.z_start + ret, self.r_safe)
         self.moves.append(Move(position[0], self.sign * position[1], position[0],
                                self.sign * position[1], False))
-        exterior = self.setup.pass_type == PassType.DIAGONAL_EXTERIOR
+        toward_x_start = self.setup.pass_type == PassType.DIAGONAL_INTERIOR
+
+        def off_face(p):
+            return (p[0] + ret, p[1])
+
+        def off_start(p):
+            return (p[0], p[1] + ret)
+
         step = self.doc
         while step < 2 * span + self.doc:
             a = (self.z_start - step, self.r_start)            # X Start side
@@ -572,7 +686,7 @@ class _Planner:
             far_b = (b[0] + FAR, b[1] - FAR)
             # from the X Start side down toward the face, inside the stock box
             segment = LineString([far_a, far_b]).intersection(
-                box(z_min - 1.0, r_min - 1.0, self.z_start, self.r_start))
+                box(z_min - 1.0, r_limit, self.z_start, self.r_start))
             step += self.doc
             if segment.is_empty or segment.length < TOLERANCE:
                 continue
@@ -580,19 +694,364 @@ class _Planner:
             if p[1] < q[1]:
                 p, q = q, p                                    # p: the outer end
             for run in self._free_runs(p, q):
-                start, end = (run[1], run[0]) if exterior else run
+                # run[0] on the X Start side, run[1] on the face side
+                if toward_x_start:
+                    start, end = run[1], run[0]
+                    entry, exit_ = off_face(start), off_start(end)
+                else:
+                    start, end = run
+                    entry, exit_ = off_start(start), off_face(end)
                 if not self._cuts(start, end) or not self._feed_clear(start, end):
                     continue
-                entry = (start[0] + ret, start[1] + ret)
                 if not self._go(position, entry):
                     continue
                 self._add(entry, start, not self._rapid_clear(entry, start), pass_no=self.pass_no)
-                self._add(start, end, True, pass_no=self.pass_no)
+                self._add_pass(start, end)
                 self.pass_no += 1
-                position = self._lift(end)
+                if self._rapid_clear(end, exit_):
+                    self._add(end, exit_, False)
+                    position = exit_
+                    if self._rapid_clear(exit_, entry):
+                        self._add(exit_, entry, False)
+                        position = entry
+                else:
+                    position = self._lift(end)
                 self._end_pass()
                 break
         self.position = position
+
+    def _diagonal_passes_along_profile(self):
+        """45° passes, each on a line through a point on the edge of the
+        stock: down its face at Z Start, then out along the profile - offset
+        by the stock to leave, compensated, carried on to Z Start along the
+        axis - each a depth of cut (square to the passes) on from the one
+        before. Each runs between that point and the X Start diameter, or
+        where it meets the profile before it.
+
+        Toward the X Start side - toward the interior, ↖ (DIAGONAL_INTERIOR) -
+        a pass starts at its
+        point. Down the face it comes in along Z, a retract in front of it; on
+        the profile it comes from where the pass before it started, along the
+        profile at the feed, a contour, to its own start. Each leaves along X,
+        a retract off its end, and comes back the way it cut, a retract off
+        it, to the diameter it started at, a retract in front of its start.
+
+        Toward the profile - toward the exterior, ↘ (DIAGONAL_EXTERIOR) - the
+        edge is walked the other
+        way round: along the X Start diameter toward Z- to over the profile's
+        end, then back along the profile toward the face - into what the
+        passes from X Start do not reach behind a shoulder. A pass starts at
+        its point and runs toward the face until it meets the profile or Z
+        Start. On X Start it comes in along X, a retract over it; on the
+        profile it comes from where the pass before it started, along the
+        profile, a contour. Each leaves along Z by a retract - along X where
+        Z is in the way - and comes back the way it cut, a retract off it, to
+        its start.
+
+        With no point on the profile a depth of cut on from the last pass,
+        the contour goes on from where that pass started to the profile's
+        end: the profile is then contoured whole, a stretch at a time. True
+        when it is, False when the tool could not get on with it (the contour
+        is then still to do, from the start)."""
+        ret = self.retract
+        chain = self._contour_chain()
+        if self.rest or len(chain) < 2:
+            self._diagonal_passes()
+            return False
+        toward_x_start = self.setup.pass_type == PassType.DIAGONAL_INTERIOR
+        # where the nose touches along it, as the contour is drawn
+        # each stretch of the edge drawn: the profile's where the nose
+        # touches it, the face at Z Start and X Start where they are
+        profile_drawn = self._drawn(chain)
+        if toward_x_start:
+            edge = [(self.z_start, self.r_start)] + chain
+            touch = [(edge[0], edge[1])] + profile_drawn
+        else:
+            # along X Start to over the profile's end, then back along it
+            over_end = (chain[-1][0], self.r_start)
+            back_along = list(reversed(chain))
+            touch = [((self.z_start, self.r_start), over_end)]
+            if math.hypot(back_along[0][0] - over_end[0], back_along[0][1] - over_end[1]) <= TOLERANCE:
+                back_along = back_along[1:]
+            else:
+                touch.append((over_end, back_along[0]))
+            touch += [(db, da) for da, db in reversed(profile_drawn)]
+            edge = [(self.z_start, self.r_start), over_end] + back_along
+        position = (self.z_start + ret, self.r_safe)
+        self.moves.append(Move(position[0], self.sign * position[1], position[0],
+                               self.sign * position[1], False))
+
+        def level(p):                       # constant along a pass
+            return p[0] + p[1]
+
+        def at(i, t, points=edge):
+            a, b = points[i], points[i + 1]
+            if t <= 0.0:
+                return a
+            if t >= 1.0:
+                return b
+            return (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
+
+        def drawn_at(i, t):
+            (a, b) = touch[i]
+            return (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
+
+        def along(i, t, k, u):
+            """At the feed along the edge from (i, t) to (k, u), as a contour."""
+            for j in range(i, k + 1):
+                t0 = t if j == i else 0.0
+                t1 = u if j == k else 1.0
+                if t1 - t0 > 1e-12:
+                    self._add_drawn(at(j, t0), at(j, t1), drawn_at(j, t0), drawn_at(j, t1))
+
+        reach = (self.tool.nose_radius if self.tool.known else 0.0) + 0.1
+        across = (1.0 / math.sqrt(2.0), 1.0 / math.sqrt(2.0))   # square to the passes, off the profile
+        # How far short of its control line, square to it, a pass cuts: at
+        # 45° the control point lies outside the nose. What is left over a
+        # point is measured to the edge the last pass left; less this, it is
+        # measured to that pass's line - the depth of cut, as down X Start
+        shortfall = max(0.0, min(e[0] * across[0] + e[1] * across[1] for e in self.envelope))
+
+        def thickness(p):
+            """How thick what is left over ``p`` is, square to the passes: up
+            to where it has been cut away already. Past a shoulder the passes
+            before did not reach, that is the last one that did."""
+            far = 3.0 * self.doc + reach
+            ray = LineString([p, (p[0] + across[0] * far, p[1] + across[1] * far)])
+            left = _intersection(ray, self.remaining)
+            for piece in getattr(left, "geoms", [left]):
+                if piece.is_empty or piece.length < TOLERANCE:
+                    continue
+                coords = list(piece.coords)
+                near = min(Point(c).distance(Point(p)) for c in coords)
+                if near <= reach:
+                    return max(Point(c).distance(Point(p)) for c in coords) - shortfall
+            return 0.0
+
+        def depth(p, after, made):
+            """The depth a pass from ``p`` would cut: past the last pass's
+            line (``after`` its level), or into what is left over it, the
+            larger. With the last pass not made (``made`` False) nothing was
+            cut there: past its line only, or the walk would stand still."""
+            beyond = (after - level(p)) / math.sqrt(2.0)
+            return max(beyond, thickness(p)) if made else beyond
+
+        sample = min(0.2, self.doc / 4.0)
+
+        def next_start(i, t, after, made):
+            """The first point on the edge after (i, t) a depth of cut deep."""
+            for k in range(i, len(edge) - 1):
+                u0 = t if k == i else 0.0
+                a, b = edge[k], edge[k + 1]
+                length = math.hypot(b[0] - a[0], b[1] - a[1])
+                if length < 1e-12:
+                    continue
+                n = max(1, int(math.ceil((1.0 - u0) * length / sample)))
+                lo = u0
+                for j in range(1, n + 1):
+                    u = u0 + (1.0 - u0) * j / n
+                    if depth(at(k, u), after, made) >= self.doc - 1e-6:
+                        for _ in range(12):
+                            mid = (lo + u) / 2
+                            if depth(at(k, mid), after, made) >= self.doc - 1e-6:
+                                u = mid
+                            else:
+                                lo = mid
+                        return k, u
+                    lo = u
+            return None
+
+        def on_face(p):
+            return p[0] >= self.z_start - TOLERANCE
+
+        def off_face(p):
+            return (p[0] + ret, p[1])
+
+        def off_start(p):
+            return (p[0], p[1] + ret)
+
+        if not toward_x_start:
+            return self._diagonal_walk_toward_profile(edge, at, along, level, next_start,
+                                                      off_face, off_start, position)
+        i, t = 0, 0.0
+        prev = edge[0]
+        after = level(prev)
+        here = position                      # where the tool is
+        made = True                          # the last pass cut what it was for
+        while True:
+            found = next_start(i, t, after, made)
+            if found is None:
+                break
+            k, u = found
+            start = at(k, u)
+            if on_face(start):
+                entry = (start[0] + ret, start[1])
+                if not self._go(here, entry):
+                    i, t, prev, after = k, u, start, level(start)
+                    made = False
+                    continue
+                self._add(entry, start, not self._rapid_clear(entry, start), pass_no=self.pass_no)
+            else:
+                if here != prev:
+                    entry = (prev[0] + ret, prev[1])
+                    if here != entry and not self._go(here, entry):
+                        break
+                    self._add(entry, prev, not self._rapid_clear(entry, prev), pass_no=self.pass_no)
+                # along the profile, from where the last pass started to this one
+                along(i, t, k, u)
+            here = start
+            i, t, prev, after = k, u, start, level(start)
+            made = False
+            if start[1] >= self.r_start - TOLERANCE:
+                continue
+            far = (start[0] - (self.r_start - start[1]), self.r_start)
+            runs = self._free_runs(start, far)
+            if not runs or math.hypot(runs[0][0][0] - start[0], runs[0][0][1] - start[1]) > 1e-3:
+                continue                     # the profile in the way straight away
+            end = runs[0][1]
+            if not self._cuts(start, end) or not self._feed_clear(start, end):
+                continue
+            self._add_pass(start, end)
+            self.pass_no += 1
+            made = True
+            # off its end along X - along Z where it ends against the profile
+            # and X is in the way: either way on the line back, a retract off
+            # the pass
+            back = (start[0] + ret, start[1])
+            exit_ = next((p for p in [(end[0], end[1] + ret), (end[0] + ret, end[1])]
+                          if self._rapid_clear(end, p)), None)
+            if exit_ is not None:
+                self._add(end, exit_, False)
+                here = exit_
+                if self._rapid_clear(exit_, back):
+                    self._add(exit_, back, False)
+                    here = back
+            else:
+                here = self._lift(end)
+            self._end_pass()
+        # on from where the last pass started, to the profile's end
+        if here != prev:
+            entry = (prev[0] + ret, prev[1])
+            if here != entry and not self._go(here, entry):
+                self.position = here
+                return False
+            self._add(entry, prev, not self._rapid_clear(entry, prev), pass_no=self.pass_no)
+        along(i, t, len(edge) - 2, 1.0)
+        self.pass_no += 1
+        self.position = self._lift(edge[-1])
+        return True
+
+    def _diagonal_walk_toward_profile(self, edge, at, along, level, next_start,
+                                      off_face, off_start, position):
+        """The passes toward the profile along ``edge`` - X Start, then the
+        profile back toward the face (see _diagonal_passes_along_profile) -
+        and the contour, a stretch at a time. True when the profile is
+        contoured whole, False when the tool could not get on with it."""
+
+        # no deeper than the contour runs out to Z Start, in front of the face
+        r_limit = max(min(r for _z, r in self.profile) + self.setup.stock_x, self._extension_r())
+
+        def on_x_start(i):
+            return i == 0
+
+        def onto_profile(here):
+            """From over X Start down onto the profile's end, at its start."""
+            if not self._go(here, off_start(edge[1])):
+                return None
+            self._add(off_start(edge[1]), edge[1],
+                      not self._rapid_clear(off_start(edge[1]), edge[1]), pass_no=self.pass_no)
+            return edge[1]
+
+        def back_to(here, p):
+            """Back to ``p`` on the profile, from just off it - or around."""
+            if here == p:
+                return p
+            near = math.hypot(here[0] - p[0], here[1] - p[1]) <= 1.5 * self.retract + TOLERANCE
+            if not near:
+                if not self._go(here, off_start(p)):
+                    return None
+                here = off_start(p)
+            self._add(here, p, not self._rapid_clear(here, p), pass_no=self.pass_no)
+            return p
+
+        i, t = 0, 0.0
+        prev = edge[0]
+        after = level(prev)
+        here = position
+        made = True
+        while True:
+            found = next_start(i, t, after, made)
+            if found is None:
+                break
+            k, u = found
+            start = at(k, u)
+            # to its start: over it on X Start, or along the profile
+            if on_x_start(k):
+                entry = off_start(start)
+                ready = self._go(here, entry)
+                if ready:
+                    here = entry
+            else:
+                if on_x_start(i):
+                    here = onto_profile(here)
+                    from_i, from_t = 1, 0.0
+                else:
+                    here = back_to(here, prev)
+                    from_i, from_t = i, t
+                if here is None:
+                    self.position = position
+                    return False
+                along(from_i, from_t, k, u)
+                here = start
+                ready = True
+            i, t, prev, after = k, u, start, level(start)
+            made = False
+            if not ready or start[0] >= self.z_start - TOLERANCE:
+                continue
+            # toward the face, until the profile, Z Start or the profile's
+            # largest diameter (less the radial stock), whichever comes first
+            z_to = min(self.z_start, start[0] + (start[1] - r_limit))
+            if z_to <= start[0] + TOLERANCE:
+                continue
+            runs = self._free_runs(start, (z_to, start[1] - (z_to - start[0])))
+            if not runs or math.hypot(runs[0][0][0] - start[0], runs[0][0][1] - start[1]) > 1e-3:
+                continue                     # the profile in the way straight away
+            end = runs[0][1]
+            if not self._cuts(start, end) or not self._feed_clear(start, end):
+                continue
+            if here != start:
+                self._add(here, start, not self._rapid_clear(here, start), pass_no=self.pass_no)
+            self._add_pass(start, end)
+            self.pass_no += 1
+            made = True
+            # off its end along Z - along X where Z is in the way - and back
+            # the way it cut, a retract off it, to its start
+            exit_ = next((p for p in [off_face(end), off_start(end)] if self._rapid_clear(end, p)), None)
+            if exit_ is None:
+                here = self._lift(end)
+            else:
+                self._add(end, exit_, False)
+                here = exit_
+                back = next((p for p in [off_start(start), off_face(start)]
+                             if self._rapid_clear(here, p)), None)
+                if back is not None:
+                    self._add(here, back, False)
+                    here = back
+            self._end_pass()
+        # the contour, on to the face from where the last pass started
+        if on_x_start(i):
+            here = onto_profile(here)
+            from_i, from_t = 1, 0.0
+        else:
+            here = back_to(here, prev)
+            from_i, from_t = i, t
+        if here is None:
+            self.position = position
+            return False
+        along(from_i, from_t, len(edge) - 2, 1.0)
+        self.pass_no += 1
+        self.position = self._lift(edge[-1])
+        return True
 
     # ── pockets ─────────────────────────────────────────────────────────────
 
@@ -703,18 +1162,33 @@ class _Planner:
     def _contour(self, chain):
         """Along the obstacle's edge: the profile, offset by the stock to leave
         and compensated for the nose, bridged over what the tool cannot enter.
-        From the top of the profile's start to its end point."""
+        From the top of the profile's start to its end point - after radial
+        passes the other way round, from its end out to Z Start."""
         if len(chain) < 2:
             self.warnings.append("no contour: the tool reaches none of the profile")
             return
         drawn = self._drawn(chain)
         approach = self._contour_approach(chain)
-        segments = list(zip(chain, chain[1:], drawn, drawn[1:]))
+        segments = [(a, b, da, db) for (a, b), (da, db) in zip(zip(chain, chain[1:]), drawn)]
+        if not self.rest and self.setup.pass_type in (PassType.RADIAL, PassType.DIAGONAL_INTERIOR,
+                                                      PassType.DIAGONAL_EXTERIOR):
+            # after radial and 45° passes from the back to the front: in at
+            # the profile's end, along it toward Z+ and out to Z Start
+            if not self._go_x_then_z(self.position, chain[-1]):
+                self.warnings.append("no contour: no clear way to its end")
+                return
+            for a, b, da, db in reversed(segments):
+                self._add_drawn(b, a, db, da)
+            self.pass_no += 1
+            self.position = self._lift(chain[0])
+            return
         if not self.rest:
-            if not self._go(self.position, approach):
+            if not self._go_x_then_z(self.position, approach):
                 self.warnings.append("no contour: no clear way to its start")
                 return
-            self._add_drawn(approach, chain[0], approach, drawn[0])
+            # drawn where the nose touches, as the chain is: along the axis
+            touch = (approach[0] + drawn[0][0][0] - chain[0][0], approach[1] + drawn[0][0][1] - chain[0][1])
+            self._add_drawn(approach, chain[0], touch, drawn[0][0])
             for a, b, da, db in segments:
                 self._add_drawn(a, b, da, db)
             self.pass_no += 1
@@ -751,32 +1225,88 @@ class _Planner:
         if self.moves and self.moves[-1].contour:
             self.moves[-1].drawn = (da[0], self.sign * da[1], db[0], self.sign * db[1])
 
-    def _drawn(self, chain: List[Pt]) -> List[Pt]:
-        """Where the nose touches along ``chain``: its centre, pushed its
-        radius toward what it cuts - the obstacle lies to the left of the
-        chain. On the profile that is the profile and its stock; where the
-        tool bridges what it cannot enter, the edge of what it cuts."""
+    def _drawn(self, chain: List[Pt]) -> List[Tuple[Pt, Pt]]:
+        """Where the nose touches along ``chain``, a pair of ends for each of
+        its stretches: its centre, pushed its radius toward what it cuts -
+        the obstacle lies to the left of the chain. On the profile that is
+        the profile and its stock; where the tool bridges what it cannot
+        enter, the edge of what it cuts.
+
+        Each stretch is drawn parallel to its own, as the machine moves along
+        it - a wall the tool runs straight along drawn straight - and joined
+        to the next where the two lines meet (a mitre), each trimmed or
+        carried on to there; only where they would meet further off than the
+        nose is wide, at a very sharp turn, are they left apart."""
+        pairs = list(zip(chain, chain[1:]))
         if not self.tool.known:
-            return list(chain)
+            return pairs
         centre = self._m(self.tool.centre)
         radius = self.tool.nose_radius
         normals = []
-        for a, b in zip(chain, chain[1:]):
+        for a, b in pairs:
             dz, dr = b[0] - a[0], b[1] - a[1]
             length = math.hypot(dz, dr) or 1.0
             normals.append((-dr / length, dz / length))
-        points = []
-        for i, p in enumerate(chain):
-            around = normals[max(0, i - 1):i + 1] or normals[-1:]
-            nz = sum(n[0] for n in around)
-            nr = sum(n[1] for n in around)
-            length = math.hypot(nz, nr) or 1.0
-            points.append((p[0] + centre[0] + radius * nz / length,
-                           p[1] + centre[1] + radius * nr / length))
-        return points
+
+        def pushed(p, n):
+            return (p[0] + centre[0] + radius * n[0], p[1] + centre[1] + radius * n[1])
+
+        drawn = [[pushed(a, n), pushed(b, n)] for (a, b), n in zip(pairs, normals)]
+        for j in range(1, len(pairs)):
+            p0, q0 = drawn[j - 1]
+            p1, q1 = drawn[j]
+            d0 = (q0[0] - p0[0], q0[1] - p0[1])
+            d1 = (q1[0] - p1[0], q1[1] - p1[1])
+            cross = d0[0] * d1[1] - d0[1] * d1[0]
+            if abs(cross) < 1e-12:
+                continue                       # in line: they meet already, or never
+            # where the line of the one before meets the line of this one
+            u = ((p1[0] - p0[0]) * d1[1] - (p1[1] - p0[1]) * d1[0]) / cross
+            meet = (p0[0] + u * d0[0], p0[1] + u * d0[1])
+            if math.hypot(meet[0] - q0[0], meet[1] - q0[1]) <= 2.0 * radius + TOLERANCE:
+                drawn[j - 1][1] = drawn[j][0] = meet
+        return [tuple(d) for d in drawn]
+
+    def _add_pass(self, a: Pt, b: Pt, toward: Pt = (-math.sqrt(0.5), -math.sqrt(0.5))):
+        """A pass from ``a`` to ``b``, drawn at the edge it leaves: where the
+        nose reaches furthest ``toward`` what is still to cut (a unit vector
+        square to the pass; a 45° pass's by default) - not at the control
+        point, which lies outside the nose wherever the pass ends against a
+        slope or an arc."""
+        self._add(a, b, True, pass_no=self.pass_no)
+        if not self.tool.known or not self.moves:
+            return
+        centre = self._m(self.tool.centre)
+        radius = self.tool.nose_radius
+        dz, dr = centre[0] + radius * toward[0], centre[1] + radius * toward[1]
+        self.moves[-1].drawn = (a[0] + dz, self.sign * (a[1] + dr), b[0] + dz, self.sign * (b[1] + dr))
 
     def _contour_chain(self) -> List[Pt]:
-        return self._boundary_chain(self.obstacle)
+        # the obstacle does not change: worked out once
+        if getattr(self, "_chain", None) is None:
+            self._chain = self._extended(self._boundary_chain(self.obstacle))
+        return list(self._chain)
+
+    def _extended(self, chain: List[Pt]) -> List[Pt]:
+        """``chain`` carried on from the profile's face out to Z Start along
+        the axis, at the diameter it starts at the face with - Z Start is the
+        profile extended toward Z+ - rather than around the tool's shape."""
+        if len(chain) < 2:
+            return chain
+        z_face = self.profile[0][0] + self.setup.stock_z
+        if chain[0][0] > z_face + TOLERANCE:
+            # in front of the face around the tool: from where it meets it
+            for i in range(len(chain) - 1):
+                a, b = chain[i], chain[i + 1]
+                if b[0] <= z_face + TOLERANCE:
+                    t = (a[0] - z_face) / (a[0] - b[0]) if a[0] - b[0] > 1e-12 else 1.0
+                    face = (z_face, a[1] + t * (b[1] - a[1]))
+                    near = math.hypot(b[0] - face[0], b[1] - face[1]) <= TOLERANCE
+                    chain = [face] + chain[i + 2 if near else i + 1:]
+                    break
+        if chain[0][0] < self.z_start - TOLERANCE:
+            chain = [(self.z_start, chain[0][1])] + chain
+        return chain
 
     def allowance_chain(self) -> List[Pt]:
         """The profile offset by the stock to leave, from its start to its
@@ -847,15 +1377,50 @@ class _Planner:
         )
 
 
+#: The grid what is left is kept on, in mm: cut along the same lines again
+#: and again - a contour, then passes ending on it - a shape picks up edges a
+#: hair apart that GEOS cannot tell crossing or not ("non-noded
+#: intersection"); on the grid they either meet or do not.
+GRID = 1e-6
+
+
+def _on_grid(shape):
+    from shapely.ops import transform
+    if shape.is_empty:
+        return shape
+    snapped = transform(lambda x, y, z=None: (_round(x), _round(y)), shape)
+    return snapped if snapped.is_valid else snapped.buffer(0)
+
+
+def _round(values):
+    if hasattr(values, "__iter__"):
+        return type(values)(round(v / GRID) * GRID for v in values)
+    return round(values / GRID) * GRID
+
+
 def _difference(a, b):
-    """``a`` less ``b``. Cut by many moves, a shape picks up slivers GEOS
-    cannot always work with; mended and tried again, they go away."""
+    """``a`` less ``b``, on the grid. Cut by many moves, a shape picks up
+    slivers GEOS cannot always work with; mended and tried again, they go
+    away."""
     from shapely.errors import TopologicalError
     try:
         result = a.difference(b)
-    except (TopologicalError, ValueError):
+    except (TopologicalError, ValueError) as error:
+        log.warning("roughing plan: a difference GEOS could not work out (%s); "
+                    "tried again on the shapes mended", error)
         result = a.buffer(0).difference(b.buffer(0))
-    return result if result.is_valid else result.buffer(0)
+    return _on_grid(result if result.is_valid else result.buffer(0))
+
+
+def _intersection(a, b):
+    """What ``a`` and ``b`` share; mended and tried again as _difference is."""
+    from shapely.errors import TopologicalError
+    try:
+        return a.intersection(b)
+    except (TopologicalError, ValueError) as error:
+        log.warning("roughing plan: an intersection GEOS could not work out (%s); "
+                    "tried again on the shapes mended", error)
+        return a.buffer(0).intersection(b.buffer(0))
 
 
 def _mirror(shape):

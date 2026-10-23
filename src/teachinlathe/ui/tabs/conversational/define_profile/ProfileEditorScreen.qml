@@ -23,7 +23,8 @@ Item {
     property var    workpiece:           ({})
     property int    selectedPrimIndex:   -1
     property int    selectedBlendIndex:  -1
-    property int    _pendingDeleteIndex: -1
+    // The card swiped open on its Delete (a SwipeRow), or null
+    property var    openSwipeRow:        null
 
     signal backRequested()
     signal openNumPadRequested(var field)
@@ -203,77 +204,6 @@ Item {
 
     IntValidator { id: intVal; bottom: 1; top: 999 }
 
-    // ── Delete confirm popup ────────────────────────────────────────────────────
-    Popup {
-        id: deleteConfirmPopup
-        parent: Overlay.overlay
-        modal: true; focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        anchors.centerIn: parent
-        contentWidth: 360
-        contentHeight: delCol.implicitHeight
-        padding: 0
-
-        background: Rectangle {
-            radius: Theme.radiusLarge; color: Theme.surface
-            border.color: Theme.separator; border.width: Theme.hairline
-        }
-
-        contentItem: Column {
-            id: delCol
-            spacing: Theme.spacing
-            width: deleteConfirmPopup.contentWidth
-            padding: 16
-
-            Text { text: "Delete Primitive"; font.pointSize: 13; font.bold: true; color: Theme.foreground }
-
-            Text {
-                width: deleteConfirmPopup.contentWidth - 32
-                text: {
-                    var idx = root._pendingDeleteIndex
-                    if (idx > 0 && idx < root.primitives.length) {
-                        var p = root.primitives[idx]
-                        return "Delete primitive " + idx + " (" + (p ? p.type : "") + ")?"
-                    }
-                    return "Delete this primitive?"
-                }
-                font.pointSize: 11; color: "#4a5568"; wrapMode: Text.WordWrap
-            }
-
-            Rectangle { width: deleteConfirmPopup.contentWidth - 32; height: 1; color: Theme.separator }
-
-            Item {
-                width: deleteConfirmPopup.contentWidth - 32; height: 44
-
-                Button {
-                    anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                    text: "Cancel"; width: 100; height: Theme.buttonHeight
-                    font.pointSize: 11; font.family: "Noto Sans"
-                    onClicked: { root._pendingDeleteIndex = -1; deleteConfirmPopup.close() }
-                }
-
-                Button {
-                    anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                    text: "Delete"; width: 120; height: Theme.buttonHeight
-                    contentItem: Text {
-                        text: parent.text; color: "white"
-                        font.pointSize: 11; font.family: "Noto Sans"
-                        horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                    }
-                    background: Rectangle {
-                        radius: Theme.radius; color: parent.pressed ? Theme.dangerPressed : Theme.danger
-                        border.color: "#e53935"; border.width: Theme.hairline
-                    }
-                    onClicked: {
-                        if (root._pendingDeleteIndex > 0) root.primDeleted(root._pendingDeleteIndex)
-                        root._pendingDeleteIndex = -1
-                        deleteConfirmPopup.close()
-                    }
-                }
-            }
-        }
-    }
-
     // ── Screen background ────────────────────────────────────────────────────────
     Rectangle {
         anchors.fill: parent
@@ -379,6 +309,11 @@ Item {
                     ScrollView {
                         id: primScroll
                         anchors.fill: parent
+
+                        Connections {
+                            target: primScroll.contentItem
+                            function onMovementStarted() { root.openSwipeRow = null }
+                        }
                         clip: true
                         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                         contentWidth: availableWidth
@@ -404,6 +339,24 @@ Item {
                                         if (blendLdr.item) blendLdr.item.primData = md
                                     }
 
+                                    // Swiped left a card shows Delete (see SwipeRow);
+                                    // the start point is never deleted
+                                    SwipeRow {
+                                        id: primSwipe
+                                        width: parent.width
+                                        height: primLdr.height
+                                        swipeEnabled: mi > 0
+                                        duplicateEnabled: false
+                                        actionGap: Theme.spacingSmall
+                                        actionRadius: 8
+                                        swipeSide: root.openSwipeRow === primSwipe ? 1 : 0
+                                        onSwipeOpened: root.openSwipeRow = primSwipe
+                                        onSwipeClosed: if (root.openSwipeRow === primSwipe) root.openSwipeRow = null
+                                        onDeleteRequested: {
+                                            root.openSwipeRow = null
+                                            root.primDeleted(mi)
+                                        }
+
                                     Loader {
                                         id: primLdr
                                         width: parent.width
@@ -425,14 +378,30 @@ Item {
                                             })
                                             item.primUpdated.connect(root.primUpdated)
                                             item.openNumPadRequested.connect(root.openNumPadRequested)
-                                            if (typeof item.deleteRequested !== "undefined") {
-                                                item.deleteRequested.connect(function(idx) {
-                                                    root._pendingDeleteIndex = idx
-                                                    deleteConfirmPopup.open()
-                                                })
-                                            }
                                         }
                                     }
+                                    }
+
+                                    // Swiped left a blend's card shows Delete, which clears the blend
+                                    SwipeRow {
+                                        id: blendSwipe
+                                        width: parent.width
+                                        height: blendLdr.height
+                                        visible: blendLdr.active
+                                        duplicateEnabled: false
+                                        actionGap: Theme.spacingSmall
+                                        actionRadius: 8
+                                        swipeSide: root.openSwipeRow === blendSwipe ? 1 : 0
+                                        onSwipeOpened: root.openSwipeRow = blendSwipe
+                                        onSwipeClosed: if (root.openSwipeRow === blendSwipe) root.openSwipeRow = null
+                                        onDeleteRequested: {
+                                            root.openSwipeRow = null
+                                            var d = JSON.parse(JSON.stringify(root.primitives[mi]))
+                                            d.blend = { type: "none" }
+                                            root.primUpdated(mi, d)
+                                            if (root.selectedBlendIndex === mi)
+                                                root.selectedBlendIndex = -1
+                                        }
 
                                     Loader {
                                         id: blendLdr
@@ -440,7 +409,6 @@ Item {
                                         active:  md !== null && md !== undefined &&
                                                  md.blend !== undefined && md.blend !== null &&
                                                  md.blend.type !== "none"
-                                        visible: active
                                         sourceComponent: {
                                             if (!md || !md.blend) return null
                                             if (md.blend.type === "undercut_din509") return undercutDin509BlendComp
@@ -457,14 +425,8 @@ Item {
                                             })
                                             item.primUpdated.connect(root.primUpdated)
                                             item.openNumPadRequested.connect(root.openNumPadRequested)
-                                            item.blendClearRequested.connect(function(idx) {
-                                                var d = JSON.parse(JSON.stringify(root.primitives[idx]))
-                                                d.blend = { type: "none" }
-                                                root.primUpdated(idx, d)
-                                                if (root.selectedBlendIndex === idx)
-                                                    root.selectedBlendIndex = -1
-                                            })
                                         }
+                                    }
                                     }
                                 }
                             }
@@ -644,6 +606,12 @@ Item {
                 }
             }
         }
+    }
+
+    // A press anywhere but on the open card's Delete closes it
+    SwipeDismissArea {
+        openRow: root.openSwipeRow
+        onDismissed: root.openSwipeRow = null
     }
 
     // ── Card component references ────────────────────────────────────────────────

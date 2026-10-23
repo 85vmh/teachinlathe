@@ -9,6 +9,13 @@ QtObject {
     property real lineWidth: 1
     property bool mirrorAcrossCenterline: false
     property bool showTransitions: true
+    property string profileType: "od"
+    // An ID profile's last diameter, from where it ends back to Z0: both its
+    // edges dashed, as Drilling draws the hole it drills, in the grey of the
+    // bore past the profile (StockActor's boreColor)
+    property color holeColor: "#aeb4bd"
+    property var   holeDash: [6, 3]       // px on, px off
+    property real  holeLineWidth: 1.5
 
     function paint(ctx) {
         if (!renderSegs || renderSegs.length === 0) return
@@ -23,6 +30,25 @@ QtObject {
             _paintPath(ctx, true)
             _paintTransitions(ctx)
         }
+        if (String(profileType || "od").toLowerCase() === "id")
+            _paintHole(ctx)
+    }
+
+    function _paintHole(ctx) {
+        var end = renderSegs[renderSegs.length - 1]
+        var x = Math.abs(Number(end.x) || 0), z = Number(end.z) || 0
+        if (x <= 0 || z >= 0) return
+        ctx.save()
+        ctx.strokeStyle = holeColor
+        ctx.lineWidth = holeLineWidth
+        ctx.setLineDash(holeDash)
+        ctx.beginPath()
+        ctx.moveTo(cx(z), cy(x)); ctx.lineTo(cx(0), cy(x))
+        if (mirrorAcrossCenterline) {
+            ctx.moveTo(cx(z), cy(-x)); ctx.lineTo(cx(0), cy(-x))
+        }
+        ctx.stroke()
+        ctx.restore()
     }
 
     // With both halves drawn, every transition of the profile - where one
@@ -39,6 +65,13 @@ QtObject {
             joins.push(s)
         }
         if (!showTransitions && joins.length > 2) joins = [joins[0], joins[joins.length - 1]]
+        // an ID profile's start is the bore's mouth, not across the part - the
+        // stock draws the face out from it to the skin - and its end goes on
+        // into the stock as the new bore: nothing across it there
+        if (String(profileType || "od").toLowerCase() === "id" && joins.length > 0) {
+            var endZ = renderSegs[renderSegs.length - 1].z
+            joins = joins.slice(1).filter(function(j) { return Math.abs(j.z - endZ) > 1e-6 })
+        }
         ctx.beginPath()
         for (var k = 0; k < joins.length; k++) {
             ctx.moveTo(cx(joins[k].z), cy(joins[k].x))

@@ -70,6 +70,14 @@ Item {
         return b ? b.fXMax : 0
     }
 
+    // Where the profile ends: its last primitive's X
+    function _lastProfileDiameter() {
+        var resolved = geom.resolvePrimitives(primitives)
+        if (resolved.length === 0) return 0
+        var last = resolved[resolved.length - 1]
+        return Number(last.type === "startPoint" ? last.x_start : last.x_end) || 0
+    }
+
     // opData with the values edited in the boxes
     function _draftOp() {
         var op = JSON.parse(JSON.stringify(opData || {}))
@@ -106,14 +114,16 @@ Item {
         workpiece   = stock
         toolCard    = editor ? (editor.toolCard || {}) : {}
 
-        // X Start defaults to the profile's largest diameter plus the retract
+        // X Start defaults, OD, to the profile's largest diameter plus the
+        // retract; ID, to the diameter it ends on
         var pp = opData.profiling_parameters || {}
         var cp = opData.cutting_parameters || {}
         var st = opData.stock_to_leave || {}
         var savedX = pp.x_start !== undefined ? Number(pp.x_start) : 0
         retract = cp.retract !== undefined ? Number(cp.retract) : 0
         doc     = cp.doc !== undefined ? Number(cp.doc) : 0
-        xStart  = savedX !== 0 ? savedX : _maxProfileDiameter() + retract
+        xStart  = savedX !== 0 ? savedX
+                : (String(profileType).toLowerCase() === "id" ? _lastProfileDiameter() : _maxProfileDiameter() + retract)
         zStart  = pp.z_start !== undefined ? Number(pp.z_start) : 0
         stockRadial = st.radial !== undefined ? Number(st.radial) : 0
         stockAxial  = st.axial !== undefined ? Number(st.axial) : 0
@@ -152,9 +162,13 @@ Item {
 
         ProfileCanvas {
             id: profileCanvas
+            // the toolpath is too much to draw again at every step of a
+            // zoom or pan: the last drawing moved instead (see ProfileCanvas)
+            snapshotWhileMoving: true
             showTransitions: false
-            // no axes: the origin alone marks Z0
+            // no axes: the origin marks Z0, and the dashed X axis through it
             showAxes: false
+            showZeroLine: true
             Layout.fillWidth: true
             Layout.fillHeight: true
             // pinch and the buttons zoom, a drag pans, a double tap fits
@@ -177,6 +191,28 @@ Item {
                 anchors.fill: parent
                 color: "transparent"
                 border.color: Theme.outline; border.width: Theme.hairline
+            }
+
+            // the tool - a turning tool's insert or a blade - its control
+            // point on the start position, turned as its orientation has it,
+            // inside the ticks; in the fit too. Declared before the boxes,
+            // the note and the buttons: they stay over it
+            fitExtraPositions: {
+                if (!canvasTool.drawn) return []
+                var pts = canvasTool.outlineFromTip, out = []
+                for (var i = 0; i < pts.length; i++)
+                    out.push({ x: root.xStart + 2 * pts[i].y, z: root.zStart + pts[i].x })
+                return out
+            }
+            onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
+            CanvasTool {
+                id: canvasTool
+                inset: profileCanvas.tickBand
+                card: root.toolCard && root.toolCard.card ? root.toolCard.card : ""
+                view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
+                pxPerMm: profileCanvas._scale
+                tipX: profileCanvas._cx(root.zStart)
+                tipY: profileCanvas._cy(root.xStart)
             }
 
             // What the plan could not do - a tool that cannot reach a pocket,
@@ -305,27 +341,6 @@ Item {
                 onXStartEdited: function(value) { root.xStart = value; root.save() }
                 onZStartEdited: function(value) { root.zStart = value; root.save() }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            // the tool - a turning tool's insert or a blade - its control
-            // point on the start position, turned as its orientation has it,
-            // inside the ticks; in the fit too
-            fitExtraPositions: {
-                if (!canvasTool.drawn) return []
-                var pts = canvasTool.outlineFromTip, out = []
-                for (var i = 0; i < pts.length; i++)
-                    out.push({ x: root.xStart + 2 * pts[i].y, z: root.zStart + pts[i].x })
-                return out
-            }
-            onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
-            CanvasTool {
-                id: canvasTool
-                inset: profileCanvas.tickBand
-                card: root.toolCard && root.toolCard.card ? root.toolCard.card : ""
-                view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
-                pxPerMm: profileCanvas._scale
-                tipX: profileCanvas._cx(root.zStart)
-                tipY: profileCanvas._cy(root.xStart)
             }
 
             // the tool it cuts with, at the top, in the middle; tapped, to

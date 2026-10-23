@@ -170,6 +170,13 @@ Rectangle {
         if (editor.text !== content) {
             userDetachedFromHighlight = false
             editor.text = content
+            // a new program - one just generated, too - is read from its
+            // start, not from where the last one was scrolled to; with a
+            // line to follow, syncHighlight takes it there
+            if (highlightLine <= 0) {
+                root._setContentYProgrammatically(0)
+                flick.contentX = 0
+            }
             Qt.callLater(syncHighlight)
         }
     }

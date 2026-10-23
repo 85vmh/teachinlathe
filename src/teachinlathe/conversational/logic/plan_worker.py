@@ -75,6 +75,9 @@ def main() -> int:
     requests, answers = sys.stdin.buffer, sys.stdout.buffer
     # stdout is the answers' channel: anything printed goes to stderr instead
     sys.stdout = sys.stderr
+    # the planners' warnings on the application's console, as its own are
+    from teachinlathe.app.logging_setup import configure_console
+    configure_console("INFO")
     jobs = _jobs()
     while True:
         request = _read_frame(requests)

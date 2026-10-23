@@ -367,6 +367,50 @@ QtObject {
         }
     }
 
+    // One half of an ID profile's stock drawn whole (Define Profile), as the
+    // Program Header draws a tube: all of it on the surface colour, the
+    // hatch's diagonal throughout - in front of the profile's end the
+    // finished part, between the profile and the skin; past it the walls,
+    // out from the bore: the profile's end diameter, or the stock's when
+    // that is wider. The bore, and what the profile bores out, plain.
+    function _paintIdProfileHalf(ctx, stockZ, stockX, mirrored, innerX) {
+        var endX = cx(profileEndZ())
+        var face = cx(faceZ), far = cx(stockZ)
+        var skin = _cy(stockX, mirrored), axis = cy(0)
+        var top = Math.min(skin, axis), bottom = Math.max(skin, axis)
+        ctx.save()
+        ctx.fillStyle = Theme.surface
+        ctx.fillRect(far, top, face - far, bottom - top)
+        ctx.restore()
+        if (endX > far) {
+            var lastSeg = renderSegs[renderSegs.length - 1]
+            var bore = _cy(Math.min(stockX, Math.max(innerX, Number(lastSeg.x) || 0)), mirrored)
+            var wTop = Math.min(skin, bore), wBottom = Math.max(skin, bore)
+            ctx.save()
+            // into the part by a px, its lines from the same origin: one hatch
+            ctx.beginPath(); ctx.rect(far, wTop, endX + 1 - far, wBottom - wTop); ctx.clip()
+            _hatchCurrentClip(ctx, far, top, face, bottom)
+            ctx.restore()
+            if (bore !== axis) {
+                ctx.strokeStyle = boreColor
+                ctx.lineWidth = outlineWidth
+                ctx.setLineDash([])
+                ctx.beginPath()
+                ctx.moveTo(endX, bore)
+                ctx.lineTo(far, bore)
+                ctx.stroke()
+            }
+        }
+        ctx.save()
+        ctx.beginPath(); ctx.rect(endX, top, face - endX, bottom - top); ctx.clip()
+        ctx.beginPath()
+        if (_pathProfileToStock(ctx, stockX, mirrored, stockZ)) {
+            ctx.clip()
+            _hatchCurrentClip(ctx, far, top, face, bottom)
+        }
+        ctx.restore()
+    }
+
     // One half of the stock: below the centre line, or its mirror above it.
     function _paintHalf(ctx, stockZ, stockX, mirrored) {
         var left = cx(faceZ)
@@ -376,30 +420,40 @@ QtObject {
         var hasInternalDiameter = internalDiameter > 0
         var innerX = hasInternalDiameter ? Math.max(0, Math.min(internalDiameter, stockX)) : 0
 
-        if (renderSegs && renderSegs.length > 0 && String(profileType || "od").toLowerCase() === "od")
+        var hasProfile = renderSegs && renderSegs.length > 0
+        var isId = String(profileType || "od").toLowerCase() === "id"
+        if (hasProfile && !isId)
             _paintProfileHalf(ctx, stockZ, stockX, mirrored, innerX)
+        else if (hasProfile)
+            _paintIdProfileHalf(ctx, stockZ, stockX, mirrored, innerX)
         else
             _hatchHalf(ctx, stockZ, stockX, mirrored)
 
         // its outside and its far end; its face only when it stands proud of
         // Z0 - at Z0 the dashed Z0 line goes, and only the finished profile
-        // is drawn over that. With a profile (Define Profile), its outside
-        // only past the profile's end, not along it
+        // is drawn over that. With an OD profile (Define Profile), its outside
+        // only past the profile's end, not along it; with an ID one, the
+        // whole of it, and at the profile's start the part's face, out from
+        // the profile to the skin
         ctx.strokeStyle = outlineColor
         ctx.lineWidth = outlineWidth
         ctx.setLineDash([])
         ctx.beginPath()
-        var hasProfile = renderSegs && renderSegs.length > 0
-        ctx.moveTo(hasProfile ? Math.max(right, cx(profileEndZ())) : left, bottom)
+        ctx.moveTo(hasProfile && !isId ? Math.max(right, cx(profileEndZ())) : left, bottom)
         ctx.lineTo(right, bottom)
         ctx.lineTo(right, top)
         if (faceZ > 0) {
             ctx.moveTo(left, bottom)
             ctx.lineTo(left, top)
         }
+        if (hasProfile && isId) {
+            ctx.moveTo(cx(renderSegs[0].z), _cy(renderSegs[0].x, mirrored))
+            ctx.lineTo(cx(renderSegs[0].z), bottom)
+        }
         ctx.stroke()
 
-        if (hasInternalDiameter && innerX > 0) {
+        // the bore; an ID profile's draws its own
+        if (hasInternalDiameter && innerX > 0 && !(hasProfile && isId)) {
             ctx.strokeStyle = boreColor
             ctx.beginPath()
             ctx.moveTo(left, _cy(innerX, mirrored))

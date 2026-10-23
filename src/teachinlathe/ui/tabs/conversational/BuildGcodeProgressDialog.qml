@@ -31,9 +31,12 @@ Popup {
             Layout.preferredHeight: 20
         }
 
+        // always running: the Basic style fades it in and out with running,
+        // and a fade back in begun as the popup opens again is lost - from
+        // the second time on it stayed invisible. Closed, it is not drawn.
         BusyIndicator {
             Layout.alignment: Qt.AlignHCenter
-            running: root.visible
+            running: true
         }
 
         Text {

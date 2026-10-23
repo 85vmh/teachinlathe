@@ -5,6 +5,7 @@ and PassType (AXIAL / RADIAL / DIAGONAL_*).
 """
 
 import dataclasses
+import logging
 
 from teachinlathe.conversational.model.data_types import PassType, ProfileRoughingConfig, ProfilingType
 
@@ -18,6 +19,8 @@ from .profiling.geometry import (
     build_render_path,
 )
 from .profiling.context import make_id_context, make_od_context
+
+log = logging.getLogger(__name__)
 
 
 def _pass_type_label(pass_type: PassType) -> str:
@@ -313,6 +316,8 @@ def resolve_tool_shape(op):
     try:
         return insert_tool_shape(CuttingTool.from_json(raw))
     except Exception:
+        # planned with the stand-in square tool then: say why
+        log.warning("roughing plan: the tool could not be read, planned without it", exc_info=True)
         return None
 
 

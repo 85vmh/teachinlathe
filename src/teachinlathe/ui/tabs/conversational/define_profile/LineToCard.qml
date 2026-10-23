@@ -30,7 +30,6 @@ Rectangle {
     signal primUpdated(int idx, var data)
     signal openNumPadRequested(var field)
     signal tapped()
-    signal deleteRequested(int idx)
 
     // ── Colors ────────────────────────────────────────────────────────────────
     readonly property color clrCardBg:            Theme.surfaceAlt
@@ -41,8 +40,6 @@ Rectangle {
     readonly property color clrBlendBtnHover:     Theme.accentSoft
     readonly property color clrBlendBtnHoverBorder: Theme.accentBorder
     readonly property color clrBtnBorder:         Theme.outlineStrong
-    readonly property color clrDeleteHover:       Theme.dangerSoft
-    readonly property color clrDeleteBorder:      Theme.danger
 
     // ── Sizes ─────────────────────────────────────────────────────────────────
     readonly property int szCardRadius:    8
@@ -372,31 +369,6 @@ Rectangle {
         }
 
         Item { Layout.fillWidth: true }
-            }
-        }
-
-        Rectangle {
-            width: Theme.hairline; Layout.fillHeight: true
-            Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
-            Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
-            color: clrSeparator
-        }
-
-        Rectangle {
-            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
-            color:   delMA.pressed ? clrDeleteHover : "transparent"
-            border.width: Theme.hairline
-            border.color: delMA.pressed ? clrDeleteBorder : clrBtnBorder
-            Layout.alignment: Qt.AlignVCenter
-            Image {
-                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
-                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: Images.url("delete_icon.svg")
-                fillMode: Image.PreserveAspectFit; smooth: true
-            }
-            MouseArea {
-                id: delMA; anchors.fill: parent
-                onClicked: root.deleteRequested(primIdx)
             }
         }
     }

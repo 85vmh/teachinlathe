@@ -112,6 +112,23 @@ def configure(level: str = "DEBUG", log_file: str | None = None) -> logging.Logg
     return log
 
 
+def configure_console(level: str = "INFO") -> logging.Logger:
+    """The console handler alone, for a helper process - the planning worker -
+    whose stderr is the application's: its messages show alongside the
+    application's, and the application's log file is left alone (configure
+    would start it over)."""
+    log = logging.getLogger(ROOT_LOGGER_NAME)
+    log.setLevel(_level_from_name(level))
+    if getattr(log, "_teachinlathe_configured", False):
+        return log
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG)
+    console.setFormatter(ConsoleFormatter(_stderr_is_a_terminal()))
+    log.addHandler(console)
+    log._teachinlathe_configured = True
+    return log
+
+
 def set_level(level: str) -> None:
     """Change the application-wide log level."""
     logging.getLogger(ROOT_LOGGER_NAME).setLevel(_level_from_name(level))

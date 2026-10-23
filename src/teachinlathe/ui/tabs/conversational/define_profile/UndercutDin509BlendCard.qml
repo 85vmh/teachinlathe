@@ -17,7 +17,6 @@ Rectangle {
     signal primUpdated(int idx, var data)
     signal openNumPadRequested(var field)
     signal tapped()
-    signal blendClearRequested(int idx)
 
     // Colors
     readonly property color clrCardBg:            Theme.surfaceAlt
@@ -25,9 +24,6 @@ Rectangle {
     readonly property color clrBorder:            Theme.outline
     readonly property color clrBorderSel:         Theme.accent
     readonly property color clrSeparator:         "#d0d0d0"
-    readonly property color clrBtnBorder:         Theme.outlineStrong
-    readonly property color clrDeleteHover:       Theme.dangerSoft
-    readonly property color clrDeleteBorder:      Theme.danger
 
     // Sizes
     readonly property int szCardRadius:    8
@@ -43,9 +39,6 @@ Rectangle {
     readonly property int szInputWidth:    120
     readonly property int szSepInset:      4
     readonly property int szSepGap:        8
-    readonly property int szBtn:           50
-    readonly property int szBtnIcon:       36
-    readonly property int szBtnIconSrc:    112
 
     function _commitUndercutField(field, v) {
         var d = JSON.parse(JSON.stringify(primData))
@@ -150,38 +143,6 @@ Rectangle {
             }
         }
 
-        Rectangle {
-            width: Theme.hairline; Layout.fillHeight: true
-            Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
-            Layout.leftMargin: szSepGap; Layout.rightMargin: 0
-            color: clrSeparator
-        }
-
         Item { Layout.fillWidth: true }
-
-        Rectangle {
-            width: Theme.hairline; Layout.fillHeight: true
-            Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
-            Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
-            color: clrSeparator
-        }
-
-        Rectangle {
-            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
-            color:   delMA.pressed ? clrDeleteHover : "transparent"
-            border.width: Theme.hairline
-            border.color: delMA.pressed ? clrDeleteBorder : clrBtnBorder
-            Layout.alignment: Qt.AlignVCenter
-            Image {
-                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
-                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: Images.url("delete_icon.svg")
-                fillMode: Image.PreserveAspectFit; smooth: true
-            }
-            MouseArea {
-                id: delMA; anchors.fill: parent
-                onClicked: root.blendClearRequested(primIdx)
-            }
-        }
     }
 }

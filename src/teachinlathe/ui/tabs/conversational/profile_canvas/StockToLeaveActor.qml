@@ -45,7 +45,9 @@ QtObject {
     }
 
     // Between the offset and the profile: along the offset, then back along
-    // the profile, so their ends join each other directly.
+    // the profile; at the face the stock in front of it closed square - along
+    // the profile's first diameter out to the offset's face - not straight
+    // across from one start to the other.
     function _fillHalf(ctx, sign) {
         if (!profile || profile.length < 2) return
         ctx.save()
@@ -55,8 +57,15 @@ QtObject {
         ctx.moveTo(cx(offset[0].z), cy(sign * offset[0].x))
         for (var i = 1; i < offset.length; i++)
             ctx.lineTo(cx(offset[i].z), cy(sign * offset[i].x))
+        // at the far end likewise square: along the offset's last diameter
+        // over to the profile's end
+        var last = offset[offset.length - 1], end = profile[profile.length - 1]
+        if (last.z > end.z && last.x !== end.x)
+            ctx.lineTo(cx(end.z), cy(sign * last.x))
         for (var j = profile.length - 1; j >= 0; j--)
             ctx.lineTo(cx(profile[j].z), cy(sign * profile[j].x))
+        if (offset[0].z > profile[0].z)
+            ctx.lineTo(cx(offset[0].z), cy(sign * profile[0].x))
         ctx.closePath()
         ctx.fill()
         ctx.restore()
