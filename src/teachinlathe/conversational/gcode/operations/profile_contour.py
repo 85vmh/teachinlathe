@@ -1,15 +1,14 @@
-from teachinlathe.conversational.model.data_types import ProfileContourConfig, ProfilingType
+"""G-code generator for Profile Contour (OD and ID): the contour alone, planned
+as Profile Roughing plans the one it finishes with (profiling/machining.py) -
+tool-aware, compensated for the insert's nose - and written the same way."""
 
+from teachinlathe.conversational.model.data_types import PassType, ProfileContourConfig, ProfilingType
+
+from ..config import fmt
 from ..helpers.spindle import build_spindle_gcode
 from ..helpers.utils import get_float
-from .profiling.geometry import (
-    StartPoint,
-    build_shifted_path_clipped_to_x_boundary,
-    build_profile_segments,
-    build_render_path,
-)
-from .profiling.contour import emit_roughing_contour_pass
-from .profiling.context import make_id_context, make_od_context
+from .profile_roughing import _comment, _emit_moves, _resolve_profile, resolve_tool_shape
+from .profiling.geometry import StartPoint
 
 
 def parse_profile_contour_config(op) -> ProfileContourConfig:
@@ -48,78 +47,73 @@ def parse_profile_contour_config(op) -> ProfileContourConfig:
     )
 
 
-def _resolve_profile(op):
-    resolved = op.get("_resolved_profile") or {}
-    primitives = resolved.get("profile_primitives", []) or []
-    profile_type = str(resolved.get("profile_type", "od")).lower()
-    segments = build_profile_segments(primitives)
-    path = build_render_path(segments, profile_type)
-    return segments, path
-
-
-def _profile_extents(path):
-    x_vals = []
-    for element in path:
-        if isinstance(element, StartPoint):
-            x_vals.append(element.x)
-        else:
-            x_vals.append(element.end_x)
-    x_min = min(x_vals) if x_vals else 0.0
-    x_max = max(x_vals) if x_vals else 0.0
-    return x_min, x_max
-
+#: Plans already worked out, by everything that went into them: the editor
+#: asks again for every value changed, and the G-code once more.
+_PLANS = {}
+_PLANS_KEPT = 16
 
 _NO_PROFILE = "no valid profile found"
-_NO_CONTOUR_PROFILE = "no valid contour profile after stock/clipping"
 
 
-def build_contour_setup(op, config):
-    """The context and the path the contour is cut along: the profile offset
-    by stock-to-leave and clipped to X Start. Returns (ctx, contour_path,
-    error); error names what is missing when there is nothing to cut.
-    """
+def plan_profile_contour(op):
+    """The tool-aware plan of a Profile Contour - the contour alone, see
+    profiling.machining - for an operation dict carrying its profile in
+    ``_resolved_profile`` and its tool in ``_resolved_cutting_tool``: the same
+    contour Profile Roughing finishes with, compensated for the insert's
+    nose, bridged over what it cannot enter."""
+    import json
+
+    if hasattr(op, "to_dict"):
+        op = op.to_dict()
+    key = json.dumps(op, sort_keys=True, default=str)
+    plan = _PLANS.get(key)
+    if plan is None:
+        plan = _plan(op)
+        if len(_PLANS) >= _PLANS_KEPT:
+            _PLANS.pop(next(iter(_PLANS)))
+        _PLANS[key] = plan
+    return plan
+
+
+def _plan(op):
+    from .profiling.machining import RoughingPlan, RoughingSetup, plan_contour
+
+    config = parse_profile_contour_config(op)
     segments, path = _resolve_profile(op)
-    if not segments or not isinstance(segments[0], StartPoint):
-        return None, None, _NO_PROFILE
-
-    x_min, x_max = _profile_extents(path)
-
-    if config.profiling_type == ProfilingType.OD:
-        ctx = make_od_context(config, x_min)
-        keep_side = "lte"
-    else:
-        ctx = make_id_context(config, x_max)
-        keep_side = "gte"
-
-    contour_path = build_shifted_path_clipped_to_x_boundary(
-        path,
-        ctx.geo_x_shift,
-        ctx.geo_z_shift,
-        ctx.x_start,
-        keep_side,
-    )
-
-    if not contour_path or not isinstance(contour_path[0], StartPoint):
-        return ctx, None, _NO_CONTOUR_PROFILE
-    return ctx, contour_path, None
+    if not segments or not isinstance(segments[0], StartPoint) or len(path) < 2:
+        return RoughingPlan(error=_NO_PROFILE)
+    setup = RoughingSetup(
+        x_start=config.x_start, z_start=config.z_start, doc=config.doc,
+        retract=config.retract, stock_x=config.stock_x, stock_z=config.stock_z,
+        profiling_type=config.profiling_type, pass_type=PassType.AXIAL)
+    return plan_contour(setup, path, resolve_tool_shape(op))
 
 
 def generate_profile_contour_gcode(op):
+    """The G-code of a Profile Contour: the moves of its plan
+    (plan_profile_contour) as the machine makes them - the control point,
+    compensated for the nose, the profile's arcs as G2 / G3. The profile
+    canvas draws the same plan."""
     if hasattr(op, "to_dict"):
         op = op.to_dict()
 
     config = parse_profile_contour_config(op)
     spindle = op.get("spindle_parameters", {}) or {}
+    prefix = config.optional_prefix
 
     lines = []
-    lines.extend(build_spindle_gcode(spindle, config.optional_prefix))
-    lines.append(f"{config.optional_prefix}G95 F{config.feed_rate}")
+    lines.extend(build_spindle_gcode(spindle, prefix))
+    lines.append(f"{prefix}G95 F{config.feed_rate}")
     lines.append("")
 
-    ctx, contour_path, error = build_contour_setup(op, config)
-    if error:
-        lines.append(f"( ERROR: Profile Contour -- {error} )")
+    plan = plan_profile_contour(op)
+    if plan.error:
+        lines.append(_comment(f"ERROR: Profile Contour -- {plan.error}"))
         return lines
 
-    emit_roughing_contour_pass(lines, ctx, contour_path)
+    if plan.tool is not None and plan.tool.known:
+        lines.append(_comment(f"Planned for {plan.tool.label}, nose R{fmt(plan.tool.nose_radius)}"))
+    for warning in plan.warnings:
+        lines.append(_comment(warning))
+    _emit_moves(lines, plan.moves, prefix, config, None, 0)
     return lines

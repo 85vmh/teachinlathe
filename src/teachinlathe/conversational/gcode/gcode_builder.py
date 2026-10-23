@@ -169,10 +169,11 @@ def _build_operation_payload(op, program, op_index=None):
         profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)
         profile_op = _resolve_profile_operation(profile_id, program.operations, op_index)
         payload["_resolved_profile"] = profile_op.to_dict() if profile_op else {}
-    if op.type == "profileRoughing":
+        # the insert both plan with: the Change Tool's above
         tool_change = _resolve_previous_tool_change(program.operations, op_index)
         payload["_resolved_cutting_tool"] = _resolve_cutting_tool(
             getattr(tool_change, "tool_no", 0) if tool_change is not None else 0)
+    if op.type == "profileRoughing":
         if getattr(op, "restMaterial", False):
             # what it starts from: the roughings of the same profile above it
             profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)

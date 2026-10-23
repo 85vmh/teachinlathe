@@ -33,7 +33,7 @@ The planner is split by what each part does - see planner.py; this module
 keeps the names it always had, for those who import them from here.
 """
 
-from .planner import _Planner, plan_leftover, plan_roughing  # noqa: F401
+from .planner import _Planner, plan_contour, plan_leftover, plan_roughing  # noqa: F401
 from .shapes import (  # noqa: F401
     Pt,
     FAR,

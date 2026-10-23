@@ -559,7 +559,9 @@ class ConversationalUseCase:
         from teachinlathe.conversational.gcode.operations.profile_contour_preview import (
             build_profile_contour_preview,
         )
+        op_data = dict(op_data)
         op_data["_resolved_profile"] = self.last_profile_before(program, op_index)
+        op_data["_resolved_cutting_tool"] = self.cutting_tool_before(program, op_index)
         return build_profile_contour_preview(op_data)
 
     # ── the edit each operation type takes ──────────────────────────────────

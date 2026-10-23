@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import math
 
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from shapely.geometry import LineString, MultiPoint, Point, Polygon, box
 from shapely.ops import unary_union
 from teachinlathe.conversational.model.data_types import PassType, ProfilingType
@@ -141,15 +141,22 @@ class PlannerBase:
         runs.sort(key=lambda run: line.project(Point(run[0])))
         return runs
 
-    def plan(self) -> RoughingPlan:
-        # The insert has to stand on its control point: nothing of it under
-        # the point it is programmed to (over it, for ID). A tool held the
-        # other way round - an OD tool on an ID profile - cannot cut this.
+    def _wrong_way_round(self) -> Optional[RoughingPlan]:
+        """The plan's error when the tool cannot cut this side of the part,
+        else None. The insert has to stand on its control point: nothing of it
+        under the point it is programmed to (over it, for ID). A tool held the
+        other way round - an OD tool on an ID profile - cannot cut this."""
         if min(r for _z, r in self.envelope) < -max(0.05, self.tool.nose_radius):
             side = "away from the axis" if self.is_id else "toward the axis"
             return RoughingPlan(tool=self.tool, error=(
                 f"{self.tool.label}: its tip does not point {side} - "
                 "check the tool's orientation"))
+        return None
+
+    def plan(self) -> RoughingPlan:
+        wrong = self._wrong_way_round()
+        if wrong is not None:
+            return wrong
         if not self.tool.known:
             self.warnings.append("No turning tool in a Change Tool above: roughing only what "
                                  "any tool reaches, pockets and undercuts left")
@@ -174,6 +181,22 @@ class PlannerBase:
         # after the 45° passes - the profile contoured along the way - a
         # contour of its own still, from the back to the front
         self._contour(chain)
+        return self._result()
+
+    def plan_contour_only(self) -> RoughingPlan:
+        """The contour alone - Profile Contour: from Z Start along the profile,
+        offset by the stock to leave, compensated for the nose, bridged over
+        what the tool cannot enter - the rest roughed already."""
+        wrong = self._wrong_way_round()
+        if wrong is not None:
+            return wrong
+        if not self.tool.known:
+            self.warnings.append("No turning tool in a Change Tool above: the contour keeps to what "
+                                 "any tool reaches, pockets and undercuts bridged")
+        self.position = (self.z_start + self.retract, self.r_safe)
+        self.moves.append(Move(self.position[0], self.sign * self.position[1],
+                               self.position[0], self.sign * self.position[1], False))
+        self._contour(self._contour_chain())
         return self._result()
 
     def _z_min(self):

@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+from shapely.geometry import Polygon
+
 from .axial_radial import AxialRadialPasses
 from .diagonal_passes import DiagonalPasses
 from .edge import Edge
@@ -44,3 +46,11 @@ def plan_leftover(setup: RoughingSetup, profile_path, stock_before,
     tool yet. ``nose_radius``: the last tool's, whose corners are not counted
     as left over."""
     return _Planner(setup, profile_path, None, stock_before, True, nose_radius)._result()
+
+
+def plan_contour(setup: RoughingSetup, profile_path, tool: Optional[ToolShape]) -> RoughingPlan:
+    """Profile Contour: the contour alone, from Z Start along the profile -
+    offset by the stock to leave, compensated for the nose, bridged over what
+    ``tool`` cannot enter - with the material roughed already: what is there
+    of it is the part and its stock to leave, which no rapid may cross."""
+    return _Planner(setup, profile_path, tool, Polygon(), False, 0.0).plan_contour_only()

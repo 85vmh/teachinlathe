@@ -248,7 +248,14 @@ def _fit_arcs(points):
                 break
             best = (j, arc)
             j += 1
-        if best is not None:
+        if best is not None and _straight(points[i:best[0] + 1]):
+            # on a line as much as on a circle - a radius of tens of mm
+            # through chords barely bent: a line it is
+            j = best[0]
+            z1, r1 = points[j]
+            words.append(f"G1 X{fmt(2 * r1)} Z{fmt(z1)}")
+            i = j
+        elif best is not None:
             j, (cz, cr, radius, clockwise) = best
             z0, r0 = points[i]
             z1, r1 = points[j]
@@ -260,6 +267,18 @@ def _fit_arcs(points):
             words.append(f"G1 X{fmt(2 * r1)} Z{fmt(z1)}")
             i += 1
     return words
+
+
+def _straight(points):
+    """Whether every point lies on the line from the first to the last,
+    within ARC_FIT_TOLERANCE."""
+    import math
+    (az, ar), (bz, br) = points[0], points[-1]
+    length = math.hypot(bz - az, br - ar)
+    if length < 1e-12:
+        return False
+    return all(abs((z - az) * (br - ar) - (r - ar) * (bz - az)) / length <= ARC_FIT_TOLERANCE
+               for z, r in points)
 
 
 def _circle(a, b, c):
