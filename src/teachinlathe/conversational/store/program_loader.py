@@ -1,17 +1,20 @@
 import json
+import logging
 import os
 from typing import List
 
 from teachinlathe.conversational.model.data_types import Program
+
+log = logging.getLogger(__name__)
 
 
 def load_programs_from_folder(folder_path: str) -> List[Program]:
     """Load only valid program JSON files from the given folder."""
     programs = []
 
-    print(f"Loading programs from {folder_path}")
+    log.info("Loading programs from %s", folder_path)
     if not os.path.exists(folder_path):
-        print(f"Warning: Folder {folder_path} does not exist.")
+        log.warning("Program folder %s does not exist", folder_path)
         return programs
 
     for filename in sorted(os.listdir(folder_path)):
@@ -23,7 +26,7 @@ def load_programs_from_folder(folder_path: str) -> List[Program]:
                     program = Program.from_dict(data)
                     program.filename = file_path
                     programs.append(program)
-            except Exception as e:
-                print(f"Error loading {filename}: {e}")
+            except Exception as exc:
+                log.warning("Could not load program %s: %s", filename, exc)
 
     return programs

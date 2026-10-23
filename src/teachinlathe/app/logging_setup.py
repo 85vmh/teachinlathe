@@ -29,7 +29,8 @@ ROOT_LOGGER_NAME = "teachinlathe"
 
 DEFAULT_LOG_FILE = "~/teachinlathe.log"
 
-CONSOLE_FORMAT = "[%(name)s][%(levelname)s]  %(message)s (%(filename)s:%(lineno)d)"
+WARNING_CONSOLE_FORMAT = "[%(name)s][%(levelname)s]  %(message)s"
+ERROR_CONSOLE_FORMAT = WARNING_CONSOLE_FORMAT + " (%(filename)s:%(lineno)d)"
 FILE_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 #: ANSI colours per level, used only when stderr is a terminal.
@@ -57,6 +58,26 @@ class ColouredFormatter(logging.Formatter):
             record.levelname = original
 
 
+class ConsoleFormatter(logging.Formatter):
+    """Keep routine console output short and reserve source locations for errors."""
+
+    def __init__(self, use_colours: bool):
+        # The selected formatter is per-record so concurrent logging calls do
+        # not mutate a shared Formatter's format string.
+        super().__init__()
+        self._use_colours = use_colours
+
+    def format(self, record: logging.LogRecord) -> str:
+        if record.levelno <= logging.INFO:
+            message = logging.Formatter("%(message)s").format(record)
+            colour = LEVEL_COLOURS.get(record.levelno, LEVEL_COLOURS[logging.INFO])
+            return "{}{}{}".format(colour, message, RESET) if self._use_colours else message
+
+        fmt = ERROR_CONSOLE_FORMAT if record.levelno >= logging.ERROR else WARNING_CONSOLE_FORMAT
+        formatter = ColouredFormatter(fmt) if self._use_colours else logging.Formatter(fmt)
+        return formatter.format(record)
+
+
 def configure(level: str = "DEBUG", log_file: str | None = None) -> logging.Logger:
     """Attach console and file handlers to the application logger.
 
@@ -71,9 +92,7 @@ def configure(level: str = "DEBUG", log_file: str | None = None) -> logging.Logg
 
     console = logging.StreamHandler()
     console.setLevel(logging.DEBUG)
-    console.setFormatter(
-        ColouredFormatter(CONSOLE_FORMAT) if _stderr_is_a_terminal()
-        else logging.Formatter(CONSOLE_FORMAT))
+    console.setFormatter(ConsoleFormatter(_stderr_is_a_terminal()))
     log.addHandler(console)
 
     path = os.path.expanduser(log_file or DEFAULT_LOG_FILE)

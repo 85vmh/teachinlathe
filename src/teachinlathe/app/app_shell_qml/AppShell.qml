@@ -62,16 +62,40 @@ Item {
         }
     }
 
-    // The drawer used to be a separate top-level QQuickWidget moved into place
-    // by resizeEvent; anchoring it to the content host does the same job.
+    // Leave the bottom bar available while the drawer is open. Tapping the
+    // uncovered area to the left dismisses it.
+    MouseArea {
+        z: 99
+        x: 0
+        y: 0
+        width: drawer.x
+        height: root.height - (bottomBar.visible ? bottomBar.height : 0)
+        enabled: NavigationStore.logsExpanded
+        onClicked: AppShellBridge.toggleLogs()
+    }
+
     AppShellEventsDrawer {
         id: drawer
-        visible: NavigationStore.logsExpanded
+        visible: true
         width: Math.min(Math.max(420, root.width / 2), Math.max(0, root.width - 24))
-        height: Math.max(0, Math.min(300, contentHost.height - 24)) || 220
-        x: root.width - width - 12
-        y: contentHost.y + contentHost.height - height
+        height: root.height - (bottomBar.visible ? bottomBar.height : 0)
+        x: root.width
+        y: 0
         z: 100
+
+        states: State {
+            name: "open"
+            when: NavigationStore.logsExpanded
+            PropertyChanges { target: drawer; x: root.width - drawer.width }
+        }
+
+        transitions: Transition {
+            NumberAnimation {
+                properties: "x"
+                duration: 240
+                easing.type: Easing.OutCubic
+            }
+        }
     }
 
     AppShellToastOverlay {

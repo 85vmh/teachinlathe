@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
@@ -568,7 +569,8 @@ def main(argv: list[str] | None = None) -> int:
         operation_type=args.operation_type,
         layer=args.layer,
     )
-    print(json.dumps(payload, indent=4))
+    # This CLI's stdout is the JSON result consumed by callers, not a log.
+    sys.stdout.write(json.dumps(payload, indent=4) + "\n")
     return 0
 
 

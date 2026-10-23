@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.core.tool_library_repository import tool_library_repository
 from teachinlathe.ui.tabs.tool_library.tool_library_models import card_and_view
+
+log = logging.getLogger(__name__)
 
 
 class ProgramsToolChangeViewModel(QObject):
@@ -119,8 +123,8 @@ class ProgramsToolChangeViewModel(QObject):
         ):
             try:
                 comp.addListener(pin_name, callback)
-            except Exception as e:
-                print(f"[ProgramsToolChangeViewModel] failed to bind HAL pin {pin_name}: {e}")
+            except Exception:
+                log.error("Could not bind HAL pin %s", pin_name, exc_info=True)
 
     def _read_initial_hal_state(self):
         self._requested = self._read_bool_pin(TeachInLatheComponent.PinToolChangeRequest, False)
@@ -210,8 +214,8 @@ class ProgramsToolChangeViewModel(QObject):
     def _set_pin(self, pin_name, value):
         try:
             self._component.comp.getPin(pin_name).value = bool(value)
-        except Exception as e:
-            print(f"[ProgramsToolChangeViewModel] failed to set HAL pin {pin_name}: {e}")
+        except Exception:
+            log.error("Could not set HAL pin %s", pin_name, exc_info=True)
 
     def _read_bool_pin(self, pin_name, default=False):
         try:

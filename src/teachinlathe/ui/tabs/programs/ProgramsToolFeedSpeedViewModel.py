@@ -15,7 +15,6 @@ class ProgramsToolFeedSpeedViewModel(QObject):
         self._runtime_store = runtime_store
         self._snapshot = runtime_store.snapshot
         self._actual_rpm = 0.0
-        self._last_debug_signature = None
 
         self._lathe_component = TeachInLatheComponent()
         self._lathe_component.comp.addListener(
@@ -27,7 +26,6 @@ class ProgramsToolFeedSpeedViewModel(QObject):
 
     def _on_runtime_snapshot_changed(self, snapshot):
         self._snapshot = snapshot
-        self._debug_runtime_values("snapshot")
         self.valuesChanged.emit()
 
     def _on_actual_rpm_changed(self, value):
@@ -38,47 +36,7 @@ class ProgramsToolFeedSpeedViewModel(QObject):
         if int(round(next_rpm)) == int(round(self._actual_rpm)):
             return
         self._actual_rpm = next_rpm
-        self._debug_runtime_values("rpm")
         self.valuesChanged.emit()
-
-    def _debug_runtime_values(self, source):
-        motion_type = int(getattr(self._snapshot, 'motion_type', 0) or 0)
-        current_vel = float(getattr(self._snapshot, 'current_vel', 0.0) or 0.0)
-        feedrate = float(getattr(self._snapshot, 'feedrate', 0.0) or 0.0)
-        rapidrate = float(getattr(self._snapshot, 'rapidrate', 0.0) or 0.0)
-        spindle_override = float(getattr(self._snapshot, 'spindle_override', 0.0) or 0.0)
-        settings = tuple(getattr(self._snapshot, 'interpreter_settings', ()) or ())
-        signature = (
-            motion_type,
-            round(current_vel, 6),
-            round(feedrate, 6),
-            round(rapidrate, 6),
-            round(spindle_override, 6),
-            tuple(round(float(v or 0.0), 6) for v in settings[:5]),
-            int(round(self._actual_rpm)),
-            self.movementLetter,
-            self.movementUnitsText,
-            self.movementValueText,
-            self.movementOverridePercent,
-        )
-        if signature == self._last_debug_signature:
-            return
-        self._last_debug_signature = signature
-        # print(
-        #     "[ProgramsToolFeedSpeed]",
-        #     source,
-        #     f"motion_type={motion_type}",
-        #     f"current_vel={current_vel}",
-        #     f"feedrate={feedrate}",
-        #     f"rapidrate={rapidrate}",
-        #     f"spindle_override={spindle_override}",
-        #     f"settings={settings}",
-        #     f"actual_rpm={self._actual_rpm}",
-        #     f"movementLetter={self.movementLetter}",
-        #     f"movementUnits={self.movementUnitsText}",
-        #     f"movementValue={self.movementValueText}",
-        #     f"movementOverride={self.movementOverridePercent}",
-        # )
 
     def _percent(self, value):
         try:

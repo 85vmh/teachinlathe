@@ -28,6 +28,7 @@ DIAGONAL_INTERIOR uses Z lead-in and X lead-out. DIAGONAL_EXTERIOR uses X
 lead-in and Z lead-out.
 """
 
+import logging
 import math
 import os
 
@@ -37,6 +38,8 @@ from ...config import fmt
 from .geometry import find_45deg_profile_intersection
 from .context import RoughingContext
 
+log = logging.getLogger(__name__)
+
 
 def _debug_enabled() -> bool:
     return os.environ.get("TEACHINLATHE_DIAGONAL_DEBUG", "").lower() in {"1", "true", "yes", "on"}
@@ -44,7 +47,7 @@ def _debug_enabled() -> bool:
 
 def _debug(message: str) -> None:
     if _debug_enabled():
-        print(f"[profile-diagonal] {message}")
+        log.debug("[profile-diagonal] %s", message)
 
 
 def _path_point(element):

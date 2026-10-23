@@ -1,5 +1,9 @@
+import logging
+
 from PyQt6.QtCore import QObject, pyqtSignal
 from teachinlathe.core import AxisLimits, ini_repository
+
+log = logging.getLogger(__name__)
 
 INI = ini_repository()
 
@@ -79,57 +83,57 @@ class MachineLimitsHandler(QObject):
         return MachineLimits(computed_x_minus, computed_x_plus, computed_z_minus, computed_z_plus)
 
     def setChuckLimitsActive(self, value):
-        print("Set chuck limit active: ", value)
+        log.debug("Chuck limit active: %s", value)
         self._chuck_limit_active = value
         self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setXMinusLimitActive(self, value):
-        print("Set X- limit active: ", value)
+        log.debug("X- limit active: %s", value)
         self._x_minus_limit_active = value
         self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setXPlusLimitActive(self, value):
-        print("Set X+ limit active: ", value)
+        log.debug("X+ limit active: %s", value)
         self._x_plus_limit_active = value
         self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setZMinusLimitActive(self, value):
-        print("Set Z- limit active: ", value)
+        log.debug("Z- limit active: %s", value)
         self._z_minus_limit_active = value
         self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setZPlusLimitActive(self, value):
-        print("Set Z+ limit active: ", value)
+        log.debug("Z+ limit active: %s", value)
         self._z_plus_limit_active = value
         self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setTailstockLimitActive(self, value):
-        print("Set tailstock limit active: ", value)
+        log.debug("Tailstock limit active: %s", value)
         self._tailstock_limit_active = value
         self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setChuckLimit(self, value):
         self._chuck_limit = value
-        print("Set chuck limit: ", self._chuck_limit)
+        log.debug("Chuck limit set to %s", self._chuck_limit)
         self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setZMinusLimit(self, value):
         self._custom_z_minus_limit = value
-        print("Set Z- limit: ", self._custom_z_minus_limit)
+        log.debug("Z- limit set to %s", self._custom_z_minus_limit)
 
     def setZPlusLimit(self, value):
         self._custom_z_plus_limit = value
-        print("Set Z+ limit: ", self._custom_z_plus_limit)
+        log.debug("Z+ limit set to %s", self._custom_z_plus_limit)
 
     def setXMinusLimit(self, value):
         self._custom_x_minus_limit = value
-        print("Set X- limit: ", self._custom_x_minus_limit)
+        log.debug("X- limit set to %s", self._custom_x_minus_limit)
 
     def setXPlusLimit(self, value):
         self._custom_x_plus_limit = value
-        print("Set X+ limit: ", self._custom_x_plus_limit)
+        log.debug("X+ limit set to %s", self._custom_x_plus_limit)
 
     # Setter for tailstock_limit
     def setTailstockLimit(self, value):
         self._tailstock_limit = value
-        print("Set tailstock limit: ", self._chuck_limit)
+        log.debug("Tailstock limit set to %s", self._tailstock_limit)

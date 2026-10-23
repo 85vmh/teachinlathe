@@ -12,8 +12,11 @@ after adding, renaming or removing one.
     tools/update_qmldir.py --check   only say which differ; exit 1 if any
 """
 
+import logging
 import sys
 from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 PACKAGE = Path(__file__).resolve().parent.parent / "src" / "teachinlathe"
 IMPORT_DIRS = (PACKAGE / "ui", PACKAGE / "app")
@@ -41,6 +44,7 @@ def qmldir_for(directory: Path, uri: str) -> str:
 
 
 def main() -> int:
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     check = "--check" in sys.argv[1:]
     stale = []
     for directory in sorted({qml.parent for qml in PACKAGE.rglob("*.qml")}):
@@ -56,7 +60,10 @@ def main() -> int:
             path.write_text(content, encoding="utf-8")
     verb = "out of date" if check else "written"
     for path in stale:
-        print(f"{verb}: {path}")
+        if check:
+            log.warning("%s: %s", verb, path)
+        else:
+            log.info("%s: %s", verb, path)
     return 1 if check and stale else 0
 
 

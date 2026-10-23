@@ -201,17 +201,8 @@ class HalComponent(QObject):
             return
         self._comp.ready()
         self._ready = True
-        log.info("HAL component %s ready, %d pins:\n%s",
-                 self._name, len(self._pins), self._pin_table())
-
-    def _pin_table(self) -> str:
-        """The pins, one per line: short enough to read, unlike a log record
-        per pin that repeats the logger name and source line every time."""
-        width = max((len(name) for name in self._pins), default=0)
-        return "\n".join(
-            "    {}.{:<{}}  {:<5} {}".format(self._name, pin.name, width,
-                                             pin.type, pin.direction)
-            for pin in self._pins.values())
+        log.info("HAL component %s ready (%d pins)",
+                 self._name, len(self._pins))
 
     def exit(self):
         """Unload the component, stopping its pins from being polled."""
@@ -282,7 +273,7 @@ def _report(message: str) -> None:
         log.info(message)
     except Exception:
         try:
-            print(message, file=sys.stderr)
+            sys.stderr.write(message + "\n")
         except Exception:
             pass
 

@@ -1,6 +1,9 @@
+import logging
 import os
 import subprocess
 import sys
+
+log = logging.getLogger(__name__)
 
 
 def _linuxcnc_tcl_dir():
@@ -50,16 +53,16 @@ def main(argv=None):
     args = list(sys.argv[1:] if argv is None else argv)
     if len(args) != 1:
         valid_tools = ", ".join(sorted(DEBUG_TOOL_COMMANDS))
-        print(f"Usage: teachinlathe-tool <tool>\nValid tools: {valid_tools}", file=sys.stderr)
+        log.error("Usage: teachinlathe-tool <tool>; valid tools: %s", valid_tools)
         return 2
 
     try:
         launch_debug_tool(args[0])
     except FileNotFoundError as exc:
-        print(f"Could not launch '{args[0]}': {exc}", file=sys.stderr)
+        log.error("Could not launch '%s': %s", args[0], exc)
         return 1
     except ValueError as exc:
-        print(str(exc), file=sys.stderr)
+        log.error("%s", exc)
         return 2
 
     return 0

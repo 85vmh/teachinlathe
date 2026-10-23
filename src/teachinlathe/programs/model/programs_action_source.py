@@ -1,3 +1,5 @@
+import logging
+
 import linuxcnc
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
@@ -7,6 +9,7 @@ from teachinlathe.core.status_repository import status_repository
 
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 
+log = logging.getLogger(__name__)
 
 STATUS = status_repository()
 STAT = STATUS.stat
@@ -166,8 +169,8 @@ class ProgramsActionSource(QObject):
         try:
             program_repository().set_optional_stop(False)
             program_repository().set_block_delete(False)
-        except Exception as e:
-            print(f"[ProgramsActionSource] failed to reset optional stop/block delete defaults: {e}")
+        except Exception as exc:
+            log.warning("Could not reset optional stop/block delete defaults: %s", exc)
 
     def _bind_hal_updates(self):
         try:

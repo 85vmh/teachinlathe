@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from datetime import datetime
 
@@ -12,6 +13,7 @@ from teachinlathe.conversational.model.qml_adapter import display_name_for_op, a
 
 from .operations import OPERATION_GENERATORS
 
+log = logging.getLogger(__name__)
 
 
 def _after_last_operation(header):
@@ -123,7 +125,7 @@ def _resolve_tool_payload(tool_no, fallback_orientation=0):
     try:
         tool = _tools().tool_in(int(tool_no))
     except Exception as exc:
-        print(f"[gcode_builder] tool lookup failed for T{tool_no}: {exc}")
+        log.warning("Tool lookup failed for T%s: %s", tool_no, exc)
         return payload
     if isinstance(tool, BladeTool):
         payload.update({"q": tool.orientation, "tool_type": "parting_blade",
@@ -143,7 +145,7 @@ def _resolve_cutting_tool(tool_no):
     try:
         tool = _tools().tool_in(int(tool_no))
     except Exception as exc:
-        print(f"[gcode_builder] tool lookup failed for T{tool_no}: {exc}")
+        log.warning("Tool lookup failed for T%s: %s", tool_no, exc)
         return {}
     return tool.to_json() if tool is not None else {}
 

@@ -388,13 +388,20 @@ Window {
                 Repeater {
                     model: 20
                     Rectangle {
+                        id: tick
                         required property int index
-                        x: face.width / 2 - 1
+                        readonly property bool majorTick: index % 2 === 0
+                        width: majorTick ? 2 : 1
+                        x: face.width / 2 - width / 2
                         y: 3
-                        width: 2
-                        height: index % 5 === 0 ? 10 : 5
+                        height: majorTick ? 12 : 5
                         color: root.mutedText
-                        transform: Rotation { origin.x: 1; origin.y: face.height / 2 - 3; angle: index * 18 }
+                        transform: Rotation {
+                            // Rotation origins are local to this tick, not the dial.
+                            origin.x: tick.width / 2
+                            origin.y: face.height / 2 - 3
+                            angle: index * 18
+                        }
                     }
                 }
                 Rectangle {

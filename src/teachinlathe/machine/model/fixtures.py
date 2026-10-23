@@ -1,5 +1,8 @@
 import json
+import logging
 import os
+
+log = logging.getLogger(__name__)
 
 
 class Fixture:
@@ -68,7 +71,7 @@ class LatheFixturesRepository:
         return self.getCurrentIndex()
 
     def updateCurrentFixtureIndex(self, new_index):
-        print("new_index: ", new_index)
+        log.debug("Current fixture index set to %s", new_index)
         self._data['current_fixture_index'] = new_index
         self._save_json()
 

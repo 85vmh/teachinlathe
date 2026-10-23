@@ -6,8 +6,8 @@ import TeachInLathe
 
 Rectangle {
     id: root
-    color: Theme.foregroundStrong
-    border.color: Theme.outlineInverse
+    color: Theme.surfaceSunken
+    border.color: Theme.outline
     border.width: Theme.hairline
 
     readonly property string statusSummary: AppShellBridge.statusSummary
@@ -24,7 +24,7 @@ Rectangle {
 
             Text {
                 text: "Application Events"
-                color: "white"
+                color: Theme.foregroundStrong
                 font.pixelSize: Theme.fontTitle
                 font.bold: true
                 Layout.fillWidth: true
@@ -39,7 +39,7 @@ Rectangle {
 
         Text {
             text: root.statusSummary
-            color: "#9fb0c7"
+            color: Theme.foregroundMuted
             font.pixelSize: Theme.fontSmall
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
@@ -53,11 +53,11 @@ Rectangle {
 
             delegate: Text {
                 width: ListView.view ? ListView.view.width : 400
-                text: "[" + modelData.timestamp + "] " + modelData.level + " " + modelData.source + ": " + modelData.message
-                color: modelData.level === "ERROR" ? "#ff8a80"
-                     : modelData.level === "WARNING" ? "#ffd180"
-                     : modelData.level === "COMMAND" ? "#80cbc4"
-                     : Theme.separator
+                text: "[" + modelData.timestamp + "] " + modelData.level + ": " + modelData.message
+                color: modelData.level === "ERROR" ? Theme.danger
+                     : modelData.level === "WARNING" ? Theme.warning
+                     : modelData.level === "COMMAND" ? Theme.accentStrong
+                     : Theme.foregroundMuted
                 font.pixelSize: Theme.fontSmall
                 elide: Text.ElideRight
             }
