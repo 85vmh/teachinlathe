@@ -6,11 +6,12 @@ from __future__ import annotations
 import math
 
 from typing import List, Optional, Tuple
+from shapely.affinity import translate
 from shapely.geometry import LineString, MultiPoint, Point, Polygon, box
 from shapely.ops import unary_union
 from teachinlathe.conversational.model.data_types import PassType, ProfilingType
 
-from .shapes import Pt, FAR, TOLERANCE, MIN_AREA, MIN_CUT, minkowski, sweep, path_points, _difference, _intersection, _mirror
+from .shapes import Pt, FAR, TOLERANCE, MIN_AREA, MIN_CUT, minkowski, path_points, _difference, _intersection, _mirror
 from .tool_shape import square_tool
 from .plan import Move, RoughingPlan
 
@@ -81,9 +82,15 @@ class PlannerBase:
                 piece for piece in getattr(self.to_remove, "geoms", [self.to_remove])
                 if self._worth_cutting(piece)]) if not self.to_remove.is_empty else self.to_remove
         self.remaining = self.to_remove
+        # the insert, as one polygon: every move's sweep is it, moved
+        self._envelope_polygon = Polygon(self.envelope)
         self.moves: List[Move] = []
         self.pass_no = 0
         self.warnings: List[str] = []
+        # where the tool is between the strategies (None until the first is
+        # under way), and the contour chain once worked out (edge.py)
+        self.position: Optional[Pt] = None
+        self._chain: Optional[List[Pt]] = None
 
     # mirrored frame <-> machine
     def _m(self, p: Pt) -> Pt:
@@ -96,6 +103,31 @@ class PlannerBase:
         outline = points + [(zn - FAR, points[-1][1]), (zn - FAR, -FAR), (z0, -FAR)]
         return Polygon(outline).buffer(0)
 
+    @property
+    def remaining(self):
+        """What is still to cut: the material less every cut made so far -
+        the cuts since it was last asked for taken off together, now."""
+        if self._pending:
+            self._remaining = _difference(self._remaining, unary_union(self._pending))
+            self._pending = []
+        return self._remaining
+
+    @remaining.setter
+    def remaining(self, shape):
+        self._remaining = shape
+        self._pending = []
+
+    def _sweep(self, a: Pt, b: Pt):
+        """What the insert covers moving from ``a`` to ``b``: its polygon at
+        both ends, and between them - its outline built once, only moved."""
+        p = self._envelope_polygon
+        return unary_union([translate(p, a[0], a[1]), translate(p, b[0], b[1])]).convex_hull
+
+    def _start_at(self, p: Pt) -> Pt:
+        """The plan's first position, ``p``: a move to it from nowhere."""
+        self.moves.append(Move(p[0], self.sign * p[1], p[0], self.sign * p[1], False))
+        return p
+
     def _end_pass(self):
         if self.moves:
             self.moves[-1].pass_end = True
@@ -104,24 +136,26 @@ class PlannerBase:
         if math.hypot(b[0] - a[0], b[1] - a[1]) < 1e-9:
             return
         if feed:
-            self.remaining = _difference(self.remaining, sweep(self.envelope, a, b))
+            # taken off when what is left is next asked for - a run of cuts
+            # in one go, not one difference each
+            self._pending.append(self._sweep(a, b))
         self.moves.append(Move(a[0], self.sign * a[1], b[0], self.sign * b[1], feed, **kind))
 
     def _rapid_clear(self, a: Pt, b: Pt) -> bool:
         """Whether a rapid from ``a`` to ``b`` meets neither the part - with
         the stock it is to be left with, material as much as the rest - nor
         the material still to cut."""
-        swept = sweep(self.envelope, a, b)
+        swept = self._sweep(a, b)
         return (_intersection(swept, self.remaining).area < MIN_AREA
                 and _intersection(swept, self.part_allow_inside).area < MIN_AREA)
 
     def _feed_clear(self, a: Pt, b: Pt) -> bool:
         """Whether a cut from ``a`` to ``b`` stays off the stock to leave."""
-        swept = sweep(self.envelope, a, b)
+        swept = self._sweep(a, b)
         return _intersection(swept, self.part_allow_inside).area < MIN_AREA
 
     def _removes(self, a: Pt, b: Pt) -> float:
-        return _intersection(sweep(self.envelope, a, b), self.remaining).area
+        return _intersection(self._sweep(a, b), self.remaining).area
 
     def _cuts(self, a: Pt, b: Pt) -> bool:
         """Whether a move from ``a`` to ``b`` takes off anything worth it: on
@@ -197,9 +231,7 @@ class PlannerBase:
         if not self.tool.known:
             self.warnings.append("No turning tool in a Change Tool above: the contour keeps to what "
                                  "any tool reaches, pockets and undercuts bridged")
-        self.position = (self.z_start + self.retract, self.r_safe)
-        self.moves.append(Move(self.position[0], self.sign * self.position[1],
-                               self.position[0], self.sign * self.position[1], False))
+        self.position = self._start_at((self.z_start + self.retract, self.r_safe))
         self._contour(self._contour_chain())
         return self._result()
 

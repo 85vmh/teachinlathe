@@ -11,7 +11,6 @@ from teachinlathe.conversational.model.data_types import PassType
 
 from .shapes import FAR, TOLERANCE
 from .edge_walk import EdgeWalk
-from .plan import Move
 
 
 class DiagonalPasses:
@@ -42,9 +41,7 @@ class DiagonalPasses:
         z_min, r_min = self._z_min(), self._r_min()
         r_limit = min(r for _z, r in self.profile) + self.setup.stock_x
         span = max(self.r_start - r_min, self.z_start - z_min)
-        position = (self.z_start + ret, self.r_safe)
-        self.moves.append(Move(position[0], self.sign * position[1], position[0],
-                               self.sign * position[1], False))
+        position = self._start_at((self.z_start + ret, self.r_safe))
         toward_x_start = self.setup.pass_type == PassType.DIAGONAL_INTERIOR
         off_face, off_start = self._diagonal_off_face, self._diagonal_off_start
 
@@ -77,15 +74,7 @@ class DiagonalPasses:
                 self._lead_in(entry, start)
                 self._add_pass(start, end)
                 self.pass_no += 1
-                if self._rapid_clear(end, exit_):
-                    self._add(end, exit_, False)
-                    position = exit_
-                    if self._rapid_clear(exit_, entry):
-                        self._add(exit_, entry, False)
-                        position = entry
-                else:
-                    position = self._lift(end)
-                self._end_pass()
+                position = self._leave_pass(start, end, [exit_], [entry])
                 break
         self.position = position
 
@@ -128,9 +117,7 @@ class DiagonalPasses:
             return False
         toward_x_start = self.setup.pass_type == PassType.DIAGONAL_INTERIOR
         walk = self._edge_walk(chain, toward_x_start)
-        position = (self.z_start + self.retract, self.r_safe)
-        self.moves.append(Move(position[0], self.sign * position[1], position[0],
-                               self.sign * position[1], False))
+        position = self._start_at((self.z_start + self.retract, self.r_safe))
         if toward_x_start:
             return self._walk_toward_x_start(walk, position)
         return self._walk_toward_profile(walk, position)
@@ -217,21 +204,8 @@ class DiagonalPasses:
             # the pass
             # - in front of its start, or where the profile is in the way
             # there, over it; failing both, back down the cut itself
-            exit_ = self._first_clear(end, [off_start(end), off_face(end)])
-            if exit_ is not None:
-                self._add(end, exit_, False)
-                here = exit_
-                back = self._first_clear(exit_, [off_face(start), off_start(start)])
-                if back is not None:
-                    self._add(exit_, back, False)
-                    here = back
-                elif self._rapid_clear(exit_, end):
-                    self._add(exit_, end, False)
-                    self._add(end, start, False)
-                    here = start
-            else:
-                here = self._lift(end)
-            self._end_pass()
+            here = self._leave_pass(start, end, [off_start(end), off_face(end)],
+                                    [off_face(start), off_start(start)], down_the_cut=True)
         # on from where the last pass started, to the profile's end
         if here != prev and not self._back_onto(here, prev, [off_face(prev), off_start(prev)]):
             self.position = here
@@ -240,7 +214,6 @@ class DiagonalPasses:
         self.pass_no += 1
         self.position = self._lift(edge[-1])
         return True
-
 
     def _walk_toward_profile(self, walk: EdgeWalk, position) -> bool:
         """The passes toward the profile (↘) along ``walk`` - X Start, then the
@@ -327,17 +300,8 @@ class DiagonalPasses:
             made = True
             # off its end along Z - along X where Z is in the way - and back
             # the way it cut, a retract off it, to its start
-            exit_ = self._first_clear(end, [off_face(end), off_start(end)])
-            if exit_ is None:
-                here = self._lift(end)
-            else:
-                self._add(end, exit_, False)
-                here = exit_
-                back = self._first_clear(here, [off_start(start), off_face(start)])
-                if back is not None:
-                    self._add(here, back, False)
-                    here = back
-            self._end_pass()
+            here = self._leave_pass(start, end, [off_face(end), off_start(end)],
+                                    [off_start(start), off_face(start)])
         # the contour, on to the face from where the last pass started
         if on_x_start(i):
             here = onto_profile(here)

@@ -5,8 +5,6 @@ from __future__ import annotations
 
 from shapely.geometry import Point
 
-from .plan import Move
-
 
 class AxialRadialPasses:
     """Axial and radial passes - one part of _Planner (planner.py)."""
@@ -19,9 +17,7 @@ class AxialRadialPasses:
         contour, back up to the level of the pass before - the step between
         them cut there, not left to the contour at the end."""
         ret = self.retract
-        position = at(u_start + ret, v_start + ret)
-        self.moves.append(Move(position[0], self.sign * position[1],
-                               position[0], self.sign * position[1], False))
+        position = self._start_at(at(u_start + ret, v_start + ret))
         v_of = (lambda p: p[1]) if at(0, 1)[1] == 1 else (lambda p: p[0])
         v_before = v_start                     # the level of the pass before
         for v in self._levels(v_start, v_end):

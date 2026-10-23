@@ -24,7 +24,7 @@ class Edge:
 
     def _contour_chain(self) -> List[Pt]:
         # the obstacle does not change: worked out once
-        if getattr(self, "_chain", None) is None:
+        if self._chain is None:
             self._chain = self._extended(self._boundary_chain(self.obstacle))
         return list(self._chain)
 

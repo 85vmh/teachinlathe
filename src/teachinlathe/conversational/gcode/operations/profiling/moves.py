@@ -87,6 +87,30 @@ class Moves:
                 return True
         return False
 
+    def _leave_pass(self, start: Pt, end: Pt, exits: List[Pt], returns: List[Pt],
+                    down_the_cut: bool = False) -> Pt:
+        """Off a pass from ``start`` to ``end``: a rapid to the first of
+        ``exits`` clear from its end, then on to the first of ``returns``
+        clear from there - with ``down_the_cut``, failing those, back to the
+        end and down the cut to its start. Out to the safe diameter when no
+        exit is clear. Where the tool is then."""
+        exit_ = self._first_clear(end, exits)
+        if exit_ is None:
+            here = self._lift(end)
+        else:
+            self._add(end, exit_, False)
+            here = exit_
+            back = self._first_clear(exit_, returns)
+            if back is not None:
+                self._add(exit_, back, False)
+                here = back
+            elif down_the_cut and self._rapid_clear(exit_, end):
+                self._add(exit_, end, False)
+                self._add(end, start, False)
+                here = start
+        self._end_pass()
+        return here
+
     def _lift(self, a: Pt) -> Pt:
         """Straight out to the safe diameter, the way a pass leaves; toward
         the face first when that is in the way."""

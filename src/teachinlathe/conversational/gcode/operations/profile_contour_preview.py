@@ -3,8 +3,8 @@ plan its G-code is written from (plan_profile_contour). All X values are
 diameters."""
 
 from .profile_contour import plan_profile_contour
-from .profile_roughing import _resolve_profile
-from .profile_roughing_preview import flatten_path
+from .profiling.operation_input import resolve_profile
+from .profiling.plan_drawing import chain_points, drawn_moves, flatten_path
 
 
 def build_profile_contour_preview(op):
@@ -25,17 +25,11 @@ def build_profile_contour_preview(op):
     plan = plan_profile_contour(op)
     if plan.error:
         return {"profile": [], "offset": [], "feeds": [], "rapids": [], "warnings": [], "error": plan.error}
-    _, profile_path = _resolve_profile(op)
-    feeds = []
-    for move in plan.moves:
-        if not move.feed:
-            continue
-        z0, r0, z1, r1 = move.drawn or (move.z0, move.r0, move.z1, move.r1)
-        feeds.append({"x0": 2 * r0, "z0": z0, "x1": 2 * r1, "z1": z1,
-                      "pass": move.pass_no, "contour": move.contour})
+    _, profile_path = resolve_profile(op)
+    feeds, _rapids = drawn_moves(plan)
     return {
         "profile": flatten_path(profile_path),
-        "offset": [{"x": 2 * r, "z": z} for z, r in plan.allowance],
+        "offset": chain_points(plan.allowance),
         "feeds": feeds,
         "rapids": [],
         "warnings": list(plan.warnings),

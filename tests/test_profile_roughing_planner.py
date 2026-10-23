@@ -9,13 +9,11 @@ import pytest
 from shapely.geometry import LineString, Point, Polygon
 
 from teachinlathe.conversational.gcode.operations.profile_roughing import (
-    _resolve_profile,
     generate_profile_roughing_gcode,
     plan_profile_roughing,
 )
 from teachinlathe.conversational.gcode.operations.profile_roughing_preview import (
     build_profile_roughing_preview,
-    gcode_moves,
 )
 from teachinlathe.conversational.gcode.operations.profiling.machining import (
     MIN_AREA,
@@ -24,6 +22,7 @@ from teachinlathe.conversational.gcode.operations.profiling.machining import (
     path_points,
     sweep,
 )
+from teachinlathe.conversational.gcode.operations.profiling.operation_input import resolve_profile
 from teachinlathe.tooling.model.data_types import (
     BoringTool,
     InsertSpec,
@@ -31,6 +30,8 @@ from teachinlathe.tooling.model.data_types import (
     SpindleDirection,
     TurningTool,
 )
+
+from gcode_reading import gcode_moves
 
 M4 = SpindleDirection.M4
 
@@ -108,7 +109,7 @@ def operation(profile, tool=CCMT_95, pass_type="axial", doc=1.0, **extra):
 
 def finished_part(op):
     """The finished part, in (z, r): under the profile for OD, over it for ID."""
-    _segments, path = _resolve_profile(op)
+    _segments, path = resolve_profile(op)
     points = path_points(path)
     far = -50.0 if op["_resolved_profile"]["profile_type"] == "od" else 100.0
     return Polygon(points + [(points[-1][0] - 50.0, points[-1][1]), (points[-1][0] - 50.0, far),

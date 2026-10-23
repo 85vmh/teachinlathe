@@ -19,7 +19,7 @@ from teachinlathe.conversational.gcode.operations.profile_contour import (
 from teachinlathe.conversational.gcode.operations.profile_contour_preview import (
     build_profile_contour_preview,
 )
-from teachinlathe.conversational.gcode.operations.profile_roughing_preview import gcode_moves
+from gcode_reading import gcode_moves
 from teachinlathe.conversational.gcode.operations.profiling import machining
 from teachinlathe.conversational.gcode.operations.profiling.machining import MIN_AREA, sweep
 

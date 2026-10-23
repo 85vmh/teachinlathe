@@ -30,29 +30,27 @@ class FinalContour:
         drawn = self._drawn(chain)
         approach = self._contour_approach(chain)
         segments = [(a, b, da, db) for (a, b), (da, db) in zip(zip(chain, chain[1:]), drawn)]
-        if not self.rest and self.setup.pass_type in (PassType.RADIAL, PassType.DIAGONAL_INTERIOR,
-                                                      PassType.DIAGONAL_EXTERIOR):
-            # after radial and 45° passes from the back to the front: in at
-            # the profile's end, along it toward Z+ and out to Z Start
-            if not self._go_x_then_z(self.position, chain[-1]):
-                self.warnings.append("no contour: no clear way to its end")
-                return
-            for a, b, da, db in reversed(segments):
-                self._add_drawn(b, a, db, da)
-            self.pass_no += 1
-            self.position = self._lift(chain[0])
-            return
         if not self.rest:
-            if not self._go_x_then_z(self.position, approach):
-                self.warnings.append("no contour: no clear way to its start")
+            if self.setup.pass_type in (PassType.RADIAL, PassType.DIAGONAL_INTERIOR,
+                                        PassType.DIAGONAL_EXTERIOR):
+                # after radial and 45° passes from the back to the front: in
+                # at the profile's end, along it toward Z+ and out to Z Start
+                start, end, where = chain[-1], chain[0], "end"
+                cuts = [(b, a, db, da) for a, b, da, db in reversed(segments)]
+            else:
+                # from the front: in along the axis to the profile's start,
+                # drawn where the nose touches, as the chain is
+                start, end, where = approach, chain[-1], "start"
+                touch = (approach[0] + drawn[0][0][0] - chain[0][0],
+                         approach[1] + drawn[0][0][1] - chain[0][1])
+                cuts = [(approach, chain[0], touch, drawn[0][0])] + segments
+            if not self._go_x_then_z(self.position, start):
+                self.warnings.append(f"no contour: no clear way to its {where}")
                 return
-            # drawn where the nose touches, as the chain is: along the axis
-            touch = (approach[0] + drawn[0][0][0] - chain[0][0], approach[1] + drawn[0][0][1] - chain[0][1])
-            self._add_drawn(approach, chain[0], touch, drawn[0][0])
-            for a, b, da, db in segments:
+            for a, b, da, db in cuts:
                 self._add_drawn(a, b, da, db)
             self.pass_no += 1
-            self.position = self._lift(chain[-1])
+            self.position = self._lift(end)
             return
         # rest material: only the stretches with something left to cut, each
         # gone to and left as a pass is

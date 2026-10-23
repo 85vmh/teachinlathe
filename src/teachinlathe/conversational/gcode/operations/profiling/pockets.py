@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from shapely.geometry import LineString, Polygon
 
-from .shapes import TOLERANCE, MIN_AREA, sweep, _difference
+from .shapes import TOLERANCE, MIN_AREA, _difference
 
 
 class Pockets:
@@ -49,7 +49,7 @@ class Pockets:
         along at that height to over this plunge, or else from ``top``, just
         over the pocket; and it leaves the cut just off it, for the next."""
         start, end = run
-        if sweep(self.envelope, start, end).intersection(
+        if self._sweep(start, end).intersection(
                 self.remaining.intersection(pocket)).area < MIN_AREA:
             return
         # the highest point of the run it can be plunged to straight from above

@@ -5,7 +5,6 @@ contour, what the canvas draws of it - on the two ID profiles it was worked out
 on, with the boring tool it was worked out with, in all four strategies; what
 holds for any profile, on two OD ones too."""
 
-import json
 import math
 import re
 import time
@@ -20,7 +19,6 @@ from teachinlathe.conversational.gcode.operations.profile_roughing import (
 )
 from teachinlathe.conversational.gcode.operations.profile_roughing_preview import (
     build_profile_roughing_preview,
-    gcode_moves,
 )
 from teachinlathe.conversational.gcode.operations.profiling import machining
 from teachinlathe.conversational.gcode.operations.profiling import plan as plan_module
@@ -36,6 +34,8 @@ from teachinlathe.tooling.model.data_types import (
     SpindleDirection,
     TurningTool,
 )
+
+from gcode_reading import gcode_moves
 
 M3 = SpindleDirection.M3
 M4 = SpindleDirection.M4
@@ -136,7 +136,7 @@ def planned(profile, pass_type):
         try:
             # planned here, not taken from the cache - which keeps it after,
             # for the G-code and the preview made from the same plan
-            profile_roughing._PLANS.pop(json.dumps(op, sort_keys=True, default=str), None)
+            profile_roughing._PLANS.forget(profile_roughing.roughing_plan_key(op))
             started = time.perf_counter()
             result = plan_profile_roughing(op)
             seconds = time.perf_counter() - started
