@@ -76,16 +76,60 @@ function pointAtY(segs, y) {
 
 function curve(ctx, s) { ctx.bezierCurveTo(s[1][0], s[1][1], s[2][0], s[2][1], s[3][0], s[3][1]) }
 
-// Diagonals ``pitch`` px apart over the rect, clipped to whatever the caller
-// set; ``across``, the other diagonal.
-function hatch(ctx, left, top, right, bottom, pitch, across) {
-    var span = bottom - top
-    for (var x = left - span; x < right + span; x += pitch) {
-        ctx.beginPath()
-        if (across) { ctx.moveTo(x, top); ctx.lineTo(x + span, bottom) }
-        else        { ctx.moveTo(x, bottom); ctx.lineTo(x + span, top) }
-        ctx.stroke()
+// Diagonals ``pitch`` px apart in ``colour`` over the rect, clipped to
+// whatever the caller set; ``across``, the other diagonal. One fill with
+// hatchPattern - not a line each, which under a clip costs the most of
+// anything a canvas draws here. Anchored to the rect: its diagonals run
+// through its top-left corner (``across``: its bottom-left), so they move
+// with what is hatched.
+function hatch(ctx, left, top, right, bottom, pitch, across, colour) {
+    // the pattern's diagonals run through x + y (across: x - y) a whole
+    // number of pitches from the origin: moved along X to the rect's - by
+    // whole px, as a pattern is laid
+    var phase = Math.round(across ? left - bottom : left + top)
+    ctx.save()
+    ctx.fillStyle = hatchPattern(ctx, colour, pitch, across)
+    ctx.translate(phase, 0)
+    ctx.fillRect(left - phase, top, right - left, bottom - top)
+    ctx.restore()
+}
+
+// The patterns hatchPattern has made, the last made at the end:
+// [{ctx, key, pattern}]; no more than _KEPT, or the contexts of canvases
+// long gone would be kept with them
+var _patterns = []
+var _KEPT = 32
+
+// A pattern of 1 px diagonals ``pitch`` px apart along X, in ``colour``,
+// through the canvas points with x + y a whole number of pitches - with
+// ``across``, x - y; made once for each canvas, colour, pitch and way.
+function hatchPattern(ctx, colour, pitch, across) {
+    var c = Qt.lighter(colour, 1.0)        // a color, from a name or "#rrggbb" too
+    var key = [c.r, c.g, c.b, c.a, pitch, !!across].join()
+    for (var i = 0; i < _patterns.length; i++)
+        if (_patterns[i].ctx === ctx && _patterns[i].key === key) return _patterns[i].pattern
+    var n = Math.max(2, Math.round(pitch))
+    var tile = ctx.createImageData(n, n)
+    for (var y = 0; y < n; y++) {
+        for (var x = 0; x < n; x++) {
+            // how far the pixel's centre is from the nearest diagonal, along
+            // a row: half a px off both pixels it runs between, each half
+            // covered - as a stroked 1 px line through the pixels' corners
+            var s = ((across ? x - y : x + y + 1) - 0.5) % n
+            if (s < 0) s += n
+            if (s > n / 2) s -= n
+            var cover = Math.max(0, 1 - Math.abs(s))
+            var k = 4 * (y * n + x)
+            tile.data[k] = Math.round(255 * c.r)
+            tile.data[k + 1] = Math.round(255 * c.g)
+            tile.data[k + 2] = Math.round(255 * c.b)
+            tile.data[k + 3] = Math.round(255 * c.a * cover)
+        }
     }
+    var pattern = ctx.createPattern(tile, "repeat")
+    _patterns.push({ ctx: ctx, key: key, pattern: pattern })
+    if (_patterns.length > _KEPT) _patterns.shift()
+    return pattern
 }
 
 // A broken end at canvas x, the gap on its ``side`` (-1 left, +1 right):
@@ -181,23 +225,22 @@ function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
     }
     // a tube's walls, hatched as the canvas hatches its stock
     if (!solid && !style.noWallHatch) {
-        ctx.strokeStyle = style.hatch
         var bands = [[top, cy - r], [cy + r, bottom]]
         for (k = 0; k < bands.length; k++) {
             ctx.save()
             body(); ctx.clip()
             if (style.material) { ctx.beginPath(); style.material(ctx); ctx.clip() }
             ctx.beginPath(); ctx.rect(leftX - R, bands[k][0], rightX - leftX + 2 * R, bands[k][1] - bands[k][0]); ctx.clip()
-            hatch(ctx, leftX - R, bands[k][0], rightX + R, bands[k][1], style.hatchPitch, false)
+            hatch(ctx, leftX - R, bands[k][0], rightX + R, bands[k][1], style.hatchPitch, false, style.hatch)
             ctx.restore()
         }
     }
     // the cut faces, hatched across
-    ctx.strokeStyle = style.lensHatch || style.hatch
     for (k = 0; k < broken.length; k++) {
         ctx.save()
         lensPath(broken[k]); ctx.clip()
-        hatch(ctx, broken[k].top[0] - 2 * R, top, broken[k].top[0] + 2 * R, bottom, style.hatchPitch, true)
+        hatch(ctx, broken[k].top[0] - 2 * R, top, broken[k].top[0] + 2 * R, bottom, style.hatchPitch, true,
+              style.lensHatch || style.hatch)
         ctx.restore()
     }
 

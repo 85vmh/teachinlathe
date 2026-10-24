@@ -403,12 +403,11 @@ Canvas {
 
     // ── Moving the view: drawn simpler while it moves ─────────────────────────
     // While a drag, a pinch or the wheel moves the view, it is drawn again at
-    // every step, but without what costs the most to draw: the hatch inside
-    // a broken stock, and the toolpath's round line ends (StockActor,
-    // ToolpathActor: simplified). Drawn whole once the gesture ends. Only
-    // where there is much to draw (simplifyWhileMoving); elsewhere the view
-    // is drawn whole as it moves. Everything placed over the canvas follows
-    // the view, from _originX/_originY/_scale.
+    // every step, but without what costs the most to draw: the toolpath's
+    // round line ends (ToolpathActor: simplified). Drawn whole once the
+    // gesture ends. Only where there is much to draw (simplifyWhileMoving);
+    // elsewhere the view is drawn whole as it moves. Everything placed over
+    // the canvas follows the view, from _originX/_originY/_scale.
     property bool simplifyWhileMoving: false
     property bool _viewMoving: false
 
@@ -537,7 +536,6 @@ Canvas {
         cx: root._cx
         cy: root._cy
         mirrorAcrossCenterline: root.mirrorAcrossCenterline
-        simplified: root._viewMoving
     }
 
     PathActor {

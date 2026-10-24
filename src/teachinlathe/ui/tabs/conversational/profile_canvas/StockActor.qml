@@ -9,9 +9,6 @@ QtObject {
     property var cx
     property var cy
     property bool mirrorAcrossCenterline: false
-    // while the view moves: the finished part inside a broken stock not
-    // hatched - its clips cost the most of anything the canvas draws
-    property bool simplified: false
 
     readonly property real stockLength: workpiece && workpiece.stock_length !== undefined ? Number(workpiece.stock_length) : 0
     readonly property real externalDiameter: workpiece && workpiece.external_diameter !== undefined ? Number(workpiece.external_diameter) : 0
@@ -139,17 +136,7 @@ QtObject {
     }
 
     function _hatchCurrentClip(ctx, left, top, right, bottom, colour) {
-        var spacing = hatchPitch
-        var overshoot = bottom - top
-        ctx.strokeStyle = colour !== undefined ? colour : hatchColor
-        ctx.lineWidth = 1
-        ctx.setLineDash([])
-        for (var x = left - overshoot; x < right + overshoot; x += spacing) {
-            ctx.beginPath()
-            ctx.moveTo(x, bottom)
-            ctx.lineTo(x + overshoot, top)
-            ctx.stroke()
-        }
+        Broken.hatch(ctx, left, top, right, bottom, hatchPitch, false, colour !== undefined ? colour : hatchColor)
     }
 
     function paint(ctx) {
@@ -249,7 +236,7 @@ QtObject {
                     c.restore()
                 }
                 style.inside = function(c) {
-                    if (pastColor === null || self.simplified) return
+                    if (pastColor === null) return
                     for (var k = 0; k < 2; k++) {
                         side(c, k === 1, function(colour) {
                             self._hatchHalf(c, hatchEndZ, stockX, false, colour)
