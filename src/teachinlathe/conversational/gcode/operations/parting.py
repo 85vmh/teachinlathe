@@ -17,7 +17,7 @@ def _edge_break_params(edge_break):
 def generate_parting_gcode(op: Parting):
     line_prefix = "/" if op.is_optional_block else ""
 
-    spindle = op.spindleParameters
+    spindle = op.speedsAndFeeds
     parting = op.partingParameters
     edge_break_type, edge_break_value = _edge_break_params(op.edgeBreak)
 
@@ -29,8 +29,8 @@ def generate_parting_gcode(op: Parting):
         f"[{fmt(parting.xStart)}] "
         f"[{fmt(parting.xEnd)}] "
         f"[{fmt(parting.zPos)}] "
-        f"[{parting.first_feed_rate}] "
-        f"[{parting.second_feed_rate}] "
+        f"[{spindle.feed_rate}] "
+        f"[{spindle.feed_rate_2}] "
         f"[{fmt(parting.second_feed_x_pos)}] "
         f"[{edge_break_type}] "
         f"[{fmt(edge_break_value)}]"

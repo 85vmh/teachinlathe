@@ -18,13 +18,13 @@ def _op(tool_type="parting_blade", orientation=6):
     return {
         "type": "grooveRoughing",
         "is_optional_block": False,
-        "spindle_parameters": {
-            "direction": -1,
+        "speeds_and_feeds": {
+            "direction": "M4",
             "mode": "rpm",
             "rpm_value": 1000,
+            "feed_rate": 0.1,
         },
         "cutting_parameters": {
-            "feed_rate": 0.1,
             "peck_depth": 3.0,
             "retract": 1.0,
             "dwell_time": 0.5,

@@ -13,6 +13,7 @@ from teachinlathe.conversational.model.data_types import (
     Strategy,
     ThreadLocation,
 )
+from teachinlathe.tooling.model.data_types import SpindleDirection
 
 
 def _coerce_enum(value, enum_cls, transform=None):
@@ -43,23 +44,25 @@ def apply_operation_update(op, payload):
     _set_attr_if_present(op, payload, "is_optional_block", coerce=bool)
 
 
-def apply_spindle_update(spindle, payload):
-    if spindle is None or not isinstance(payload, dict):
+def apply_speeds_and_feeds_update(speeds, payload):
+    if speeds is None or not isinstance(payload, dict):
         return
-    _set_attr_if_present(spindle, payload, "direction", coerce=int)
+    _set_attr_if_present(speeds, payload, "direction", coerce=lambda v: SpindleDirection[str(v)])
     mode_value = payload.get("mode")
     if mode_value:
         try:
-            spindle.mode = _coerce_enum(mode_value, SpindleMode, lambda v: str(v).lower())
+            speeds.mode = _coerce_enum(mode_value, SpindleMode, lambda v: str(v).lower())
         except Exception:
             pass
     elif payload.get("rpm_value") is not None:
-        spindle.mode = SpindleMode.RPM
+        speeds.mode = SpindleMode.RPM
     elif payload.get("css_value") is not None and payload.get("css_max_speed") is not None:
-        spindle.mode = SpindleMode.CSS
-    _set_attr_if_present(spindle, payload, "rpm_value", coerce=int)
-    _set_attr_if_present(spindle, payload, "css_value", coerce=int)
-    _set_attr_if_present(spindle, payload, "css_max_speed", coerce=int)
+        speeds.mode = SpindleMode.CSS
+    _set_attr_if_present(speeds, payload, "rpm_value", coerce=int)
+    _set_attr_if_present(speeds, payload, "css_value", coerce=int)
+    _set_attr_if_present(speeds, payload, "css_max_speed", coerce=int)
+    _set_attr_if_present(speeds, payload, "feed_rate", coerce=float)
+    _set_attr_if_present(speeds, payload, "feed_rate_2", coerce=float)
 
 
 def apply_m1_update(m1, payload):
@@ -77,7 +80,6 @@ def apply_m1_update(m1, payload):
 def apply_cutting_update(cutting, payload):
     if cutting is None or not isinstance(payload, dict):
         return
-    _set_attr_if_present(cutting, payload, "feed_rate", attr="feedRate", coerce=float)
     _set_attr_if_present(cutting, payload, "retract", coerce=float)
     _set_attr_if_present(cutting, payload, "doc", coerce=float)
 
@@ -93,7 +95,6 @@ def apply_knurling_cutting_update(cutting, payload):
 def apply_groove_roughing_cutting_update(cutting, payload):
     if cutting is None or not isinstance(payload, dict):
         return
-    _set_attr_if_present(cutting, payload, "feed_rate", attr="feedRate", coerce=float)
     _set_attr_if_present(cutting, payload, "peck_depth", attr="peckDepth", coerce=float)
     _set_attr_if_present(cutting, payload, "retract", coerce=float)
     _set_attr_if_present(cutting, payload, "dwell_time", attr="dwellTime", coerce=float)
@@ -102,7 +103,6 @@ def apply_groove_roughing_cutting_update(cutting, payload):
 def apply_groove_finishing_cutting_update(cutting, payload):
     if cutting is None or not isinstance(payload, dict):
         return
-    _set_attr_if_present(cutting, payload, "feed_rate", attr="feedRate", coerce=float)
     _set_attr_if_present(cutting, payload, "retract", coerce=float)
 
 
@@ -124,7 +124,6 @@ def apply_drilling_update(drilling, payload):
                          coerce=lambda v: abs(float(v)))
     _set_attr_if_present(drilling, payload, "peck_depth", attr="peckDepth", coerce=float)
     _set_attr_if_present(drilling, payload, "dwell_time", attr="dwellTime", coerce=float)
-    _set_attr_if_present(drilling, payload, "feed_rate", attr="feedRate", coerce=float)
 
 
 def apply_tapping_update(tapping, payload):
@@ -144,8 +143,6 @@ def apply_parting_update(parting, payload):
     _set_attr_if_present(parting, payload, "x_start", attr="xStart", coerce=float)
     _set_attr_if_present(parting, payload, "x_end", attr="xEnd", coerce=float)
     _set_attr_if_present(parting, payload, "z_pos", attr="zPos", coerce=float)
-    _set_attr_if_present(parting, payload, "first_feed_rate", coerce=float)
-    _set_attr_if_present(parting, payload, "second_feed_rate", coerce=float)
     _set_attr_if_present(parting, payload, "second_feed_x_pos", coerce=float)
     _set_attr_if_present(parting, payload, "x_clearance", coerce=float)
 
@@ -366,4 +363,4 @@ def apply_turnable_operation_update(op, payload):
     if op is None or not isinstance(payload, dict):
         return
     apply_operation_update(op, payload)
-    apply_spindle_update(getattr(op, "spindleParameters", None), payload.get("spindle_parameters"))
+    apply_speeds_and_feeds_update(getattr(op, "speedsAndFeeds", None), payload.get("speeds_and_feeds"))

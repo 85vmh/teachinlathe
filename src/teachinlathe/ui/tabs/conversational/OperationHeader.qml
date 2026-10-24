@@ -1,8 +1,8 @@
 // OperationHeader.qml — the row at the top of an operation's details: Speeds
 // and Feeds as wide as it needs, then Pause to Inspect in the width left.
 // Operations without an M1 (hasM1: false) leave that width empty.
-// The feed rate is passed in and reported out as a number: each operation
-// keeps it in its own place (cutting_parameters, drilling_parameters, ...).
+// Speeds and Feeds edits the operation's speeds_and_feeds - its feeds too -
+// reported out whole.
 import QtQuick
 import QtQuick.Layouts
 import theme
@@ -22,8 +22,7 @@ RowLayout {
     // what Speeds and Feeds' feeds column holds: SpeedsAndFeeds.FeedKind -
     // Standard (Fz), Parting (Fz1 and Fz2), Threading (Pitch and Starts)
     property alias feedKind: speedsAndFeeds.feedKind
-    // Parting's second feed rate, Threading's pitch and starts
-    property alias feedRate2: speedsAndFeeds.feed_rate2
+    // Threading's pitch and starts
     property alias pitch: speedsAndFeeds.pitch
     property alias starts: speedsAndFeeds.starts
     property bool hasM1: true
@@ -32,19 +31,17 @@ RowLayout {
     // the width each Pause to Inspect button gets
     readonly property real pauseOptionWidth: m1Panel.optionWidth
 
-    signal spindleEdited(var spindle)    // a whole spindle_parameters
-    signal feedRateEdited(real value)
-    signal feedRate2Edited(real value)
+    signal speedsAndFeedsEdited(var speedsAndFeeds)   // a whole speeds_and_feeds
     signal pitchEdited(real value)
     signal startsEdited(int value)
     signal m1Edited(var m1)              // a whole m1_parameters
     signal openNumPadRequested(var field)
 
-    function applyData(op, feedRate) {
+    function applyData(op) {
         op = op || {}
         var d = op._tool_spindle_direction
         _toolClockwise = d === 3 ? true : d === 4 ? false : null
-        speedsAndFeeds.applyData(op.spindle_parameters, feedRate)
+        speedsAndFeeds.applyData(op.speeds_and_feeds)
         if (hasM1)
             m1Panel.applyData(op.m1_parameters || {})
     }
@@ -55,9 +52,7 @@ RowLayout {
                        ? root.onlyClockwise : root._toolClockwise
         // as wide as its contents need
         Layout.minimumWidth: implicitWidth
-        onSpindleEdited: function(spindle) { root.spindleEdited(spindle) }
-        onFeedRateEdited: function(value) { root.feedRateEdited(value) }
-        onFeedRate2Edited: function(value) { root.feedRate2Edited(value) }
+        onSpeedsAndFeedsEdited: function(speeds) { root.speedsAndFeedsEdited(speeds) }
         onPitchEdited: function(value) { root.pitchEdited(value) }
         onStartsEdited: function(value) { root.startsEdited(value) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }

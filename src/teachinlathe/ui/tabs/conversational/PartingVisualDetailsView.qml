@@ -35,8 +35,6 @@ Item {
     property real   zPos: 0.0
     property real   xFz2: 0.0          // where the second feed rate takes over
     property real   xClearance: 1.0
-    property real   firstFeedRate: 0.0
-    property real   secondFeedRate: 0.0
     // none, a chamfer or a fillet on the part's edge, as the op keeps it
     property var    edgeBreak: ({ blend_type: "none", chamfer_width: 0, fillet_radius: 0 })
 
@@ -89,8 +87,6 @@ Item {
         pp.z_pos = zPos
         pp.second_feed_x_pos = xFz2
         pp.x_clearance = xClearance
-        pp.first_feed_rate = firstFeedRate
-        pp.second_feed_rate = secondFeedRate
         op.edge_break = JSON.parse(JSON.stringify(edgeBreak))
         return op
     }
@@ -115,15 +111,12 @@ Item {
         zPos   = pp.z_pos   !== undefined ? Number(pp.z_pos)   : 0
         xFz2   = pp.second_feed_x_pos !== undefined ? Number(pp.second_feed_x_pos) : 0
         xClearance = pp.x_clearance !== undefined ? Number(pp.x_clearance) : 1
-        firstFeedRate  = pp.first_feed_rate  !== undefined ? Number(pp.first_feed_rate)  : 0
-        secondFeedRate = pp.second_feed_rate !== undefined ? Number(pp.second_feed_rate) : 0
         var eb = opData.edge_break || {}
         edgeBreak = { blend_type: eb.blend_type !== undefined ? String(eb.blend_type) : "none",
                       chamfer_width: eb.chamfer_width !== undefined ? Number(eb.chamfer_width) : 0,
                       fillet_radius: eb.fillet_radius !== undefined ? Number(eb.fillet_radius) : 0 }
 
-        header.feedRate2 = secondFeedRate
-        header.applyData(opData, firstFeedRate)
+        header.applyData(opData)
 
         // a new one - X Start never set - from the stock: start at its
         // outside, end at its bore, Fz2 from a blade's width before the end
@@ -147,13 +140,11 @@ Item {
             hasM1: false
             feedKind: SpeedsAndFeeds.FeedKind.Parting
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpindleEdited: function(spindle) {
+            onSpeedsAndFeedsEdited: function(speeds) {
                 var op = root._draftOp()
-                op.spindle_parameters = spindle
+                op.speeds_and_feeds = speeds
                 root.save(op)
             }
-            onFeedRateEdited: function(value) { root.firstFeedRate = value; root.save() }
-            onFeedRate2Edited: function(value) { root.secondFeedRate = value; root.save() }
         }
 
         ProfileCanvas {

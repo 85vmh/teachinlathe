@@ -14,9 +14,10 @@ from teachinlathe.conversational.model.data_types import (  # noqa: E402
     M1Parameters,
     PredefinedPosition,
     SpindleMode,
-    SpindleParameters,
+    SpeedsAndFeeds,
     ThreadLocation,
 )
+from teachinlathe.tooling.model.data_types import SpindleDirection  # noqa: E402
 
 BASE = SRC / "teachinlathe" / "conversational" / "gcode"
 
@@ -48,7 +49,7 @@ def _op(**overrides):
         "type": "g33Threading",
         "generate_gcode": True,
         "is_optional_block": False,
-        "spindleParameters": SpindleParameters(direction=-1, mode=SpindleMode.RPM, rpm_value=500),
+        "speedsAndFeeds": SpeedsAndFeeds(direction=SpindleDirection.M4, mode=SpindleMode.RPM, rpm_value=500),
         "location": ThreadLocation.OD,
         "thread_type": "g33",
         "pitch": 1.5,

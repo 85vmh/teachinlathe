@@ -1,4 +1,4 @@
-from ..helpers.spindle import build_spindle_gcode
+from ..helpers.spindle import build_spindle_gcode, feed_rate_of
 from ..helpers.utils import get_float
 from .profiling.geometry import StartPoint
 from .profiling.toolpath import emit_toolpath
@@ -180,13 +180,13 @@ def generate_groove_finishing_gcode(op):
         op = op.to_dict()
 
     prefix = "/" if bool(op.get("is_optional_block", False)) else ""
-    spindle = op.get("spindle_parameters", {}) or {}
+    spindle = op.get("speeds_and_feeds", {}) or {}
     cutting = op.get("cutting_parameters", {}) or {}
     finishing = op.get("finishing_parameters", {}) or {}
     profile = op.get("_resolved_radial_profile", {}) or {}
     tool = op.get("_resolved_tool", {}) or {}
 
-    feed_rate = get_float(cutting, "feed_rate", 0.1)
+    feed_rate = feed_rate_of(op, 0.1)
     clearance = abs(get_float(cutting, "retract", 1.0))
     strategy = str(finishing.get("strategy", "towards_center")).lower()
 

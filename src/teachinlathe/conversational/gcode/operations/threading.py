@@ -18,7 +18,7 @@ def generate_threading_gcode(op: Threading):
         retract = abs(op.retract)
 
     lines = []
-    lines.extend(build_spindle_gcode(op.spindleParameters, line_prefix))
+    lines.extend(build_spindle_gcode(op.speedsAndFeeds, line_prefix))
     lines.append(
         f"{line_prefix}o<threading> call "
         f"[{fmt(x_start)}] "

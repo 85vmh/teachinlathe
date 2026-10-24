@@ -273,7 +273,7 @@ Item {
 
         header.pitch = pitch
         header.starts = starts
-        header.applyData(opData, null)
+        header.applyData(opData)
         profileCanvas.resetView()
     }
 
@@ -288,9 +288,9 @@ Item {
             rpmOnly: true
             feedKind: SpeedsAndFeeds.FeedKind.Threading
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpindleEdited: function(spindle) {
+            onSpeedsAndFeedsEdited: function(speeds) {
                 var op = root._draftOp()
-                op.spindle_parameters = spindle
+                op.speeds_and_feeds = speeds
                 root.save(op)
             }
             onPitchEdited: function(value) { root.pitch = value; root.save() }

@@ -98,7 +98,7 @@ def operation(profile, tool=CCMT_95, pass_type="axial", doc=1.0, **extra):
     build, kind, x_start = PROFILES[profile]
     op = {"_resolved_profile": {"profile_type": kind, "profile_primitives": build()},
           "profiling_parameters": {"x_start": x_start, "z_start": 1.0},
-          "cutting_parameters": {"doc": doc, "retract": 0.5, "feed_rate": 0.1},
+          "cutting_parameters": {"doc": doc, "retract": 0.5},
           "stock_to_leave": {"radial": STOCK_X, "axial": STOCK_Z},
           "profile_roughing_strategy": {"profiling_type": kind, "pass_type": pass_type},
           **extra}

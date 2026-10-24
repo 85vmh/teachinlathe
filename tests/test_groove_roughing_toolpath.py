@@ -69,8 +69,8 @@ def _op(groove, blade, stock, initial=1.0, afterwards=1.5, peck=5.0, clearance=1
     radial, axial = stock or (0.0, 0.0)
     return {
         "type": "grooveRoughing",
-        "spindle_parameters": {"direction": 3, "mode": "rpm", "rpm_value": 1000},
-        "cutting_parameters": {"feed_rate": 0.1, "peck_depth": peck, "retract": clearance, "dwell_time": 0.2},
+        "speeds_and_feeds": {"direction": "M3", "mode": "rpm", "rpm_value": 1000, "feed_rate": 0.1},
+        "cutting_parameters": {"peck_depth": peck, "retract": clearance, "dwell_time": 0.2},
         "roughing_parameters": {"profile_id": 1, "strategy": "start_center",
                                 "initial_offset": initial, "afterwards_offset": afterwards},
         "stock_to_leave": {"radial": radial, "axial": axial},

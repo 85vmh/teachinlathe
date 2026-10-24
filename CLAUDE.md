@@ -88,7 +88,7 @@ The domain model is a hierarchy of Python dataclasses (`conversational/model/dat
 ```
 Program → Header (Workpiece) + List[Operation]
 Operation subtypes: ChangeTool, Facing, Profiling, Drilling, Tapping, Parting, Threading, DefineProfile
-Each TurnableOperation contains: SpindleParameters, CuttingParameters, GeometryParameters, M1Parameters, EdgeBreak
+Each TurnableOperation contains: SpeedsAndFeeds (speeds_and_feeds: direction "M3"/"M4", speed, feed_rate, Parting's feed_rate_2), CuttingParameters, GeometryParameters, M1Parameters, EdgeBreak
 ```
 
 Programs are stored as JSON files in `conversational/` (`PROGRAMS_DIR` in `conversational_use_case.py`). The `Operation` registry maps string keys to classes:

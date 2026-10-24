@@ -76,7 +76,7 @@ Item {
         // G33's speeds, pitch and starts, and its pause, in the header
         header.pitch  = pitch
         header.starts = starts
-        header.applyData(opData, null)
+        header.applyData(opData)
         _loading = false
     }
 
@@ -156,7 +156,7 @@ Item {
             rpmOnly: true
             feedKind: SpeedsAndFeeds.FeedKind.Threading
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpindleEdited: function(spindle) { root._saveFromHeader({ spindle_parameters: spindle }) }
+            onSpeedsAndFeedsEdited: function(speeds) { root._saveFromHeader({ speeds_and_feeds: speeds }) }
             onPitchEdited: function(value) { root.pitch = value; root.emitSave() }
             onStartsEdited: function(value) { root.starts = value; root.emitSave() }
             onM1Edited: function(m1) { root._saveFromHeader({ m1_parameters: m1 }) }

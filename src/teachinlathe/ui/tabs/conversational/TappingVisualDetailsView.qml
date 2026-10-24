@@ -82,7 +82,7 @@ Item {
         toolClearance = dp.tool_clearance !== undefined ? Math.abs(Number(dp.tool_clearance)) : 0
         peckDepth = dp.peck_depth !== undefined ? Number(dp.peck_depth) : 0
 
-        header.applyData(opData, null)
+        header.applyData(opData)
         profileCanvas.resetView()
     }
 
@@ -103,9 +103,9 @@ Item {
                          : root.tool && root.tool.spindle_direction === 4 ? false : null
             feedEnabled: false
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpindleEdited: function(spindle) {
+            onSpeedsAndFeedsEdited: function(speeds) {
                 var op = root._draftOp()
-                op.spindle_parameters = spindle
+                op.speeds_and_feeds = speeds
                 root.save(op)
             }
             onM1Edited: function(m1) {

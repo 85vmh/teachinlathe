@@ -8,7 +8,7 @@ from ..helpers.spindle import build_spindle_gcode
 def generate_profiling_gcode(op: Profiling):
     line_prefix = "/" if op.is_optional_block else ""
 
-    spindle = op.spindleParameters
+    spindle = op.speedsAndFeeds
     cutting = op.cuttingParameters
     params = op.profilingParameters
     options = op.profilingOptions
@@ -19,7 +19,7 @@ def generate_profiling_gcode(op: Profiling):
 
     lines = []
     lines.extend(build_spindle_gcode(spindle, line_prefix))
-    lines.append(f"{line_prefix}G95 F{cutting.feedRate}")
+    lines.append(f"{line_prefix}G95 F{spindle.feed_rate}")
     lines.append("")
 
     if options.strategy == Strategy.FINISH:

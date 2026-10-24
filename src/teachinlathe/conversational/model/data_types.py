@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Any, Optional, Type
 
+from teachinlathe.tooling.model.data_types import SpindleDirection
+
 
 class CoordinateType(Enum):
     RELATIVE = "relative"
@@ -227,24 +229,36 @@ class Operation:
         }
 
 
-# ------------------------------ Spindle model --------------------------------
+# --------------------------- Speeds and feeds --------------------------------
 
 @dataclass
-class SpindleParameters:
-    direction: int
+class SpeedsAndFeeds:
+    """How an operation turns the spindle and feeds the tool: the way it
+    turns (M3 / M4), its speed - RPM, or CSS up to a maximum - and the feed,
+    mm/rev: ``feed_rate`` for every operation that feeds (not a threading,
+    a tapping or a knurling: they go by the pitch), ``feed_rate_2`` Parting's
+    second, from Second Feed X on."""
+    direction: SpindleDirection
     mode: SpindleMode
     rpm_value: Optional[int] = None
     css_value: Optional[int] = None
     css_max_speed: Optional[int] = None
+    feed_rate: Optional[float] = None
+    feed_rate_2: Optional[float] = None
 
     DEFAULT_RPM = 1000
     DEFAULT_CSS_VALUE = 100
     DEFAULT_CSS_MAX = 1000
 
+    @property
+    def sign(self) -> int:
+        """The direction as the subroutines take it: 1 M3, -1 M4."""
+        return 1 if self.direction == SpindleDirection.M3 else -1
+
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "SpindleParameters":
+    def from_dict(data: Dict[str, Any]) -> "SpeedsAndFeeds":
         if not isinstance(data, dict):
-            raise ValueError("Spindle must be an object")
+            raise ValueError("Speeds and feeds must be an object")
         mode_str = data.get("mode")
         if mode_str not in (m.value for m in SpindleMode):
             raise ValueError(f"Invalid spindle mode: {mode_str!r}")
@@ -252,17 +266,22 @@ class SpindleParameters:
         def as_opt_int(v):
             return None if v is None or (isinstance(v, str) and v.strip() == "") else int(v)
 
-        return SpindleParameters(
-            direction=int(data.get("direction", -1)),
+        def as_opt_float(v):
+            return None if v is None or (isinstance(v, str) and v.strip() == "") else float(v)
+
+        return SpeedsAndFeeds(
+            direction=SpindleDirection[str(data.get("direction", SpindleDirection.M4.name))],
             mode=SpindleMode(mode_str),
             rpm_value=as_opt_int(data.get("rpm_value")),
             css_value=as_opt_int(data.get("css_value")),
             css_max_speed=as_opt_int(data.get("css_max_speed")),
+            feed_rate=as_opt_float(data.get("feed_rate")),
+            feed_rate_2=as_opt_float(data.get("feed_rate_2")),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         out = {
-            "direction": int(self.direction),
+            "direction": self.direction.name,
             "mode": self.mode.value,
         }
         if self.rpm_value is not None:
@@ -271,23 +290,27 @@ class SpindleParameters:
             out["css_value"] = int(self.css_value)
         if self.css_max_speed is not None:
             out["css_max_speed"] = int(self.css_max_speed)
+        if self.feed_rate is not None:
+            out["feed_rate"] = float(self.feed_rate)
+        if self.feed_rate_2 is not None:
+            out["feed_rate_2"] = float(self.feed_rate_2)
         return out
 
 # --------- TurnableOperation: all spindle-using ops inherit from this --------
 
 @dataclass
 class TurnableOperation(Operation):
-    spindleParameters: SpindleParameters
+    speedsAndFeeds: SpeedsAndFeeds
 
     @staticmethod
-    def _parse_spindle(data: Dict[str, Any]) -> SpindleParameters:
-        sp = data.get("spindle_parameters")
-        if sp is None:
-            raise ValueError("Missing required 'spindle_parameters' block for turnable operation")
-        return SpindleParameters.from_dict(sp)
+    def _parse_speeds_and_feeds(data: Dict[str, Any]) -> SpeedsAndFeeds:
+        sf = data.get("speeds_and_feeds")
+        if sf is None:
+            raise ValueError("Missing required 'speeds_and_feeds' block for turnable operation")
+        return SpeedsAndFeeds.from_dict(sf)
 
-    def _add_spindle_to(self, base: Dict[str, Any]) -> Dict[str, Any]:
-        base["spindle_parameters"] = self.spindleParameters.to_dict()
+    def _add_speeds_and_feeds_to(self, base: Dict[str, Any]) -> Dict[str, Any]:
+        base["speeds_and_feeds"] = self.speedsAndFeeds.to_dict()
         return base
 
 
@@ -447,21 +470,18 @@ class M1Parameters:
 
 @dataclass
 class CuttingParameters:
-    feedRate: float
     retract: float
     doc: float = 0.0
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "CuttingParameters":
         return CuttingParameters(
-            feedRate=float(data.get("feed_rate", 0.0)),
             retract=float(data.get("retract", 0.0)),
             doc=float(data.get("doc", 0.0) or 0.0),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "feed_rate": float(self.feedRate),
             "doc": float(self.doc),
             "retract": float(self.retract),
         }
@@ -491,7 +511,6 @@ class KnurlingCuttingParameters:
 
 @dataclass
 class GrooveRoughingCuttingParameters:
-    feedRate: float
     peckDepth: float
     retract: float
     dwellTime: float
@@ -499,7 +518,6 @@ class GrooveRoughingCuttingParameters:
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "GrooveRoughingCuttingParameters":
         return GrooveRoughingCuttingParameters(
-            feedRate=float(data.get("feed_rate", 0.0) or 0.0),
             peckDepth=float(data.get("peck_depth", 0.0) or 0.0),
             retract=float(data.get("retract", 0.0) or 0.0),
             dwellTime=float(data.get("dwell_time", 0.0) or 0.0),
@@ -507,7 +525,6 @@ class GrooveRoughingCuttingParameters:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "feed_rate": float(self.feedRate),
             "peck_depth": float(self.peckDepth),
             "retract": float(self.retract),
             "dwell_time": float(self.dwellTime),
@@ -516,19 +533,16 @@ class GrooveRoughingCuttingParameters:
 
 @dataclass
 class GrooveFinishingCuttingParameters:
-    feedRate: float
     retract: float
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "GrooveFinishingCuttingParameters":
         return GrooveFinishingCuttingParameters(
-            feedRate=float(data.get("feed_rate", 0.0) or 0.0),
             retract=float(data.get("retract", 0.0) or 0.0),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "feed_rate": float(self.feedRate),
             "retract": float(self.retract),
         }
 
@@ -590,7 +604,6 @@ class DrillingParameters:
     peckDepth: float = 0.0
     # seconds at the bottom of each peck
     dwellTime: float = 0.0
-    feedRate: float = 0.0
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "DrillingParameters":
@@ -600,7 +613,6 @@ class DrillingParameters:
             toolClearance=abs(float(data.get("tool_clearance", 0.0) or 0.0)),
             peckDepth=float(data.get("peck_depth", 0.0) or 0.0),
             dwellTime=float(data.get("dwell_time", 0.0) or 0.0),
-            feedRate=float(data.get("feed_rate", 0.0) or 0.0),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -610,7 +622,6 @@ class DrillingParameters:
             "tool_clearance": float(self.toolClearance),
             "peck_depth": float(self.peckDepth),
             "dwell_time": float(self.dwellTime),
-            "feed_rate": float(self.feedRate)
         }
         return out
 
@@ -652,8 +663,6 @@ class PartingParameters:
     xStart: float = 0.0
     xEnd: float = 0.0
     zPos: float = 0.0
-    first_feed_rate: float = 0.0
-    second_feed_rate: float = 0.0
     second_feed_x_pos: float = 0.0
     x_clearance: float = 1.0
 
@@ -663,8 +672,6 @@ class PartingParameters:
             xStart=float(data.get("x_start", 0.0) or 0.0),
             xEnd=float(data.get("x_end", 0.0) or 0.0),
             zPos=float(data.get("z_pos", 0.0) or 0.0),
-            first_feed_rate=float(data.get("first_feed_rate", 0.0) or 0.0),
-            second_feed_rate=float(data.get("second_feed_rate", 0.0) or 0.0),
             second_feed_x_pos=float(data.get("second_feed_x_pos", 0.0) or 0.0),
             x_clearance=float(data.get("x_clearance", 1.0) or 1.0),
         )
@@ -674,8 +681,6 @@ class PartingParameters:
             "x_start": float(self.xStart),
             "x_end": float(self.xEnd),
             "z_pos" : float(self.zPos),
-            "first_feed_rate" : float(self.first_feed_rate),
-            "second_feed_rate" : float(self.second_feed_rate),
             "second_feed_x_pos": float(self.second_feed_x_pos),
             "x_clearance": float(self.x_clearance),
         }
@@ -822,7 +827,7 @@ class Facing(TurnableOperation):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Facing":
-        spindle_parameters = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
 
         cutting_parameters = CuttingParameters.from_dict(data.get("cutting_parameters", {}))
         geometry_parameters = GeometryParameters.from_dict(data.get("geometry_parameters", {}))
@@ -833,7 +838,7 @@ class Facing(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle_parameters,
+            speedsAndFeeds=speeds_and_feeds,
             cuttingParameters=cutting_parameters,
             geometryParameters=geometry_parameters,
             m1Parameters=m1_parameters,
@@ -842,7 +847,7 @@ class Facing(TurnableOperation):
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        self._add_spindle_to(base)
+        self._add_speeds_and_feeds_to(base)
         base.update({
             "cutting_parameters": self.cuttingParameters.to_dict(),
             "geometry_parameters": self.geometryParameters.to_dict(),
@@ -860,7 +865,7 @@ class Knurling(TurnableOperation):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Knurling":
-        spindle_parameters = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
         cutting_parameters = KnurlingCuttingParameters.from_dict(data.get("cutting_parameters", {}))
         geometry_parameters = KnurlingGeometryParameters.from_dict(data.get("geometry_parameters", {}))
         m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
@@ -870,7 +875,7 @@ class Knurling(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle_parameters,
+            speedsAndFeeds=speeds_and_feeds,
             cuttingParameters=cutting_parameters,
             geometryParameters=geometry_parameters,
             m1Parameters=m1_parameters,
@@ -878,7 +883,7 @@ class Knurling(TurnableOperation):
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        self._add_spindle_to(base)
+        self._add_speeds_and_feeds_to(base)
         base.update({
             "cutting_parameters": self.cuttingParameters.to_dict(),
             "geometry_parameters": self.geometryParameters.to_dict(),
@@ -1198,7 +1203,7 @@ class Profiling(TurnableOperation):
 
     @classmethod
     def from_dict(cls, data: dict) -> "Profiling":
-        spindle_parameters = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
         cutting_parameters = CuttingParameters.from_dict(data.get("cutting_parameters", {}))
         profiling_parameters = ProfilingParameters.from_dict(data.get("profiling_parameters", {}))
         profiling_options = ProfilingOptions.from_dict(data.get("profiling_options", {}))
@@ -1208,7 +1213,7 @@ class Profiling(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle_parameters,
+            speedsAndFeeds=speeds_and_feeds,
             cuttingParameters=cutting_parameters,
             profilingParameters=profiling_parameters,
             profilingOptions=profiling_options
@@ -1216,7 +1221,7 @@ class Profiling(TurnableOperation):
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        self._add_spindle_to(base)
+        self._add_speeds_and_feeds_to(base)
         base.update({
             "cutting_parameters": self.cuttingParameters.to_dict(),
             "profiling_parameters": self.profilingParameters.to_dict(),
@@ -1241,7 +1246,7 @@ class ProfileRoughing(TurnableOperation):
 
     @classmethod
     def from_dict(cls, data: dict) -> "ProfileRoughing":
-        spindle_parameters = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
         cutting_parameters = CuttingParameters.from_dict(data.get("cutting_parameters", {}))
         profiling_parameters = ProfilingParameters.from_dict(data.get("profiling_parameters", {}))
         profile_roughing_strategy = ProfileRoughingStrategy.from_dict(data.get("profile_roughing_strategy", {}))
@@ -1253,7 +1258,7 @@ class ProfileRoughing(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle_parameters,
+            speedsAndFeeds=speeds_and_feeds,
             cuttingParameters=cutting_parameters,
             profilingParameters=profiling_parameters,
             profileRoughingStrategy=profile_roughing_strategy,
@@ -1264,7 +1269,7 @@ class ProfileRoughing(TurnableOperation):
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        self._add_spindle_to(base)
+        self._add_speeds_and_feeds_to(base)
         base.update({
             "cutting_parameters": self.cuttingParameters.to_dict(),
             "profiling_parameters": self.profilingParameters.to_dict(),
@@ -1286,7 +1291,7 @@ class ProfileContour(TurnableOperation):
 
     @classmethod
     def from_dict(cls, data: dict) -> "ProfileContour":
-        spindle_parameters = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
         cutting_parameters = CuttingParameters.from_dict(data.get("cutting_parameters", {}))
         profiling_parameters = ProfilingParameters.from_dict(data.get("profiling_parameters", {}))
         profile_contour_strategy = ProfileContourStrategy.from_dict(data.get("profile_contour_strategy", {}))
@@ -1297,7 +1302,7 @@ class ProfileContour(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle_parameters,
+            speedsAndFeeds=speeds_and_feeds,
             cuttingParameters=cutting_parameters,
             profilingParameters=profiling_parameters,
             profileContourStrategy=profile_contour_strategy,
@@ -1307,7 +1312,7 @@ class ProfileContour(TurnableOperation):
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        self._add_spindle_to(base)
+        self._add_speeds_and_feeds_to(base)
         base.update({
             "cutting_parameters": self.cuttingParameters.to_dict(),
             "profiling_parameters": self.profilingParameters.to_dict(),
@@ -1357,7 +1362,7 @@ class GrooveRoughing(TurnableOperation):
 
     @classmethod
     def from_dict(cls, data: dict) -> "GrooveRoughing":
-        spindle_parameters = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
         cutting_parameters = GrooveRoughingCuttingParameters.from_dict(data.get("cutting_parameters", {}))
         roughing_parameters = GrooveRoughingParameters.from_dict(data.get("roughing_parameters", {}))
         stock_to_leave = StockToLeave.from_dict(data.get("stock_to_leave", {}))
@@ -1368,7 +1373,7 @@ class GrooveRoughing(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle_parameters,
+            speedsAndFeeds=speeds_and_feeds,
             cuttingParameters=cutting_parameters,
             roughingParameters=roughing_parameters,
             stockToLeave=stock_to_leave,
@@ -1378,7 +1383,7 @@ class GrooveRoughing(TurnableOperation):
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        self._add_spindle_to(base)
+        self._add_speeds_and_feeds_to(base)
         base.update({
             "cutting_parameters": self.cuttingParameters.to_dict(),
             "roughing_parameters": self.roughingParameters.to_dict(),
@@ -1419,7 +1424,7 @@ class GrooveFinishing(TurnableOperation):
 
     @classmethod
     def from_dict(cls, data: dict) -> "GrooveFinishing":
-        spindle_parameters = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
         cutting_parameters = GrooveFinishingCuttingParameters.from_dict(data.get("cutting_parameters", {}))
         finishing_parameters = GrooveFinishingParameters.from_dict(data.get("finishing_parameters", {}))
 
@@ -1428,14 +1433,14 @@ class GrooveFinishing(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle_parameters,
+            speedsAndFeeds=speeds_and_feeds,
             cuttingParameters=cutting_parameters,
             finishingParameters=finishing_parameters,
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        self._add_spindle_to(base)
+        self._add_speeds_and_feeds_to(base)
         base.update({
             "cutting_parameters": self.cuttingParameters.to_dict(),
             "finishing_parameters": self.finishingParameters.to_dict(),
@@ -1479,14 +1484,14 @@ class Threading(TurnableOperation):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Threading":
-        spindle = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
         d = dict(data)
         return Threading(
             order=int(d["order"]),
             type=d["type"],
             generate_gcode=bool(d.get("generate_gcode", True)),
             is_optional_block=bool(d.get("is_optional_block", False)),
-            spindleParameters=spindle,
+            speedsAndFeeds=speeds_and_feeds,
             location=_coerce_thread_location(d.get("location", "OD")),
             thread_type=d["thread_type"],
             pitch=float(d["pitch"]),
@@ -1521,7 +1526,7 @@ class Threading(TurnableOperation):
             "taper_type": self.taper_type,
             "compound_angle": self.compound_angle
         })
-        return self._add_spindle_to(base)
+        return self._add_speeds_and_feeds_to(base)
 
 
 @dataclass
@@ -1544,7 +1549,7 @@ class G33Threading(TurnableOperation):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "G33Threading":
-        spindle = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
         m1_parameters = M1Parameters.from_dict(
             data.get("m1_parameters") or {"include_m1": False}
         )
@@ -1554,7 +1559,7 @@ class G33Threading(TurnableOperation):
             type=d["type"],
             generate_gcode=bool(d.get("generate_gcode", True)),
             is_optional_block=bool(d.get("is_optional_block", False)),
-            spindleParameters=spindle,
+            speedsAndFeeds=speeds_and_feeds,
             location=_coerce_thread_location(d.get("location", "OD")),
             thread_type=d.get("thread_type", "g33"),
             pitch=float(d["pitch"]),
@@ -1595,7 +1600,7 @@ class G33Threading(TurnableOperation):
             "compound_angle": self.compound_angle,
             "m1_parameters": self.m1Parameters.to_dict(),
         })
-        return self._add_spindle_to(base)
+        return self._add_speeds_and_feeds_to(base)
 
 
 # -------------------------------- Drilling -----------------------------------
@@ -1607,7 +1612,7 @@ class Drilling(TurnableOperation):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Drilling":
-        spindle = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
 
         drilling_parameters = DrillingParameters.from_dict(data.get("drilling_parameters", {}))
         m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
@@ -1617,14 +1622,14 @@ class Drilling(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle,
+            speedsAndFeeds=speeds_and_feeds,
             drillingParameters=drilling_parameters,
             m1Parameters=m1_parameters,
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        self._add_spindle_to(base)
+        self._add_speeds_and_feeds_to(base)
         base.update({
             "drilling_parameters": self.drillingParameters.to_dict(),
             "m1_parameters": self.m1Parameters.to_dict(),
@@ -1641,7 +1646,7 @@ class Tapping(TurnableOperation):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Tapping":
-        spindle = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
 
         cutting_parameters = TappingParameters.from_dict(data.get("tapping_parameters", {}))
         m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
@@ -1651,14 +1656,14 @@ class Tapping(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle,
+            speedsAndFeeds=speeds_and_feeds,
             tappingParameters=cutting_parameters,
             m1Parameters=m1_parameters,
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        self._add_spindle_to(base)
+        self._add_speeds_and_feeds_to(base)
         base.update({
             "tapping_parameters": self.tappingParameters.to_dict(),
             "m1_parameters": self.m1Parameters.to_dict(),
@@ -1713,7 +1718,7 @@ class Parting(TurnableOperation):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Parting":
-        spindle = TurnableOperation._parse_spindle(data)
+        speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
 
         parting_parameters = PartingParameters.from_dict(data.get("parting_parameters", {}))
         edge_break = EdgeBreak.from_dict(data.get("edge_break", {}))
@@ -1723,14 +1728,14 @@ class Parting(TurnableOperation):
             type=data["type"],
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
-            spindleParameters=spindle,
+            speedsAndFeeds=speeds_and_feeds,
             partingParameters=parting_parameters,
             edgeBreak=edge_break
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        self._add_spindle_to(base)
+        self._add_speeds_and_feeds_to(base)
         base.update({
             "parting_parameters": self.partingParameters.to_dict(),
             "edge_break": self.edgeBreak.to_dict(),

@@ -23,7 +23,7 @@ Item {
         opIndex = index
         opData = data || {}
 
-        header.applyData(opData, (opData.cutting_parameters || {}).feed_rate)
+        header.applyData(opData)
         cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
         profilingParamsPanel.applyData(opIndex, (opData.profiling_parameters || {}), opData)
         profilingOptionsPanel.applyData(opData.profiling_options || {})
@@ -65,8 +65,7 @@ Item {
             id: header
             hasM1: false
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpindleEdited: function(spindle) { root.save({spindle_parameters: spindle}) }
-            onFeedRateEdited: function(value) { root.save({cutting_parameters: {feed_rate: value}}) }
+            onSpeedsAndFeedsEdited: function(speeds) { root.save({speeds_and_feeds: speeds}) }
         }
 
         // Row 1: Profiling parameters | Profiling options (top-aligned)

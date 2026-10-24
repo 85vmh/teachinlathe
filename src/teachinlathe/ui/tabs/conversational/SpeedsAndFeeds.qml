@@ -1,8 +1,8 @@
 // SpeedsAndFeeds.qml — speed mode, speed and feeds in one row: CSS/RPM |
 // the speed for the mode | the feeds. The spindle direction is the tool's
 // (onlyClockwise): shown as the M3 / M4 icon before the speed, not picked.
-// Edits an operation's spindle_parameters, and feeds the operation keeps
-// wherever it keeps them: each edit reports only what changed.
+// Edits an operation's speeds_and_feeds: each edit reports the whole of it,
+// its feeds as the feeds column holds them.
 //
 // What the feeds column holds is ``feedKind``'s:
 //   Standard   Feed rate (Fz)
@@ -35,9 +35,7 @@ GroupBox {
     // (applyData), and saved; set it before then
     property var onlyClockwise: null
 
-    signal spindleEdited(var spindle)    // a whole spindle_parameters
-    signal feedRateEdited(real value)      // Standard's Fz, Parting's Fz1
-    signal feedRate2Edited(real value)     // Parting's Fz2
+    signal speedsAndFeedsEdited(var speedsAndFeeds)   // a whole speeds_and_feeds
     signal pitchEdited(real value)         // Threading's
     signal startsEdited(int value)         // Threading's
     signal openNumPadRequested(var field)
@@ -46,17 +44,17 @@ GroupBox {
     property int    rpm_value: 0
     property int    css_value: 0
     property int    css_max_rpm: 0
-    property int    direction: -1        // +1 = Forward (M3), -1 = Reverse (M4)
+    property string direction: "M4"      // "M3" forward, "M4" reverse
+    // Standard's Fz, Parting's Fz1; Parting's Fz2
     property real   feed_rate: 0.0
-    // Parting's second feed rate, and Threading's pitch and starts: set them
-    // as feed_rate is, from the operation's data
-    property real   feed_rate2: 0.0
+    property real   feed_rate_2: 0.0
+    // Threading's pitch and starts: set them from the operation's data
     property real   pitch: 0.0
     property int    starts: 1
 
-    function applyData(spindleParams, feedRate) {
-        var sp = spindleParams || {}
-        direction = (sp.direction !== undefined) ? sp.direction : -1
+    function applyData(speedsAndFeeds) {
+        var sp = speedsAndFeeds || {}
+        direction = sp.direction === "M3" ? "M3" : "M4"
         var hasRPM = (sp.rpm_value !== undefined && sp.rpm_value !== null)
         var hasCSS = (sp.css_value !== undefined && sp.css_max_speed !== undefined)
         spindleMode = rpmOnly ? "rpm"
@@ -64,26 +62,33 @@ GroupBox {
         rpm_value = hasRPM ? +sp.rpm_value : 0
         css_value = hasCSS ? +sp.css_value : 0
         css_max_rpm = hasCSS ? +sp.css_max_speed : 0
-        feed_rate = (feedRate !== undefined && feedRate !== null) ? +feedRate : 0
+        feed_rate = (sp.feed_rate !== undefined && sp.feed_rate !== null) ? +sp.feed_rate : 0
+        feed_rate_2 = (sp.feed_rate_2 !== undefined && sp.feed_rate_2 !== null) ? +sp.feed_rate_2 : 0
         _keepToAllowedDirection()
     }
 
     function _keepToAllowedDirection() {
         if (onlyClockwise !== true && onlyClockwise !== false) return
-        if ((direction === 1) === onlyClockwise) return
-        direction = onlyClockwise ? 1 : -1
-        emitSpindle()
+        if ((direction === "M3") === onlyClockwise) return
+        direction = onlyClockwise ? "M3" : "M4"
+        emitSpeedsAndFeeds()
     }
 
-    function emitSpindle() {
-        var spindle = {direction: direction, mode: spindleMode}
+    // the whole speeds_and_feeds: the feeds the feeds column holds - none
+    // for Threading, which goes by the pitch
+    function emitSpeedsAndFeeds() {
+        var speeds = {direction: direction, mode: spindleMode}
         if (spindleMode === "rpm") {
-            spindle.rpm_value = rpm_value
+            speeds.rpm_value = rpm_value
         } else {
-            spindle.css_value = css_value
-            spindle.css_max_speed = css_max_rpm
+            speeds.css_value = css_value
+            speeds.css_max_speed = css_max_rpm
         }
-        root.spindleEdited(spindle)
+        if (feedEnabled && feedKind !== SpeedsAndFeeds.FeedKind.Threading)
+            speeds.feed_rate = feed_rate
+        if (feedEnabled && feedKind === SpeedsAndFeeds.FeedKind.Parting)
+            speeds.feed_rate_2 = feed_rate_2
+        root.speedsAndFeedsEdited(speeds)
     }
 
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
@@ -130,7 +135,7 @@ GroupBox {
                 font.pixelSize: Theme.fontBody
                 checked: root.spindleMode === "css"
                 ButtonGroup.group: modeGroup
-                onToggled: if (checked) { root.spindleMode = "css"; root.emitSpindle() }
+                onToggled: if (checked) { root.spindleMode = "css"; root.emitSpeedsAndFeeds() }
             }
             RadioButton {
                 leftPadding: 0
@@ -139,7 +144,7 @@ GroupBox {
                 font.pixelSize: Theme.fontBody
                 checked: root.spindleMode === "rpm"
                 ButtonGroup.group: modeGroup
-                onToggled: if (checked) { root.spindleMode = "rpm"; root.emitSpindle() }
+                onToggled: if (checked) { root.spindleMode = "rpm"; root.emitSpeedsAndFeeds() }
             }
         }
 
@@ -176,7 +181,7 @@ GroupBox {
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.css_value = value; root.emitSpindle() }
+                onValueCommitted: function(value) { root.css_value = value; root.emitSpeedsAndFeeds() }
             }
             Label {
                 Layout.row: 0; Layout.column: 2
@@ -196,7 +201,7 @@ GroupBox {
                     anchors.verticalCenter: parent.verticalCenter
                     width: root.directionIconSize
                     height: width
-                    source: Qt.resolvedUrl(Images.url(root.direction === 1 ? "spindle_m3.svg" : "spindle_m4.svg"))
+                    source: Qt.resolvedUrl(Images.url(root.direction === "M3" ? "spindle_m3.svg" : "spindle_m4.svg"))
                     sourceSize.width: width
                     sourceSize.height: height
                     fillMode: Image.PreserveAspectFit
@@ -218,7 +223,7 @@ GroupBox {
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.css_max_rpm = value; root.emitSpindle() }
+                onValueCommitted: function(value) { root.css_max_rpm = value; root.emitSpeedsAndFeeds() }
             }
             NumpadField {
                 Layout.row: 1; Layout.column: 1
@@ -229,7 +234,7 @@ GroupBox {
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.rpm_value = value; root.emitSpindle() }
+                onValueCommitted: function(value) { root.rpm_value = value; root.emitSpeedsAndFeeds() }
             }
             Label {
                 Layout.row: 1; Layout.column: 2
@@ -271,7 +276,7 @@ GroupBox {
                 formatter: function (v) { return (v == null || !root.feedEnabled) ? "" : String(Number(Number(v).toFixed(3))) }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.feed_rate = value; root.feedRateEdited(value) }
+                onValueCommitted: function(value) { root.feed_rate = value; root.emitSpeedsAndFeeds() }
             }
             NumpadField {
                 visible: parent.threading
@@ -301,12 +306,12 @@ GroupBox {
                 visible: parent.parting
                 Layout.preferredWidth: 80
                 settingName: "turning.feed_rate"
-                value: root.feed_rate2
+                value: root.feed_rate_2
                 validatorObject: dblVal
                 formatter: function (v) { return (v == null || !root.feedEnabled) ? "" : String(Number(Number(v).toFixed(3))) }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.feed_rate2 = value; root.feedRate2Edited(value) }
+                onValueCommitted: function(value) { root.feed_rate_2 = value; root.emitSpeedsAndFeeds() }
             }
             NumpadField {
                 visible: parent.threading

@@ -81,7 +81,7 @@ def generate_profile_contour_gcode(op):
     op = as_dict(op)
 
     config = parse_profile_contour_config(op)
-    spindle = op.get("spindle_parameters", {}) or {}
+    spindle = op.get("speeds_and_feeds", {}) or {}
     prefix = config.optional_prefix
 
     lines = []

@@ -10,7 +10,7 @@ import dataclasses
 
 from teachinlathe.conversational.model.data_types import PassType, ProfileRoughingConfig
 
-from ..helpers.spindle import build_spindle_gcode
+from ..helpers.spindle import build_spindle_gcode, direction_sign
 from ..helpers.utils import get_float
 from .profiling.operation_input import (
     NO_PROFILE,
@@ -65,9 +65,9 @@ def generate_profile_roughing_gcode(op):
     op = as_dict(op)
 
     config = parse_profile_roughing_config(op)
-    spindle = op.get("spindle_parameters", {}) or {}
+    spindle = op.get("speeds_and_feeds", {}) or {}
     m1_params = op.get("m1_parameters", {}) or {}
-    spindle_direction = int(spindle.get("direction", 0) or 0)
+    spindle_direction = direction_sign(op)
     prefix = config.optional_prefix
 
     lines = []

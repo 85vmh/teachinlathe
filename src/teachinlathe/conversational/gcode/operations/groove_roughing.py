@@ -5,7 +5,7 @@ from shapely.geometry import LineString, Point, Polygon, box
 from shapely.ops import linemerge, unary_union
 from shapely.prepared import prep
 
-from ..helpers.spindle import build_spindle_gcode
+from ..helpers.spindle import build_spindle_gcode, feed_rate_of
 from ..helpers.utils import get_float
 from .profiling.geometry import (
     StartPoint,
@@ -1120,7 +1120,7 @@ def generate_groove_roughing_gcode(op):
         op = op.to_dict()
 
     prefix = "/" if bool(op.get("is_optional_block", False)) else ""
-    spindle = op.get("spindle_parameters", {}) or {}
+    spindle = op.get("speeds_and_feeds", {}) or {}
     cutting = op.get("cutting_parameters", {}) or {}
     roughing = op.get("roughing_parameters", {}) or {}
     stock = op.get("stock_to_leave", {}) or {}
@@ -1130,7 +1130,7 @@ def generate_groove_roughing_gcode(op):
 
     lines = []
     lines.extend(build_spindle_gcode(spindle, prefix))
-    feed_rate = get_float(cutting, "feed_rate", 0.1)
+    feed_rate = feed_rate_of(op, 0.1)
     peck_depth = abs(get_float(cutting, "peck_depth", 3.0))
     clearance = abs(get_float(cutting, "retract", 1.0))
     dwell_time = get_float(cutting, "dwell_time", 0.0)

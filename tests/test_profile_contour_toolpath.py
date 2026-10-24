@@ -32,7 +32,7 @@ def operation(profile, stock=False, tool=True):
     build, kind, cutting_tool, x_start, z_start, doc, retract, radial, axial = PROFILES[profile]
     op = {"_resolved_profile": {"profile_type": kind, "profile_primitives": build()},
           "profiling_parameters": {"x_start": x_start, "z_start": z_start},
-          "cutting_parameters": {"doc": doc, "retract": retract, "feed_rate": 0.1},
+          "cutting_parameters": {"doc": doc, "retract": retract},
           "stock_to_leave": {"radial": radial, "axial": axial},
           "stock_to_leave_enabled": stock,
           "profile_contour_strategy": {"profiling_type": kind}}

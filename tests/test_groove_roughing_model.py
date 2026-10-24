@@ -20,13 +20,13 @@ def test_groove_roughing_default_roundtrip_and_json_shape():
 
     assert data["order"] == 5
     assert data["type"] == "grooveRoughing"
-    assert data["spindle_parameters"] == {
-        "direction": -1,
+    assert data["speeds_and_feeds"] == {
+        "direction": "M4",
         "mode": "rpm",
         "rpm_value": 1000,
+        "feed_rate": 0.1,
     }
     assert data["cutting_parameters"] == {
-        "feed_rate": 0.1,
         "peck_depth": 3.0,
         "retract": 1.0,
         "dwell_time": 0.5,

@@ -80,7 +80,7 @@ Item {
         retract = cp.retract !== undefined ? Number(cp.retract) : 0
         zEndBecomesNewZ0 = !!opData.z_end_becomes_new_z0
 
-        header.applyData(opData, cp.feed_rate)
+        header.applyData(opData)
         profileCanvas.resetView()
     }
 
@@ -93,14 +93,9 @@ Item {
         OperationHeader {
             id: header
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpindleEdited: function(spindle) {
+            onSpeedsAndFeedsEdited: function(speeds) {
                 var op = root._draftOp()
-                op.spindle_parameters = spindle
-                root.save(op)
-            }
-            onFeedRateEdited: function(value) {
-                var op = root._draftOp()
-                op.cutting_parameters.feed_rate = value
+                op.speeds_and_feeds = speeds
                 root.save(op)
             }
             onM1Edited: function(m1) {

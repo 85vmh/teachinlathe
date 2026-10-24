@@ -9,13 +9,13 @@ from ..helpers.spindle import build_spindle_gcode
 def generate_knurling_gcode(op: Knurling):
     line_prefix = "/" if op.is_optional_block else ""
 
-    spindle = op.spindleParameters
+    spindle = op.speedsAndFeeds
     geometry = op.geometryParameters
     cutting = op.cuttingParameters
     m1_params = op.m1Parameters
 
     include_m1 = 1 if m1_params.include_m1 else 0
-    direction = spindle.direction if spindle.direction is not None else 0
+    direction = spindle.sign
 
     lines = []
     lines.extend(build_spindle_gcode(spindle, line_prefix))

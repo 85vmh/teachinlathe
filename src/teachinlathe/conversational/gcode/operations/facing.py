@@ -9,14 +9,14 @@ from ..helpers.spindle import build_spindle_gcode
 def generate_facing_gcode(op: Facing, datum: int = 1):
     line_prefix = "/" if op.is_optional_block else ""
 
-    spindle = op.spindleParameters
+    spindle = op.speedsAndFeeds
     geometry = op.geometryParameters
     cutting = op.cuttingParameters
     m1_params = op.m1Parameters
 
     lines = []
     lines.extend(build_spindle_gcode(spindle, line_prefix))
-    lines.append(f"{line_prefix}G95 F{cutting.feedRate}")
+    lines.append(f"{line_prefix}G95 F{spindle.feed_rate}")
     lines.append("")
     lines.append(
         f"{line_prefix}o<facing> call "
@@ -26,7 +26,7 @@ def generate_facing_gcode(op: Facing, datum: int = 1):
         f"[{fmt(geometry.zEnd)}] "
         f"[{inspect_position_int(m1_params)}] "
         f"[{fmt(cutting.doc)}] "
-        f"[{spindle.direction}] "
+        f"[{spindle.sign}] "
         f"[{fmt(cutting.retract)}]"
     )
 

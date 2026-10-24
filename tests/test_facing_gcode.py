@@ -20,10 +20,11 @@ if str(SRC) not in sys.path:
 
 from teachinlathe.conversational.model.data_types import (  # noqa: E402
     CuttingParameters, Facing, GeometryParameters, M1Parameters,
-    PredefinedPosition, SpindleMode, SpindleParameters,
+    PredefinedPosition, SpindleMode, SpeedsAndFeeds,
 )
 from teachinlathe.conversational.gcode.operations.facing \
     import generate_facing_gcode  # noqa: E402
+from teachinlathe.tooling.model.data_types import SpindleDirection  # noqa: E402
 
 SUBROUTINE = ROOT / "subroutines" / "facing.ngc"
 
@@ -32,10 +33,9 @@ def facing(doc=1.0, retract=2.0, optional=False, new_datum=False):
     return Facing(
         order=1, type="facing", generate_gcode=True,
         is_optional_block=optional,
-        spindleParameters=SpindleParameters(
-            direction=-1, mode=SpindleMode.RPM, rpm_value=1200),
-        cuttingParameters=CuttingParameters(
-            feedRate=0.1, retract=retract, doc=doc),
+        speedsAndFeeds=SpeedsAndFeeds(
+            direction=SpindleDirection.M4, mode=SpindleMode.RPM, rpm_value=1200, feed_rate=0.1),
+        cuttingParameters=CuttingParameters(retract=retract, doc=doc),
         geometryParameters=GeometryParameters(
             xStart=42.0, zStart=1.0, xEnd=-0.4, zEnd=-2.0),
         m1Parameters=M1Parameters(

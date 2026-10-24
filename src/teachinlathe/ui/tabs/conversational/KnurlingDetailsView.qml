@@ -19,7 +19,7 @@ Item {
         opIndex = index
         opData = data || {}
 
-        header.applyData(opData, null)
+        header.applyData(opData)
         cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
         geometryPanel.applyData(opIndex, (opData.geometry_parameters || {}), opData)
     }
@@ -58,7 +58,7 @@ Item {
             id: header
             feedEnabled: false
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpindleEdited: function(spindle) { root.save({spindle_parameters: spindle}) }
+            onSpeedsAndFeedsEdited: function(speeds) { root.save({speeds_and_feeds: speeds}) }
             onM1Edited: function(m1) { root.save({m1_parameters: m1}) }
         }
 

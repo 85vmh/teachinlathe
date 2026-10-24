@@ -110,7 +110,7 @@ def operation(profile, pass_type):
     return {"_resolved_profile": {"profile_type": kind, "profile_primitives": build()},
             "_resolved_cutting_tool": tool.to_json(),
             "profiling_parameters": {"x_start": x_start, "z_start": z_start},
-            "cutting_parameters": {"doc": doc, "retract": retract, "feed_rate": 0.1},
+            "cutting_parameters": {"doc": doc, "retract": retract},
             "stock_to_leave": {"radial": radial, "axial": axial},
             "profile_roughing_strategy": {"profiling_type": kind, "pass_type": pass_type}}
 

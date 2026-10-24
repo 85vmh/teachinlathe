@@ -28,14 +28,14 @@ GroupBox {
     property int    rpm_value: 0
     property real   css_value: 0.0
     property int    css_max_rpm: 0
-    property int    directionCache: -1   // +1 = Forward (M3), -1 = Reverse (M4)
+    property string directionCache: "M4" // "M3" forward, "M4" reverse
 
     function applyData(index, data) {
         opIndex = index
         opData = data || {}
 
-        var sp = (opData.spindle_parameters || {})
-        directionCache = (sp.direction !== undefined) ? sp.direction : -1
+        var sp = (opData.speeds_and_feeds || {})
+        directionCache = sp.direction === "M3" ? "M3" : "M4"
 
         var hasRPM = (sp.rpm_value !== undefined && sp.rpm_value !== null)
         var hasCSS = (sp.css_value !== undefined && sp.css_max_speed !== undefined)
@@ -62,7 +62,7 @@ GroupBox {
             type: (opData && opData.type) ? opData.type : "",
             generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
             is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-            spindle_parameters: spindle
+            speeds_and_feeds: spindle
         }
         root.saveRequested({index: opIndex, payload: payload})
     }
@@ -82,9 +82,9 @@ GroupBox {
 
             // M3 then M4, as the cutting-tool editors pick a tool's.
             SpindleDirectionPicker {
-                clockwise: root.directionCache === 1
+                clockwise: root.directionCache === "M3"
                 onPicked: function(clockwise) {
-                    root.directionCache = clockwise ? 1 : -1
+                    root.directionCache = clockwise ? "M3" : "M4"
                     root.emitSave()
                 }
             }

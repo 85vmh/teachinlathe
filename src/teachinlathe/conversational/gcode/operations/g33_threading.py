@@ -22,7 +22,7 @@ def _x_reference(op: G33Threading) -> float:
 def _emit_m1_handling(lines, prefix, op: G33Threading, x_return: float, z_return: float) -> None:
     if not bool(op.m1Parameters.include_m1):
         return
-    spindle_direction = int(op.spindleParameters.direction or 0)
+    spindle_direction = op.speedsAndFeeds.sign
     lines.append(
         f"{prefix}o<m1_handling> call "
         f"[{inspect_position_int(op.m1Parameters)}] "
@@ -43,7 +43,7 @@ def generate_g33_threading_gcode(op: G33Threading):
     safe_x = _safe_x(op, x_reference)
 
     lines = []
-    lines.extend(build_spindle_gcode(op.spindleParameters, prefix, force_rpm=True))
+    lines.extend(build_spindle_gcode(op.speedsAndFeeds, prefix, force_rpm=True))
 
     if int(op.taper_type or 0) != 0:
         lines.append("( G33 Threading: thread taper is not implemented yet )")

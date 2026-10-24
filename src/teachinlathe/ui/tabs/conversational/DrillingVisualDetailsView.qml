@@ -78,7 +78,7 @@ Item {
         peckDepth = dp.peck_depth !== undefined ? Number(dp.peck_depth) : 0
         dwellTime = dp.dwell_time !== undefined ? Number(dp.dwell_time) : 0
 
-        header.applyData(opData, dp.feed_rate)
+        header.applyData(opData)
         profileCanvas.resetView()
     }
 
@@ -97,14 +97,9 @@ Item {
             onlyClockwise: root.tool && root.tool.spindle_direction === 3 ? true
                          : root.tool && root.tool.spindle_direction === 4 ? false : null
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpindleEdited: function(spindle) {
+            onSpeedsAndFeedsEdited: function(speeds) {
                 var op = root._draftOp()
-                op.spindle_parameters = spindle
-                root.save(op)
-            }
-            onFeedRateEdited: function(value) {
-                var op = root._draftOp()
-                op.drilling_parameters.feed_rate = value
+                op.speeds_and_feeds = speeds
                 root.save(op)
             }
             onM1Edited: function(m1) {

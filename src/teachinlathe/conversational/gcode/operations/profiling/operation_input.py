@@ -7,6 +7,7 @@ import logging
 
 from teachinlathe.conversational.model.data_types import ProfilingType
 
+from ...helpers.spindle import feed_rate_of
 from ...helpers.utils import get_float
 from .geometry import StartPoint, build_profile_segments, build_render_path
 
@@ -75,7 +76,7 @@ def common_config(op, strategy) -> dict:
         z_start=get_float(params, "z_start", 0.0),
         doc=get_float(cutting, "doc", 0.5),
         retract=get_float(cutting, "retract", 1.0),
-        feed_rate=get_float(cutting, "feed_rate", 0.1),
+        feed_rate=feed_rate_of(op, 0.1),
         profiling_type=profiling_type(op, strategy),
         optional_prefix="/" if bool(op.get("is_optional_block", False)) else "",
     )

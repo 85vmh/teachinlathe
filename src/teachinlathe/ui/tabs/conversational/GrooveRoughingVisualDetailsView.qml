@@ -119,7 +119,7 @@ Item {
         stockAxial  = stockOn && st.axial !== undefined ? Number(st.axial) : 0
 
         _loadProfile()
-        header.applyData(opData, cp.feed_rate)
+        header.applyData(opData)
         profileCanvas.resetView()
     }
 
@@ -132,14 +132,9 @@ Item {
         OperationHeader {
             id: header
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpindleEdited: function(spindle) {
+            onSpeedsAndFeedsEdited: function(speeds) {
                 var op = root._draftOp()
-                op.spindle_parameters = spindle
-                root.save(op)
-            }
-            onFeedRateEdited: function(value) {
-                var op = root._draftOp()
-                op.cutting_parameters.feed_rate = value
+                op.speeds_and_feeds = speeds
                 root.save(op)
             }
             onM1Edited: function(m1) {

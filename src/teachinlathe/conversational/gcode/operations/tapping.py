@@ -12,7 +12,7 @@ def generate_tapping_gcode(op: Tapping, pitch=None):
     """``pitch``: the tap's, from the Tool Library; the op's own when None."""
     line_prefix = "/" if op.is_optional_block else ""
 
-    spindle = op.spindleParameters
+    spindle = op.speedsAndFeeds
     tapping = op.tappingParameters
     m1_params = op.m1Parameters
     pitch = tapping.pitch if pitch is None or pitch <= 0 else pitch
@@ -34,7 +34,7 @@ def generate_tapping_gcode(op: Tapping, pitch=None):
     else:
         peck_targets = [tapping.zEnd]
 
-    direction = spindle.direction if spindle.direction is not None else 1
+    direction = spindle.sign
     for z_target in peck_targets:
         lines.append(f"{line_prefix}G33.1 Z{fmt(z_target)} K{fmt(pitch)}")
         if m1_params.include_m1:
