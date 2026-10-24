@@ -401,34 +401,25 @@ Canvas {
         requestPaint()
     }
 
-    // ── Moving the view: the last drawing moved, not drawn again ──────────────
-    // While a drag, a pinch or the wheel moves the view, what was last drawn
-    // is shown moved and scaled to it - one image, however much is drawn -
-    // and drawn again, sharp, once the gesture ends. Everything placed over
-    // the canvas follows the view as it moves, from _originX/_originY/_scale.
-    // Only where there is much to draw (snapshotWhileMoving); elsewhere the
-    // view is drawn whole as it moves.
-    property bool snapshotWhileMoving: false
+    // ── Moving the view: drawn simpler while it moves ─────────────────────────
+    // While a drag, a pinch or the wheel moves the view, it is drawn again at
+    // every step, but without what costs the most to draw: the hatch inside
+    // a broken stock, and the toolpath's round line ends (StockActor,
+    // ToolpathActor: simplified). Drawn whole once the gesture ends. Only
+    // where there is much to draw (simplifyWhileMoving); elsewhere the view
+    // is drawn whole as it moves. Everything placed over the canvas follows
+    // the view, from _originX/_originY/_scale.
+    property bool simplifyWhileMoving: false
     property bool _viewMoving: false
-    property var  _snapshot: null
-    // the view the canvas was last drawn at, whole
-    property real _drawnOriginX: 0
-    property real _drawnOriginY: 0
-    property real _drawnScale:   1
 
     function _beginViewMove() {
-        if (_viewMoving || !snapshotWhileMoving) return
-        // the drawing is kept in device pixels: all of it, on a scaled
-        // screen too, not its top-left width x height of them
-        var ratio = Screen.devicePixelRatio
-        _snapshot = getContext("2d").getImageData(0, 0, Math.round(width * ratio), Math.round(height * ratio))
+        if (_viewMoving || !simplifyWhileMoving) return
         _viewMoving = true
     }
 
     function _endViewMove() {
         if (!_viewMoving) return
         _viewMoving = false
-        _snapshot = null
         requestPaint()
     }
 
@@ -446,17 +437,6 @@ Canvas {
         var ctx = getContext("2d")
         ctx.clearRect(0, 0, width, height)
         backgroundActor.paint(ctx)
-        if (_viewMoving && _snapshot) {
-            // a pixel p of the drawing is at world (p - drawnOrigin) / drawnScale,
-            // so now at origin + (p - drawnOrigin) * k
-            var k = _scale / _drawnScale
-            ctx.drawImage(_snapshot, _originX - _drawnOriginX * k, _originY - _drawnOriginY * k,
-                          width * k, height * k)
-            return
-        }
-        _drawnOriginX = _originX
-        _drawnOriginY = _originY
-        _drawnScale   = _scale
         // not placed yet, and not zoomed or panned by hand: the background alone
         if (!_fitted && !_manualView) return
         gridActor.paint(ctx)
@@ -557,6 +537,7 @@ Canvas {
         cx: root._cx
         cy: root._cy
         mirrorAcrossCenterline: root.mirrorAcrossCenterline
+        simplified: root._viewMoving
     }
 
     PathActor {
@@ -647,6 +628,7 @@ Canvas {
         rapidColor: root.rapidColor
         cx: root._cx
         cy: root._cy
+        simplified: root._viewMoving
     }
 
     ResidualActor {

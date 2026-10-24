@@ -18,6 +18,9 @@ QtObject {
     property real  arrowLength: 12        // px
     property real  arrowHalfWidth: 4.5    // px
     property real  arrowEvery: 10         // mm along the cut, X counted on the diameter
+    // while the view moves: square line ends - round ones take the
+    // rasterizer off its fast way, and are what the toolpath costs to draw
+    property bool  simplified: false
 
     function paint(ctx) {
         if (!cx || !cy) return
@@ -31,7 +34,7 @@ QtObject {
         if (!moves || moves.length === 0) return
         ctx.save()
         ctx.setLineDash(dash)
-        ctx.lineCap = "round"
+        ctx.lineCap = simplified ? "butt" : "round"
         ctx.strokeStyle = color
         ctx.lineWidth = width
         ctx.beginPath()

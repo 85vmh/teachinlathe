@@ -162,9 +162,8 @@ Item {
 
         ProfileCanvas {
             id: profileCanvas
-            // the toolpath is too much to draw again at every step of a
-            // zoom or pan: the last drawing moved instead (see ProfileCanvas)
-            snapshotWhileMoving: true
+            // drawn simpler at every step of a zoom or pan (see ProfileCanvas)
+            simplifyWhileMoving: true
             showTransitions: false
             // no axes: the origin marks Z0, and the dashed X axis through it
             showAxes: false

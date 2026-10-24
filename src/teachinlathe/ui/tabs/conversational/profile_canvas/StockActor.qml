@@ -9,6 +9,9 @@ QtObject {
     property var cx
     property var cy
     property bool mirrorAcrossCenterline: false
+    // while the view moves: the finished part inside a broken stock not
+    // hatched - its clips cost the most of anything the canvas draws
+    property bool simplified: false
 
     readonly property real stockLength: workpiece && workpiece.stock_length !== undefined ? Number(workpiece.stock_length) : 0
     readonly property real externalDiameter: workpiece && workpiece.external_diameter !== undefined ? Number(workpiece.external_diameter) : 0
@@ -246,7 +249,7 @@ QtObject {
                     c.restore()
                 }
                 style.inside = function(c) {
-                    if (pastColor === null) return
+                    if (pastColor === null || self.simplified) return
                     for (var k = 0; k < 2; k++) {
                         side(c, k === 1, function(colour) {
                             self._hatchHalf(c, hatchEndZ, stockX, false, colour)
