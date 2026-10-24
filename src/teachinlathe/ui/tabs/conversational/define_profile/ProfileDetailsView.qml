@@ -2,7 +2,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 import tabs.conversational
 import theme
 import common
@@ -76,51 +75,9 @@ Item {
                 }
             }
 
-            // Edit Profile button — top-right overlay
-            Rectangle {
-                id: editProfileBtn
-                anchors { top: parent.top; right: parent.right; topMargin: 24; rightMargin: 24 }
-                height: 60
-                width: editProfileRow.implicitWidth + 32
-                radius: Theme.radius
-                color: editProfileMa.pressed ? Theme.accentSoft : "transparent"
-                border.color: editProfileMa.pressed ? Theme.accentBorder : Theme.outlineStrong; border.width: Theme.hairline
-
-                RowLayout {
-                    id: editProfileRow
-                    anchors.centerIn: parent
-                    spacing: Theme.spacingSmall
-
-                    Item {
-                        width: 28; height: 28
-                        Image {
-                            id: editProfileIcon
-                            anchors.fill: parent
-                            source: Images.url("edit-profile.svg")
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            visible: false
-                        }
-                        ColorOverlay {
-                            anchors.fill: editProfileIcon
-                            source: editProfileIcon
-                            color: Theme.success
-                        }
-                    }
-
-                    Text {
-                        text: "Edit Profile P" + root.profileId
-                        color: Theme.success
-                        font.pointSize: 11; font.family: "Noto Sans"
-                    }
-                }
-
-                MouseArea {
-                    id: editProfileMa
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: root.editor.openEditor()
-                }
+            EditProfileButton {
+                text: "Edit Profile P" + root.profileId
+                onClicked: root.editor.openEditor()
             }
 
             // zoom, fit to screen and mirror - top-left, as on every profile canvas

@@ -1,7 +1,7 @@
-// GroovingBox.qml — Groove Roughing's own parameters, laid over the profile
-// canvas: the strategy, where its first
-// plunges go - Initial Offset apart either side of the groove's middle - and
-// how far apart the plunges after them are (Afterwards Offset).
+// GroovingBox.qml — a groove operation's own parameters, laid over the
+// profile canvas: the strategy and, for Groove Roughing (showOffsets), where
+// its first plunges go - Initial Offset apart either side of the groove's
+// middle - and how far apart the plunges after them are (Afterwards Offset).
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -20,7 +20,10 @@ CanvasBox {
     signal afterwardsOffsetEdited(real value)
     signal openNumPadRequested(var field)
 
-    readonly property var strategies: [
+    property bool   showOffsets: true
+
+    // [{label, value}]: Groove Roughing's by default
+    property var strategies: [
         { label: "Start Center", value: "start_center" },
         { label: "Start Right", value: "start_right" },
         { label: "Start Left", value: "start_left" }
@@ -40,6 +43,8 @@ CanvasBox {
             Layout.fillWidth: true
             Layout.preferredHeight: Theme.inputHeight
             font.pixelSize: Theme.fontBody
+            // as wide as its longest strategy, whatever else is in the box
+            implicitContentWidthPolicy: ComboBox.WidestText
             model: root.strategies
             textRole: "label"
             currentIndex: {
@@ -57,8 +62,12 @@ CanvasBox {
             }
         }
 
-        Label { text: "Initial Offset"; color: root.accent; font.pixelSize: Theme.fontBody }
+        Label {
+            visible: root.showOffsets
+            text: "Initial Offset"; color: root.accent; font.pixelSize: Theme.fontBody
+        }
         NumpadField {
+            visible: root.showOffsets
             Layout.preferredWidth: 100
             settingName: "groove_roughing.initial_offset"
             description: "Initial Offset"
@@ -69,10 +78,14 @@ CanvasBox {
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
             onValueCommitted: function(value) { root.initialOffsetEdited(Number(value)) }
         }
-        Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
+        Label { visible: root.showOffsets; text: "(mm)"; font.pixelSize: Theme.fontBody }
 
-        Label { text: "Afterwards Offset"; color: root.accent; font.pixelSize: Theme.fontBody }
+        Label {
+            visible: root.showOffsets
+            text: "Afterwards Offset"; color: root.accent; font.pixelSize: Theme.fontBody
+        }
         NumpadField {
+            visible: root.showOffsets
             Layout.preferredWidth: 100
             settingName: "groove_roughing.afterwards_offset"
             description: "Afterwards Offset"
@@ -83,7 +96,7 @@ CanvasBox {
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
             onValueCommitted: function(value) { root.afterwardsOffsetEdited(Number(value)) }
         }
-        Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
+        Label { visible: root.showOffsets; text: "(mm)"; font.pixelSize: Theme.fontBody }
 
     }
 }

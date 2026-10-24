@@ -13,10 +13,16 @@ Row {
     property var  canvas: null           // the ProfileCanvas they act on
     property bool showMirror: true       // false where there is no profile to mirror
 
-    anchors { top: parent.top; left: parent.left; topMargin: 24; leftMargin: 24 }
-    spacing: Theme.spacing
+    anchors {
+        top: parent.top; left: parent.left
+        topMargin: Theme.zoomInOutFitMirrorButtonMarginTop
+        leftMargin: Theme.zoomInOutFitMirrorButtonMarginLeft
+    }
+    spacing: Theme.zoomInOutFitMirrorButtonSpacing
 
     Programs.BackplotIconButton {
+        implicitWidth: Theme.zoomInOutFitMirrorButtonSize
+        implicitHeight: Theme.zoomInOutFitMirrorButtonSize
         iconSource: Images.url("zoom-in.svg")
         autoRepeat: true
         autoRepeatDelay: 300
@@ -24,6 +30,8 @@ Row {
         onClicked: root.canvas.zoomIn()
     }
     Programs.BackplotIconButton {
+        implicitWidth: Theme.zoomInOutFitMirrorButtonSize
+        implicitHeight: Theme.zoomInOutFitMirrorButtonSize
         iconSource: Images.url("zoom-out.svg")
         autoRepeat: true
         autoRepeatDelay: 300
@@ -31,10 +39,14 @@ Row {
         onClicked: root.canvas.zoomOut()
     }
     Programs.BackplotIconButton {
+        implicitWidth: Theme.zoomInOutFitMirrorButtonSize
+        implicitHeight: Theme.zoomInOutFitMirrorButtonSize
         iconSource: Images.url("zoom-fit.svg")
         onClicked: root.canvas.fitToScreen()
     }
     Programs.BackplotIconButton {
+        implicitWidth: Theme.zoomInOutFitMirrorButtonSize
+        implicitHeight: Theme.zoomInOutFitMirrorButtonSize
         visible: root.showMirror
         iconSource: Images.url("mirror.svg")
         active: root.canvas ? root.canvas.mirrorAcrossCenterline : false

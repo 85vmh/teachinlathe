@@ -15,7 +15,8 @@ Rectangle {
     signal openNumPadRequested(var field)
     signal tapped()
 
-    color: isSelected ? Theme.selection : Theme.surfaceAlt
+    // selected: its border alone
+    color: Theme.surfaceAlt
     radius: Theme.radiusLarge
     border.color: isSelected ? Theme.accent : Theme.outline
     border.width: isSelected ? 2 : 1

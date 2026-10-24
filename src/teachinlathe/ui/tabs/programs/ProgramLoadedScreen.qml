@@ -137,21 +137,18 @@ Item {
                         }
                     }
 
-                    // Clear of the scale the plot draws round its own
-                    // edge. The ticks reach 7px in, their labels another
-                    // 2px past that, and a label as wide as "-100" adds
-                    // about 36 more - so anything inside 48px sits on top
-                    // of the numbers. See actors/ticks.py for those three.
-                    readonly property int plotMargin: 48
-
+                    // As the profile canvases have them (Theme), over the
+                    // scale the plot draws round its own edge.
                     Row {
                         anchors.left: parent.left
                         anchors.top: parent.top
-                        anchors.margins: backplot.plotMargin
-                        // The profile editor's spacing over its canvas.
-                        spacing: 32
+                        anchors.leftMargin: Theme.zoomInOutFitMirrorButtonMarginLeft
+                        anchors.topMargin: Theme.zoomInOutFitMirrorButtonMarginTop
+                        spacing: Theme.zoomInOutFitMirrorButtonSpacing
 
                         BackplotIconButton {
+                            implicitWidth: Theme.zoomInOutFitMirrorButtonSize
+                            implicitHeight: Theme.zoomInOutFitMirrorButtonSize
                             iconSource: Images.url("zoom-in.svg")
                             autoRepeat: true
                             autoRepeatDelay: 300
@@ -159,6 +156,8 @@ Item {
                             onClicked: backplot.zoomIn()
                         }
                         BackplotIconButton {
+                            implicitWidth: Theme.zoomInOutFitMirrorButtonSize
+                            implicitHeight: Theme.zoomInOutFitMirrorButtonSize
                             iconSource: Images.url("zoom-out.svg")
                             autoRepeat: true
                             autoRepeatDelay: 300
@@ -166,12 +165,16 @@ Item {
                             onClicked: backplot.zoomOut()
                         }
                         BackplotIconButton {
+                            implicitWidth: Theme.zoomInOutFitMirrorButtonSize
+                            implicitHeight: Theme.zoomInOutFitMirrorButtonSize
                             iconSource: Images.url("zoom-fit.svg")
                             onClicked: backplot.fitToWindow()
                         }
                         // the material left so far, drawn above the centre
                         // line; off when the app starts, then as left
                         BackplotIconButton {
+                            implicitWidth: Theme.zoomInOutFitMirrorButtonSize
+                            implicitHeight: Theme.zoomInOutFitMirrorButtonSize
                             iconSource: Images.url("mirror.svg")
                             active: backplot.mirror
                             onClicked: backplot.mirror = !backplot.mirror
@@ -179,12 +182,16 @@ Item {
                     }
 
                     // Same button as the zoom row, so the two line up
-                    // across the top of the plot; the tint is what says
+                    // across the top of the plot - as far in from the right
+                    // as the row is from the left; the tint is what says
                     // it throws something away.
                     BackplotIconButton {
+                        implicitWidth: Theme.zoomInOutFitMirrorButtonSize
+                        implicitHeight: Theme.zoomInOutFitMirrorButtonSize
                         anchors.right: parent.right
                         anchors.top: parent.top
-                        anchors.margins: backplot.plotMargin
+                        anchors.rightMargin: Theme.zoomInOutFitMirrorButtonMarginLeft
+                        anchors.topMargin: Theme.zoomInOutFitMirrorButtonMarginTop
                         iconSource: Images.url("brush_out.svg")
                         tint: Theme.danger
                         borderTint: Theme.danger

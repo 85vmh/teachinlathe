@@ -46,6 +46,14 @@ Item {
         profileCanvas.resetView()
     }
 
+    // the groove's card's box of point ``point`` (1..4) flashed: its tag on
+    // the canvas tapped
+    function flashPoint(point) {
+        var row = cardRepeater.itemAt(grooveIndex)
+        if (row && row.card)
+            row.card.flashPoint(point)
+    }
+
     function emitSave() {
         if (_loading) return
         var merged = JSON.parse(JSON.stringify(opData || {}))
@@ -258,10 +266,13 @@ Item {
                         padding: 8
 
                         Repeater {
+                            id: cardRepeater
                             model: root.primitives
                             // Swiped left a card shows Delete (see SwipeRow)
                             delegate: SwipeRow {
                                 id: primSwipe
+                                // the card in it
+                                readonly property alias card: cardLoader.item
                                 width: parent.width - 16
                                 height: cardLoader.height
                                 duplicateEnabled: false
@@ -286,7 +297,10 @@ Item {
                                     onLoaded: {
                                         item.primData = modelData
                                         item.primIdx = index
-                                        item.isSelected = Qt.binding(function() { return root.selectedIndex === index })
+                                        // selected shown only with more than one in the list
+                                        item.isSelected = Qt.binding(function() {
+                                            return root.primitives.length > 1 && root.selectedIndex === index
+                                        })
                                         item.tapped.connect(function() { root.selectedIndex = index })
                                         item.primUpdated.connect(root.primUpdated)
                                         item.openNumPadRequested.connect(root.openNumPadRequested)
@@ -372,6 +386,7 @@ Item {
                 visible: !!root.groove
                 point: 1
                 axes: "XZ"
+                onClicked: root.flashPoint(1)
                 x: profileCanvas.tip(0).x
                 y: profileCanvas.tip(0).y - height / 2
             }
@@ -380,6 +395,7 @@ Item {
                 visible: !!root.groove
                 point: 2
                 axes: "X"
+                onClicked: root.flashPoint(2)
                 x: profileCanvas.tip(1).x
                 y: profileCanvas.tip(1).y - height / 2
             }
@@ -388,6 +404,7 @@ Item {
                 visible: !!root.groove
                 point: 3
                 axes: "X"
+                onClicked: root.flashPoint(3)
                 x: profileCanvas.tip(2).x - width
                 y: profileCanvas.tip(2).y - height / 2
             }
@@ -396,6 +413,7 @@ Item {
                 visible: !!root.groove
                 point: 4
                 axes: "XZ"
+                onClicked: root.flashPoint(4)
                 x: profileCanvas.tip(3).x - width
                 y: profileCanvas.tip(3).y - height / 2
             }

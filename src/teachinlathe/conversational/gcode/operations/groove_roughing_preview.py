@@ -11,16 +11,19 @@ from .groove_roughing import (
     ROUNDING,
     SAME_MM,
     _blade_control,
-    _first_groove,
-    _profile_bounds_from_path,
-    _radial_profile_primitives,
+    _blade_start_x,
+    _blade_width,
     _cut_path,
+    _first_groove,
+    _groove_path,
+    _profile_bounds_from_path,
     _reverse_path,
     _split_path_at_z,
+    _start_x,
     _stock_allowance,
     generate_groove_roughing_gcode,
 )
-from .profiling.geometry import StartPoint, ToolpathArc, build_profile_segments, build_render_path
+from .profiling.geometry import StartPoint, ToolpathArc
 from .profiling.plan_drawing import _arc_points, flatten_path
 
 #: How far from its own plunge toward the other a peck's number in the pair
@@ -29,8 +32,35 @@ from .profiling.plan_drawing import _arc_points, flatten_path
 ORDER_BY_ITS_PLUNGE = 0.25
 
 _WORD = re.compile(r"([GXZIK])(-?\d+(?:\.\d*)?)")
-_ERROR = "( ERROR: Groove Roughing -- "
+#: The comment a groove generator ends with when it cannot cut: why, after the "--".
+_ERROR = re.compile(r"^/?\( ERROR: .*? -- (.*) \)$")
 _CONTOUR = "Finish Contour"
+
+#: What a groove preview has with nothing to show; each adds its own keys.
+EMPTY = {"profile": [], "offset": [], "feeds": [], "rapids": [], "residual": [], "warnings": [], "error": ""}
+
+
+def groove_path(op):
+    """(path, profile_type, error) of the groove the op carries in
+    ``_resolved_radial_profile``: its profile, from its Z+ end, and "" - or
+    None and why not."""
+    profile = op.get("_resolved_radial_profile", {}) or {}
+    profile_type = str(profile.get("profile_type", "od")).lower()
+    if not _first_groove(profile):
+        return None, profile_type, "no radial profile with a groove above this operation"
+    path = _groove_path(profile)
+    if path is None:
+        return None, profile_type, "the radial profile does not make a groove"
+    return path, profile_type, ""
+
+
+def gcode_error(lines):
+    """Why a groove generator's ``lines`` cut nothing, or ""."""
+    for line in lines:
+        found = _ERROR.match(line.strip())
+        if found:
+            return found.group(1)
+    return ""
 
 
 def _moves(lines):
@@ -136,7 +166,8 @@ def _contour_feeds(path, cut_path, first_pass):
 
 
 def build_groove_roughing_preview(op):
-    """{profile, offset, feeds, rapids, plunges, peck, order, error} for a
+    """{profile, offset, feeds, rapids, plunges, peck, order, startDiameter,
+    bladeX, error} for a
     Groove Roughing dict carrying its radial profile in
     ``_resolved_radial_profile`` and its tool in ``_resolved_tool``, as
     ProfileCanvas draws a roughing:
@@ -154,20 +185,17 @@ def build_groove_roughing_preview(op):
                 turn, numbered in that order: [{n, z, x, x0}] - between them, a
                 ORDER_BY_ITS_PLUNGE of the way from its own, at the depth it goes to (``x``)
                 from ``x0``
+    startDiameter  the plunges' start: the pulley's outside with its radial
+                stock to leave on it
+    bladeX      where the blade starts: the clearance out from it
     error       why there is nothing to show, or ""
     """
     if hasattr(op, "to_dict"):
         op = op.to_dict()
-    empty = {"profile": [], "offset": [], "feeds": [], "rapids": [], "residual": [], "warnings": [],
-             "plunges": [], "peck": None, "order": [], "error": ""}
-    profile = op.get("_resolved_radial_profile", {}) or {}
-    groove = _first_groove(profile)
-    if not groove:
-        return dict(empty, error="no radial profile with a groove above this operation")
-    profile_type = str(profile.get("profile_type", "od")).lower()
-    path = build_render_path(build_profile_segments(_radial_profile_primitives(groove)), profile_type)
-    if not path or not isinstance(path[0], StartPoint):
-        return dict(empty, error="the radial profile does not make a groove")
+    empty = dict(EMPTY, plunges=[], peck=None, order=[], startDiameter=None, bladeX=None)
+    path, profile_type, error = groove_path(op)
+    if path is None:
+        return dict(empty, error=error)
 
     stock = op.get("stock_to_leave", {}) or {}
     stock_on = bool(op.get("stock_to_leave_enabled", False))
@@ -175,12 +203,13 @@ def build_groove_roughing_preview(op):
     axial = abs(float(stock.get("axial", 0.0) or 0.0)) if stock_on else 0.0
 
     lines = generate_groove_roughing_gcode(op)
-    error = next((line.strip()[len(_ERROR):].rstrip(" )") for line in lines if line.strip().startswith(_ERROR)), "")
+    error = gcode_error(lines)
     feeds, rapids = ([], []) if error else _moves(lines)
     # the G-code is written for the point the blade was touched off on; the
     # pecks are drawn down its middle
     tool = op.get("_resolved_tool") or {}
-    z_control = _blade_control(tool) * float(tool.get("width", 0) or 0) / 2.0
+    half_width = _blade_width(tool) / 2.0
+    z_control = _blade_control(tool) * half_width
     for f in feeds:
         f["z0"] -= z_control
         f["z1"] -= z_control
@@ -188,8 +217,7 @@ def build_groove_roughing_preview(op):
     # from the start diameter on, the pulley's largest with its radial stock
     # to leave: what the G-code feeds through above it is air; the contour
     # drawn on the contour
-    x_min, x_max, _z_min, _z_max = _profile_bounds_from_path(path)
-    start_x = x_min - 2.0 * radial if profile_type == "id" else x_max + 2.0 * radial
+    start_x = _start_x(path, profile_type, radial)
     feeds = [f for f in (_from_start(dict(f, arrows="end"), start_x, profile_type)
                          for f in feeds if not f["contour"]) if f]
     plunges = []
@@ -209,9 +237,8 @@ def build_groove_roughing_preview(op):
                     order.append({"n": len(order) + 1, "z": own + (other - own) * ORDER_BY_ITS_PLUNGE, "x": f["x1"],
                                   "x0": f["x0"]})
     # where each peck ends, a line across as wide as the blade
-    tick = float(tool.get("width", 0) or 0) / 2.0
     for f in feeds:
-        f["endTick"] = tick
+        f["endTick"] = half_width
     if not error:
         feeds += _contour_feeds(path, _cut_path(path, profile_type, radial, axial),
                                 max([f["pass"] for f in feeds] + [-1]) + 1)
@@ -221,9 +248,11 @@ def build_groove_roughing_preview(op):
     # rapids: the backing off and in of the pecks, and the moves between them
     # inside the groove, are not drawn
     clearance = abs(float((op.get("cutting_parameters") or {}).get("retract", 0) or 0))
-    blade_x = start_x + (-2.0 if profile_type == "id" else 2.0) * clearance
+    blade_x = _blade_start_x(start_x, profile_type, clearance)
     rapids = [{"x0": blade_x, "z0": z, "x1": start_x, "z1": z} for z in plunges[:2]] if clearance > 0 else []
     return dict(empty,
+                startDiameter=start_x,
+                bladeX=blade_x,
                 plunges=plunges,
                 peck=peck,
                 order=order,

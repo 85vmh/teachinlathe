@@ -22,7 +22,8 @@ Rectangle {
     signal openNumPadRequested(var field)
     signal tapped()
 
-    color: isSelected ? Theme.selection : Theme.surfaceAlt
+    // selected: its border alone
+    color: Theme.surfaceAlt
     radius: Theme.radiusLarge
     border.color: isSelected ? Theme.accent : Theme.outline
     border.width: isSelected ? 2 : 1
@@ -30,6 +31,13 @@ Rectangle {
     height: content.implicitHeight + 24
 
     TapHandler { onTapped: root.tapped() }
+
+    // the box of point ``point`` (1..4) flashed, its tag on the canvas tapped
+    function flashPoint(point) {
+        var box = [p1Box, p2Box, p3Box, p4Box][point - 1]
+        if (box)
+            box.flash()
+    }
 
     function _clone() {
         var d = JSON.parse(JSON.stringify(primData || {}))
@@ -128,6 +136,7 @@ Rectangle {
             SideLabel { text: "Bottom Right" }
 
             GroovePointBox {
+                id: p3Box
                 Layout.fillWidth: true
                 point: 3
                 flankStart: false
@@ -145,6 +154,7 @@ Rectangle {
                 onMirrorRequested: function(toRight) { root._mirrorBottom(toRight) }
             }
             GroovePointBox {
+                id: p2Box
                 Layout.fillWidth: true
                 point: 2
                 flankStart: false
@@ -165,6 +175,7 @@ Rectangle {
             SideLabel { text: "Right Flank"; Layout.topMargin: Theme.spacingLarge }
 
             GroovePointBox {
+                id: p4Box
                 Layout.fillWidth: true
                 point: 4
                 flankStart: true
@@ -186,6 +197,7 @@ Rectangle {
                 onMirrorRequested: function(toRight) { root._mirrorFlanks(toRight) }
             }
             GroovePointBox {
+                id: p1Box
                 Layout.fillWidth: true
                 point: 1
                 flankStart: true

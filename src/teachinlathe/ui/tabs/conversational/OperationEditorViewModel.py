@@ -270,8 +270,12 @@ class ProfilingEditorViewModel(OperationEditorViewModel):
         self._tab.add_profiling_finish(self._index)
 
 
-class GrooveRoughingEditorViewModel(ToolOperationEditorViewModel):
-    update_type = "grooveRoughing"
+class GrooveEditorViewModel(ToolOperationEditorViewModel):
+    """Groove Roughing and Groove Finishing: they cut a radial profile above,
+    and show what they would cut (``_preview``: the use case's preview)."""
+
+    def _preview(self, op):
+        raise NotImplementedError
 
     @pyqtSlot(int, result="QVariant")
     def radialProfile(self, profile_id):
@@ -281,13 +285,22 @@ class GrooveRoughingEditorViewModel(ToolOperationEditorViewModel):
 
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
-        """What Groove Roughing would cut with ``op_data``."""
-        return self._tab.preview(
-            lambda op: self._use_case.groove_roughing_preview(self._program, self._index, op), op_data)
+        """What it would cut with ``op_data``."""
+        return self._tab.preview(self._preview, op_data)
 
 
-class GrooveFinishingEditorViewModel(OperationEditorViewModel):
+class GrooveRoughingEditorViewModel(GrooveEditorViewModel):
+    update_type = "grooveRoughing"
+
+    def _preview(self, op):
+        return self._use_case.groove_roughing_preview(self._program, self._index, op)
+
+
+class GrooveFinishingEditorViewModel(GrooveEditorViewModel):
     update_type = "grooveFinishing"
+
+    def _preview(self, op):
+        return self._use_case.groove_finishing_preview(self._program, self._index, op)
 
 
 class DefineProfileEditorViewModel(OperationEditorViewModel):

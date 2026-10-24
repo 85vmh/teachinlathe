@@ -279,7 +279,9 @@ Item {
             ToolBox {
                 id: toolBox
                 x: (profileCanvas.width - width) / 2
-                y: profileCanvas.boxGap
+                // lined up with the view buttons, as tall as they are
+                y: viewButtons.y
+                rowHeight: viewButtons.height
                 toolCard: root.toolCard
                 onClicked: toolPicker.open()
             }
@@ -301,6 +303,7 @@ Item {
 
             // zoom, fit to screen and mirror - top-left, as on every profile canvas
             CanvasViewButtons {
+                id: viewButtons
                 canvas: profileCanvas
             }
         }

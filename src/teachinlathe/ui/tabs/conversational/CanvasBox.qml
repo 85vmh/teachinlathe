@@ -28,6 +28,20 @@ Rectangle {
     // tapped anywhere but on a control in it
     signal clicked()
 
+    // How long each flash is on, and off between them, in ms, and how many
+    // times it flashes: as the Cutting Tools list flashes the tool it
+    // scrolls to (CuttingToolsPane).
+    readonly property int flashDuration: 100
+    readonly property int flashes: 2
+    property bool _flashOn: false
+
+    // flashed, to show which box something tapped elsewhere is for
+    function flash() {
+        flashTimer.ticks = 0
+        _flashOn = true
+        flashTimer.restart()
+    }
+
     // keeps taps and drags on the box from reaching the canvas under it,
     // which would pan it or fit it to the screen
     MouseArea { anchors.fill: parent; onClicked: root.clicked() }
@@ -49,6 +63,28 @@ Rectangle {
         ColumnLayout {
             id: body
             spacing: Theme.spacingSmall
+        }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: root.radius
+        color: root.accent
+        opacity: root._flashOn ? 0.25 : 0
+        Behavior on opacity { NumberAnimation { duration: 50 } }
+    }
+
+    // On, off, on, off: each tick turns the flash the other way.
+    Timer {
+        id: flashTimer
+        property int ticks: 0
+        interval: root.flashDuration
+        repeat: true
+        onTriggered: {
+            ticks += 1
+            root._flashOn = ticks % 2 === 0
+            if (ticks >= 2 * root.flashes - 1)
+                stop()
         }
     }
 }

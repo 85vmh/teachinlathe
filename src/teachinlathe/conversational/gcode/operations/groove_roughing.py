@@ -1,7 +1,9 @@
 import math
 
+from shapely.affinity import translate
 from shapely.geometry import LineString, Point, Polygon, box
 from shapely.ops import linemerge, unary_union
+from shapely.prepared import prep
 
 from ..helpers.spindle import build_spindle_gcode
 from ..helpers.utils import get_float
@@ -70,6 +72,43 @@ def _on_diameter(radial):
     """A distance along X, such as the clearance - given on the radius, as
     the canvas dimensions it - on the diameter the G-code's X is."""
     return 2.0 * abs(radial)
+
+
+def _outward(profile_type):
+    """Which way out of the groove is along X: +1 for an OD one, -1 for ID."""
+    return -1.0 if str(profile_type).lower() == "id" else 1.0
+
+
+def _top_x(path, profile_type):
+    """The pulley's outside, the groove's mouth: the largest diameter of its
+    profile ``path``, the smallest for ID."""
+    x_min, x_max, _z_min, _z_max = _profile_bounds_from_path(path)
+    return x_min if str(profile_type).lower() == "id" else x_max
+
+
+def _start_x(path, profile_type, stock_radial):
+    """The start diameter: the pulley's outside with ``stock_radial`` - the
+    radial stock to leave, or the one left - on it."""
+    return _top_x(path, profile_type) + _outward(profile_type) * _on_diameter(stock_radial)
+
+
+def _blade_start_x(start_x, profile_type, clearance):
+    """Where the blade starts, and backs off to: ``clearance`` out from the
+    start diameter ``start_x``."""
+    return start_x + _outward(profile_type) * _on_diameter(clearance)
+
+
+def _groove_path(profile):
+    """The profile of the first groove of the radial ``profile``, as the
+    G-code goes along it - from its Z+ end to its Z- one - or None."""
+    groove = _first_groove(profile)
+    if not groove:
+        return None
+    segments = build_profile_segments(_radial_profile_primitives(groove))
+    path = build_render_path(segments, profile_type=str(profile.get("profile_type", "od")).lower())
+    if not path or not isinstance(path[0], StartPoint):
+        return None
+    return path
 
 
 def _fmt(value):
@@ -414,7 +453,7 @@ def _corner_to_control(path, corner, radius, half_width, control, profile_type):
     end - inward for OD, outward for ID."""
     side = 1.0 if corner == "right" else -1.0
     z_shift = control * half_width - side * (half_width - radius)
-    x_shift = (2.0 if str(profile_type).lower() == "id" else -2.0) * radius
+    x_shift = -_outward(profile_type) * _on_diameter(radius)
     return _translate_path(path, x_shift, z_shift)
 
 
@@ -873,7 +912,7 @@ def _part_with_stock(path, profile_type, radial, axial):
     ``axial`` off the flanks - as a shapely Polygon in (z, r), r turned over
     for ID so the part is under it either way; with ``points``, the profile's
     (z, r) from its right end to its left, in the same frame."""
-    sign = -1.0 if str(profile_type).lower() == "id" else 1.0
+    sign = _outward(profile_type)
     points = [(z, sign * r) for z, r in path_points(path)]
     if points[0][0] < points[-1][0]:
         points.reverse()                        # from the right end to the left
@@ -895,7 +934,7 @@ def _stock_allowance(path, profile_type, radial, axial):
     with its stock; [] with none to leave."""
     if radial <= 0 and axial <= 0:
         return []
-    sign = -1.0 if str(profile_type).lower() == "id" else 1.0
+    sign = _outward(profile_type)
     allowance, points = _part_with_stock(path, profile_type, radial, axial)
     (z_right, r_right), (z_left, r_left) = points[0], points[-1]
     floor = min(r for _z, r in points) - BAR_PAST_GROOVE - 2 * (radial + axial)
@@ -929,25 +968,32 @@ class _Blade:
         self.left = min(max(left_radius, 0.0), half)
         self.right = min(max(right_radius, 0.0), half)
         self.control = control
-        self.sign = -1.0 if str(profile_type).lower() == "id" else 1.0
+        self.sign = _outward(profile_type)
+        # its shape with its end's middle at (0, 0), built once and moved to
+        # each point checked: a contour is checked at hundreds of them
+        half, left, right = self.half, self.left, self.right
+        # each half of its end rounded by its own corner's radius
+        shapes = [box(-half + left, 0.0, half - right, self.BODY),
+                  box(-half, left, 0.0, self.BODY),
+                  box(0.0, right, half, self.BODY)]
+        if left > 0:
+            shapes.append(Point(-half + left, left).buffer(left, CORNER_SEGMENTS))
+        if right > 0:
+            shapes.append(Point(half - right, right).buffer(right, CORNER_SEGMENTS))
+        self._shape = unary_union(shapes)
+        self._part = self._prepared = None
 
     def at(self, x, z):
         """Its shape with the G-code at (x, z), in the part's frame."""
-        middle = z - self.control * self.half
-        tip = self.sign * x / 2.0
-        lo, hi = middle - self.half, middle + self.half
-        # each half of its end rounded by its own corner's radius
-        shapes = [box(lo + self.left, tip, hi - self.right, tip + self.BODY),
-                  box(lo, tip + self.left, middle, tip + self.BODY),
-                  box(middle, tip + self.right, hi, tip + self.BODY)]
-        if self.left > 0:
-            shapes.append(Point(lo + self.left, tip + self.left).buffer(self.left, CORNER_SEGMENTS))
-        if self.right > 0:
-            shapes.append(Point(hi - self.right, tip + self.right).buffer(self.right, CORNER_SEGMENTS))
-        return unary_union(shapes)
+        return translate(self._shape, z - self.control * self.half, self.sign * x / 2.0)
 
     def clear_of(self, part, x, z):
-        return self.at(x, z).intersection(part).area < CONTACT_AREA
+        if part is not self._part:
+            # the part prepared once, for the quick test of whether the
+            # blade is anywhere near it
+            self._part, self._prepared = part, prep(part)
+        shape = self.at(x, z)
+        return not self._prepared.intersects(shape) or shape.intersection(part).area < CONTACT_AREA
 
 
 def _clear_part_of(section, blade, part, steps=CHECK_STEPS):
@@ -1117,25 +1163,22 @@ def generate_groove_roughing_gcode(op):
         lines.append("( ERROR: Groove Roughing -- radial profile has no groove primitive )")
         return lines
 
-    primitives = _radial_profile_primitives(groove)
-    segments = build_profile_segments(primitives)
-    path = build_render_path(segments, profile_type=str(profile.get("profile_type", "od")).lower())
-    if not path or not isinstance(path[0], StartPoint):
+    path = _groove_path(profile)
+    if path is None:
         lines.append("( ERROR: Groove Roughing -- radial profile did not produce a valid toolpath )")
         return lines
 
-    x_min, x_max, z_min, z_max = _profile_bounds_from_path(path)
+    _x_min, _x_max, z_min, z_max = _profile_bounds_from_path(path)
     center_z = (z_min + z_max) / 2.0
     half_width = width / 2.0
 
     profile_type = str(profile.get("profile_type", "od")).lower()
-    outward = -1.0 if profile_type == "id" else 1.0
     # the pulley's outside; the start diameter, the plunges' start: that with
     # its radial stock to leave on; where the blade starts and backs off to:
-    # the clearance out from the start diameter (all diameters)
-    top_x = x_min if profile_type == "id" else x_max
-    start_x = top_x + outward * 2.0 * stock_radial
-    safe_x = start_x + outward * 2.0 * clearance
+    # the clearance out from the start diameter
+    top_x = _top_x(path, profile_type)
+    start_x = _start_x(path, profile_type, stock_radial)
+    safe_x = _blade_start_x(start_x, profile_type, clearance)
     # what the blade cuts to: the profile with the stock to leave - radial
     # off the bottom, axial off the flanks
     cut_path = _cut_path(path, profile_type, stock_radial, stock_axial)

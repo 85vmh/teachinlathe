@@ -1,16 +1,12 @@
-// GrooveRoughingVisualDetailsView.qml — Groove Roughing on the profile canvas,
-// laid out as Profile Roughing: the radial profile it roughs drawn on the
-// header's stock, the blade where it starts - over its first plunge, the
-// clearance out from the groove's mouth - its outline over the second, and
-// the boxes down the right edge: its own parameters (GroovingBox), the stock
-// to leave, the clearance as Parting has it, the peck depth and dwell time as
-// Drilling has them, each dimensioned on the canvas. The tool in at the top:
-// a blade, or a tool held neutral - orientation 6 for an OD groove, 8 for an
-// ID one.
+// GrooveRoughingVisualDetailsView.qml — Groove Roughing on the groove's
+// canvas (GrooveCanvas), laid out as Profile Roughing: the blade where it
+// starts - over its first plunge, the clearance out from the start diameter -
+// its outline over the second, and the boxes down the right edge: its own
+// parameters (GroovingBox), the stock to leave, the clearance as Parting has
+// it, the peck depth and dwell time as Drilling has them, each dimensioned on
+// the canvas.
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
-import tabs.conversational.define_radial_profile
 import theme
 
 Item {
@@ -47,16 +43,7 @@ Item {
     property real   stockRadial: 0.0
     property real   stockAxial: 0.0
 
-    readonly property bool isId: String(profileType).toLowerCase() === "id"
-    readonly property bool hasGroove: profileCanvas.groovePoints.length === 4
-    // the start diameter, the plunges' start: the groove's mouth with the
-    // radial stock to leave on it
-    readonly property real mouthX: {
-        var p = profileCanvas.groovePoints
-        if (p.length !== 4) return 0
-        return isId ? Math.min(p[0].x, p[3].x) - 2 * stockRadial
-                    : Math.max(p[0].x, p[3].x) + 2 * stockRadial
-    }
+    readonly property bool hasGroove: profileCanvas.hasGroove
     // the plunges, in the order the G-code makes them; the groove's middle
     // until there is a plan
     readonly property var plunges: {
@@ -66,21 +53,11 @@ Item {
         return p.length === 4 ? [(p[0].z + p[3].z) / 2] : []
     }
     // where the blade starts: over its first plunge, the clearance out from
-    // the start diameter - as the G-code goes there (retract is the clearance)
-    readonly property var startPosition: plunges.length > 0
-        ? { z: plunges[0], x: mouthX + (isId ? -2 : 2) * Math.abs(retract) } : null
-    // mm, the blade's width - before one is chosen, as wide as a usual one,
-    // for the marks drawn beside it
-    readonly property real defaultBladeWidth: 3
-    readonly property real bladeWidth: toolCard && toolCard.card === "blade" && toolCard.view
-                                       ? Number(toolCard.view.bladeWidth) : defaultBladeWidth
-    // LinuxCNC's lathe orientation of a tool held neutral, its end square to
-    // X: 6 cutting toward the axis (OD), 8 away from it (ID)
-    readonly property int neutralOrientation: isId ? 8 : 6
-
-    readonly property color groovingColor: "#1565c0"
+    // the start diameter - the groove's mouth with the radial stock to leave
+    // on it - as the G-code goes there
+    readonly property var startPosition: plunges.length > 0 && groovePreview && groovePreview.bladeX != null
+        ? { z: plunges[0], x: groovePreview.bladeX } : null
     readonly property color peckColor: profileCanvas.feedColor
-    readonly property color clearanceColor: "#6d4c41"
 
     // what it will cut with the values above: the pecks and the finish
     // contour of its G-code, and the stock to leave
@@ -172,36 +149,30 @@ Item {
             }
         }
 
-        RadialProfileCanvas {
+        GrooveCanvas {
             id: profileCanvas
             Layout.fillWidth: true
             Layout.fillHeight: true
+            editor: root.editor
+            toolCard: root.toolCard
+            profileId: root.profileId
             primitives: root.primitives
             profileType: root.profileType
             workpiece: root.workpiece
-            roughingPreview: root.groovePreview
+            preview: root.groovePreview
             stockToLeaveArrowRect: root.stockRadial > 0 || root.stockAxial > 0 ? stockBox.rect : null
-            // the pulley: its profile and its mirror joined at both ends -
-            // no lines across it between them - and filled as an OD profile
-            showTransitions: false
-            fillProfile: true
+            startPosition: root.startPosition
+            startDiameter: root.groovePreview && root.groovePreview.startDiameter != null
+                           ? root.groovePreview.startDiameter : 0
+            clearance: root.retract
+            clearanceBoxRect: clearanceBox.rect
+            boxWidth: Math.max(groovingBox.implicitWidth, stockBox.implicitWidth,
+                               clearanceBox.implicitWidth, peckBox.implicitWidth)
 
-            // how far either side of the blade the clearance's lines reach, mm
-            readonly property real xLinePast: 2
-            // the clearance between the groove's mouth and where the blade
-            // starts, a line at each beside the blade, dimensioned between
-            // them on its right; from the middle of one peck - on the first
-            // plunge toward Z+ after the two in the middle - an arrow to the
-            // Peck Depth box
-            markers: {
+            // from the middle of one peck - on the first plunge toward Z+
+            // after the two in the middle - an arrow to the Peck Depth box
+            extraMarkers: {
                 var out = []
-                if (root.startPosition && root.retract > 0)
-                    out.push({ hline: true, x: root.mouthX, z: root.startPosition.z,
-                               half: root.bladeWidth / 2 + xLinePast,
-                               halfRight: root.bladeWidth / 2 + 2 * xLinePast, color: root.clearanceColor },
-                             { hline: true, x: root.startPosition.x, z: root.startPosition.z,
-                               half: root.bladeWidth / 2 + xLinePast,
-                               halfRight: root.bladeWidth / 2 + 2 * xLinePast, color: root.clearanceColor })
                 var peck = root.groovePreview ? root.groovePreview.peck : null
                 if (peck)
                     out.push({ dot: true, x: (peck.from + peck.to) / 2, z: peck.z,
@@ -220,70 +191,31 @@ Item {
                 }
                 return out
             }
-            dimensions: {
-                var out = []
-                if (root.startPosition && root.retract > 0)
-                    out.push({ axis: "x", from: root.mouthX, to: root.startPosition.x,
-                               z: root.startPosition.z + root.bladeWidth / 2 + xLinePast, offset: 0,
-                               color: root.clearanceColor, arrowToRect: clearanceBox.rect,
-                               arrowsOutside: true, leaderFromOutsideEnd: "to" })
-                return out
-            }
 
-            // the blade where it starts, inside the ticks; in the fit too
-            fitExtraPositions: {
-                if (!canvasTool.drawn || !root.startPosition) return []
-                var pts = canvasTool.outlineFromTip, out = []
-                for (var i = 0; i < pts.length; i++)
-                    out.push({ x: root.startPosition.x + 2 * pts[i].y, z: root.startPosition.z + pts[i].x })
-                return out
-            }
-            CanvasTool {
-                id: canvasTool
-                visible: !!root.startPosition
-                inset: profileCanvas.tickBand
-                card: root.toolCard && root.toolCard.card ? root.toolCard.card : ""
-                view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
-                pxPerMm: profileCanvas.pxPerMm
-                tipX: root.startPosition ? profileCanvas.px(root.startPosition.z) : 0
-                tipY: root.startPosition ? profileCanvas.py(root.startPosition.x) : 0
-            }
-            // over it, the blade's outline where it plunges next: the Initial
+            // over the blade, its outline where it plunges next: the Initial
             // Offset to its left
             CanvasTool {
                 visible: !!root.startPosition && root.plunges.length > 1
                 outlineOnly: true
                 inset: profileCanvas.tickBand
-                card: canvasTool.card
-                view: canvasTool.view
+                card: profileCanvas.startTool.card
+                view: profileCanvas.startTool.view
                 pxPerMm: profileCanvas.pxPerMm
                 tipX: root.plunges.length > 1 ? profileCanvas.px(root.plunges[1]) : 0
-                tipY: canvasTool.tipY
+                tipY: profileCanvas.startTool.tipY
             }
 
-            Rectangle {
-                anchors.fill: parent
-                color: "transparent"
-                border.color: Theme.outline; border.width: Theme.hairline
-            }
-
-            // The boxes stack down the right edge, each as wide as it needs;
-            // the drawing is fitted into what the widest leaves free.
-            readonly property real boxWidth: Math.max(groovingBox.implicitWidth, stockBox.implicitWidth,
-                                                      clearanceBox.implicitWidth, peckBox.implicitWidth)
-            readonly property real boxGap: Theme.spacingLarge
             // top to bottom: grooving, stock to leave, clearance, peck - the
             // first at the top, the last at the bottom, the space between
             // them shared out
             readonly property real boxSpacing: (height - 2 * boxGap - groovingBox.height - stockBox.height
                                                 - clearanceBox.height - peckBox.height) / 3
-            fitInsetRight: boxWidth + boxGap
 
             GroovingBox {
                 id: groovingBox
                 x: profileCanvas.width - width - profileCanvas.boxGap
                 y: profileCanvas.boxGap
-                accent: root.groovingColor
+                accent: profileCanvas.groovingColor
                 strategy: root.strategy
                 initialOffset: root.initialOffset
                 afterwardsOffset: root.afterwardsOffset
@@ -305,14 +237,14 @@ Item {
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
-            // how far out from the groove's mouth the blade starts and each
+            // how far out from the start diameter the blade starts and each
             // peck backs off to: the cutting_parameters' retract
             DimensionBox {
                 id: clearanceBox
                 x: profileCanvas.width - width - profileCanvas.boxGap
                 y: stockBox.y + stockBox.height + profileCanvas.boxSpacing
                 label: "Clearance"
-                dimensionColor: root.clearanceColor
+                dimensionColor: profileCanvas.clearanceColor
                 settingName: "groove_roughing.clearance"
                 value: root.retract
                 onValueEdited: function(value) { root.retract = Math.abs(value); root.save() }
@@ -330,79 +262,6 @@ Item {
                 onPeckDepthEdited: function(value) { root.peckDepth = value; root.save() }
                 onDwellTimeEdited: function(value) { root.dwellTime = value; root.save() }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            // the tool it cuts with, at the top, in the middle; tapped, to
-            // pick it - a blade, or a tool held neutral: orientation 6 for
-            // an OD groove, 8 for an ID one
-            ToolBox {
-                id: toolBox
-                // in the middle of what the boxes leave, clear of the view buttons
-                x: Math.max(viewButtons.x + viewButtons.width + profileCanvas.boxGap,
-                            (profileCanvas.width - profileCanvas.boxWidth - width) / 2)
-                y: profileCanvas.boxGap
-                toolCard: root.toolCard
-                onClicked: toolPicker.open()
-            }
-
-            ToolPickerPopup {
-                id: toolPicker
-
-                toolsModel: root.editor ? root.editor.touchedOffTools : null
-                contentWidth: root.width
-                toolFilter: function(card, view) {
-                    return (card === "blade" || card === "turning")
-                        && Number(view.orientation) === root.neutralOrientation
-                }
-                currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
-                currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
-                                           ? root.toolCard.toolchange_position : "G28"
-                onToolChosen: function(toolNo, position) {
-                    if (root.editor)
-                        root.editor.useTool(toolNo, position)
-                }
-            }
-
-            // zoom, fit to screen and mirror - top-left, as on every profile canvas
-            CanvasViewButtons {
-                id: viewButtons
-                canvas: profileCanvas
-                visible: root.hasGroove
-            }
-
-            // why there is nothing to draw: no blade, a groove narrower than it
-            Rectangle {
-                readonly property string message: root.groovePreview && root.groovePreview.error
-                                                  ? root.groovePreview.error : ""
-                visible: message !== "" && root.hasGroove
-                x: Theme.spacingLarge
-                y: profileCanvas.height - height - Theme.spacingLarge
-                width: Math.min(errorText.implicitWidth + 2 * Theme.spacing,
-                                profileCanvas.width - profileCanvas.boxWidth - 3 * Theme.spacingLarge)
-                height: errorText.implicitHeight + 2 * Theme.spacingSmall
-                radius: Theme.radius
-                color: Theme.dangerSoft
-                border.color: Theme.danger
-                border.width: Theme.hairline
-
-                Text {
-                    id: errorText
-                    x: Theme.spacing
-                    y: Theme.spacingSmall
-                    width: parent.width - 2 * Theme.spacing
-                    text: parent.message
-                    color: Theme.foreground
-                    font.pixelSize: Theme.fontSmall
-                    wrapMode: Text.Wrap
-                }
-            }
-
-            Label {
-                anchors.centerIn: parent
-                visible: !root.hasGroove
-                text: "No radial profile P" + root.profileId + " defined above this operation"
-                color: Theme.foregroundMuted
-                font.pixelSize: Theme.fontBody
             }
         }
     }

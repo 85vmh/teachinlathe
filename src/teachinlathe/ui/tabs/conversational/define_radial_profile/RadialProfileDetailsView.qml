@@ -47,14 +47,14 @@ Item {
                 workpiece: root.workpiece
             }
 
-            Button {
-                anchors.top: parent.top
-                anchors.right: parent.right
-                anchors.topMargin: 24
-                anchors.rightMargin: 24
+            EditProfileButton {
                 text: "Edit Radial Profile P" + root.profileId
-                height: 54
                 onClicked: root.editor.openEditor()
+            }
+
+            // zoom, fit to screen and mirror - top-left, as on every profile canvas
+            CanvasViewButtons {
+                canvas: canvas
             }
 
             Rectangle {

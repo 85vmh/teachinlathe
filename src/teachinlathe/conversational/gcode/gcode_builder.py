@@ -92,6 +92,23 @@ def _resolve_radial_profile_operation(profile_id, operations, before_index=None)
     return None
 
 
+def _resolve_groove_roughing_stock(profile_id, operations, before_index=None):
+    """The stock the last Groove Roughing of radial profile ``profile_id``
+    above ``before_index`` leaves - what a Groove Finishing takes off - as
+    {"radial", "axial"}; both 0 with none, or none left."""
+    search_ops = operations
+    if before_index is not None and before_index >= 0:
+        search_ops = operations[:before_index]
+    for op in reversed(search_ops):
+        if (getattr(op, "type", None) == "grooveRoughing"
+                and int(getattr(op.roughingParameters, "profile_id", 0) or 0) == profile_id):
+            if not getattr(op, "stockToLeaveEnabled", False):
+                break
+            return {"radial": abs(float(op.stockToLeave.stockToLeaveX or 0.0)),
+                    "axial": abs(float(op.stockToLeave.stockToLeaveZ or 0.0))}
+    return {"radial": 0.0, "axial": 0.0}
+
+
 def _resolve_previous_tool_change(operations, before_index=None):
     search_ops = operations
     if before_index is not None and before_index >= 0:
@@ -192,6 +209,9 @@ def _build_operation_payload(op, program, op_index=None):
             profile_id = int(getattr(op.roughingParameters, "profile_id", 0) or 0)
         profile_op = _resolve_radial_profile_operation(profile_id, program.operations, op_index)
         payload["_resolved_radial_profile"] = profile_op.to_dict() if profile_op else {}
+        if op.type == "grooveFinishing":
+            payload["_resolved_roughing_stock"] = _resolve_groove_roughing_stock(
+                profile_id, program.operations, op_index)
         tool_change = _resolve_previous_tool_change(program.operations, op_index)
         if tool_change is not None:
             payload["_resolved_tool_change"] = tool_change.to_dict()

@@ -1,7 +1,7 @@
 // ToolBox.qml — which tool an operation cuts with, laid over its canvas: the
-// tool the last Change Tool above puts in, as "T1" and its title as the
-// Manual Turning list has it ("Turning CCMT 060204"), or "Select the tool"
-// while there is none - in the inserts' colour.
+// tool the last Change Tool above puts in, as "T1 - Turning CCMT 060204" -
+// its title as the Manual Turning list has it, in one colour - or "Select the
+// tool" while there is none; on a lighter shade of the inserts' colour.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -16,17 +16,28 @@ CanvasBox {
     // the inserts' colour - the backplot's, as the Tool Library draws them
     property color insertColor: "#e5a93b"
 
+    // as tall as the row it is lined up with - the canvas's view buttons -
+    // its text in the middle of it
+    property real rowHeight: 0
+
     readonly property bool hasTool: !!(toolCard && toolCard.tool_no)
+    // the tool's title, its colours taken out: all of it the text's
+    readonly property string description: hasTool && toolCard.view
+        ? ToolTitles.listTitle(toolCard.card, toolCard.view, Theme).replace(/<[^>]*>/g, "") : "(empty)"
+    // its border the inserts' colour, its fill that lighter: the colour this
+    // much of the way from white to it - opaque, the canvas not showing through
+    readonly property real fillStrength: 0.4
     accent: insertColor
+    color: Qt.tint(Theme.surface, Qt.rgba(insertColor.r, insertColor.g, insertColor.b, fillStrength))
+    height: Math.max(implicitHeight, rowHeight)
 
     Text {
+        Layout.preferredHeight: root.rowHeight > 0 ? root.rowHeight - 2 * Theme.spacing : -1
+        verticalAlignment: Text.AlignVCenter
         textFormat: Text.StyledText
-        font.pixelSize: Theme.fontBody
-        font.bold: !root.hasTool
-        color: root.hasTool ? Theme.foregroundStrong : root.insertColor
-        text: !root.hasTool ? "Select the tool"
-              : "<b>T" + root.toolCard.tool_no + "</b>"
-                + (root.toolCard.view ? "  " + ToolTitles.listTitle(root.toolCard.card, root.toolCard.view, Theme)
-                                      : "  (empty)")
+        font.pixelSize: Theme.fontLarge
+        color: Theme.foregroundStrong
+        text: !root.hasTool ? "<b>Select the tool</b>"
+              : "<b>T" + root.toolCard.tool_no + "</b> - " + root.description
     }
 }

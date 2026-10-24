@@ -16,13 +16,13 @@ DimensionBox 1.0 DimensionBox.qml
 Divider 1.0 Divider.qml
 DrillingVisualDetailsView 1.0 DrillingVisualDetailsView.qml
 EdgeBreakBox 1.0 EdgeBreakBox.qml
+EditProfileButton 1.0 EditProfileButton.qml
 FacingVisualDetailsView 1.0 FacingVisualDetailsView.qml
 G33CuttingParams 1.0 G33CuttingParams.qml
 G33ThreadingVisualDetailsView 1.0 G33ThreadingVisualDetailsView.qml
 G76CuttingParams 1.0 G76CuttingParams.qml
-GrooveFinishingCuttingParameters 1.0 GrooveFinishingCuttingParameters.qml
-GrooveFinishingDetailsView 1.0 GrooveFinishingDetailsView.qml
-GrooveFinishingParameters 1.0 GrooveFinishingParameters.qml
+GrooveCanvas 1.0 GrooveCanvas.qml
+GrooveFinishingVisualDetailsView 1.0 GrooveFinishingVisualDetailsView.qml
 GrooveRoughingVisualDetailsView 1.0 GrooveRoughingVisualDetailsView.qml
 GroovingBox 1.0 GroovingBox.qml
 HeaderDetailsView 1.0 HeaderDetailsView.qml

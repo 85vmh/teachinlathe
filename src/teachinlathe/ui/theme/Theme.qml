@@ -81,6 +81,14 @@ QtObject {
     // between the boxes of an editor screen, and between them and its canvas
     readonly property int innerSpacings: 12
 
+    // The zoom in, zoom out, fit and mirror buttons over every profile
+    // canvas and the backplot: each one's side, how far in from the canvas's
+    // left and top edges the row of them is, and the gap between two.
+    readonly property int zoomInOutFitMirrorButtonSize:       48
+    readonly property int zoomInOutFitMirrorButtonMarginLeft: 16
+    readonly property int zoomInOutFitMirrorButtonMarginTop:  16
+    readonly property int zoomInOutFitMirrorButtonSpacing:    16
+
     // ── Surfaces ────────────────────────────────────────────────────────────
 
     readonly property color surface:        "#ffffff"   // 15 uses
