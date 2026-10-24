@@ -94,16 +94,16 @@ Item {
         var ua = _unitFrom(corner, legAEnd)
         var ub = _unitFrom(corner, legBEnd)
         if (!ua || !ub || b.type === "none")
-            return { start: cornerD, end: cornerD, arc: [] }
+            return { start: cornerD, end: cornerD }
 
         var amount = b.type === "fillet" ? b.fillet_radius : b.chamfer_width
         if (amount <= 0.0001)
-            return { start: cornerD, end: cornerD, arc: [] }
+            return { start: cornerD, end: cornerD }
 
         var dot = Math.max(-0.9999, Math.min(0.9999, ua.z * ub.z + ua.xh * ub.xh))
         var theta = Math.acos(dot)
         if (theta < 0.001)
-            return { start: cornerD, end: cornerD, arc: [] }
+            return { start: cornerD, end: cornerD }
 
         var tangentDistance = b.type === "fillet" ? amount / Math.tan(theta / 2.0) : amount
         tangentDistance = Math.min(tangentDistance, ua.len, ub.len)
@@ -111,13 +111,13 @@ Item {
         var t2 = _point(corner.z + ub.z * tangentDistance, corner.xh + ub.xh * tangentDistance)
 
         if (b.type !== "fillet")
-            return { start: t1, end: t2, arc: [] }
+            return { start: t1, end: t2 }
 
         var bisZ = ua.z + ub.z
         var bisX = ua.xh + ub.xh
         var bisLen = Math.sqrt(bisZ * bisZ + bisX * bisX)
         if (bisLen < 0.0001)
-            return { start: t1, end: t2, arc: [] }
+            return { start: t1, end: t2 }
 
         var centerDistance = amount / Math.sin(theta / 2.0)
         var center = _point(
@@ -130,13 +130,25 @@ Item {
         while (delta > Math.PI) delta -= Math.PI * 2.0
         while (delta < -Math.PI) delta += Math.PI * 2.0
 
-        var arc = []
-        var steps = 10
-        for (var i = 1; i <= steps; i++) {
-            var a = startAngle + delta * i / steps
-            arc.push(_point(center.z + Math.cos(a) * amount, center.xh + Math.sin(a) * amount))
-        }
-        return { start: t1, end: t2, arc: arc }
+        // one arc from t1 to t2 - clockwise as drawn (X down) when its angle
+        // grows - so the profile has a transition only at its ends
+        return { start: t1, end: t2, center: center, radius: amount, clockwise: delta > 0 }
+    }
+
+    // The fillet ``blend`` (from _cornerBlend) as an arcTo to its end.
+    function _appendArc(out, pid, blend) {
+        out.push({
+            primitive_id: pid,
+            type: "arcTo",
+            x_end: blend.end.x,
+            z_end: blend.end.z,
+            x_center: blend.center.x,
+            z_center: blend.center.z,
+            arc_radius: blend.radius,
+            direction: blend.clockwise ? "cw" : "ccw",
+            blend: _blend(null)
+        })
+        return pid + 1
     }
 
     function _appendLine(out, pid, point, blend) {
@@ -197,21 +209,17 @@ Item {
             z_start: rightBlend.start.z,
             blend: _blend(null)
         })
-        if (rightBlend.arc && rightBlend.arc.length > 0) {
-            for (var ri = 0; ri < rightBlend.arc.length; ri++)
-                pid = _appendLine(out, pid, rightBlend.arc[ri], _blend(null))
-        } else {
+        if (rightBlend.center)
+            pid = _appendArc(out, pid, rightBlend)
+        else
             pid = _appendLine(out, pid, rightBlend.end, _blend(null))
-        }
         pid = _appendLine(out, pid, rightBottom, _blend(bottom.blend_right))
         pid = _appendLine(out, pid, leftBottom, _blend(bottom.blend_left))
         pid = _appendLine(out, pid, leftBlend.start, _blend(null))
-        if (leftBlend.arc && leftBlend.arc.length > 0) {
-            for (var li = 0; li < leftBlend.arc.length; li++)
-                pid = _appendLine(out, pid, leftBlend.arc[li], _blend(null))
-        } else {
+        if (leftBlend.center)
+            pid = _appendArc(out, pid, leftBlend)
+        else
             pid = _appendLine(out, pid, leftBlend.end, _blend(null))
-        }
         _profilePrimitives = out
     }
 
