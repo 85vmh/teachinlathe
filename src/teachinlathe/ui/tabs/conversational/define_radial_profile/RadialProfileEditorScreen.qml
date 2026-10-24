@@ -19,6 +19,16 @@ Item {
     property var workpiece: ({})
     property int selectedIndex: -1
     property bool _loading: false
+    // The card swiped open on its Delete (a SwipeRow), or null
+    property var openSwipeRow: null
+
+    // The first groove, whose points the canvas names: its index, or -1
+    readonly property int grooveIndex: {
+        for (var i = 0; i < primitives.length; i++)
+            if (primitives[i] && primitives[i].type === "groove") return i
+        return -1
+    }
+    readonly property var groove: grooveIndex >= 0 ? primitives[grooveIndex] : null
 
     signal backRequested()
     signal openNumPadRequested(var field)
@@ -33,7 +43,7 @@ Item {
         workpiece = JSON.parse(JSON.stringify(opData.workpiece || {}))
         selectedIndex = primitives.length > 0 ? 0 : -1
         _loading = false
-        canvas.resetView()
+        profileCanvas.resetView()
     }
 
     function emitSave() {
@@ -147,7 +157,8 @@ Item {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            width: parent.width * 0.42
+            // as wide as a groove's card and the row over the list need
+            width: Math.max(headerRow.implicitWidth + 24, widthProbe.implicitWidth + 2 * 8 + 12)
             color: Theme.surface
 
             ColumnLayout {
@@ -155,6 +166,7 @@ Item {
                 spacing: Theme.spacingSmall
 
                 RowLayout {
+                    id: headerRow
                     Layout.fillWidth: true
                     Layout.preferredHeight: Theme.rowHeight
                     Layout.leftMargin: 12
@@ -231,6 +243,11 @@ Item {
                     id: cardScroll
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+
+                    Connections {
+                        target: cardScroll.contentItem
+                        function onMovementStarted() { root.openSwipeRow = null }
+                    }
                     clip: true
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                     contentWidth: availableWidth
@@ -242,21 +259,38 @@ Item {
 
                         Repeater {
                             model: root.primitives
-                            delegate: Loader {
+                            // Swiped left a card shows Delete (see SwipeRow)
+                            delegate: SwipeRow {
+                                id: primSwipe
                                 width: parent.width - 16
-                                sourceComponent: {
-                                    if (!modelData) return null
-                                    if (modelData.type === "repeat") return repeatCardComp
-                                    return grooveCardComp
+                                height: cardLoader.height
+                                duplicateEnabled: false
+                                actionGap: Theme.spacingSmall
+                                actionRadius: 8
+                                swipeSide: root.openSwipeRow === primSwipe ? 1 : 0
+                                onSwipeOpened: root.openSwipeRow = primSwipe
+                                onSwipeClosed: if (root.openSwipeRow === primSwipe) root.openSwipeRow = null
+                                onDeleteRequested: {
+                                    root.openSwipeRow = null
+                                    root.primDeleted(index)
                                 }
-                                onLoaded: {
-                                    item.primData = modelData
-                                    item.primIdx = index
-                                    item.isSelected = Qt.binding(function() { return root.selectedIndex === index })
-                                    item.tapped.connect(function() { root.selectedIndex = index })
-                                    item.primUpdated.connect(root.primUpdated)
-                                    item.deleteRequested.connect(root.primDeleted)
-                                    item.openNumPadRequested.connect(root.openNumPadRequested)
+
+                                Loader {
+                                    id: cardLoader
+                                    width: parent.width
+                                    sourceComponent: {
+                                        if (!modelData) return null
+                                        if (modelData.type === "repeat") return repeatCardComp
+                                        return grooveCardComp
+                                    }
+                                    onLoaded: {
+                                        item.primData = modelData
+                                        item.primIdx = index
+                                        item.isSelected = Qt.binding(function() { return root.selectedIndex === index })
+                                        item.tapped.connect(function() { root.selectedIndex = index })
+                                        item.primUpdated.connect(root.primUpdated)
+                                        item.openNumPadRequested.connect(root.openNumPadRequested)
+                                    }
                                 }
                             }
                         }
@@ -273,48 +307,115 @@ Item {
             color: Theme.separator
         }
 
-        ColumnLayout {
+        RadialProfileCanvas {
+            id: profileCanvas
             anchors.left: leftPanelBg.right
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.margins: 12
-            spacing: Theme.spacingSmall
-
-            RadialProfileCanvas {
-                id: canvas
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                primitives: root.primitives
-                workpiece: root.workpiece
-                profileType: root.profileType
-                selectedIndex: root.selectedIndex
-
-                Rectangle {
-                    anchors.fill: parent
-                    color: "transparent"
-                    border.color: Theme.outline
-                    border.width: Theme.hairline
-                }
+            primitives: root.primitives
+            workpiece: root.workpiece
+            profileType: root.profileType
+            editable: true
+            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            onGrooveEdited: function(section, values) {
+                if (root.grooveIndex < 0) return
+                var d = JSON.parse(JSON.stringify(root.groove))
+                if (!d[section]) d[section] = {}
+                for (var key in values) d[section][key] = values[key]
+                root.primUpdated(root.grooveIndex, d)
             }
 
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 46
-                Item { Layout.fillWidth: true }
-                Button { text: "Zoom In"; onClicked: canvas.zoomIn() }
-                Button { text: "Zoom Out"; onClicked: canvas.zoomOut() }
-                Button { text: "Fit"; onClicked: canvas.fitToScreen() }
-                // the upper half too, above the centre line, or only the lower
-                Button {
-                    text: "Mirror"
-                    checkable: true
-                    checked: canvas.mirrorAcrossCenterline
-                    onToggled: canvas.mirrorAcrossCenterline = checked
-                }
+            // the first groove's points, each a dot with an arrow to its tag,
+            // all at 45 degrees: on the right P2 up and P1 down, on the left
+            // P3 up and P4 down, each pair's tips in line - ``reach`` px past
+            // the pair's outer point - their tags' near sides' middles on them
+            readonly property var points: groovePoints
+            readonly property real reach: 56
+            readonly property real rightZ: points.length === 4 ? Math.max(points[0].z, points[1].z) : 0
+            readonly property real leftZ: points.length === 4 ? Math.min(points[2].z, points[3].z) : 0
+            readonly property var leaders: [
+                { toZ: rightZ, dx: reach, slope: 1 },
+                { toZ: rightZ, dx: reach, slope: -1 },
+                { toZ: leftZ, dx: -reach, slope: -1 },
+                { toZ: leftZ, dx: -reach, slope: 1 }
+            ]
+            markers: {
+                var out = []
+                for (var i = 0; i < points.length && i < 4; i++)
+                    out.push({ leader: true, x: points[i].x, z: points[i].z, color: tags[i].accent,
+                               toZ: leaders[i].toZ, dx: leaders[i].dx, slope: leaders[i].slope })
+                return out
+            }
+            readonly property var tags: [p1Tag, p2Tag, p3Tag, p4Tag]
+            // the tip of point ``i``'s arrow, in px, as MarkersActor draws it
+            function tip(i) {
+                if (points.length !== 4) return { x: 0, y: 0 }
+                var l = leaders[i]
+                var sx = px(points[i].z), sy = py(points[i].x)
+                var ex = px(l.toZ) + l.dx
+                return { x: ex, y: sy + l.slope * Math.abs(ex - sx) }
+            }
+            // room around the drawing for the tags
+            fitPadding: root.groove ? reach + 80 : 0
+
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                border.color: Theme.outline
+                border.width: Theme.hairline
+            }
+
+            GroovePointTag {
+                id: p1Tag
+                visible: !!root.groove
+                point: 1
+                axes: "XZ"
+                x: profileCanvas.tip(0).x
+                y: profileCanvas.tip(0).y - height / 2
+            }
+            GroovePointTag {
+                id: p2Tag
+                visible: !!root.groove
+                point: 2
+                axes: "X"
+                x: profileCanvas.tip(1).x
+                y: profileCanvas.tip(1).y - height / 2
+            }
+            GroovePointTag {
+                id: p3Tag
+                visible: !!root.groove
+                point: 3
+                axes: "X"
+                x: profileCanvas.tip(2).x - width
+                y: profileCanvas.tip(2).y - height / 2
+            }
+            GroovePointTag {
+                id: p4Tag
+                visible: !!root.groove
+                point: 4
+                axes: "XZ"
+                x: profileCanvas.tip(3).x - width
+                y: profileCanvas.tip(3).y - height / 2
+            }
+
+            // zoom, fit to screen and mirror - top-left, as on every profile canvas
+            CanvasViewButtons {
+                id: viewButtons
+                canvas: profileCanvas
             }
         }
     }
+
+    // A press anywhere but on the open card's Delete closes it
+    SwipeDismissArea {
+        openRow: root.openSwipeRow
+        onDismissed: root.openSwipeRow = null
+    }
+
+    // never shown: how wide a groove's card is, for the list's width
+    GrooveProfileCard { id: widthProbe; visible: false }
 
     Component { id: grooveCardComp; GrooveProfileCard {} }
     Component { id: repeatCardComp; RepeatProfileCard {} }

@@ -9,6 +9,12 @@ QtObject {
     property real lineWidth: 1
     property bool mirrorAcrossCenterline: false
     property bool showTransitions: true
+    // without them, the lines at the profile's start and end too: none at all
+    property bool showEnds: true
+    // the part the profile bounds filled, from it to the centre line - on
+    // both halves when they are drawn - in ``fillColor`` (paintFill)
+    property bool fill: false
+    property color fillColor: "#ffffff"
     property string profileType: "od"
     // An ID profile's last diameter, from where it ends back to Z0: both its
     // edges dashed, as Drilling draws the hole it drills, in the grey of the
@@ -64,6 +70,7 @@ QtObject {
             if (s.interior || Math.abs(s.x) < 1e-9) continue
             joins.push(s)
         }
+        if (!showTransitions && !showEnds) return
         if (!showTransitions && joins.length > 2) joins = [joins[0], joins[joins.length - 1]]
         // an ID profile's start is the bore's mouth, not across the part - the
         // stock draws the face out from it to the skin - and its end goes on
@@ -80,8 +87,34 @@ QtObject {
         ctx.stroke()
     }
 
+    // Under everything else of the profile: the part it bounds, filled down
+    // to the centre line, as the stock's fill is under it.
+    function paintFill(ctx) {
+        if (!fill || !renderSegs || renderSegs.length === 0) return
+        ctx.save()
+        ctx.fillStyle = fillColor
+        var halves = mirrorAcrossCenterline ? [false, true] : [false]
+        for (var h = 0; h < halves.length; h++) {
+            ctx.beginPath()
+            var ends = _tracePath(ctx, halves[h])
+            ctx.lineTo(cx(ends.endZ), cy(0))
+            ctx.lineTo(cx(ends.startZ), cy(0))
+            ctx.closePath()
+            ctx.fill()
+        }
+        ctx.restore()
+    }
+
     function _paintPath(ctx, mirrored) {
         ctx.beginPath()
+        _tracePath(ctx, mirrored)
+        ctx.stroke()
+    }
+
+    // The profile on the current path, mirrored over the centre line when
+    // ``mirrored``: {startZ, endZ}, where it starts and ends.
+    function _tracePath(ctx, mirrored) {
+        var startZ = renderSegs.length > 0 ? renderSegs[0].z : 0
         var drawZ = 0
         var drawX = 0
         for (var i = 0; i < renderSegs.length; i++) {
@@ -106,6 +139,6 @@ QtObject {
                 drawX = endX
             }
         }
-        ctx.stroke()
+        return { startZ: startZ, endZ: drawZ }
     }
 }

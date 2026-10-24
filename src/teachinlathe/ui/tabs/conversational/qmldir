@@ -1,5 +1,6 @@
 module tabs.conversational
 AddOperationPopup 1.0 AddOperationPopup.qml
+BlendPicker 1.0 BlendPicker.qml
 BuildGcodeProgressDialog 1.0 BuildGcodeProgressDialog.qml
 CanvasBox 1.0 CanvasBox.qml
 CanvasTool 1.0 CanvasTool.qml
@@ -22,9 +23,8 @@ G76CuttingParams 1.0 G76CuttingParams.qml
 GrooveFinishingCuttingParameters 1.0 GrooveFinishingCuttingParameters.qml
 GrooveFinishingDetailsView 1.0 GrooveFinishingDetailsView.qml
 GrooveFinishingParameters 1.0 GrooveFinishingParameters.qml
-GrooveRoughingCuttingParameters 1.0 GrooveRoughingCuttingParameters.qml
-GrooveRoughingDetailsView 1.0 GrooveRoughingDetailsView.qml
-GrooveRoughingParameters 1.0 GrooveRoughingParameters.qml
+GrooveRoughingVisualDetailsView 1.0 GrooveRoughingVisualDetailsView.qml
+GroovingBox 1.0 GroovingBox.qml
 HeaderDetailsView 1.0 HeaderDetailsView.qml
 KnurlingCuttingParameters 1.0 KnurlingCuttingParameters.qml
 KnurlingDetailsView 1.0 KnurlingDetailsView.qml

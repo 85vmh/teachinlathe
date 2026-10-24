@@ -12,7 +12,6 @@ Rectangle {
     property bool isSelected: false
 
     signal primUpdated(int idx, var data)
-    signal deleteRequested(int idx)
     signal openNumPadRequested(var field)
     signal tapped()
 
@@ -86,11 +85,5 @@ Rectangle {
         }
 
         Item { Layout.fillWidth: true }
-
-        Button {
-            text: "Delete"
-            Layout.preferredWidth: 84
-            onClicked: root.deleteRequested(primIdx)
-        }
     }
 }

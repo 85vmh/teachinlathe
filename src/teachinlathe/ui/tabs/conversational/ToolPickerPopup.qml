@@ -31,6 +31,9 @@ Popup {
     // Blade", "OD Threading", "ID Threading", "Drill Tool", "Reamer Tool",
     // "Tap". Empty shows every kind.
     property var toolKinds: []
+    // Or which tools are shown, as a function(card, view) giving true for
+    // those, instead of their kinds
+    property var toolFilter: null
     // the tool in now, selected when the popup opens; 0 for none
     property int currentToolNo: 0
     property int selectedToolNo: 0
@@ -60,6 +63,7 @@ Popup {
     }
 
     function _allowed(card, view) {
+        if (toolFilter) return !!view && toolFilter(card, view)
         if (!toolKinds || toolKinds.length === 0) return true
         return toolKinds.indexOf(ToolTitles.kindTitle(card, view)) >= 0
     }

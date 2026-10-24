@@ -23,6 +23,8 @@ Canvas {
     property bool   selectable: true
     // px along the right edge that fitToScreen leaves free, for boxes laid there
     property real   fitInsetRight: 0
+    // likewise along the left edge
+    property real   fitInsetLeft: 0
     // px fitToScreen leaves on every side as well, for dimensions drawn
     // outside the part
     property real   fitPadding: 0
@@ -35,6 +37,12 @@ Canvas {
     // by a line across the centre line while the profile is defined; else
     // only where it starts and where it ends
     property bool   showTransitions: true
+    // with showTransitions off, the lines across where the profile starts and
+    // ends left out as well (a groove's, inside the part)
+    property bool   showProfileEnds: true
+    // the part the profile bounds filled from it to the centre line, as the
+    // stock is - for a profile drawn with no stock round it (a pulley's groove)
+    property bool   fillProfile: false
     // a stretch of Z left out of the drawing - the grid and the ticks skip
     // it and mark the real Z past it; see profile_canvas/axisbreak.js
     property var    axisBreak: null
@@ -105,6 +113,16 @@ Canvas {
     // tag; with this set, tapping the tag opens the numpad and reports the
     // new value through diameterEdited or blendEdited.
     property bool   tagEditable: false
+    // px, how long the toolpath's arrowheads are drawn (ToolpathActor), for
+    // what is laid level with them
+    readonly property real toolpathArrowLength: toolpathActor.arrowLength
+    // A tag of the screen's own for the selected primitive, before the
+    // canvas's: a function(index) giving {value, prefix, unit, description,
+    // field, min, z, x} - z and x (a diameter) where its leader touches the
+    // profile, unit after the value (" mm" when left out), min the least it
+    // takes - or null for the canvas's tag, if any. A new value comes back
+    // through tagEdited.
+    property var    extraTag: null
 
     signal primitiveSelected(int index)
     signal blendSelected(int index)   // the blend carried by primitive ``index``
@@ -116,10 +134,12 @@ Canvas {
     // A new value for ``field`` ("fillet_radius" / "chamfer_width") of the
     // blend carried by primitive ``index``.
     signal blendEdited(int index, string field, real value)
+    // A new value for ``field`` of extraTag's tag on primitive ``index``.
+    signal tagEdited(int index, string field, real value)
 
     // ── Value tag ──────────────────────────────────────────────────────────────
     // What the tag shows for the current selection, or null:
-    //   kind         "diameter" | "fillet" | "chamfer"
+    //   kind         "diameter" | "fillet" | "chamfer" | "extra" (extraTag's)
     //   index        the selected primitive, or the one carrying the blend
     //   value        the number shown and edited
     //   prefix       the symbol before it
@@ -130,6 +150,19 @@ Canvas {
     readonly property var _tag: _currentTag()
 
     function _currentTag() {
+        if (selectedPrimIndex >= 0 && extraTag) {
+            var extra = extraTag(selectedPrimIndex)
+            if (extra) {
+                var extraY = _cy(extra.x)
+                return {
+                    kind: "extra", index: selectedPrimIndex, value: extra.value,
+                    prefix: extra.prefix, unit: extra.unit, field: extra.field, min: extra.min,
+                    description: extra.description,
+                    anchorX: _cx(extra.z),
+                    anchorY: mirrorAcrossCenterline ? 2 * _originY - extraY : extraY
+                }
+            }
+        }
         if (selectedPrimIndex >= 0) {
             var cylinder = geom.cylinderAt(_resolvedPrimitives, selectedPrimIndex)
             if (!cylinder) return null
@@ -197,7 +230,9 @@ Canvas {
     readonly property real _leaderEndY: _tag ? _tag.anchorY + (mirrorAcrossCenterline ? -_leaderRun : _leaderRun) : 0
 
     // e.g. "\u00D8 11.000 mm", "r 1.000 mm"
-    function _tagText(tag) { return tag.prefix + " " + Number(tag.value).toFixed(3) + " mm" }
+    function _tagText(tag) {
+        return tag.prefix + " " + Number(tag.value).toFixed(3) + (tag.unit !== undefined ? tag.unit : " mm")
+    }
 
     // ``primitives`` with the cylindrical run containing primitive ``index``
     // moved to ``diameter``, or null; for handlers of diameterEdited.
@@ -250,6 +285,7 @@ Canvas {
     }
     onWidthChanged:  { if (!_manualView) fitToScreen() }
     onFitInsetRightChanged: { if (!_manualView) _scheduleFit() }
+    onFitInsetLeftChanged:  { if (!_manualView) _scheduleFit() }
     onFitPaddingChanged:    { if (!_manualView) _scheduleFit() }
     onDimensionsChanged:     requestPaint()
     onHeightChanged: { if (!_manualView) fitToScreen() }
@@ -379,12 +415,12 @@ Canvas {
         // X is diameter in profile primitives; canvas uses radius units for display.
         var spanX = Math.max(displayXMax - displayXMin + 2 * marginX, 1)
 
-        var fitWidth = Math.max(1, width - fitInsetRight - 2 * fitPadding)
+        var fitWidth = Math.max(1, width - fitInsetLeft - fitInsetRight - 2 * fitPadding)
         var fitHeight = Math.max(1, height - 2 * fitPadding)
         var scale = Math.min(fitWidth / spanZ, fitHeight / spanX)
 
         // Centre each axis in whatever canvas space it gets
-        var leftOffset = fitPadding + (fitWidth - spanZ * scale) / 2
+        var leftOffset = fitInsetLeft + fitPadding + (fitWidth - spanZ * scale) / 2
         var topOffset  = fitPadding + (fitHeight - spanX * scale) / 2
 
         _scale   = scale
@@ -395,7 +431,13 @@ Canvas {
         requestPaint()
     }
 
+    // Nothing to fit: Z0 on the centre line in the middle of the canvas, not
+    // in its corner - again as it is resized, until it is panned or zoomed.
     function _showUnfitted() {
+        if (!_manualView) {
+            _originX = width / 2
+            _originY = height / 2
+        }
         if (_fitted) return
         _fitted = true
         requestPaint()
@@ -440,6 +482,7 @@ Canvas {
         if (!_fitted && !_manualView) return
         gridActor.paint(ctx)
         stockActor.paint(ctx)
+        pathActor.paintFill(ctx)
         centerLineActor.paint(ctx)
         if (showZeroLine) axesActor.paintZeroLine(ctx)
         originActor.paint(ctx)
@@ -548,6 +591,9 @@ Canvas {
         cy: root._cy
         mirrorAcrossCenterline: root.mirrorAcrossCenterline
         showTransitions: root.showTransitions
+        showEnds: root.showProfileEnds
+        fill: root.fillProfile
+        fillColor: Theme.surface
         profileType: root.profileType
     }
 
@@ -944,7 +990,10 @@ Canvas {
             id: tagField
             visible: false
             settingName: "profile.tag"
-            validatorObject: DoubleValidator { bottom: 0.001; notation: DoubleValidator.StandardNotation }
+            validatorObject: DoubleValidator {
+                bottom: tagField.editing && tagField.editing.min !== undefined ? tagField.editing.min : 0.001
+                notation: DoubleValidator.StandardNotation
+            }
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             property var editing: null   // the tag being edited, fixed at the tap
             onValueCommitted: function(value) {
@@ -952,6 +1001,8 @@ Canvas {
                 if (!tag) return
                 if (tag.kind === "diameter")
                     root.diameterEdited(tag.index, Number(value))
+                else if (tag.kind === "extra")
+                    root.tagEdited(tag.index, tag.field, Number(value))
                 else
                     root.blendEdited(tag.index, tag.field, Number(value))
             }

@@ -31,7 +31,7 @@ import logging
 from teachinlathe.ui.tabs.programs.backplot.actors.axis_arrows import AxisArrowsActor
 from teachinlathe.ui.tabs.programs.backplot.actors.axis_letters import AxisLettersActor
 from teachinlathe.ui.tabs.programs.backplot.actors.base import LIB_GOOD, InertActor
-from teachinlathe.ui.tabs.programs.backplot.actors import cutting
+from teachinlathe.ui.tabs.programs.backplot.actors import cutting, trail
 from teachinlathe.ui.tabs.programs.backplot.actors.centerline import CenterlineActor
 from teachinlathe.ui.tabs.programs.backplot.actors.grid import GridActor
 from teachinlathe.ui.tabs.programs.backplot.actors.insert_tool import InsertActor
@@ -99,6 +99,12 @@ def install(canon):
     except Exception as exc:
         LOG.warning("backplot actors: could not set the cutting weight: %s",
                     exc)
+
+    # The live trace, down a blade's middle as the program is drawn.
+    try:
+        installed.append(trail.install(scene, canon))
+    except Exception as exc:
+        LOG.warning("backplot actors: could not centre the trail: %s", exc)
 
     # The annotation, immediately before the live trace: over the toolpath,
     # under the trace and the tool. The depth mode each one sets is what stops

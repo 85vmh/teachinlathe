@@ -472,6 +472,16 @@ class ConversationalUseCase:
                 return self.with_workpiece(program, build_details_payload(op)) or {}
         return {}
 
+    def radial_profile_before(self, program: Optional[Program], before_index: int, profile_id: int) -> dict:
+        """The Define Radial Profile ``profile_id`` above ``before_index`` -
+        the last one above with no id - as its details payload, or {}."""
+        if program is None:
+            return {}
+        for op in reversed(program.operations[:max(before_index, 0)]):
+            if isinstance(op, DefineRadialProfile) and (not profile_id or int(op.profile_id) == int(profile_id)):
+                return build_details_payload(op) or {}
+        return {}
+
     @staticmethod
     def change_tool_before(program: Optional[Program], before_index: int):
         """The last Change Tool above ``before_index``, or None."""
@@ -563,6 +573,24 @@ class ConversationalUseCase:
         op_data["_resolved_profile"] = self.last_profile_before(program, op_index)
         op_data["_resolved_cutting_tool"] = self.cutting_tool_before(program, op_index)
         return build_profile_contour_preview(op_data)
+
+    def groove_roughing_preview(self, program, op_index: int, op_data: dict) -> dict:
+        """What the Groove Roughing at ``op_index`` would cut with ``op_data``,
+        against the radial profile it names and the tool the last Change Tool
+        above puts in, as the G-code has them; see build_groove_roughing_preview."""
+        from teachinlathe.conversational.gcode import gcode_builder
+        from teachinlathe.conversational.gcode.operations.groove_roughing_preview import (
+            build_groove_roughing_preview,
+        )
+        op_data = dict(op_data)
+        operations = program.operations if program is not None else []
+        profile_id = int((op_data.get("roughing_parameters") or {}).get("profile_id", 0) or 0)
+        profile_op = gcode_builder._resolve_radial_profile_operation(profile_id, operations, op_index)
+        op_data["_resolved_radial_profile"] = profile_op.to_dict() if profile_op else {}
+        change = gcode_builder._resolve_previous_tool_change(operations, op_index)
+        op_data["_resolved_tool"] = (gcode_builder._resolve_tool_payload(change.tool_no, change.tool_orientation)
+                                     if change is not None else {})
+        return build_groove_roughing_preview(op_data)
 
     # ── the edit each operation type takes ──────────────────────────────────
 

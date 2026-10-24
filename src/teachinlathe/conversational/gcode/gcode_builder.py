@@ -128,9 +128,12 @@ def _resolve_tool_payload(tool_no, fallback_orientation=0):
         log.warning("Tool lookup failed for T%s: %s", tool_no, exc)
         return payload
     if isinstance(tool, BladeTool):
+        # where it was touched off along Z: -1 its left corner, 0 its middle, 1 its right
+        holder = _tools().find_holder(int(tool_no))
+        place = getattr(getattr(holder, "z_offset_place", None), "value", "0")
         payload.update({"q": tool.orientation, "tool_type": "parting_blade",
                         "width": tool.blade_width, "left_radius": tool.left_radius,
-                        "right_radius": tool.right_radius})
+                        "right_radius": tool.right_radius, "control": int(place)})
     elif tool is not None and hasattr(tool, "orientation"):
         payload["q"] = int(tool.orientation)
     return payload

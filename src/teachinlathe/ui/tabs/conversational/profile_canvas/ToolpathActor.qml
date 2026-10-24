@@ -51,7 +51,10 @@ QtObject {
     // starting arrowEvery / 2 mm into the pass and a new one every arrowEvery
     // mm after, as long as it still fits; a pass shorter than arrowEvery gets
     // a single one, centred halfway along. Distances run along the whole
-    // pass, across its cuts and around its arcs.
+    // pass, across its cuts and around its arcs. A pass whose feeds say
+    // ``arrows``: "along", so on every pass, not only the even ones; "end",
+    // one arrowhead on each of its feeds instead, its tip where the feed ends
+    // (a peck, at the depth it goes to).
     function _paintDirections(ctx) {
         if (!feeds || feeds.length === 0) return
         ctx.save()
@@ -60,7 +63,9 @@ QtObject {
         var first = 0
         for (var i = 1; i <= feeds.length; i++) {
             if (i < feeds.length && feeds[i].pass === feeds[first].pass) continue
-            if (feeds[first].pass % 2 === 0) _paintPassDirections(ctx, feeds.slice(first, i))
+            var arrows = feeds[first].arrows
+            if (arrows === "end") _paintEndHeads(ctx, feeds.slice(first, i))
+            else if (arrows === "along" || feeds[first].pass % 2 === 0) _paintPassDirections(ctx, feeds.slice(first, i))
             first = i
         }
         ctx.restore()
@@ -100,6 +105,31 @@ QtObject {
                 at += arrowEvery
             }
             walked += mm
+        }
+    }
+
+    // an arrowhead on each move, its tip on the move's end - and, with
+    // ``endTick`` (mm), a thin line across there that wide either way, at
+    // most as long as the arrowhead's base
+    function _paintEndHeads(ctx, moves) {
+        for (var i = 0; i < moves.length; i++) {
+            var m = moves[i]
+            var sx = cx(m.z0), sy = cy(m.x0), ex = cx(m.z1), ey = cy(m.x1)
+            if (m.endTick > 0) {
+                ctx.save()
+                ctx.strokeStyle = feedColor
+                ctx.lineWidth = 1
+                var half = Math.min(Math.abs(cx(m.z1 + m.endTick) - ex), arrowHalfWidth)
+                ctx.beginPath()
+                ctx.moveTo(ex - half, ey)
+                ctx.lineTo(ex + half, ey)
+                ctx.stroke()
+                ctx.restore()
+            }
+            var length = Math.sqrt(Math.pow(ex - sx, 2) + Math.pow(ey - sy, 2))
+            if (length < arrowLength) continue
+            var ux = (ex - sx) / length, uy = (ey - sy) / length
+            _paintHead(ctx, ex - ux * arrowLength, ey - uy * arrowLength, ux, uy)
         }
     }
 

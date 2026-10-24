@@ -21,7 +21,14 @@ import "arrow.js" as Arrow
 // ``travel`` the way a cut goes: horizontal, at diameter ``x``, from Z
 // ``from`` to Z ``to``, arrowheads along it pointing to ``to`` - and, with
 // ``arrowToRect``, a line up from its middle to the box's height, then from
-// a dot there the arrow to the box, in ``leaderColor``.
+// a dot there the arrow to the box, in ``leaderColor``; with ``dot`` a point:
+// a dot at diameter ``x``, Z ``z``, the arrow to the box from it; with
+// ``text`` a label: the text centred on diameter ``x``, Z ``z``, ``dx`` px
+// along Z and ``dy`` px down from there; with
+// ``leader`` a dot there and an arrow from it to a point ``dx``, ``dy`` px
+// on - from diameter ``toX``'s height instead of the dot's, when given; or,
+// with ``toZ``, ``dx`` px past Z ``toZ`` at 45 degrees, down with
+// ``slope`` 1, up with -1: a box laid with its edge on the arrow's tip.
 QtObject {
     // [{x: diameter, z, color, arrowToRect, line, top, bottom, arrowAt, dash, hline, half}]
     property var markers: []
@@ -30,6 +37,8 @@ QtObject {
     property real lineWidth: 1             // as a dimension's extension lines
     // a dot where each arrow to a box starts, too
     property bool startDots: false
+    // a ``text`` mark's font, unless it gives its own: as the axes' letters
+    property string textFont: "bold 11px sans-serif"
 
     property StartPositionActor _one: StartPositionActor {}
 
@@ -60,12 +69,56 @@ QtObject {
                 _paintTravel(ctx, m)
                 continue
             }
+            if (m.dot) {
+                _paintDot(ctx, m)
+                continue
+            }
+            if (m.leader) {
+                _paintLeader(ctx, m)
+                continue
+            }
+            if (m.text !== undefined) {
+                _paintText(ctx, m)
+                continue
+            }
             _one.position = { x: m.x || 0, z: m.z || 0 }
             _one.color = m.color || "#1565c0"
             _one.arrowToRect = m.arrowToRect || null
             _one.paint(ctx)
         }
         _one.position = null
+    }
+
+    function _paintDot(ctx, m) {
+        var color = m.color || "#1565c0"
+        var px = cx(+m.z || 0), py = cy(+m.x || 0)
+        if (m.arrowToRect) Arrow.paintToBox(ctx, px, py, m.arrowToRect, color, 0, true)
+        else Arrow.paintDot(ctx, px, py, color)
+    }
+
+    function _paintText(ctx, m) {
+        ctx.save()
+        ctx.fillStyle = m.color || "#333333"
+        ctx.font = m.font || textFont
+        ctx.textAlign = "center"
+        ctx.textBaseline = "middle"
+        ctx.fillText(String(m.text), cx(+m.z || 0) + (+m.dx || 0), cy(+m.x || 0) + (+m.dy || 0))
+        ctx.restore()
+    }
+
+    function _paintLeader(ctx, m) {
+        var color = m.color || "#1565c0"
+        var px = cx(+m.z || 0), py = cy(+m.x || 0)
+        var ex, ey
+        if (m.toZ !== undefined) {
+            ex = cx(+m.toZ) + (+m.dx || 0)
+            ey = py + (m.slope || 1) * Math.abs(ex - px)
+        } else {
+            ex = px + (+m.dx || 0)
+            ey = (m.toX !== undefined ? cy(+m.toX) : py) + (+m.dy || 0)
+        }
+        Arrow.paintDot(ctx, px, py, color)
+        Arrow.paint(ctx, px, py, ex, ey, color, 0)
     }
 
     function _paintTravel(ctx, m) {

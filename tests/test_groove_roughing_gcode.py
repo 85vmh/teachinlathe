@@ -14,7 +14,7 @@ from teachinlathe.conversational.gcode.operations.groove_roughing import (
 )
 
 
-def _op(tool_type="parting_blade"):
+def _op(tool_type="parting_blade", orientation=6):
     return {
         "type": "grooveRoughing",
         "is_optional_block": False,
@@ -42,7 +42,7 @@ def _op(tool_type="parting_blade"):
         "stock_to_leave_enabled": True,
         "_resolved_tool": {
             "t": 1,
-            "q": 6,
+            "q": orientation,
             "tool_type": tool_type,
             "width": 3.0,
             "left_radius": 0.1,
@@ -85,15 +85,18 @@ def test_groove_roughing_start_center_generates_pecks_and_contour():
     assert "G97 M4 S1000" in lines
     assert "G95 F0.100" in lines
     assert "(----------Groove Roughing: Start Center P1----------)" in lines
-    assert "G0 X42.000 Z-24.250" in lines
-    assert "G0 X42.000 Z-25.750" in lines
-    assert "G1 X39.000 F0.100" in lines
+    # the start diameter 40 + 2 x 0.5 radial stock, the blade the 1 mm
+    # clearance (2 on the diameter) out from it
+    assert lines[lines.index("(----------Groove Roughing Initial Center Pair----------)") + 1] == "G0 X43.000"
+    assert "G0 Z-24.250" in lines
+    assert "G0 Z-25.750" in lines
+    # the bottom at 30, with the radial stock to leave
     assert "G1 X31.000 F0.100" in lines
-    assert "(----------Groove Roughing Finish Contour: Right to Center----------)" in lines
-    assert "(----------Groove Roughing Finish Contour: Left to Center----------)" in lines
+    assert "(----------Groove Roughing Finish Contour Z+ to Center----------)" in lines
+    assert "(----------Groove Roughing Finish Contour Z- to Center----------)" in lines
 
 
 def test_groove_roughing_requires_blade_tool():
-    lines = generate_groove_roughing_gcode(_op(tool_type="generic"))
+    lines = generate_groove_roughing_gcode(_op(tool_type="generic", orientation=1))
 
     assert lines[-1] == "( ERROR: Groove Roughing -- current tool must be a parting or grooving blade )"

@@ -270,8 +270,20 @@ class ProfilingEditorViewModel(OperationEditorViewModel):
         self._tab.add_profiling_finish(self._index)
 
 
-class GrooveRoughingEditorViewModel(OperationEditorViewModel):
+class GrooveRoughingEditorViewModel(ToolOperationEditorViewModel):
     update_type = "grooveRoughing"
+
+    @pyqtSlot(int, result="QVariant")
+    def radialProfile(self, profile_id):
+        """The Define Radial Profile ``profile_id`` above - the last one with
+        none - as its details payload, or {}."""
+        return self._use_case.radial_profile_before(self._program, self._index, profile_id)
+
+    @pyqtSlot("QVariant", result="QVariant")
+    def preview(self, op_data):
+        """What Groove Roughing would cut with ``op_data``."""
+        return self._tab.preview(
+            lambda op: self._use_case.groove_roughing_preview(self._program, self._index, op), op_data)
 
 
 class GrooveFinishingEditorViewModel(OperationEditorViewModel):

@@ -1,4 +1,6 @@
 module tabs.conversational.define_radial_profile
+GroovePointBox 1.0 GroovePointBox.qml
+GroovePointTag 1.0 GroovePointTag.qml
 GrooveProfileCard 1.0 GrooveProfileCard.qml
 RadialProfileCanvas 1.0 RadialProfileCanvas.qml
 RadialProfileDetailsView 1.0 RadialProfileDetailsView.qml

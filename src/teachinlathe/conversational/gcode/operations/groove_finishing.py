@@ -3,7 +3,12 @@ from ..helpers.utils import get_float
 from .profiling.geometry import StartPoint, build_profile_segments, build_render_path
 from .profiling.toolpath import emit_toolpath
 from .groove_roughing import (
+    SAME_MM,
+    _CONTROL_NAMES,
+    _blade_control,
+    _blade_width,
     _code,
+    _corner_to_control,
     _emit_contour_section,
     _first_groove,
     _fmt,
@@ -13,9 +18,9 @@ from .groove_roughing import (
     _radial_profile_primitives,
     _reverse_path,
     _safe_x_for_contour,
-    _shift_path_x,
     _split_path_at_z,
     _tool_is_blade,
+    corner_comment,
 )
 
 
@@ -35,10 +40,15 @@ def _left_from_center_side(profile_type):
     return "right" if str(profile_type).lower() == "id" else "left"
 
 
-def _emit_continuous_sections(lines, prefix, safe_x, sections):
-    sections = [section for section in sections if section and isinstance(section[0], StartPoint)]
-    if not sections:
+def _emit_continuous_sections(lines, prefix, safe_x, sections, corners):
+    """``sections`` one after the other at the feed, each cut with the
+    blade's corner of ``corners`` ("right" / "left"), said over it."""
+    kept = [(section, corner) for section, corner in zip(sections, corners)
+            if section and isinstance(section[0], StartPoint)]
+    if not kept:
         return
+    sections = [section for section, _corner in kept]
+    lines.append(_code(prefix, corner_comment(kept[0][1])))
 
     start = sections[0][0]
     lines.append(_code(prefix, f"G0 X{_fmt(safe_x)}"))
@@ -48,8 +58,9 @@ def _emit_continuous_sections(lines, prefix, safe_x, sections):
     current_end = (start.x, start.z)
     for index, section in enumerate(sections):
         if index > 0:
+            lines.append(_code(prefix, corner_comment(kept[index][1])))
             section_start = section[0]
-            if abs(current_end[0] - section_start.x) > 0.0001 or abs(current_end[1] - section_start.z) > 0.0001:
+            if abs(current_end[0] - section_start.x) > SAME_MM or abs(current_end[1] - section_start.z) > SAME_MM:
                 lines.append(_code(prefix, f"G1 X{_fmt(section_start.x)} Z{_fmt(section_start.z)}"))
         emit_toolpath(lines, prefix, section)
         end_point = _path_end_point(section)
@@ -83,8 +94,10 @@ def _append_finishing_contour(
     strategy,
     left_radius,
     right_radius,
+    half_width=0.0,
+    control=0,
 ):
-    contour_path = _shift_path_x(path, 0.0)
+    contour_path = path
     z_plus_path, z_minus_path = _split_path_at_z(contour_path, center_z)
 
     z_plus_to_center = _offset_path_for_tool_radius(
@@ -108,24 +121,35 @@ def _append_finishing_contour(
         _left_from_center_side(profile_type),
     )
 
+    # the Z+ side cut with the blade's right corner, the Z- side with its
+    # left: each written for the point it was touched off on
+    z_plus_to_center = _corner_to_control(z_plus_to_center, "right", right_radius, half_width, control, profile_type)
+    z_plus_from_center = _corner_to_control(z_plus_from_center, "right", right_radius, half_width, control,
+                                            profile_type)
+    z_minus_to_center = _corner_to_control(z_minus_to_center, "left", left_radius, half_width, control, profile_type)
+    z_minus_from_center = _corner_to_control(z_minus_from_center, "left", left_radius, half_width, control,
+                                             profile_type)
+
     safe_path = z_plus_to_center + z_minus_to_center + z_plus_from_center + z_minus_from_center
     contour_safe_x = _safe_x_for_contour(safe_path, safe_x, clearance, profile_type)
 
     if strategy == "towards_left":
         lines.append(_code(prefix, "(----------Groove Finishing Contour Towards Left----------)"))
-        _emit_continuous_sections(lines, prefix, contour_safe_x, [z_plus_to_center, z_minus_from_center])
+        _emit_continuous_sections(lines, prefix, contour_safe_x, [z_plus_to_center, z_minus_from_center],
+                                  ["right", "left"])
         return
 
     if strategy == "towards_right":
         lines.append(_code(prefix, "(----------Groove Finishing Contour Towards Right----------)"))
-        _emit_continuous_sections(lines, prefix, contour_safe_x, [z_minus_to_center, z_plus_from_center])
+        _emit_continuous_sections(lines, prefix, contour_safe_x, [z_minus_to_center, z_plus_from_center],
+                                  ["left", "right"])
         return
 
     lines.append(_code(prefix, "(----------Groove Finishing Contour Z+ to Center----------)"))
-    _emit_contour_section(lines, prefix, contour_safe_x, z_plus_to_center)
+    _emit_contour_section(lines, prefix, contour_safe_x, z_plus_to_center, "right")
 
     lines.append(_code(prefix, "(----------Groove Finishing Contour Z- to Center----------)"))
-    _emit_contour_section(lines, prefix, contour_safe_x, z_minus_to_center)
+    _emit_contour_section(lines, prefix, contour_safe_x, z_minus_to_center, "left")
 
 
 def generate_groove_finishing_gcode(op):
@@ -180,7 +204,7 @@ def generate_groove_finishing_gcode(op):
     lines.append(
         _code(
             prefix,
-            f"( blade left radius={_fmt(get_float(tool, 'left_radius', 0.0))} right radius={_fmt(get_float(tool, 'right_radius', 0.0))} )",
+            f"( blade left radius={_fmt(get_float(tool, 'left_radius', 0.0))} right radius={_fmt(get_float(tool, 'right_radius', 0.0))} touched off at {_CONTROL_NAMES[_blade_control(tool)]} )",
         )
     )
 
@@ -195,5 +219,7 @@ def generate_groove_finishing_gcode(op):
         strategy,
         get_float(tool, "left_radius", 0.0),
         get_float(tool, "right_radius", 0.0),
+        _blade_width(tool) / 2.0,
+        _blade_control(tool),
     )
     return lines

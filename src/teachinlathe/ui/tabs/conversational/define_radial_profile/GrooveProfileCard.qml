@@ -1,10 +1,15 @@
+// GrooveProfileCard.qml — a groove in the list, as its four points' boxes
+// (GroovePointBox): its bottom's two corners on top - P3 bottom left, P2
+// bottom right - and its flanks' starts under them - P4 the left flank's,
+// P1 the right flank's. Between each pair, two buttons that copy one side
+// onto the other, mirrored: the flanks' angle and blend, the bottom's
+// diameter and blend.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import common.touchable_input
 import theme
 import common
-import TeachInLathe
+import tabs.programs as Programs
 
 Rectangle {
     id: root
@@ -14,7 +19,6 @@ Rectangle {
     property bool isSelected: false
 
     signal primUpdated(int idx, var data)
-    signal deleteRequested(int idx)
     signal openNumPadRequested(var field)
     signal tapped()
 
@@ -22,10 +26,10 @@ Rectangle {
     radius: Theme.radiusLarge
     border.color: isSelected ? Theme.accent : Theme.outline
     border.width: isSelected ? 2 : 1
+    implicitWidth: content.implicitWidth + 24
     height: content.implicitHeight + 24
 
     TapHandler { onTapped: root.tapped() }
-    DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
 
     function _clone() {
         var d = JSON.parse(JSON.stringify(primData || {}))
@@ -44,7 +48,7 @@ Rectangle {
         return { type: "none", chamfer_width: 0, fillet_radius: 0 }
     }
 
-    function _fieldValue(section, key, fallback) {
+    function _value(section, key, fallback) {
         return primData && primData[section] && primData[section][key] !== undefined
             ? Number(primData[section][key])
             : fallback
@@ -56,27 +60,40 @@ Rectangle {
             : _emptyBlend()
     }
 
-    function _blendValue(blend, key) {
-        return blend && blend[key] !== undefined ? Number(blend[key]) : 0
-    }
-
-    function _blendType(blend) {
-        if (!blend || !blend.type) return "none"
-        return blend.type === "radius" ? "fillet" : blend.type
-    }
-
     function _commit(section, key, value) {
         var d = _clone()
         d[section][key] = Number(value)
         root.primUpdated(primIdx, d)
     }
 
-    function _commitBlend(section, blendKey, blendType, valueKey, value) {
+    function _commitBlend(section, key, blendType, chamferWidth, filletRadius) {
         var d = _clone()
-        if (!d[section][blendKey]) d[section][blendKey] = _emptyBlend()
-        if (blendType !== null) d[section][blendKey].type = blendType
-        if (valueKey) d[section][blendKey][valueKey] = Number(value)
+        d[section][key] = { type: blendType, chamfer_width: chamferWidth, fillet_radius: filletRadius }
         root.primUpdated(primIdx, d)
+    }
+
+    // the flanks: the angle and the start blend of one copied onto the other
+    function _mirrorFlanks(toRight) {
+        var d = _clone()
+        var from = toRight ? d.left_flank : d.right_flank
+        var to = toRight ? d.right_flank : d.left_flank
+        to.angle = from.angle !== undefined ? Number(from.angle) : 0
+        to.start_blend = JSON.parse(JSON.stringify(from.start_blend))
+        root.primUpdated(primIdx, d)
+    }
+
+    // the bottom: one corner's diameter and blend copied onto the other's
+    function _mirrorBottom(toRight) {
+        var b = _clone()
+        var d = b.bottom
+        if (toRight) {
+            d.x_end_right = d.x_end_left !== undefined ? Number(d.x_end_left) : 0
+            d.blend_right = JSON.parse(JSON.stringify(d.blend_left))
+        } else {
+            d.x_end_left = d.x_end_right !== undefined ? Number(d.x_end_right) : 0
+            d.blend_left = JSON.parse(JSON.stringify(d.blend_right))
+        }
+        root.primUpdated(primIdx, b)
     }
 
     ColumnLayout {
@@ -87,326 +104,153 @@ Rectangle {
         anchors.margins: 12
         spacing: 10
 
-        RowLayout {
-            Layout.fillWidth: true
-            Label {
-                text: (primIdx + 1) + ". Groove"
-                font.pixelSize: Theme.fontBody
-                font.bold: true
-            }
-            Item { Layout.fillWidth: true }
-            Button {
-                text: "Delete"
-                Layout.preferredWidth: 84
-                onClicked: root.deleteRequested(primIdx)
-            }
-        }
-
-        FlankSection {
-            Layout.fillWidth: true
-            title: "Right Flank"
-            sectionName: "right_flank"
-            blendKey: "start_blend"
-            xValue: root._fieldValue("right_flank", "x_start", 30)
-            zValue: root._fieldValue("right_flank", "z_start", 0)
-            angleValue: root._fieldValue("right_flank", "angle", 0)
-            blendData: root._blend("right_flank", "start_blend")
-            settingPrefix: "radial_profile.right_flank"
-            onFieldCommitted: function(section, key, value) { root._commit(section, key, value) }
-            onBlendTypeCommitted: function(section, blend, blendType) { root._commitBlend(section, blend, blendType, "", 0) }
-            onBlendValueCommitted: function(section, blend, key, value) { root._commitBlend(section, blend, null, key, value) }
-            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-        }
-
-        BottomSection {
-            Layout.fillWidth: true
-            xEndLeft: root._fieldValue("bottom", "x_end_left", 20)
-            xEndRight: root._fieldValue("bottom", "x_end_right", 20)
-            leftBlend: root._blend("bottom", "blend_left")
-            rightBlend: root._blend("bottom", "blend_right")
-            onFieldCommitted: function(key, value) { root._commit("bottom", key, value) }
-            onBlendTypeCommitted: function(blend, blendType) { root._commitBlend("bottom", blend, blendType, "", 0) }
-            onBlendValueCommitted: function(blend, key, value) { root._commitBlend("bottom", blend, null, key, value) }
-            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-        }
-
-        FlankSection {
-            Layout.fillWidth: true
-            title: "Left Flank"
-            sectionName: "left_flank"
-            blendKey: "start_blend"
-            xValue: root._fieldValue("left_flank", "x_start", 30)
-            zValue: root._fieldValue("left_flank", "z_start", -5)
-            angleValue: root._fieldValue("left_flank", "angle", 0)
-            blendData: root._blend("left_flank", "start_blend")
-            settingPrefix: "radial_profile.left_flank"
-            onFieldCommitted: function(section, key, value) { root._commit(section, key, value) }
-            onBlendTypeCommitted: function(section, blend, blendType) { root._commitBlend(section, blend, blendType, "", 0) }
-            onBlendValueCommitted: function(section, blend, key, value) { root._commitBlend(section, blend, null, key, value) }
-            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-        }
-    }
-
-    component NumberRow: RowLayout {
-        id: numberRow
-
-        property string label: ""
-        property string settingName: ""
-        property real value: 0
-        property bool teachable: true
-        signal committed(real value)
-        signal teachRequested()
-        signal openNumPadRequested(var field)
-
-        Layout.fillWidth: true
-        spacing: Theme.spacingSmall
-
         Label {
-            text: numberRow.label
-            Layout.preferredWidth: 70
-            font.pixelSize: Theme.fontSmall
-        }
-
-        NumpadField {
-            Layout.preferredWidth: 96
-            settingName: numberRow.settingName
-            validatorObject: dblVal
-            seedNumpadFromValue: true
-            value: numberRow.value
-            formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
-            hAlign: Text.AlignRight
-            onOpenRequested: function(field) { numberRow.openNumPadRequested(field) }
-            onValueCommitted: function(value) { numberRow.committed(Number(value)) }
-        }
-
-        TeachInButton {
-            visible: numberRow.teachable
-            Layout.preferredWidth: numberRow.teachable ? implicitWidth : 0
-            onClicked: numberRow.teachRequested()
-        }
-    }
-
-    component BlendEditor: GridLayout {
-        id: blendRoot
-
-        property string title: ""
-        property var blendData: ({ type: "none" })
-        property string settingPrefix: ""
-        property string activeType: root._blendType(blendData)
-        signal blendTypeCommitted(string blendType)
-        signal blendValueCommitted(string key, real value)
-        signal openNumPadRequested(var field)
-
-        Layout.fillWidth: true
-        columns: 3
-        columnSpacing: 10
-        rowSpacing: 8
-
-        ButtonGroup { id: modeGroup }
-
-        Label {
-            text: blendRoot.title
-            font.pixelSize: Theme.fontSmall
+            text: (primIdx + 1) + ". Groove"
+            font.pixelSize: Theme.fontBody
             font.bold: true
-            Layout.columnSpan: 3
         }
 
-        RadioButton {
-            text: "None"
-            font.pixelSize: Theme.fontSmall
-            checked: blendRoot.activeType === "none"
-            ButtonGroup.group: modeGroup
-            Layout.columnSpan: 3
-            onToggled: if (checked) blendRoot.blendTypeCommitted("none")
+        Rectangle {
+            Layout.fillWidth: true
+            height: Theme.hairline
+            color: Theme.separator
         }
 
-        RadioButton {
-            text: "Chamfer"
-            font.pixelSize: Theme.fontSmall
-            checked: blendRoot.activeType === "chamfer"
-            ButtonGroup.group: modeGroup
-            onToggled: if (checked) blendRoot.blendTypeCommitted("chamfer")
-        }
-        NumpadField {
-            Layout.preferredWidth: 96
-            enabled: blendRoot.activeType === "chamfer"
-            opacity: enabled ? 1.0 : 0.4
-            settingName: blendRoot.settingPrefix + ".chamfer_width"
-            validatorObject: dblVal
-            seedNumpadFromValue: true
-            value: root._blendValue(blendRoot.blendData, "chamfer_width")
-            formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
-            hAlign: Text.AlignRight
-            onOpenRequested: function(field) { blendRoot.openNumPadRequested(field) }
-            onValueCommitted: function(value) { blendRoot.blendValueCommitted("chamfer_width", Number(value)) }
-        }
-        Label {
-            text: "(mm)"
-            font.pixelSize: Theme.fontSmall
-            opacity: blendRoot.activeType === "chamfer" ? 1.0 : 0.4
-        }
+        // the boxes in two columns, the mirror buttons between them
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 3
+            columnSpacing: Theme.spacing
+            rowSpacing: Theme.spacingSmall
 
-        RadioButton {
-            text: "Fillet"
-            font.pixelSize: Theme.fontSmall
-            checked: blendRoot.activeType === "fillet"
-            ButtonGroup.group: modeGroup
-            onToggled: if (checked) blendRoot.blendTypeCommitted("fillet")
-        }
-        NumpadField {
-            Layout.preferredWidth: 96
-            enabled: blendRoot.activeType === "fillet"
-            opacity: enabled ? 1.0 : 0.4
-            settingName: blendRoot.settingPrefix + ".fillet_radius"
-            validatorObject: dblVal
-            seedNumpadFromValue: true
-            value: root._blendValue(blendRoot.blendData, "fillet_radius")
-            formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
-            hAlign: Text.AlignRight
-            onOpenRequested: function(field) { blendRoot.openNumPadRequested(field) }
-            onValueCommitted: function(value) { blendRoot.blendValueCommitted("fillet_radius", Number(value)) }
-        }
-        Label {
-            text: "(mm)"
-            font.pixelSize: Theme.fontSmall
-            opacity: blendRoot.activeType === "fillet" ? 1.0 : 0.4
-        }
-    }
+            SideLabel { text: "Bottom Left" }
+            Item { Layout.preferredWidth: 1 }
+            SideLabel { text: "Bottom Right" }
 
-    component FlankSection: GroupBox {
-        id: flankRoot
-
-        property string sectionName: ""
-        property string blendKey: ""
-        property real xValue: 0
-        property real zValue: 0
-        property real angleValue: 0
-        property var blendData: ({ type: "none" })
-        property string settingPrefix: ""
-        signal fieldCommitted(string section, string key, real value)
-        signal blendTypeCommitted(string section, string blend, string blendType)
-        signal blendValueCommitted(string section, string blend, string key, real value)
-        signal openNumPadRequested(var field)
-
-        font.pixelSize: Theme.fontSmall
-        Layout.fillWidth: true
-
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: 8
-            spacing: Theme.spacingLarge
-
-            ColumnLayout {
+            GroovePointBox {
                 Layout.fillWidth: true
-                Layout.alignment: Qt.AlignTop
-                spacing: Theme.spacingSmall
-
-                NumberRow {
-                    label: "X Start"
-                    settingName: flankRoot.settingPrefix + ".x_start"
-                    value: flankRoot.xValue
-                    onOpenNumPadRequested: function(field) { flankRoot.openNumPadRequested(field) }
-                    onCommitted: function(value) { flankRoot.fieldCommitted(flankRoot.sectionName, "x_start", value) }
-                    onTeachRequested: flankRoot.fieldCommitted(flankRoot.sectionName, "x_start", PositionsBridge.teachInX() * 2)
+                point: 3
+                flankStart: false
+                xValue: root._value("bottom", "x_end_left", 20)
+                blend: root._blend("bottom", "blend_left")
+                settingPrefix: "radial_profile.p3"
+                onClicked: root.tapped()
+                onFieldEdited: function(key, value) { root._commit("bottom", "x_end_left", value) }
+                onBlendEdited: function(blendType, chamferWidth, filletRadius) {
+                    root._commitBlend("bottom", "blend_left", blendType, chamferWidth, filletRadius)
                 }
-                NumberRow {
-                    label: "Z Start"
-                    settingName: flankRoot.settingPrefix + ".z_start"
-                    value: flankRoot.zValue
-                    onOpenNumPadRequested: function(field) { flankRoot.openNumPadRequested(field) }
-                    onCommitted: function(value) { flankRoot.fieldCommitted(flankRoot.sectionName, "z_start", value) }
-                    onTeachRequested: flankRoot.fieldCommitted(flankRoot.sectionName, "z_start", PositionsBridge.teachInZ())
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+            MirrorButtons {
+                onMirrorRequested: function(toRight) { root._mirrorBottom(toRight) }
+            }
+            GroovePointBox {
+                Layout.fillWidth: true
+                point: 2
+                flankStart: false
+                xValue: root._value("bottom", "x_end_right", 20)
+                blend: root._blend("bottom", "blend_right")
+                settingPrefix: "radial_profile.p2"
+                onClicked: root.tapped()
+                onFieldEdited: function(key, value) { root._commit("bottom", "x_end_right", value) }
+                onBlendEdited: function(blendType, chamferWidth, filletRadius) {
+                    root._commitBlend("bottom", "blend_right", blendType, chamferWidth, filletRadius)
                 }
-                NumberRow {
-                    label: "Angle"
-                    settingName: flankRoot.settingPrefix + ".angle"
-                    value: flankRoot.angleValue
-                    teachable: false
-                    onOpenNumPadRequested: function(field) { flankRoot.openNumPadRequested(field) }
-                    onCommitted: function(value) { flankRoot.fieldCommitted(flankRoot.sectionName, "angle", value) }
-                }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
-            BlendEditor {
+            // the flanks a row apart from the bottom
+            SideLabel { text: "Left Flank"; Layout.topMargin: Theme.spacingLarge }
+            Item { Layout.preferredWidth: 1 }
+            SideLabel { text: "Right Flank"; Layout.topMargin: Theme.spacingLarge }
+
+            GroovePointBox {
                 Layout.fillWidth: true
-                title: "Start Blend"
-                blendData: flankRoot.blendData
-                settingPrefix: flankRoot.settingPrefix + ".start_blend"
-                onBlendTypeCommitted: function(blendType) { flankRoot.blendTypeCommitted(flankRoot.sectionName, flankRoot.blendKey, blendType) }
-                onBlendValueCommitted: function(key, value) { flankRoot.blendValueCommitted(flankRoot.sectionName, flankRoot.blendKey, key, value) }
-                onOpenNumPadRequested: function(field) { flankRoot.openNumPadRequested(field) }
+                point: 4
+                flankStart: true
+                xValue: root._value("left_flank", "x_start", 30)
+                zValue: root._value("left_flank", "z_start", -5)
+                angleValue: root._value("left_flank", "angle", 0)
+                blend: root._blend("left_flank", "start_blend")
+                settingPrefix: "radial_profile.p4"
+                onClicked: root.tapped()
+                onFieldEdited: function(key, value) {
+                    root._commit("left_flank", key === "x" ? "x_start" : key === "z" ? "z_start" : "angle", value)
+                }
+                onBlendEdited: function(blendType, chamferWidth, filletRadius) {
+                    root._commitBlend("left_flank", "start_blend", blendType, chamferWidth, filletRadius)
+                }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+            MirrorButtons {
+                onMirrorRequested: function(toRight) { root._mirrorFlanks(toRight) }
+            }
+            GroovePointBox {
+                Layout.fillWidth: true
+                point: 1
+                flankStart: true
+                xValue: root._value("right_flank", "x_start", 30)
+                zValue: root._value("right_flank", "z_start", 0)
+                angleValue: root._value("right_flank", "angle", 0)
+                blend: root._blend("right_flank", "start_blend")
+                settingPrefix: "radial_profile.p1"
+                onClicked: root.tapped()
+                onFieldEdited: function(key, value) {
+                    root._commit("right_flank", key === "x" ? "x_start" : key === "z" ? "z_start" : "angle", value)
+                }
+                onBlendEdited: function(blendType, chamferWidth, filletRadius) {
+                    root._commitBlend("right_flank", "start_blend", blendType, chamferWidth, filletRadius)
+                }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
         }
     }
 
-    component BottomSection: GroupBox {
-        id: bottomRoot
-
-        title: "Bottom"
-        property real xEndLeft: 0
-        property real xEndRight: 0
-        property var leftBlend: ({ type: "none" })
-        property var rightBlend: ({ type: "none" })
-        signal fieldCommitted(string key, real value)
-        signal blendTypeCommitted(string blend, string blendType)
-        signal blendValueCommitted(string blend, string key, real value)
-        signal openNumPadRequested(var field)
-
+    // centred over its box
+    component SideLabel: Label {
+        Layout.alignment: Qt.AlignHCenter
         font.pixelSize: Theme.fontSmall
-        Layout.fillWidth: true
+        font.bold: true
+    }
 
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: 8
-            spacing: Theme.spacingLarge
+    // Copy the left box onto the right one, mirrored, or the right onto the
+    // left: the profile's mirror turned a quarter clockwise - its arrow over
+    // it going left to right - and that flipped left to right. Pressed, not
+    // switched on.
+    component MirrorButtons: Column {
+        id: mirrors
+        signal mirrorRequested(bool toRight)
 
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignTop
-                spacing: 10
+        Layout.alignment: Qt.AlignVCenter
+        // as far apart as the fields in the boxes (GroovePointBox)
+        spacing: 20
 
-                NumberRow {
-                    label: "X End Left"
-                    settingName: "radial_profile.bottom.x_end_left"
-                    value: bottomRoot.xEndLeft
-                    onOpenNumPadRequested: function(field) { bottomRoot.openNumPadRequested(field) }
-                    onCommitted: function(value) { bottomRoot.fieldCommitted("x_end_left", value) }
-                    onTeachRequested: bottomRoot.fieldCommitted("x_end_left", PositionsBridge.teachInX() * 2)
-                }
-
-                BlendEditor {
-                    title: "Left Flank Blend"
-                    blendData: bottomRoot.leftBlend
-                    settingPrefix: "radial_profile.bottom.blend_left"
-                    onBlendTypeCommitted: function(blendType) { bottomRoot.blendTypeCommitted("blend_left", blendType) }
-                    onBlendValueCommitted: function(key, value) { bottomRoot.blendValueCommitted("blend_left", key, value) }
-                    onOpenNumPadRequested: function(field) { bottomRoot.openNumPadRequested(field) }
-                }
+        Programs.BackplotIconButton {
+            id: toRightButton
+            iconSource: Images.url("mirror.svg")
+            transform: Rotation {
+                origin.x: toRightButton.width / 2
+                origin.y: toRightButton.height / 2
+                angle: 90
             }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignTop
-                spacing: 10
-
-                NumberRow {
-                    label: "X End Right"
-                    settingName: "radial_profile.bottom.x_end_right"
-                    value: bottomRoot.xEndRight
-                    onOpenNumPadRequested: function(field) { bottomRoot.openNumPadRequested(field) }
-                    onCommitted: function(value) { bottomRoot.fieldCommitted("x_end_right", value) }
-                    onTeachRequested: bottomRoot.fieldCommitted("x_end_right", PositionsBridge.teachInX() * 2)
+            onClicked: mirrors.mirrorRequested(true)
+        }
+        Programs.BackplotIconButton {
+            id: toLeftButton
+            iconSource: Images.url("mirror.svg")
+            transform: [
+                Rotation {
+                    origin.x: toLeftButton.width / 2
+                    origin.y: toLeftButton.height / 2
+                    angle: 90
+                },
+                Scale {
+                    origin.x: toLeftButton.width / 2
+                    origin.y: toLeftButton.height / 2
+                    xScale: -1
                 }
-
-                BlendEditor {
-                    title: "Right Flank Blend"
-                    blendData: bottomRoot.rightBlend
-                    settingPrefix: "radial_profile.bottom.blend_right"
-                    onBlendTypeCommitted: function(blendType) { bottomRoot.blendTypeCommitted("blend_right", blendType) }
-                    onBlendValueCommitted: function(key, value) { bottomRoot.blendValueCommitted("blend_right", key, value) }
-                    onOpenNumPadRequested: function(field) { bottomRoot.openNumPadRequested(field) }
-                }
-            }
+            ]
+            onClicked: mirrors.mirrorRequested(false)
         }
     }
 }

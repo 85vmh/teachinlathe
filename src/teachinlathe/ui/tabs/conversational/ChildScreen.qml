@@ -39,7 +39,7 @@ Item {
         "profiling": "ProfilingDetailsView.qml",
         "profileRoughing": "ProfileRoughingVisualDetailsView.qml",
         "profileContour": "ProfileContourVisualDetailsView.qml",
-        "grooveRoughing": "GrooveRoughingDetailsView.qml",
+        "grooveRoughing": "GrooveRoughingVisualDetailsView.qml",
         "grooveFinishing": "GrooveFinishingDetailsView.qml",
         "defineProfile": "define_profile/ProfileDetailsView.qml",
         "importDxfProfile": "define_profile/ProfileDetailsView.qml",

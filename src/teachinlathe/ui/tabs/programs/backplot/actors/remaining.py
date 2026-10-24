@@ -28,7 +28,9 @@ the hatch stops reads as an edge and not as hatching that thinned out.
 
 import logging
 
+from teachinlathe.ui.tabs.programs.backplot import blade_middle
 from teachinlathe.ui.tabs.programs.backplot.actors import palette, profile
+from teachinlathe.ui.tabs.programs.backplot.actors.units import mm
 from teachinlathe.ui.tabs.programs.backplot.actors.base import Actor
 from teachinlathe.ui.tabs.programs.backplot.actors.stock import StockActor
 
@@ -47,7 +49,15 @@ except ImportError as exc:  # pragma: no cover - depends on the LinuxCNC install
 TRAVERSE = 1
 
 
-def cutting_segments(ctx, first=0):
+def _blade(host):
+    """``(shift, half)`` of the tool in now, in the scene's unit: from the
+    point it was touched off on to its middle along Z, and half its width -
+    ``(0, 0)`` for anything but a blade (``blade_middle``)."""
+    shift, half = blade_middle.blade_offsets(getattr(host, "insert", None))
+    return mm(shift), mm(half)
+
+
+def cutting_segments(ctx, first=0, shift=0.0):
     """The trail's cutting moves from point ``first`` on, as ``(starts, ends,
     npts)`` - two ``(N, 3)`` arrays in the actor's frame and the trail's
     length - or ``None`` when there is no trail to read.
@@ -78,10 +88,12 @@ def cutting_segments(ctx, first=0):
     # upstream's trail part scales it before drawing.
     unit = 1.0 / ((getattr(ctx.stat, "linear_units", 1.0) or 1.0) * 25.4)
     local = profile._to_actor(points["pos"].astype(float) * unit, transform)
+    # a blade's trail down its middle, as the program is drawn
+    local[:, 2] += shift
     return local[:-1][cutting], local[1:][cutting], npts
 
 
-def live(ctx, z_start, z_end, outer_radius):
+def live(ctx, z_start, z_end, outer_radius, host=None):
     """The radius left at every Z, from the whole trail's cutting moves.
 
     ``None`` when nothing has been cut - no trail, or only rapids - which
@@ -89,16 +101,19 @@ def live(ctx, z_start, z_end, outer_radius):
     """
     if z_end <= z_start:
         return None
-    found = cutting_segments(ctx)
+    shift, half = _blade(host)
+    found = cutting_segments(ctx, shift=shift)
     if found is None or not len(found[0]):
         return None
     radii = np.full(profile.SAMPLES, float(outer_radius))
-    _cut_into(radii, z_start, z_end, outer_radius, found[0], found[1])
+    _cut_into(radii, z_start, z_end, outer_radius, found[0], found[1], half)
     return profile.Profile(z_start, z_end, radii)
 
 
-def _cut_into(radii, z_start, z_end, outer_radius, starts, ends):
+def _cut_into(radii, z_start, z_end, outer_radius, starts, ends, half=0.0):
     step = (z_end - z_start) / (profile.SAMPLES - 1)
+    # a blade's moves swept across its width
+    starts, ends = blade_middle.swept(starts, ends, half)
     profile._cut(radii, z_start, step, starts, ends)
     np.clip(radii, 0.0, outer_radius, out=radii)
 
@@ -165,13 +180,15 @@ class RemainingStockActor(StockActor):
 
         # from the start of the last segment read: it is the one the logger
         # may have stretched since
-        found = cutting_segments(ctx, max(0, self._done - 2))
+        # the tool in now: a blade's trail down its middle, swept across it
+        shift, half = _blade(self._host)
+        found = cutting_segments(ctx, max(0, self._done - 2), shift)
         if found is None:
             return self._live
         starts, ends, self._done = found
         if len(starts):
             before = self._radii.copy()
-            _cut_into(self._radii, low[1], high[1], high[0], starts, ends)
+            _cut_into(self._radii, low[1], high[1], high[0], starts, ends, half)
             if self._live is None or not np.array_equal(before, self._radii):
                 # a new object, so the hatch - keyed on it - is cut again
                 self._live = profile.Profile(low[1], high[1], self._radii.copy())

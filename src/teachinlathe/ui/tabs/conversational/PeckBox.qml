@@ -16,6 +16,8 @@ CanvasBox {
     property real  dwellTime: 0.0
     // the dwell times offered, in seconds
     property var   dwellTimes: [0, 0.1, 0.2, 0.3, 0.5, 1, 1.5, 2, 3]
+    // the numpad's setting for the peck depth
+    property string peckSettingName: "drilling.peck_depth"
 
     signal peckDepthEdited(real value)
     signal dwellTimeEdited(real value)
@@ -32,7 +34,7 @@ CanvasBox {
         NumpadField {
             id: peckField
             Layout.preferredWidth: 100
-            settingName: "drilling.peck_depth"
+            settingName: root.peckSettingName
             description: "Peck Depth"
             validatorObject: dblVal
             value: root.peckDepth

@@ -19,9 +19,14 @@ Until it is, a bored feature hatches as though it had been turned.
 Traverse moves are excluded - a rapid over the bar cuts nothing. A feed move
 through air is not excluded, because nothing tells it apart from a cut; an
 approach programmed at feed rate will pull the profile in with it.
+
+A blade's moves are swept across its width: read at its middle
+(``blade_middle``), the blade cutting half its width either side of that.
 """
 
 import logging
+
+from teachinlathe.ui.tabs.programs.backplot import blade_middle
 
 LOG = logging.getLogger(__name__)
 
@@ -135,7 +140,10 @@ def finished(ctx, z_start, z_end, outer_radius):
         return None
 
     try:
-        points = program.positions(0)
+        # a blade's moves at its middle, not where its trace is drawn
+        points = getattr(program, "blade_middle", None)
+        if points is None:
+            points = program.positions(0)
         kinds = program.kinds
     except (AttributeError, IndexError, TypeError) as exc:
         LOG.debug("backplot profile: no usable program geometry: %s", exc)
@@ -150,6 +158,11 @@ def finished(ctx, z_start, z_end, outer_radius):
     local = _to_actor(points, transform)
     starts = local[:-1][cutting]
     ends = local[1:][cutting]
+    # a blade's moves as the edge of its end sweeps them, half its width
+    # either side of its middle
+    half = getattr(program, "blade_half", None)
+    if half is not None:
+        starts, ends = blade_middle.swept(starts, ends, np.asarray(half)[1:][cutting])
 
     radii = np.full(SAMPLES, float(outer_radius))
     step = (z_end - z_start) / (SAMPLES - 1)

@@ -62,7 +62,8 @@ def test_everything_that_moves_is_after_the_split():
     scene = scene_with_actors()
     _before, after = names_before_and_after(scene)
 
-    assert "BackplotPart" in after, "the live trace would be frozen"
+    # the trace: upstream's BackplotPart, drawn down a blade's middle here
+    assert type(scene.backplot).__name__ in after, "the live trace would be frozen"
     assert any("Insert" in name or "Tool" in name for name in after), \
         "the tool marker would be frozen"
 
@@ -98,7 +99,7 @@ def test_the_annotation_still_draws_over_the_toolpath():
     order = [type(part).__name__ for part, _gate in scene.parts]
 
     assert order.index("CuttingMovesPart") < order.index("TicksActor")
-    assert order.index("OriginActor") < order.index("BackplotPart")
+    assert order.index("OriginActor") < order.index(type(scene.backplot).__name__)
 
 
 def test_the_expensive_still_parts_are_before_the_split():

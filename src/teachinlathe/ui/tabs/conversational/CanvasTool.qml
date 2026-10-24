@@ -25,6 +25,8 @@ Item {
     property real tipX: 0
     property real tipY: 0
     property real inset: 0
+    // only its outline, the inside clear: where it goes next, over the tool
+    property bool outlineOnly: false
 
     readonly property bool isInsert: card === "turning" && !!view
     readonly property bool isBlade: card === "blade" && !!view
@@ -56,7 +58,8 @@ Item {
                  leftRadius: view.leftRadius, rightRadius: view.rightRadius,
                  rotation: view.bladeRotation, mirrored: view.bladeMirrored,
                  pxPerMm: pxPerMm, tipX: tipX - inset, tipY: tipY - inset,
-                 bodyColor: view.bodyColor, edgeColor: view.edgeColor, lineWidth: 1 }
+                 bodyColor: outlineOnly ? "transparent" : view.bodyColor, edgeColor: view.edgeColor,
+                 lineWidth: 1 }
     }
 
     // The tool's outline about its control point, in mm, as the canvas
@@ -120,7 +123,7 @@ Item {
         orientation: root.isInsert ? root.view.insertRotation : 0
         pxPerMm: root.pxPerMm
         openHole: true
-        bodyColor: root.isInsert ? root.view.insertBodyColor : "#e5a93b"
+        bodyColor: root.outlineOnly ? "transparent" : root.isInsert ? root.view.insertBodyColor : "#e5a93b"
         edgeColor: root.isInsert ? root.view.insertEdgeColor : "#674c1b"
     }
 
@@ -149,7 +152,8 @@ Item {
         antialiasing: true
         readonly property var inputs: root.isBlade
             ? [root.view.bladeWidth, root.view.bladeLength, root.view.leftRadius, root.view.rightRadius,
-               root.view.bladeRotation, root.view.bladeMirrored, root.pxPerMm, root.tipX, root.tipY]
+               root.view.bladeRotation, root.view.bladeMirrored, root.pxPerMm, root.tipX, root.tipY,
+               root.outlineOnly]
             : []
         onInputsChanged: requestPaint()
         onWidthChanged: requestPaint()

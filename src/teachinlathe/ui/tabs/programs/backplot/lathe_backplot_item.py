@@ -32,7 +32,8 @@ from PyQt6.QtOpenGL import (QOpenGLFramebufferObject,
 from PyQt6.QtQml import qmlRegisterType
 from PyQt6.QtQuick import QQuickFramebufferObject
 
-from teachinlathe.ui.tabs.programs.backplot import actors, tool_source, workpiece
+from teachinlathe.ui.tabs.programs.backplot import actors, blade_middle, tool_source, workpiece
+from teachinlathe.ui.tabs.programs.backplot.actors.units import INTERNAL_PER_MM
 from teachinlathe.ui.tabs.programs.backplot.touch_gestures import ThreeFingerSwipe
 from teachinlathe.ui.tabs.programs.backplot.actors import base as actor_base
 from teachinlathe.ui.tabs.programs.backplot.actors import palette, screen, text
@@ -473,6 +474,9 @@ class LatheBackplotCanon(_HostBase):
         # backplot.tool_source - refreshed on every poll. The insert actor
         # falls back to its own default while this is empty.
         self.insert = {}
+        # the program's lines that a blade cuts a contour along with one of
+        # its corners, +1 the right, -1 the left (blade_middle.corner_lines)
+        self.blade_corners = {}
 
         # Mirrored: the material left drawn above the centre line, by
         # actors.remaining. See _mirror.
@@ -1127,6 +1131,15 @@ class LatheBackplotCanon(_HostBase):
                 result, seq = self.load_preview(filename, canon, unitcode, initcode)
             if result > gcode.MIN_ERROR:
                 self.report_gcode_error(result, seq, filename)
+            # a blade's moves down its middle - a contour along the corner
+            # the program says it is cut with - not along the point it was
+            # touched off on, before anything draws them; the tool in for the
+            # moves before the program changes to one. The trail is drawn
+            # the same way, by the line being cut (actors.trail).
+            self.blade_corners = blade_middle.corner_lines(filename)
+            blade_middle.centre_program(getattr(canon, "program_geometry", None),
+                                        tool_source.describe, INTERNAL_PER_MM,
+                                        int(stat.tool_in_spindle or 0), self.blade_corners)
             self.logger.set_depth(
                 self.from_internal_linear_unit(self.get_foam_z()),
                 self.from_internal_linear_unit(self.get_foam_w()),
