@@ -6,10 +6,14 @@ import "../../tool_library/shapes/tap.js" as TapShape
 // its body running on towards +Z, drawn by the Tool Library's own drawing
 // (ui/tabs/tool_library/shapes) - one drawing of each, wherever it shows.
 QtObject {
-    // {kind: "drill" | "tap", diameter, tip_angle, right_hand, pitch} as the
-    // backplot's tool_source describes it, and ``z``, where its point is;
-    // null, or any other kind, draws nothing
-    property var   tool: null
+    // the drill (a DrillingToolView, Drilling's editor.drill) or the tap (a
+    // TappingToolView, Tapping's editor.tap) drawn; with neither, nothing is
+    property var   drill: null
+    property var   tap: null
+    // where its point is, mm
+    property real  z: 0
+    // the one drawn
+    readonly property var tool: drill || tap
     property var   cx: null
     property var   cy: null
     property real  scale: 1               // px per mm
@@ -26,32 +30,31 @@ QtObject {
     property real  peckLineWidth: 1.5
 
     function _kind() {
-        if (!tool || !(Number(tool.diameter) > 0)) return ""
-        if (tool.kind === "drill") return "drill"
-        if (tool.kind === "tap" && Number(tool.pitch) > 0) return "tap"
+        if (drill) return "drill"
+        if (tap) return "tap"
         return ""
     }
 
     function _drill() {
         return {
             diameter: Number(tool.diameter),
-            tipAngle: tool.tip_angle !== undefined ? Number(tool.tip_angle) : 118,
-            rightHand: tool.right_hand !== false,
+            tipAngle: Number(tool.tipAngle),
+            rightHand: tool.rightHand,
             helixAngle: 30, helixLineWidth: 1, helixGapPx: 3,
             fluteLengthD: 5, shankLengthD: 2, length: 0,
             bodyColor: bodyColor, edgeColor: edgeColor,
-            pxPerMm: scale, tipX: cx(Number(tool.z) || 0), tipY: cy(0)
+            pxPerMm: scale, tipX: cx(z), tipY: cy(0)
         }
     }
 
     function _tap() {
         return {
             diameter: Number(tool.diameter), pitch: Number(tool.pitch),
-            rightHand: tool.right_hand !== false,
+            rightHand: tool.rightHand,
             leadThreads: 3, threadLengthD: 2, minThreads: 8, shankRatio: 0.8,
             shankLengthD: 2, helixLineWidth: 1, length: 0,
             bodyColor: bodyColor, edgeColor: edgeColor,
-            pxPerMm: scale, tipX: cx(Number(tool.z) || 0), tipY: cy(0)
+            pxPerMm: scale, tipX: cx(z), tipY: cy(0)
         }
     }
 

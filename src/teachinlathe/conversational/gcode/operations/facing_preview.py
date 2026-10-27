@@ -1,53 +1,57 @@
 """What Facing will cut, for drawing on the profile canvas.
 
-Facing hands its cutting to the o<facing> subroutine (subroutines/facing.ngc),
-so there is no G-code of its own to read the moves back from: this walks the
-same moves the subroutine makes, in the same order, and must change with it.
-All X values are diameters.
+facing_passes is the one place Facing's moves are worked out: the G-code
+(facing.py) writes them and the preview draws them, so the two cannot drift
+apart. All X values are diameters.
 """
 
 from ..helpers.utils import get_float
 
 
-def facing_moves(x_start, z_start, x_end, z_end, doc, retract):
-    """The moves of o<facing>, as (feeds, rapids), each [{x0, z0, x1, z1}],
-    leaving out the approach to the start point. A feed also carries ``pass``,
-    counting the passes from 0, and ``contour``, always false.
+def facing_passes(x_start, z_start, x_end, z_end, doc, retract):
+    """Facing's passes, in order, each a list of moves (feed, x, z) going on
+    from where the one before ended - the first from (x_start, z_start).
+    Every pass but the last ends back at X Start, on the face it cut; the
+    last ends clear of the part, at Z End. None without a depth of cut.
     """
-    feeds, rapids = [], []
     if doc <= 0:
-        return feeds, rapids
-    # a retract of zero falls back to the depth of cut, as the subroutine does
+        return []
+    # a retract of zero would leave the tool rubbing the face it just cut on
+    # the way back out: the depth of cut instead
     if retract <= 0:
         retract = doc
 
-    pos = [x_start, z_start]
-    pass_no = -1
-
-    def feed(x, z):
-        feeds.append({"x0": pos[0], "z0": pos[1], "x1": x, "z1": z, "pass": pass_no, "contour": False})
-        pos[0], pos[1] = x, z
-
-    def rapid(x, z):
-        rapids.append({"x0": pos[0], "z0": pos[1], "x1": x, "z1": z})
-        pos[0], pos[1] = x, z
-
+    passes = []
     z = z_start
-    while z > z_end + doc:
+    # with a tolerance: Z End a whole number of cuts away, rounding must not
+    # make the last of them a second pass at Z End
+    while z > z_end + doc + 1e-6:
         z -= doc
-        pass_no += 1
-        feed(pos[0], z)
-        feed(x_end, z)
-        rapid(x_end + retract * 2, z + retract)
-        rapid(x_start, pos[1])
-        rapid(pos[0], z)
+        # away at 45 degrees: X a diameter, so 2R on X is R on the part
+        passes.append([(True, x_start, z), (True, x_end, z),
+                       (False, x_end + retract * 2, z + retract),
+                       (False, x_start, z + retract), (False, x_start, z)])
+    passes.append([(True, x_start, z_end), (True, x_end, z_end),
+                   (False, x_end + retract * 2, z_end + retract),
+                   (False, x_start + retract * 2, z_end + retract),
+                   (False, x_start + retract * 2, z_end)])
+    return passes
 
-    pass_no += 1
-    feed(pos[0], z_end)
-    feed(x_end, z_end)
-    rapid(x_end + retract * 2, z_end + retract)
-    rapid(x_start + retract * 2, pos[1])
-    rapid(pos[0], z_end)
+
+def facing_moves(x_start, z_start, x_end, z_end, doc, retract):
+    """Facing's moves, as (feeds, rapids), each [{x0, z0, x1, z1}], leaving
+    out the approach to the start point. A feed also carries ``pass``,
+    counting the passes from 0, and ``contour``, always false.
+    """
+    feeds, rapids = [], []
+    x0, z0 = x_start, z_start
+    for pass_no, moves in enumerate(facing_passes(x_start, z_start, x_end, z_end, doc, retract)):
+        for feed, x, z in moves:
+            if feed:
+                feeds.append({"x0": x0, "z0": z0, "x1": x, "z1": z, "pass": pass_no, "contour": False})
+            else:
+                rapids.append({"x0": x0, "z0": z0, "x1": x, "z1": z})
+            x0, z0 = x, z
     return feeds, rapids
 
 

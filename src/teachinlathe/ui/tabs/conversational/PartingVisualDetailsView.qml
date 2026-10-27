@@ -1,6 +1,6 @@
 // PartingVisualDetailsView.qml — Parting on the profile canvas, laid out as
 // Drilling's: the header's stock, broken off after Z Position, and the
-// parting blade the last Change Tool above puts in, where it starts: its
+// parting blade it cuts with, where it starts: its
 // cutting end at X Start + the clearance (a radius, X Start a diameter), its
 // right side on Z Position. X Start, where Fz2 takes over and X End each a
 // short line across the blade's path at their diameter, Z Position a line
@@ -390,29 +390,13 @@ Item {
 
             // the tool it parts with, at the top, in the middle; tapped, to
             // pick it - only a parting blade
-            ToolBox {
-                id: toolBox
+            OperationToolBox {
+                editor: root.editor
+                pickerWidth: root.width
                 x: (profileCanvas.width - width) / 2
                 // lined up with the view buttons, as tall as they are
                 y: viewButtons.y
                 rowHeight: viewButtons.height
-                toolCard: root.toolCard
-                onClicked: toolPicker.open()
-            }
-
-            ToolPickerPopup {
-                id: toolPicker
-
-                toolsModel: root.editor ? root.editor.touchedOffTools : null
-                contentWidth: root.width
-                toolKinds: ["Parting Blade"]
-                currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
-                currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
-                                           ? root.toolCard.toolchange_position : "G28"
-                onToolChosen: function(toolNo, position) {
-                    if (root.editor)
-                        root.editor.useTool(toolNo, position)
-                }
             }
 
             // zoom, fit to screen and mirror - top-left, as on every profile canvas

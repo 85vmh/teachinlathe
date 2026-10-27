@@ -470,10 +470,10 @@ class LatheBackplotCanon(_HostBase):
         # object, distinguished by a plural, is a trap to walk into later.
         self.stock = {}
 
-        # The tool in the spindle as the Tool Library has it - see
+        # The tool in the spindle as the Tool Library has it - a drawing of
         # backplot.tool_source - refreshed on every poll. The insert actor
-        # falls back to its own default while this is empty.
-        self.insert = {}
+        # falls back to its own default while this is None.
+        self.insert = None
         # the program's lines that a blade cuts a contour along with one of
         # its corners, +1 the right, -1 the left (blade_middle.corner_lines)
         self.blade_corners = {}
@@ -829,7 +829,7 @@ class LatheBackplotCanon(_HostBase):
             ctx.show_program, ctx.show_rapids, ctx.show_extents,
             ctx.show_limits, ctx.show_relative, ctx.show_workpiece,
             dict(self.stock) if isinstance(self.stock, dict) else self.stock,
-            dict(self.insert) if isinstance(self.insert, dict) else self.insert,
+            self.insert,
         )
 
     def _pixel_quantum(self):

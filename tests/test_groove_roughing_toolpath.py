@@ -12,6 +12,7 @@ import pytest
 from shapely.geometry import Point, Polygon, box
 from shapely.ops import unary_union
 
+from teachinlathe.tooling.model.data_types import BladeTool, MountedTool, ZOffsetPlace
 from teachinlathe.conversational.gcode.operations.groove_roughing import (
     _first_groove,
     _radial_profile_primitives,
@@ -75,11 +76,25 @@ def _op(groove, blade, stock, initial=1.0, afterwards=1.5, peck=5.0, clearance=1
                                 "initial_offset": initial, "afterwards_offset": afterwards},
         "stock_to_leave": {"radial": radial, "axial": axial},
         "stock_to_leave_enabled": stock is not None,
-        "_resolved_tool": dict({"t": 13, "q": 8 if profile_type == "id" else 6, "tool_type": "parting_blade"},
-                               **blade),
+        "_resolved_tool": _mounted(blade, 8 if profile_type == "id" else 6),
         "_resolved_radial_profile": {"profile_id": 1, "profile_type": profile_type,
                                      "profile_primitives": [groove]},
     }
+
+
+def _mounted(blade, orientation):
+    """Blade ``blade`` (one of BLADES) as mounted, in T13."""
+    return MountedTool(13, BladeTool(cutting_tool_id=13, blade_width=blade["width"],
+                                     left_radius=blade["left_radius"], right_radius=blade["right_radius"],
+                                     orientation=orientation),
+                       ZOffsetPlace(str(blade["control"])))
+
+
+def _blade_of(op):
+    """The blade ``op`` cuts with, as BLADES has it."""
+    mounted = op["_resolved_tool"]
+    return {"width": mounted.blade.blade_width, "left_radius": mounted.blade.left_radius,
+            "right_radius": mounted.blade.right_radius, "control": mounted.z_control}
 
 
 def _moves(lines):
@@ -167,7 +182,7 @@ def _gouges(op):
     lines = generate_groove_roughing_gcode(op)
     assert not [line for line in lines if "ERROR" in line], lines
     part, sign = _part(op)
-    blade = op["_resolved_tool"]
+    blade = _blade_of(op)
     found = []
     for move in _moves(lines):
         x0, z0, x1, z1 = move
@@ -224,7 +239,7 @@ def test_the_contours_clean_the_bottom_to_the_middle(groove, blade, stock):
     it between them."""
     op = _op(GROOVES[groove], BLADES[blade], STOCK[stock])
     lines = generate_groove_roughing_gcode(op)
-    tool = op["_resolved_tool"]
+    tool = _blade_of(op)
     middle = (GROOVES[groove]["right_flank"]["z_start"] + GROOVES[groove]["left_flank"]["z_start"]) / 2
     ends = {}
     section = None

@@ -1,4 +1,3 @@
-from .change_tool import generate_change_tool_gcode
 from .define_profile import generate_define_profile_gcode
 from .facing import generate_facing_gcode
 from .knurling import generate_knurling_gcode
@@ -15,7 +14,6 @@ from .groove_finishing import generate_groove_finishing_gcode
 from .tapping import generate_tapping_gcode
 
 OPERATION_GENERATORS = {
-    "changeTool": generate_change_tool_gcode,
     "positionAt": generate_position_at_gcode,
     "defineProfile": generate_define_profile_gcode,
     "importDxfProfile": generate_define_profile_gcode,

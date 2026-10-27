@@ -12,6 +12,7 @@ another operation, or coming back to this one, makes a new one.
 
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
+from teachinlathe.conversational.logic.program_tools import ToolStatus
 from teachinlathe.conversational.model.data_types import ThreadForm
 
 # Thread depth over pitch, per side, for a 60° thread.
@@ -68,9 +69,26 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
     """An operation drawn on the stock with the tool that cuts it, which the
     editor can change."""
 
+    #: The holders whose tool the operation can cut with may have changed:
+    #: the Tool Library did, or the operation (an OD profile become ID).
+    suitableToolNosChanged = pyqtSignal()
+
     def __init__(self, tab, program, index, operation, parent=None):
         super().__init__(tab, program, index, operation, parent)
         self._tool_card = None
+        from teachinlathe.core.tool_library_repository import tool_library_repository
+        tool_library_repository().toolsChanged.connect(self.suitableToolNosChanged)
+
+    @pyqtProperty("QVariantList", notify=suitableToolNosChanged)
+    def suitableToolNos(self):
+        """The T numbers whose tool the operation can cut with: the only
+        ones its tool picker shows."""
+        return self._use_case.suitable_tool_nos(self._program, self._index)
+
+    @pyqtSlot("QVariant")
+    def save(self, payload):
+        super().save(payload)
+        self.suitableToolNosChanged.emit()
 
     @pyqtProperty("QVariant", constant=True)
     def workpiece(self):
@@ -78,39 +96,54 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
         return self._use_case.workpiece(self._program)
 
     @pyqtProperty("QVariant", constant=True)
-    def tool(self):
-        """The tool the last Change Tool above puts in, as the backplot
-        describes it, with its ``tool_no``; {} with none."""
-        return self._use_case.tool_before(self._program, self._index)
-
-    @pyqtProperty("QVariant", constant=True)
     def toolCard(self):
-        """The same tool as the Tool Library's card shows it: {tool_no,
-        card, view} - card the card's kind ("turning", ...), view its view
-        (a TurningToolView, ...), for ToolTitles.js and the insert drawings.
-        {} with no Change Tool; no card and no view when the holder is empty."""
+        """The operation's tool as the Tool Library's card shows it: {tool_no,
+        card, view, toolchange_position, status, suggested_tool_no, users} -
+        card the card's kind ("turning", ...), view its view (a
+        TurningToolView, ...), for ToolTitles.js and the insert drawings.
+        ``status``: a ToolStatus value - "none", "ok", "moved", "changed",
+        "missing", "unfit"; but for "ok", card and view are the tool as it
+        was chosen.
+        ``suggested_tool_no``: the holder the tool picker starts on - where
+        the tool is now - 0 for none; ``users``: how many operations cut with
+        this tool from this one down, it included. {} with no tool chosen."""
         if self._tool_card is None:
             self._tool_card = self._make_tool_card()
         return self._tool_card
 
     def _make_tool_card(self):
+        from teachinlathe.tooling.model.data_types import CuttingTool
         from teachinlathe.ui.tabs.programs.backplot import tool_source
         from teachinlathe.ui.tabs.tool_library.tool_library_models import card_and_view
-        change = self._use_case.change_tool_before(self._program, self._index)
-        if change is None:
+        entry = self._use_case.tool_entry(self._program, self._index)
+        if entry is None:
             return {}
+        result = self._use_case.tool_check(self._program, self._index)
+        if result.status is ToolStatus.OK:
+            tool = tool_source.tool_in(int(entry.tool_holder_id))
+        else:
+            try:
+                tool = CuttingTool.from_json(entry.snapshot.get("cutting_tool") or {})
+            except Exception:
+                tool = None
         # The view lives as long as this editor: QML holds only a reference.
-        card, view = card_and_view(tool_source.tool_in(int(change.tool_no)), self)
-        position = getattr(change, "toolchange_position", None)
-        return {"tool_no": int(change.tool_no), "card": card, "view": view,
-                "toolchange_position": getattr(position, "value", position) or "G28"}
+        card, view = card_and_view(tool, self)
+        return {"tool_no": int(entry.tool_holder_id), "card": card, "view": view,
+                "toolchange_position": entry.toolchange_position.value,
+                "status": result.status.value,
+                # not one it cannot cut with
+                "suggested_tool_no": (0 if result.status is ToolStatus.UNFIT
+                                      else int(result.tool_holder_id)),
+                "users": self._use_case.tool_users_below(self._program, self._index)}
 
-    @pyqtSlot(int, str)
-    def useTool(self, tool_no, toolchange_position):
-        """Cut with tool ``tool_no``, changed to at ``toolchange_position``
-        ("G28" or "G30"): the Change Tool right above changes to it, or one is
-        put in. The editor is made again, with it."""
-        self._tab.use_tool_before(self._index, tool_no, toolchange_position)
+    @pyqtSlot(int, str, str)
+    def useTool(self, tool_no, toolchange_position, scope):
+        """Cut with the tool in holder ``tool_no``, changed to at
+        ``toolchange_position`` ("G28" or "G30"). ``scope``: "this" for this
+        operation only, "below" for it and those below cutting with its tool,
+        "all" for every one cutting with it. The editor is made again, with
+        it."""
+        self._tab.use_tool(self._index, tool_no, toolchange_position, scope)
 
 
 class FacingEditorViewModel(ToolOperationEditorViewModel):
@@ -161,8 +194,8 @@ class ProfileRoughingEditorViewModel(ProfileFollowingEditorViewModel):
 
     @pyqtSlot()
     def addRestRoughing(self):
-        """For what this roughing leaves: a Change Tool with no tool yet and,
-        after it, a copy of this roughing on rest material - opened."""
+        """For what this roughing leaves: a copy of this roughing on rest
+        material, with no tool yet - opened."""
         self._tab.add_rest_roughing(self._index)
 
 
@@ -178,9 +211,41 @@ class ProfileContourEditorViewModel(ProfileFollowingEditorViewModel):
 class DrillingEditorViewModel(ToolOperationEditorViewModel):
     update_type = "drilling"
 
+    def __init__(self, tab, program, index, operation, parent=None):
+        super().__init__(tab, program, index, operation, parent)
+        from teachinlathe.tooling.model.data_types import DrillingTool
+        from teachinlathe.ui.tabs.tool_library.DrillingToolView import DrillingToolView
+        tool = self._use_case.tool_of(program, index)
+        # lives as long as this editor: QML holds only a reference
+        self._drill = (DrillingToolView(tool, self)
+                       if isinstance(tool, DrillingTool) and tool.diameter > 0 else None)
+
+    @pyqtProperty(QObject, constant=True)
+    def drill(self):
+        """The drill it cuts with, as the Tool Library shows it (a
+        DrillingToolView); None with no drill - or one not as chosen, or of
+        no diameter."""
+        return self._drill
+
 
 class TappingEditorViewModel(ToolOperationEditorViewModel):
     update_type = "tapping"
+
+    def __init__(self, tab, program, index, operation, parent=None):
+        super().__init__(tab, program, index, operation, parent)
+        from teachinlathe.tooling.model.data_types import TappingTool
+        from teachinlathe.ui.tabs.tool_library.TappingToolView import TappingToolView
+        tool = self._use_case.tool_of(program, index)
+        # lives as long as this editor: QML holds only a reference
+        self._tap = (TappingToolView(tool, self)
+                     if isinstance(tool, TappingTool) and tool.diameter > 0 and tool.pitch > 0 else None)
+
+    @pyqtProperty(QObject, constant=True)
+    def tap(self):
+        """The tap it cuts with, as the Tool Library shows it (a
+        TappingToolView); None with no tap - or one not as chosen, or of no
+        diameter or pitch."""
+        return self._tap
 
 
 class PartingEditorViewModel(ToolOperationEditorViewModel):
@@ -247,10 +312,6 @@ class G33ThreadingEditorViewModel(ToolOperationEditorViewModel):
     @pyqtSlot(str, "QVariant", "QVariant", "QVariant", result="QVariantMap")
     def calculateThreadDiameter(self, location, pitch, major_diameter, minor_diameter):
         return calculate_thread_diameter(location, pitch, major_diameter, minor_diameter)
-
-
-class ToolChangeEditorViewModel(OperationEditorViewModel):
-    update_type = "changeTool"
 
 
 class PositionAtEditorViewModel(OperationEditorViewModel):
@@ -336,7 +397,6 @@ class DefineRadialProfileEditorViewModel(OperationEditorViewModel):
 
 # The editor for each operation type.
 EDITORS = {
-    "changeTool": ToolChangeEditorViewModel,
     "positionAt": PositionAtEditorViewModel,
     "facing": FacingEditorViewModel,
     "knurling": KnurlingEditorViewModel,

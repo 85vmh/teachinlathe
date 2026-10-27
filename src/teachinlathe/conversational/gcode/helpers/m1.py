@@ -53,3 +53,13 @@ def emit_m1_block(m1_params, prefix: str) -> list:
     lines.append(f"{prefix}M1")
     lines.append("")
     return lines
+
+
+def m1_handling_call(prefix: str, m1_params, x_return, z_return, spindle_sign: int) -> str:
+    """The call to o<m1_handling> (subroutines/m1_handling.ngc) at a point the
+    operator may Pause to Inspect: where the tool waits, and where it goes
+    back to - ``x_return`` (a diameter), ``z_return`` - before going on, the
+    spindle started again ``spindle_sign`` 1 (M3) or -1 (M4)."""
+    from ..config import fmt
+    return (f"{prefix}o<m1_handling> call [{inspect_position_int(m1_params)}] "
+            f"[{fmt(x_return)}] [{fmt(z_return)}] [{int(spindle_sign)}]")

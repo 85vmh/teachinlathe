@@ -46,50 +46,6 @@ def move_operation(program, from_index: int, to_index: int):
     return to_index
 
 
-def _visible_group_start(operations, index):
-    while index > 0 and getattr(operations[index - 1], "type", "") == "changeTool":
-        index -= 1
-    return index
-
-
-def move_visible_operation(program, from_index: int, to_index: int):
-    """Move a displayed operation together with its preceding hidden tool change."""
-    ops = program.operations
-    if (not 0 <= from_index < len(ops) or not 0 <= to_index < len(ops)
-            or from_index == to_index
-            or getattr(ops[from_index], "type", "") == "changeTool"
-            or getattr(ops[to_index], "type", "") == "changeTool"):
-        return None
-    target = ops[to_index]
-    start = _visible_group_start(ops, from_index)
-    block = ops[start:from_index + 1]
-    del ops[start:from_index + 1]
-    target_index = next(i for i, op in enumerate(ops) if op is target)
-    insert_index = target_index + 1 if from_index < to_index else _visible_group_start(ops, target_index)
-    ops[insert_index:insert_index] = block
-    renumber_operations(ops)
-    return insert_index + len(block) - 1
-
-
-def delete_visible_operation(program, index: int):
-    ops = program.operations
-    if not 0 <= index < len(ops) or getattr(ops[index], "type", "") == "changeTool":
-        return False
-    del ops[_visible_group_start(ops, index):index + 1]
-    renumber_operations(ops)
-    return True
-
-
-def duplicate_visible_operation(program, index: int):
-    ops = program.operations
-    if not 0 <= index < len(ops) or getattr(ops[index], "type", "") == "changeTool":
-        raise IndexError(index)
-    block = copy.deepcopy(ops[_visible_group_start(ops, index):index + 1])
-    ops[index + 1:index + 1] = block
-    renumber_operations(ops)
-    return index + len(block)
-
-
 def delete_operation(program, index: int):
     if not (0 <= index < len(program.operations)):
         return False

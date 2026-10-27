@@ -15,7 +15,7 @@ RadialProfileCanvas {
 
     // The view model of the operation (OperationEditorViewModel.py).
     property var editor: null
-    // the tool the last Change Tool above puts in: {tool_no, card, view}; {} with none
+    // the tool it cuts with: editor.toolCard; {} with none
     property var toolCard: ({})
     property int profileId: 1
     // what it would cut, as the view model's preview has it
@@ -37,15 +37,11 @@ RadialProfileCanvas {
     readonly property alias startTool: canvasTool
 
     readonly property bool hasGroove: groovePoints.length === 4
-    readonly property bool isId: String(profileType).toLowerCase() === "id"
     // mm, the blade's width - before one is chosen, as wide as a usual one,
     // for the marks drawn beside it
     readonly property real defaultBladeWidth: 3
     readonly property real bladeWidth: toolCard && toolCard.card === "blade" && toolCard.view
                                        ? Number(toolCard.view.bladeWidth) : defaultBladeWidth
-    // LinuxCNC's lathe orientation of a tool held neutral, its end square to
-    // X: 6 cutting toward the axis (OD), 8 away from it (ID)
-    readonly property int neutralOrientation: isId ? 8 : 6
     // how far either side of the blade the clearance's lines reach, mm
     readonly property real xLinePast: 2
 
@@ -101,34 +97,15 @@ RadialProfileCanvas {
         border.color: Theme.outline; border.width: Theme.hairline
     }
 
-    // the tool it cuts with, at the top, in the canvas's middle; tapped, to pick it -
-    // a blade, or a tool held neutral: orientation 6 for an OD groove, 8 for
-    // an ID one
-    ToolBox {
+    // the tool it cuts with, at the top, in the canvas's middle; tapped, to
+    // pick it - a blade, or a tool held neutral (tool_fit.py)
+    OperationToolBox {
+        editor: root.editor
+        pickerWidth: root.width
         x: (root.width - width) / 2
         // lined up with the view buttons, as tall as they are
         y: viewButtons.y
         rowHeight: viewButtons.height
-        toolCard: root.toolCard
-        onClicked: toolPicker.open()
-    }
-
-    ToolPickerPopup {
-        id: toolPicker
-
-        toolsModel: root.editor ? root.editor.touchedOffTools : null
-        contentWidth: root.width
-        toolFilter: function(card, view) {
-            return (card === "blade" || card === "turning")
-                && Number(view.orientation) === root.neutralOrientation
-        }
-        currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
-        currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
-                                   ? root.toolCard.toolchange_position : "G28"
-        onToolChosen: function(toolNo, position) {
-            if (root.editor)
-                root.editor.useTool(toolNo, position)
-        }
     }
 
     // zoom, fit to screen and mirror - top-left, as on every profile canvas

@@ -32,7 +32,6 @@ Item {
     // The details pane for each kind of editor.
     readonly property var editorViews: ({
         "header": "HeaderDetailsView.qml",
-        "changeTool": "ToolChangeDetailsView.qml",
         "positionAt": "PositionAtDetailsView.qml",
         "facing": "FacingVisualDetailsView.qml",
         "knurling": "KnurlingDetailsView.qml",

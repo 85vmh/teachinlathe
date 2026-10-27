@@ -1,6 +1,6 @@
 // DrillingVisualDetailsView.qml — Drilling on the profile canvas, laid out
-// as Facing's: the header's stock, and on the centre line the drill the last
-// Change Tool above puts in, its point at Z Start + Clearance, where it
+// as Facing's: the header's stock, and on the center line the drill it
+// cuts with, its point at Z Start + Clearance, where it
 // starts and every peck retracts to. Its values in boxes down the right
 // edge; Z Start, Z End and the clearance's Z each drawn as a line across the
 // centre line, with an arrow from it to its box; each peck as the drill's
@@ -23,7 +23,8 @@ Item {
 
     // the program header's stock, and the tool in when this drills
     property var    workpiece: ({})
-    property var    tool: ({})
+    // the drill it cuts with: editor.drill (a DrillingToolView), null with none
+    property var    drill: null
     // the same tool as its Tool Library card shows it: {tool_no, card,
     // view}; {} with none
     property var    toolCard: ({})
@@ -68,7 +69,7 @@ Item {
         opIndex = index
         opData  = data || {}
         workpiece = editor ? (editor.workpiece || {}) : {}
-        tool      = editor ? (editor.tool || {}) : {}
+        drill     = editor ? editor.drill : null
         toolCard  = editor ? (editor.toolCard || {}) : {}
 
         var dp = opData.drilling_parameters || {}
@@ -94,8 +95,7 @@ Item {
             // Pause to Inspect may also stay where the tool is
             allowStayInPlace: true
             // only the way the tool in turns
-            onlyClockwise: root.tool && root.tool.spindle_direction === 3 ? true
-                         : root.tool && root.tool.spindle_direction === 4 ? false : null
+            onlyClockwise: root.drill ? root.drill.clockwise : null
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             onSpeedsAndFeedsEdited: function(speeds) {
                 var op = root._draftOp()
@@ -135,10 +135,8 @@ Item {
                 return w
             }
             // the drill in, its point where it starts; none when it is not a drill
-            axialTool: root.tool && root.tool.kind === "drill"
-                       ? { kind: "drill", diameter: root.tool.diameter, tip_angle: root.tool.tip_angle,
-                           right_hand: root.tool.right_hand, z: root.retractZ }
-                       : null
+            axialDrill: root.drill
+            axialToolZ: root.retractZ
             // where each peck ends: every Peck Depth on from Z Start while
             // short of Z End, and the last at Z End
             axialToolPecks: {
@@ -159,7 +157,7 @@ Item {
             dimensions: peckDimensions.concat(clearanceDimension ? [clearanceDimension] : [])
             readonly property var peckDimensions: {
                 var pecks = axialToolPecks
-                var d = root.tool && root.tool.kind === "drill" ? Number(root.tool.diameter) : 0
+                var d = root.drill ? Number(root.drill.diameter) : 0
                 if (!(d > 0) || !(root.peckDepth > 0) || pecks.length === 0) return []
                 var ends = [root.zStart].concat(pecks), full = []
                 for (var i = 0; i + 1 < ends.length; i++)
@@ -189,9 +187,7 @@ Item {
             readonly property real drillPoint: axialTool ? axialToolPeckBack() : 0
             // at each Z, a line across the centre line longer than the
             // drill is wide, an arrow from it to its box; Peck Depth none yet
-            readonly property real zLineDiameter: (root.tool && root.tool.kind === "drill"
-                                                   && Number(root.tool.diameter) > 0
-                                                   ? Number(root.tool.diameter) : 10) * 1.6
+            readonly property real zLineDiameter: (root.drill ? Number(root.drill.diameter) : 10) * 1.6
             markers: [
                 { line: true, x: zLineDiameter, z: root.zStart,   color: root.zStartColor,   arrowToRect: zStartBox.rect },
                 { line: true, x: zLineDiameter, z: root.zEnd,     color: root.zEndColor,     arrowToRect: zEndBox.rect },
@@ -271,29 +267,13 @@ Item {
 
             // the tool it cuts with, at the top, in the middle; tapped, to
             // pick it - only a drill
-            ToolBox {
-                id: toolBox
+            OperationToolBox {
+                editor: root.editor
+                pickerWidth: root.width
                 x: (profileCanvas.width - width) / 2
                 // lined up with the view buttons, as tall as they are
                 y: viewButtons.y
                 rowHeight: viewButtons.height
-                toolCard: root.toolCard
-                onClicked: toolPicker.open()
-            }
-
-            ToolPickerPopup {
-                id: toolPicker
-
-                toolsModel: root.editor ? root.editor.touchedOffTools : null
-                contentWidth: root.width
-                toolKinds: ["Drill Tool"]
-                currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
-                currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
-                                           ? root.toolCard.toolchange_position : "G28"
-                onToolChosen: function(toolNo, position) {
-                    if (root.editor)
-                        root.editor.useTool(toolNo, position)
-                }
             }
 
             // zoom, fit to screen and mirror - top-left, as on every profile canvas

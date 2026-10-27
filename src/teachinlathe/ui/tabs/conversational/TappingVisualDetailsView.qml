@@ -1,6 +1,6 @@
 // TappingVisualDetailsView.qml — Tapping on the profile canvas, laid out
-// as Drilling's: the header's stock, and on the centre line the tap the last
-// Change Tool above puts in, its point at Z Start + Clearance, where it
+// as Drilling's: the header's stock, and on the centre line the tap it
+// cuts with, its point at Z Start + Clearance, where it
 // starts and every peck comes back to. Its pitch is the tap's, not edited
 // here. Its values in boxes down the right edge; Z Start, Z End and the
 // clearance's Z each drawn as a line across the centre line; each peck as a
@@ -23,7 +23,8 @@ Item {
 
     // the program header's stock, and the tool in when this taps
     property var    workpiece: ({})
-    property var    tool: ({})
+    // the tap it cuts with: editor.tap (a TappingToolView), null with none
+    property var    tap: null
     // the same tool as its Tool Library card shows it: {tool_no, card,
     // view}; {} with none
     property var    toolCard: ({})
@@ -52,16 +53,12 @@ Item {
         op.tapping_parameters.tool_clearance = Math.abs(toolClearance)
         op.tapping_parameters.peck_depth = peckDepth
         // the tap's pitch, kept with the op
-        if (_isTap()) op.tapping_parameters.pitch = Number(tool.pitch)
+        if (tap) op.tapping_parameters.pitch = Number(tap.pitch)
         return op
     }
 
     // the whole op with every edited value, sent as one save; opData keeps it,
     // so the next edit builds on this one
-    // the tool in is a tap, with a pitch to cut with
-    function _isTap() {
-        return !!(tool && tool.kind === "tap" && Number(tool.diameter) > 0 && Number(tool.pitch) > 0)
-    }
 
     function save(op) {
         if (opIndex < 0 || !opData) return
@@ -73,7 +70,7 @@ Item {
         opIndex = index
         opData  = data || {}
         workpiece = editor ? (editor.workpiece || {}) : {}
-        tool      = editor ? (editor.tool || {}) : {}
+        tap       = editor ? editor.tap : null
         toolCard  = editor ? (editor.toolCard || {}) : {}
 
         var dp = opData.tapping_parameters || {}
@@ -99,8 +96,7 @@ Item {
             // Pause to Inspect may also stay where the tool is
             allowStayInPlace: true
             // only the way the tool in turns
-            onlyClockwise: root.tool && root.tool.spindle_direction === 3 ? true
-                         : root.tool && root.tool.spindle_direction === 4 ? false : null
+            onlyClockwise: root.tap ? root.tap.clockwise : null
             feedEnabled: false
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             onSpeedsAndFeedsEdited: function(speeds) {
@@ -141,10 +137,8 @@ Item {
                 return w
             }
             // the tap in, its point where it starts; none when it is not a tap
-            axialTool: root._isTap()
-                       ? { kind: "tap", diameter: root.tool.diameter, pitch: root.tool.pitch,
-                           right_hand: root.tool.right_hand, z: root.retractZ }
-                       : null
+            axialTap: root.tap
+            axialToolZ: root.retractZ
             // where each peck ends: every Peck Depth on from Z Start while
             // short of Z End, and the last at Z End
             axialToolPecks: {
@@ -165,7 +159,7 @@ Item {
             dimensions: peckDimensions.concat(clearanceDimension ? [clearanceDimension] : [])
             readonly property var peckDimensions: {
                 var pecks = axialToolPecks
-                var d = root._isTap() ? Number(root.tool.diameter) : 0
+                var d = root.tap ? Number(root.tap.diameter) : 0
                 if (!(d > 0) || !(root.peckDepth > 0) || pecks.length === 0) return []
                 var ends = [root.zStart].concat(pecks), full = []
                 for (var i = 0; i + 1 < ends.length; i++)
@@ -192,7 +186,7 @@ Item {
                 : null
             // at each Z, a line across the centre line longer than the tap
             // is wide, an arrow from it to its box
-            readonly property real zLineDiameter: (root._isTap() ? Number(root.tool.diameter) : 10) * 1.6
+            readonly property real zLineDiameter: (root.tap ? Number(root.tap.diameter) : 10) * 1.6
             markers: [
                 { line: true, x: zLineDiameter, z: root.zStart,   color: root.zStartColor,   arrowToRect: zStartBox.rect },
                 { line: true, x: zLineDiameter, z: root.zEnd,     color: root.zEndColor,     arrowToRect: zEndBox.rect },
@@ -272,29 +266,13 @@ Item {
 
             // the tool it cuts with, at the top, in the middle; tapped, to
             // pick it - only a tap
-            ToolBox {
-                id: toolBox
+            OperationToolBox {
+                editor: root.editor
+                pickerWidth: root.width
                 x: (profileCanvas.width - width) / 2
                 // lined up with the view buttons, as tall as they are
                 y: viewButtons.y
                 rowHeight: viewButtons.height
-                toolCard: root.toolCard
-                onClicked: toolPicker.open()
-            }
-
-            ToolPickerPopup {
-                id: toolPicker
-
-                toolsModel: root.editor ? root.editor.touchedOffTools : null
-                contentWidth: root.width
-                toolKinds: ["Tap"]
-                currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
-                currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
-                                           ? root.toolCard.toolchange_position : "G28"
-                onToolChosen: function(toolNo, position) {
-                    if (root.editor)
-                        root.editor.useTool(toolNo, position)
-                }
             }
 
             // zoom, fit to screen and mirror - top-left, as on every profile canvas

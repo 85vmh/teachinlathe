@@ -8,6 +8,7 @@ from .groove_roughing import (
     _CONTROL_NAMES,
     _Blade,
     _blade_control,
+    _blade_radii,
     _blade_start_x,
     _blade_width,
     _clear_part_of,
@@ -184,7 +185,7 @@ def generate_groove_finishing_gcode(op):
     cutting = op.get("cutting_parameters", {}) or {}
     finishing = op.get("finishing_parameters", {}) or {}
     profile = op.get("_resolved_radial_profile", {}) or {}
-    tool = op.get("_resolved_tool", {}) or {}
+    tool = op.get("_resolved_tool")
 
     feed_rate = feed_rate_of(op, 0.1)
     clearance = abs(get_float(cutting, "retract", 1.0))
@@ -224,8 +225,7 @@ def generate_groove_finishing_gcode(op):
         return lines
     half_width = width / 2.0
     control = _blade_control(tool)
-    left_radius = get_float(tool, "left_radius", 0.0)
-    right_radius = get_float(tool, "right_radius", 0.0)
+    left_radius, right_radius = _blade_radii(tool)
 
     lines.append(
         _code(

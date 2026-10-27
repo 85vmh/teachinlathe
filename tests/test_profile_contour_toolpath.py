@@ -37,7 +37,7 @@ def operation(profile, stock=False, tool=True):
           "stock_to_leave_enabled": stock,
           "profile_contour_strategy": {"profiling_type": kind}}
     if tool:
-        op["_resolved_cutting_tool"] = cutting_tool.to_json()
+        op["_resolved_cutting_tool"] = cutting_tool
     return op
 
 

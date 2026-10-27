@@ -21,7 +21,7 @@ Item {
     property var    primitives:  []
     property string profileType: "od"
     property var    workpiece:   ({})
-    // the tool the last Change Tool above puts in: {tool_no, card, view}; {} with none
+    // the tool it cuts with: editor.toolCard; {} with none
     property var    toolCard:    ({})
 
     // what an operation saved without a value has: a new one's, as

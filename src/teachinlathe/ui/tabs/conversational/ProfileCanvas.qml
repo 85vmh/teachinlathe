@@ -61,10 +61,12 @@ Canvas {
     // more targets, each with its arrow to a box: [{x: diameter, z, color,
     // arrowToRect}], drawn by MarkersActor; fitted as the positions are
     property var    markers: []
-    // the drill or tap that is the current loaded tool, {kind, diameter, tip_angle,
-    // right_hand, pitch, z} (AxialToolActor), its point at z on the centre
-    // line; null draws none
-    property var    axialTool: null
+    // the drill or the tap it cuts with, as AxialToolActor takes them, its
+    // point at axialToolZ on the centre line; neither draws none
+    property var    axialDrill: null
+    property var    axialTap: null
+    property real   axialToolZ: 0
+    readonly property var axialTool: axialDrill || axialTap
     // a dot where each arrow to a box starts as well as where it ends -
     // the markers' and the dimensions' leaders
     property bool   arrowStartDots: false
@@ -380,8 +382,8 @@ Canvas {
         }
         var positions = [startPosition, endPosition].concat(markers || []).concat(fitExtraPositions || [])
         // the axial tool, from its point to its far end
-        if (axialTool && Number(axialTool.diameter) > 0) {
-            var toolZ = Number(axialTool.z) || 0
+        if (axialTool) {
+            var toolZ = axialToolZ
             positions.push({ x: Number(axialTool.diameter), z: toolZ })
             if (fitAxialToolLength)
                 positions.push({ x: Number(axialTool.diameter), z: toolZ + axialToolActor.length() })
@@ -635,7 +637,9 @@ Canvas {
 
     AxialToolActor {
         id: axialToolActor
-        tool: root.axialTool
+        drill: root.axialDrill
+        tap: root.axialTap
+        z: root.axialToolZ
         peckZs: root.axialToolPecks
         peckFrom: root.axialToolPecksFrom
         peckColor: root.axialToolPeckColor

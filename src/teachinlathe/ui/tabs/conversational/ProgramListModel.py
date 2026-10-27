@@ -111,11 +111,6 @@ class ProgramListModel(QAbstractListModel):
 
     def _display_name_for_op(self, op, tool_label=None):
         op_type = getattr(op, "type", "") or ""
-        if op_type == "changeTool":
-            tool_no = getattr(op, "tool_no", None)
-            if tool_no is not None and int(tool_no) <= 0:
-                return "Tool Change (choose a tool)"
-            return f"Tool Change (T{tool_no})" if tool_no is not None else "Tool Change"
         if op_type == "positionAt":
             return "Position At"
         if op_type == "facing":
@@ -173,11 +168,10 @@ class ProgramListModel(QAbstractListModel):
 
     def _operations_summary(self, program):
         ops = getattr(program, "operations", []) or []
-        visible = [(i, op) for i, op in enumerate(ops) if getattr(op, "type", "") != "changeTool"]
-        if not visible:
+        if not ops:
             return "No operations yet, tap to change that"
         return "||".join(
             f"{1 if bool(getattr(op, 'generate_gcode', False)) else 0}::"
-            f"{self._display_name_for_op(op, axial_tool_label(getattr(op, 'type', ''), ops, i))}"
-            for i, op in visible
+            f"{self._display_name_for_op(op, axial_tool_label(op, program))}"
+            for op in ops
         )

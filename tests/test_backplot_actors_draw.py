@@ -35,6 +35,7 @@ from teachinlathe.ui.tabs.programs.backplot.actors.units import mm, to_mm  # noq
 from teachinlathe.ui.tabs.programs.backplot.actors.centerline import (  # noqa: E402
     CenterlineActor)
 from teachinlathe.ui.tabs.programs.backplot.actors.grid import GridActor  # noqa: E402
+from teachinlathe.ui.tabs.programs.backplot.tool_source import InsertDrawing  # noqa: E402
 from teachinlathe.ui.tabs.programs.backplot.actors.insert_tool import (  # noqa: E402
     InsertActor, _offset, _rotate, _to_plane)
 from teachinlathe.ui.tabs.programs.backplot.actors.origin import OriginActor  # noqa: E402
@@ -109,7 +110,7 @@ class FakeHost:
 
     def __init__(self, stock=None, insert=None):
         self.stock = stock or {}
-        self.insert = insert or {}
+        self.insert = insert
 
 
 def lathe_frame(width=800, height=600, zoom=1.0):
@@ -365,7 +366,7 @@ def test_the_hole_and_countersink_are_outlined():
 
 def test_a_round_insert_with_no_hole_in_the_table_still_draws():
     ctx = lathe_frame()
-    actor = InsertActor(FakeHost(insert={"family": "RCMT", "size_index": 0}))
+    actor = InsertActor(FakeHost(insert=InsertDrawing(family="RCMT", size_index=0)))
     actor._draw_insert(ctx)
     assert len(ctx.renderer.arrays) == 1
 
@@ -412,8 +413,8 @@ def test_insert_falls_back_when_there_is_no_tool():
 def test_insert_honours_a_choice_made_on_the_host():
     """The hook the tool list will set."""
     ctx = lathe_frame()
-    insert = InsertActor(FakeHost(insert={
-        "family": "WNMG", "size_index": 1, "nose_radius": 1.2}))._insert(ctx)
+    insert = InsertActor(FakeHost(insert=InsertDrawing(
+        family="WNMG", size_index=1, nose_radius=1.2)))._insert(ctx)
     assert insert.family == "WNMG"
     assert insert.size_code == "08"
     assert insert.nose_radius == pytest.approx(1.2)
@@ -421,7 +422,7 @@ def test_insert_honours_a_choice_made_on_the_host():
 
 def test_insert_falls_back_on_an_unknown_family():
     ctx = lathe_frame()
-    insert = InsertActor(FakeHost(insert={"family": "NOPE"}))._insert(ctx)
+    insert = InsertActor(FakeHost(insert=InsertDrawing(family="NOPE")))._insert(ctx)
     assert insert.family == "DCMT"
 
 

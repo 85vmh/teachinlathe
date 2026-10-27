@@ -66,11 +66,11 @@ def blade_offsets(description):
     """``(shift, half)`` in millimetres for a tool as ``tool_source.describe``
     gives it: how far along Z its middle is from the point it was touched off
     on, and half its width; ``(0, 0)`` for anything that is not a blade."""
-    if not description or description.get("kind") != "blade":
+    from teachinlathe.ui.tabs.programs.backplot.tool_source import BladeDrawing
+    if not isinstance(description, BladeDrawing):
         return 0.0, 0.0
-    half = float(description.get("width", 0.0) or 0.0) / 2.0
-    control = int(description.get("control", 0) or 0)
-    return -control * half, half
+    half = float(description.width) / 2.0
+    return -int(description.control) * half, half
 
 
 def centre_program(geometry, describe, internal_per_mm, tool_in=0, corners=None):

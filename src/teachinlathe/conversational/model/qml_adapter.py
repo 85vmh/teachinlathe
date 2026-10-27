@@ -18,34 +18,29 @@ def _number(value):
     return f"{float(value):.3f}".rstrip("0").rstrip(".")
 
 
-def axial_tool_label(op_type, operations, index):
+def axial_tool_label(op, program):
     """What Drilling and Tapping show of their tool, in brackets: the drill's
-    diameter, (Ø25), or the tap's size, (M12 x 1mm) - the tool the last
-    Change Tool above ``index`` puts in, from the Tool Library - or (???)
-    when that is not a drill, or a tap, or there is none. None for any other
-    operation."""
-    kind = {"drilling": "drill", "tapping": "tap"}.get(op_type)
-    if kind is None:
+    diameter, (Ø25), or the tap's size, (M12 x 1mm) - the tool ``op`` cuts
+    with, from the Tool Library - or (???) when that is not a drill, or a
+    tap, or there is none. None for any other operation."""
+    from teachinlathe.conversational.model.data_types import Drilling, Tapping
+    from teachinlathe.tooling.model.data_types import DrillingTool, TappingTool
+    if not isinstance(op, (Drilling, Tapping)):
         return None
     from teachinlathe.ui.tabs.programs.backplot import tool_source
-    change = next((o for o in reversed((operations or [])[:max(index, 0)])
-                   if getattr(o, "type", "") == "changeTool"), None)
-    tool = tool_source.describe(int(getattr(change, "tool_no", 0) or 0)) if change is not None else {}
-    if tool.get("kind") != kind or not tool.get("diameter"):
+    entry = program.tool_of(op) if program is not None else None
+    tool = tool_source.tool_in(int(entry.tool_holder_id)) if entry is not None else None
+    if isinstance(op, Drilling):
+        if not isinstance(tool, DrillingTool) or tool.diameter <= 0:
+            return "(???)"
+        return f"(\u00d8{_number(tool.diameter)})"
+    if not isinstance(tool, TappingTool) or tool.diameter <= 0 or tool.pitch <= 0:
         return "(???)"
-    if kind == "drill":
-        return f"(\u00d8{_number(tool['diameter'])})"
-    if not tool.get("pitch"):
-        return "(???)"
-    return f"(M{_number(tool['diameter'])} x {_number(tool['pitch'])}mm)"
+    return f"(M{_number(tool.diameter)} x {_number(tool.pitch)}mm)"
 
 
-def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, strategy=None, profiling_type=None, profile_type=None, tool_label=None, rest=False):
+def display_name_for_op(op_type, pitch=None, profile_id=None, strategy=None, profiling_type=None, profile_type=None, tool_label=None, rest=False):
     op_type_value = (op_type or "").strip()
-    if op_type_value == "changeTool":
-        if tool_no is not None and int(tool_no) <= 0:
-            return "Tool Change (choose a tool)"
-        return f"Tool Change (T{tool_no})" if tool_no is not None else "Tool Change"
     if op_type_value == "positionAt":
         return "Position At"
     if op_type_value == "facing":
@@ -95,40 +90,32 @@ def display_name_for_op(op_type, tool_no=None, pitch=None, profile_id=None, stra
 
 
 def build_operations_model(program):
+    """The rows of the program's operation list. ``tool_label``: the T
+    number where the tool changes - what an operation that cuts with the one
+    before's tool leaves out - "T?" for one with no tool chosen."""
     out = []
     operations = getattr(program, "operations", []) or []
-    inherited_tool = None
-    pending_tool = None
-    group_start = None
-    tool_picker_types = {
-        "facing", "profileRoughing", "profileContour", "drilling",
-        "tapping", "parting", "g33Threading",
-    }
+    previous_tool = None
     for index, op in enumerate(operations):
         op_type = getattr(op, "type", "")
-        if op_type == "changeTool":
-            if group_start is None:
-                group_start = index
-            pending_tool = int(getattr(op, "tool_no", 0) or 0)
-            continue
-
         tool_label = ""
-        if pending_tool is not None:
-            if op_type in tool_picker_types and pending_tool > 0 and pending_tool != inherited_tool:
-                tool_label = f"T{pending_tool}"
-            inherited_tool = pending_tool
+        if hasattr(op, "toolRef"):
+            entry = program.tool_of(op)
+            holder = entry.tool_holder_id if entry is not None else None
+            if holder is None:
+                tool_label = "T?"
+            elif holder != previous_tool:
+                tool_label = f"T{holder}"
+            previous_tool = holder
         item = {
             "order": len(out) + 1,
             "source_index": index,
-            "group_start_index": group_start if group_start is not None else index,
+            "group_start_index": index,
             "tool_label": tool_label,
             "type": op_type,
             "generate_gcode": bool(getattr(op, "generate_gcode", False)),
             "is_optional_block": bool(getattr(op, "is_optional_block", False)),
         }
-        pending_tool = None
-        group_start = None
-        tool_no = getattr(op, "tool_no", None)
         pitch = getattr(op, "pitch", None)
         profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
         if profile_id is None:
@@ -145,9 +132,9 @@ def build_operations_model(program):
             profiling_type = profiling_type.value
         profile_type = getattr(op, "profile_type", None)
         item["display_type"] = display_name_for_op(
-            item["type"], tool_no=tool_no, pitch=pitch, profile_id=profile_id,
+            item["type"], pitch=pitch, profile_id=profile_id,
             strategy=strategy, profiling_type=profiling_type, profile_type=profile_type,
-            tool_label=axial_tool_label(item["type"], operations, index),
+            tool_label=axial_tool_label(op, program),
             rest=bool(getattr(op, "restMaterial", False)),
         )
         out.append(item)

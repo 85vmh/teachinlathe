@@ -108,7 +108,7 @@ ALL_CASES = ID_CASES + OD_CASES
 def operation(profile, pass_type):
     build, kind, tool, x_start, z_start, doc, retract, radial, axial = PROFILES[profile]
     return {"_resolved_profile": {"profile_type": kind, "profile_primitives": build()},
-            "_resolved_cutting_tool": tool.to_json(),
+            "_resolved_cutting_tool": tool,
             "profiling_parameters": {"x_start": x_start, "z_start": z_start},
             "cutting_parameters": {"doc": doc, "retract": retract},
             "stock_to_leave": {"radial": radial, "axial": axial},

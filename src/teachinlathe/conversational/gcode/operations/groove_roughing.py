@@ -438,11 +438,10 @@ _CONTROL_NAMES = {-1: "left corner", 0: "middle", 1: "right corner"}
 
 
 def _blade_control(tool):
-    """Which point of the blade it was touched off on, so the G-code is
-    written for: -1 its left corner, 0 the middle of its end, 1 its right
-    corner."""
-    control = int(get_float(tool or {}, "control", 0.0))
-    return control if control in (-1, 0, 1) else 0
+    """Which point of the blade - ``tool``, a MountedTool or None - it was
+    touched off on, so the G-code is written for: -1 its left corner, 0 the
+    middle of its end, 1 its right corner."""
+    return tool.z_control if tool is not None else 0
 
 
 def _corner_to_control(path, corner, radius, half_width, control, profile_type):
@@ -688,16 +687,18 @@ def _offset_path_for_tool_radius(path, radius, side):
 
 
 def _tool_is_blade(tool):
-    tool_type = str((tool or {}).get("tool_type", "")).lower()
-    orientation = int((tool or {}).get("q", 0) or 0)
-    return tool_type in ("parting_blade", "grooving_blade") or orientation in (6, 8)
+    """Whether ``tool`` (a MountedTool or None) is a blade."""
+    return tool is not None and tool.blade is not None
 
 
 def _blade_width(tool):
-    width = get_float(tool or {}, "width", 0.0)
-    if width <= 0:
-        width = get_float(tool or {}, "d", 0.0)
-    return width
+    """The width of blade ``tool`` (a MountedTool or None); 0 for no blade."""
+    return float(tool.blade.blade_width) if _tool_is_blade(tool) else 0.0
+
+
+def _blade_radii(tool):
+    """(left, right): the corner radii of blade ``tool`` (a MountedTool)."""
+    return float(tool.blade.left_radius), float(tool.blade.right_radius)
 
 
 def _append_peck(lines, prefix, z_pos, safe_x, final_x, peck_depth, clearance, feed_rate, dwell_time):
@@ -1126,7 +1127,7 @@ def generate_groove_roughing_gcode(op):
     stock = op.get("stock_to_leave", {}) or {}
     stock_enabled = bool(op.get("stock_to_leave_enabled", False))
     profile = op.get("_resolved_radial_profile", {}) or {}
-    tool = op.get("_resolved_tool", {}) or {}
+    tool = op.get("_resolved_tool")
 
     lines = []
     lines.extend(build_spindle_gcode(spindle, prefix))
@@ -1203,8 +1204,7 @@ def generate_groove_roughing_gcode(op):
     # for the point it was touched off on
     control = _blade_control(tool)
     z_control = control * half_width
-    left_radius = get_float(tool, "left_radius", 0.0)
-    right_radius = get_float(tool, "right_radius", 0.0)
+    left_radius, right_radius = _blade_radii(tool)
 
     lines.append(
         _code(

@@ -9,7 +9,7 @@ import pytest
 
 from teachinlathe.conversational.gcode.operations.groove_finishing import generate_groove_finishing_gcode
 
-from test_groove_roughing_toolpath import BLADES, GROOVES, MAX_OVERLAP, _blade, _moves, _op, _part
+from test_groove_roughing_toolpath import BLADES, GROOVES, MAX_OVERLAP, _blade, _blade_of, _moves, _op, _part
 from shapely.ops import unary_union
 
 STRATEGIES = ["towards_center", "towards_left", "towards_right"]
@@ -30,7 +30,7 @@ def _gouges(op):
     lines = generate_groove_finishing_gcode(op)
     assert not [line for line in lines if "ERROR" in line], lines
     part, sign = _part(op)
-    blade = op["_resolved_tool"]
+    blade = _blade_of(op)
     found = []
     for move in _moves(lines):
         x0, z0, x1, z1 = move

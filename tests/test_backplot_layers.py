@@ -27,6 +27,7 @@ glcanon_scene = pytest.importorskip(
     "rs274.glcanon_scene",
     reason="needs a LinuxCNC with the split-out preview renderer")
 
+from teachinlathe.ui.tabs.programs.backplot.tool_source import InsertDrawing  # noqa: E402
 from teachinlathe.ui.tabs.programs.backplot.lathe_backplot_item import (  # noqa: E402
     STATIC_MAX_AGE_S, LatheBackplotCanon)
 
@@ -188,7 +189,7 @@ class StubCanon:
 
     def __init__(self):
         self.stock = {}
-        self.insert = {}
+        self.insert = None
         self._mvp = np.eye(4)
 
     def _preview_mvp(self):
@@ -278,7 +279,7 @@ def test_new_stock_dimensions_drop_the_layer():
 def test_a_new_insert_choice_drops_the_layer():
     canon, ctx = StubCanon(), StubCtx()
     before = signature(canon, ctx)
-    canon.insert = {"family": "WNMG"}
+    canon.insert = InsertDrawing(family="WNMG")
     assert signature(canon, ctx) != before
 
 

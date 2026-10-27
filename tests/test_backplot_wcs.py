@@ -25,7 +25,7 @@ def status():
 
 
 def host(monkeypatch):
-    monkeypatch.setattr(module.tool_source, "describe", lambda tool: {})
+    monkeypatch.setattr(module.tool_source, "describe", lambda tool: None)
     stat = status()
     reloads = []
     obj = SimpleNamespace(

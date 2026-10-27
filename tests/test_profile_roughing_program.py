@@ -9,6 +9,7 @@ import pytest
 from PyQt6.QtCore import QCoreApplication, QEventLoop, QTimer
 
 from teachinlathe.conversational.gcode import build_ngc_from_program
+from teachinlathe.conversational.gcode.gcode_builder import ToolsNotReady
 from teachinlathe.conversational.gcode.operations.profile_roughing_preview import (
     build_profile_roughing_preview,
 )
@@ -16,7 +17,7 @@ from teachinlathe.conversational.logic.conversational_use_case import Conversati
 from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
 from teachinlathe.conversational.model.data_types import Operation, ProfileRoughing
 from teachinlathe.conversational.model.factories import make_default_operation, make_new_program
-from teachinlathe.tooling.model.data_types import InsertSpec, SpindleDirection, TurningTool
+from teachinlathe.tooling.model.data_types import InsertSpec, SpindleDirection, ToolHolder, TurningTool
 from teachinlathe.tooling.model.tool_snapshot import ToolSnapshot
 
 CCMT_95 = TurningTool(cutting_tool_id=1, insert=InsertSpec("ccmt", "06", "02"),
@@ -25,7 +26,9 @@ CCMT_95 = TurningTool(cutting_tool_id=1, insert=InsertSpec("ccmt", "06", "02"),
 VBMT_NEUTRAL = TurningTool(cutting_tool_id=3, insert=InsertSpec("vbmt", "16", "04"),
                            orientation=6, front_angle=72.5, back_angle=72.5,
                            spindle_direction=SpindleDirection.M4)
-TOOLS = ToolSnapshot(tools={1: CCMT_95, 3: VBMT_NEUTRAL})
+TOOLS = ToolSnapshot(holders={1: ToolHolder(tool_holder_id=1, cutting_tool_id=1),
+                              3: ToolHolder(tool_holder_id=3, cutting_tool_id=3)},
+                     tools={1: CCMT_95, 3: VBMT_NEUTRAL})
 
 
 def _point(kind, x, z):
@@ -39,26 +42,26 @@ NECK = [_point("startPoint", 30, 0)] + [_point("lineTo", x, z) for x, z in (
 
 
 @pytest.fixture
-def program(tmp_path):
+def use_case(tmp_path):
+    return ConversationalUseCase(programs_dir=str(tmp_path), ini=SimpleNamespace(), tools=TOOLS)
+
+
+@pytest.fixture
+def program(tmp_path, use_case):
     prog = make_new_program(str(tmp_path))
     prog.operations = [Operation.from_dict({**make_default_operation(op["type"]).to_dict(), **op})
                        for op in (
-        {"type": "changeTool", "order": 1, "tool_no": 1, "toolchange_position": "G28"},
-        {"type": "defineProfile", "order": 2, "profile_id": 1, "profile_type": "od",
+        {"type": "defineProfile", "order": 1, "profile_id": 1, "profile_type": "od",
          "profile_primitives": NECK},
-        {"type": "profileRoughing", "order": 3,
+        {"type": "profileRoughing", "order": 2,
          "speeds_and_feeds": {"direction": "M4", "mode": "rpm", "rpm_value": 1000, "feed_rate": 0.1},
          "cutting_parameters": {"doc": 1.0, "retract": 0.5},
          "profiling_parameters": {"profile_id": 1, "x_start": 74.0, "z_start": 1.0},
          "profile_roughing_strategy": {"profiling_type": "od", "pass_type": "axial"},
          "stock_to_leave": {"radial": 0.1, "axial": 0.05}},
     )]
+    assert use_case.use_tool(prog, 1, 1)
     return prog
-
-
-@pytest.fixture
-def use_case(tmp_path):
-    return ConversationalUseCase(programs_dir=str(tmp_path), ini=SimpleNamespace())
 
 
 def build(program, tmp_path, tools=TOOLS):
@@ -76,52 +79,51 @@ def section(ngc, number):
 
 # ── the rest roughing ───────────────────────────────────────────────────────
 
-def test_rest_roughing_comes_after_an_empty_tool_change_as_a_linked_copy(program, use_case):
-    index = use_case.add_rest_roughing(program, 2)
+def test_rest_roughing_comes_right_after_as_a_linked_copy_with_no_tool(program, use_case):
+    index = use_case.add_rest_roughing(program, 1)
 
-    assert index == 4
-    change, rest = program.operations[3], program.operations[4]
-    assert change.type == "changeTool" and change.tool_no == 0
+    assert index == 2
+    rest = program.operations[2]
     assert isinstance(rest, ProfileRoughing) and rest.restMaterial
-    assert not program.operations[2].restMaterial
+    assert rest.toolRef is None
+    assert not program.operations[1].restMaterial
     assert rest.profilingParameters.profile_id == 1
 
 
 def test_only_a_profile_roughing_gets_a_rest_roughing(program, use_case):
     with pytest.raises(ValueError):
-        use_case.add_rest_roughing(program, 1)
+        use_case.add_rest_roughing(program, 0)
 
 
 def test_program_gcode_rests_with_the_second_tool(program, use_case, tmp_path):
-    rest_index = use_case.add_rest_roughing(program, 2)
-    use_case.use_tool_before(program, rest_index, 3)
+    rest_index = use_case.add_rest_roughing(program, 1)
+    use_case.use_tool(program, rest_index, 3)
     ngc = build(program, tmp_path)
 
-    first, rest = section(ngc, 3), section(ngc, 5)
+    first, rest = section(ngc, 2), section(ngc, 3)
     assert "ERROR" not in ngc
     assert "( Planned for CCMT" in first and "1 region left for another tool" in first
     assert "( Planned for VBMT" in rest
-    assert "o<tc_at_g28> call [3]" in section(ngc, 4)
+    assert "o<tc_at_g28> call [1]" in first
+    assert "o<tc_at_g28> call [3]" in rest
     assert 0 < rest.count("G1 ") < first.count("G1 ")
 
 
-def test_program_gcode_says_when_the_rest_tool_is_still_to_be_chosen(program, use_case, tmp_path):
-    use_case.add_rest_roughing(program, 2)
-    ngc = build(program, tmp_path)
+def test_no_gcode_while_the_rest_tool_is_still_to_be_chosen(program, use_case, tmp_path):
+    use_case.add_rest_roughing(program, 1)
+    with pytest.raises(ToolsNotReady) as refused:
+        build(program, tmp_path)
 
-    assert "( ERROR: Tool Change -- no tool chosen )" in section(ngc, 4)
-    rest = section(ngc, 5)
-    assert "Choose the tool in the Change Tool above" in rest
-    assert "G1 " not in rest
+    assert refused.value.problems == ["Operation #3 Profile Roughing: no tool chosen"]
+    assert not (tmp_path / "ngc").exists()
 
 
-def test_program_gcode_looks_tools_up_in_the_snapshot_it_is_given(program, tmp_path):
-    with_ccmt = build(program, tmp_path)
-    program.operations[0].tool_no = 3
-    with_vbmt = build(program, tmp_path, ToolSnapshot(tools={3: VBMT_NEUTRAL}))
-
-    assert "( Planned for CCMT" in with_ccmt
-    assert "( Planned for VBMT" in with_vbmt
+def test_program_gcode_checks_tools_in_the_snapshot_it_is_given(program, tmp_path):
+    assert "( Planned for CCMT" in build(program, tmp_path)
+    # T1 holds another tool now: not the one the roughing was planned with
+    other = ToolSnapshot(holders=TOOLS.holders, tools={1: VBMT_NEUTRAL, 3: VBMT_NEUTRAL})
+    with pytest.raises(ToolsNotReady):
+        build(program, tmp_path, other)
 
 
 def test_snapshot_keeps_what_each_holder_has():
@@ -168,7 +170,7 @@ def _payload(program):
     from teachinlathe.conversational.gcode import gcode_builder
     gcode_builder._TOOLS = TOOLS
     try:
-        return gcode_builder._build_operation_payload(program.operations[2], program, 2)
+        return gcode_builder._build_operation_payload(program.operations[1], program, 1)
     finally:
         gcode_builder._TOOLS = None
 

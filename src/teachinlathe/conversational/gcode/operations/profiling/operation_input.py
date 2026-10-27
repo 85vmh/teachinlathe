@@ -39,16 +39,15 @@ def profile_path(op):
 
 
 def resolve_tool_shape(op):
-    """The insert the Change Tool above puts in, as ``_resolved_cutting_tool``
-    carries it (the Tool Library's JSON); None when there is none to go by."""
-    from teachinlathe.tooling.model.data_types import CuttingTool
+    """The insert the operation cuts with - ``_resolved_cutting_tool``, a
+    CuttingTool - as a ToolShape; None when there is none to go by."""
     from .tool_shape import insert_tool_shape
 
-    raw = op.get("_resolved_cutting_tool") or None
-    if not raw:
+    tool = op.get("_resolved_cutting_tool")
+    if tool is None:
         return None
     try:
-        return insert_tool_shape(CuttingTool.from_json(raw))
+        return insert_tool_shape(tool)
     except Exception:
         # planned with the stand-in square tool then: say why
         log.warning("roughing plan: the tool could not be read, planned without it", exc_info=True)
@@ -87,5 +86,5 @@ def profile_and_tool_key(op) -> dict:
     resolved = op.get("_resolved_profile") or {}
     return dict(
         profile=[str(resolved.get("profile_type", "od")).lower(), resolved.get("profile_primitives") or []],
-        tool=op.get("_resolved_cutting_tool") or None,
+        tool=tool.to_json() if (tool := op.get("_resolved_cutting_tool")) is not None else None,
     )

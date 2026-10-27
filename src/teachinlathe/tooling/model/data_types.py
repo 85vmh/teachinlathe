@@ -308,6 +308,53 @@ class TappingTool(CuttingTool):
         return f"M{_fmt(self.diameter)}x{_fmt(self.pitch)}"
 
 
+# ── What a tool is for ──────────────────────────────────────────────────────
+
+
+class ToolKind(str, Enum):
+    """What a cutting tool is for, as an operation asks for it: its type,
+    and for a blade or a threading tool how it is held."""
+
+    TURNING = "turning"
+    BORING = "boring"
+    PARTING_BLADE = "parting_blade"
+    GROOVING_BLADE = "grooving_blade"
+    TREPANNING_BLADE = "trepanning_blade"
+    #: a blade held at an orientation none of the others is
+    BLADE = "blade"
+    OD_THREADING = "od_threading"
+    ID_THREADING = "id_threading"
+    DRILL = "drill"
+    REAMER = "reamer"
+    TAP = "tap"
+
+
+#: A blade's kind by the orientation it is held at.
+_BLADE_KINDS = {6: ToolKind.PARTING_BLADE, 8: ToolKind.GROOVING_BLADE,
+                5: ToolKind.TREPANNING_BLADE, 7: ToolKind.TREPANNING_BLADE}
+
+
+def kind_of(tool: CuttingTool) -> ToolKind:
+    """What ``tool`` is for."""
+    if isinstance(tool, BoringTool):
+        return ToolKind.BORING
+    if isinstance(tool, TurningTool):
+        return ToolKind.TURNING
+    if isinstance(tool, BladeTool):
+        return _BLADE_KINDS.get(tool.orientation, ToolKind.BLADE)
+    if isinstance(tool, ThreadingTool):
+        from teachinlathe.tooling.model import threading_catalog
+        internal = threading_catalog.hand_of(tool.insert.geometry, tool.orientation) == "IR"
+        return ToolKind.ID_THREADING if internal else ToolKind.OD_THREADING
+    if isinstance(tool, DrillingTool):
+        return ToolKind.DRILL
+    if isinstance(tool, ReamingTool):
+        return ToolKind.REAMER
+    if isinstance(tool, TappingTool):
+        return ToolKind.TAP
+    raise TypeError(f"no kind for {type(tool).__name__}")
+
+
 # ── Tool holders ────────────────────────────────────────────────────────────
 
 
@@ -362,3 +409,34 @@ class ToolHolder:
     @property
     def is_ready(self) -> bool:
         return self.has_tool and self.x_touched and self.z_touched
+
+
+@dataclass(frozen=True)
+class MountedTool:
+    """A cutting tool as it is mounted: in holder ``tool_holder_id`` - the T
+    number - and, for a blade, the point its Z offset was taken on."""
+
+    tool_holder_id: int
+    tool: CuttingTool
+    z_offset_place: Optional[ZOffsetPlace] = None
+
+    @staticmethod
+    def of(tools, tool_holder_id: int) -> Optional["MountedTool"]:
+        """The tool in holder ``tool_holder_id`` of ``tools`` (the Tool
+        Library, or a ToolSnapshot of it); None for an empty one."""
+        tool = tools.tool_in(int(tool_holder_id))
+        if tool is None:
+            return None
+        holder = tools.find_holder(int(tool_holder_id))
+        return MountedTool(int(tool_holder_id), tool, getattr(holder, "z_offset_place", None))
+
+    @property
+    def blade(self) -> Optional[BladeTool]:
+        """The tool, when it is a blade; None else."""
+        return self.tool if isinstance(self.tool, BladeTool) else None
+
+    @property
+    def z_control(self) -> int:
+        """Where along the blade its Z offset was taken: -1 its left corner,
+        0 its middle - also when not known - 1 its right corner."""
+        return int(self.z_offset_place.value) if self.z_offset_place is not None else 0

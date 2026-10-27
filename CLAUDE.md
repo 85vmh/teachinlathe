@@ -86,10 +86,18 @@ through `teachinlathe.ui.common.images` in Python — never by a relative path.
 The domain model is a hierarchy of Python dataclasses (`conversational/model/data_types.py`):
 
 ```
-Program → Header (Workpiece) + List[Operation]
-Operation subtypes: ChangeTool, Facing, Profiling, Drilling, Tapping, Parting, Threading, DefineProfile
+Program → Header (Workpiece) + List[ProgramTool] + List[Operation]
+Operation subtypes: PositionAt, Facing, Profiling, Drilling, Tapping, Parting, Threading, DefineProfile, ...
 Each TurnableOperation contains: SpeedsAndFeeds (speeds_and_feeds: direction "M3"/"M4", speed, feed_rate, Parting's feed_rate_2), CuttingParameters, GeometryParameters, M1Parameters, EdgeBreak
 ```
+
+An operation that cuts (a `TurnableOperation`) names its tool by `toolRef`: the id of one of the program's
+`tools` (`"tools"` above `"operations"` in the JSON). A `ProgramTool` keeps the holder (the T number), the
+cutting tool, where the tool change goes (G28/G30) and a snapshot of both as they were when chosen;
+`conversational/logic/program_tools.py` checks it against the Tool Library (ok / moved / changed / missing),
+chooses tools and drops the unused ones. There is no Change Tool operation: the G-code builder writes
+`o<tc_at_g28|g30> call` where the tool differs from the one before, and generates nothing while an operation
+that cuts has no tool or one not as it was chosen (`ToolsNotReady`).
 
 Programs are stored as JSON files in `conversational/` (`PROGRAMS_DIR` in `conversational_use_case.py`). The `Operation` registry maps string keys to classes:
 

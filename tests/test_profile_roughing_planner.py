@@ -103,7 +103,7 @@ def operation(profile, tool=CCMT_95, pass_type="axial", doc=1.0, **extra):
           "profile_roughing_strategy": {"profiling_type": kind, "pass_type": pass_type},
           **extra}
     if tool is not None:
-        op["_resolved_cutting_tool"] = tool.to_json()
+        op["_resolved_cutting_tool"] = tool
     return op
 
 
@@ -262,7 +262,7 @@ def test_tool_held_the_wrong_way_round_is_an_error():
 def test_without_a_tool_only_what_any_tool_reaches_is_roughed():
     plan = plan_profile_roughing(operation("pocket", None))
 
-    assert plan.warnings[0].startswith("No turning tool in a Change Tool above")
+    assert plan.warnings[0].startswith("No turning tool chosen")
     assert not any(m.pocket for m in plan.moves)
     assert inside(plan.residual, -11.0, 7.5)
 
@@ -306,7 +306,7 @@ def test_rest_roughing_without_its_tool_shows_what_is_left():
     plan = plan_profile_roughing(rest)
 
     assert plan.moves == []
-    assert plan.warnings[0].startswith("Choose the tool in the Change Tool above")
+    assert plan.warnings[0].startswith("Choose the tool to cut what is left")
     assert area(plan.residual) == pytest.approx(area(plan_profile_roughing(source).residual), rel=0.05)
 
 

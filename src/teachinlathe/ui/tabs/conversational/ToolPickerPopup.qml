@@ -1,15 +1,16 @@
 // ToolPickerPopup.qml — picks the tool an operation cuts with, laid out as
-// Add Operation's popup: the tools Manual Turning has touched off, as Tool
-// Change shows them - two to a row, scrolling - but only those of the kinds
-// the operation can use. Tapping one selects it; Use Tool hands its T number
+// Add Operation's popup: the tools Manual Turning has touched off, two to a
+// row, scrolling - but only those the operation can cut with (toolNos, which
+// its editor works out). Tapping one selects it; Use Tool hands its T number
 // on, with where the tool change goes - G28 or G30 - picked between the
-// buttons; Cancel closes.
+// buttons; Cancel closes. A tool other than the one in now, for an operation
+// whose tool the ones below it cut with too, asks first whether it is for
+// this operation only or for it and those below - never those above.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
 import tabs.tool_library
-import "../tool_library/ToolTitles.js" as ToolTitles
 import theme
 
 Popup {
@@ -26,23 +27,39 @@ Popup {
     contentHeight: column.implicitHeight
     padding: 0
 
-    // The kinds of tool shown, as ToolTitles.kindTitle names them: "Turning
-    // Tool", "Boring Tool", "Parting Blade", "Grooving Blade", "Trepanning
-    // Blade", "OD Threading", "ID Threading", "Drill Tool", "Reamer Tool",
-    // "Tap". Empty shows every kind.
-    property var toolKinds: []
-    // Or which tools are shown, as a function(card, view) giving true for
-    // those, instead of their kinds
-    property var toolFilter: null
+    // The T numbers shown - of those in toolsModel - the operation editor's
+    // suitableToolNos
+    property var toolNos: []
+    onToolNosChanged: shown.refilter()
     // the tool in now, selected when the popup opens; 0 for none
     property int currentToolNo: 0
+    // how many operations cut with the operation's tool from it down, it
+    // included
+    property int toolUsers: 0
     property int selectedToolNo: 0
     // where the machine goes to change the tool, "G28" or "G30": the Change
     // Tool's now, picked again in the popup
     property string currentToolchangePosition: "G28"
     property string toolchangePosition: "G28"
 
-    signal toolChosen(int toolNo, string toolchangePosition)
+    // scope: "this" for this operation only, "below" for it and those below
+    // cutting with its tool, "all" for every one cutting with it
+    signal toolChosen(int toolNo, string toolchangePosition, string scope)
+
+    function _choose() {
+        // the same tool - a new tool change position, a move confirmed - is
+        // the tool's, so all its operations'; another, for a tool the ones
+        // below cut with too, is asked about
+        if (selectedToolNo === currentToolNo) {
+            toolChosen(selectedToolNo, toolchangePosition, "all")
+            close()
+        } else if (toolUsers <= 1) {
+            toolChosen(selectedToolNo, toolchangePosition, "this")
+            close()
+        } else {
+            scopeQuestion.open()
+        }
+    }
 
     readonly property int buttonWidth: 180
     readonly property int buttonHeight: Theme.buttonHeightTouch
@@ -62,10 +79,8 @@ Popup {
         shown.refilter()
     }
 
-    function _allowed(card, view) {
-        if (toolFilter) return !!view && toolFilter(card, view)
-        if (!toolKinds || toolKinds.length === 0) return true
-        return toolKinds.indexOf(ToolTitles.kindTitle(card, view)) >= 0
+    function _allowed(toolNo) {
+        return !!toolNos && toolNos.indexOf(toolNo) >= 0
     }
 
     background: Rectangle {
@@ -86,7 +101,7 @@ Popup {
         function refilter() {
             for (var i = 0; i < items.count; i++) {
                 var it = items.get(i)
-                it.inAllowed = root._allowed(it.model.toolCard, it.model.toolView)
+                it.inAllowed = root._allowed(it.model.toolNo)
             }
         }
 
@@ -225,9 +240,63 @@ Popup {
                 font.pixelSize: root.buttonFontSize
                 // a tool picked, and one there is to pick
                 enabled: root.selectedToolNo > 0 && toolsGrid.count > 0
-                onClicked: {
-                    root.toolChosen(root.selectedToolNo, root.toolchangePosition)
-                    root.close()
+                onClicked: root._choose()
+            }
+        }
+    }
+
+    // for this operation only, or for it and those below cutting with its tool
+    Popup {
+        id: scopeQuestion
+        parent: Overlay.overlay
+        modal: true
+        focus: true
+        anchors.centerIn: parent
+        padding: 24
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        background: Rectangle {
+            radius: Theme.radiusXLarge
+            color: Theme.surfaceSunken
+            border.color: Theme.dialogBorder
+            border.width: Theme.hairline
+        }
+
+        contentItem: Column {
+            spacing: 24
+
+            Text {
+                textFormat: Text.StyledText
+                text: "This tool is also used by <b>" + (root.toolUsers - 1)
+                      + (root.toolUsers === 2 ? " operation" : " operations") + " below</b>.<br>"
+                      + "Use <b>T" + root.selectedToolNo + "</b> for:"
+                font.pixelSize: Theme.fontLarge
+                color: Theme.foreground
+            }
+
+            Row {
+                spacing: 16
+                Button {
+                    text: "This operation"
+                    width: root.buttonWidth
+                    height: root.buttonHeight
+                    font.pixelSize: root.buttonFontSize
+                    onClicked: {
+                        root.toolChosen(root.selectedToolNo, root.toolchangePosition, "this")
+                        scopeQuestion.close()
+                        root.close()
+                    }
+                }
+                Button {
+                    text: "This and the ones below"
+                    width: root.buttonWidth
+                    height: root.buttonHeight
+                    font.pixelSize: root.buttonFontSize
+                    onClicked: {
+                        root.toolChosen(root.selectedToolNo, root.toolchangePosition, "below")
+                        scopeQuestion.close()
+                        root.close()
+                    }
                 }
             }
         }

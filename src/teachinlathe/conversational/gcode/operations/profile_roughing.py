@@ -90,7 +90,7 @@ def generate_profile_roughing_gcode(op):
 _PLANS = PlanCache()
 
 _NO_SOURCE = "rest material, but no Profile Roughing of this profile above it"
-_CHOOSE_TOOL = "Choose the tool in the Change Tool above to cut what is left"
+_CHOOSE_TOOL = "Choose the tool to cut what is left"
 
 
 def roughing_plan_key(op) -> str:

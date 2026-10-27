@@ -9,9 +9,11 @@ from teachinlathe.conversational.model.data_types import (
     DefineRadialProfile,
     Program,
 )
+from teachinlathe.conversational.logic import program_tools
 from teachinlathe.conversational.model.qml_adapter import display_name_for_op, axial_tool_label
 
 from .operations import OPERATION_GENERATORS
+from .operations.change_tool import generate_change_tool_gcode
 
 log = logging.getLogger(__name__)
 
@@ -109,14 +111,10 @@ def _resolve_groove_roughing_stock(profile_id, operations, before_index=None):
     return {"radial": 0.0, "axial": 0.0}
 
 
-def _resolve_previous_tool_change(operations, before_index=None):
-    search_ops = operations
-    if before_index is not None and before_index >= 0:
-        search_ops = operations[:before_index]
-    for op in reversed(search_ops):
-        if getattr(op, "type", None) == "changeTool":
-            return op
-    return None
+def _holder_of(program, op):
+    """The T number of the tool ``op`` cuts with, 0 with none."""
+    tool = program.tool_of(op)
+    return int(tool.tool_holder_id) if tool is not None else 0
 
 
 #: Where tools are looked up while a program is built: a ToolSnapshot when
@@ -131,56 +129,42 @@ def _tools():
     return tool_library_repository()
 
 
-def _resolve_tool_payload(tool_no, fallback_orientation=0):
-    """What a groove operation reads of the tool a Change Tool puts in: its
-    number and orientation and, for a blade, its width and corners - from
-    the Tool Library."""
+def _resolve_mounted_tool(tool_no):
+    """The tool in holder ``tool_no`` as mounted (a MountedTool) - what a
+    groove operation cuts with - from the Tool Library; None with none."""
     if not tool_no:
-        return {}
-    from teachinlathe.tooling.model.data_types import BladeTool
-    payload = {"t": int(tool_no), "q": int(fallback_orientation or 0)}
+        return None
+    from teachinlathe.tooling.model.data_types import MountedTool
     try:
-        tool = _tools().tool_in(int(tool_no))
+        return MountedTool.of(_tools(), int(tool_no))
     except Exception as exc:
         log.warning("Tool lookup failed for T%s: %s", tool_no, exc)
-        return payload
-    if isinstance(tool, BladeTool):
-        # where it was touched off along Z: -1 its left corner, 0 its middle, 1 its right
-        holder = _tools().find_holder(int(tool_no))
-        place = getattr(getattr(holder, "z_offset_place", None), "value", "0")
-        payload.update({"q": tool.orientation, "tool_type": "parting_blade",
-                        "width": tool.blade_width, "left_radius": tool.left_radius,
-                        "right_radius": tool.right_radius, "control": int(place)})
-    elif tool is not None and hasattr(tool, "orientation"):
-        payload["q"] = int(tool.orientation)
-    return payload
+        return None
 
 
 def _resolve_cutting_tool(tool_no):
-    """The cutting tool in holder ``tool_no`` as the Tool Library stores it
-    (CuttingTool.to_json) - what Profile Roughing plans its moves with; {}
-    with none."""
+    """The cutting tool in holder ``tool_no`` - what Profile Roughing plans
+    its moves with; None with none."""
     if not tool_no:
-        return {}
+        return None
     try:
-        tool = _tools().tool_in(int(tool_no))
+        return _tools().tool_in(int(tool_no))
     except Exception as exc:
         log.warning("Tool lookup failed for T%s: %s", tool_no, exc)
-        return {}
-    return tool.to_json() if tool is not None else {}
+        return None
 
 
-def _resolve_tap_pitch(operations, op_index):
-    """The pitch of the tap the last Change Tool above ``op_index`` puts in,
-    from the Tool Library; None when it is not a tap or cannot be found."""
-    from teachinlathe.ui.tabs.programs.backplot import tool_source
-    tool_change = _resolve_previous_tool_change(operations, op_index)
-    if tool_change is None:
+def _resolve_tap_pitch(program, op):
+    """The pitch of the tap ``op`` cuts with, from the Tool Library; None
+    when it is not a tap or cannot be found."""
+    from teachinlathe.tooling.model.data_types import TappingTool
+    tool_no = _holder_of(program, op)
+    if not tool_no:
         return None
-    tool = tool_source.describe(int(getattr(tool_change, "tool_no", 0) or 0), _tools())
-    if tool.get("kind") != "tap" or not tool.get("pitch"):
+    tool = _tools().tool_in(tool_no)
+    if not isinstance(tool, TappingTool) or tool.pitch <= 0:
         return None
-    return float(tool["pitch"])
+    return float(tool.pitch)
 
 
 def _build_operation_payload(op, program, op_index=None):
@@ -189,10 +173,8 @@ def _build_operation_payload(op, program, op_index=None):
         profile_id = int(getattr(op.profilingParameters, "profile_id", 0) or 0)
         profile_op = _resolve_profile_operation(profile_id, program.operations, op_index)
         payload["_resolved_profile"] = profile_op.to_dict() if profile_op else {}
-        # the insert both plan with: the Change Tool's above
-        tool_change = _resolve_previous_tool_change(program.operations, op_index)
-        payload["_resolved_cutting_tool"] = _resolve_cutting_tool(
-            getattr(tool_change, "tool_no", 0) if tool_change is not None else 0)
+        # the insert both plan with
+        payload["_resolved_cutting_tool"] = _resolve_cutting_tool(_holder_of(program, op))
     if op.type == "profileRoughing":
         if getattr(op, "restMaterial", False):
             # what it starts from: the roughings of the same profile above it
@@ -212,19 +194,12 @@ def _build_operation_payload(op, program, op_index=None):
         if op.type == "grooveFinishing":
             payload["_resolved_roughing_stock"] = _resolve_groove_roughing_stock(
                 profile_id, program.operations, op_index)
-        tool_change = _resolve_previous_tool_change(program.operations, op_index)
-        if tool_change is not None:
-            payload["_resolved_tool_change"] = tool_change.to_dict()
-            payload["_resolved_tool"] = _resolve_tool_payload(
-                getattr(tool_change, "tool_no", 0),
-                getattr(tool_change, "tool_orientation", 0),
-            )
+        payload["_resolved_tool"] = _resolve_mounted_tool(_holder_of(program, op))
     return payload
 
 
-def _display_name_for_operation(op, operations=None, index=None):
+def _display_name_for_operation(op, program=None):
     op_type = getattr(op, "type", "")
-    tool_no = getattr(op, "tool_no", None)
     pitch = getattr(op, "pitch", None)
     profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
     if profile_id is None:
@@ -242,25 +217,37 @@ def _display_name_for_operation(op, operations=None, index=None):
     profile_type = getattr(op, "profile_type", None)
     return display_name_for_op(
         op_type,
-        tool_no=tool_no,
         pitch=pitch,
         profile_id=profile_id,
         strategy=strategy,
         profiling_type=profiling_type,
         profile_type=profile_type,
-        tool_label=axial_tool_label(op_type, operations, index) if operations is not None else None,
+        tool_label=axial_tool_label(op, program) if program is not None else None,
         rest=bool(getattr(op, "restMaterial", False)),
     )
 
 
 
+class ToolsNotReady(ValueError):
+    """The program's tools are not all as chosen: no G-code until they are."""
+
+    def __init__(self, problems):
+        super().__init__("; ".join(problems))
+        self.problems = list(problems)
+
+
 def build_ngc_from_program(program: Program, output_dir=None, output_path=None, source_json=None,
                            tools=None):
     """Writes the program's .ngc and returns its path. ``tools``: a
-    ToolSnapshot to look tools up in instead of the Tool Library."""
+    ToolSnapshot to look tools up in instead of the Tool Library. Raises
+    ToolsNotReady, writing nothing, while an operation that cuts has no tool
+    or one the Tool Library no longer has as it was."""
     global _TOOLS
     _TOOLS = tools
     try:
+        problems = program_tools.not_ready(program, _tools())
+        if problems:
+            raise ToolsNotReady(problems)
         return _build_ngc(program, output_dir, output_path, source_json)
     finally:
         _TOOLS = None
@@ -302,12 +289,23 @@ def _build_ngc(program, output_dir, output_path, source_json):
 
     datum = int(program.header.datum)
     operations = program.operations
+    # the T number in the spindle so far; 0 before the first tool change
+    loaded_tool = 0
     for index, op in enumerate(operations, 1):
         if not bool(op.generate_gcode):
             continue
 
-        op_display = _display_name_for_operation(op, operations, index - 1)
+        op_display = _display_name_for_operation(op, program)
         lines.append(_format_comment(f"----------Operation #{index}: {op_display}----------") + "\n")
+
+        # a tool change where the tool differs from the one before. Never a
+        # "/" block, even for an optional operation: skipped, the operations
+        # after it would cut with the wrong tool.
+        tool = program.tool_of(op) if program_tools.needs_tool(op) else None
+        if tool is not None and tool.tool_holder_id != loaded_tool:
+            lines.extend(generate_change_tool_gcode(tool.tool_holder_id, tool.toolchange_position))
+            lines.append("")
+            loaded_tool = tool.tool_holder_id
 
         if op.type in ("defineProfile", "importDxfProfile"):
             if not _define_profile_needs_subroutine(int(op.profile_id or 0), operations):
@@ -326,7 +324,7 @@ def _build_ngc(program, output_dir, output_path, source_json):
             elif op.type == "facing":
                 lines.extend(generator(op, datum=datum))
             elif op.type == "tapping":
-                lines.extend(generator(op, pitch=_resolve_tap_pitch(operations, index - 1)))
+                lines.extend(generator(op, pitch=_resolve_tap_pitch(program, op)))
             else:
                 lines.extend(generator(op))
         else:

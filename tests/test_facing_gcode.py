@@ -1,10 +1,9 @@
-"""The facing call, and the retract it was not passing.
+"""Facing's G-code, written out move by move from facing_passes.
 
-The operation had a retract in the UI, saved in the program's JSON, and the
-subroutine had no parameter for it: the call passed seven arguments and the
-subroutine retracted by the depth of cut instead. Nothing errored - a smaller
-depth of cut quietly meant a smaller clearance - so this checks the call and
-the subroutine agree on both the count and the order.
+The retract was once in the UI and the JSON but never reached the cut, which
+backed off by the depth of cut instead: nothing errored, a smaller depth of
+cut quietly meant a smaller clearance. These check the moves use the retract,
+leave at 45 degrees, and are the moves the preview draws.
 """
 
 import re
@@ -19,17 +18,19 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from teachinlathe.conversational.model.data_types import (  # noqa: E402
-    CuttingParameters, Facing, GeometryParameters, M1Parameters,
-    PredefinedPosition, SpindleMode, SpeedsAndFeeds,
+    CuttingParameters, Facing, GeometryParameters, InspectPosition, M1Parameters,
+    SpindleMode, SpeedsAndFeeds,
 )
 from teachinlathe.conversational.gcode.operations.facing \
     import generate_facing_gcode  # noqa: E402
+from teachinlathe.conversational.gcode.operations.facing_preview \
+    import facing_passes  # noqa: E402
 from teachinlathe.tooling.model.data_types import SpindleDirection  # noqa: E402
 
-SUBROUTINE = ROOT / "subroutines" / "facing.ngc"
+X_START, Z_START, X_END, Z_END = 42.0, 1.0, -0.4, -2.0
 
 
-def facing(doc=1.0, retract=2.0, optional=False, new_datum=False):
+def facing(doc=1.0, retract=2.0, optional=False, new_datum=False, include_m1=False):
     return Facing(
         order=1, type="facing", generate_gcode=True,
         is_optional_block=optional,
@@ -37,131 +38,102 @@ def facing(doc=1.0, retract=2.0, optional=False, new_datum=False):
             direction=SpindleDirection.M4, mode=SpindleMode.RPM, rpm_value=1200, feed_rate=0.1),
         cuttingParameters=CuttingParameters(retract=retract, doc=doc),
         geometryParameters=GeometryParameters(
-            xStart=42.0, zStart=1.0, xEnd=-0.4, zEnd=-2.0),
+            xStart=X_START, zStart=Z_START, xEnd=X_END, zEnd=Z_END),
         m1Parameters=M1Parameters(
-            include_m1=False,
-            inspect_position=PredefinedPosition.NONE
-            if hasattr(PredefinedPosition, "NONE")
-            else list(PredefinedPosition)[0],
-            stop_spindle=False),
+            include_m1=include_m1, inspect_position=InspectPosition.G30, stop_spindle=False),
         zEndBecomesNewZ0=new_datum,
     )
 
 
-def call_line(op=None):
-    lines = generate_facing_gcode(op or facing())
-    return next(line for line in lines if "o<facing> call" in line)
+def moves(op):
+    """The G0 / G1 moves, as (word, x, z)."""
+    found = []
+    for line in generate_facing_gcode(op):
+        m = re.match(r"/?(G[01]) X(\S+) Z(\S+)$", line)
+        if m:
+            found.append((m.group(1), float(m.group(2)), float(m.group(3))))
+    return found
 
 
-def arguments(line):
-    return re.findall(r"\[([^\]]*)\]", line)
-
-
-def numbers(line):
-    """The call's arguments as floats.
-
-    Compared as numbers, not as the strings ``fmt`` happens to produce - a
-    test that pins the formatter's decimal places fails the next time someone
-    changes it, for no reason connected to what it is checking.
-    """
-    return [float(argument) for argument in arguments(line)]
-
-
-# ── the call ───────────────────────────────────────────────────────────────
-
-def test_the_retract_is_passed():
-    """The whole bug: it never reached the subroutine."""
-    assert numbers(call_line(facing(retract=3.0)))[-1] == pytest.approx(3.0)
-
-
-def test_the_retract_is_the_last_argument():
-    """Positional, so its place is the contract with the subroutine."""
-    assert numbers(call_line(facing(retract=2.5)))[7] == pytest.approx(2.5)
-
-
-def test_the_retract_is_not_the_depth_of_cut():
-    """They were the same value by accident of the subroutine reusing doc."""
-    args = numbers(call_line(facing(doc=0.5, retract=3.0)))
-    assert args[5] == pytest.approx(0.5)
-    assert args[7] == pytest.approx(3.0)
-
-
-def test_the_earlier_arguments_did_not_move():
-    args = numbers(call_line())
-    assert args[0] == pytest.approx(42.0)    # x start
-    assert args[1] == pytest.approx(1.0)     # z start
-    assert args[2] == pytest.approx(-0.4)    # x end
-    assert args[3] == pytest.approx(-2.0)    # z end
-
-
-# ── the call and the subroutine agree ──────────────────────────────────────
-
-def subroutine_parameters():
-    """``#<name> = #N`` in the subroutine, in N order."""
-    found = {}
-    for name, number in re.findall(r"#<(\w+)>\s*=\s*#(\d+)",
-                                   SUBROUTINE.read_text()):
-        found[int(number)] = name
-    return [found[n] for n in sorted(found)]
-
-
-def test_the_call_passes_exactly_what_the_subroutine_reads():
-    names = subroutine_parameters()
-    assert len(arguments(call_line())) == len(names), \
-        "the call and the subroutine disagree on how many arguments there are"
-    assert names[-1] == "retract"
-
-
-def test_the_subroutine_numbers_its_parameters_without_a_gap():
-    names = subroutine_parameters()
-    text = SUBROUTINE.read_text()
-    for index, name in enumerate(names, start=1):
-        assert re.search(r"#<%s>\s*=\s*#%d\b" % (name, index), text), name
+def diagonal_exits(op):
+    """Rapids off the end of a cut - from X End - moving both axes at once."""
+    found, previous = [], None
+    for move in moves(op):
+        if (move[0] == "G0" and previous is not None and previous[0] == "G1"
+                and previous[1] == pytest.approx(X_END)):
+            found.append((move[1] - previous[1], move[2] - previous[2]))
+        previous = move
+    return found
 
 
 # ── how it leaves the cut ──────────────────────────────────────────────────
 
-def diagonal_exits():
-    """Rapids that move both axes at once - a 45 degree exit."""
-    return [line.strip() for line in SUBROUTINE.read_text().splitlines()
-            if re.match(r"\s*G0 X\[.*\] Z\[", line)]
+def test_it_leaves_every_cut_at_45_degrees_by_the_retract():
+    """X a diameter, so 2R on X is R on the part."""
+    exits = diagonal_exits(facing(retract=2.0))
+    assert exits
+    for dx, dz in exits:
+        assert dx == pytest.approx(4.0)
+        assert dz == pytest.approx(2.0)
 
 
-def test_it_leaves_the_cut_at_45_degrees():
-    """As every other toolpath does. Two separate moves - out in Z, then back
-    in X - is what it did before."""
-    assert diagonal_exits(), "no move that changes both axes at once"
-
-
-def test_the_exit_is_45_degrees_on_the_part_not_on_the_numbers():
-    """The subroutine runs in diameter mode, so a diameter step of 2R is a
-    radial step of R: X has to move twice what Z does."""
-    for line in diagonal_exits():
-        assert "#<retract> * 2" in line, line
-        assert re.search(r"Z\[[^\]]*\+ #<retract>\]", line), line
-
-
-def test_the_retracts_no_longer_use_the_depth_of_cut():
-    """``G0 Z[#<z_start> + #<doc>]`` was the retract, and it is why a fine
-    depth of cut gave a clearance of a few hundredths."""
-    for line in SUBROUTINE.read_text().splitlines():
-        if line.strip().startswith("G0") and "#<doc>" in line:
-            pytest.fail("a rapid still retracts by the depth of cut: %s"
-                        % line.strip())
+def test_the_retract_is_not_the_depth_of_cut():
+    for dx, dz in diagonal_exits(facing(doc=0.5, retract=3.0)):
+        assert dz == pytest.approx(3.0)
 
 
 def test_a_zero_retract_falls_back_to_the_depth_of_cut():
-    """Left at zero in the UI it would otherwise rub the face on the way out.
-    """
-    text = SUBROUTINE.read_text()
-    assert re.search(r"IF \[#<retract> LE 0\]", text)
-    assert re.search(r"#<retract>\s*=\s*#<doc>", text)
+    """Left at zero in the UI it would otherwise rub the face on the way out."""
+    for dx, dz in diagonal_exits(facing(doc=0.5, retract=0.0)):
+        assert dz == pytest.approx(0.5)
+
+
+# ── the passes ─────────────────────────────────────────────────────────────
+
+def test_it_cuts_down_to_z_end_by_the_depth_of_cut():
+    cuts = [z for word, x, z in moves(facing(doc=1.0)) if word == "G1" and x == pytest.approx(X_END)]
+    assert cuts == pytest.approx([0.0, -1.0, -2.0])
+
+
+def test_the_moves_are_the_ones_the_preview_draws():
+    """Both come from facing_passes: written in its order, word for word."""
+    drawn = [("G1" if feed else "G0", x, z)
+             for moves_ in facing_passes(X_START, Z_START, X_END, Z_END, 0.7, 1.5)
+             for feed, x, z in moves_]
+    # the first move is the approach, which the preview leaves out
+    written = moves(facing(doc=0.7, retract=1.5))[1:]
+    assert [w for w, _, _ in written] == [w for w, _, _ in drawn]
+    assert [v for _, x, z in written for v in (x, z)] == \
+        pytest.approx([v for _, x, z in drawn for v in (x, z)], abs=1e-3)
+
+
+def test_no_depth_of_cut_is_an_error_not_an_endless_loop():
+    lines = generate_facing_gcode(facing(doc=0.0))
+    assert any("ERROR" in line for line in lines)
+
+
+# ── pause to inspect ───────────────────────────────────────────────────────
+
+def m1_calls(op):
+    return [line for line in generate_facing_gcode(op) if "o<m1_handling> call" in line]
+
+
+def test_no_m1_handling_unless_it_is_included():
+    assert m1_calls(facing(include_m1=False)) == []
+
+
+def test_m1_handling_after_every_pass_but_the_last():
+    """Back at X Start on the face just cut, the spindle as it was (M4)."""
+    calls = m1_calls(facing(doc=1.0, include_m1=True))
+    args = [float(a) for call in calls for a in re.findall(r"\[([^\]]*)\]", call)]
+    assert args == pytest.approx([1, X_START, 0.0, -1, 1, X_START, -1.0, -1])
 
 
 # ── what was already there stays ───────────────────────────────────────────
 
-def test_the_optional_block_prefix_still_applies_to_the_call():
-    assert call_line(facing(optional=True)).startswith("/")
+def test_the_optional_block_prefix_applies_to_every_move():
+    lines = [line for line in generate_facing_gcode(facing(optional=True, include_m1=True)) if line]
+    assert all(line.startswith("/") for line in lines)
 
 
 def test_the_datum_line_is_still_emitted():

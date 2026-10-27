@@ -12,9 +12,10 @@ if str(SRC) not in sys.path:
 from teachinlathe.conversational.gcode.operations.groove_roughing import (
     generate_groove_roughing_gcode,
 )
+from teachinlathe.tooling.model.data_types import BladeTool, MountedTool, TurningTool
 
 
-def _op(tool_type="parting_blade", orientation=6):
+def _op(blade=True, orientation=6):
     return {
         "type": "grooveRoughing",
         "is_optional_block": False,
@@ -40,14 +41,9 @@ def _op(tool_type="parting_blade", orientation=6):
             "axial": 0.2,
         },
         "stock_to_leave_enabled": True,
-        "_resolved_tool": {
-            "t": 1,
-            "q": orientation,
-            "tool_type": tool_type,
-            "width": 3.0,
-            "left_radius": 0.1,
-            "right_radius": 0.1,
-        },
+        "_resolved_tool": MountedTool(1, BladeTool(cutting_tool_id=1, blade_width=3.0, left_radius=0.1,
+                                                   right_radius=0.1, orientation=orientation)
+                                      if blade else TurningTool(cutting_tool_id=1, orientation=orientation)),
         "_resolved_radial_profile": {
             "profile_id": 1,
             "profile_type": "od",
@@ -97,6 +93,6 @@ def test_groove_roughing_start_center_generates_pecks_and_contour():
 
 
 def test_groove_roughing_requires_blade_tool():
-    lines = generate_groove_roughing_gcode(_op(tool_type="generic", orientation=1))
+    lines = generate_groove_roughing_gcode(_op(blade=False, orientation=1))
 
     assert lines[-1] == "( ERROR: Groove Roughing -- current tool must be a parting or grooving blade )"

@@ -3,7 +3,6 @@ from datetime import datetime
 
 from teachinlathe.conversational.model.data_types import (
     BlendType,
-    ChangeTool,
     CuttingParameters,
     Drilling,
     DrillingParameters,
@@ -28,7 +27,6 @@ from teachinlathe.conversational.model.data_types import (
     PositionAt,
     PositionDetails,
     InspectPosition,
-    PredefinedPosition,
     Parting,
     PartingParameters,
     PassType,
@@ -69,18 +67,6 @@ def _speeds(rpm=1000, feed_rate=None, feed_rate_2=None):
 def make_default_operation(op_type: str, order: int = 1):
     m1_default = M1Parameters(include_m1=False, inspect_position=InspectPosition.G28, stop_spindle=False)
 
-    if op_type == "changeTool":
-        return ChangeTool(
-            order=order,
-            type=op_type,
-            generate_gcode=True,
-            is_optional_block=False,
-            tool_no=1,
-            tool_orientation=1,
-            back_angle=0,
-            front_angle=0,
-            toolchange_position=PredefinedPosition.G28,
-        )
     if op_type == "positionAt":
         return PositionAt(
             order=order,

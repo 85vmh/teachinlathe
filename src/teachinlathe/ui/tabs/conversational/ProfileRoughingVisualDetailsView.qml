@@ -19,8 +19,8 @@ Item {
     property var    primitives:  []
     property string profileType: "od"
     property var    workpiece:   ({})
-    // the tool the last Change Tool above puts in, as its Tool Library card
-    // shows it: {tool_no, card, view}; {} with none
+    // the tool it cuts with, as its Tool Library card
+    // shows it: editor.toolCard; {} with none
     property var    toolCard:    ({})
 
     // the values the boxes on the canvas show and edit
@@ -212,7 +212,7 @@ Item {
             // What the plan could not do - a tool that cannot reach a pocket,
             // or no plan at all - in the bottom left corner, clear of the zoom
             // buttons. With material left for another tool, tapping it adds a
-            // rest roughing for that, after a Change Tool to choose the tool in.
+            // rest roughing for that, its tool still to be chosen.
             Rectangle {
                 id: note
                 readonly property var preview: root.roughingPreview
@@ -340,29 +340,13 @@ Item {
             // the tool it cuts with, at the top, in the middle; tapped, to
             // pick it - a turning tool for an OD profile, a boring bar for
             // an ID one
-            ToolBox {
-                id: toolBox
+            OperationToolBox {
+                editor: root.editor
+                pickerWidth: root.width
                 x: (profileCanvas.width - width) / 2
                 // lined up with the view buttons, as tall as they are
                 y: viewButtons.y
                 rowHeight: viewButtons.height
-                toolCard: root.toolCard
-                onClicked: toolPicker.open()
-            }
-
-            ToolPickerPopup {
-                id: toolPicker
-
-                toolsModel: root.editor ? root.editor.touchedOffTools : null
-                contentWidth: root.width
-                toolKinds: String(root.profileType).toLowerCase() === "id" ? ["Boring Tool"] : ["Turning Tool"]
-                currentToolNo: root.toolCard && root.toolCard.tool_no ? root.toolCard.tool_no : 0
-                currentToolchangePosition: root.toolCard && root.toolCard.toolchange_position
-                                           ? root.toolCard.toolchange_position : "G28"
-                onToolChosen: function(toolNo, position) {
-                    if (root.editor)
-                        root.editor.useTool(toolNo, position)
-                }
             }
 
             // zoom, fit to screen and mirror - top-left, as on every profile canvas

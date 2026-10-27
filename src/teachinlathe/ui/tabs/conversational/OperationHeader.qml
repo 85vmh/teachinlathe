@@ -16,7 +16,7 @@ RowLayout {
     property alias feedEnabled: speedsAndFeeds.feedEnabled
     // the only spindle direction the tool allows: true M3, false M4, null
     // either. Unless set, the tool's the op's details carry
-    // (_tool_spindle_direction, 3 or 4, from the last Change Tool above)
+    // (_tool_spindle_direction, 3 or 4, from the tool it cuts with)
     property var onlyClockwise: null
     property var _toolClockwise: null
     // what Speeds and Feeds' feeds column holds: SpeedsAndFeeds.FeedKind -

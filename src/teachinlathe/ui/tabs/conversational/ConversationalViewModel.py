@@ -27,11 +27,9 @@ from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.conversational.logic.conversational_use_case import ConversationalUseCase
 from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
+from teachinlathe.conversational.gcode.gcode_builder import ToolsNotReady
 from teachinlathe.conversational.model.data_types import Program
 from teachinlathe.conversational.model.qml_adapter import build_operations_model, build_selected_program_summary
-from teachinlathe.conversational.model.program_commands import (
-    delete_visible_operation, duplicate_visible_operation, move_visible_operation,
-)
 from teachinlathe.core.positions_bridge import PositionsBridge
 from teachinlathe.core.settings_repository import GCODE_PROGRESS_DELAY_MS, settings_repository
 from teachinlathe.ui.common.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
@@ -81,6 +79,8 @@ class ConversationalViewModel(QObject):
     facingMirrorChanged = pyqtSignal()
     gcodeGenerationStarted = pyqtSignal()
     gcodeGenerationFinished = pyqtSignal()
+    #: not generated: what is wrong with the program's tools, a line each
+    gcodeRefused = pyqtSignal(str)
     #: The header's Import DXF: the import screen imports the drawing it shows.
     importDxfRequested = pyqtSignal()
     dxfImportFailed = pyqtSignal(str)
@@ -345,13 +345,6 @@ class ConversationalViewModel(QObject):
         self.current_program = program
         self.current_program_index = row_index
         self.current_op_index = self.use_case.last_operation_index(program)
-        if (0 <= self.current_op_index < len(program.operations)
-                and getattr(program.operations[self.current_op_index], "type", "") == "changeTool"):
-            next_visible = next((i for i in range(self.current_op_index + 1, len(program.operations))
-                                 if getattr(program.operations[i], "type", "") != "changeTool"), None)
-            previous_visible = next((i for i in range(self.current_op_index - 1, -1, -1)
-                                     if getattr(program.operations[i], "type", "") != "changeTool"), -1)
-            self.current_op_index = next_visible if next_visible is not None else previous_visible
         self._set_facing_mirror(True)
         LOG.info("opening %s, %d operations", program.header.name, len(program.operations))
         # A fresh editor, whatever was open before.
@@ -447,6 +440,10 @@ class ConversationalViewModel(QObject):
         self.use_case.remember_last_operation(prog, self.current_op_index)
         try:
             job = self.use_case.gcode_job(prog)
+        except ToolsNotReady as e:
+            LOG.warning("G-code not generated: %s", e)
+            self.gcodeRefused.emit("\n".join(e.problems))
+            return
         except Exception as e:
             LOG.error("G-code generation failed: %s", e)
             return
@@ -524,7 +521,7 @@ class ConversationalViewModel(QObject):
             return
         selected = (prog.operations[self.current_op_index]
                     if 0 <= self.current_op_index < len(prog.operations) else None)
-        if move_visible_operation(prog, from_index, to_index) is None:
+        if not self.use_case.move_operation(prog, from_index, to_index):
             return
         self.current_op_index = next((i for i, op in enumerate(prog.operations)
                                       if op is selected), -1)
@@ -534,11 +531,7 @@ class ConversationalViewModel(QObject):
     def deleteOperation(self, index):
         prog = self.current_program
         previous = index - 1
-        if prog:
-            while (previous >= 0
-                   and getattr(prog.operations[previous], "type", "") == "changeTool"):
-                previous -= 1
-        if not prog or not delete_visible_operation(prog, index):
+        if not prog or not self.use_case.delete_operation(prog, index):
             return
         # the one above it, or the header for the first
         self.current_op_index = previous
@@ -553,7 +546,7 @@ class ConversationalViewModel(QObject):
         selected = (prog.operations[self.current_op_index]
                     if 0 <= self.current_op_index < len(prog.operations) else None)
         try:
-            duplicate_visible_operation(prog, index)
+            self.use_case.duplicate_operation(prog, index)
         except IndexError as e:
             LOG.error("duplicate operation failed: %s", e)
             return
@@ -585,16 +578,20 @@ class ConversationalViewModel(QObject):
             return
         self._save_current_program()
 
-    def use_tool_before(self, op_index, tool_no, toolchange_position):
+    def use_tool(self, op_index, tool_no, toolchange_position, scope):
         if self.current_program is None:
             return
-        new_index = self.use_case.use_tool_before(self.current_program, op_index, tool_no, toolchange_position)
-        if new_index is None:
+        try:
+            used = self.use_case.use_tool(self.current_program, op_index, tool_no,
+                                          toolchange_position, scope)
+        except Exception as e:
+            LOG.error("use tool failed: %s", e)
             return
-        self.current_op_index = new_index
+        if not used:
+            return
         self._save_current_program()
-        # The operation moved down, under its new Change Tool: a new editor.
-        QTimer.singleShot(0, lambda: self.showDetails(new_index))
+        # its tool is part of the editor: a new one, with it
+        QTimer.singleShot(0, lambda: self.showDetails(op_index))
 
     def add_rest_roughing(self, index):
         if self.current_program is None:

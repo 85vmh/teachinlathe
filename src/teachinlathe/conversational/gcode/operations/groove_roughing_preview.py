@@ -207,7 +207,7 @@ def build_groove_roughing_preview(op):
     feeds, rapids = ([], []) if error else _moves(lines)
     # the G-code is written for the point the blade was touched off on; the
     # pecks are drawn down its middle
-    tool = op.get("_resolved_tool") or {}
+    tool = op.get("_resolved_tool")
     half_width = _blade_width(tool) / 2.0
     z_control = _blade_control(tool) * half_width
     for f in feeds:

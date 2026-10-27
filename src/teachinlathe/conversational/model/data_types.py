@@ -218,7 +218,11 @@ class Operation:
         op_type = data.get("type")
         if op_type not in operation_types:
             raise ValueError(f"Unknown operation type: {op_type}")
-        return operation_types[op_type].from_dict(data)
+        op = operation_types[op_type].from_dict(data)
+        if isinstance(op, TurnableOperation):
+            ref = data.get("tool_ref")
+            op.toolRef = int(ref) if ref is not None else None
+        return op
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -300,7 +304,16 @@ class SpeedsAndFeeds:
 
 @dataclass
 class TurnableOperation(Operation):
+    """An operation that cuts, so needs a tool: ``toolRef``, the id of one of
+    the program's tools (Program.tools); None while none is chosen."""
     speedsAndFeeds: SpeedsAndFeeds
+    toolRef: Optional[int] = field(default=None, kw_only=True)
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        if self.toolRef is not None:
+            base["tool_ref"] = int(self.toolRef)
+        return base
 
     @staticmethod
     def _parse_speeds_and_feeds(data: Dict[str, Any]) -> SpeedsAndFeeds:
@@ -369,45 +382,6 @@ class PositionDetails:
             "stop_spindle_before_positioning": bool(self.stop_spindle_before_positioning),
             "include_m0": bool(self.include_m0),
         }
-
-
-@dataclass
-class ChangeTool(Operation):
-    tool_no: int
-    tool_orientation: int
-    back_angle: int
-    front_angle: int
-    toolchange_position: PredefinedPosition
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "ChangeTool":
-        position_raw = str(data.get("toolchange_position", PredefinedPosition.G28.value))
-        try:
-            toolchange_position = PredefinedPosition(position_raw)
-        except ValueError:
-            toolchange_position = PredefinedPosition.G28
-        return ChangeTool(
-            order=data["order"],
-            type=data["type"],
-            generate_gcode=bool(data.get("generate_gcode", True)),
-            is_optional_block=bool(data.get("is_optional_block", False)),
-            tool_no=int(data["tool_no"]),
-            tool_orientation=int(data["tool_orientation"]),
-            back_angle=int(data["back_angle"]),
-            front_angle=int(data["front_angle"]),
-            toolchange_position=toolchange_position
-        )
-
-    def to_dict(self) -> Dict[str, Any]:
-        base = super().to_dict()
-        base.update({
-            "tool_no": int(self.tool_no),
-            "tool_orientation": int(self.tool_orientation),
-            "back_angle": int(self.back_angle),
-            "front_angle": int(self.front_angle),
-            "toolchange_position": self.toolchange_position.value
-        })
-        return base
 
 
 @dataclass
@@ -634,7 +608,7 @@ class TappingParameters:
     toolClearance: float = 0.0
     peckDepth: float = 0.0
     # the tap's, as the Tool Library had it when last edited; the G-code
-    # takes the pitch of the tap the Change Tool above puts in when it can
+    # takes the pitch of the tap it cuts with when it can
     # find it
     pitch: float = 0.0
 
@@ -1746,22 +1720,74 @@ class Parting(TurnableOperation):
 # --------------------------------- Program -----------------------------------
 
 @dataclass
+class ProgramTool:
+    """A tool a program's operations cut with: a holder - the T number - and
+    the cutting tool that was in it, as it was when chosen (``snapshot``:
+    {"holder": ..., "cutting_tool": CuttingTool.to_json()}), so the program
+    can tell later whether the Tool Library still has it. ``id`` is the
+    program's own number for it, what an operation's toolRef names; the tool
+    change to it goes to ``toolchange_position``."""
+    id: int
+    tool_holder_id: int
+    cutting_tool_id: Optional[int]
+    toolchange_position: PredefinedPosition = PredefinedPosition.G28
+    snapshot: Dict[str, Any] = field(default_factory=dict)
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "ProgramTool":
+        try:
+            position = PredefinedPosition(str(data.get("toolchange_position", "G28")).upper())
+        except ValueError:
+            position = PredefinedPosition.G28
+        cutting_tool_id = data.get("cutting_tool_id")
+        return ProgramTool(
+            id=int(data["id"]),
+            tool_holder_id=int(data["tool_holder_id"]),
+            cutting_tool_id=int(cutting_tool_id) if cutting_tool_id is not None else None,
+            toolchange_position=position,
+            snapshot=dict(data.get("snapshot") or {}),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "tool_holder_id": self.tool_holder_id,
+            "cutting_tool_id": self.cutting_tool_id,
+            "toolchange_position": self.toolchange_position.value,
+            "snapshot": self.snapshot,
+        }
+
+
+@dataclass
 class Program:
     id: str
     header: Header
     operations: List[Operation]
+    tools: List[ProgramTool] = field(default_factory=list)
     filename: Optional[str] = field(default=None, repr=False, compare=False)
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Program":
         header = Header.from_dict(data["header"])
+        tools = [ProgramTool.from_dict(tool) for tool in data.get("tools", [])]
         operations = [Operation.from_dict(op) for op in data.get("operations", [])]
-        return Program(id=data["id"], header=header, operations=operations)
+        return Program(id=data["id"], header=header, operations=operations, tools=tools)
+
+    def tool(self, tool_ref: Optional[int]) -> Optional[ProgramTool]:
+        """The program's tool ``tool_ref``, or None."""
+        if tool_ref is None:
+            return None
+        return next((tool for tool in self.tools if tool.id == tool_ref), None)
+
+    def tool_of(self, op) -> Optional[ProgramTool]:
+        """The tool operation ``op`` cuts with, or None."""
+        return self.tool(getattr(op, "toolRef", None))
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
             "header": self.header.to_dict(),
+            "tools": [tool.to_dict() for tool in self.tools],
             "operations": [op.to_dict() for op in self.operations]
         }
 
@@ -1776,7 +1802,6 @@ class Program:
 # --------------------------- Operation registry ------------------------------
 
 operation_types: Dict[str, Type[Operation]] = {
-    "changeTool": ChangeTool,
     "positionAt": PositionAt,
     "facing": Facing,
     "knurling": Knurling,
@@ -1796,7 +1821,6 @@ operation_types: Dict[str, Type[Operation]] = {
 }
 
 display_names: Dict[str, str] = {
-    "changeTool": "Tool Change",
     "positionAt": "Position At",
     "facing": "Facing",
     "knurling": "SinglePoint Knurling",

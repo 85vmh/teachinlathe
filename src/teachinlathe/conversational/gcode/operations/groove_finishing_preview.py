@@ -80,7 +80,7 @@ def build_groove_finishing_preview(op):
     strategy = str((op.get("finishing_parameters") or {}).get("strategy", "towards_center")).lower()
     feeds, rapids = [], []
     # toward the centre, each side half the blade's width past the middle
-    half_width = _blade_width(op.get("_resolved_tool") or {}) / 2.0
+    half_width = _blade_width(op.get("_resolved_tool")) / 2.0
     for n, points in enumerate(_passes(path, center_z, strategy, half_width)):
         first = points[0]
         rapids.append({"x0": blade_x, "z0": center_z, "x1": blade_x, "z1": first["z"]})

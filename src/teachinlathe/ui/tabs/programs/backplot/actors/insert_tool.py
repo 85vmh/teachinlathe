@@ -25,6 +25,9 @@ from teachinlathe.ui.tabs.programs.backplot.actors import (geometry, inserts, pa
 from teachinlathe.ui.tabs.programs.backplot.actors.base import (Actor, line_width,
                                                        multisample)
 from teachinlathe.ui.tabs.programs.backplot.actors.units import mm, to_mm
+from teachinlathe.ui.tabs.programs.backplot.tool_source import (
+    BladeDrawing, DrillDrawing, InsertDrawing, ReamerDrawing, TapDrawing, ThreadingDrawing,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -62,7 +65,7 @@ class InsertActor(_TOOL_PART):
     ``host`` is the backplot item. Its ``insert`` describes the tool in the
     spindle as the Tool Library has it - see ``backplot.tool_source``: an ISO
     insert, a threading insert, a blade, a drill, a reamer or a tap. While it
-    is empty - no library, or nothing in the holder - the default insert is
+    is None - no library, or nothing in the holder - the default insert is
     drawn, turned by the tool table's orientation.
     """
 
@@ -157,25 +160,24 @@ class InsertActor(_TOOL_PART):
     def _shape(self, ctx, mvp=None):
         """The tool's vertices in model space, built or reused. ``mvp`` is
         what the flutes' pairs are spaced by; without it they are single."""
-        chosen = getattr(self._host, "insert", None) or {}
-        outline = _OUTLINES.get(chosen.get("kind"))
+        chosen = getattr(self._host, "insert", None)
+        outline = _OUTLINES.get(type(chosen))
         if outline is not None:
             # The flutes' pairs are a few pixels apart whatever the zoom, so
             # a drill or a reamer is rebuilt when the zoom changes.
             gap = (_helix_gap_mm(ctx, mvp)
-                   if mvp is not None and chosen.get("kind") in _PAIRED else 0.0)
-            key = (tuple(sorted(chosen.items())), round(gap, 4))
+                   if mvp is not None and isinstance(chosen, _PAIRED) else 0.0)
+            key = (chosen, round(gap, 4))
             if key != self._cached_key:
                 self._cached = _build_outline(outline(chosen, gap),
-                                              math.radians(chosen.get("rotation", 0.0)),
-                                              chosen.get("mirror_y", False))
+                                              math.radians(chosen.rotation), chosen.mirror_y)
                 self._cached_key = key
             return self._cached
 
         insert = self._insert(ctx)
-        if "rotation" in chosen:
+        if isinstance(chosen, InsertDrawing) and chosen.rotation is not None:
             # As the Tool Library turns it, front and back angle included.
-            angle = math.radians(chosen["rotation"])
+            angle = math.radians(chosen.rotation)
         else:
             angle = self._angle(ctx, insert)
         key = (insert.family, insert.size_index, insert.nose_radius,
@@ -195,10 +197,12 @@ class InsertActor(_TOOL_PART):
         LinuxCNC keeps it as a diameter - the same reading
         ``_draw_lathetool_geometry`` takes of it - on the default family.
         """
-        chosen = getattr(self._host, "insert", None) or {}
-        family = chosen.get("family", DEFAULT_FAMILY)
-        size_index = chosen.get("size_index", DEFAULT_SIZE_INDEX)
-        nose_radius = chosen.get("nose_radius")
+        chosen = getattr(self._host, "insert", None)
+        if not isinstance(chosen, InsertDrawing):
+            chosen = InsertDrawing()
+        family = chosen.family if chosen.family is not None else DEFAULT_FAMILY
+        size_index = chosen.size_index if chosen.size_index is not None else DEFAULT_SIZE_INDEX
+        nose_radius = chosen.nose_radius
 
         if nose_radius is None:
             nose_radius = DEFAULT_NOSE_RADIUS_MM
@@ -213,8 +217,7 @@ class InsertActor(_TOOL_PART):
             nose_radius = 0.0
 
         try:
-            return inserts.Insert(family, size_index, nose_radius,
-                                  chosen.get("active_corner", 0))
+            return inserts.Insert(family, size_index, nose_radius, chosen.active_corner)
         except KeyError:
             return inserts.Insert(DEFAULT_FAMILY, DEFAULT_SIZE_INDEX,
                                   nose_radius)
@@ -272,22 +275,18 @@ def _build(insert, angle):
     }
 
 
-#: The tools that are not ISO turning inserts, by the description's kind.
-#: Each takes the description and the flutes' pair spacing in millimetres.
+#: The tools that are not ISO turning inserts, by their drawing's class.
+#: Each takes the drawing and the flutes' pair spacing in millimetres.
 _OUTLINES = {
-    "threading": lambda d, gap: tool_outlines.threading_insert(
-        d["size"], d["pitch"], d.get("mirrored", False)),
-    "blade": lambda d, gap: tool_outlines.blade(
-        d["width"], d["left_radius"], d["right_radius"], d.get("control", 0)),
-    "drill": lambda d, gap: tool_outlines.drill(
-        d["diameter"], d["tip_angle"], d.get("right_hand", True), gap),
-    "reamer": lambda d, gap: tool_outlines.reamer(d["diameter"], gap),
-    "tap": lambda d, gap: tool_outlines.tap(
-        d["diameter"], d["pitch"], d.get("right_hand", True)),
+    ThreadingDrawing: lambda d, gap: tool_outlines.threading_insert(d.size, d.pitch, d.mirrored),
+    BladeDrawing: lambda d, gap: tool_outlines.blade(d.width, d.left_radius, d.right_radius, d.control),
+    DrillDrawing: lambda d, gap: tool_outlines.drill(d.diameter, d.tip_angle, d.right_hand, gap),
+    ReamerDrawing: lambda d, gap: tool_outlines.reamer(d.diameter, gap),
+    TapDrawing: lambda d, gap: tool_outlines.tap(d.diameter, d.pitch, d.right_hand),
 }
 
-#: The kinds whose flute edges are drawn in pairs.
-_PAIRED = ("drill", "reamer")
+#: The drawings whose flute edges are drawn in pairs.
+_PAIRED = (DrillDrawing, ReamerDrawing)
 
 
 def _helix_gap_mm(ctx, mvp):

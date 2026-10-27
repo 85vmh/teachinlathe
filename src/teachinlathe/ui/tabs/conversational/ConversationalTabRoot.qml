@@ -5,6 +5,7 @@ import tabs.conversational.define_profile as DefineProfile
 import tabs.conversational.define_radial_profile as DefineRadialProfile
 import tabs.conversational.import_dxf_profile as ImportDxfProfile
 import TeachInLathe
+import theme
 
 // The Conversational tab: a stack of screens, kept in step with the view
 // model's `screens` - the program list at the bottom, the program open in
@@ -71,6 +72,10 @@ Item {
         function onScreensChanged() { root.syncStack() }
         function onGcodeGenerationStarted() { buildGcodeProgressDialog.open() }
         function onGcodeGenerationFinished() { buildGcodeProgressDialog.close() }
+        function onGcodeRefused(problems) {
+            gcodeRefusedPopup.problems = problems
+            gcodeRefusedPopup.open()
+        }
     }
 
     Component.onCompleted: syncStack()
@@ -188,4 +193,47 @@ Item {
         }
     }
     BuildGcodeProgressDialog { id: buildGcodeProgressDialog }
+
+    // no G-code: what is wrong with the program's tools
+    Popup {
+        id: gcodeRefusedPopup
+        property string problems: ""
+        parent: Overlay.overlay
+        modal: true
+        focus: true
+        anchors.centerIn: parent
+        padding: 24
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        background: Rectangle {
+            radius: Theme.radiusXLarge
+            color: Theme.surfaceSunken
+            border.color: Theme.dialogBorder
+            border.width: Theme.hairline
+        }
+
+        contentItem: Column {
+            spacing: 24
+
+            Text {
+                text: "The G-code was not generated"
+                font.pixelSize: Theme.fontLarge
+                font.bold: true
+                color: Theme.foreground
+            }
+            Text {
+                text: gcodeRefusedPopup.problems
+                font.pixelSize: Theme.fontBody
+                color: Theme.foreground
+            }
+            Button {
+                anchors.right: parent.right
+                text: "OK"
+                width: 180
+                height: Theme.buttonHeightTouch
+                font.pixelSize: 16
+                onClicked: gcodeRefusedPopup.close()
+            }
+        }
+    }
 }

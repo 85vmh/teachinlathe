@@ -196,7 +196,7 @@ class PlannerBase:
         if wrong is not None:
             return wrong
         if not self.tool.known:
-            self.warnings.append("No turning tool in a Change Tool above: roughing only what "
+            self.warnings.append("No turning tool chosen: roughing only what "
                                  "any tool reaches, pockets and undercuts left")
         if self.setup.pass_type == PassType.RADIAL:
             # in front of the face no deeper than the contour runs out to Z
@@ -229,7 +229,7 @@ class PlannerBase:
         if wrong is not None:
             return wrong
         if not self.tool.known:
-            self.warnings.append("No turning tool in a Change Tool above: the contour keeps to what "
+            self.warnings.append("No turning tool chosen: the contour keeps to what "
                                  "any tool reaches, pockets and undercuts bridged")
         self.position = self._start_at((self.z_start + self.retract, self.r_safe))
         self._contour(self._contour_chain())
