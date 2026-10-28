@@ -20,6 +20,9 @@ def write_plan(path: GcodeEmitter, plan, stock, m1_params=None, spindle_sign=0, 
         path.note(comment(warning))
     if title:
         path.note(title)
+    if any(move.contour and move.feed for move in plan.moves):
+        path.note(comment(f"Contour with StockToLeave[radial={fmt(stock[0])} "
+                          f"axial={fmt(stock[1])}]"))
     emit_moves(path, plan.moves, stock, m1_params, spindle_sign)
 
 
@@ -38,14 +41,9 @@ def emit_moves(path: GcodeEmitter, moves, stock, m1_params=None, spindle_sign=0)
                 segment.write(path)
         contour.clear()
 
-    in_contour = False
     for move in moves:
         path.pass_no = move.pass_no
         if move.contour and move.feed:
-            if not in_contour:
-                path.note(f"( Contour with StockToLeave[radial={fmt(stock[0])} "
-                          f"axial={fmt(stock[1])}] )")
-                in_contour = True
             if not contour:
                 path.rapid(2 * move.r0, move.z0)
                 contour.append((move.z0, move.r0))

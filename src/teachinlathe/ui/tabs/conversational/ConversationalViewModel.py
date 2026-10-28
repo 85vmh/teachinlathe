@@ -609,7 +609,12 @@ class ConversationalViewModel(QObject):
         editor's draft, to ``editor.previewReady`` once worked out - at once
         when known, otherwise from the planning worker."""
         try:
-            cut = self.use_case.profile_cut(self.current_program, op_index, to_py(op_data) or {})
+            draft = to_py(op_data)
+            if not isinstance(draft, dict):
+                draft = {}
+            if not draft.get("type"):
+                draft = {**editor.operation, **draft}
+            cut = self.use_case.profile_cut(self.current_program, op_index, draft)
             key = self.use_case.profile_roughing_preview_key(cut)
         except Exception as e:
             LOG.error("preview failed: %s", e)

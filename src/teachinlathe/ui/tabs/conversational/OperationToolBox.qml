@@ -12,19 +12,19 @@ ToolBox {
     // the picker's width: the details pane's
     property real pickerWidth: 1000
 
-    toolCard: editor.toolCard
-    onClicked: picker.open()
+    toolCard: root.editor ? root.editor.toolCard : null
+    onClicked: if (root.editor) picker.open()
 
     ToolPickerPopup {
         id: picker
-        toolsModel: root.editor.touchedOffTools
-        toolNos: root.editor.suitableToolNos
+        toolsModel: root.editor ? root.editor.touchedOffTools : null
+        toolNos: root.editor ? root.editor.suitableToolNos : []
         contentWidth: root.pickerWidth
-        currentToolNo: root.toolCard.suggestedToolNo
-        toolUsers: root.toolCard.users
-        currentToolchangePosition: root.toolCard.toolchangePosition
+        currentToolNo: root.toolCard ? root.toolCard.suggestedToolNo : 0
+        toolUsers: root.toolCard ? root.toolCard.users : 0
+        currentToolchangePosition: root.toolCard ? root.toolCard.toolchangePosition : 0
         onToolChosen: function(toolNo, position, scope) {
-            root.editor.useTool(toolNo, position, scope)
+            if (root.editor) root.editor.useTool(toolNo, position, scope)
         }
     }
 }

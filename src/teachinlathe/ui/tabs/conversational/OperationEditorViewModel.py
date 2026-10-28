@@ -146,6 +146,16 @@ class OperationEditorViewModel(QObject):
         """The whole operation, with the editor's changes: applied and saved."""
         self._tab.update_operation(self.update_type, self._index, PauseToInspect.from_qml(to_py(payload)))
 
+    def _preview(self, build, op_data):
+        """Preview a QML draft, retaining its operation type if the draft
+        omitted it while copying the edited fields."""
+        payload = to_py(op_data)
+        if not isinstance(payload, dict):
+            payload = {}
+        if not payload.get("type"):
+            payload = {**self._operation, **payload}
+        return self._tab.preview(build, payload)
+
 
 class HeaderEditorViewModel(OperationEditorViewModel):
     @pyqtSlot("QVariant")
@@ -329,7 +339,7 @@ class FacingEditorViewModel(ToolOperationEditorViewModel):
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
         """What facing would cut with ``op_data``."""
-        return self._tab.preview(lambda op: qml_preview(self._use_case.facing_preview(op)), op_data)
+        return self._preview(lambda op: qml_preview(self._use_case.facing_preview(op)), op_data)
 
     # Shared by every Facing of the program: kept by the tab.
     def _get_canvas_mirror(self):
@@ -381,7 +391,7 @@ class ProfileContourEditorViewModel(ProfileFollowingEditorViewModel):
 
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
-        return self._tab.preview(
+        return self._preview(
             lambda op: qml_preview(self._use_case.profile_contour_preview(self._program, self._index, op)), op_data)
 
 
@@ -400,7 +410,7 @@ class DrillingEditorViewModel(ToolOperationEditorViewModel):
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
         """What drilling would cut with ``op_data``: a feed each peck."""
-        return self._tab.preview(lambda op: qml_preview(self._use_case.drilling_preview(op)), op_data)
+        return self._preview(lambda op: qml_preview(self._use_case.drilling_preview(op)), op_data)
 
     @pyqtProperty(QObject, constant=True)
     def drill(self):
@@ -436,7 +446,7 @@ class PartingEditorViewModel(ToolOperationEditorViewModel):
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
         """What parting would cut with ``op_data``: its edge break and feeds."""
-        return self._tab.preview(lambda op: qml_preview(self._use_case.parting_preview(op)), op_data)
+        return self._preview(lambda op: qml_preview(self._use_case.parting_preview(op)), op_data)
 
 
 def thread_angle(form):
@@ -534,7 +544,7 @@ class GrooveEditorViewModel(ToolOperationEditorViewModel):
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
         """What it would cut with ``op_data``."""
-        return self._tab.preview(lambda op: qml_preview(self._preview(op)), op_data)
+        return self._preview(lambda op: qml_preview(self._preview(op)), op_data)
 
 
 class GrooveRoughingEditorViewModel(GrooveEditorViewModel):
