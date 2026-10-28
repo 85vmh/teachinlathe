@@ -9,7 +9,6 @@ if str(SRC) not in sys.path:
 
 from teachinlathe.conversational.model.data_types import Operation
 from teachinlathe.conversational.model.factories import make_default_operation
-from teachinlathe.conversational.model.qml_adapter import display_name_for_op
 
 
 def test_define_radial_profile_roundtrip_and_display_name():
@@ -31,7 +30,7 @@ def test_define_radial_profile_roundtrip_and_display_name():
 
     loaded = Operation.from_dict(data)
     assert loaded.to_dict() == data
-    assert display_name_for_op("defineRadialProfile", profile_id=1) == "Define Radial Profile (P1)"
+    assert make_default_operation("defineRadialProfile").display_name() == "Define Radial Profile (P1)"
 
 
 def test_define_radial_profile_orders_groove_keys_on_load():

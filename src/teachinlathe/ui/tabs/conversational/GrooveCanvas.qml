@@ -15,8 +15,8 @@ RadialProfileCanvas {
 
     // The view model of the operation (OperationEditorViewModel.py).
     property var editor: null
-    // the tool it cuts with: editor.toolCard; {} with none
-    property var toolCard: ({})
+    // the tool it cuts with: editor.toolCard, a ToolCard; null with none
+    property var toolCard: null
     property int profileId: 1
     // what it would cut, as the view model's preview has it
     property var preview: null

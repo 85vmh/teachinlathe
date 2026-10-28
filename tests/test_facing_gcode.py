@@ -1,9 +1,10 @@
-"""Facing's G-code, written out move by move from facing_passes.
+"""Facing's G-code, written out move by move by facing_toolpath.
 
 The retract was once in the UI and the JSON but never reached the cut, which
 backed off by the depth of cut instead: nothing errored, a smaller depth of
 cut quietly meant a smaller clearance. These check the moves use the retract,
-leave at 45 degrees, and are the moves the preview draws.
+leave at 45 degrees, and are the moves the preview draws - the moves kept as
+they were written.
 """
 
 import re
@@ -22,9 +23,8 @@ from teachinlathe.conversational.model.data_types import (  # noqa: E402
     SpindleMode, SpeedsAndFeeds,
 )
 from teachinlathe.conversational.gcode.operations.facing \
-    import generate_facing_gcode  # noqa: E402
-from teachinlathe.conversational.gcode.operations.facing_preview \
-    import facing_passes  # noqa: E402
+    import facing_preview, facing_toolpath, generate_facing_gcode  # noqa: E402
+from teachinlathe.conversational.gcode.toolpath import GcodeEmitter  # noqa: E402
 from teachinlathe.tooling.model.data_types import SpindleDirection  # noqa: E402
 
 X_START, Z_START, X_END, Z_END = 42.0, 1.0, -0.4, -2.0
@@ -46,12 +46,15 @@ def facing(doc=1.0, retract=2.0, optional=False, new_datum=False, include_m1=Fal
 
 
 def moves(op):
-    """The G0 / G1 moves, as (word, x, z)."""
-    found = []
+    """The G0 / G1 moves, as (word, x, z): a word left out where it does
+    not change."""
+    found, x, z = [], None, None
     for line in generate_facing_gcode(op):
-        m = re.match(r"/?(G[01]) X(\S+) Z(\S+)$", line)
+        m = re.match(r"/?(G[01])((?: [XZ]\S+)+)$", line)
         if m:
-            found.append((m.group(1), float(m.group(2)), float(m.group(3))))
+            words = dict((w[0], float(w[1:])) for w in m.group(2).split())
+            x, z = words.get("X", x), words.get("Z", z)
+            found.append((m.group(1), x, z))
     return found
 
 
@@ -96,15 +99,21 @@ def test_it_cuts_down_to_z_end_by_the_depth_of_cut():
 
 
 def test_the_moves_are_the_ones_the_preview_draws():
-    """Both come from facing_passes: written in its order, word for word."""
-    drawn = [("G1" if feed else "G0", x, z)
-             for moves_ in facing_passes(X_START, Z_START, X_END, Z_END, 0.7, 1.5)
-             for feed, x, z in moves_]
-    # the first move is the approach, which the preview leaves out
-    written = moves(facing(doc=0.7, retract=1.5))[1:]
-    assert [w for w, _, _ in written] == [w for w, _, _ in drawn]
-    assert [v for _, x, z in written for v in (x, z)] == \
-        pytest.approx([v for _, x, z in drawn for v in (x, z)], abs=1e-3)
+    """The preview is drawn from the moves the G-code was written with: the
+    same, in the same order - the first, the approach, left out."""
+    op = facing(doc=0.7, retract=1.5)
+    path = GcodeEmitter()
+    facing_toolpath(op, path)
+    kept = path.moves
+    preview = facing_preview(op)
+    drawn = [("G1", f.x1, f.z1) for f in preview.feeds] + [("G0", r.x1, r.z1) for r in preview.rapids]
+    assert sorted(drawn) == sorted(("G1" if m.feed else "G0", 2 * m.r1, m.z1) for m in kept)
+    assert [("G1" if m.feed else "G0", 2 * m.r1, m.z1) for m in kept] == moves(op)[1:]
+
+
+def test_a_word_that_does_not_change_is_left_out():
+    """Down to the next pass is along Z only: no X written for it."""
+    assert "G1 Z0.000" in generate_facing_gcode(facing(doc=1.0))
 
 
 def test_no_depth_of_cut_is_an_error_not_an_endless_loop():

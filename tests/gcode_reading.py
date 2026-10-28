@@ -5,6 +5,9 @@ import re
 
 from teachinlathe.conversational.gcode.operations.profiling.plan_drawing import _arc_points
 from teachinlathe.conversational.gcode.operations.profiling.geometry import ToolpathArc
+from teachinlathe.conversational.gcode.operations.profiling.operation_input import GrooveCut, ProfileCut
+from teachinlathe.conversational.model.data_types import Operation, StockToLeave
+from teachinlathe.conversational.model.factories import make_default_operation
 
 _ROUGHING_START = "(----------Profiling Type:"
 _CONTOUR_START = "( Contour with StockToLeave"
@@ -62,3 +65,51 @@ def gcode_moves(lines, start=_ROUGHING_START):
             last_mode = "G1" if mode != "G0" else "G0"
         x, z = new_x, new_z
     return feeds, rapids
+
+
+def profile_cut_of(fixture):
+    """A test's Profile Roughing or Contour as it is cut (a ProfileCut), from
+    ``fixture``: the parts of the operation's dict it sets - the rest the new
+    operation's - and what it is cut against: ``_resolved_profile`` ({profile_type,
+    profile_primitives}), ``_resolved_cutting_tool`` (a CuttingTool, or None)
+    and ``_resolved_previous_roughing`` (fixtures or ProfileCuts)."""
+    data = dict(fixture)
+    resolved = data.pop("_resolved_profile", None)
+    tool = data.pop("_resolved_cutting_tool", None)
+    previous = data.pop("_resolved_previous_roughing", [])
+    op_type = "profileContour" if "profile_contour_strategy" in data else "profileRoughing"
+    op_data = make_default_operation(op_type).to_dict()
+    for key, value in data.items():
+        op_data[key] = {**op_data[key], **value} if isinstance(op_data.get(key), dict) else value
+    profile = None
+    if resolved is not None:
+        profile_data = make_default_operation("defineProfile").to_dict()
+        profile_data.update(profile_type=resolved["profile_type"],
+                            profile_primitives=resolved["profile_primitives"])
+        profile = Operation.from_dict(profile_data)
+    return ProfileCut(Operation.from_dict(op_data), profile, tool,
+                      tuple(p if isinstance(p, ProfileCut) else profile_cut_of(p) for p in previous))
+
+
+def groove_cut_of(fixture):
+    """A test's Groove Roughing or Finishing as it is cut (a GrooveCut), from
+    ``fixture``: the parts of the operation's dict it sets - "type" saying
+    which, the rest the new operation's - and what it is cut against:
+    ``_resolved_radial_profile`` (the radial profile's dict, or what of it the
+    test sets), ``_resolved_tool`` (a MountedTool, or None) and, for a
+    finishing, ``_resolved_roughing_stock`` ({radial, axial})."""
+    data = dict(fixture)
+    resolved = data.pop("_resolved_radial_profile", None)
+    tool = data.pop("_resolved_tool", None)
+    stock = data.pop("_resolved_roughing_stock", None)
+    op_type = data.pop("type", "grooveRoughing")
+    op_data = make_default_operation(op_type).to_dict()
+    for key, value in data.items():
+        op_data[key] = {**op_data[key], **value} if isinstance(op_data.get(key), dict) else value
+    profile = None
+    if resolved:
+        profile_data = {**make_default_operation("defineRadialProfile").to_dict(), **resolved}
+        profile = Operation.from_dict(profile_data)
+    roughing_stock = (StockToLeave(stock["radial"], stock["axial"])
+                      if stock and (stock["radial"] or stock["axial"]) else None)
+    return GrooveCut(Operation.from_dict(op_data), profile, tool, roughing_stock)

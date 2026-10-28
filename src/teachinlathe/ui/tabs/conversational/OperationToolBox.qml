@@ -12,7 +12,7 @@ ToolBox {
     // the picker's width: the details pane's
     property real pickerWidth: 1000
 
-    toolCard: editor.toolCard || ({})
+    toolCard: editor.toolCard
     onClicked: picker.open()
 
     ToolPickerPopup {
@@ -20,9 +20,9 @@ ToolBox {
         toolsModel: root.editor.touchedOffTools
         toolNos: root.editor.suitableToolNos
         contentWidth: root.pickerWidth
-        currentToolNo: root.toolCard.suggested_tool_no || 0
-        toolUsers: root.toolCard.users || 0
-        currentToolchangePosition: root.toolCard.toolchange_position || "G28"
+        currentToolNo: root.toolCard.suggestedToolNo
+        toolUsers: root.toolCard.users
+        currentToolchangePosition: root.toolCard.toolchangePosition
         onToolChosen: function(toolNo, position, scope) {
             root.editor.useTool(toolNo, position, scope)
         }

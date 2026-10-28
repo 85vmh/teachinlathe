@@ -117,7 +117,7 @@ def users_from(program: Program, op) -> list:
     entry = program.tool_of(op)
     if entry is None:
         return [op]
-    index = next(i for i, o in enumerate(program.operations) if o is op)
+    index = program.index_of(op)
     return [o for o in program.operations[index:] if getattr(o, "toolRef", None) == entry.id]
 
 
@@ -133,8 +133,8 @@ class Scope(str, Enum):
     ALL = "all"
 
 
-def choose_tool(program: Program, op, tool_holder_id: int, toolchange_position, scope: Scope,
-                tools) -> bool:
+def choose_tool(program: Program, op, tool_holder_id: int, toolchange_position: PredefinedPosition,
+                scope: Scope, tools) -> bool:
     """Have ``op`` - and with ``scope`` the others that cut with its tool -
     cut with the tool in holder ``tool_holder_id``, changed to at
     ``toolchange_position``; the others only where it fits them (tool_fit).
@@ -145,17 +145,13 @@ def choose_tool(program: Program, op, tool_holder_id: int, toolchange_position, 
     tool = tools.tool_in(int(tool_holder_id))
     if holder is None or tool is None or not tool_fit.fits(program, op, tool):
         return False
-    try:
-        position = PredefinedPosition(str(toolchange_position).upper())
-    except ValueError:
-        position = PredefinedPosition.G28
     snapshot = snapshot_of(holder, tool)
     current = program.tool_of(op)
     same = next((t for t in program.tools if t.tool_holder_id == holder.tool_holder_id
                  and t.cutting_tool_id == tool.cutting_tool_id
                  and _geometry(t.snapshot) == _geometry(snapshot)), None)
     movers = {Scope.THIS: [op], Scope.BELOW: users_from(program, op),
-              Scope.ALL: users_of(program, current) if current is not None else [op]}[Scope(scope)]
+              Scope.ALL: users_of(program, current) if current is not None else [op]}[scope]
     movers = [m for m in movers if m is op or tool_fit.fits(program, m, tool)]
 
     if current is not None and all(any(user is m for m in movers) for user in users_of(program, current)):
@@ -173,7 +169,7 @@ def choose_tool(program: Program, op, tool_holder_id: int, toolchange_position, 
         program.tools.append(target)
     target.tool_holder_id = holder.tool_holder_id
     target.cutting_tool_id = tool.cutting_tool_id
-    target.toolchange_position = position
+    target.toolchange_position = toolchange_position
     target.snapshot = snapshot
     for user in movers:
         user.toolRef = target.id
@@ -195,7 +191,6 @@ def not_ready(program: Program, tools) -> List[str]:
     """What keeps the program from being turned into G-code: for each
     operation that is generated and cuts, with no tool or one the Tool
     Library no longer has as it was, a line saying so. Empty when ready."""
-    from teachinlathe.conversational.model.data_types import display_names
     problems = []
     for number, op in enumerate(program.operations, 1):
         if not op.generate_gcode or not needs_tool(op):
@@ -203,7 +198,7 @@ def not_ready(program: Program, tools) -> List[str]:
         result = check_for(program, op, tools)
         if result.status is ToolStatus.OK:
             continue
-        name = display_names.get(op.type, op.type)
+        name = op.display_name()
         entry = program.tool_of(op)
         problems.append(f"Operation #{number} {name}: " + {
             ToolStatus.NONE: "no tool chosen",

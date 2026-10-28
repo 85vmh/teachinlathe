@@ -38,10 +38,8 @@ _HEADER = struct.Struct("!I")
 
 
 def _jobs():
-    from teachinlathe.conversational.gcode.operations.profile_roughing_preview import (
-        build_profile_roughing_preview,
-    )
-    return {"profile_roughing_preview": build_profile_roughing_preview,
+    from teachinlathe.conversational.gcode.operations.profile_roughing import profile_roughing_preview
+    return {"profile_roughing_preview": profile_roughing_preview,
             "generate_gcode": _generate_gcode}
 
 

@@ -8,14 +8,14 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import TeachInLathe
 import "../tool_library/ToolTitles.js" as ToolTitles
 
 CanvasBox {
     id: root
 
-    // {tool_no, card, view, status, suggested_tool_no, ...} as the
-    // operation's editor gives it (editor.toolCard)
-    property var toolCard: ({})
+    // the operation's tool, a ToolCard (its editor's toolCard); null for none
+    property var toolCard: null
     // the inserts' colour - the backplot's, as the Tool Library draws them
     property color insertColor: "#e5a93b"
 
@@ -23,7 +23,7 @@ CanvasBox {
     // its text in the middle of it
     property real rowHeight: 0
 
-    readonly property bool hasTool: !!(toolCard && toolCard.tool_no)
+    readonly property bool hasTool: !!toolCard && toolCard.hasTool
     // the tool's title, its colours taken out: all of it the text's
     readonly property string description: hasTool && toolCard.view
         ? ToolTitles.listTitle(toolCard.card, toolCard.view, Theme).replace(/<[^>]*>/g, "") : "(empty)"
@@ -41,17 +41,17 @@ CanvasBox {
         font.pixelSize: Theme.fontLarge
         color: Theme.foregroundStrong
         text: !root.hasTool ? "<b>Select the tool</b>"
-              : "<b>T" + root.toolCard.tool_no + "</b> - " + root.description + root.problem
+              : "<b>T" + root.toolCard.toolNo + "</b> - " + root.description + root.problem
     }
 
     // what is wrong with the tool, after its title; "" when it is as chosen
     readonly property string problem: {
         if (!hasTool) return ""
         switch (toolCard.status) {
-        case "moved": return "<br><b>Now in T" + toolCard.suggested_tool_no + "</b>: tap to confirm"
-        case "changed": return "<br><b>Changed in the Tool Library</b>: tap to choose"
-        case "missing": return "<br><b>No longer in the Tool Library</b>: tap to choose"
-        case "unfit": return "<br><b>Not a tool this operation can cut with</b>: tap to choose"
+        case ToolCard.Moved: return "<br><b>Now in T" + toolCard.suggestedToolNo + "</b>: tap to confirm"
+        case ToolCard.Changed: return "<br><b>Changed in the Tool Library</b>: tap to choose"
+        case ToolCard.Missing: return "<br><b>No longer in the Tool Library</b>: tap to choose"
+        case ToolCard.Unfit: return "<br><b>Not a tool this operation can cut with</b>: tap to choose"
         default: return ""
         }
     }

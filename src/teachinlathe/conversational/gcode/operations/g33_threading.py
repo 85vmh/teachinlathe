@@ -1,9 +1,8 @@
 from teachinlathe.conversational.model.data_types import G33Threading, ThreadLocation
 from teachinlathe.conversational.gcode.g33_threading_pass_planner import plan_g33_threading_passes
 
-from ..config import fmt
-from ..helpers.m1 import inspect_position_int
 from ..helpers.spindle import build_spindle_gcode
+from ..toolpath import GcodeEmitter
 
 
 def _safe_x(op: G33Threading, x_reference: float) -> float:
@@ -19,22 +18,10 @@ def _x_reference(op: G33Threading) -> float:
     return float(op.major_diameter)
 
 
-def _emit_m1_handling(lines, prefix, op: G33Threading, x_return: float, z_return: float) -> None:
-    if not bool(op.m1Parameters.include_m1):
-        return
-    spindle_direction = op.speedsAndFeeds.sign
-    lines.append(
-        f"{prefix}o<m1_handling> call "
-        f"[{inspect_position_int(op.m1Parameters)}] "
-        f"[{fmt(x_return)}] "
-        f"[{fmt(z_return)}] "
-        f"[{spindle_direction}]"
-    )
-    lines.append("")
-
-
-def generate_g33_threading_gcode(op: G33Threading):
-    prefix = "/" if op.is_optional_block else ""
+def g33_threading_toolpath(op: G33Threading, path: GcodeEmitter, program=None):
+    """``op``'s G-code, and its moves, onto ``path``: each pass of the plan
+    (plan_g33_threading_passes), for each start, in from the safe diameter,
+    along Z synchronized with the spindle (G33), and back out."""
     x_reference = _x_reference(op)
     final_radial_depth = op.final_radial_depth
     starts = max(1, int(op.starts or 1))
@@ -42,11 +29,10 @@ def generate_g33_threading_gcode(op: G33Threading):
     lead_angle_step = 360.0 / starts if starts > 1 else 0.0
     safe_x = _safe_x(op, x_reference)
 
-    lines = []
-    lines.extend(build_spindle_gcode(op.speedsAndFeeds, prefix, force_rpm=True))
+    path.codes(build_spindle_gcode(op.speedsAndFeeds, "", force_rpm=True))
 
     if int(op.taper_type or 0) != 0:
-        lines.append("( G33 Threading: thread taper is not implemented yet )")
+        path.note("( G33 Threading: thread taper is not implemented yet )")
 
     try:
         passes = plan_g33_threading_passes(
@@ -62,7 +48,8 @@ def generate_g33_threading_gcode(op: G33Threading):
             threadLocation=op.location,
         )
     except Exception as exc:
-        return lines + [f"( ERROR: G33 Threading -- {exc} )"]
+        path.error(f"G33 Threading -- {exc}")
+        return
 
     for thread_pass in passes:
         for start_index in range(starts):
@@ -70,12 +57,20 @@ def generate_g33_threading_gcode(op: G33Threading):
             pass_comment = f"{thread_pass.type.value.lower()} pass #{thread_pass.index}"
             if starts > 1:
                 pass_comment = f"{pass_comment}, start #{start_index + 1}"
-            lines.append(f"{prefix}({pass_comment})")
-            lines.append(f"{prefix}G0 X{fmt(safe_x)} Z{fmt(thread_pass.zStart)}")
-            lines.append(f"{prefix}G0 X{fmt(thread_pass.x)}")
-            lines.append(f"{prefix}G33 Z{fmt(thread_pass.zEnd)} K{fmt(thread_pass.pitch)} D{fmt(lead_angle_offset)}")
-            lines.append(f"{prefix}G0 X{fmt(safe_x)}")
-            lines.append(f"{prefix}G0 Z{fmt(thread_pass.zStart)}")
-            _emit_m1_handling(lines, prefix, op, safe_x, thread_pass.zStart)
+            path.start_pass()
+            path.code(f"({pass_comment})")
+            path.rapid(safe_x, thread_pass.zStart)
+            path.rapid(x=thread_pass.x)
+            path.thread(thread_pass.zEnd, thread_pass.pitch, lead_angle_offset)
+            path.rapid(x=safe_x)
+            path.rapid(z=thread_pass.zStart)
+            if op.m1Parameters.include_m1:
+                path.inspect_stop(op.m1Parameters, op.speedsAndFeeds.sign)
+                path.blank()
 
-    return lines
+
+def generate_g33_threading_gcode(op: G33Threading):
+    """``op``'s G-code on its own."""
+    path = GcodeEmitter(op.is_optional_block)
+    g33_threading_toolpath(op, path)
+    return path.lines

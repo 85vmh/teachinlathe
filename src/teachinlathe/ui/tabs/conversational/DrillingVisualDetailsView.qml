@@ -25,9 +25,9 @@ Item {
     property var    workpiece: ({})
     // the drill it cuts with: editor.drill (a DrillingToolView), null with none
     property var    drill: null
-    // the same tool as its Tool Library card shows it: {tool_no, card,
-    // view}; {} with none
-    property var    toolCard: ({})
+    // the same tool as its Tool Library card shows it: editor.toolCard,
+    // a ToolCard; null with none
+    property var    toolCard: null
 
     // the values the boxes on the canvas show and edit
     property real   zStart: 0.0
@@ -44,6 +44,11 @@ Item {
     readonly property color clearanceColor: "#00838f"
     readonly property color peckColor:     profileCanvas.feedColor
     signal openNumPadRequested(var field)
+
+    // what drilling will cut with the values above: a feed each peck
+    readonly property var drillingPreview: (opIndex >= 0 && editor)
+                                           ? editor.preview(_draftOp())
+                                           : null
 
     // opData with the values edited in the boxes
     function _draftOp() {
@@ -70,7 +75,7 @@ Item {
         opData  = data || {}
         workpiece = editor ? (editor.workpiece || {}) : {}
         drill     = editor ? editor.drill : null
-        toolCard  = editor ? (editor.toolCard || {}) : {}
+        toolCard  = editor ? editor.toolCard : null
 
         var dp = opData.drilling_parameters || {}
         zStart    = dp.z_start    !== undefined ? Number(dp.z_start)    : 0
@@ -137,17 +142,9 @@ Item {
             // the drill in, its point where it starts; none when it is not a drill
             axialDrill: root.drill
             axialToolZ: root.retractZ
-            // where each peck ends: every Peck Depth on from Z Start while
-            // short of Z End, and the last at Z End
-            axialToolPecks: {
-                var out = []
-                if (root.peckDepth > 0)
-                    for (var z = root.zStart - root.peckDepth; z > root.zEnd + 1e-6 && out.length < 1000;
-                         z -= root.peckDepth)
-                        out.push(z)
-                if (root.zEnd < root.zStart) out.push(root.zEnd)
-                return out
-            }
+            // where each peck ends: the end of each feed of the G-code
+            axialToolPecks: root.drillingPreview
+                            ? root.drillingPreview.feeds.map(function(f) { return f.z1 }) : []
             axialToolPeckColor: root.peckColor
             axialToolPecksFrom: root.zStart
             // one peck's depth - the full peck nearest halfway between Z

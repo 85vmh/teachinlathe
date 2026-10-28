@@ -33,6 +33,7 @@ def _load_g33_threading_module():
         ("g33test.helpers.utils", BASE / "helpers" / "utils.py"),
         ("g33test.helpers.m1", BASE / "helpers" / "m1.py"),
         ("g33test.helpers.spindle", BASE / "helpers" / "spindle.py"),
+        ("g33test.toolpath", BASE / "toolpath.py"),
         ("g33test.operations.g33_threading", BASE / "operations" / "g33_threading.py"),
     ]:
         spec = importlib.util.spec_from_file_location(fullname, path)

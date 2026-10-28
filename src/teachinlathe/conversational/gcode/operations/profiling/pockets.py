@@ -5,8 +5,13 @@ from __future__ import annotations
 
 from shapely.geometry import LineString, Polygon
 
-from .shapes import TOLERANCE, MIN_AREA, _difference
+from .geometry import ROUNDING
+from .shapes import NO_LENGTH, TOLERANCE, MIN_AREA, _difference
 
+
+#: Points along a run tried, from its start, for where it can be plunged to
+#: straight from above.
+PLUNGE_STEPS = 20
 
 class Pockets:
     """Pockets - one part of _Planner (planner.py)."""
@@ -54,10 +59,10 @@ class Pockets:
             return
         # the highest point of the run it can be plunged to straight from above
         length = start[0] - end[0]
-        for k in range(0, 21):
-            z = start[0] - length * k / 20.0
+        for k in range(0, PLUNGE_STEPS + 1):
+            z = start[0] - length * k / PLUNGE_STEPS
             plunge_top = (z, top)
-            if self.obstacle.intersection(LineString([plunge_top, (z, r)])).length < 1e-6:
+            if self.obstacle.intersection(LineString([plunge_top, (z, r)])).length < NO_LENGTH:
                 break
         else:
             return
@@ -67,8 +72,8 @@ class Pockets:
         # otherwise over the pocket
         here = self.position
         over = (z, here[1])
-        across = (r < here[1] <= top + 1e-9
-                  and self.obstacle.intersection(LineString([over, bottom])).length < 1e-6
+        across = (r < here[1] <= top + ROUNDING
+                  and self.obstacle.intersection(LineString([over, bottom])).length < NO_LENGTH
                   and self._rapid_clear(here, over))
         high = over if across else entry
         # down fast to just over what is still there, then at the feed

@@ -10,6 +10,7 @@ import math
 from typing import List, Optional, Tuple
 from shapely.geometry import LineString, Point, Polygon
 
+from .geometry import DEGENERATE, RESOLUTION, ROUNDING
 from .shapes import Pt, FAR, TOLERANCE, _simplify
 
 
@@ -67,7 +68,7 @@ class Edge:
         if not inner:
             return []
         z_wall = self.z_end_limit
-        candidates = [i for i in inner if ring[i][1] >= r_first and ring[i][0] <= self.z_start + 1e-9]
+        candidates = [i for i in inner if ring[i][1] >= r_first and ring[i][0] <= self.z_start + ROUNDING]
         if not candidates:
             return []
         start = max(candidates, key=lambda i: (ring[i][0], -ring[i][1]))
@@ -117,7 +118,7 @@ class Edge:
             d0 = (q0[0] - p0[0], q0[1] - p0[1])
             d1 = (q1[0] - p1[0], q1[1] - p1[1])
             cross = d0[0] * d1[1] - d0[1] * d1[0]
-            if abs(cross) < 1e-12:
+            if abs(cross) < DEGENERATE:
                 continue                       # in line: they meet already, or never
             # where the line of the one before meets the line of this one
             u = ((p1[0] - p0[0]) * d1[1] - (p1[1] - p0[1]) * d1[0]) / cross
@@ -162,13 +163,13 @@ class Edge:
             d = LineString([a, b]).distance(Point(end))
             if best is None or d < best:
                 best, at_i = d, i
-        if best is None or best > 1e-3:
+        if best is None or best > RESOLUTION:
             return []
         a, b = chain[at_i], chain[at_i + 1]
         length = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
         t = ((end[0] - a[0]) * (b[0] - a[0]) + (end[1] - a[1]) * (b[1] - a[1])) / (length * length)
         t = min(1.0, max(0.0, t))
-        tol = 1e-9
+        tol = ROUNDING
 
         def point(i, u):
             p, q = chain[i], chain[i + 1]
@@ -195,10 +196,10 @@ class Edge:
                 span = v_of(there) - v_of(here)
                 u_to = u + (u_to - u) * ((v_before - v_of(here)) / span if span > tol else 1.0)
                 there = point(i, u_to)
-                if math.hypot(there[0] - here[0], there[1] - here[1]) > 1e-9:
+                if math.hypot(there[0] - here[0], there[1] - here[1]) > ROUNDING:
                     out.append((here, there, touch(i, u), touch(i, u_to)))
                 break
-            if math.hypot(there[0] - here[0], there[1] - here[1]) > 1e-9:
+            if math.hypot(there[0] - here[0], there[1] - here[1]) > ROUNDING:
                 out.append((here, there, touch(i, u), touch(i, u_to)))
             i += step
             u = 0.0 if step > 0 else 1.0

@@ -25,9 +25,9 @@ Item {
     property var    workpiece: ({})
     // the tap it cuts with: editor.tap (a TappingToolView), null with none
     property var    tap: null
-    // the same tool as its Tool Library card shows it: {tool_no, card,
-    // view}; {} with none
-    property var    toolCard: ({})
+    // the same tool as its Tool Library card shows it: editor.toolCard,
+    // a ToolCard; null with none
+    property var    toolCard: null
 
     // the values the boxes on the canvas show and edit
     property real   zStart: 0.0
@@ -71,7 +71,7 @@ Item {
         opData  = data || {}
         workpiece = editor ? (editor.workpiece || {}) : {}
         tap       = editor ? editor.tap : null
-        toolCard  = editor ? (editor.toolCard || {}) : {}
+        toolCard  = editor ? editor.toolCard : null
 
         var dp = opData.tapping_parameters || {}
         zStart    = dp.z_start    !== undefined ? Number(dp.z_start)    : 0

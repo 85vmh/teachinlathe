@@ -1,259 +1,240 @@
-from ..helpers.spindle import build_spindle_gcode, feed_rate_of
-from ..helpers.utils import get_float
+from dataclasses import dataclass
+from typing import Optional
+
+from teachinlathe.conversational.model.data_types import GrooveFinishingStrategy
+
+from ..helpers.spindle import build_spindle_gcode
 from .profiling.geometry import StartPoint
-from .profiling.toolpath import emit_toolpath
+from ..toolpath import Arrows, DrawnLine, GcodeEmitter, OperationPreview, Point
+from .profiling.plan_drawing import flatten_path
+from .profiling.plan_gcode import fit_arcs
+from .profiling.operation_input import GrooveCut
 from .groove_roughing import (
-    CONTACT_MARGIN,
-    SAME_MM,
+    CONTOUR_ARC_TOLERANCE,
     _CONTROL_NAMES,
-    _Blade,
+    Corner,
     _blade_control,
+    _blade_obstacle,
     _blade_radii,
     _blade_start_x,
     _blade_width,
-    _clear_part_of,
-    _code,
-    _corner_to_control,
+    _contour_edge,
     _emit_contour_section,
     _fmt,
     _groove_path,
-    _offset_path_for_tool_radius,
-    _part_with_stock,
-    _path_end_point,
+    _outward,
     _profile_bounds_from_path,
+    _profiling_type,
     _reverse_path,
     _safe_x_for_contour,
     _split_path_at_z,
     _start_x,
+    _stock_allowance,
     _tool_is_blade,
+    _to_middle,
     corner_comment,
+    groove_path,
+    operation_error,
 )
 
 
-def roughing_stock(op):
-    """(radial, axial) the Groove Roughing above left, as the op carries it
-    in ``_resolved_roughing_stock``: what this takes off."""
-    stock = op.get("_resolved_roughing_stock") or {}
-    return abs(get_float(stock, "radial", 0.0)), abs(get_float(stock, "axial", 0.0))
+def roughing_stock(cut: GrooveCut):
+    """(radial, axial) the Groove Roughing above left (``cut.roughing_stock``):
+    what this takes off."""
+    stock = cut.roughing_stock
+    if stock is None:
+        return 0.0, 0.0
+    return abs(stock.stockToLeaveX), abs(stock.stockToLeaveZ)
 
 
-def _right_to_center_side(profile_type):
-    return "right" if str(profile_type).lower() == "id" else "left"
-
-
-def _left_to_center_side(profile_type):
-    return "left" if str(profile_type).lower() == "id" else "right"
-
-
-def _right_from_center_side(profile_type):
-    return "left" if str(profile_type).lower() == "id" else "right"
-
-
-def _left_from_center_side(profile_type):
-    return "right" if str(profile_type).lower() == "id" else "left"
-
-
-def _emit_continuous_sections(lines, prefix, safe_x, sections, corners):
-    """``sections`` one after the other at the feed, each cut with the
-    blade's corner of ``corners`` ("right" / "left"), said over it."""
-    kept = [(section, corner) for section, corner in zip(sections, corners)
-            if section and isinstance(section[0], StartPoint)]
+def _emit_continuous_sections(gcode, safe_x, sections, corners, profile_type):
+    """``sections`` - (z, r) of the touch-off point, in the part's frame -
+    one after the other at the feed, each cut with the blade's corner of
+    ``corners`` (Corners), said over it."""
+    kept = [(section, corner) for section, corner in zip(sections, corners) if len(section) > 1]
     if not kept:
         return
-    sections = [section for section, _corner in kept]
-    lines.append(_code(prefix, corner_comment(kept[0][1])))
-
-    start = sections[0][0]
-    lines.append(_code(prefix, f"G0 X{_fmt(safe_x)}"))
-    lines.append(_code(prefix, f"G0 Z{_fmt(start.z)}"))
-    lines.append(_code(prefix, f"G1 X{_fmt(start.x)} Z{_fmt(start.z)}"))
-
-    current_end = (start.x, start.z)
-    for index, section in enumerate(sections):
+    sign = _outward(profile_type)
+    start_z, start_r = kept[0][0][0]
+    gcode.code(corner_comment(kept[0][1]))
+    gcode.rapid(x=safe_x)
+    gcode.rapid(z=start_z)
+    gcode.feed(2.0 * sign * start_r, start_z)
+    for index, (section, corner) in enumerate(kept):
         if index > 0:
-            lines.append(_code(prefix, corner_comment(kept[index][1])))
-            section_start = section[0]
-            if abs(current_end[0] - section_start.x) > SAME_MM or abs(current_end[1] - section_start.z) > SAME_MM:
-                lines.append(_code(prefix, f"G1 X{_fmt(section_start.x)} Z{_fmt(section_start.z)}"))
-        emit_toolpath(lines, prefix, section)
-        end_point = _path_end_point(section)
-        if end_point is not None:
-            current_end = end_point
-
-    lines.append(_code(prefix, f"G0 X{_fmt(safe_x)}"))
+            gcode.code(corner_comment(corner))
+        for segment in fit_arcs([(z, sign * r) for z, r in section], CONTOUR_ARC_TOLERANCE):
+            segment.write(gcode)
+    gcode.rapid(x=safe_x)
 
 
-def _finishing_sections(path, center_z, half_width, left_radius, right_radius, overlap=0.0):
-    """The groove's profile ``path`` - from its Z+ end to its Z- one - as the
-    two sides the blade's corners finish: the Z+ side, cut with its right
-    corner, as far along the bottom as puts the blade's middle ``overlap``
-    past the groove's middle, and the Z- side, cut with its left, from as
-    far the other way. The blade's end - flat between its corners -
-    finishes the bottom between them; with no overlap, a pass going on from
-    the one to the other goes straight on."""
-    right_end = center_z + max(half_width - right_radius, 0.0) - overlap
-    left_start = center_z - max(half_width - left_radius, 0.0) + overlap
-    z_plus, _rest = _split_path_at_z(path, right_end)
-    _rest, z_minus = _split_path_at_z(path, left_start)
-    return z_plus, z_minus
+def _append_finishing_contour(gcode, safe_x, obstacle, path, center_z, clearance, profile_type,
+                              strategy, half_width, control):
+    """The contour the strategy goes along, the blade on the part
+    (``obstacle``): the Z+ side cut with its right corner, the Z- side with
+    its left. Toward the centre, each side takes the blade's middle half its
+    width past the groove's middle - the two overlapping by a blade's width;
+    a pass going on from one side to the other changes corner there."""
+    overlap = half_width if strategy is GrooveFinishingStrategy.TOWARDS_CENTER else 0.0
+    edge = _contour_edge(obstacle, path, 2.0 * half_width)
+    z_control = control * half_width
+    z_plus_to_center = _to_middle(edge, center_z - overlap + z_control)
+    z_minus_to_center = _to_middle(edge[::-1], center_z + overlap + z_control)
+    z_plus_from_center = z_plus_to_center[::-1]
+    z_minus_from_center = z_minus_to_center[::-1]
+    contour_safe_x = _safe_x_for_contour([z_plus_to_center, z_minus_to_center], safe_x, clearance,
+                                         profile_type)
 
-
-def _append_finishing_contour(
-    lines,
-    prefix,
-    safe_x,
-    path,
-    center_z,
-    clearance,
-    profile_type,
-    strategy,
-    left_radius,
-    right_radius,
-    half_width=0.0,
-    control=0,
-    blade=None,
-    part=None,
-):
-    # toward the centre, each side takes the blade's middle half its width
-    # past the groove's middle - the two overlapping by a blade's width; a
-    # pass going on from one side to the other cuts across it anyway
-    overlap = half_width if strategy == "towards_center" else 0.0
-    z_plus_path, z_minus_path = _finishing_sections(path, center_z, half_width, left_radius, right_radius,
-                                                    overlap)
-
-    z_plus_to_center = _offset_path_for_tool_radius(
-        z_plus_path,
-        right_radius,
-        _right_to_center_side(profile_type),
-    )
-    z_minus_to_center = _offset_path_for_tool_radius(
-        _reverse_path(z_minus_path),
-        left_radius,
-        _left_to_center_side(profile_type),
-    )
-    z_plus_from_center = _offset_path_for_tool_radius(
-        _reverse_path(z_plus_path),
-        right_radius,
-        _right_from_center_side(profile_type),
-    )
-    z_minus_from_center = _offset_path_for_tool_radius(
-        z_minus_path,
-        left_radius,
-        _left_from_center_side(profile_type),
-    )
-
-    # the Z+ side cut with the blade's right corner, the Z- side with its
-    # left: each written for the point it was touched off on, and as far as
-    # the blade stays out of the part
-    def _placed(section, corner, radius):
-        section = _corner_to_control(section, corner, radius, half_width, control, profile_type)
-        return _clear_part_of(section, blade, part)
-
-    z_plus_to_center = _placed(z_plus_to_center, "right", right_radius)
-    z_plus_from_center = _placed(z_plus_from_center, "right", right_radius)
-    z_minus_to_center = _placed(z_minus_to_center, "left", left_radius)
-    z_minus_from_center = _placed(z_minus_from_center, "left", left_radius)
-
-    safe_path = z_plus_to_center + z_minus_to_center + z_plus_from_center + z_minus_from_center
-    contour_safe_x = _safe_x_for_contour(safe_path, safe_x, clearance, profile_type)
-
-    if strategy == "towards_left":
-        lines.append(_code(prefix, "(----------Groove Finishing Contour Towards Left----------)"))
-        _emit_continuous_sections(lines, prefix, contour_safe_x, [z_plus_to_center, z_minus_from_center],
-                                  ["right", "left"])
+    if strategy is GrooveFinishingStrategy.TOWARDS_LEFT:
+        gcode.code("(----------Groove Finishing Contour Towards Left----------)")
+        _emit_continuous_sections(gcode, contour_safe_x, [z_plus_to_center, z_minus_from_center],
+                                  [Corner.RIGHT, Corner.LEFT], profile_type)
         return
 
-    if strategy == "towards_right":
-        lines.append(_code(prefix, "(----------Groove Finishing Contour Towards Right----------)"))
-        _emit_continuous_sections(lines, prefix, contour_safe_x, [z_minus_to_center, z_plus_from_center],
-                                  ["left", "right"])
+    if strategy is GrooveFinishingStrategy.TOWARDS_RIGHT:
+        gcode.code("(----------Groove Finishing Contour Towards Right----------)")
+        _emit_continuous_sections(gcode, contour_safe_x, [z_minus_to_center, z_plus_from_center],
+                                  [Corner.LEFT, Corner.RIGHT], profile_type)
         return
 
-    lines.append(_code(prefix, "(----------Groove Finishing Contour Z+ to Center----------)"))
-    _emit_contour_section(lines, prefix, contour_safe_x, z_plus_to_center, "right")
+    gcode.code("(----------Groove Finishing Contour Z+ to Center----------)")
+    _emit_contour_section(gcode, contour_safe_x, z_plus_to_center, profile_type, Corner.RIGHT)
 
-    lines.append(_code(prefix, "(----------Groove Finishing Contour Z- to Center----------)"))
-    _emit_contour_section(lines, prefix, contour_safe_x, z_minus_to_center, "left")
+    gcode.code("(----------Groove Finishing Contour Z- to Center----------)")
+    _emit_contour_section(gcode, contour_safe_x, z_minus_to_center, profile_type, Corner.LEFT)
 
 
-def generate_groove_finishing_gcode(op):
-    if hasattr(op, "to_dict"):
-        op = op.to_dict()
+def groove_finishing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
+    """The G-code of a Groove Finishing, as it is cut (``cut``), onto ``gcode``."""
+    op = cut.op
+    finishing = op.finishingParameters
+    # the radial profile's own primitives are dicts: the groove geometry reads them so
+    profile = cut.radial_profile.to_dict() if cut.radial_profile is not None else {}
+    tool = cut.tool
 
-    prefix = "/" if bool(op.get("is_optional_block", False)) else ""
-    spindle = op.get("speeds_and_feeds", {}) or {}
-    cutting = op.get("cutting_parameters", {}) or {}
-    finishing = op.get("finishing_parameters", {}) or {}
-    profile = op.get("_resolved_radial_profile", {}) or {}
-    tool = op.get("_resolved_tool")
+    feed_rate = op.speedsAndFeeds.feed
+    clearance = abs(op.cuttingParameters.retract)
+    strategy = finishing.strategy
 
-    feed_rate = feed_rate_of(op, 0.1)
-    clearance = abs(get_float(cutting, "retract", 1.0))
-    strategy = str(finishing.get("strategy", "towards_center")).lower()
+    gcode.codes(build_spindle_gcode(op.speedsAndFeeds, ""))
+    gcode.code(f"G95 F{_fmt(feed_rate)}")
+    gcode.blank()
 
-    lines = []
-    lines.extend(build_spindle_gcode(spindle, prefix))
-    lines.append(_code(prefix, f"G95 F{_fmt(feed_rate)}"))
-    lines.append("")
-
-    if strategy not in {"towards_left", "towards_right", "towards_center"}:
-        lines.append("( ERROR: Groove Finishing -- invalid strategy )")
-        return lines
+    if not isinstance(strategy, GrooveFinishingStrategy):
+        gcode.error("Groove Finishing -- invalid strategy")
+        return
     if not profile:
-        lines.append("( ERROR: Groove Finishing -- no Define Radial Profile found above this operation )")
-        return lines
+        gcode.error("Groove Finishing -- no Define Radial Profile found above this operation")
+        return
     if not _tool_is_blade(tool):
-        lines.append("( ERROR: Groove Finishing -- current tool must be a parting or grooving blade )")
-        return lines
+        gcode.error("Groove Finishing -- current tool must be a parting or grooving blade")
+        return
 
     path = _groove_path(profile)
     if path is None:
-        lines.append("( ERROR: Groove Finishing -- radial profile did not produce a valid toolpath )")
-        return lines
+        gcode.error("Groove Finishing -- radial profile did not produce a valid toolpath")
+        return
 
     _x_min, _x_max, z_min, z_max = _profile_bounds_from_path(path)
     center_z = (z_min + z_max) / 2.0
-    profile_type = str(profile.get("profile_type", "od")).lower()
+    profile_type = _profiling_type(profile.get("profile_type"))
     # what the Groove Roughing above left: the start diameter is the
     # pulley's outside with that radial stock on it, and the blade starts
     # the clearance out from it, as the roughing's did
-    stock_radial = roughing_stock(op)[0]
+    stock_radial = roughing_stock(cut)[0]
     safe_x = _blade_start_x(_start_x(path, profile_type, stock_radial), profile_type, clearance)
     width = _blade_width(tool)
     if width <= 0:
-        lines.append("( ERROR: Groove Finishing -- blade width is not defined in tool extras )")
-        return lines
+        gcode.error("Groove Finishing -- blade width is not defined in tool extras")
+        return
     half_width = width / 2.0
     control = _blade_control(tool)
     left_radius, right_radius = _blade_radii(tool)
 
-    lines.append(
-        _code(
-            prefix,
-            f"(----------Groove Finishing: {strategy.replace('_', ' ').title()} P{int(finishing.get('profile_id', 0) or 0)}----------)",
-        )
+    gcode.code(
+        f"(----------Groove Finishing: {strategy.value.replace('_', ' ').title()} P{int(finishing.profile_id or 0)}----------)"
     )
-    lines.append(
-        _code(
-            prefix,
-            f"( blade width={_fmt(width)} left radius={_fmt(left_radius)} right radius={_fmt(right_radius)} touched off at {_CONTROL_NAMES[control]} )",
-        )
+    gcode.code(
+        f"( blade width={_fmt(width)} left radius={_fmt(left_radius)} right radius={_fmt(right_radius)} touched off at {_CONTROL_NAMES[control]} )"
     )
 
-    _append_finishing_contour(
-        lines,
-        prefix,
-        safe_x,
-        path,
-        center_z,
-        clearance,
-        profile_type,
-        strategy,
-        left_radius,
-        right_radius,
-        half_width,
-        control,
-        _Blade(half_width, left_radius, right_radius, control, profile_type),
-        _part_with_stock(path, profile_type, 0.0, 0.0)[0].buffer(-CONTACT_MARGIN),
-    )
-    return lines
+    _append_finishing_contour(gcode, safe_x, _blade_obstacle(tool, path, profile_type, 0.0, 0.0), path,
+                              center_z, clearance, profile_type, strategy, half_width, control)
+
+
+def generate_groove_finishing_gcode(cut: GrooveCut):
+    """A Groove Finishing's G-code on its own."""
+    gcode = GcodeEmitter(cut.op.is_optional_block)
+    groove_finishing_toolpath(cut, gcode)
+    return gcode.lines
+
+
+# ── what the editor draws ───────────────────────────────────────────────────
+# What Groove Finishing will cut: the groove's profile, it offset by the
+# stock the roughing above left - what the finishing takes off - and the
+# contour its strategy goes along, on the profile itself.
+
+@dataclass(frozen=True)
+class GrooveFinishingPreview(OperationPreview):
+    """A Groove Finishing as the editor draws it: the contour, its arrows
+    along it, and the rapids from where the blade starts over to above each
+    pass's start and down to it; ``start`` where the blade starts - over the
+    groove's middle, the clearance out from the start diameter - and the
+    start diameter, the pulley's outside with the stock the roughing left on
+    it."""
+    start: Optional[Point] = None
+    start_diameter: Optional[float] = None
+
+
+def _passes(path, center_z, strategy, overlap):
+    """The profile as the strategy goes along it, a list of passes, each
+    Points: toward the centre, each side ``overlap`` past the middle, as
+    the blade's middle goes; toward the left, the Z+ side down and on along
+    the bottom and up the Z- side; toward the right, the other way round."""
+    z_plus, _rest = _split_path_at_z(path, center_z - overlap)
+    _rest, z_minus = _split_path_at_z(path, center_z + overlap)
+    if strategy is GrooveFinishingStrategy.TOWARDS_LEFT:
+        sections = [path]
+    elif strategy is GrooveFinishingStrategy.TOWARDS_RIGHT:
+        sections = [_reverse_path(path)]
+    else:
+        sections = [z_plus, _reverse_path(z_minus)]
+    return [flatten_path(section) for section in sections if section and isinstance(section[0], StartPoint)]
+
+
+def groove_finishing_preview(cut: GrooveCut) -> GrooveFinishingPreview:
+    """What a Groove Finishing - as it is cut, ``cut``, the stock the
+    Groove Roughing of its profile above left included - will cut, as the
+    editor draws it (GrooveFinishingPreview)."""
+    op = cut.op
+    path, profile_type, error = groove_path(cut)
+    if path is None:
+        return GrooveFinishingPreview(error=error)
+
+    radial, axial = roughing_stock(cut)
+    offset = tuple(Point(x, z) for z, x in _stock_allowance(path, profile_type, radial, axial))
+
+    gcode = GcodeEmitter(op.is_optional_block)
+    groove_finishing_toolpath(cut, gcode)
+    error = operation_error(gcode)
+
+    _x_min, _x_max, z_min, z_max = _profile_bounds_from_path(path)
+    center_z = (z_min + z_max) / 2.0
+    clearance = abs(op.cuttingParameters.retract)
+    start_x = _start_x(path, profile_type, radial)
+    blade_x = _blade_start_x(start_x, profile_type, clearance)
+    drawn = dict(profile=flatten_path(path), offset=offset, start=Point(blade_x, center_z),
+                 start_diameter=start_x)
+    if error:
+        return GrooveFinishingPreview(error=error, **drawn)
+
+    feeds, rapids = [], []
+    # toward the centre, each side half the blade's width past the middle
+    half_width = _blade_width(cut.tool) / 2.0
+    for n, points in enumerate(_passes(path, center_z, op.finishingParameters.strategy, half_width)):
+        first = points[0]
+        rapids.append(DrawnLine(blade_x, center_z, blade_x, first.z))
+        rapids.append(DrawnLine(blade_x, first.z, first.x, first.z))
+        for a, b in zip(points, points[1:]):
+            feeds.append(DrawnLine(a.x, a.z, b.x, b.z, n, True, Arrows.ALONG))
+    return GrooveFinishingPreview(feeds=tuple(feeds), rapids=tuple(rapids), **drawn)

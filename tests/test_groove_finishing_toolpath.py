@@ -7,6 +7,7 @@ import re
 
 import pytest
 
+from gcode_reading import groove_cut_of
 from teachinlathe.conversational.gcode.operations.groove_finishing import generate_groove_finishing_gcode
 
 from test_groove_roughing_toolpath import BLADES, GROOVES, MAX_OVERLAP, _blade, _blade_of, _moves, _op, _part
@@ -27,7 +28,7 @@ def _finishing(groove, blade, strategy, stock=(0.0, 0.0), clearance=1.0, profile
 
 
 def _gouges(op):
-    lines = generate_groove_finishing_gcode(op)
+    lines = generate_groove_finishing_gcode(groove_cut_of(op))
     assert not [line for line in lines if "ERROR" in line], lines
     part, sign = _part(op)
     blade = _blade_of(op)
@@ -66,7 +67,7 @@ def test_the_blade_starts_the_clearance_out_from_the_roughings_start_diameter(st
     radial = ROUGHING_STOCK[stock][0]
     op = _finishing(GROOVES["filleted"], BLADES["1.5 touched off middle"], "towards_center",
                     ROUGHING_STOCK[stock], clearance=1.0)
-    first = next(line for line in generate_groove_finishing_gcode(op) if line.startswith("G0 X"))
+    first = next(line for line in generate_groove_finishing_gcode(groove_cut_of(op)) if line.startswith("G0 X"))
 
     assert float(first[4:]) == pytest.approx(GROOVES["filleted"]["right_flank"]["x_start"] + 2 * radial + 2 * 1.0)
 
@@ -77,17 +78,20 @@ def test_the_two_sides_overlap_past_the_middle(groove, blade):
     """Toward the centre, each side ends with the blade's middle half its
     width past the groove's: the two overlap by a blade's width."""
     tool = BLADES[blade]
-    lines = generate_groove_finishing_gcode(_finishing(GROOVES[groove], tool, "towards_center"))
+    lines = generate_groove_finishing_gcode(groove_cut_of(_finishing(GROOVES[groove], tool, "towards_center")))
     middle = (GROOVES[groove]["right_flank"]["z_start"] + GROOVES[groove]["left_flank"]["z_start"]) / 2
     ends = {}
     section = None
+    z = None
     for line in lines:
+        # the Z a line leaves out is the one before it
+        found = re.search(r"Z(-?[\d.]+)", line.split("(")[0])
+        z = float(found.group(1)) if found else z
         if "Contour Z+" in line:
             section = "right"
         elif "Contour Z-" in line:
             section = "left"
         elif section and line.startswith(("G1", "G2", "G3")):
-            z = float(re.search(r"Z(-?[\d.]+)", line).group(1))
             ends[section] = z - tool["control"] * tool["width"] / 2      # the blade's middle
 
     assert ends["right"] == pytest.approx(middle - tool["width"] / 2, abs=1e-3)
@@ -99,7 +103,7 @@ def test_a_pass_across_the_bottom_goes_straight_on(strategy):
     """Going on from one side to the other, the blade does not go back over
     the bottom where it changes from one corner to the other."""
     tool = BLADES["1.5 touched off left"]
-    moves = _moves(generate_groove_finishing_gcode(_finishing(GROOVES["plain"], tool, strategy)))
+    moves = _moves(generate_groove_finishing_gcode(groove_cut_of(_finishing(GROOVES["plain"], tool, strategy))))
     bottom = [(z0, z1) for x0, z0, x1, z1 in moves if x0 == x1 == 12.0 and z0 != z1]
     way = 1 if strategy == "towards_right" else -1
 

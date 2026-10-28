@@ -1,44 +1,47 @@
+"""A drawn profile as the G-code goes along it: its primitives (the model's
+StartPoint, LineTo, ArcTo, each with its ProfileBlend) made into a path of
+lines and arcs - the blends cut into the corners they are on: chamfers,
+fillets and DIN 509 undercuts - and what is worked out on such a path.
+All X values are diameters, as the G-code has them; the blends are worked
+out in radius space (x = X / 2), where a corner's angles are as drawn.
+"""
+
 import math
 from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
+from teachinlathe.conversational.model.data_types import ArcTo, BlendType, LineTo, ProfileBlend, ProfilingType
+from teachinlathe.conversational.model.data_types import StartPoint as ProfileStart
+
+# ── Tolerances: when two numbers are the same one ───────────────────────────
+
+#: mm the G-code is written to: lengths shorter than this are nothing to the
+#: machine - no blend is made on them, no point is apart from another by it.
+RESOLUTION = 0.001
+
+#: mm: two positions or lengths this close are the same one - a tenth of the
+#: RESOLUTION, so nothing the machine is sent differs.
+SAME_MM = 0.0001
+
+#: What floating-point rounding leaves over in a computed value - an angle,
+#: a distance - that is exactly at a limit: compared with this much slack.
+ROUNDING = 1e-9
+
+#: A length, a cross product or a tangent this small is zero: nothing is
+#: divided by it.
+DEGENERATE = 1e-12
+
+#: Degrees from the floor a DIN 509 undercut's ramp rises at.
+DIN509_RAMP_ANGLE = 15.0
+
+
+# ── The path ────────────────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class StartPoint:
+    """Where a path starts."""
     x: float
     z: float
-    blend_type: str = "none"
-    blend_width: float = 0.0
-    blend_radius: float = 0.0
-
-
-@dataclass(frozen=True)
-class ProfileLineSegment:
-    end_x: float
-    end_z: float
-    blend_type: str = "none"
-    blend_radius: float = 0.0
-    blend_width: float = 0.0
-    undercut_radius: float = 0.4
-    undercut_depth: float = 0.4
-    undercut_length: float = 2.5
-    angle: float = 0.0
-    input_mode: str = "xz"
-
-
-@dataclass(frozen=True)
-class ProfileArcSegment:
-    end_x: float
-    end_z: float
-    center_x: float
-    center_z: float
-    radius: float
-    gcode_dir: int
-    blend_type: str = "none"
-    blend_radius: float = 0.0
-    blend_width: float = 0.0
-    undercut_radius: float = 0.4
-    undercut_depth: float = 0.4
-    undercut_length: float = 2.5
 
 
 @dataclass(frozen=True)
@@ -56,155 +59,239 @@ class ToolpathArc:
     anticlockwise: bool
 
 
-def json_dir_to_gcode(direction_str):
-    # The lathe profile convention used here maps JSON ccw/cw to G2/G3.
-    return 2 if str(direction_str).lower() == "ccw" else 3
-
-
-def resolve_line_endpoint(start_x, start_z, end_x, end_z, angle, input_mode):
-    """Resolve LineTo endpoint. X values are diameters; angle is from the Z axis."""
-    mode = str(input_mode or "xz").lower()
+def line_end(line: LineTo, start_x: float, start_z: float) -> Tuple[float, float]:
+    """Where ``line`` ends, from (start_x, start_z): at its X and Z ("xz"),
+    or at one of them and its angle from the Z axis - its Z ("az") or its
+    X ("ax")."""
+    mode = str(line.input or "xz").lower()
     if mode not in ("xz", "ax", "az"):
         mode = "xz"
-    end_x = float(end_x)
-    end_z = float(end_z)
+    end_x = float(line.x_end)
+    end_z = float(line.z_end)
     if mode == "xz":
         return end_x, end_z
 
-    angle_rad = math.radians(float(angle or 0.0))
-    tangent = math.tan(angle_rad)
+    tangent = math.tan(math.radians(float(line.angle or 0.0)))
     if mode == "az":
         return float(start_x) + 2.0 * (end_z - float(start_z)) * tangent, end_z
-    if abs(tangent) < 1e-12:
+    if abs(tangent) < DEGENERATE:
         return end_x, float(start_z)
     radial_delta = (end_x - float(start_x)) / 2.0
     return end_x, float(start_z) + radial_delta / tangent
 
 
-def build_profile_segments(primitives):
-    segments = []
-    current_x = 0.0
-    current_z = 0.0
-    for primitive in (primitives or []):
-        primitive_type = primitive.get("type", "")
-        if primitive_type == "startPoint":
-            current_x = float(primitive.get("x_start", 0.0))
-            current_z = float(primitive.get("z_start", 0.0))
-            blend = primitive.get("blend") or {}
-            segments.append(StartPoint(
-                x=current_x,
-                z=current_z,
-                blend_type=blend.get("type", "none"),
-                blend_width=float(blend.get("chamfer_width", 0.0) or 0.0),
-                blend_radius=float(blend.get("fillet_radius", 0.0) or 0.0),
-            ))
+def build_path(primitives, profile_type: ProfilingType = ProfilingType.OD) -> list:
+    """``primitives`` - a profile's, in order - as the G-code goes along
+    them: a StartPoint, then ToolpathLines and ToolpathArcs, each corner cut
+    by the blend of the primitive it ends - a start point's blend cuts the
+    corner its stock makes with the first primitive, from outside the stock
+    (``profile_type``: OD from above, ID from below). A path that does not
+    begin with a start point starts at X0 Z0, with no StartPoint."""
+    ends = _ends(primitives)
+    is_id = profile_type is ProfilingType.ID
+    path = []
+    at_x = at_z = 0.0
+    for index, (primitive, end_x, end_z) in enumerate(ends):
+        after = _next(ends, index)
+        blend = primitive.blend
+        if isinstance(primitive, ProfileStart):
+            at_x, at_z = end_x, end_z
+            if blend.blend_type is not BlendType.NONE and after is not None:
+                start_r = at_x / 2
+                if blend.blend_type is BlendType.CHAMFER:
+                    width = blend.chamfer_width
+                    entry_r = start_r + width if is_id else start_r - width
+                    chamfer = _chamfer_line(entry_r, at_z, start_r, at_z, after, width)
+                    if chamfer:
+                        path.append(StartPoint(chamfer.start_x * 2, chamfer.start_z))
+                        path.append(ToolpathLine(chamfer.end_x * 2, chamfer.end_z))
+                        continue
+                elif blend.blend_type is BlendType.FILLET:
+                    radius = blend.fillet_radius
+                    entry_r = start_r + radius if is_id else start_r - radius
+                    fillet = (_fillet_line_arc(entry_r, at_z, start_r, at_z, after, radius)
+                              if isinstance(after, _NextArc)
+                              else _fillet_line_line(entry_r, at_z, start_r, at_z, after, radius))
+                    if fillet:
+                        path.append(StartPoint(fillet.start_x * 2, fillet.start_z))
+                        path.append(fillet.arc())
+                        continue
+            path.append(StartPoint(at_x, at_z))
             continue
 
-        blend = primitive.get("blend") or {}
-        if primitive_type == "lineTo":
-            end_x, end_z = resolve_line_endpoint(
-                current_x, current_z,
-                primitive.get("x_end", 0.0), primitive.get("z_end", 0.0),
-                primitive.get("angle", 0.0), primitive.get("input", "xz"),
-            )
-            segments.append(ProfileLineSegment(
-                end_x=end_x,
-                end_z=end_z,
-                blend_type=blend.get("type", "none"),
-                blend_radius=float(blend.get("fillet_radius", 0.0) or 0.0),
-                blend_width=float(blend.get("chamfer_width", 0.0) or 0.0),
-                undercut_radius=float(blend.get("undercut_radius", 0.4) or 0.4),
-                undercut_depth=float(blend.get("undercut_depth", 0.4) or 0.4),
-                undercut_length=float(blend.get("undercut_length", 2.5) or 2.5),
-                angle=float(primitive.get("angle", 0.0) or 0.0),
-                input_mode=str(primitive.get("input", "xz") or "xz").lower(),
-            ))
-            current_x = end_x
-            current_z = end_z
+        if isinstance(primitive, LineTo):
+            next_x, next_z = end_x, end_z
+            if blend.blend_type is BlendType.CHAMFER:
+                chamfer = _chamfer_line(at_x / 2, at_z, end_x / 2, end_z, after, blend.chamfer_width)
+                if chamfer:
+                    path.append(ToolpathLine(chamfer.start_x * 2, chamfer.start_z))
+                    path.append(ToolpathLine(chamfer.end_x * 2, chamfer.end_z))
+                else:
+                    path.append(ToolpathLine(end_x, end_z))
+            elif blend.blend_type is BlendType.FILLET:
+                radius = blend.fillet_radius
+                fillet = (_fillet_line_arc(at_x / 2, at_z, end_x / 2, end_z, after, radius)
+                          if isinstance(after, _NextArc)
+                          else _fillet_line_line(at_x / 2, at_z, end_x / 2, end_z, after, radius))
+                if fillet:
+                    path.append(ToolpathLine(fillet.start_x * 2, fillet.start_z))
+                    path.append(fillet.arc())
+                else:
+                    path.append(ToolpathLine(end_x, end_z))
+            elif blend.blend_type is BlendType.UNDERCUT_DIN509:
+                undercut = (undercut_din509(at_x / 2, at_z, end_x / 2, end_z, after.x, after.z, blend)
+                            if isinstance(after, _NextLine) else None)
+                if undercut:
+                    path.append(ToolpathLine(undercut.entry_x * 2, undercut.entry_z))
+                    path.append(ToolpathLine(undercut.ramp_end_x * 2, undercut.ramp_end_z))
+                    path.append(ToolpathLine(undercut.arc_start_x * 2, undercut.arc_start_z))
+                    path.append(ToolpathArc(undercut.exit_x * 2, undercut.exit_z,
+                                            undercut.center_x * 2, undercut.center_z, undercut.anticlockwise))
+                    next_x, next_z = undercut.exit_x * 2, undercut.exit_z
+                else:
+                    path.append(ToolpathLine(end_x, end_z))
+            else:
+                path.append(ToolpathLine(end_x, end_z))
+            at_x, at_z = next_x, next_z
             continue
 
-        if primitive_type == "arcTo":
-            end_x = float(primitive.get("x_end", 0.0))
-            end_z = float(primitive.get("z_end", 0.0))
-            center_x = float(primitive.get("x_center", 0.0))
-            center_z = float(primitive.get("z_center", 0.0))
-            segments.append(ProfileArcSegment(
-                end_x=end_x,
-                end_z=end_z,
-                center_x=center_x,
-                center_z=center_z,
-                radius=math.sqrt((end_x - center_x) ** 2 + (end_z - center_z) ** 2),
-                gcode_dir=json_dir_to_gcode(primitive.get("direction", "cw")),
-                blend_type=blend.get("type", "none"),
-                blend_radius=float(blend.get("fillet_radius", 0.0) or 0.0),
-                blend_width=float(blend.get("chamfer_width", 0.0) or 0.0),
-                undercut_radius=float(blend.get("undercut_radius", 0.4) or 0.4),
-                undercut_depth=float(blend.get("undercut_depth", 0.4) or 0.4),
-                undercut_length=float(blend.get("undercut_length", 2.5) or 2.5),
-            ))
-            current_x = end_x
-            current_z = end_z
-    return segments
+        # an arc
+        center_x, center_z = primitive.x_center, primitive.z_center
+        clockwise = not primitive.ccw
+        end_r, center_r = end_x / 2, center_x / 2
+        radius_r = math.sqrt((end_r - center_r) ** 2 + (end_z - center_z) ** 2)
+        arc_end = ToolpathArc(end_x, end_z, center_x, center_z, not clockwise)
+        if blend.blend_type is BlendType.CHAMFER:
+            chamfer = _chamfer_arc(center_r, center_z, radius_r, clockwise, end_r, end_z, after, blend.chamfer_width)
+            if chamfer:
+                path.append(ToolpathArc(chamfer.start_x * 2, chamfer.start_z, center_x, center_z, not clockwise))
+                path.append(ToolpathLine(chamfer.end_x * 2, chamfer.end_z))
+            else:
+                path.append(arc_end)
+        elif blend.blend_type is BlendType.FILLET:
+            fillet = _fillet_arc_line(center_r, center_z, radius_r, clockwise, end_r, end_z, after,
+                                      blend.fillet_radius)
+            if fillet:
+                path.append(ToolpathArc(fillet.start_x * 2, fillet.start_z, center_x, center_z, not clockwise))
+                path.append(fillet.arc())
+            else:
+                path.append(arc_end)
+        else:
+            path.append(arc_end)
+        at_x, at_z = end_x, end_z
+    return path
 
 
-def _as_legacy_segment(segment):
-    if isinstance(segment, StartPoint):
-        return {
-            "type": "startPoint", "x": segment.x, "z": segment.z,
-            "blend_type": segment.blend_type,
-            "blend_cw": segment.blend_width,
-            "blend_rf": segment.blend_radius,
-        }
-    if isinstance(segment, ProfileLineSegment):
-        return {
-            "type": "lineTo",
-            "x_end": segment.end_x,
-            "z_end": segment.end_z,
-            "blend_type": segment.blend_type,
-            "blend_rf": segment.blend_radius,
-            "blend_cw": segment.blend_width,
-            "undercut_radius": segment.undercut_radius,
-            "undercut_depth": segment.undercut_depth,
-            "undercut_length": segment.undercut_length,
-            "angle": segment.angle,
-            "input": segment.input_mode,
-        }
-    return {
-        "type": "arcTo",
-        "x_end": segment.end_x,
-        "z_end": segment.end_z,
-        "x_center": segment.center_x,
-        "z_center": segment.center_z,
-        "arc_radius": segment.radius,
-        "gcode_dir": segment.gcode_dir,
-        "blend_type": segment.blend_type,
-        "blend_rf": segment.blend_radius,
-        "blend_cw": segment.blend_width,
-        "undercut_radius": segment.undercut_radius,
-        "undercut_depth": segment.undercut_depth,
-        "undercut_length": segment.undercut_length,
-    }
+def _ends(primitives) -> List[tuple]:
+    """(primitive, X, Z) of each of ``primitives``: where it ends - a start
+    point where it is - from X0 Z0 before the first start point."""
+    ends = []
+    x = z = 0.0
+    for primitive in primitives or []:
+        if isinstance(primitive, ProfileStart):
+            x, z = float(primitive.x_start), float(primitive.z_start)
+        elif isinstance(primitive, LineTo):
+            x, z = line_end(primitive, x, z)
+        elif isinstance(primitive, ArcTo):
+            x, z = float(primitive.x_end), float(primitive.z_end)
+        else:
+            continue
+        ends.append((primitive, x, z))
+    return ends
 
 
-def _legacy_next_segment(segments, index):
-    if index + 1 < len(segments):
-        return segments[index + 1]
-    return None
+# ── The corners: in radius space ────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class _NextLine:
+    """The primitive after a corner, a line: where it ends."""
+    x: float
+    z: float
 
 
-def _legacy_fillet_line_line(start_x, start_z, corner_x, corner_z, next_segment, radius):
-    if not next_segment or next_segment["type"] != "lineTo":
+@dataclass(frozen=True)
+class _NextArc:
+    """The primitive after a corner, an arc: its centre, radius and way round."""
+    center_x: float
+    center_z: float
+    radius: float
+    clockwise: bool
+
+
+@dataclass(frozen=True)
+class _NextStart:
+    """The primitive after a corner, another start point: nothing to blend with."""
+
+
+def _next(ends, index):
+    """The primitive after the one at ``index``, as the blend of its corner
+    takes it (in radius space), or None after the last."""
+    if index + 1 >= len(ends):
+        return None
+    primitive, x, z = ends[index + 1]
+    if isinstance(primitive, LineTo):
+        return _NextLine(x / 2, z)
+    if isinstance(primitive, ArcTo):
+        end_r, center_r = x / 2, primitive.x_center / 2
+        return _NextArc(center_r, primitive.z_center,
+                        math.sqrt((end_r - center_r) ** 2 + (z - primitive.z_center) ** 2), not primitive.ccw)
+    return _NextStart()
+
+
+@dataclass(frozen=True)
+class _Chamfer:
+    start_x: float
+    start_z: float
+    end_x: float
+    end_z: float
+
+
+@dataclass(frozen=True)
+class _Fillet:
+    """A fillet's arc, from (start) to (end) about (center)."""
+    start_x: float
+    start_z: float
+    end_x: float
+    end_z: float
+    center_x: float
+    center_z: float
+    anticlockwise: bool
+
+    def arc(self) -> ToolpathArc:
+        return ToolpathArc(self.end_x * 2, self.end_z, self.center_x * 2, self.center_z, self.anticlockwise)
+
+
+@dataclass(frozen=True)
+class Undercut:
+    """A DIN 509 undercut at a corner, in radius space (x = X / 2): in at
+    ``entry``, up its ramp to ``ramp_end``, along its floor to ``arc_start``
+    and round its radius about ``center`` out to ``exit``, on the next line."""
+    entry_x: float
+    entry_z: float
+    ramp_end_x: float
+    ramp_end_z: float
+    arc_start_x: float
+    arc_start_z: float
+    center_x: float
+    center_z: float
+    exit_x: float
+    exit_z: float
+    anticlockwise: bool
+
+
+def _fillet_line_line(start_x, start_z, corner_x, corner_z, after, radius) -> Optional[_Fillet]:
+    if not isinstance(after, _NextLine):
         return None
     start_delta_x = corner_x - start_x
     start_delta_z = corner_z - start_z
     start_length = math.sqrt(start_delta_x ** 2 + start_delta_z ** 2)
-    if start_length < 0.001 or radius < 0.001:
+    if start_length < RESOLUTION or radius < RESOLUTION:
         return None
 
-    next_delta_x = next_segment["x_end"] - corner_x
-    next_delta_z = next_segment["z_end"] - corner_z
+    next_delta_x = after.x - corner_x
+    next_delta_z = after.z - corner_z
     next_length = math.sqrt(next_delta_x ** 2 + next_delta_z ** 2)
-    if next_length < 0.001:
+    if next_length < RESOLUTION:
         return None
 
     dir1_x = start_delta_x / start_length
@@ -213,7 +300,7 @@ def _legacy_fillet_line_line(start_x, start_z, corner_x, corner_z, next_segment,
     dir2_z = next_delta_z / next_length
     cross = dir1_z * dir2_x - dir1_x * dir2_z
     dot = dir1_z * dir2_z + dir1_x * dir2_x
-    if abs(cross) < 0.001:
+    if abs(cross) < RESOLUTION:
         return None
 
     tangent_distance = radius * (1.0 - dot) / abs(cross)
@@ -224,16 +311,17 @@ def _legacy_fillet_line_line(start_x, start_z, corner_x, corner_z, next_segment,
 
     normal_x = dir1_z if cross > 0 else -dir1_z
     normal_z = -dir1_x if cross > 0 else dir1_x
-    return tangent1_x, tangent1_z, tangent2_x, tangent2_z, tangent1_x + radius * normal_x, tangent1_z + radius * normal_z, cross < 0
+    return _Fillet(tangent1_x, tangent1_z, tangent2_x, tangent2_z,
+                   tangent1_x + radius * normal_x, tangent1_z + radius * normal_z, cross < 0)
 
 
-def _legacy_fillet_arc_line(center_x, center_z, arc_radius, is_cw, join_x, join_z, next_segment, radius):
-    if not next_segment or next_segment["type"] != "lineTo":
+def _fillet_arc_line(center_x, center_z, arc_radius, is_cw, join_x, join_z, after, radius) -> Optional[_Fillet]:
+    if not isinstance(after, _NextLine):
         return None
-    next_delta_raw_x = next_segment["x_end"] - join_x
-    next_delta_raw_z = next_segment["z_end"] - join_z
+    next_delta_raw_x = after.x - join_x
+    next_delta_raw_z = after.z - join_z
     next_length = math.sqrt(next_delta_raw_x ** 2 + next_delta_raw_z ** 2)
-    if next_length < 0.001 or radius < 0.001 or arc_radius < 0.001:
+    if next_length < RESOLUTION or radius < RESOLUTION or arc_radius < RESOLUTION:
         return None
     dir2_x = next_delta_raw_x / next_length
     dir2_z = next_delta_raw_z / next_length
@@ -241,13 +329,13 @@ def _legacy_fillet_arc_line(center_x, center_z, arc_radius, is_cw, join_x, join_
     radial_x = join_x - center_x
     radial_z = join_z - center_z
     radial_length = math.sqrt(radial_x ** 2 + radial_z ** 2)
-    if radial_length < 0.001:
+    if radial_length < RESOLUTION:
         return None
     dir1_x = (radial_z if is_cw else -radial_z) / radial_length
     dir1_z = (-radial_x if is_cw else radial_x) / radial_length
 
     cross = dir1_z * dir2_x - dir1_x * dir2_z
-    if abs(cross) < 0.001:
+    if abs(cross) < RESOLUTION:
         return None
 
     normal2_x = dir2_z if cross > 0 else -dir2_z
@@ -268,46 +356,46 @@ def _legacy_fillet_arc_line(center_x, center_z, arc_radius, is_cw, join_x, join_
     center_vector_x = fillet_center_x - center_x
     center_vector_z = fillet_center_z - center_z
     center_vector_length = math.sqrt(center_vector_x ** 2 + center_vector_z ** 2)
-    if center_vector_length < 0.001:
+    if center_vector_length < RESOLUTION:
         return None
 
     tangent1_x = center_x + arc_radius * center_vector_x / center_vector_length
     tangent1_z = center_z + arc_radius * center_vector_z / center_vector_length
-    return tangent1_x, tangent1_z, tangent2_x, tangent2_z, fillet_center_x, fillet_center_z, cross < 0
+    return _Fillet(tangent1_x, tangent1_z, tangent2_x, tangent2_z, fillet_center_x, fillet_center_z, cross < 0)
 
 
-def _legacy_fillet_line_arc(start_x, start_z, corner_x, corner_z, next_arc, radius):
-    if not next_arc or next_arc["type"] != "arcTo":
+def _fillet_line_arc(start_x, start_z, corner_x, corner_z, after, radius) -> Optional[_Fillet]:
+    if not isinstance(after, _NextArc):
         return None
-    is_cw = next_arc["gcode_dir"] != 2
-    arc_radius = next_arc["arc_radius"]
-    if radius < 0.001 or arc_radius < 0.001:
+    is_cw = after.clockwise
+    arc_radius = after.radius
+    if radius < RESOLUTION or arc_radius < RESOLUTION:
         return None
 
     delta1_x = corner_x - start_x
     delta1_z = corner_z - start_z
     length1 = math.sqrt(delta1_x ** 2 + delta1_z ** 2)
-    if length1 < 0.001:
+    if length1 < RESOLUTION:
         return None
     dir1_x = delta1_x / length1
     dir1_z = delta1_z / length1
 
-    radial_x = corner_x - next_arc["x_center"]
-    radial_z = corner_z - next_arc["z_center"]
+    radial_x = corner_x - after.center_x
+    radial_z = corner_z - after.center_z
     radial_length = math.sqrt(radial_x ** 2 + radial_z ** 2)
-    if radial_length < 0.001:
+    if radial_length < RESOLUTION:
         return None
     dir2_x = (radial_z if is_cw else -radial_z) / radial_length
     dir2_z = (-radial_x if is_cw else radial_x) / radial_length
 
     cross = dir1_z * dir2_x - dir1_x * dir2_z
-    if abs(cross) < 0.001:
+    if abs(cross) < RESOLUTION:
         return None
 
     normal1_x = dir1_z if cross > 0 else -dir1_z
     normal1_z = -dir1_x if cross > 0 else dir1_x
-    offset_x = corner_x + radius * normal1_x - next_arc["x_center"]
-    offset_z = corner_z + radius * normal1_z - next_arc["z_center"]
+    offset_x = corner_x + radius * normal1_x - after.center_x
+    offset_z = corner_z + radius * normal1_z - after.center_z
 
     projection = offset_z * dir1_z + offset_x * dir1_x
     discriminant = projection ** 2 - (offset_z ** 2 + offset_x ** 2) + (arc_radius + radius) ** 2
@@ -319,52 +407,52 @@ def _legacy_fillet_line_arc(start_x, start_z, corner_x, corner_z, next_arc, radi
     fillet_center_z = corner_z - tangent_distance * dir1_z + radius * normal1_z
     tangent1_x = corner_x - tangent_distance * dir1_x
     tangent1_z = corner_z - tangent_distance * dir1_z
-    center_vector_x = fillet_center_x - next_arc["x_center"]
-    center_vector_z = fillet_center_z - next_arc["z_center"]
+    center_vector_x = fillet_center_x - after.center_x
+    center_vector_z = fillet_center_z - after.center_z
     center_vector_length = math.sqrt(center_vector_x ** 2 + center_vector_z ** 2)
-    if center_vector_length < 0.001:
+    if center_vector_length < RESOLUTION:
         return None
 
-    tangent2_x = next_arc["x_center"] + arc_radius * center_vector_x / center_vector_length
-    tangent2_z = next_arc["z_center"] + arc_radius * center_vector_z / center_vector_length
-    return tangent1_x, tangent1_z, tangent2_x, tangent2_z, fillet_center_x, fillet_center_z, cross < 0
+    tangent2_x = after.center_x + arc_radius * center_vector_x / center_vector_length
+    tangent2_z = after.center_z + arc_radius * center_vector_z / center_vector_length
+    return _Fillet(tangent1_x, tangent1_z, tangent2_x, tangent2_z, fillet_center_x, fillet_center_z, cross < 0)
 
 
-def _legacy_chamfer_line(logical_x, logical_z, end_x, end_z, next_segment, width):
+def _chamfer_line(logical_x, logical_z, end_x, end_z, after, width) -> Optional[_Chamfer]:
     delta_x = end_x - logical_x
     delta_z = end_z - logical_z
     length = math.sqrt(delta_x ** 2 + delta_z ** 2)
-    if length < 0.001 or width < 0.001:
+    if length < RESOLUTION or width < RESOLUTION:
         return None
     chamfer_start_x = end_x - width * delta_x / length
     chamfer_start_z = end_z - width * delta_z / length
     chamfer_end_x = end_x
     chamfer_end_z = end_z
 
-    if next_segment and next_segment["type"] == "lineTo":
-        next_delta_x = next_segment["x_end"] - end_x
-        next_delta_z = next_segment["z_end"] - end_z
+    if isinstance(after, _NextLine):
+        next_delta_x = after.x - end_x
+        next_delta_z = after.z - end_z
         next_length = math.sqrt(next_delta_x ** 2 + next_delta_z ** 2)
-        if next_length > 0.001:
+        if next_length > RESOLUTION:
             chamfer_end_x = end_x + width * next_delta_x / next_length
             chamfer_end_z = end_z + width * next_delta_z / next_length
-    elif next_segment and next_segment["type"] == "arcTo":
-        radial_x = end_x - next_segment["x_center"]
-        radial_z = end_z - next_segment["z_center"]
-        tangent_x = radial_z if next_segment["gcode_dir"] != 2 else -radial_z
-        tangent_z = -radial_x if next_segment["gcode_dir"] != 2 else radial_x
+    elif isinstance(after, _NextArc):
+        radial_x = end_x - after.center_x
+        radial_z = end_z - after.center_z
+        tangent_x = radial_z if after.clockwise else -radial_z
+        tangent_z = -radial_x if after.clockwise else radial_x
         tangent_length = math.sqrt(tangent_x ** 2 + tangent_z ** 2)
-        if tangent_length > 0.001:
+        if tangent_length > RESOLUTION:
             chamfer_end_x = end_x + width * tangent_x / tangent_length
             chamfer_end_z = end_z + width * tangent_z / tangent_length
-    return chamfer_start_x, chamfer_start_z, chamfer_end_x, chamfer_end_z
+    return _Chamfer(chamfer_start_x, chamfer_start_z, chamfer_end_x, chamfer_end_z)
 
 
-def _legacy_chamfer_arc(center_x, center_z, radius, is_cw, end_x, end_z, next_segment, width):
+def _chamfer_arc(center_x, center_z, radius, is_cw, end_x, end_z, after, width) -> Optional[_Chamfer]:
     radial_x = end_x - center_x
     radial_z = end_z - center_z
     radial_length = math.sqrt(radial_x ** 2 + radial_z ** 2)
-    if radial_length < 0.001 or width < 0.001:
+    if radial_length < RESOLUTION or width < RESOLUTION:
         return None
     tangent_x = radial_z if is_cw else -radial_z
     tangent_z = -radial_x if is_cw else radial_x
@@ -372,32 +460,28 @@ def _legacy_chamfer_arc(center_x, center_z, radius, is_cw, end_x, end_z, next_se
     chamfer_start_z = end_z - width * tangent_z / radial_length
     chamfer_end_x = end_x
     chamfer_end_z = end_z
-    if next_segment and next_segment["type"] == "lineTo":
-        next_delta_x = next_segment["x_end"] - end_x
-        next_delta_z = next_segment["z_end"] - end_z
+    if isinstance(after, _NextLine):
+        next_delta_x = after.x - end_x
+        next_delta_z = after.z - end_z
         next_length = math.sqrt(next_delta_x ** 2 + next_delta_z ** 2)
-        if next_length > 0.001:
+        if next_length > RESOLUTION:
             chamfer_end_x = end_x + width * next_delta_x / next_length
             chamfer_end_z = end_z + width * next_delta_z / next_length
-    return chamfer_start_x, chamfer_start_z, chamfer_end_x, chamfer_end_z
+    return _Chamfer(chamfer_start_x, chamfer_start_z, chamfer_end_x, chamfer_end_z)
 
 
-def _legacy_undercut_din509_line(
-    start_x,
-    start_z,
-    corner_x,
-    corner_z,
-    next_segment,
-    undercut_radius,
-    undercut_depth,
-    undercut_length,
-):
-    if not next_segment or next_segment["type"] != "lineTo":
-        return None
+def undercut_din509(start_x, start_z, corner_x, corner_z, next_x, next_z,
+                    blend: ProfileBlend) -> Optional[Undercut]:
+    """The DIN 509 undercut ``blend`` cuts into the corner (corner_x,
+    corner_z) between the line from (start_x, start_z) and the one on to
+    (next_x, next_z), all in radius space; None where there is none to cut."""
+    undercut_radius = blend.undercut_radius
+    undercut_depth = blend.undercut_depth
+    undercut_length = blend.undercut_length
     if (
-        undercut_radius < 0.001
-        or undercut_depth < 0.001
-        or undercut_length < 0.001
+        undercut_radius < RESOLUTION
+        or undercut_depth < RESOLUTION
+        or undercut_length < RESOLUTION
         or undercut_depth < undercut_radius
     ):
         return None
@@ -405,13 +489,13 @@ def _legacy_undercut_din509_line(
     delta1_x = corner_x - start_x
     delta1_z = corner_z - start_z
     length1 = math.sqrt(delta1_x ** 2 + delta1_z ** 2)
-    if length1 < 0.001:
+    if length1 < RESOLUTION:
         return None
 
-    delta2_x = next_segment["x_end"] - corner_x
-    delta2_z = next_segment["z_end"] - corner_z
+    delta2_x = next_x - corner_x
+    delta2_z = next_z - corner_z
     length2 = math.sqrt(delta2_x ** 2 + delta2_z ** 2)
-    if length2 < 0.001:
+    if length2 < RESOLUTION:
         return None
 
     dir1_x = delta1_x / length1
@@ -421,10 +505,10 @@ def _legacy_undercut_din509_line(
 
     cross = dir1_z * dir2_x - dir1_x * dir2_z
     dot = dir1_z * dir2_z + dir1_x * dir2_x
-    if abs(cross) < 0.001:
+    if abs(cross) < RESOLUTION:
         return None
 
-    ramp_len = undercut_depth / math.tan(math.radians(15.0))
+    ramp_len = undercut_depth / math.tan(math.radians(DIN509_RAMP_ANGLE))
     depth_x = dir1_z
     depth_z = -dir1_x
     if depth_x * dir2_x + depth_z * dir2_z > 0:
@@ -454,189 +538,15 @@ def _legacy_undercut_din509_line(
     exit_z = join_z + tangent_len * dir2_z
     normal_x = dir1_z if cross > 0 else -dir1_z
     normal_z = -dir1_x if cross > 0 else dir1_x
-    arc_center_x = arc_start_x + undercut_radius * normal_x
-    arc_center_z = arc_start_z + undercut_radius * normal_z
-
-    return {
-        "entry_x": ramp_start_x,
-        "entry_z": ramp_start_z,
-        "ramp_end_x": ramp_end_x,
-        "ramp_end_z": ramp_end_z,
-        "arc_start_x": arc_start_x,
-        "arc_start_z": arc_start_z,
-        "arc_center_x": arc_center_x,
-        "arc_center_z": arc_center_z,
-        "exit_x": exit_x,
-        "exit_z": exit_z,
-        "anticlockwise": cross < 0,
-    }
+    return Undercut(ramp_start_x, ramp_start_z, ramp_end_x, ramp_end_z, arc_start_x, arc_start_z,
+                    arc_start_x + undercut_radius * normal_x, arc_start_z + undercut_radius * normal_z,
+                    exit_x, exit_z, cross < 0)
 
 
-def _half_x_seg(seg):
-    """Return seg dict with all X fields halved (diameter → physical radius) for geometry calls."""
-    if seg is None:
-        return None
-    if seg["type"] == "lineTo":
-        return {**seg, "x_end": seg["x_end"] / 2}
-    if seg["type"] == "arcTo":
-        xeh = seg["x_end"] / 2
-        xch = seg["x_center"] / 2
-        return {
-            **seg,
-            "x_end": xeh,
-            "x_center": xch,
-            "arc_radius": math.sqrt((xeh - xch) ** 2 + (seg["z_end"] - seg["z_center"]) ** 2),
-        }
-    return seg
-
-
-def build_render_path(segments, profile_type: str = "od"):
-    if not segments:
-        return []
-
-    is_id = str(profile_type or "od").lower() == "id"
-    legacy_segments = [_as_legacy_segment(segment) for segment in segments]
-    path = []
-    logical_x = 0.0
-    logical_z = 0.0
-    for index, segment in enumerate(legacy_segments):
-        if segment["type"] == "startPoint":
-            logical_x = segment["x"]
-            logical_z = segment["z"]
-            blend_type = segment.get("blend_type", "none")
-            next_seg = _legacy_next_segment(legacy_segments, index)
-            if blend_type != "none" and next_seg:
-                next_seg_h = _half_x_seg(next_seg)
-                sx_r = logical_x / 2
-                sz = logical_z
-                if blend_type == "chamfer":
-                    cw = segment.get("blend_cw", 0.0)
-                    entry_x = sx_r + cw if is_id else sx_r - cw
-                    chamfer = _legacy_chamfer_line(entry_x, sz, sx_r, sz, next_seg_h, cw)
-                    if chamfer:
-                        cs_x, cs_z, ce_x, ce_z = chamfer
-                        path.append(StartPoint(cs_x * 2, cs_z))
-                        path.append(ToolpathLine(ce_x * 2, ce_z))
-                        continue
-                elif blend_type == "fillet":
-                    fr = segment.get("blend_rf", 0.0)
-                    entry_x = sx_r + fr if is_id else sx_r - fr
-                    if next_seg["type"] == "arcTo":
-                        fillet = _legacy_fillet_line_arc(entry_x, sz, sx_r, sz, next_seg_h, fr)
-                    else:
-                        fillet = _legacy_fillet_line_line(entry_x, sz, sx_r, sz, next_seg_h, fr)
-                    if fillet:
-                        t1x, t1z, t2x, t2z, fcx, fcz, acw = fillet
-                        path.append(StartPoint(t1x * 2, t1z))
-                        path.append(ToolpathArc(t2x * 2, t2z, fcx * 2, fcz, acw))
-                        continue
-            path.append(StartPoint(logical_x, logical_z))
-            continue
-
-        next_segment = _legacy_next_segment(legacy_segments, index)
-        if segment["type"] == "lineTo":
-            end_x = segment["x_end"]
-            end_z = segment["z_end"]
-            logical_next_x = end_x
-            logical_next_z = end_z
-            if segment.get("blend_type") == "chamfer":
-                chamfer = _legacy_chamfer_line(
-                    logical_x / 2, logical_z, end_x / 2, end_z,
-                    _half_x_seg(next_segment), segment.get("blend_cw", 0.0),
-                )
-                if chamfer:
-                    sx, sz, cex, cez = chamfer
-                    path.append(ToolpathLine(sx * 2, sz))
-                    path.append(ToolpathLine(cex * 2, cez))
-                else:
-                    path.append(ToolpathLine(end_x, end_z))
-            elif segment.get("blend_type") == "fillet":
-                radius = segment.get("blend_rf", 0.0)
-                if next_segment and next_segment["type"] == "arcTo":
-                    fillet = _legacy_fillet_line_arc(
-                        logical_x / 2, logical_z, end_x / 2, end_z,
-                        _half_x_seg(next_segment), radius,
-                    )
-                else:
-                    fillet = _legacy_fillet_line_line(
-                        logical_x / 2, logical_z, end_x / 2, end_z,
-                        _half_x_seg(next_segment), radius,
-                    )
-                if fillet:
-                    t1x, t1z, t2x, t2z, cx, cz, acw = fillet
-                    path.append(ToolpathLine(t1x * 2, t1z))
-                    path.append(ToolpathArc(t2x * 2, t2z, cx * 2, cz, acw))
-                else:
-                    path.append(ToolpathLine(end_x, end_z))
-            elif segment.get("blend_type") == "undercut_din509":
-                undercut = _legacy_undercut_din509_line(
-                    logical_x / 2, logical_z,
-                    end_x / 2, end_z,
-                    _half_x_seg(next_segment),
-                    segment.get("undercut_radius", 0.4),
-                    segment.get("undercut_depth", 0.4),
-                    segment.get("undercut_length", 2.5),
-                )
-                if undercut:
-                    path.append(ToolpathLine(undercut["entry_x"] * 2, undercut["entry_z"]))
-                    path.append(ToolpathLine(undercut["ramp_end_x"] * 2, undercut["ramp_end_z"]))
-                    path.append(ToolpathLine(undercut["arc_start_x"] * 2, undercut["arc_start_z"]))
-                    path.append(ToolpathArc(
-                        undercut["exit_x"] * 2,
-                        undercut["exit_z"],
-                        undercut["arc_center_x"] * 2,
-                        undercut["arc_center_z"],
-                        undercut["anticlockwise"],
-                    ))
-                    logical_next_x = undercut["exit_x"] * 2
-                    logical_next_z = undercut["exit_z"]
-                else:
-                    path.append(ToolpathLine(end_x, end_z))
-            else:
-                path.append(ToolpathLine(end_x, end_z))
-            logical_x = logical_next_x
-            logical_z = logical_next_z
-            continue
-
-        end_x = segment["x_end"]
-        end_z = segment["z_end"]
-        cx_d = segment["x_center"]
-        cz = segment["z_center"]
-        is_cw = segment["gcode_dir"] != 2
-        end_x_h = end_x / 2
-        cx_h = cx_d / 2
-        arc_r_h = math.sqrt((end_x_h - cx_h) ** 2 + (end_z - cz) ** 2)
-        if segment.get("blend_type") == "chamfer":
-            chamfer = _legacy_chamfer_arc(
-                cx_h, cz, arc_r_h, is_cw, end_x_h, end_z,
-                _half_x_seg(next_segment), segment.get("blend_cw", 0.0),
-            )
-            if chamfer:
-                sx, sz, cex, cez = chamfer
-                path.append(ToolpathArc(sx * 2, sz, cx_d, cz, not is_cw))
-                path.append(ToolpathLine(cex * 2, cez))
-            else:
-                path.append(ToolpathArc(end_x, end_z, cx_d, cz, not is_cw))
-        elif segment.get("blend_type") == "fillet":
-            fillet = _legacy_fillet_arc_line(
-                cx_h, cz, arc_r_h, is_cw, end_x_h, end_z,
-                _half_x_seg(next_segment), segment.get("blend_rf", 0.0),
-            )
-            if fillet:
-                t1x, t1z, t2x, t2z, fcx, fcz, acw = fillet
-                path.append(ToolpathArc(t1x * 2, t1z, cx_d, cz, not is_cw))
-                path.append(ToolpathArc(t2x * 2, t2z, fcx * 2, fcz, acw))
-            else:
-                path.append(ToolpathArc(end_x, end_z, cx_d, cz, not is_cw))
-        else:
-            path.append(ToolpathArc(end_x, end_z, cx_d, cz, not is_cw))
-        logical_x = end_x
-        logical_z = end_z
-    return path
-
+# ── On a path ───────────────────────────────────────────────────────────────
 
 def _normalize_angle(angle):
-    two_pi = 2.0 * math.pi
+    two_pi = math.pi * 2.0
     while angle < 0.0:
         angle += two_pi
     while angle >= two_pi:
@@ -651,25 +561,25 @@ def _angle_on_arc(angle, start_angle, end_angle, anticlockwise):
 
     if anticlockwise:
         if end_angle < start_angle:
-            end_angle += 2.0 * math.pi
+            end_angle += math.pi * 2.0
         if angle < start_angle:
-            angle += 2.0 * math.pi
-        return start_angle - 1e-9 <= angle <= end_angle + 1e-9
+            angle += math.pi * 2.0
+        return start_angle - ROUNDING <= angle <= end_angle + ROUNDING
 
     if start_angle < end_angle:
-        start_angle += 2.0 * math.pi
+        start_angle += math.pi * 2.0
     if angle > start_angle:
-        angle -= 2.0 * math.pi
-    return end_angle - 1e-9 <= angle <= start_angle + 1e-9
+        angle -= math.pi * 2.0
+    return end_angle - ROUNDING <= angle <= start_angle + ROUNDING
 
 
-def _arc_z_intersections_x(sx, sz, ex, ez, cx, cz, anticlockwise, target_z):
-    """Return all X values (diameter) where arc (sx,sz)->(ex,ez) crosses z=target_z.
-    X coords are in diameter; geometry is computed in physical radius-Z space."""
+def arc_x_at_z(sx, sz, ex, ez, cx, cz, anticlockwise, target_z) -> List[float]:
+    """Every X (a diameter) where the arc (sx, sz) -> (ex, ez) about
+    (cx, cz) crosses Z ``target_z``."""
     sx_r, ex_r, cx_r = sx / 2, ex / 2, cx / 2
     radius = math.hypot(sx_r - cx_r, sz - cz)
     dz = target_z - cz
-    if abs(dz) > radius + 1e-9:
+    if abs(dz) > radius + ROUNDING:
         return []
     disc = max(0.0, radius * radius - dz * dz)
     start_angle = math.atan2(sz - cz, sx_r - cx_r)

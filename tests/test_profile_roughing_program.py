@@ -10,8 +10,9 @@ from PyQt6.QtCore import QCoreApplication, QEventLoop, QTimer
 
 from teachinlathe.conversational.gcode import build_ngc_from_program
 from teachinlathe.conversational.gcode.gcode_builder import ToolsNotReady
-from teachinlathe.conversational.gcode.operations.profile_roughing_preview import (
-    build_profile_roughing_preview,
+from teachinlathe.conversational.gcode.operations.profiling.operation_input import profile_cut
+from teachinlathe.conversational.gcode.operations.profile_roughing import (
+    profile_roughing_preview,
 )
 from teachinlathe.conversational.logic.conversational_use_case import ConversationalUseCase
 from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
@@ -114,7 +115,7 @@ def test_no_gcode_while_the_rest_tool_is_still_to_be_chosen(program, use_case, t
     with pytest.raises(ToolsNotReady) as refused:
         build(program, tmp_path)
 
-    assert refused.value.problems == ["Operation #3 Profile Roughing: no tool chosen"]
+    assert refused.value.problems == ["Operation #3 OD Profile Roughing (P1) · Rest: no tool chosen"]
     assert not (tmp_path / "ngc").exists()
 
 
@@ -170,7 +171,7 @@ def _payload(program):
     from teachinlathe.conversational.gcode import gcode_builder
     gcode_builder._TOOLS = TOOLS
     try:
-        return gcode_builder._build_operation_payload(program.operations[1], program, 1)
+        return profile_cut(program, 1, program.operations[1], TOOLS)
     finally:
         gcode_builder._TOOLS = None
 
@@ -181,7 +182,7 @@ def test_worker_previews_what_the_gui_would(planner, program):
 
     ok, result = answers(planner, 1)[request]
     assert ok
-    assert result == build_profile_roughing_preview(payload)
+    assert result == profile_roughing_preview(payload)
 
 
 def test_worker_keeps_only_the_last_of_the_requests_waiting(planner, program):

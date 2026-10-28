@@ -29,7 +29,9 @@ from teachinlathe.conversational.model.data_types import (
     GrooveRoughing,
     Header,
     Knurling,
+    Operation,
     Parting,
+    PredefinedPosition,
     ProfileContour,
     ProfileRoughing,
     Profiling,
@@ -288,17 +290,17 @@ class ConversationalUseCase:
         return rest_index
 
     def use_tool(self, program: Program, op_index: int, tool_no: int,
-                 toolchange_position: str = "G28", scope: str = "this") -> bool:
+                 toolchange_position: PredefinedPosition = PredefinedPosition.G28,
+                 scope: "program_tools.Scope" = program_tools.Scope.THIS) -> bool:
         """Have the operation at ``op_index`` cut with the tool in holder
-        ``tool_no``, changed to at ``toolchange_position`` ("G28" or "G30");
-        ``scope`` (a program_tools.Scope value) says which of the others
-        cutting with its tool do too. False when there is no such operation,
-        or the holder is empty."""
+        ``tool_no``, changed to at ``toolchange_position``; ``scope`` says
+        which of the others cutting with its tool do too. False when there is
+        no such operation, or the holder is empty."""
         op = self.operation(program, op_index)
         if not program_tools.needs_tool(op) or tool_no <= 0:
             return False
-        return program_tools.choose_tool(program, op, int(tool_no), toolchange_position,
-                                         program_tools.Scope(scope), self._tool_library())
+        return program_tools.choose_tool(program, op, int(tool_no), toolchange_position, scope,
+                                         self._tool_library())
 
     def set_generate_gcode(self, program: Program, index: int, checked: bool) -> bool:
         op = self.operation(program, index)
@@ -534,104 +536,74 @@ class ConversationalUseCase:
         return self._library_tool(program, index)
 
     @staticmethod
-    def facing_preview(op_data: dict) -> dict:
-        """What a Facing would cut with ``op_data``; see build_facing_preview."""
-        from teachinlathe.conversational.gcode.operations.facing_preview import build_facing_preview
-        return build_facing_preview(op_data)
+    def facing_preview(op_data: dict):
+        """What a Facing would cut as its editor has it - ``op_data``, the
+        operation's dict - an OperationPreview."""
+        from teachinlathe.conversational.gcode.operations.facing import facing_preview
+        return facing_preview(Operation.from_dict(op_data))
 
-    def profile_roughing_preview(self, program, op_index: int, op_data: dict) -> dict:
-        """What the Profile Roughing at ``op_index`` would cut with ``op_data``,
-        against the last profile above it; see build_profile_roughing_preview.
+    @staticmethod
+    def parting_preview(op_data: dict):
+        """What a Parting would cut as its editor has it - ``op_data``, the
+        operation's dict - an OperationPreview."""
+        from teachinlathe.conversational.gcode.operations.parting import parting_preview
+        return parting_preview(Operation.from_dict(op_data))
+
+    @staticmethod
+    def drilling_preview(op_data: dict):
+        """What a Drilling would cut as its editor has it - ``op_data``, the
+        operation's dict - an OperationPreview."""
+        from teachinlathe.conversational.gcode.operations.drilling import drilling_preview
+        return drilling_preview(Operation.from_dict(op_data))
+
+    def profile_roughing_preview(self, program, op_index: int, op_data: dict):
+        """What the Profile Roughing at ``op_index`` would cut with ``op_data``;
+        see profile_roughing_preview.
         Worked out here, on the caller's thread - the editor has it done in
         the planning worker (plan_worker) instead."""
-        from teachinlathe.conversational.gcode.operations.profile_roughing_preview import (
-            build_profile_roughing_preview,
-        )
-        return build_profile_roughing_preview(self.resolve_profile_roughing(program, op_index, op_data))
+        from teachinlathe.conversational.gcode.operations.profile_roughing import profile_roughing_preview
+        return profile_roughing_preview(self.profile_cut(program, op_index, op_data))
 
-    def resolve_profile_roughing(self, program, op_index: int, op_data: dict) -> dict:
-        """``op_data`` with all its preview needs from the program: the
-        profile, the tool - and for rest material the roughings above it.
-        Values that pickle - dicts, and the tool a CuttingTool - so it can go
-        to the planning worker as it is."""
-        op_data = dict(op_data)
-        op_data["_resolved_profile"] = self.last_profile_before(program, op_index)
-        op_data["_resolved_cutting_tool"] = self.tool_of(program, op_index)
-        if op_data.get("rest_material"):
-            op_data["_resolved_previous_roughing"] = self.roughings_before(program, op_index)
-        return op_data
+    def profile_cut(self, program, op_index: int, op_data: dict):
+        """The Profile Roughing or Contour at ``op_index`` as its editor has
+        it - ``op_data``, the operation's dict - with what it is planned
+        against in the program, as its G-code is (a ProfileCut). It pickles,
+        so it can go to the planning worker as it is."""
+        from teachinlathe.conversational.gcode.operations.profiling.operation_input import profile_cut
+        return profile_cut(program, op_index, Operation.from_dict(op_data), self._tool_library())
 
-    def roughings_before(self, program: Optional[Program], before_index: int) -> list:
-        """The Profile Roughings above ``before_index`` that cut the same
-        profile as the one there, in order, each as an operation dict with its
-        profile and tool resolved - what a rest roughing starts from."""
-        if program is None:
-            return []
-        ops = program.operations
-        own = ops[before_index] if 0 <= before_index < len(ops) else None
-        profile_id = int(getattr(getattr(own, "profilingParameters", None), "profile_id", 0) or 0)
-        out = []
-        for index, op in enumerate(ops[:max(before_index, 0)]):
-            if not isinstance(op, ProfileRoughing):
-                continue
-            if int(getattr(op.profilingParameters, "profile_id", 0) or 0) != profile_id:
-                continue
-            data = op.to_dict()
-            data["_resolved_profile"] = self.last_profile_before(program, index)
-            data["_resolved_cutting_tool"] = self.tool_of(program, index)
-            out.append(data)
-        return out
+    @staticmethod
+    def profile_roughing_preview_key(cut) -> str:
+        """What a Profile Roughing's preview of ``cut`` depends on: its plan's
+        inputs (roughing_plan_key)."""
+        from teachinlathe.conversational.gcode.operations.profile_roughing import roughing_plan_key
+        return roughing_plan_key(cut)
 
+    def profile_contour_preview(self, program, op_index: int, op_data: dict):
+        """What the Profile Contour at ``op_index`` would cut with ``op_data``;
+        see profile_contour_preview."""
+        from teachinlathe.conversational.gcode.operations.profile_contour import profile_contour_preview
+        return profile_contour_preview(self.profile_cut(program, op_index, op_data))
 
-    def profile_contour_preview(self, program, op_index: int, op_data: dict) -> dict:
-        """What the Profile Contour at ``op_index`` would cut with ``op_data``,
-        against the last profile above it; see build_profile_contour_preview."""
-        from teachinlathe.conversational.gcode.operations.profile_contour_preview import (
-            build_profile_contour_preview,
-        )
-        op_data = dict(op_data)
-        op_data["_resolved_profile"] = self.last_profile_before(program, op_index)
-        op_data["_resolved_cutting_tool"] = self.tool_of(program, op_index)
-        return build_profile_contour_preview(op_data)
+    def groove_cut(self, program, op_index: int, op_data: dict):
+        """The Groove Roughing or Finishing at ``op_index`` as its editor has
+        it - ``op_data``, the operation's dict - with what it is cut against
+        in the program, as its G-code is (a GrooveCut)."""
+        from teachinlathe.conversational.gcode.operations.profiling.operation_input import groove_cut
+        return groove_cut(program, op_index, Operation.from_dict(op_data), self._tool_library())
 
-    def _with_groove_resolved(self, program, op_index: int, op_data: dict, profile_id: int) -> dict:
-        """``op_data`` with what a groove operation at ``op_index`` is cut
-        against, as the G-code has it: the radial profile ``profile_id``
-        and its tool."""
-        from teachinlathe.conversational.gcode import gcode_builder
-        op_data = dict(op_data)
-        operations = program.operations if program is not None else []
-        profile_op = gcode_builder._resolve_radial_profile_operation(profile_id, operations, op_index)
-        op_data["_resolved_radial_profile"] = profile_op.to_dict() if profile_op else {}
-        from teachinlathe.tooling.model.data_types import MountedTool
-        entry = self.tool_entry(program, op_index)
-        usable = self._library_tool(program, op_index) is not None
-        op_data["_resolved_tool"] = (MountedTool.of(self._tool_library(), entry.tool_holder_id)
-                                     if usable else None)
-        return op_data
-
-    def groove_roughing_preview(self, program, op_index: int, op_data: dict) -> dict:
+    def groove_roughing_preview(self, program, op_index: int, op_data: dict):
         """What the Groove Roughing at ``op_index`` would cut with ``op_data``;
-        see build_groove_roughing_preview."""
-        from teachinlathe.conversational.gcode.operations.groove_roughing_preview import (
-            build_groove_roughing_preview,
-        )
-        profile_id = int((op_data.get("roughing_parameters") or {}).get("profile_id", 0) or 0)
-        return build_groove_roughing_preview(self._with_groove_resolved(program, op_index, op_data, profile_id))
+        see groove_roughing_preview."""
+        from teachinlathe.conversational.gcode.operations.groove_roughing import groove_roughing_preview
+        return groove_roughing_preview(self.groove_cut(program, op_index, op_data))
 
-    def groove_finishing_preview(self, program, op_index: int, op_data: dict) -> dict:
+    def groove_finishing_preview(self, program, op_index: int, op_data: dict):
         """What the Groove Finishing at ``op_index`` would cut with
         ``op_data``, the stock the Groove Roughing of its profile above left
-        included; see build_groove_finishing_preview."""
-        from teachinlathe.conversational.gcode import gcode_builder
-        from teachinlathe.conversational.gcode.operations.groove_finishing_preview import (
-            build_groove_finishing_preview,
-        )
-        profile_id = int((op_data.get("finishing_parameters") or {}).get("profile_id", 0) or 0)
-        op_data = self._with_groove_resolved(program, op_index, op_data, profile_id)
-        op_data["_resolved_roughing_stock"] = gcode_builder._resolve_groove_roughing_stock(
-            profile_id, program.operations if program is not None else [], op_index)
-        return build_groove_finishing_preview(op_data)
+        included; see groove_finishing_preview."""
+        from teachinlathe.conversational.gcode.operations.groove_finishing import groove_finishing_preview
+        return groove_finishing_preview(self.groove_cut(program, op_index, op_data))
 
     # ── the edit each operation type takes ──────────────────────────────────
 

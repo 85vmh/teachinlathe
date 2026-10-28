@@ -8,10 +8,15 @@ import theme
 SwipeRow {
     id: root
 
-    // Inputs from the ListView delegate
-    property var  op
-    property int  rowIndex: -1
-    property bool isCurrentItem: false
+    // Inputs from the ListView delegate: the operation's row
+    // (OperationListModel's roles) and where it is
+    property int    number: 0
+    property string title: ""
+    property string toolLabel: ""
+    property bool   generateGcode: false
+    property bool   optionalBlock: false
+    property int    rowIndex: -1
+    property bool   isCurrentItem: false
 
     // Column widths
     property int colOpNumW: 50
@@ -24,15 +29,13 @@ SwipeRow {
     // Being dragged to a new place, after a long press
     property bool lifted: false
 
-    // Bound to the operation, never set: the list hands a row another
-    // operation's data when operations move, and it must follow.
-    readonly property bool gcodeEnabled: !!(op && op.generate_gcode)
+    // Bound to the row, never set: the list hands a row another
+    // operation's when operations move, and it must follow.
+    readonly property bool gcodeEnabled: generateGcode
     readonly property int operationLabelMinW: colOpNumW + colTypeW
     readonly property string operationLabel: {
-        var order = (op && op.order !== undefined) ? op.order : (rowIndex + 1)
-        var orderText = order >= 1 && order <= 9 ? "0" + order : "" + order
-        var name = (op && op.display_type) ? op.display_type : (op && op.type ? op.type : "")
-        return "[#" + orderText + "]    " + name
+        var numberText = number >= 1 && number <= 9 ? "0" + number : "" + number
+        return "[#" + numberText + "]    " + title
     }
 
     // Signals back to parent
@@ -123,8 +126,8 @@ SwipeRow {
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
-                visible: !!(root.op && root.op.tool_label)
-                text: visible ? root.op.tool_label : ""
+                visible: root.toolLabel !== ""
+                text: root.toolLabel
                 font.pixelSize: root.itemFontSize
                 font.bold: true
                 color: root.gcodeEnabled ? "black" : Theme.outlineStrong
@@ -143,7 +146,6 @@ SwipeRow {
                 anchors.centerIn: parent
                 checked: root.gcodeEnabled
                 onToggled: {
-                    if (!op) return
                     root.generateToggled(rowIndex, checked)
                     // a click breaks the binding; the save above has already
                     // put the new value in the operation
@@ -163,11 +165,10 @@ SwipeRow {
             Layout.fillHeight: true
             CheckBox {
                 anchors.centerIn: parent
-                checked: !!(op && op.is_optional_block)
+                checked: root.optionalBlock
                 onToggled: {
-                    if (!op) return
                     root.optionalToggled(rowIndex, checked)
-                    checked = Qt.binding(function() { return !!(root.op && root.op.is_optional_block) })
+                    checked = Qt.binding(function() { return root.optionalBlock })
                 }
             }
         }

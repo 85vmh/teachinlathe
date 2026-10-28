@@ -7,7 +7,10 @@ import common
 Rectangle {
     id: root
 
-    property var operationsModel: []
+    // the program's operations, a row each - OperationListModel: number,
+    // title, toolLabel, generateGcode, optionalBlock - a row's index its
+    // operation's
+    property var operationsModel: null
     property int programDatum: 1          // the work offset's P number: 1 is G54
     property int activeOpIndex: -1
 
@@ -29,7 +32,7 @@ Rectangle {
     property int dragFrom: -1
     property real dragDy: 0
     readonly property int dragTo: dragFrom < 0 ? -1
-        : Math.max(0, Math.min(operationsModel.length - 1, dragFrom + Math.round(dragDy / rowH)))
+        : Math.max(0, Math.min(opsList.count - 1, dragFrom + Math.round(dragDy / rowH)))
     property bool _dragAnimate: true
 
     signal programHeaderSelected()
@@ -42,27 +45,12 @@ Rectangle {
     signal duplicateOperationRequested(int index)
     signal moveOperationRequested(int fromIndex, int toIndex)
 
-    function sourceIndexAt(visibleIndex) {
-        return visibleIndex >= 0 && visibleIndex < operationsModel.length
-            ? operationsModel[visibleIndex].source_index : -1
-    }
-
-    function visibleIndexForSource(sourceIndex) {
-        if (sourceIndex < 0)
-            return -1
-        for (var i = 0; i < operationsModel.length; ++i) {
-            if (operationsModel[i].source_index === sourceIndex)
-                return i
-        }
-        return -1
-    }
-
     function selectedOperationIndex() {
-        return sourceIndexAt(opsList.currentIndex)
+        return opsList.currentIndex
     }
 
     function setCurrentOperationIndex(index) {
-        opsList.currentIndex = visibleIndexForSource(index)
+        opsList.currentIndex = index >= 0 && index < opsList.count ? index : -1
     }
 
     function saveScrollPosition() {
@@ -100,7 +88,7 @@ Rectangle {
         _dragAnimate = false
         if (from >= 0 && to >= 0 && to !== from) {
             saveScrollPosition()
-            moveOperationRequested(sourceIndexAt(from), sourceIndexAt(to))
+            moveOperationRequested(from, to)
         }
         dragFrom = -1
         dragDy = 0
@@ -138,7 +126,14 @@ Rectangle {
     }
 
     onActiveOpIndexChanged: setCurrentOperationIndex(activeOpIndex)
-    onOperationsModelChanged: syncAfterOperationsModelChanged()
+
+    // the rows changed - all of them anew, or some in place: the scroll
+    // position and the selection as they are to be after
+    Connections {
+        target: root.operationsModel
+        function onModelReset() { Qt.callLater(root.syncAfterOperationsModelChanged) }
+        function onDataChanged() { Qt.callLater(root.syncAfterOperationsModelChanged) }
+    }
 
     Loader {
         id: addOpPopupLoader
@@ -156,10 +151,10 @@ Rectangle {
 
         onLoaded: {
             if (item) {
-                item.operationsCount = root.operationsModel.length
-                var current = root.operationsModel[opsList.currentIndex]
-                item.insertAboveIndex = current ? current.group_start_index : 0
-                item.insertBelowIndex = current ? current.source_index + 1 : -1
+                item.operationsCount = opsList.count
+                var current = opsList.currentIndex
+                item.insertAboveIndex = current >= 0 ? current : 0
+                item.insertBelowIndex = current >= 0 ? current + 1 : -1
                 if (item.open) item.open()
             }
         }
@@ -225,7 +220,7 @@ Rectangle {
                         id: opsList
                         anchors.fill: parent
                         clip: true
-                        model: root.operationsModel.length
+                        model: root.operationsModel
                         currentIndex: -1
                         interactive: root.dragFrom < 0
 
@@ -233,7 +228,7 @@ Rectangle {
 
                         onCurrentIndexChanged: {
                             if (currentIndex >= 0)
-                                root.operationSelected(root.sourceIndexAt(currentIndex))
+                                root.operationSelected(currentIndex)
                         }
 
                         delegate: Item {
@@ -270,7 +265,11 @@ Rectangle {
                                 id: opRow
                                 anchors.fill: parent
                                 operationIndex: parent.operationIndex
-                                operationData: root.operationsModel[parent.operationIndex]
+                                number: model.number
+                                title: model.title
+                                toolLabel: model.toolLabel
+                                generateGcode: model.generateGcode
+                                optionalBlock: model.optionalBlock
                                 selected: opsList.currentIndex === index
                                 colOpNumW: root.colOpNumW
                                 colGenW: root.colGenW
@@ -282,21 +281,21 @@ Rectangle {
 
                                 onGenerateToggled: function(i, checked) {
                                     root.saveScrollPosition()
-                                    root.generateToggled(root.sourceIndexAt(i), checked)
+                                    root.generateToggled(i, checked)
                                 }
                                 onOptionalToggled: function(i, checked) {
                                     root.saveScrollPosition()
-                                    root.optionalToggled(root.sourceIndexAt(i), checked)
+                                    root.optionalToggled(i, checked)
                                 }
                                 onDeleteClicked: function(i) {
                                     root.openSwipeIndex = -1
-                                    root._scrollToLastPending = i === root.operationsModel.length - 1
-                                    root.deleteOperationRequested(root.sourceIndexAt(i))
+                                    root._scrollToLastPending = i === opsList.count - 1
+                                    root.deleteOperationRequested(i)
                                 }
                                 onDuplicateClicked: function(i) {
                                     root.openSwipeIndex = -1
                                     root.saveScrollPosition()
-                                    root.duplicateOperationRequested(root.sourceIndexAt(i))
+                                    root.duplicateOperationRequested(i)
                                 }
                                 onReorderStarted: function(i) {
                                     root.openSwipeIndex = -1
@@ -306,7 +305,7 @@ Rectangle {
                                 onReorderMoved: function(i, dy) {
                                     // kept within the list's first and last rows
                                     root.dragDy = Math.max(-i * root.rowH,
-                                                           Math.min((root.operationsModel.length - 1 - i) * root.rowH, dy))
+                                                           Math.min((opsList.count - 1 - i) * root.rowH, dy))
                                 }
                                 onReorderFinished: function(i) {
                                     root._finishReorder()

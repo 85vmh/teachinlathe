@@ -12,16 +12,15 @@ import pytest
 from shapely.geometry import Point, Polygon, box
 from shapely.ops import unary_union
 
+from gcode_reading import groove_cut_of
 from teachinlathe.tooling.model.data_types import BladeTool, MountedTool, ZOffsetPlace
 from teachinlathe.conversational.gcode.operations.groove_roughing import (
     _first_groove,
     _radial_profile_primitives,
     generate_groove_roughing_gcode,
 )
-from teachinlathe.conversational.gcode.operations.profiling.geometry import (
-    build_profile_segments,
-    build_render_path,
-)
+from teachinlathe.conversational.gcode.operations.profiling.geometry import build_path
+from teachinlathe.conversational.model.data_types import ProfilingType
 from teachinlathe.conversational.gcode.operations.profiling.shapes import minkowski, path_points
 
 #: How far into the part or its stock a move may go, mm^2: rounding only.
@@ -163,7 +162,7 @@ def _part(op):
     profile = op["_resolved_radial_profile"]
     sign = -1.0 if profile["profile_type"] == "id" else 1.0
     groove = _first_groove(profile)
-    path = build_render_path(build_profile_segments(_radial_profile_primitives(groove)), profile["profile_type"])
+    path = build_path(_radial_profile_primitives(groove), ProfilingType(profile["profile_type"]))
     points = [(z, sign * r) for z, r in path_points(path)]
     if points[0][0] < points[-1][0]:
         points.reverse()
@@ -179,7 +178,7 @@ def _part(op):
 def _gouges(op):
     """The moves whose swept blade enters the part or its stock to leave:
     [(line of the move, (x0, z0, x1, z1), area)]."""
-    lines = generate_groove_roughing_gcode(op)
+    lines = generate_groove_roughing_gcode(groove_cut_of(op))
     assert not [line for line in lines if "ERROR" in line], lines
     part, sign = _part(op)
     blade = _blade_of(op)
@@ -215,7 +214,7 @@ def test_no_move_goes_deeper_than_the_smallest_diameter():
     """The Grooving tests program: its bottom at 12, no stock to leave - no
     X under 12 anywhere, rapids included."""
     op = _op(GROOVES["filleted"], BLADES["1.5 touched off left"], None)
-    xs = [x for move in _moves(generate_groove_roughing_gcode(op)) for x in (move[0], move[2])]
+    xs = [x for move in _moves(generate_groove_roughing_gcode(groove_cut_of(op))) for x in (move[0], move[2])]
 
     assert min(xs) >= 12.0 - 1e-6
 
@@ -238,18 +237,21 @@ def test_the_contours_clean_the_bottom_to_the_middle(groove, blade, stock):
     middle - the blade's own middle there - so the two of them clean all of
     it between them."""
     op = _op(GROOVES[groove], BLADES[blade], STOCK[stock])
-    lines = generate_groove_roughing_gcode(op)
+    lines = generate_groove_roughing_gcode(groove_cut_of(op))
     tool = _blade_of(op)
     middle = (GROOVES[groove]["right_flank"]["z_start"] + GROOVES[groove]["left_flank"]["z_start"]) / 2
     ends = {}
     section = None
+    z = None
     for line in lines:
+        # the Z a line leaves out is the one before it
+        found = re.search(r"Z(-?[\d.]+)", line.split("(")[0])
+        z = float(found.group(1)) if found else z
         if "Finish Contour Z+" in line:
             section = "right"
         elif "Finish Contour Z-" in line:
             section = "left"
         elif section and line.startswith(("G1", "G2", "G3")):
-            z = float(re.search(r"Z(-?[\d.]+)", line).group(1))
             ends[section] = z - tool["control"] * tool["width"] / 2      # the blade's middle
     assert ends["right"] <= middle + 1e-6
     assert ends["left"] >= middle - 1e-6
@@ -262,6 +264,6 @@ def test_the_blade_starts_the_clearance_out_from_the_start_diameter(stock):
     that - on the diameter, twice the radial values."""
     op = _op(GROOVES["filleted"], BLADES["1.5 touched off middle"], STOCK[stock], clearance=1.0)
     radial = op["stock_to_leave"]["radial"] if op["stock_to_leave_enabled"] else 0.0
-    first = next(move for move in _moves(generate_groove_roughing_gcode(op)))
+    first = next(move for move in _moves(generate_groove_roughing_gcode(groove_cut_of(op))))
 
     assert first[0] == pytest.approx(GROOVES["filleted"]["right_flank"]["x_start"] + 2 * radial + 2 * 1.0)

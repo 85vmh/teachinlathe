@@ -1,17 +1,30 @@
 import math
+from typing import Optional
 
 from teachinlathe.conversational.model.data_types import Tapping
 
-from ..config import fmt
-from ..helpers.m1 import inspect_position_int
 from ..helpers.spindle import build_spindle_gcode
+from ..toolpath import GcodeEmitter
 
 
 
-def generate_tapping_gcode(op: Tapping, pitch=None):
-    """``pitch``: the tap's, from the Tool Library; the op's own when None."""
-    line_prefix = "/" if op.is_optional_block else ""
+def _peck_targets(tapping):
+    """The Z each peck taps to, the last one Z End; one straight to Z End
+    without a peck depth."""
+    if tapping.peckDepth > 0.0 and abs(tapping.zEnd - tapping.zStart) > 0.0:
+        total_depth = abs(tapping.zEnd - tapping.zStart)
+        n_pecks = math.ceil(total_depth / tapping.peckDepth)
+        sign = -1.0 if tapping.zEnd < tapping.zStart else 1.0
+        return [tapping.zStart + sign * min((i + 1) * tapping.peckDepth, total_depth)
+                for i in range(n_pecks)]
+    return [tapping.zEnd]
 
+
+def tapping_toolpath(op: Tapping, path: GcodeEmitter, pitch: Optional[float] = None):
+    """``op``'s G-code, and its moves, onto ``path``: from the clearance in
+    front of Z Start, rigid tapping (G33.1) a peck at a time, each back out to
+    the clearance. ``pitch``: the tap's, from the Tool Library; the
+    operation's own when None."""
     spindle = op.speedsAndFeeds
     tapping = op.tappingParameters
     m1_params = op.m1Parameters
@@ -20,31 +33,11 @@ def generate_tapping_gcode(op: Tapping, pitch=None):
     # of Z Start
     retract_z = tapping.zStart + abs(tapping.toolClearance)
 
-    lines = list(build_spindle_gcode(spindle, line_prefix, force_rpm=True))
-    lines.append(f"{line_prefix}G0 X0 Z{fmt(retract_z)}")
-
-    if tapping.peckDepth > 0.0 and abs(tapping.zEnd - tapping.zStart) > 0.0:
-        total_depth = abs(tapping.zEnd - tapping.zStart)
-        n_pecks = math.ceil(total_depth / tapping.peckDepth)
-        sign = -1.0 if tapping.zEnd < tapping.zStart else 1.0
-        peck_targets = [
-            tapping.zStart + sign * min((i + 1) * tapping.peckDepth, total_depth)
-            for i in range(n_pecks)
-        ]
-    else:
-        peck_targets = [tapping.zEnd]
-
-    direction = spindle.sign
-    for z_target in peck_targets:
-        lines.append(f"{line_prefix}G33.1 Z{fmt(z_target)} K{fmt(pitch)}")
+    path.codes(build_spindle_gcode(spindle, "", force_rpm=True))
+    path.rapid(0.0, retract_z)
+    for z_target in _peck_targets(tapping):
+        path.start_pass()
+        path.rigid_tap(z_target, pitch)
         if m1_params.include_m1:
-            lines.append(
-                f"{line_prefix}o<m1_handling> call "
-                f"[{inspect_position_int(m1_params)}]"
-                f" [0.000] "
-                f"[{fmt(retract_z)}] "
-                f"[{direction}]"
-            )
-
-    lines.append(f"{line_prefix}G0 Z{fmt(retract_z)}")
-    return lines
+            path.inspect_stop(m1_params, spindle.sign)
+    path.rapid(z=retract_z)

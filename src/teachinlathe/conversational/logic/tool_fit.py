@@ -26,7 +26,7 @@ def _is_id(profiling_type) -> bool:
 def _radial_profile_type(program: Program, op, profile_id: int):
     """The type of the radial profile a groove at ``op`` cuts: the Define
     Radial Profile ``profile_id`` above it - the last one above with no id."""
-    index = next(i for i, o in enumerate(program.operations) if o is op)
+    index = program.index_of(op)
     for other in reversed(program.operations[:index]):
         if isinstance(other, DefineRadialProfile) and (not profile_id or int(other.profile_id) == profile_id):
             return other.profile_type

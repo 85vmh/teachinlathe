@@ -25,9 +25,9 @@ Item {
     property var opData: null
 
     // the program header's stock, and the tool in when this parts, as its
-    // Tool Library card shows it: {tool_no, card, view}; {} with none
+    // Tool Library card shows it: editor.toolCard, a ToolCard; null with none
     property var    workpiece: ({})
-    property var    toolCard: ({})
+    property var    toolCard: null
 
     // the values the boxes on the canvas show and edit
     property real   xStart: 0.0
@@ -78,6 +78,25 @@ Item {
     signal openNumPadRequested(var field)
 
     // opData with the values edited in the boxes
+    // what parting will cut with the values above, as its G-code moves - drawn
+    // where the canvas draws the blade: along Z by zShift, as the stock is
+    // broken to fit
+    readonly property var partingPreview: {
+        if (opIndex < 0 || !editor) return null
+        var preview = editor.preview(_draftOp())
+        function shifted(lines) {
+            return (lines || []).map(function(l) {
+                var m = JSON.parse(JSON.stringify(l))
+                m.z0 += root.zShift
+                m.z1 += root.zShift
+                return m
+            })
+        }
+        preview.feeds = shifted(preview.feeds)
+        preview.rapids = shifted(preview.rapids)
+        return preview
+    }
+
     function _draftOp() {
         var op = JSON.parse(JSON.stringify(opData || {}))
         op.parting_parameters = op.parting_parameters || {}
@@ -103,7 +122,7 @@ Item {
         opIndex = index
         opData  = data || {}
         workpiece = editor ? (editor.workpiece || {}) : {}
-        toolCard  = editor ? (editor.toolCard || {}) : {}
+        toolCard  = editor ? editor.toolCard : null
 
         var pp = opData.parting_parameters || {}
         xStart = pp.x_start !== undefined ? Number(pp.x_start) : 0
@@ -163,6 +182,8 @@ Item {
             // a dot at both ends of each arrow to a box
             arrowStartDots: true
             primitives: []
+            // the G-code's moves
+            roughingPreview: root.partingPreview
             // the header's stock, as big as Start Ø, broken off after where it
             // is parted - and its middle left out when that is far down it
             workpiece: {

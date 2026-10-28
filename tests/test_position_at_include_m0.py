@@ -1,4 +1,3 @@
-import importlib.util
 import sys
 from pathlib import Path
 
@@ -8,32 +7,14 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from teachinlathe.conversational.gcode.operations.position_at import generate_position_at_gcode
 from teachinlathe.conversational.model.data_types import (
     MoveSequence,
     PositionAt,
     PositionDetails,
 )
 
-POSITION_AT_GENERATOR = (
-    ROOT
-    / "src"
-    / "teachinlathe"
-    / "conversational"
-    / "gcode"
-    / "operations"
-    / "position_at.py"
-)
-
-
-def _load_position_at_generator():
-    spec = importlib.util.spec_from_file_location("position_at_generator", POSITION_AT_GENERATOR)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.generate_position_at_gcode
-
-
 def test_position_at_include_m0_serializes_and_generates_pause():
-    generate_position_at_gcode = _load_position_at_generator()
     details = PositionDetails(
         x_pos=12.0,
         z_pos=-5.0,

@@ -1,14 +1,9 @@
 import json
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Any, Optional, Type
+from typing import Any, ClassVar, Dict, List, Optional, Type
 
 from teachinlathe.tooling.model.data_types import SpindleDirection
-
-
-class CoordinateType(Enum):
-    RELATIVE = "relative"
-    ABSOLUTE = "absolute"
 
 
 class MoveSequence(Enum):
@@ -204,6 +199,11 @@ class Header:
         }
 
 
+def _od_or_id(profiling_type) -> str:
+    """"OD" or "ID", as an operation's name says which side it cuts."""
+    return "ID" if ProfilingType(profiling_type) is ProfilingType.ID else "OD"
+
+
 # ---------------------------- Base Operation ---------------------------------
 
 @dataclass
@@ -223,6 +223,10 @@ class Operation:
             ref = data.get("tool_ref")
             op.toolRef = int(ref) if ref is not None else None
         return op
+
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return type(self).__name__
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -253,6 +257,13 @@ class SpeedsAndFeeds:
     DEFAULT_RPM = 1000
     DEFAULT_CSS_VALUE = 100
     DEFAULT_CSS_MAX = 1000
+    #: mm/rev an operation that feeds is cut at while it has no feed set
+    DEFAULT_FEED_RATE = 0.1
+
+    @property
+    def feed(self) -> float:
+        """The feed, mm/rev: ``feed_rate``, DEFAULT_FEED_RATE with none."""
+        return float(self.feed_rate) if self.feed_rate is not None else self.DEFAULT_FEED_RATE
 
     @property
     def sign(self) -> int:
@@ -390,9 +401,7 @@ class PositionAt(Operation):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "PositionAt":
-        details = PositionDetails.from_dict(
-            data.get("position_details", data.get("toolchange_rules", {}))
-        )
+        details = PositionDetails.from_dict(data.get("position_details", {}))
         return PositionAt(
             order=int(data["order"]),
             type=data["type"],
@@ -408,6 +417,10 @@ class PositionAt(Operation):
             "position_details": details.to_dict()
         })
         return base
+
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return "Position At"
 
 
 # ----------------------------- M1 Parameters ---------------------------------
@@ -830,6 +843,10 @@ class Facing(TurnableOperation):
         })
         return base
 
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return "Facing"
+
 
 @dataclass
 class Knurling(TurnableOperation):
@@ -864,6 +881,10 @@ class Knurling(TurnableOperation):
             "m1_parameters": self.m1Parameters.to_dict(),
         })
         return base
+
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return "SinglePoint Knurling"
 
 
 # ----------------------- Profile Primitives ----------------------------------
@@ -1007,6 +1028,11 @@ class ArcTo(ProfilePrimitive):
             blend=ProfileBlend.from_dict(data.get("blend", {})),
         )
 
+    @property
+    def ccw(self) -> bool:
+        """Whether it is drawn counter-clockwise ("ccw"), else clockwise."""
+        return str(self.direction).lower() == "ccw"
+
     def to_dict(self) -> Dict[str, Any]:
         d = super().to_dict()
         d.update({
@@ -1025,6 +1051,8 @@ class ArcTo(ProfilePrimitive):
 
 @dataclass
 class DefineProfile(Operation):
+    #: what its name starts with: drawn here, or read from a DXF drawing
+    NAME_PREFIX: ClassVar[str] = "Define"
     profile_id:         int
     profile_type:       ProfilingType
     profile_primitives: List[ProfilePrimitive]
@@ -1061,9 +1089,14 @@ class DefineProfile(Operation):
         })
         return base
 
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return f"{self.NAME_PREFIX} {_od_or_id(self.profile_type)} Profile (P{self.profile_id})"
+
 
 @dataclass
 class ImportDxfProfile(DefineProfile):
+    NAME_PREFIX: ClassVar[str] = "Import DXF"
     dxfFilePath: str = ""
 
     @staticmethod
@@ -1165,6 +1198,10 @@ class DefineRadialProfile(Operation):
         })
         return base
 
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return f"Define Radial Profile (P{self.profile_id})"
+
 
 # ------------------------------- Profiling -----------------------------------
 
@@ -1202,6 +1239,12 @@ class Profiling(TurnableOperation):
             "profiling_options": self.profilingOptions.to_dict()
         })
         return base
+
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        strategy = self.profilingOptions.strategy
+        g_code = {Strategy.ROUGH: "G71 ", Strategy.FINISH: "G70 "}.get(strategy, "")
+        return f"{g_code}Cut Profile (P:{self.profilingParameters.profile_id}, {strategy.value.capitalize()})"
 
 
 # ------------------------------ Profile Roughing -----------------------------
@@ -1254,6 +1297,12 @@ class ProfileRoughing(TurnableOperation):
         })
         return base
 
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        name = (f"{_od_or_id(self.profileRoughingStrategy.profiling_type)} Profile Roughing "
+                f"(P{self.profilingParameters.profile_id})")
+        return name + " · Rest" if self.restMaterial else name
+
 
 @dataclass
 class ProfileContour(TurnableOperation):
@@ -1295,6 +1344,11 @@ class ProfileContour(TurnableOperation):
             "stock_to_leave_enabled": bool(self.stockToLeaveEnabled),
         })
         return base
+
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return (f"{_od_or_id(self.profileContourStrategy.profiling_type)} Profile Contour "
+                f"(P{self.profilingParameters.profile_id})")
 
 
 @dataclass
@@ -1367,6 +1421,10 @@ class GrooveRoughing(TurnableOperation):
         })
         return base
 
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return f"Groove Roughing (P{self.roughingParameters.profile_id})"
+
 
 @dataclass
 class GrooveFinishingParameters:
@@ -1420,6 +1478,10 @@ class GrooveFinishing(TurnableOperation):
             "finishing_parameters": self.finishingParameters.to_dict(),
         })
         return base
+
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return f"Groove Finishing (P{self.finishingParameters.profile_id})"
 
 
 # ------------------------------- Threading -----------------------------------
@@ -1502,6 +1564,10 @@ class Threading(TurnableOperation):
         })
         return self._add_speeds_and_feeds_to(base)
 
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return f"G76 Threading (P: {self.pitch})"
+
 
 @dataclass
 class G33Threading(TurnableOperation):
@@ -1576,6 +1642,10 @@ class G33Threading(TurnableOperation):
         })
         return self._add_speeds_and_feeds_to(base)
 
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return f"G33 Threading (P: {self.pitch})"
+
 
 # -------------------------------- Drilling -----------------------------------
 
@@ -1610,6 +1680,10 @@ class Drilling(TurnableOperation):
         })
         return base
 
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return "Drilling"
+
 
 # --------------------------------- Tapping -----------------------------------
 
@@ -1643,6 +1717,10 @@ class Tapping(TurnableOperation):
             "m1_parameters": self.m1Parameters.to_dict(),
         })
         return base
+
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return "Tapping"
 
 
 # --------------------------------- Parting -----------------------------------
@@ -1716,6 +1794,10 @@ class Parting(TurnableOperation):
         })
         return base
 
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return "Parting"
+
 
 # --------------------------------- Program -----------------------------------
 
@@ -1779,6 +1861,15 @@ class Program:
             return None
         return next((tool for tool in self.tools if tool.id == tool_ref), None)
 
+    def index_of(self, op) -> int:
+        """Where ``op`` is in the operations: that very one, or - a draft of
+        it, an editor's - the one of its order; past the last when neither."""
+        for index, other in enumerate(self.operations):
+            if other is op:
+                return index
+        return next((index for index, other in enumerate(self.operations) if other.order == op.order),
+                    len(self.operations))
+
     def tool_of(self, op) -> Optional[ProgramTool]:
         """The tool operation ``op`` cuts with, or None."""
         return self.tool(getattr(op, "toolRef", None))
@@ -1820,27 +1911,7 @@ operation_types: Dict[str, Type[Operation]] = {
     "parting": Parting
 }
 
-display_names: Dict[str, str] = {
-    "positionAt": "Position At",
-    "facing": "Facing",
-    "knurling": "SinglePoint Knurling",
-    "defineProfile": "Define Profile",
-    "importDxfProfile": "Import DXF Profile",
-    "defineRadialProfile": "Define Radial Profile",
-    "profiling": "Profiling",
-    "profileRoughing": "Profile Roughing",
-    "profileContour": "Profile Contour",
-    "grooveRoughing": "Groove Roughing",
-    "grooveFinishing": "Groove Finishing",
-    "threading": "Threading",
-    "g33Threading": "G33 Threading",
-    "drilling": "Drilling",
-    "tapping": "Tapping",
-    "parting": "Parting",
-}
-
-
-# -------------------- CAM config objects (built from JSON operation dicts) -------------------
+# -------------------- CAM config objects (built from the operations) -------------------
 
 
 @dataclass(frozen=True)

@@ -12,7 +12,7 @@ import os
 
 from PyQt6.QtCore import QObject, Qt, QUrl
 from PyQt6.QtGui import QColor
-from PyQt6.QtQml import qmlRegisterSingletonInstance
+from PyQt6.QtQml import qmlRegisterSingletonInstance, qmlRegisterUncreatableType
 from PyQt6.QtQuick import QQuickView
 
 from teachinlathe.app.application import Application
@@ -133,6 +133,11 @@ class AppWindow(QObject):
             ("PositionsBridge", self.conversationalViewModel.positionsBridge),
         ):
             qmlRegisterSingletonInstance(QML_MODULE, 1, 0, name, instance)
+        # Types only for their enums (ToolCard.Moved, PauseToInspect.G30, ...): the editors make ToolCards.
+        from teachinlathe.ui.tabs.conversational.OperationEditorViewModel import PauseToInspect, ToolCard
+        qmlRegisterUncreatableType(ToolCard, QML_MODULE, 1, 0, "an operation's editor makes it", "ToolCard")
+        qmlRegisterUncreatableType(PauseToInspect, QML_MODULE, 1, 0, "M1Parameters.qml uses its enum",
+                                   "PauseToInspect")
 
     def _loadScene(self):
         self.view.setSource(QUrl.fromLocalFile(os.path.join(QML_DIR, "AppRoot.qml")))

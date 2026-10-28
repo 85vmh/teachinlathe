@@ -20,8 +20,8 @@ Item {
     // the program header's stock
     property var    workpiece: ({})
     // the tool it cuts with, as its Tool Library card
-    // shows it: editor.toolCard; {} with none
-    property var    toolCard: ({})
+    // shows it: editor.toolCard, a ToolCard; null with none
+    property var    toolCard: null
 
     // the values the boxes on the canvas show and edit
     property real   xStart: 0.0
@@ -68,7 +68,7 @@ Item {
         opData  = data || {}
 
         workpiece = editor ? (editor.workpiece || {}) : {}
-        toolCard = editor ? (editor.toolCard || {}) : {}
+        toolCard = editor ? editor.toolCard : null
 
         var gp = opData.geometry_parameters || {}
         var cp = opData.cutting_parameters || {}

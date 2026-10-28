@@ -5,13 +5,11 @@ OperationRowDelegate {
     id: root
 
     property int operationIndex: -1
-    property var operationData: null
     property bool selected: false
 
     width: parent ? parent.width : 400
     height: Theme.rowHeight
     rowIndex: operationIndex
-    op: operationData
     isCurrentItem: selected
 
     Rectangle {

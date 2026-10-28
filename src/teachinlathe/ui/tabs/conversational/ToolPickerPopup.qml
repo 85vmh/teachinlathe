@@ -12,6 +12,7 @@ import QtQuick.Layouts
 import QtQml.Models
 import tabs.tool_library
 import theme
+import TeachInLathe
 
 Popup {
     id: root
@@ -21,8 +22,8 @@ Popup {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     anchors.centerIn: parent
 
-    // as wide as a Tool Change's details, so two cards fit side by side as
-    // they do there; the operation sets it to its details' width
+    // wide enough for two cards side by side; the operation sets it to its
+    // details' width
     contentWidth: 1000
     contentHeight: column.implicitHeight
     padding: 0
@@ -37,24 +38,24 @@ Popup {
     // included
     property int toolUsers: 0
     property int selectedToolNo: 0
-    // where the machine goes to change the tool, "G28" or "G30": the Change
-    // Tool's now, picked again in the popup
-    property string currentToolchangePosition: "G28"
-    property string toolchangePosition: "G28"
+    // where the machine goes to change the tool, a ToolCard.ChangePosition:
+    // the operation's tool's now, picked again in the popup
+    property int currentToolchangePosition: ToolCard.G28
+    property int toolchangePosition: ToolCard.G28
 
-    // scope: "this" for this operation only, "below" for it and those below
-    // cutting with its tool, "all" for every one cutting with it
-    signal toolChosen(int toolNo, string toolchangePosition, string scope)
+    // scope, a ToolCard.Scope: ThisOperation, ThisAndBelow - it and those
+    // below cutting with its tool - or AllOperations cutting with it
+    signal toolChosen(int toolNo, int toolchangePosition, int scope)
 
     function _choose() {
         // the same tool - a new tool change position, a move confirmed - is
         // the tool's, so all its operations'; another, for a tool the ones
         // below cut with too, is asked about
         if (selectedToolNo === currentToolNo) {
-            toolChosen(selectedToolNo, toolchangePosition, "all")
+            toolChosen(selectedToolNo, toolchangePosition, ToolCard.AllOperations)
             close()
         } else if (toolUsers <= 1) {
-            toolChosen(selectedToolNo, toolchangePosition, "this")
+            toolChosen(selectedToolNo, toolchangePosition, ToolCard.ThisOperation)
             close()
         } else {
             scopeQuestion.open()
@@ -75,7 +76,7 @@ Popup {
 
     onAboutToShow: {
         selectedToolNo = currentToolNo
-        toolchangePosition = currentToolchangePosition === "G30" ? "G30" : "G28"
+        toolchangePosition = currentToolchangePosition
         shown.refilter()
     }
 
@@ -209,14 +210,14 @@ Popup {
                     RadioButton {
                         text: "Move to <b>G28</b>"
                         font.pixelSize: Theme.fontBody
-                        checked: root.toolchangePosition === "G28"
-                        onToggled: if (checked) root.toolchangePosition = "G28"
+                        checked: root.toolchangePosition === ToolCard.G28
+                        onToggled: if (checked) root.toolchangePosition = ToolCard.G28
                     }
                     RadioButton {
                         text: "Move to <b>G30</b>"
                         font.pixelSize: Theme.fontBody
-                        checked: root.toolchangePosition === "G30"
-                        onToggled: if (checked) root.toolchangePosition = "G30"
+                        checked: root.toolchangePosition === ToolCard.G30
+                        onToggled: if (checked) root.toolchangePosition = ToolCard.G30
                     }
                 }
             }
@@ -282,7 +283,7 @@ Popup {
                     height: root.buttonHeight
                     font.pixelSize: root.buttonFontSize
                     onClicked: {
-                        root.toolChosen(root.selectedToolNo, root.toolchangePosition, "this")
+                        root.toolChosen(root.selectedToolNo, root.toolchangePosition, ToolCard.ThisOperation)
                         scopeQuestion.close()
                         root.close()
                     }
@@ -293,7 +294,7 @@ Popup {
                     height: root.buttonHeight
                     font.pixelSize: root.buttonFontSize
                     onClicked: {
-                        root.toolChosen(root.selectedToolNo, root.toolchangePosition, "below")
+                        root.toolChosen(root.selectedToolNo, root.toolchangePosition, ToolCard.ThisAndBelow)
                         scopeQuestion.close()
                         root.close()
                     }

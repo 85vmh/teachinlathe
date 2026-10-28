@@ -1,10 +1,11 @@
 """Profile Contour, planned as Profile Roughing plans the contour it finishes
-with (profile_contour.py on profiling/machining.py): the tool's, compensated
+with (profile_contour.py on profiling/planner.py): the tool's, compensated
 for its nose, bridged over what it cannot enter, from Z Start to the profile's
 end - and the G-code and the preview that plan. On the profiles the roughing's
 toolpath is checked on (test_profile_roughing_toolpath.py), with and without
 stock to leave."""
 
+import dataclasses
 import math
 import re
 
@@ -16,12 +17,13 @@ from teachinlathe.conversational.gcode.operations.profile_contour import (
     generate_profile_contour_gcode,
     plan_profile_contour,
 )
-from teachinlathe.conversational.gcode.operations.profile_contour_preview import (
-    build_profile_contour_preview,
+from teachinlathe.conversational.gcode.operations.profile_contour import (
+    profile_contour_preview,
 )
-from gcode_reading import gcode_moves
-from teachinlathe.conversational.gcode.operations.profiling import machining
-from teachinlathe.conversational.gcode.operations.profiling.machining import MIN_AREA, sweep
+from gcode_reading import gcode_moves, profile_cut_of
+from teachinlathe.conversational.gcode.operations.profiling import shapes
+from teachinlathe.conversational.gcode.operations.profiling.planner import _Planner
+from teachinlathe.conversational.gcode.operations.profiling.shapes import MIN_AREA, sweep
 
 from test_profile_roughing_toolpath import PROFILES
 
@@ -38,7 +40,7 @@ def operation(profile, stock=False, tool=True):
           "profile_contour_strategy": {"profiling_type": kind}}
     if tool:
         op["_resolved_cutting_tool"] = cutting_tool
-    return op
+    return profile_cut_of(op)
 
 
 _PLANNED = {}
@@ -51,18 +53,18 @@ def planned(profile, stock=False):
     if key not in _PLANNED:
         op = operation(profile, stock)
         caught = {}
-        original = machining._Planner.plan_contour_only
+        original = _Planner.plan_contour_only
 
         def plan(self):
             caught["planner"] = self
             return original(self)
 
-        machining._Planner.plan_contour_only = plan
+        _Planner.plan_contour_only = plan
         try:
             profile_contour._PLANS.clear()
             result = plan_profile_contour(op)
         finally:
-            machining._Planner.plan_contour_only = original
+            _Planner.plan_contour_only = original
         _PLANNED[key] = (op, result, caught["planner"])
     return _PLANNED[key]
 
@@ -92,7 +94,7 @@ def test_no_move_takes_the_insert_into_the_part_or_its_stock_to_leave(profile, s
     _op, plan, planner = planned(profile, stock)
 
     into = [m for m in plan.moves
-            if machining._intersection(
+            if shapes._intersection(
                 sweep(planner.envelope, _mirrored(planner, m.z0, m.r0), _mirrored(planner, m.z1, m.r1)),
                 planner.part_allow_inside).area >= MIN_AREA]
 
@@ -104,7 +106,7 @@ def test_the_contour_runs_from_z_start_to_the_profiles_end(profile, stock):
     op, plan, planner = planned(profile, stock)
     cuts = _cuts(plan)
 
-    assert cuts[0].z0 == pytest.approx(op["profiling_parameters"]["z_start"] + planner.retract)
+    assert cuts[0].z0 == pytest.approx(op.op.profilingParameters.zStart + planner.retract)
     assert cuts[-1].z1 < cuts[0].z0
     assert cuts[-1].z1 == pytest.approx(min(m.z1 for m in cuts))
 
@@ -171,8 +173,7 @@ def test_without_a_tool_the_contour_says_so():
 
 
 def test_without_a_profile_it_is_an_error():
-    op = operation("od_steps")
-    op["_resolved_profile"] = {"profile_type": "od", "profile_primitives": []}
+    op = dataclasses.replace(operation("od_steps"), profile=None)
     profile_contour._PLANS.clear()
 
     lines = generate_profile_contour_gcode(op)
@@ -215,9 +216,9 @@ def test_gcode_arcs_are_arcs(profile, stock):
 @pytest.mark.parametrize("profile,stock", CASES)
 def test_preview_draws_the_planned_contour(profile, stock):
     op, plan, _planner = planned(profile, stock)
-    preview = build_profile_contour_preview(op)
+    preview = profile_contour_preview(op)
 
-    assert preview["error"] == ""
-    assert len(preview["feeds"]) == len(_cuts(plan))
-    assert preview["offset"]
-    assert preview["rapids"] == []
+    assert preview.error == ""
+    assert len(preview.feeds) == len(_cuts(plan))
+    assert preview.offset
+    assert preview.rapids == ()

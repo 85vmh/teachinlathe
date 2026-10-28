@@ -4,31 +4,13 @@ moves, the plan."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from teachinlathe.conversational.model.data_types import PassType, ProfilingType
 
+from ...toolpath import Move
 from .shapes import Pt
 from .tool_shape import ToolShape
 
-
-@dataclass
-class Move:
-    """One straight move of the control point, in (z, r) as the machine has
-    them (not mirrored). ``feed`` False is a rapid."""
-    z0: float
-    r0: float
-    z1: float
-    r1: float
-    feed: bool
-    pass_no: int = -1
-    contour: bool = False
-    pocket: bool = False
-    #: the last move of a pass, its retract included: where an M1 stop goes
-    pass_end: bool = False
-    #: a contour move as the profile drawing shows it, (z0, r0, z1, r1): where
-    #: the nose touches - along the profile and its stock - rather than the
-    #: compensated point the machine is programmed to
-    drawn: Optional[Tuple[float, float, float, float]] = None
 
 @dataclass
 class RoughingPlan:

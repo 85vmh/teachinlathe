@@ -21,8 +21,8 @@ Item {
     property var    primitives:  []
     property string profileType: "od"
     property var    workpiece:   ({})
-    // the tool it cuts with: editor.toolCard; {} with none
-    property var    toolCard:    ({})
+    // the tool it cuts with: editor.toolCard, a ToolCard; null with none
+    property var    toolCard:    null
 
     // what an operation saved without a value has: a new one's, as
     // conversational/model/factories.py makes it
@@ -78,7 +78,7 @@ Item {
         opIndex = index
         opData  = data || {}
         workpiece = editor ? (editor.workpiece || {}) : {}
-        toolCard  = editor ? (editor.toolCard || {}) : {}
+        toolCard  = editor ? editor.toolCard : null
 
         var fp = opData.finishing_parameters || {}
         var cp = opData.cutting_parameters || {}

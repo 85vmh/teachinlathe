@@ -10,16 +10,104 @@ An editor is made for one operation at one place in the program. Selecting
 another operation, or coming back to this one, makes a new one.
 """
 
-from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+import dataclasses
+from enum import Enum
 
+from PyQt6.QtCore import QObject, pyqtEnum, pyqtProperty, pyqtSignal, pyqtSlot
+
+from teachinlathe.conversational.logic.program_tools import Scope as ProgramToolScope
 from teachinlathe.conversational.logic.program_tools import ToolStatus
-from teachinlathe.conversational.model.data_types import ThreadForm
+from teachinlathe.conversational.model.data_types import InspectPosition, PredefinedPosition, ThreadForm
 
 # Thread depth over pitch, per side, for a 60° thread.
 EXTERNAL_THREAD_HEIGHT_FACTOR = 0.61344
 INTERNAL_THREAD_HEIGHT_FACTOR = 0.54127
 
 EMPTY_PREVIEW = {"profile": [], "offset": [], "feeds": [], "rapids": []}
+
+
+#: The preview fields whose name in QML is not their own in camelCase.
+_QML_NAMES = {"pass_no": "pass", "from_x": "from", "to_x": "to"}
+
+
+def _qml_name(name):
+    if name in _QML_NAMES:
+        return _QML_NAMES[name]
+    first, *rest = name.split("_")
+    return first + "".join(part.capitalize() for part in rest)
+
+
+def _qml_value(value):
+    """A preview's value as QML takes it: a dataclass an object of its fields
+    by their QML names - those None left out, but at the top - a tuple a
+    list, an Enum its value."""
+    if dataclasses.is_dataclass(value):
+        return {_qml_name(f.name): _qml_value(getattr(value, f.name)) for f in dataclasses.fields(value)
+                if getattr(value, f.name) is not None}
+    if isinstance(value, (tuple, list)):
+        return [_qml_value(item) for item in value]
+    if isinstance(value, Enum):
+        return value.value
+    return value
+
+
+def qml_preview(preview):
+    """An operation's preview (OperationPreview, or one of the kinds of it
+    an operation has: ProfileRoughingPreview, GrooveRoughingPreview, ...) as
+    the canvases take it: an object of its fields by their QML names -
+    profile, offset, feeds, rapids, warnings, error, and the kind's own
+    (restOffered, startDiameter, ...). The one place a preview is made into
+    what QML reads."""
+    return {_qml_name(f.name): _qml_value(getattr(preview, f.name)) for f in dataclasses.fields(preview)}
+
+
+def to_py(obj):
+    """Convert QJSValue / nested JS structures to Python dict/list."""
+    try:
+        if hasattr(obj, "toVariant"):
+            obj = obj.toVariant()
+    except Exception:
+        pass
+    if isinstance(obj, dict):
+        return {k: to_py(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [to_py(x) for x in obj]
+    return obj
+
+
+class PauseToInspect(QObject):
+    """Where Pause to Inspect stops, as M1Parameters.qml has it
+    (``PauseToInspect.G28``, ``PauseToInspect.InPlace``): the operation an
+    editor shows has its m1_parameters' inspect_position one of these
+    (for_qml), and what the editor saves has it the domain's
+    InspectPosition again (from_qml)."""
+
+    @pyqtEnum
+    class Position(Enum):
+        G28 = 0
+        G30 = 1
+        InPlace = 2
+
+    _POSITIONS = {InspectPosition.G28: Position.G28, InspectPosition.G30: Position.G30,
+                  InspectPosition.IN_PLACE: Position.InPlace}
+    _INSPECT = {position.value: inspect for inspect, position in _POSITIONS.items()}
+
+    @classmethod
+    def _with_position(cls, operation, position_of):
+        m1 = operation.get("m1_parameters") if isinstance(operation, dict) else None
+        if not isinstance(m1, dict) or m1.get("inspect_position") is None:
+            return operation
+        return {**operation, "m1_parameters": {**m1, "inspect_position": position_of(m1["inspect_position"])}}
+
+    @classmethod
+    def for_qml(cls, operation):
+        """``operation``, as its dict, with its inspect position QML's."""
+        return cls._with_position(operation, lambda raw: cls._POSITIONS[InspectPosition(raw)].value)
+
+    @classmethod
+    def from_qml(cls, payload):
+        """What an editor saves, with its inspect position the domain's."""
+        return cls._with_position(payload, lambda value: cls._INSPECT[int(value)])
 
 
 class OperationEditorViewModel(QObject):
@@ -45,7 +133,7 @@ class OperationEditorViewModel(QObject):
     @pyqtProperty("QVariant", constant=True)
     def operation(self):
         """The operation as the editor shows it."""
-        return self._operation
+        return PauseToInspect.for_qml(self._operation)
 
     @pyqtProperty(QObject, constant=True)
     def touchedOffTools(self):
@@ -56,13 +144,114 @@ class OperationEditorViewModel(QObject):
     @pyqtSlot("QVariant")
     def save(self, payload):
         """The whole operation, with the editor's changes: applied and saved."""
-        self._tab.update_operation(self.update_type, self._index, payload)
+        self._tab.update_operation(self.update_type, self._index, PauseToInspect.from_qml(to_py(payload)))
 
 
 class HeaderEditorViewModel(OperationEditorViewModel):
     @pyqtSlot("QVariant")
     def save(self, payload):
         self._tab.update_header(payload)
+
+
+class ToolCard(QObject):
+    """An operation's tool as its editor shows it: the holder ``toolNo`` (0
+    with none chosen), the cutting tool as the Tool Library's card draws it -
+    ``card`` its kind ("turning", ..., as ToolTitles.js has them), ``view`` its
+    view (a TurningToolView, ...) - where the tool change to it goes, and
+    whether the Tool Library still has it as it was chosen (``status``): but
+    when Ok, ``card`` and ``view`` are the tool as it was chosen.
+    ``suggestedToolNo``: the holder the tool picker starts on - where the tool
+    is now - 0 for none; ``users``: how many operations cut with this tool
+    from this one down, it included.
+
+    Its enums are QML's (``ToolCard.Moved``, ``ToolCard.ThisAndBelow``,
+    ``ToolCard.G30``); position_of and scope_of make them the domain's."""
+
+    @pyqtEnum
+    class Status(Enum):
+        NoTool = 0
+        Ok = 1
+        Moved = 2
+        Changed = 3
+        Missing = 4
+        Unfit = 5
+
+    @pyqtEnum
+    class Scope(Enum):
+        """Which operations a tool chosen for one is for: that one, it and
+        those below cutting with its tool, or every one cutting with it."""
+        ThisOperation = 0
+        ThisAndBelow = 1
+        AllOperations = 2
+
+    @pyqtEnum
+    class ChangePosition(Enum):
+        """Where the machine goes to change the tool."""
+        G28 = 0
+        G30 = 1
+
+    _STATUS = {ToolStatus.NONE: Status.NoTool, ToolStatus.OK: Status.Ok, ToolStatus.MOVED: Status.Moved,
+               ToolStatus.CHANGED: Status.Changed, ToolStatus.MISSING: Status.Missing,
+               ToolStatus.UNFIT: Status.Unfit}
+    _POSITIONS = {PredefinedPosition.G28: ChangePosition.G28, PredefinedPosition.G30: ChangePosition.G30}
+    _SCOPES = {Scope.ThisOperation: ProgramToolScope.THIS, Scope.ThisAndBelow: ProgramToolScope.BELOW,
+               Scope.AllOperations: ProgramToolScope.ALL}
+
+    def __init__(self, tool_no=0, card="", view=None, toolchange_position=PredefinedPosition.G28,
+                 status=ToolStatus.NONE, suggested_tool_no=0, users=0, parent=None):
+        super().__init__(parent)
+        self._tool_no = tool_no
+        self._card = card
+        self._view = view
+        self._position = self._POSITIONS[toolchange_position]
+        self._status = self._STATUS[status]
+        self._suggested_tool_no = suggested_tool_no
+        self._users = users
+
+    @classmethod
+    def position_of(cls, value: int) -> PredefinedPosition:
+        """The domain's PredefinedPosition of a ChangePosition from QML."""
+        wanted = cls.ChangePosition(value)
+        return next(p for p, q in cls._POSITIONS.items() if q is wanted)
+
+    @classmethod
+    def scope_of(cls, value: int) -> ProgramToolScope:
+        """program_tools' Scope of a Scope from QML."""
+        return cls._SCOPES[cls.Scope(value)]
+
+    @pyqtProperty(bool, constant=True)
+    def hasTool(self):
+        return self._tool_no > 0
+
+    @pyqtProperty(int, constant=True)
+    def toolNo(self):
+        return self._tool_no
+
+    @pyqtProperty(str, constant=True)
+    def card(self):
+        return self._card
+
+    @pyqtProperty(QObject, constant=True)
+    def view(self):
+        return self._view
+
+    @pyqtProperty(int, constant=True)
+    def toolchangePosition(self):
+        """A ChangePosition."""
+        return self._position.value
+
+    @pyqtProperty(int, constant=True)
+    def status(self):
+        """A Status."""
+        return self._status.value
+
+    @pyqtProperty(int, constant=True)
+    def suggestedToolNo(self):
+        return self._suggested_tool_no
+
+    @pyqtProperty(int, constant=True)
+    def users(self):
+        return self._users
 
 
 class ToolOperationEditorViewModel(OperationEditorViewModel):
@@ -95,18 +284,9 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
         """The program header's stock, as its dict, or {}."""
         return self._use_case.workpiece(self._program)
 
-    @pyqtProperty("QVariant", constant=True)
+    @pyqtProperty(QObject, constant=True)
     def toolCard(self):
-        """The operation's tool as the Tool Library's card shows it: {tool_no,
-        card, view, toolchange_position, status, suggested_tool_no, users} -
-        card the card's kind ("turning", ...), view its view (a
-        TurningToolView, ...), for ToolTitles.js and the insert drawings.
-        ``status``: a ToolStatus value - "none", "ok", "moved", "changed",
-        "missing", "unfit"; but for "ok", card and view are the tool as it
-        was chosen.
-        ``suggested_tool_no``: the holder the tool picker starts on - where
-        the tool is now - 0 for none; ``users``: how many operations cut with
-        this tool from this one down, it included. {} with no tool chosen."""
+        """The operation's tool, as its ToolCard."""
         if self._tool_card is None:
             self._tool_card = self._make_tool_card()
         return self._tool_card
@@ -117,7 +297,7 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
         from teachinlathe.ui.tabs.tool_library.tool_library_models import card_and_view
         entry = self._use_case.tool_entry(self._program, self._index)
         if entry is None:
-            return {}
+            return ToolCard(parent=self)
         result = self._use_case.tool_check(self._program, self._index)
         if result.status is ToolStatus.OK:
             tool = tool_source.tool_in(int(entry.tool_holder_id))
@@ -128,22 +308,19 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
                 tool = None
         # The view lives as long as this editor: QML holds only a reference.
         card, view = card_and_view(tool, self)
-        return {"tool_no": int(entry.tool_holder_id), "card": card, "view": view,
-                "toolchange_position": entry.toolchange_position.value,
-                "status": result.status.value,
-                # not one it cannot cut with
-                "suggested_tool_no": (0 if result.status is ToolStatus.UNFIT
-                                      else int(result.tool_holder_id)),
-                "users": self._use_case.tool_users_below(self._program, self._index)}
+        return ToolCard(tool_no=int(entry.tool_holder_id), card=card, view=view,
+                        toolchange_position=entry.toolchange_position, status=result.status,
+                        # not one it cannot cut with
+                        suggested_tool_no=0 if result.status is ToolStatus.UNFIT else int(result.tool_holder_id),
+                        users=self._use_case.tool_users_below(self._program, self._index), parent=self)
 
-    @pyqtSlot(int, str, str)
+    @pyqtSlot(int, int, int)
     def useTool(self, tool_no, toolchange_position, scope):
         """Cut with the tool in holder ``tool_no``, changed to at
-        ``toolchange_position`` ("G28" or "G30"). ``scope``: "this" for this
-        operation only, "below" for it and those below cutting with its tool,
-        "all" for every one cutting with it. The editor is made again, with
-        it."""
-        self._tab.use_tool(self._index, tool_no, toolchange_position, scope)
+        ``toolchange_position`` (a ToolCard.ChangePosition), for ``scope``'s
+        operations (a ToolCard.Scope). The editor is made again, with it."""
+        self._tab.use_tool(self._index, tool_no, ToolCard.position_of(toolchange_position),
+                           ToolCard.scope_of(scope))
 
 
 class FacingEditorViewModel(ToolOperationEditorViewModel):
@@ -152,7 +329,7 @@ class FacingEditorViewModel(ToolOperationEditorViewModel):
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
         """What facing would cut with ``op_data``."""
-        return self._tab.preview(lambda op: self._use_case.facing_preview(op), op_data)
+        return self._tab.preview(lambda op: qml_preview(self._use_case.facing_preview(op)), op_data)
 
     # Shared by every Facing of the program: kept by the tab.
     def _get_canvas_mirror(self):
@@ -205,7 +382,7 @@ class ProfileContourEditorViewModel(ProfileFollowingEditorViewModel):
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
         return self._tab.preview(
-            lambda op: self._use_case.profile_contour_preview(self._program, self._index, op), op_data)
+            lambda op: qml_preview(self._use_case.profile_contour_preview(self._program, self._index, op)), op_data)
 
 
 class DrillingEditorViewModel(ToolOperationEditorViewModel):
@@ -219,6 +396,11 @@ class DrillingEditorViewModel(ToolOperationEditorViewModel):
         # lives as long as this editor: QML holds only a reference
         self._drill = (DrillingToolView(tool, self)
                        if isinstance(tool, DrillingTool) and tool.diameter > 0 else None)
+
+    @pyqtSlot("QVariant", result="QVariant")
+    def preview(self, op_data):
+        """What drilling would cut with ``op_data``: a feed each peck."""
+        return self._tab.preview(lambda op: qml_preview(self._use_case.drilling_preview(op)), op_data)
 
     @pyqtProperty(QObject, constant=True)
     def drill(self):
@@ -250,6 +432,11 @@ class TappingEditorViewModel(ToolOperationEditorViewModel):
 
 class PartingEditorViewModel(ToolOperationEditorViewModel):
     update_type = "parting"
+
+    @pyqtSlot("QVariant", result="QVariant")
+    def preview(self, op_data):
+        """What parting would cut with ``op_data``: its edge break and feeds."""
+        return self._tab.preview(lambda op: qml_preview(self._use_case.parting_preview(op)), op_data)
 
 
 def thread_angle(form):
@@ -347,7 +534,7 @@ class GrooveEditorViewModel(ToolOperationEditorViewModel):
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
         """What it would cut with ``op_data``."""
-        return self._tab.preview(self._preview, op_data)
+        return self._tab.preview(lambda op: qml_preview(self._preview(op)), op_data)
 
 
 class GrooveRoughingEditorViewModel(GrooveEditorViewModel):

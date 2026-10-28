@@ -6,7 +6,6 @@ from teachinlathe.conversational.model.data_types import (
     MoveSequence,
     PassType,
     InspectPosition,
-    PredefinedPosition,
     ProfilePrimitive,
     ProfilingType,
     SpindleMode,
@@ -348,15 +347,6 @@ def apply_position_details_update(details, payload):
         details.stop_spindle_before_positioning = bool(payload.get("stop_spindle_before_positioning", False))
     if "include_m0" in payload:
         details.include_m0 = bool(payload.get("include_m0", False))
-
-
-def apply_predefined_position_update(op, payload, key="toolchange_position"):
-    if op is None or not isinstance(payload, dict) or key not in payload or payload[key] is None:
-        return
-    try:
-        setattr(op, key, _coerce_enum(payload[key], PredefinedPosition, lambda v: str(v).upper()))
-    except Exception:
-        pass
 
 
 def apply_turnable_operation_update(op, payload):

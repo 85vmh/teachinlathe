@@ -1,5 +1,5 @@
 """The toolpath Profile Roughing makes, as it has been checked on the screen and
-in the backplot (conversational/gcode/operations/profiling/machining.py): where
+in the backplot (conversational/gcode/operations/profiling/planner.py): where
 the passes go and how far apart, how the tool gets to them and away, the
 contour, what the canvas draws of it - on the two ID profiles it was worked out
 on, with the boring tool it was worked out with, in all four strategies; what
@@ -17,16 +17,13 @@ from teachinlathe.conversational.gcode.operations.profile_roughing import (
     generate_profile_roughing_gcode,
     plan_profile_roughing,
 )
-from teachinlathe.conversational.gcode.operations.profile_roughing_preview import (
-    build_profile_roughing_preview,
+from teachinlathe.conversational.gcode.operations.profile_roughing import (
+    profile_roughing_preview,
 )
-from teachinlathe.conversational.gcode.operations.profiling import machining
 from teachinlathe.conversational.gcode.operations.profiling import plan as plan_module
-from teachinlathe.conversational.gcode.operations.profiling.machining import (
-    MIN_AREA,
-    TOLERANCE,
-    sweep,
-)
+from teachinlathe.conversational.gcode.operations.profiling import shapes
+from teachinlathe.conversational.gcode.operations.profiling.planner import _Planner
+from teachinlathe.conversational.gcode.operations.profiling.shapes import MIN_AREA, sweep
 from teachinlathe.tooling.model.data_types import (
     BoringTool,
     InsertSpec,
@@ -35,7 +32,7 @@ from teachinlathe.tooling.model.data_types import (
     TurningTool,
 )
 
-from gcode_reading import gcode_moves
+from gcode_reading import gcode_moves, profile_cut_of
 
 M3 = SpindleDirection.M3
 M4 = SpindleDirection.M4
@@ -107,12 +104,12 @@ ALL_CASES = ID_CASES + OD_CASES
 
 def operation(profile, pass_type):
     build, kind, tool, x_start, z_start, doc, retract, radial, axial = PROFILES[profile]
-    return {"_resolved_profile": {"profile_type": kind, "profile_primitives": build()},
+    return profile_cut_of({"_resolved_profile": {"profile_type": kind, "profile_primitives": build()},
             "_resolved_cutting_tool": tool,
             "profiling_parameters": {"x_start": x_start, "z_start": z_start},
             "cutting_parameters": {"doc": doc, "retract": retract},
             "stock_to_leave": {"radial": radial, "axial": axial},
-            "profile_roughing_strategy": {"profiling_type": kind, "pass_type": pass_type}}
+            "profile_roughing_strategy": {"profiling_type": kind, "pass_type": pass_type}})
 
 
 _PLANNED = {}
@@ -126,13 +123,13 @@ def planned(profile, pass_type):
     if key not in _PLANNED:
         op = operation(profile, pass_type)
         caught = {}
-        original = machining._Planner.plan
+        original = _Planner.plan
 
         def plan(self):
             caught["planner"] = self
             return original(self)
 
-        machining._Planner.plan = plan
+        _Planner.plan = plan
         try:
             # planned here, not taken from the cache - which keeps it after,
             # for the G-code and the preview made from the same plan
@@ -141,7 +138,7 @@ def planned(profile, pass_type):
             result = plan_profile_roughing(op)
             seconds = time.perf_counter() - started
         finally:
-            machining._Planner.plan = original
+            _Planner.plan = original
         _PLANNED[key] = (op, result, caught["planner"], seconds)
     return _PLANNED[key]
 
@@ -206,7 +203,7 @@ def test_no_move_takes_the_insert_into_the_stock_to_leave(profile, pass_type):
     _op, plan, planner, _s = planned(profile, pass_type)
 
     into = [m for m in plan.moves
-            if machining._intersection(
+            if shapes._intersection(
                 sweep(planner.envelope, _mirrored(planner, m.z0, m.r0), _mirrored(planner, m.z1, m.r1)),
                 planner.part_allow_inside).area >= MIN_AREA]
 
@@ -226,7 +223,7 @@ def test_no_line_the_canvas_draws_goes_into_the_stock_to_leave(profile, pass_typ
             continue
         z0, r0, z1, r1 = m.drawn or (m.z0, m.r0, m.z1, m.r1)
         line = LineString([_mirrored(planner, z0, r0), _mirrored(planner, z1, r1)])
-        if line.length > 1e-9 and not machining._intersection(line, inside).is_empty:
+        if line.length > 1e-9 and not shapes._intersection(line, inside).is_empty:
             deep.append(m)
 
     assert deep == []
@@ -256,7 +253,7 @@ def test_45_degree_passes_are_one_depth_of_cut_apart(profile, pass_type):
     profile and into an island alike; a step back is the walk turning into an
     island behind a shoulder."""
     op, plan, _planner, _s = planned(profile, pass_type)
-    doc = op["cutting_parameters"]["doc"]
+    doc = op.op.cuttingParameters.doc
     cuts = _diagonal_cuts(plan)
     gaps = [(_level(a) - _level(b), a, b) for a, b in zip(cuts, cuts[1:])]
 
@@ -388,10 +385,10 @@ def test_gcode_makes_the_planned_moves(profile, pass_type):
 @pytest.mark.parametrize("profile,pass_type", ALL_CASES)
 def test_preview_draws_the_planned_moves(profile, pass_type):
     op, plan, _planner, _s = planned(profile, pass_type)
-    preview = build_profile_roughing_preview(op)
+    preview = profile_roughing_preview(op)
 
-    assert len(preview["feeds"]) == sum(1 for m in plan.moves if m.feed)
-    assert preview["error"] == ""
+    assert len(preview.feeds) == sum(1 for m in plan.moves if m.feed)
+    assert preview.error == ""
 
 
 def test_planning_warns_when_geos_has_to_try_again(caplog):
@@ -401,7 +398,7 @@ def test_planning_warns_when_geos_has_to_try_again(caplog):
     square = Polygon([(0, 0), (1, 0), (1, 1), (0, 1)])
 
     with caplog.at_level("WARNING"):
-        result = machining._intersection(bow, square)
+        result = shapes._intersection(bow, square)
 
     assert result.area > 0
     assert any("tried again" in r.getMessage() for r in caplog.records)
@@ -411,11 +408,11 @@ def test_what_is_left_is_kept_on_the_grid():
     """Cut along the same lines again and again a shape picks up edges a hair
     apart that GEOS cannot tell crossing or not: on the grid they either meet
     or do not."""
-    cut = machining._difference(box(0, 0, 10, 10), box(1.0000000001, 1, 2.0000000004, 2))
+    cut = shapes._difference(box(0, 0, 10, 10), box(1.0000000001, 1, 2.0000000004, 2))
 
     for x, y in cut.exterior.coords:
-        assert abs(x / machining.GRID - round(x / machining.GRID)) < 1e-6
-        assert abs(y / machining.GRID - round(y / machining.GRID)) < 1e-6
+        assert abs(x / shapes.GRID - round(x / shapes.GRID)) < 1e-6
+        assert abs(y / shapes.GRID - round(y / shapes.GRID)) < 1e-6
 
 
 def test_gcode_names_the_strategy():

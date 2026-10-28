@@ -17,7 +17,6 @@ The selected operation's editor has a view model of its own, ``editor``
 (OperationEditorViewModel.py). Nothing here holds a QML item.
 """
 
-import json
 import logging
 import os
 import time
@@ -29,12 +28,12 @@ from teachinlathe.conversational.logic.conversational_use_case import Conversati
 from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
 from teachinlathe.conversational.gcode.gcode_builder import ToolsNotReady
 from teachinlathe.conversational.model.data_types import Program
-from teachinlathe.conversational.model.qml_adapter import build_operations_model, build_selected_program_summary
+from teachinlathe.conversational.model.qml_adapter import build_selected_program_summary, operation_rows
 from teachinlathe.core.positions_bridge import PositionsBridge
 from teachinlathe.core.settings_repository import GCODE_PROGRESS_DELAY_MS, settings_repository
 from teachinlathe.ui.common.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
-from teachinlathe.ui.tabs.conversational.OperationEditorViewModel import EMPTY_PREVIEW, editor_for
-from teachinlathe.ui.tabs.conversational.ProgramListModel import ProgramListModel
+from teachinlathe.ui.tabs.conversational.OperationEditorViewModel import EMPTY_PREVIEW, editor_for, qml_preview, to_py
+from teachinlathe.ui.tabs.conversational.ProgramListModel import OperationListModel, ProgramListModel
 from teachinlathe.ui.tabs.programs.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.ui.tabs.tool_library.ManualToolsViewModel import TouchedOffToolsModel
 
@@ -51,20 +50,6 @@ EDITOR_SCREENS = (PROFILE_EDITOR, RADIAL_PROFILE_EDITOR, DXF_IMPORT)
 # The generation progress dialog, once shown (after the
 # GCODE_PROGRESS_DELAY_MS setting), stays up at least this long, so it is seen.
 GCODE_PROGRESS_MIN_MS = 300
-
-
-def to_py(obj):
-    """Convert QJSValue / nested JS structures to Python dict/list."""
-    try:
-        if hasattr(obj, "toVariant"):
-            obj = obj.toVariant()
-    except Exception:
-        pass
-    if isinstance(obj, dict):
-        return {k: to_py(v) for k, v in obj.items()}
-    if isinstance(obj, (list, tuple)):
-        return [to_py(x) for x in obj]
-    return obj
 
 
 class ConversationalViewModel(QObject):
@@ -105,6 +90,8 @@ class ConversationalViewModel(QObject):
         self.current_op_index = -1
 
         self.model = ProgramListModel(self.use_case.load_programs())
+        # the open program's operations, kept in step with it (_program_changed)
+        self._operations_model = OperationListModel(self)
 
         # The Profile Roughing previews are worked out in a process of their
         # own (see plan_worker), started now so it is ready by the first one;
@@ -165,11 +152,10 @@ class ConversationalViewModel(QObject):
             return None
         return build_selected_program_summary(self.current_program)
 
-    @pyqtProperty("QVariantList", notify=programChanged)
+    @pyqtProperty(QObject, constant=True)
     def operationsModel(self):
-        if self.current_program is None:
-            return []
-        return build_operations_model(self.current_program)
+        """The open program's operations, a row each (OperationListModel)."""
+        return self._operations_model
 
     @pyqtProperty(int, notify=activeOpIndexChanged)
     def activeOpIndex(self):
@@ -405,6 +391,7 @@ class ConversationalViewModel(QObject):
 
     def _program_changed(self):
         self.activeOpIndexChanged.emit()
+        self._operations_model.setRows(operation_rows(self.current_program) if self.current_program else [])
         self.programChanged.emit()
 
     @pyqtSlot(int)
@@ -622,18 +609,17 @@ class ConversationalViewModel(QObject):
         editor's draft, to ``editor.previewReady`` once worked out - at once
         when known, otherwise from the planning worker."""
         try:
-            resolved = self.use_case.resolve_profile_roughing(
-                self.current_program, op_index, to_py(op_data) or {})
+            cut = self.use_case.profile_cut(self.current_program, op_index, to_py(op_data) or {})
+            key = self.use_case.profile_roughing_preview_key(cut)
         except Exception as e:
             LOG.error("preview failed: %s", e)
             editor.previewReady.emit(dict(EMPTY_PREVIEW, error=str(e)))
             return
-        key = json.dumps(resolved, sort_keys=True, default=str)
         editor.wanted_preview = key
         if key in self._previews:
             editor.previewReady.emit(self._previews[key])
             return
-        request_id = self._planner.submit("roughing-preview", "profile_roughing_preview", resolved)
+        request_id = self._planner.submit("roughing-preview", "profile_roughing_preview", cut)
         self._preview_requests[request_id] = (key, editor)
 
     def _on_plan_finished(self, request_id, ok, result):
@@ -647,6 +633,7 @@ class ConversationalViewModel(QObject):
             LOG.error("preview failed: %s", result)
             result = dict(EMPTY_PREVIEW, error=str(result))
         else:
+            result = qml_preview(result)
             if len(self._previews) >= 16:
                 self._previews.pop(next(iter(self._previews)))
             self._previews[key] = result

@@ -3,7 +3,7 @@ import theme
 import "ToolTitles.js" as ToolTitles
 
 // A tool holder with the cutting tool in it, as the Manual Turning list and
-// the conversational Tool Change pick from them:
+// the conversational tool picker (ToolPickerPopup) pick from them:
 //
 //   ┌─────────────────────────────────────────────────────────────────┐
 //   │     ┌─────────┐ Turning CCMT 060202 (comment) │    Offsets      │

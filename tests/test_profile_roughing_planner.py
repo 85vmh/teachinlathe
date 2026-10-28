@@ -1,4 +1,4 @@
-"""Tool-aware Profile Roughing (conversational/gcode/operations/profiling/machining.py):
+"""Tool-aware Profile Roughing (conversational/gcode/operations/profiling/planner.py):
 what the insert can reach, the moves that reach it, what is left for another tool,
 and the G-code that has the machine make the same moves."""
 
@@ -6,22 +6,19 @@ import math
 import re
 
 import pytest
+
+from teachinlathe.conversational.model.data_types import ProfilingType
 from shapely.geometry import LineString, Point, Polygon
 
 from teachinlathe.conversational.gcode.operations.profile_roughing import (
     generate_profile_roughing_gcode,
     plan_profile_roughing,
 )
-from teachinlathe.conversational.gcode.operations.profile_roughing_preview import (
-    build_profile_roughing_preview,
+from teachinlathe.conversational.gcode.operations.profile_roughing import (
+    profile_roughing_preview,
 )
-from teachinlathe.conversational.gcode.operations.profiling.machining import (
-    MIN_AREA,
-    TOLERANCE,
-    insert_tool_shape,
-    path_points,
-    sweep,
-)
+from teachinlathe.conversational.gcode.operations.profiling.shapes import MIN_AREA, TOLERANCE, path_points, sweep
+from teachinlathe.conversational.gcode.operations.profiling.tool_shape import insert_tool_shape
 from teachinlathe.conversational.gcode.operations.profiling.operation_input import resolve_profile
 from teachinlathe.tooling.model.data_types import (
     BoringTool,
@@ -31,7 +28,7 @@ from teachinlathe.tooling.model.data_types import (
     TurningTool,
 )
 
-from gcode_reading import gcode_moves
+from gcode_reading import gcode_moves, profile_cut_of
 
 M4 = SpindleDirection.M4
 
@@ -104,14 +101,14 @@ def operation(profile, tool=CCMT_95, pass_type="axial", doc=1.0, **extra):
           **extra}
     if tool is not None:
         op["_resolved_cutting_tool"] = tool
-    return op
+    return profile_cut_of(op)
 
 
 def finished_part(op):
     """The finished part, in (z, r): under the profile for OD, over it for ID."""
-    _segments, path = resolve_profile(op)
+    path = resolve_profile(op)
     points = path_points(path)
-    far = -50.0 if op["_resolved_profile"]["profile_type"] == "od" else 100.0
+    far = -50.0 if op.profile.profile_type is ProfilingType.OD else 100.0
     return Polygon(points + [(points[-1][0] - 50.0, points[-1][1]), (points[-1][0] - 50.0, far),
                              (points[0][0], far)]).buffer(0)
 
@@ -273,9 +270,9 @@ def rest_operation(tool):
     source = operation("neck", CCMT_95)
     # its own start and stock are the source's: these must not count
     rest = operation("neck", tool, doc=0.5, rest_material=True,
-                     _resolved_previous_roughing=[source])
-    rest["profiling_parameters"] = {"x_start": 999.0, "z_start": 50.0}
-    rest["stock_to_leave"] = {"radial": 2.0, "axial": 2.0}
+                     _resolved_previous_roughing=[source],
+                     profiling_parameters={"x_start": 999.0, "z_start": 50.0},
+                     stock_to_leave={"radial": 2.0, "axial": 2.0})
     return source, rest
 
 
@@ -319,12 +316,12 @@ def test_rest_roughing_without_a_roughing_above_is_an_error():
 # ── the preview ─────────────────────────────────────────────────────────────
 
 def test_preview_offers_a_rest_roughing_for_what_is_left():
-    preview = build_profile_roughing_preview(operation("neck", CCMT_95))
+    preview = profile_roughing_preview(operation("neck", CCMT_95))
 
-    assert preview["restOffered"] is True
-    assert preview["warnings"] == ["1 region left for another tool"]
-    assert preview["feeds"] and preview["rapids"] and preview["residual"]
-    assert not build_profile_roughing_preview(operation("steps", CCMT_95))["restOffered"]
+    assert preview.rest_offered is True
+    assert preview.warnings == ("1 region left for another tool",)
+    assert preview.feeds and preview.rapids and preview.residual
+    assert not profile_roughing_preview(operation("steps", CCMT_95)).rest_offered
 
 
 # ── the G-code ──────────────────────────────────────────────────────────────

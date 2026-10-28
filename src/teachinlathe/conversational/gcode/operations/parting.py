@@ -1,13 +1,14 @@
 from teachinlathe.conversational.model.data_types import BlendType, Parting
 
-from ..config import fmt
 from ..helpers.spindle import build_spindle_gcode
+from ..toolpath import GcodeEmitter, OperationPreview
 
 
 
-def generate_parting_gcode(op: Parting):
-    line_prefix = "/" if op.is_optional_block else ""
-
+def parting_toolpath(op: Parting, path: GcodeEmitter, program=None):
+    """``op``'s G-code, and its moves, onto ``path``: an edge break first
+    when it has one, then in to X End, the feed changing at the second feed's
+    X, and back out to the clearance."""
     spindle = op.speedsAndFeeds
     parting = op.partingParameters
     edge_break = op.edgeBreak
@@ -16,34 +17,40 @@ def generate_parting_gcode(op: Parting):
     # here
     x_clear = x_start + 2 * parting.x_clearance
 
-    lines = []
-    lines.extend(build_spindle_gcode(spindle, line_prefix))
+    path.codes(build_spindle_gcode(spindle, ""))
     if edge_break.blend_type in (BlendType.CHAMFER, BlendType.FILLET):
         size = (edge_break.chamfer_width if edge_break.blend_type == BlendType.CHAMFER
                 else edge_break.fillet_radius)
         # X a diameter: the edge break's depth, a radius, twice over
         x_break = x_start - 2 * size
         # in to the edge break's depth, then back out and across it in Z+
-        lines.append(f"{line_prefix}G0 Z{fmt(z_pos)}")
-        lines.append(f"{line_prefix}G0 X{fmt(x_clear)}")
-        lines.append(f"{line_prefix}G95 F{spindle.feed_rate}")
-        lines.append(f"{line_prefix}G1 X{fmt(x_break)}")
-        lines.append(f"{line_prefix}G0 X{fmt(x_clear)}")
-        lines.append(f"{line_prefix}G0 Z{fmt(z_pos + size)}")
-        lines.append(f"{line_prefix}G1 X{fmt(x_start)}")
+        path.rapid(z=z_pos)
+        path.rapid(x=x_clear)
+        path.code(f"G95 F{spindle.feed_rate}")
+        path.feed(x=x_break)
+        path.rapid(x=x_clear)
+        path.rapid(z=z_pos + size)
+        path.feed(x=x_start)
         if edge_break.blend_type == BlendType.CHAMFER:
-            lines.append(f"{line_prefix}G1 X{fmt(x_break)} Z{fmt(z_pos)}")
+            path.feed(x_break, z_pos)
         else:
             # the quarter round the corner, from (X Start, Z + size) to
             # (X Start - 2 size, Z) about its centre a radius ``size`` below
             # the start: CCW in ZX - G2 is the other three quarters, through
             # the part. I a radius, in G7 too.
-            lines.append(f"{line_prefix}G3 X{fmt(x_break)} Z{fmt(z_pos)} I{fmt(-size)} K0")
+            path.arc(x_break, z_pos, -size, 0.0, clockwise=False)
     else:
-        lines.append(f"{line_prefix}G0 Z{fmt(z_pos)}")
-        lines.append(f"{line_prefix}G0 X{fmt(x_start)}")
-        lines.append(f"{line_prefix}G95 F{spindle.feed_rate}")
-    lines.append(f"{line_prefix}G1 X{fmt(parting.second_feed_x_pos)} F{spindle.feed_rate}")
-    lines.append(f"{line_prefix}G1 X{fmt(parting.xEnd)} F{spindle.feed_rate_2}")
-    lines.append(f"{line_prefix}G0 X{fmt(x_clear)}")
-    return lines
+        path.rapid(z=z_pos)
+        path.rapid(x=x_start)
+        path.code(f"G95 F{spindle.feed_rate}")
+    path.feed(x=parting.second_feed_x_pos, f=spindle.feed_rate)
+    path.feed(x=parting.xEnd, f=spindle.feed_rate_2)
+    path.rapid(x=x_clear)
+
+
+def parting_preview(op: Parting) -> OperationPreview:
+    """What ``op`` cuts, as its editor draws it: its G-code's moves - the
+    edge break, the two feeds, the rapids between."""
+    path = GcodeEmitter(op.is_optional_block)
+    parting_toolpath(op, path)
+    return path.preview()

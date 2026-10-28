@@ -1,6 +1,4 @@
-import importlib.util
 import sys
-import types
 from pathlib import Path
 
 import pytest
@@ -8,7 +6,6 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
-BASE = SRC / "teachinlathe" / "conversational" / "gcode"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
@@ -17,6 +14,7 @@ from teachinlathe.conversational.model.data_types import (  # noqa: E402
     DefineProfile,
     LineTo,
     ProfileBlend,
+    ProfilePrimitive,
     ProfilingType,
     StartPoint,
     Workpiece,
@@ -24,37 +22,18 @@ from teachinlathe.conversational.model.data_types import (  # noqa: E402
 
 
 def _load_define_profile_module():
-    for name in ["x", "x.operations"]:
-        package = types.ModuleType(name)
-        package.__path__ = []
-        sys.modules[name] = package
-
-    for fullname, path in [
-        ("x.config", BASE / "config.py"),
-        ("x.operations.define_profile", BASE / "operations" / "define_profile.py"),
-    ]:
-        spec = importlib.util.spec_from_file_location(fullname, path)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[fullname] = module
-        spec.loader.exec_module(module)
-
-    return sys.modules["x.operations.define_profile"].generate_define_profile_gcode
+    from teachinlathe.conversational.gcode.operations.define_profile import generate_define_profile_gcode
+    return generate_define_profile_gcode
 
 
 def _load_profiling_geometry_module():
-    for name in ["y", "y.operations", "y.operations.profiling"]:
-        package = types.ModuleType(name)
-        package.__path__ = []
-        sys.modules[name] = package
+    from teachinlathe.conversational.gcode.operations.profiling import geometry
+    return geometry
 
-    spec = importlib.util.spec_from_file_location(
-        "y.operations.profiling.geometry",
-        BASE / "operations" / "profiling" / "geometry.py",
-    )
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["y.operations.profiling.geometry"] = module
-    spec.loader.exec_module(module)
-    return module
+
+def _primitives(dicts):
+    """The model's primitives, from what a profile's JSON has."""
+    return [ProfilePrimitive.from_dict(d) for d in dicts]
 
 
 def test_define_profile_din509_undercut_uses_radius_floor_and_15_degree_ramp():
@@ -135,8 +114,7 @@ def test_profiling_render_path_includes_din509_undercut_geometry():
         },
     ]
 
-    segments = geometry.build_profile_segments(primitives)
-    path = geometry.build_render_path(segments, "od")
+    path = geometry.build_path(_primitives(primitives), ProfilingType.OD)
 
     assert path[0] == geometry.StartPoint(10.0, 0.0)
     assert path[1] == geometry.ToolpathLine(10.0, -4.0)
@@ -175,7 +153,7 @@ def test_profiling_din509_undercut_arc_is_tangent_to_obtuse_next_line():
         },
     ]
 
-    path = geometry.build_render_path(geometry.build_profile_segments(primitives), "od")
+    path = geometry.build_path(_primitives(primitives), ProfilingType.OD)
 
     assert len(path) == 6
     arc_start = path[3]
@@ -318,7 +296,7 @@ def test_profiling_geometry_resolves_angle_line_to_endpoint():
         },
     ]
 
-    segments = geometry.build_profile_segments(primitives)
+    path = geometry.build_path(_primitives(primitives), ProfilingType.OD)
 
-    assert segments[1].end_x == pytest.approx(30.0)
-    assert segments[1].end_z == pytest.approx(10.0)
+    assert path[1].end_x == pytest.approx(30.0)
+    assert path[1].end_z == pytest.approx(10.0)

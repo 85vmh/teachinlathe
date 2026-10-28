@@ -1,59 +1,51 @@
+import dataclasses
 import math
+from dataclasses import dataclass
+from enum import Enum
+from typing import Optional, Tuple
 
-from shapely.affinity import translate
-from shapely.geometry import LineString, Point, Polygon, box
-from shapely.ops import linemerge, unary_union
-from shapely.prepared import prep
+from shapely.geometry import LineString, Polygon, box
+from shapely.ops import linemerge
 
-from ..helpers.spindle import build_spindle_gcode, feed_rate_of
+from teachinlathe.conversational.model.data_types import (
+    BlendType, GrooveRoughingStrategy, LineTo, ProfileBlend, ProfilingType,
+)
+from teachinlathe.conversational.model.data_types import StartPoint as ProfileStart
+
+from ..helpers.spindle import build_spindle_gcode
 from ..helpers.utils import get_float
 from .profiling.geometry import (
+    ROUNDING,
+    SAME_MM,
     StartPoint,
     ToolpathArc,
     ToolpathLine,
-    build_profile_segments,
-    build_render_path,
+    arc_x_at_z,
+    build_path,
 )
-from .profiling.plan_drawing import _arc_points
-from .profiling.shapes import minkowski, path_points
-from .profiling.toolpath import emit_toolpath
-
-# ── Tolerances ───────────────────────────────────────────────────────────────
-
-#: mm: two positions or lengths this close are the same one - a tenth of the
-#: 0.001 mm the G-code is written to, so nothing the machine is sent differs.
-SAME_MM = 0.0001
-
-#: What floating-point rounding leaves over in a computed value - an angle,
-#: a distance - that is exactly at a limit: compared with this much slack.
-ROUNDING = 1e-9
-
-# ── Checking the blade against the part (_Blade, _clear_part_of) ─────────────
-
-#: mm the part is shrunk by before the blade is checked against it. The
-#: profile's arcs are drawn as chords, which bulge into a concave fillet; a
-#: blade following the fillet exactly would otherwise touch them.
-CONTACT_MARGIN = 0.005
-
-#: mm a contour cut short at the part backs off by: past CONTACT_MARGIN, so
-#: the blade stops clear of the real flank, not in the margin.
-BACK_OFF = CONTACT_MARGIN + 0.001
-
-#: mm^2 of overlap still taken as no contact: rounding of the polygons only.
-CONTACT_AREA = 1e-6
-
-#: Segments a corner radius of the blade is drawn with, for the check.
-CORNER_SEGMENTS = 16
-
-#: Points a stretch of contour is checked at before the contact is narrowed
-#: down, and how many halvings narrow it - to 2**-20 of the step.
-CHECK_STEPS = 8
-NARROWING_STEPS = 20
+from .profiling.plan_drawing import flatten_path
+from .profiling.plan_gcode import fit_arcs
+from .profiling.shapes import FAR, drop_onto, edge_between, minkowski, obstacle_of, path_points
+from .profiling.tool_shape import blade_shape
+from ..toolpath import Arrows, DrawnLine, GcodeEmitter, OperationPreview
+from ..toolpath import Point as CanvasPoint
+from .profiling.operation_input import GrooveCut
 
 # ── Geometry ─────────────────────────────────────────────────────────────────
 
 #: Chords a fillet on a groove's corner is drawn with in its profile.
 FILLET_CHORDS = 10
+
+#: mm the outside is drawn on along Z from a groove's top corner, for the
+#: corner's blend: past any groove.
+OUTSIDE_LEG = 10000.0
+
+#: Radians: a corner turning less than this is straight - no blend is cut.
+MIN_CORNER_ANGLE = 0.001
+
+#: The cosine a corner's angle is kept within, short of a straight line
+#: either way, so its half-angle's tangent and sine are never zero.
+CORNER_DOT_LIMIT = 0.9999
 
 #: mm the bar is carried on past the groove's ends, either side, for the
 #: part's outline - more for more stock, so it still reaches past it.
@@ -63,9 +55,26 @@ BAR_PAST_GROOVE = 10.0
 #: taken up to: past the top of it, so the line keeps its ends.
 OVER_THE_OUTSIDE = 1.0
 
-#: mm the depth a plunge may go to is carried on along the outside past the
-#: groove (_depth_path): farther than any blade reaches out of it.
-OUTSIDE_REACH = 1000.0
+#: mm the contour's chords may be off the arc they are written as
+#: (plan_gcode.fit_arcs): under the bump a blade's corner makes rolling over
+#: a corner of the profile's chords, which a looser arc would cut into.
+CONTOUR_ARC_TOLERANCE = 0.0005
+
+#: mm past the blade's width beyond the groove's ends the contour's edge is
+#: taken from (_contour_edge): on the outside, where the blade sits on it.
+RIM_REACH = 1.0
+
+
+class Corner(Enum):
+    """One of the blade's corners - its right, on the Z+ side, or its left -
+    as the G-code's comment over a contour cut with it says (corner_comment)."""
+    RIGHT = "right"
+    LEFT = "left"
+
+    @property
+    def along_z(self) -> float:
+        """Which way along Z it is from the blade's middle: +1 or -1."""
+        return 1.0 if self is Corner.RIGHT else -1.0
 
 
 def _on_diameter(radial):
@@ -76,14 +85,14 @@ def _on_diameter(radial):
 
 def _outward(profile_type):
     """Which way out of the groove is along X: +1 for an OD one, -1 for ID."""
-    return -1.0 if str(profile_type).lower() == "id" else 1.0
+    return -1.0 if profile_type is ProfilingType.ID else 1.0
 
 
 def _top_x(path, profile_type):
     """The pulley's outside, the groove's mouth: the largest diameter of its
     profile ``path``, the smallest for ID."""
     x_min, x_max, _z_min, _z_max = _profile_bounds_from_path(path)
-    return x_min if str(profile_type).lower() == "id" else x_max
+    return x_min if profile_type is ProfilingType.ID else x_max
 
 
 def _start_x(path, profile_type, stock_radial):
@@ -104,19 +113,18 @@ def _groove_path(profile):
     groove = _first_groove(profile)
     if not groove:
         return None
-    segments = build_profile_segments(_radial_profile_primitives(groove))
-    path = build_render_path(segments, profile_type=str(profile.get("profile_type", "od")).lower())
+    path = build_path(_radial_profile_primitives(groove), _profiling_type(profile.get("profile_type")))
     if not path or not isinstance(path[0], StartPoint):
         return None
     return path
 
 
+def _profiling_type(value) -> ProfilingType:
+    return ProfilingType.ID if str(value or "od").lower() == "id" else ProfilingType.OD
+
+
 def _fmt(value):
     return f"{float(value):.3f}"
-
-
-def _code(prefix, words):
-    return f"{prefix}{words}" if prefix else words
 
 
 def _first_groove(profile):
@@ -126,71 +134,96 @@ def _first_groove(profile):
     return None
 
 
-def _blend(blend):
+#: A radial profile's blend types - the editor's, and "radius" as it once
+#: called a fillet - as the model's.
+_BLEND_TYPES = {"chamfer": BlendType.CHAMFER, "fillet": BlendType.FILLET, "radius": BlendType.FILLET}
+
+
+def _blend(blend) -> ProfileBlend:
+    """A blend of the radial profile (its dict) as the model's ProfileBlend."""
     blend = blend or {}
-    blend_type = str(blend.get("type", "none") or "none").lower()
-    if blend_type == "radius":
-        blend_type = "fillet"
-    return {
-        "type": blend_type,
-        "chamfer_width": get_float(blend, "chamfer_width", 0.0),
-        "fillet_radius": get_float(blend, "fillet_radius", 0.0),
-    }
+    return ProfileBlend(
+        blend_type=_BLEND_TYPES.get(str(blend.get("type", "none") or "none").lower(), BlendType.NONE),
+        chamfer_width=get_float(blend, "chamfer_width", 0.0),
+        fillet_radius=get_float(blend, "fillet_radius", 0.0),
+    )
 
 
-def _point(z, xh):
-    return {"z": z, "x": xh * 2.0, "xh": xh}
+_NO_BLEND = ProfileBlend(blend_type=BlendType.NONE)
 
 
-def _unit_from(corner, point):
-    dz = point["z"] - corner["z"]
-    dx = point["xh"] - corner["xh"]
+@dataclass(frozen=True)
+class _At:
+    """A point of a groove's outline: its Z, and its X on the radius."""
+    z: float
+    xh: float
+
+    @property
+    def x(self) -> float:
+        return self.xh * 2.0
+
+    @staticmethod
+    def on_diameter(x, z) -> "_At":
+        return _At(z, x / 2.0)
+
+
+@dataclass(frozen=True)
+class _Corner:
+    """A top corner of a groove as its blend cuts it: from ``start`` to
+    ``end``, through ``arc`` for a fillet (its chords' ends, ``end`` last)."""
+    start: _At
+    end: _At
+    arc: Tuple[_At, ...] = ()
+
+
+def _unit_from(corner: _At, point: _At):
+    """(z, xh, length): the way from ``corner`` to ``point``, or None when
+    they are the same."""
+    dz = point.z - corner.z
+    dx = point.xh - corner.xh
     length = math.hypot(dz, dx)
     if length < SAME_MM:
         return None
-    return {"z": dz / length, "xh": dx / length, "len": length}
+    return dz / length, dx / length, length
 
 
-def _corner_blend(corner_d, leg_a_end_d, leg_b_end_d, blend):
-    b = _blend(blend)
-    corner = _point(corner_d["z"], corner_d["x"] / 2.0)
-    leg_a_end = _point(leg_a_end_d["z"], leg_a_end_d["x"] / 2.0)
-    leg_b_end = _point(leg_b_end_d["z"], leg_b_end_d["x"] / 2.0)
+def _corner_blend(corner: _At, leg_a_end: _At, leg_b_end: _At, blend: ProfileBlend) -> _Corner:
+    """The corner between the legs from ``corner`` to ``leg_a_end`` and to
+    ``leg_b_end``, cut by ``blend``."""
     ua = _unit_from(corner, leg_a_end)
     ub = _unit_from(corner, leg_b_end)
-    if not ua or not ub or b["type"] == "none":
-        return {"start": corner_d, "end": corner_d, "arc": []}
+    if not ua or not ub or blend.blend_type is BlendType.NONE:
+        return _Corner(corner, corner)
 
-    amount = b["fillet_radius"] if b["type"] == "fillet" else b["chamfer_width"]
+    fillet = blend.blend_type is BlendType.FILLET
+    amount = blend.fillet_radius if fillet else blend.chamfer_width
     if amount <= SAME_MM:
-        return {"start": corner_d, "end": corner_d, "arc": []}
+        return _Corner(corner, corner)
 
-    dot = max(-0.9999, min(0.9999, ua["z"] * ub["z"] + ua["xh"] * ub["xh"]))
+    (ua_z, ua_x, ua_len), (ub_z, ub_x, ub_len) = ua, ub
+    dot = max(-CORNER_DOT_LIMIT, min(CORNER_DOT_LIMIT, ua_z * ub_z + ua_x * ub_x))
     theta = math.acos(dot)
-    if theta < 0.001:
-        return {"start": corner_d, "end": corner_d, "arc": []}
+    if theta < MIN_CORNER_ANGLE:
+        return _Corner(corner, corner)
 
-    tangent_distance = amount / math.tan(theta / 2.0) if b["type"] == "fillet" else amount
-    tangent_distance = min(tangent_distance, ua["len"], ub["len"])
-    t1 = _point(corner["z"] + ua["z"] * tangent_distance, corner["xh"] + ua["xh"] * tangent_distance)
-    t2 = _point(corner["z"] + ub["z"] * tangent_distance, corner["xh"] + ub["xh"] * tangent_distance)
+    tangent_distance = amount / math.tan(theta / 2.0) if fillet else amount
+    tangent_distance = min(tangent_distance, ua_len, ub_len)
+    t1 = _At(corner.z + ua_z * tangent_distance, corner.xh + ua_x * tangent_distance)
+    t2 = _At(corner.z + ub_z * tangent_distance, corner.xh + ub_x * tangent_distance)
 
-    if b["type"] != "fillet":
-        return {"start": t1, "end": t2, "arc": []}
+    if not fillet:
+        return _Corner(t1, t2)
 
-    bis_z = ua["z"] + ub["z"]
-    bis_x = ua["xh"] + ub["xh"]
+    bis_z = ua_z + ub_z
+    bis_x = ua_x + ub_x
     bis_len = math.hypot(bis_z, bis_x)
     if bis_len < SAME_MM:
-        return {"start": t1, "end": t2, "arc": []}
+        return _Corner(t1, t2)
 
     center_distance = amount / math.sin(theta / 2.0)
-    center = _point(
-        corner["z"] + bis_z / bis_len * center_distance,
-        corner["xh"] + bis_x / bis_len * center_distance,
-    )
-    start_angle = math.atan2(t1["xh"] - center["xh"], t1["z"] - center["z"])
-    end_angle = math.atan2(t2["xh"] - center["xh"], t2["z"] - center["z"])
+    center = _At(corner.z + bis_z / bis_len * center_distance, corner.xh + bis_x / bis_len * center_distance)
+    start_angle = math.atan2(t1.xh - center.xh, t1.z - center.z)
+    end_angle = math.atan2(t2.xh - center.xh, t2.z - center.z)
     delta = end_angle - start_angle
     while delta > math.pi:
         delta -= math.pi * 2.0
@@ -200,35 +233,27 @@ def _corner_blend(corner_d, leg_a_end_d, leg_b_end_d, blend):
     arc = []
     for index in range(1, FILLET_CHORDS + 1):
         angle = start_angle + delta * index / float(FILLET_CHORDS)
-        arc.append(_point(center["z"] + math.cos(angle) * amount, center["xh"] + math.sin(angle) * amount))
-    return {"start": t1, "end": t2, "arc": arc}
+        arc.append(_At(center.z + math.cos(angle) * amount, center.xh + math.sin(angle) * amount))
+    return _Corner(t1, t2, tuple(arc))
 
 
-def _same_point(a, b):
-    return abs(a["z"] - b["z"]) < SAME_MM and abs(a["x"] - b["x"]) < SAME_MM
+def _same_point(a: _At, b_x, b_z) -> bool:
+    return abs(a.z - b_z) < SAME_MM and abs(a.x - b_x) < SAME_MM
 
 
-def _append_line_primitive(out, primitive_id, point, blend=None):
-    if out:
-        last = out[-1]
-        if last["type"] == "startPoint":
-            last_point = {"z": get_float(last, "z_start", 0.0), "x": get_float(last, "x_start", 0.0)}
-        else:
-            last_point = {"z": get_float(last, "z_end", 0.0), "x": get_float(last, "x_end", 0.0)}
-        if _same_point(last_point, point) and (not blend or _blend(blend)["type"] == "none"):
-            return primitive_id
-    out.append({
-        "primitive_id": primitive_id,
-        "type": "lineTo",
-        "input": "xz",
-        "x_end": point["x"],
-        "z_end": point["z"],
-        "blend": blend or _blend(None),
-    })
-    return primitive_id + 1
+def _append_line(out, point: _At, blend: ProfileBlend = _NO_BLEND):
+    """A line on to ``point`` after ``out``'s last primitive - none when it
+    is there already and has no blend to make."""
+    last = out[-1]
+    last_x, last_z = (last.x_start, last.z_start) if isinstance(last, ProfileStart) else (last.x_end, last.z_end)
+    if _same_point(point, last_x, last_z) and blend.blend_type is BlendType.NONE:
+        return
+    out.append(LineTo(primitive_id=len(out) + 1, primitive_type="lineTo",
+                      x_end=point.x, z_end=point.z, blend=blend, input="xz"))
 
 
 def _groove_corner_points(groove):
+    """(right top, right bottom, left bottom, left top) of the groove."""
     right = groove.get("right_flank", {}) or {}
     bottom = groove.get("bottom", {}) or {}
     left = groove.get("left_flank", {}) or {}
@@ -244,57 +269,34 @@ def _groove_corner_points(groove):
     rdz = abs((rx0 - rxe) / 2.0 * math.tan(ra))
     ldz = abs((lx0 - lxe) / 2.0 * math.tan(la))
 
-    return {
-        "right_top": {"x": rx0, "z": rz0},
-        "right_bottom": {"x": rxe, "z": rz0 - rdz},
-        "left_bottom": {"x": lxe, "z": lz0 + ldz},
-        "left_top": {"x": lx0, "z": lz0},
-    }
+    return (_At.on_diameter(rx0, rz0), _At.on_diameter(rxe, rz0 - rdz),
+            _At.on_diameter(lxe, lz0 + ldz), _At.on_diameter(lx0, lz0))
 
 
 def _radial_profile_primitives(groove):
-    points = _groove_corner_points(groove)
+    """The groove's outline as profile primitives - the model's StartPoint
+    and LineTos - from the right flank's top to the left's: its top corners
+    cut by their blends here, its bottom corners by the lines' blends."""
+    right_top, right_bottom, left_bottom, left_top = _groove_corner_points(groove)
     right = groove.get("right_flank", {}) or {}
     left = groove.get("left_flank", {}) or {}
     bottom = groove.get("bottom", {}) or {}
-    imaginary_span = 10000.0
 
-    right_blend = _corner_blend(
-        points["right_top"],
-        {"z": points["right_top"]["z"] + imaginary_span, "x": points["right_top"]["x"]},
-        points["right_bottom"],
-        right.get("start_blend"),
-    )
-    left_blend = _corner_blend(
-        points["left_top"],
-        points["left_bottom"],
-        {"z": points["left_top"]["z"] - imaginary_span, "x": points["left_top"]["x"]},
-        left.get("start_blend"),
-    )
+    # each top corner is between its flank and the outside, along Z
+    right_corner = _corner_blend(right_top, _At(right_top.z + OUTSIDE_LEG, right_top.xh), right_bottom,
+                                 _blend(right.get("start_blend")))
+    left_corner = _corner_blend(left_top, left_bottom, _At(left_top.z - OUTSIDE_LEG, left_top.xh),
+                                _blend(left.get("start_blend")))
 
-    out = []
-    primitive_id = 1
-    out.append({
-        "primitive_id": primitive_id,
-        "type": "startPoint",
-        "x_start": right_blend["start"]["x"],
-        "z_start": right_blend["start"]["z"],
-        "blend": _blend(None),
-    })
-    primitive_id += 1
-    if right_blend["arc"]:
-        for point in right_blend["arc"]:
-            primitive_id = _append_line_primitive(out, primitive_id, point, _blend(None))
-    else:
-        primitive_id = _append_line_primitive(out, primitive_id, right_blend["end"], _blend(None))
-    primitive_id = _append_line_primitive(out, primitive_id, points["right_bottom"], _blend(bottom.get("blend_right")))
-    primitive_id = _append_line_primitive(out, primitive_id, points["left_bottom"], _blend(bottom.get("blend_left")))
-    primitive_id = _append_line_primitive(out, primitive_id, left_blend["start"], _blend(None))
-    if left_blend["arc"]:
-        for point in left_blend["arc"]:
-            primitive_id = _append_line_primitive(out, primitive_id, point, _blend(None))
-    else:
-        _append_line_primitive(out, primitive_id, left_blend["end"], _blend(None))
+    out = [ProfileStart(primitive_id=1, primitive_type="startPoint",
+                        x_start=right_corner.start.x, z_start=right_corner.start.z, blend=_NO_BLEND)]
+    for point in right_corner.arc or (right_corner.end,):
+        _append_line(out, point)
+    _append_line(out, right_bottom, _blend(bottom.get("blend_right")))
+    _append_line(out, left_bottom, _blend(bottom.get("blend_left")))
+    _append_line(out, left_corner.start)
+    for point in left_corner.arc or (left_corner.end,):
+        _append_line(out, point)
     return out
 
 
@@ -311,129 +313,6 @@ def _profile_bounds_from_path(path):
     return min(xs), max(xs), min(zs), max(zs)
 
 
-def _x_bounds_from_path(path):
-    xs = []
-    for element in path or []:
-        if isinstance(element, StartPoint):
-            xs.append(element.x)
-        else:
-            xs.append(element.end_x)
-    if not xs:
-        return 0.0, 0.0
-    return min(xs), max(xs)
-
-
-def _arc_z_intersections_x(sx, sz, ex, ez, cx, cz, anticlockwise, target_z):
-    sx_r, ex_r, cx_r = sx / 2.0, ex / 2.0, cx / 2.0
-    radius = math.hypot(sx_r - cx_r, sz - cz)
-    dz = target_z - cz
-    if abs(dz) > radius + ROUNDING:
-        return []
-    disc = max(0.0, radius * radius - dz * dz)
-    start_angle = math.atan2(sz - cz, sx_r - cx_r)
-    end_angle = math.atan2(ez - cz, ex_r - cx_r)
-    results = []
-    for x_r_candidate in (cx_r + math.sqrt(disc), cx_r - math.sqrt(disc)):
-        angle = math.atan2(dz, x_r_candidate - cx_r)
-        if _angle_on_arc(angle, start_angle, end_angle, anticlockwise):
-            results.append(x_r_candidate * 2.0)
-    return results
-
-
-def _normalize_angle(angle):
-    two_pi = math.pi * 2.0
-    while angle < 0.0:
-        angle += two_pi
-    while angle >= two_pi:
-        angle -= two_pi
-    return angle
-
-
-def _angle_on_arc(angle, start_angle, end_angle, anticlockwise):
-    angle = _normalize_angle(angle)
-    start_angle = _normalize_angle(start_angle)
-    end_angle = _normalize_angle(end_angle)
-    if anticlockwise:
-        if end_angle < start_angle:
-            end_angle += math.pi * 2.0
-        if angle < start_angle:
-            angle += math.pi * 2.0
-        return start_angle - ROUNDING <= angle <= end_angle + ROUNDING
-    if start_angle < end_angle:
-        start_angle += math.pi * 2.0
-    if angle > start_angle:
-        angle -= math.pi * 2.0
-    return end_angle - ROUNDING <= angle <= start_angle + ROUNDING
-
-
-def _profile_x_at_z(path, target_z, profile_type, x_shift=0.0):
-    if not path:
-        return None
-    current_x = path[0].x + x_shift
-    current_z = path[0].z
-    candidates = []
-    for element in path[1:]:
-        end_x = element.end_x + x_shift
-        end_z = element.end_z
-        z_lo = min(current_z, end_z)
-        z_hi = max(current_z, end_z)
-        if isinstance(element, ToolpathLine):
-            if abs(end_z - current_z) > ROUNDING:
-                if z_lo - ROUNDING <= target_z <= z_hi + ROUNDING:
-                    candidates.append(current_x + (target_z - current_z) * (end_x - current_x) / (end_z - current_z))
-            elif abs(target_z - current_z) < SAME_MM:
-                candidates.extend([current_x, end_x])
-        elif isinstance(element, ToolpathArc):
-            candidates.extend(_arc_z_intersections_x(
-                current_x,
-                current_z,
-                end_x,
-                end_z,
-                element.center_x + x_shift,
-                element.center_z,
-                element.anticlockwise,
-                target_z,
-            ))
-        current_x = end_x
-        current_z = end_z
-    if not candidates:
-        return None
-    return max(candidates) if str(profile_type).lower() == "id" else min(candidates)
-
-
-def _profile_x_for_blade(path, center_z, half_width, profile_type, x_shift=0.0):
-    samples = []
-    sample_count = 9
-    for index in range(sample_count):
-        ratio = index / float(sample_count - 1)
-        z_pos = center_z - half_width + ratio * half_width * 2.0
-        x_pos = _profile_x_at_z(path, z_pos, profile_type, x_shift)
-        if x_pos is not None:
-            samples.append(x_pos)
-    if not samples:
-        return None
-    return min(samples) if str(profile_type).lower() == "id" else max(samples)
-
-
-def _translate_path(path, x_shift, z_shift):
-    """``path`` moved by ``x_shift`` (on the diameter) and ``z_shift``."""
-    shifted = []
-    for element in path:
-        if isinstance(element, StartPoint):
-            shifted.append(StartPoint(element.x + x_shift, element.z + z_shift))
-        elif isinstance(element, ToolpathLine):
-            shifted.append(ToolpathLine(element.end_x + x_shift, element.end_z + z_shift))
-        elif isinstance(element, ToolpathArc):
-            shifted.append(ToolpathArc(
-                element.end_x + x_shift,
-                element.end_z + z_shift,
-                element.center_x + x_shift,
-                element.center_z + z_shift,
-                element.anticlockwise,
-            ))
-    return shifted
-
-
 _CONTROL_NAMES = {-1: "left corner", 0: "middle", 1: "right corner"}
 
 
@@ -442,18 +321,6 @@ def _blade_control(tool):
     touched off on, so the G-code is written for: -1 its left corner, 0 the
     middle of its end, 1 its right corner."""
     return tool.z_control if tool is not None else 0
-
-
-def _corner_to_control(path, corner, radius, half_width, control, profile_type):
-    """``path``, the one the centre of the blade's ``corner`` radius
-    ("right": its Z+ side, "left": its Z- side) follows, as the point it was
-    touched off on (``control``) follows it then: along Z from that corner's
-    centre to the touch-off point, along X from the centre to the blade's
-    end - inward for OD, outward for ID."""
-    side = 1.0 if corner == "right" else -1.0
-    z_shift = control * half_width - side * (half_width - radius)
-    x_shift = -_outward(profile_type) * _on_diameter(radius)
-    return _translate_path(path, x_shift, z_shift)
 
 
 def _path_end_point(path):
@@ -504,7 +371,7 @@ def _line_point_at_z(start_x, start_z, end_x, end_z, target_z):
 
 
 def _arc_point_at_z(start_x, start_z, element, target_z):
-    xs = _arc_z_intersections_x(
+    xs = arc_x_at_z(
         start_x,
         start_z,
         element.end_x,
@@ -579,113 +446,6 @@ def _split_path_at_z(path, target_z):
     return first, []
 
 
-def _offset_line_segment_radius_space(sx, sz, ex, ez, radius, side):
-    dx = ex - sx
-    dz = ez - sz
-    length = math.hypot(dx, dz)
-    if length < 1e-12:
-        return sx, sz, ex, ez
-    if side == "left":
-        nx = -dz / length
-        nz = dx / length
-    else:
-        nx = dz / length
-        nz = -dx / length
-    return sx + nx * radius, sz + nz * radius, ex + nx * radius, ez + nz * radius
-
-
-def _offset_arc_segment_radius_space(sx, sz, element, radius, side):
-    cx = element.center_x / 2.0
-    cz = element.center_z
-    start_radius = math.hypot(sx - cx, sz - cz)
-    if start_radius < 1e-12:
-        return None
-
-    left_side_is_inward = bool(element.anticlockwise)
-    if (side == "left" and left_side_is_inward) or (side == "right" and not left_side_is_inward):
-        offset_radius = start_radius - radius
-    else:
-        offset_radius = start_radius + radius
-    if offset_radius <= ROUNDING:
-        return None
-
-    end_x = element.end_x / 2.0
-    end_z = element.end_z
-    start_angle = math.atan2(sz - cz, sx - cx)
-    end_angle = math.atan2(end_z - cz, end_x - cx)
-    return {
-        "type": "arc",
-        "sx": cx + math.cos(start_angle) * offset_radius,
-        "sz": cz + math.sin(start_angle) * offset_radius,
-        "ex": cx + math.cos(end_angle) * offset_radius,
-        "ez": cz + math.sin(end_angle) * offset_radius,
-        "cx": cx,
-        "cz": cz,
-        "anticlockwise": element.anticlockwise,
-    }
-
-
-def _line_line_intersection(seg_a, seg_b):
-    d1x = seg_a["ex"] - seg_a["sx"]
-    d1z = seg_a["ez"] - seg_a["sz"]
-    d2x = seg_b["ex"] - seg_b["sx"]
-    d2z = seg_b["ez"] - seg_b["sz"]
-    denom = d1x * d2z - d1z * d2x
-    if abs(denom) < 1e-12:
-        return None
-    t = ((seg_b["sx"] - seg_a["sx"]) * d2z - (seg_b["sz"] - seg_a["sz"]) * d2x) / denom
-    return seg_a["sx"] + t * d1x, seg_a["sz"] + t * d1z
-
-
-def _offset_path_for_tool_radius(path, radius, side):
-    radius = abs(float(radius or 0.0))
-    if radius <= SAME_MM or not path or not isinstance(path[0], StartPoint):
-        return path
-
-    segments = []
-    current_x = path[0].x / 2.0
-    current_z = path[0].z
-    for element in path[1:]:
-        end_x = element.end_x / 2.0
-        end_z = element.end_z
-        if isinstance(element, ToolpathLine):
-            sx, sz, ex, ez = _offset_line_segment_radius_space(current_x, current_z, end_x, end_z, radius, side)
-            segments.append({"type": "line", "sx": sx, "sz": sz, "ex": ex, "ez": ez})
-        elif isinstance(element, ToolpathArc):
-            arc = _offset_arc_segment_radius_space(current_x, current_z, element, radius, side)
-            if arc:
-                segments.append(arc)
-        current_x = end_x
-        current_z = end_z
-
-    for index in range(len(segments) - 1):
-        current = segments[index]
-        next_seg = segments[index + 1]
-        if current["type"] == "line" and next_seg["type"] == "line":
-            hit = _line_line_intersection(current, next_seg)
-            if hit:
-                current["ex"], current["ez"] = hit
-                next_seg["sx"], next_seg["sz"] = hit
-        else:
-            current["ex"], current["ez"] = next_seg["sx"], next_seg["sz"]
-
-    out = []
-    for segment in segments:
-        if not out:
-            out.append(StartPoint(segment["sx"] * 2.0, segment["sz"]))
-        if segment["type"] == "line":
-            out.append(ToolpathLine(segment["ex"] * 2.0, segment["ez"]))
-        else:
-            out.append(ToolpathArc(
-                segment["ex"] * 2.0,
-                segment["ez"],
-                segment["cx"] * 2.0,
-                segment["cz"],
-                segment["anticlockwise"],
-            ))
-    return out
-
-
 def _tool_is_blade(tool):
     """Whether ``tool`` (a MountedTool or None) is a blade."""
     return tool is not None and tool.blade is not None
@@ -701,30 +461,32 @@ def _blade_radii(tool):
     return float(tool.blade.left_radius), float(tool.blade.right_radius)
 
 
-def _append_peck(lines, prefix, z_pos, safe_x, final_x, peck_depth, clearance, feed_rate, dwell_time):
+def _append_peck(gcode, z_pos, safe_x, final_x, peck_depth, clearance, dwell_time):
     if peck_depth <= 0:
         peck_depth = abs(safe_x - final_x)
     direction = -1 if final_x < safe_x else 1
     outside = -direction
     current_x = safe_x
 
-    lines.append(_code(prefix, f"G0 X{_fmt(safe_x)}"))
-    lines.append(_code(prefix, f"G0 Z{_fmt(z_pos)}"))
+    gcode.rapid(x=safe_x)
+    gcode.rapid(z=z_pos)
     while True:
         remaining = abs(final_x - current_x)
         if remaining <= SAME_MM:
             break
         next_x = current_x + direction * min(abs(peck_depth), remaining)
-        lines.append(_code(prefix, f"G1 X{_fmt(next_x)} F{_fmt(feed_rate)}"))
+        # The operation sets G95 F once before its first cut. Keep the feed
+        # modal across pecks instead of repeating F on every G1.
+        gcode.feed(x=next_x)
         if dwell_time > 0:
-            lines.append(_code(prefix, f"G4 P{_fmt(dwell_time)}"))
+            gcode.dwell(dwell_time)
         current_x = next_x
         if abs(final_x - current_x) <= SAME_MM:
             break
         retract_x = current_x + outside * _on_diameter(clearance)
-        lines.append(_code(prefix, f"G0 X{_fmt(retract_x)}"))
-        lines.append(_code(prefix, f"G0 X{_fmt(current_x)}"))
-    lines.append(_code(prefix, f"G0 X{_fmt(safe_x)}"))
+        gcode.rapid(x=retract_x)
+        gcode.rapid(x=current_x)
+    gcode.rapid(x=safe_x)
 
 
 def _next_depth(current_x, final_x, peck_depth):
@@ -748,13 +510,11 @@ def _is_at_depth(current_x, final_x):
 
 
 def _append_incremental_cut(
-    lines,
-    prefix,
+    gcode,
     z_pos,
     current_x,
     target_x,
     clearance,
-    feed_rate,
     dwell_time,
     retract_reference_x=None,
 ):
@@ -763,11 +523,12 @@ def _append_incremental_cut(
     # out of the cut is back the way it came in, from wherever it goes to
     outward = 1.0 if current_x > target_x else -1.0
     approach_x = current_x + outward * _on_diameter(clearance)
-    lines.append(_code(prefix, f"G0 X{_fmt(approach_x)}"))
-    lines.append(_code(prefix, f"G0 Z{_fmt(z_pos)}"))
-    lines.append(_code(prefix, f"G1 X{_fmt(target_x)} F{_fmt(feed_rate)}"))
+    gcode.rapid(x=approach_x)
+    gcode.rapid(z=z_pos)
+    # G95 F was set once at the start of this operation.
+    gcode.feed(x=target_x)
     if dwell_time > 0:
-        lines.append(_code(prefix, f"G4 P{_fmt(dwell_time)}"))
+        gcode.dwell(dwell_time)
     # backed off to clear the other plunge too, so the move over to it is
     # in the air: out past the shallower of the two - never deeper than
     # this cut, whatever depth the other is at
@@ -775,12 +536,11 @@ def _append_incremental_cut(
         retract_reference_x = target_x
     shallower = max(retract_reference_x, target_x) if outward > 0 else min(retract_reference_x, target_x)
     retract_x = shallower + outward * _on_diameter(clearance)
-    lines.append(_code(prefix, f"G0 X{_fmt(retract_x)}"))
+    gcode.rapid(x=retract_x)
 
 
 def _append_center_pair_roughing(
-    lines,
-    prefix,
+    gcode,
     first_z,
     first_final_x,
     second_z,
@@ -788,7 +548,6 @@ def _append_center_pair_roughing(
     top_x,
     peck_depth,
     clearance,
-    feed_rate,
     dwell_time,
 ):
     first_depth = top_x
@@ -796,13 +555,11 @@ def _append_center_pair_roughing(
 
     first_target = _next_depth(first_depth, first_final_x, peck_depth)
     _append_incremental_cut(
-        lines,
-        prefix,
+        gcode,
         first_z,
         first_depth,
         first_target,
         clearance,
-        feed_rate,
         dwell_time,
         retract_reference_x=second_depth,
     )
@@ -812,13 +569,11 @@ def _append_center_pair_roughing(
         if not _is_at_depth(second_depth, second_final_x):
             next_depth = _next_center_depth(second_depth, second_final_x, peck_depth)
             _append_incremental_cut(
-                lines,
-                prefix,
+                gcode,
                 second_z,
                 second_depth,
                 next_depth,
                 clearance,
-                feed_rate,
                 dwell_time,
                 retract_reference_x=first_depth,
             )
@@ -827,13 +582,11 @@ def _append_center_pair_roughing(
         if not _is_at_depth(first_depth, first_final_x):
             next_depth = _next_center_depth(first_depth, first_final_x, peck_depth)
             _append_incremental_cut(
-                lines,
-                prefix,
+                gcode,
                 first_z,
                 first_depth,
                 next_depth,
                 clearance,
-                feed_rate,
                 dwell_time,
                 retract_reference_x=second_depth,
             )
@@ -880,45 +633,55 @@ def _center_positions(center, left_limit, right_limit, initial_offset, afterward
 CORNER_COMMENT = "( blade {} corner on the contour )"
 
 
-def corner_comment(corner):
-    """The comment over a contour cut with the blade's ``corner``: "right"
-    or "left"."""
-    return CORNER_COMMENT.format(corner)
+def corner_comment(corner: Corner):
+    """The comment over a contour cut with the blade's ``corner``."""
+    return CORNER_COMMENT.format(corner.value)
 
 
-def _emit_contour_section(lines, prefix, safe_x, path, corner=None):
-    if not path or not isinstance(path[0], StartPoint):
+def _emit_contour_section(gcode, safe_x, section, profile_type, corner=None):
+    """``section`` - (z, r) of the touch-off point, in the part's frame - at
+    the feed: in from ``safe_x`` over its start, along it - its runs of
+    chords on one circle as arcs (plan_gcode.fit_arcs) - and back out; the
+    blade's ``corner`` cutting it said over it."""
+    if len(section) < 2:
         return
-
     if corner:
-        lines.append(_code(prefix, corner_comment(corner)))
-    start = path[0]
-    lines.append(_code(prefix, f"G0 X{_fmt(safe_x)}"))
-    lines.append(_code(prefix, f"G0 Z{_fmt(start.z)}"))
-    lines.append(_code(prefix, f"G1 X{_fmt(start.x)} Z{_fmt(start.z)}"))
-    emit_toolpath(lines, prefix, path)
-    lines.append(_code(prefix, f"G0 X{_fmt(safe_x)}"))
+        gcode.code(corner_comment(corner))
+    sign = _outward(profile_type)
+    points = [(z, sign * r) for z, r in section]
+    gcode.rapid(x=safe_x)
+    gcode.rapid(z=points[0][0])
+    gcode.feed(2.0 * points[0][1], points[0][0])
+    for segment in fit_arcs(points, CONTOUR_ARC_TOLERANCE):
+        segment.write(gcode)
+    gcode.rapid(x=safe_x)
 
 
-def _safe_x_for_contour(path, safe_x, clearance, profile_type):
-    x_min, x_max = _x_bounds_from_path(path)
-    if str(profile_type).lower() == "id":
-        return min(safe_x, x_min - _on_diameter(clearance))
-    return max(safe_x, x_max + _on_diameter(clearance))
+def _safe_x_for_contour(sections, safe_x, clearance, profile_type):
+    """Where the blade goes in from and back out to for ``sections``: the
+    start's clearance out, or the clearance out from the sections' highest."""
+    sign = _outward(profile_type)
+    xs = [2.0 * sign * r for section in sections for _z, r in section]
+    if not xs:
+        return safe_x
+    if profile_type is ProfilingType.ID:
+        return min(safe_x, min(xs) - _on_diameter(clearance))
+    return max(safe_x, max(xs) + _on_diameter(clearance))
 
 
-def _part_with_stock(path, profile_type, radial, axial):
+def _part_with_stock(path, profile_type, radial, axial, reach=0.0):
     """The part under the groove's profile ``path``, the bar carried on past
-    it either side, grown by the stock to leave - ``radial`` off the bottom,
-    ``axial`` off the flanks - as a shapely Polygon in (z, r), r turned over
-    for ID so the part is under it either way; with ``points``, the profile's
-    (z, r) from its right end to its left, in the same frame."""
+    it either side - ``reach`` farther still - grown by the stock to leave -
+    ``radial`` off the bottom, ``axial`` off the flanks - as a shapely
+    Polygon in (z, r), r turned over for ID so the part is under it either
+    way; with ``points``, the profile's (z, r) from its right end to its
+    left, in the same frame."""
     sign = _outward(profile_type)
     points = [(z, sign * r) for z, r in path_points(path)]
     if points[0][0] < points[-1][0]:
         points.reverse()                        # from the right end to the left
     (z_right, r_right), (z_left, r_left) = points[0], points[-1]
-    far = BAR_PAST_GROOVE + 2 * (radial + axial)
+    far = BAR_PAST_GROOVE + 2 * (radial + axial) + reach
     floor = min(r for _z, r in points) - far
     part = Polygon([(z_right + far, r_right)] + points + [(z_left - far, r_left), (z_left - far, floor),
                                                           (z_right + far, floor)]).buffer(0)
@@ -954,110 +717,67 @@ def _stock_allowance(path, profile_type, radial, axial):
     return [(z, 2 * sign * r) for z, r in coords]
 
 
-class _Blade:
-    """The blade as it stands at a point of the G-code, to be checked
-    against the part: its end ``half`` either side of its middle - ``control``
-    half-widths off the point along Z, the one it was touched off on - its
-    corners rounded, its body going on out of the groove."""
-
-    #: How far the body is drawn out from its end, mm: past any groove, so a
-    #: body that would rub a flank on its way down is caught as well.
-    BODY = 100.0
-
-    def __init__(self, half, left_radius, right_radius, control, profile_type):
-        self.half = half
-        self.left = min(max(left_radius, 0.0), half)
-        self.right = min(max(right_radius, 0.0), half)
-        self.control = control
-        self.sign = _outward(profile_type)
-        # its shape with its end's middle at (0, 0), built once and moved to
-        # each point checked: a contour is checked at hundreds of them
-        half, left, right = self.half, self.left, self.right
-        # each half of its end rounded by its own corner's radius
-        shapes = [box(-half + left, 0.0, half - right, self.BODY),
-                  box(-half, left, 0.0, self.BODY),
-                  box(0.0, right, half, self.BODY)]
-        if left > 0:
-            shapes.append(Point(-half + left, left).buffer(left, CORNER_SEGMENTS))
-        if right > 0:
-            shapes.append(Point(half - right, right).buffer(right, CORNER_SEGMENTS))
-        self._shape = unary_union(shapes)
-        self._part = self._prepared = None
-
-    def at(self, x, z):
-        """Its shape with the G-code at (x, z), in the part's frame."""
-        return translate(self._shape, z - self.control * self.half, self.sign * x / 2.0)
-
-    def clear_of(self, part, x, z):
-        if part is not self._part:
-            # the part prepared once, for the quick test of whether the
-            # blade is anywhere near it
-            self._part, self._prepared = part, prep(part)
-        shape = self.at(x, z)
-        return not self._prepared.intersects(shape) or shape.intersection(part).area < CONTACT_AREA
+def _blade_obstacle(tool, path, profile_type, radial, axial):
+    """Where the point blade ``tool`` (a MountedTool) was touched off on may
+    not go without the blade going into the part or the stock it is to be
+    left with (``radial``, ``axial``; _part_with_stock) - the bar carried on
+    past the groove as far as the blade sits on its outside either side -
+    the part grown by the blade (tool_shape.blade_shape) turned round, in
+    the part's frame."""
+    width = _blade_width(tool)
+    part, _points = _part_with_stock(path, profile_type, radial, axial, reach=width)
+    left_radius, right_radius = _blade_radii(tool)
+    return obstacle_of(part, blade_shape(width, left_radius, right_radius, _blade_control(tool)).envelope)
 
 
-def _clear_part_of(section, blade, part, steps=CHECK_STEPS):
-    """``section`` - a contour, as the G-code goes along it - as far as the
-    blade, there, stays out of ``part``: cut short where it would go in -
-    where a blade wider than half the groove, running its corner along the
-    bottom to the middle, would put its other side into the far flank."""
-    if not section or not isinstance(section[0], StartPoint) or blade is None or part is None:
-        return section
-    kept = [section[0]]
-    x, z = section[0].x, section[0].z
-    if not blade.clear_of(part, x, z):
+def _plunge_x(inside, z, start_x, profile_type):
+    """How deep the touch-off point plunged at ``z`` from the start diameter
+    ``start_x`` goes before the blade meets the part or its stock -
+    ``inside``, the blade's obstacle (_blade_obstacle) shrunk by SAME_MM, so
+    a blade's side flush with a flank goes on down it: the X it stops at."""
+    sign = _outward(profile_type)
+    r_start = sign * start_x / 2.0
+    return 2.0 * sign * drop_onto(inside, z, r_start + OVER_THE_OUTSIDE, r_start - FAR, SAME_MM)
+
+
+def _contour_edge(obstacle, path, width):
+    """The touch-off point's way across the groove with the blade on the part
+    (``obstacle``, _blade_obstacle): its top, from over the outside past
+    the groove's Z+ end - the blade sitting on it - to past its Z- end, as
+    (z, r) in the part's frame."""
+    _x_min, _x_max, z_min, z_max = _profile_bounds_from_path(path)
+    top = obstacle.bounds[3] + OVER_THE_OUTSIDE
+    ends = [(z, drop_onto(obstacle, z, top, top - FAR, 0.0))
+            for z in (z_max + width + RIM_REACH, z_min - width - RIM_REACH)]
+    return edge_between(obstacle, *ends)
+
+
+def _to_middle(edge, stop_z):
+    """``edge`` (_contour_edge, or it the other way round) from where it
+    leaves the outside - the groove's rim - as far as ``stop_z`` along Z, or
+    to where it goes back up, whichever comes first: the far flank, met by
+    a blade wider than what is left of the groove."""
+    if len(edge) < 2:
         return []
-    for element in section[1:]:
-        end = (element.end_x, element.end_z)
-        along = (_arc_points(x, z, element) if isinstance(element, ToolpathArc) else []) + [end]
-        # steps along it, each a straight stretch: the last point clear of it
-        points = []
-        px, pz = x, z
-        for qx, qz in along:
-            points.extend((px + (qx - px) * k / steps, pz + (qz - pz) * k / steps) for k in range(1, steps + 1))
-            px, pz = qx, qz
-        last = (x, z)
-        for qx, qz in points:
-            if not blade.clear_of(part, qx, qz):
-                # between the last clear point and this one, closer
-                lo, hi = 0.0, 1.0
-                for _ in range(NARROWING_STEPS):
-                    mid = (lo + hi) / 2
-                    if blade.clear_of(part, last[0] + (qx - last[0]) * mid, last[1] + (qz - last[1]) * mid):
-                        lo = mid
-                    else:
-                        hi = mid
-                # and back off by BACK_OFF along it - X is a diameter, so
-                # halved for the distance - clear of the flank, not in the
-                # CONTACT_MARGIN the part was shrunk by
-                length = math.hypot((qx - last[0]) / 2.0, qz - last[1])
-                lo = max(0.0, lo - (BACK_OFF / length if length > 0 else 0.0))
-                cut = (last[0] + (qx - last[0]) * lo, last[1] + (qz - last[1]) * lo)
-                if isinstance(element, ToolpathArc):
-                    kept.extend(ToolpathLine(px_, pz_) for px_, pz_ in points[:points.index((qx, qz))])
-                kept.append(ToolpathLine(*cut))
-                return kept
-            last = (qx, qz)
-        kept.append(element)
-        x, z = end
-    return kept
-
-
-def _depth_path(cut_path, top_x):
-    """``cut_path`` carried on past both its ends, along the pulley's
-    outside: what a blade wider than what is left of the groove there is
-    stopped by, so a plunge near a flank goes no deeper than its edge may."""
-    if not cut_path or not isinstance(cut_path[0], StartPoint):
-        return cut_path
-    start = cut_path[0]
-    end_x, end_z = _path_end_point(cut_path)
-    far = OUTSIDE_REACH
-    right_first = start.z > end_z
-    out_start = start.z + (far if right_first else -far)
-    out_end = end_z + (-far if right_first else far)
-    return ([StartPoint(top_x, out_start), ToolpathLine(start.x, start.z)]
-            + cut_path[1:] + [ToolpathLine(top_x, out_end)])
+    toward = 1.0 if stop_z > edge[0][0] else -1.0
+    outside = edge[0][1]
+    start = 0
+    while start + 1 < len(edge) and edge[start + 1][1] >= outside - SAME_MM:
+        start += 1
+    section = [edge[start]]
+    lowest = edge[start][1]
+    for z, r in edge[start + 1:]:
+        last_z, last_r = section[-1]
+        if (z - stop_z) * toward >= 0.0:
+            if abs(z - last_z) > ROUNDING and (stop_z - last_z) * toward > SAME_MM:
+                t = (stop_z - last_z) / (z - last_z)
+                section.append((stop_z, last_r + t * (r - last_r)))
+            break
+        if r > lowest + SAME_MM:
+            break
+        section.append((z, r))
+        lowest = min(lowest, r)
+    return section
 
 
 def _cut_path(path, profile_type, radial, axial):
@@ -1070,134 +790,102 @@ def _cut_path(path, profile_type, radial, axial):
     return [StartPoint(x, z)] + [ToolpathLine(x, z) for z, x in allowance[1:]]
 
 
-def _append_contour(
-    lines,
-    prefix,
-    safe_x,
-    path,
-    center_z,
-    clearance,
-    profile_type,
-    left_radius,
-    right_radius,
-    half_width=0.0,
-    control=0,
-    blade=None,
-    part=None,
-):
-    contour_path = path
-    if not contour_path or not isinstance(contour_path[0], StartPoint):
+def _append_contour(gcode, safe_x, obstacle, path, center_z, clearance, profile_type,
+                    left_radius, right_radius, half_width, control):
+    """The finish contour: the blade on the part with its stock (``obstacle``)
+    from the Z+ rim, its right corner cutting, to the groove's middle - its
+    middle past it by the rest of its end - then from the Z- rim, its left
+    corner cutting, the same."""
+    edge = _contour_edge(obstacle, path, 2.0 * half_width)
+    z_control = control * half_width
+    z_plus = _to_middle(edge, center_z - max(half_width - right_radius, 0.0) + z_control)
+    z_minus = _to_middle(edge[::-1], center_z + max(half_width - left_radius, 0.0) + z_control)
+    contour_safe_x = _safe_x_for_contour([z_plus, z_minus], safe_x, clearance, profile_type)
+
+    gcode.begin_contour()
+    gcode.code("(----------Groove Roughing Finish Contour Z+ to Center----------)")
+    _emit_contour_section(gcode, contour_safe_x, z_plus, profile_type, Corner.RIGHT)
+
+    gcode.code("(----------Groove Roughing Finish Contour Z- to Center----------)")
+    _emit_contour_section(gcode, contour_safe_x, z_minus, profile_type, Corner.LEFT)
+
+
+def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
+    """The G-code of a Groove Roughing, as it is cut (``cut``), onto ``gcode``."""
+    op = cut.op
+    cutting = op.cuttingParameters
+    roughing = op.roughingParameters
+    # the radial profile's own primitives are dicts: the groove geometry reads them so
+    profile = cut.radial_profile.to_dict() if cut.radial_profile is not None else {}
+    tool = cut.tool
+
+    gcode.codes(build_spindle_gcode(op.speedsAndFeeds, ""))
+    feed_rate = op.speedsAndFeeds.feed
+    peck_depth = abs(cutting.peckDepth)
+    clearance = abs(cutting.retract)
+    dwell_time = cutting.dwellTime
+    initial_offset = abs(roughing.initial_offset)
+    afterwards_offset = abs(roughing.afterwards_offset)
+    strategy = roughing.strategy
+    stock_radial = op.stockToLeave.stockToLeaveX if op.stockToLeaveEnabled else 0.0
+    stock_axial = op.stockToLeave.stockToLeaveZ if op.stockToLeaveEnabled else 0.0
+
+    gcode.code(f"G95 F{_fmt(feed_rate)}")
+    gcode.blank()
+
+    if strategy is not GrooveRoughingStrategy.START_CENTER:
+        gcode.error("Groove Roughing -- only start_center strategy is implemented")
         return
-
-    z_plus_path, z_minus_path = _split_path_at_z(contour_path, center_z)
-    if str(profile_type).lower() == "id":
-        z_plus_comp_side = "right"
-        z_minus_comp_side = "left"
-    else:
-        z_plus_comp_side = "left"
-        z_minus_comp_side = "right"
-
-    z_plus_path = _offset_path_for_tool_radius(z_plus_path, right_radius, z_plus_comp_side)
-    z_minus_path = _offset_path_for_tool_radius(_reverse_path(z_minus_path), left_radius, z_minus_comp_side)
-    # the Z+ flank cut with the blade's right corner, the Z- one with its
-    # left: each written for the point it was touched off on
-    z_plus_path = _corner_to_control(z_plus_path, "right", right_radius, half_width, control, profile_type)
-    z_minus_path = _corner_to_control(z_minus_path, "left", left_radius, half_width, control, profile_type)
-    # each as far as the blade stays out of the part and its stock: one
-    # wider than half the groove meets the far flank before the middle
-    z_plus_path = _clear_part_of(z_plus_path, blade, part)
-    z_minus_path = _clear_part_of(z_minus_path, blade, part)
-    contour_safe_x = _safe_x_for_contour(z_plus_path + z_minus_path, safe_x, clearance, profile_type)
-
-    lines.append(_code(prefix, "(----------Groove Roughing Finish Contour Z+ to Center----------)"))
-    _emit_contour_section(lines, prefix, contour_safe_x, z_plus_path, "right")
-
-    lines.append(_code(prefix, "(----------Groove Roughing Finish Contour Z- to Center----------)"))
-    _emit_contour_section(lines, prefix, contour_safe_x, z_minus_path, "left")
-
-
-def generate_groove_roughing_gcode(op):
-    if hasattr(op, "to_dict"):
-        op = op.to_dict()
-
-    prefix = "/" if bool(op.get("is_optional_block", False)) else ""
-    spindle = op.get("speeds_and_feeds", {}) or {}
-    cutting = op.get("cutting_parameters", {}) or {}
-    roughing = op.get("roughing_parameters", {}) or {}
-    stock = op.get("stock_to_leave", {}) or {}
-    stock_enabled = bool(op.get("stock_to_leave_enabled", False))
-    profile = op.get("_resolved_radial_profile", {}) or {}
-    tool = op.get("_resolved_tool")
-
-    lines = []
-    lines.extend(build_spindle_gcode(spindle, prefix))
-    feed_rate = feed_rate_of(op, 0.1)
-    peck_depth = abs(get_float(cutting, "peck_depth", 3.0))
-    clearance = abs(get_float(cutting, "retract", 1.0))
-    dwell_time = get_float(cutting, "dwell_time", 0.0)
-    initial_offset = abs(get_float(roughing, "initial_offset", 0.0))
-    afterwards_offset = abs(get_float(roughing, "afterwards_offset", 0.0))
-    strategy = str(roughing.get("strategy", "start_center")).lower()
-    stock_radial = get_float(stock, "radial", 0.0) if stock_enabled else 0.0
-    stock_axial = get_float(stock, "axial", 0.0) if stock_enabled else 0.0
-
-    lines.append(_code(prefix, f"G95 F{_fmt(feed_rate)}"))
-    lines.append("")
-
-    if strategy != "start_center":
-        lines.append("( ERROR: Groove Roughing -- only start_center strategy is implemented )")
-        return lines
     if not profile:
-        lines.append("( ERROR: Groove Roughing -- no Define Radial Profile found above this operation )")
-        return lines
+        gcode.error("Groove Roughing -- no Define Radial Profile found above this operation")
+        return
     if not _tool_is_blade(tool):
-        lines.append("( ERROR: Groove Roughing -- current tool must be a parting or grooving blade )")
-        return lines
+        gcode.error("Groove Roughing -- current tool must be a parting or grooving blade")
+        return
 
     width = _blade_width(tool)
     if width <= 0:
-        lines.append("( ERROR: Groove Roughing -- blade width is not defined in tool extras )")
-        return lines
+        gcode.error("Groove Roughing -- blade width is not defined in tool extras")
+        return
 
     groove = _first_groove(profile)
     if not groove:
-        lines.append("( ERROR: Groove Roughing -- radial profile has no groove primitive )")
-        return lines
+        gcode.error("Groove Roughing -- radial profile has no groove primitive")
+        return
 
     path = _groove_path(profile)
     if path is None:
-        lines.append("( ERROR: Groove Roughing -- radial profile did not produce a valid toolpath )")
-        return lines
+        gcode.error("Groove Roughing -- radial profile did not produce a valid toolpath")
+        return
 
     _x_min, _x_max, z_min, z_max = _profile_bounds_from_path(path)
     center_z = (z_min + z_max) / 2.0
     half_width = width / 2.0
 
-    profile_type = str(profile.get("profile_type", "od")).lower()
+    profile_type = _profiling_type(profile.get("profile_type"))
     # the pulley's outside; the start diameter, the plunges' start: that with
     # its radial stock to leave on; where the blade starts and backs off to:
     # the clearance out from the start diameter
     top_x = _top_x(path, profile_type)
     start_x = _start_x(path, profile_type, stock_radial)
     safe_x = _blade_start_x(start_x, profile_type, clearance)
-    # what the blade cuts to: the profile with the stock to leave - radial
-    # off the bottom, axial off the flanks
-    cut_path = _cut_path(path, profile_type, stock_radial, stock_axial)
-    # how deep a plunge may go: the cut path, and past its ends the pulley's
-    # outside with its stock, under a blade wider than the groove is there
-    depth_path = _depth_path(cut_path, start_x)
+    # where the blade may not go: into the part, or the stock it is to be
+    # left with - radial off the bottom, axial off the flanks - nor, past the
+    # groove's ends, below the outside with its stock
+    obstacle = _blade_obstacle(tool, path, profile_type, stock_radial, stock_axial)
+    inside = obstacle.buffer(-SAME_MM)
 
     def _plunges_into(target_x):
         """Whether a plunge to ``target_x`` goes into the groove at all."""
         if target_x is None:
             return False
-        return target_x > top_x + SAME_MM if profile_type == "id" else target_x < top_x - SAME_MM
+        return target_x > top_x + SAME_MM if profile_type is ProfilingType.ID else target_x < top_x - SAME_MM
 
     right_limit = z_max - stock_axial - half_width
     left_limit = z_min + stock_axial + half_width
     if left_limit > right_limit:
-        lines.append("( ERROR: Groove Roughing -- blade is wider than available groove after axial stock )")
-        return lines
+        gcode.error("Groove Roughing -- blade is wider than available groove after axial stock")
+        return
 
     positions = _center_positions(center_z, left_limit, right_limit, initial_offset, afterwards_offset)
     # the plunges are planned for the blade's middle; the G-code is written
@@ -1206,30 +894,23 @@ def generate_groove_roughing_gcode(op):
     z_control = control * half_width
     left_radius, right_radius = _blade_radii(tool)
 
-    lines.append(
-        _code(
-            prefix,
-            f"(----------Groove Roughing: Start Center P{int(roughing.get('profile_id', 0) or 0)}----------)",
-        )
+    gcode.code(
+        f"(----------Groove Roughing: Start Center P{int(roughing.profile_id or 0)}----------)"
     )
-    lines.append(
-        _code(
-            prefix,
-            f"( blade width={_fmt(width)} left radius={_fmt(left_radius)} right radius={_fmt(right_radius)} touched off at {_CONTROL_NAMES[control]} )",
-        )
+    gcode.code(
+        f"( blade width={_fmt(width)} left radius={_fmt(left_radius)} right radius={_fmt(right_radius)} touched off at {_CONTROL_NAMES[control]} )"
     )
 
     start_index = 0
     if len(positions) >= 2 and initial_offset > 0:
         first_z = positions[0]
         second_z = positions[1]
-        first_target_x = _profile_x_for_blade(depth_path, first_z, half_width, profile_type)
-        second_target_x = _profile_x_for_blade(depth_path, second_z, half_width, profile_type)
+        first_target_x = _plunge_x(inside, first_z + z_control, start_x, profile_type)
+        second_target_x = _plunge_x(inside, second_z + z_control, start_x, profile_type)
         if _plunges_into(first_target_x) and _plunges_into(second_target_x):
-            lines.append(_code(prefix, "(----------Groove Roughing Initial Center Pair----------)"))
+            gcode.code("(----------Groove Roughing Initial Center Pair----------)")
             _append_center_pair_roughing(
-                lines,
-                prefix,
+                gcode,
                 first_z + z_control,
                 first_target_x,
                 second_z + z_control,
@@ -1237,32 +918,220 @@ def generate_groove_roughing_gcode(op):
                 start_x,
                 peck_depth,
                 clearance,
-                feed_rate,
                 dwell_time,
             )
             start_index = 2
 
     for z_pos in positions[start_index:]:
-        target_x = _profile_x_for_blade(depth_path, z_pos, half_width, profile_type)
+        target_x = _plunge_x(inside, z_pos + z_control, start_x, profile_type)
         if not _plunges_into(target_x):
             continue
-        _append_peck(lines, prefix, z_pos + z_control, safe_x, target_x, peck_depth, clearance, feed_rate,
-                     dwell_time)
+        _append_peck(gcode, z_pos + z_control, safe_x, target_x, peck_depth, clearance, dwell_time)
 
-    _append_contour(
-        lines,
-        prefix,
-        safe_x,
-        cut_path,
-        center_z,
-        clearance,
-        profile_type,
-        left_radius,
-        right_radius,
-        half_width,
-        control,
-        _Blade(half_width, left_radius, right_radius, control, profile_type),
-        _part_with_stock(path, profile_type, stock_radial, stock_axial)[0].buffer(-CONTACT_MARGIN),
-    )
+    _append_contour(gcode, safe_x, obstacle, path, center_z, clearance, profile_type,
+                    left_radius, right_radius, half_width, control)
 
-    return lines
+
+
+def generate_groove_roughing_gcode(cut: GrooveCut):
+    """A Groove Roughing's G-code on its own."""
+    gcode = GcodeEmitter(cut.op.is_optional_block)
+    groove_roughing_toolpath(cut, gcode)
+    return gcode.lines
+
+
+# ── what the editor draws ───────────────────────────────────────────────────
+# The pecks the G-code makes (groove_roughing_toolpath's moves), along the
+# blade's middle - so the drawing is the program, peck for peck - its finish
+# contour on the contour itself, not where the blade's corners are
+# compensated to, and the groove's profile offset by the stock to leave.
+
+#: How far from its own plunge toward the other a peck's number in the pair
+#: in the middle is put: near enough to say whose it is, far enough from the
+#: other's number at the same depth.
+ORDER_BY_ITS_PLUNGE = 0.25
+
+
+@dataclass(frozen=True)
+class PeckDimension:
+    """One whole peck, to point at Peck Depth from: on the plunge at ``z``,
+    from ``from_x`` to ``to_x``."""
+    z: float
+    from_x: float
+    to_x: float
+
+
+@dataclass(frozen=True)
+class PeckNumber:
+    """A peck of the two plunges in the middle, made a peck at a time each in
+    turn: ``n`` its place in that order, drawn at ``z`` - between them, by its
+    own plunge - going from ``x0`` to the depth ``x``."""
+    n: int
+    z: float
+    x: float
+    x0: float
+
+
+@dataclass(frozen=True)
+class GrooveRoughingPreview(OperationPreview):
+    """A Groove Roughing as the editor draws it: its pecks, each its arrow
+    where it ends and a line across there as wide as the blade, and the
+    finish contour, its arrows along it; ``plunges`` the Z of each plunge in
+    the order they are made, ``peck`` one whole peck for its dimension,
+    ``order`` the pecks of the pair in the middle numbered; the plunges'
+    start - the pulley's outside with its radial stock on it - and where the
+    blade starts, the clearance out from it."""
+    plunges: Tuple[float, ...] = ()
+    peck: Optional[PeckDimension] = None
+    order: Tuple[PeckNumber, ...] = ()
+    start_diameter: Optional[float] = None
+    blade_x: Optional[float] = None
+
+
+def groove_path(cut: GrooveCut):
+    """(path, profile_type, error) of the groove ``cut`` cuts: its radial
+    profile, from its Z+ end, and "" - or None and why not."""
+    profile = cut.radial_profile.to_dict() if cut.radial_profile is not None else {}
+    profile_type = cut.radial_profile.profile_type if cut.radial_profile is not None else ProfilingType.OD
+    if not _first_groove(profile):
+        return None, profile_type, "no radial profile with a groove above this operation"
+    path = _groove_path(profile)
+    if path is None:
+        return None, profile_type, "the radial profile does not make a groove"
+    return path, profile_type, ""
+
+
+def operation_error(gcode: GcodeEmitter) -> str:
+    """Why a groove operation written on ``gcode`` cuts nothing - its first
+    error, the reason after the "--" - or ""."""
+    return gcode.errors[0].split(" -- ", 1)[-1] if gcode.errors else ""
+
+
+def _cut_feeds(moves):
+    """The feeds of ``moves`` (Moves) that are not the finish contour's, as
+    DrawnLines, a pass counting the cuts from 0 - a cut being the feeds
+    between two rapids."""
+    feeds, pass_no, last_feed = [], -1, False
+    for move in moves:
+        if not move.feed:
+            last_feed = False
+            continue
+        if not last_feed:
+            pass_no += 1
+        last_feed = True
+        if not move.contour:
+            feeds.append(DrawnLine(2 * move.r0, move.z0, 2 * move.r1, move.z1, pass_no))
+    return feeds
+
+
+def _from_start(feed: DrawnLine, start_x, profile_type):
+    """``feed`` from the start diameter ``start_x`` on - the part of it in the
+    air above it cut off - or None when it is all in the air."""
+    outside = ((lambda x: x < start_x - ROUNDING) if profile_type is ProfilingType.ID
+               else (lambda x: x > start_x + ROUNDING))
+    if outside(feed.x0) and outside(feed.x1):
+        return None
+    if outside(feed.x0) and abs(feed.x1 - feed.x0) > ROUNDING:
+        t = (start_x - feed.x0) / (feed.x1 - feed.x0)
+        return dataclasses.replace(feed, z0=feed.z0 + t * (feed.z1 - feed.z0), x0=start_x)
+    return feed
+
+
+def _peck(feeds, peck_depth, plunges):
+    """One whole peck, to point at Peck Depth from - on the first plunge
+    after the two in the middle, toward Z+, or failing it the next that has
+    two pecks one after the other a Peck Depth apart, from the end of the one
+    to the end of the next - or None."""
+    if peck_depth <= 0:
+        return None
+    by_z = {}
+    for f in feeds:
+        if abs(f.z1 - f.z0) < SAME_MM:
+            by_z.setdefault(round(f.z0, 6), []).append(f.x1)
+    for z in [round(p, 6) for p in plunges[2:] + plunges[:2]]:
+        ends = by_z.get(z, [])
+        for a, b in zip(ends, ends[1:]):
+            if abs(abs(b - a) - peck_depth) < SAME_MM:
+                return PeckDimension(z, a, b)
+    return None
+
+
+def _contour_feeds(path, cut_path, first_pass):
+    """The finish contour as the G-code cuts it, on the contour - the profile
+    with the stock to leave (``cut_path``) - not compensated: from the right
+    flank's start to the groove's middle, then from the left one's. Each a
+    pass of its own, from ``first_pass``, its arrows along it."""
+    _x_min, _x_max, z_min, z_max = _profile_bounds_from_path(path)
+    z_plus, z_minus = _split_path_at_z(cut_path, (z_min + z_max) / 2.0)
+    feeds = []
+    for n, section in enumerate((z_plus, _reverse_path(z_minus))):
+        if not section or not isinstance(section[0], StartPoint):
+            continue
+        points = flatten_path(section)
+        for a, b in zip(points, points[1:]):
+            feeds.append(DrawnLine(a.x, a.z, b.x, b.z, first_pass + n, True, Arrows.ALONG))
+    return feeds
+
+
+def groove_roughing_preview(cut: GrooveCut) -> GrooveRoughingPreview:
+    """What a Groove Roughing - as it is cut, ``cut`` - will cut, as the
+    editor draws it (GrooveRoughingPreview)."""
+    op = cut.op
+    path, profile_type, error = groove_path(cut)
+    if path is None:
+        return GrooveRoughingPreview(error=error)
+
+    radial = abs(op.stockToLeave.stockToLeaveX) if op.stockToLeaveEnabled else 0.0
+    axial = abs(op.stockToLeave.stockToLeaveZ) if op.stockToLeaveEnabled else 0.0
+
+    gcode = GcodeEmitter(op.is_optional_block)
+    groove_roughing_toolpath(cut, gcode)
+    error = operation_error(gcode)
+    feeds = [] if error else _cut_feeds(gcode.moves)
+    # the G-code is written for the point the blade was touched off on; the
+    # pecks are drawn down its middle
+    half_width = _blade_width(cut.tool) / 2.0
+    z_control = _blade_control(cut.tool) * half_width
+    feeds = [dataclasses.replace(f, z0=f.z0 - z_control, z1=f.z1 - z_control) for f in feeds]
+    # the pecks, each with its arrow where it ends - the depth it goes to -
+    # from the start diameter on, the pulley's largest with its radial stock
+    # to leave: what the G-code feeds through above it is air; the contour
+    # drawn on the contour
+    start_x = _start_x(path, profile_type, radial)
+    feeds = [f for f in (_from_start(dataclasses.replace(f, arrows=Arrows.END), start_x, profile_type)
+                         for f in feeds) if f]
+    plunges = []
+    for f in feeds:
+        if not any(abs(f.z0 - z) < SAME_MM for z in plunges):
+            plunges.append(f.z0)
+    peck = _peck(feeds, abs(op.cuttingParameters.peckDepth), plunges)
+    # the two plunges in the middle are made a peck at a time each in turn:
+    # each peck's place in that order, between them by its own plunge -
+    # ORDER_BY_ITS_PLUNGE of the way to the other, so two at the same depth
+    # stay apart - at the depth it goes to
+    order = []
+    if len(plunges) > 1:
+        for f in feeds:
+            for own, other in ((plunges[0], plunges[1]), (plunges[1], plunges[0])):
+                if abs(f.z1 - own) < SAME_MM:
+                    order.append(PeckNumber(len(order) + 1, own + (other - own) * ORDER_BY_ITS_PLUNGE, f.x1, f.x0))
+    # where each peck ends, a line across as wide as the blade
+    feeds = [dataclasses.replace(f, end_tick=half_width) for f in feeds]
+    if not error:
+        feeds += _contour_feeds(path, _cut_path(path, profile_type, radial, axial),
+                                max([f.pass_no for f in feeds] + [-1]) + 1)
+    # from where the blade starts - the clearance out from the start
+    # diameter - down its middle to the start diameter, for the first two
+    # plunges, the blade's and its outline's on the canvas; not the G-code's
+    # rapids: the backing off and in of the pecks, and the moves between them
+    # inside the groove, are not drawn
+    clearance = abs(op.cuttingParameters.retract)
+    blade_x = _blade_start_x(start_x, profile_type, clearance)
+    rapids = [DrawnLine(blade_x, z, start_x, z) for z in plunges[:2]] if clearance > 0 else []
+    return GrooveRoughingPreview(
+        feeds=tuple(feeds), rapids=tuple(rapids),
+        profile=flatten_path(path),
+        offset=tuple(CanvasPoint(x, z) for z, x in _stock_allowance(path, profile_type, radial, axial)),
+        error=error,
+        plunges=tuple(plunges), peck=peck, order=tuple(order),
+        start_diameter=start_x, blade_x=blade_x)

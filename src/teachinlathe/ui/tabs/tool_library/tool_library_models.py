@@ -9,12 +9,12 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Type
+from typing import Any, Dict, List, Optional, Set
 
-from PyQt6.QtCore import (QAbstractListModel, QModelIndex, QObject, Qt,
-                          pyqtProperty, pyqtSignal, pyqtSlot)
+from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.tooling.model.data_types import CuttingToolType, ToolHolder
+from teachinlathe.ui.common.dataclass_list_model import DataclassListModel  # noqa: F401
 from teachinlathe.core.tool_library_repository import ToolLibraryRepository
 from teachinlathe.ui.tabs.tool_library.BladeToolView import BladeToolView
 from teachinlathe.ui.tabs.tool_library.DrillingToolView import DrillingToolView
@@ -22,50 +22,6 @@ from teachinlathe.ui.tabs.tool_library.ReamingToolView import ReamingToolView
 from teachinlathe.ui.tabs.tool_library.TappingToolView import TappingToolView
 from teachinlathe.ui.tabs.tool_library.ThreadingToolView import ThreadingToolView
 from teachinlathe.ui.tabs.tool_library.TurningToolView import TurningToolView
-
-class DataclassListModel(QAbstractListModel):
-    """A list model whose roles are the fields of its row dataclass."""
-
-    def __init__(self, row_type: Type[Any], parent=None):
-        super().__init__(parent)
-        self._fields = [f.name for f in dataclasses.fields(row_type)]
-        self._rows: List[Any] = []
-
-    def roleNames(self):
-        first = Qt.ItemDataRole.UserRole + 1
-        return {first + i: name.encode() for i, name in enumerate(self._fields)}
-
-    def rowCount(self, parent=QModelIndex()):
-        return 0 if parent.isValid() else len(self._rows)
-
-    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-        if not index.isValid() or not 0 <= index.row() < len(self._rows):
-            return None
-        field = role - (Qt.ItemDataRole.UserRole + 1)
-        if not 0 <= field < len(self._fields):
-            return None
-        return getattr(self._rows[index.row()], self._fields[field])
-
-    def rows(self) -> List[Any]:
-        return list(self._rows)
-
-    def setRows(self, rows: List[Any]) -> None:
-        """Show these rows. As many as before, only the ones that differ are
-        changed, in place: a reset would scroll the list back to its top,
-        and a list refreshed after an edit should stay where it was."""
-        if len(rows) != len(self._rows):
-            self.beginResetModel()
-            self._rows = list(rows)
-            self.endResetModel()
-            return
-        for index, row in enumerate(rows):
-            if row != self._rows[index]:
-                self.replaceRow(index, row)
-
-    def replaceRow(self, index: int, row: Any) -> None:
-        self._rows[index] = row
-        self.dataChanged.emit(self.index(index), self.index(index))
-
 
 # ── Tool holders ────────────────────────────────────────────────────────────
 

@@ -9,10 +9,10 @@ import logging
 import math
 
 from typing import List, Sequence, Tuple
-from shapely.geometry import MultiPoint, Polygon
-from shapely.ops import unary_union
+from shapely.geometry import LineString, MultiPoint, Point, Polygon
+from shapely.ops import substring, unary_union
 
-from .geometry import ToolpathArc
+from .geometry import ROUNDING, ToolpathArc
 
 log = logging.getLogger(__name__)
 
@@ -35,9 +35,22 @@ MIN_AREA = 1e-3
 #: in mm.
 MIN_CUT = 0.01
 
+#: The grid what is left is kept on, in mm: cut along the same lines again
+#: and again - a contour, then passes ending on it - a shape picks up edges a
+#: hair apart that GEOS cannot tell crossing or not ("non-noded
+#: intersection"); on the grid they either meet or do not.
+GRID = 1e-6
+#: A length GEOS gives that is less than this is none: below the GRID.
+NO_LENGTH = GRID
+
+#: Material thinner than this is a sliver - left, not cut again - whatever
+#: the nose radius that leaves it; in mm.
+MIN_SLIVER = 0.05
+
 def minkowski(shape, convex: Sequence[Pt]):
     """``shape`` (a Polygon or MultiPolygon) grown by the convex outline
     ``convex``: every point of the one plus every point of the other."""
+    outline = _anticlockwise_hull(convex)
     pieces = []
     polygons = getattr(shape, "geoms", [shape])
     for polygon in polygons:
@@ -47,11 +60,83 @@ def minkowski(shape, convex: Sequence[Pt]):
                                for x, y in polygon.exterior.coords]))
         for ring in [polygon.exterior, *polygon.interiors]:
             coords = list(ring.coords)
-            for (ax, ay), (bx, by) in zip(coords, coords[1:]):
-                pieces.append(MultiPoint(
-                    [(ax + x, ay + y) for x, y in convex]
-                    + [(bx + x, by + y) for x, y in convex]).convex_hull)
+            for a, b in zip(coords, coords[1:]):
+                pieces.append(_swept(outline, a, b))
     return unary_union(pieces)
+
+
+def _anticlockwise_hull(points: Sequence[Pt]) -> List[Pt]:
+    """The convex hull of ``points``, its corners anticlockwise."""
+    hull = MultiPoint(list(points)).convex_hull
+    if not isinstance(hull, Polygon):
+        return list(getattr(hull, "coords", points))
+    coords = list(hull.exterior.coords)[:-1]
+    area = sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(coords, coords[1:] + coords[:1]))
+    return coords if area > 0 else coords[::-1]
+
+
+def _swept(outline: List[Pt], a: Pt, b: Pt):
+    """What the convex ``outline`` (anticlockwise) covers moved from ``a`` to
+    ``b``: its side facing back at ``a``, its side facing on at ``b`` - the
+    two joined at its corners furthest either side of the way it goes."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    n = len(outline)
+    if n < 3 or (dx == 0.0 and dy == 0.0):
+        return MultiPoint([(a[0] + x, a[1] + y) for x, y in outline]
+                          + [(b[0] + x, b[1] + y) for x, y in outline]).convex_hull
+    # across the way it goes, to its left
+    across = [-dy * x + dx * y for x, y in outline]
+    top, bottom = across.index(max(across)), across.index(min(across))
+    back = [outline[(top + k) % n] for k in range((bottom - top) % n + 1)]
+    front = [outline[(bottom + k) % n] for k in range((top - bottom) % n + 1)]
+    return Polygon([(a[0] + x, a[1] + y) for x, y in back] + [(b[0] + x, b[1] + y) for x, y in front])
+
+
+def obstacle_of(part, envelope: Sequence[Pt]):
+    """Where a tool's control point may not go without the tool going into
+    ``part``: the part grown by the tool's convex ``envelope`` (a
+    ToolShape's) turned round."""
+    return minkowski(part, [(-z, -r) for z, r in envelope])
+
+
+def drop_onto(inside, z: float, r_from: float, r_to: float, touch: float) -> float:
+    """Where a control point coming straight down at ``z``, from ``r_from``
+    to ``r_to``, meets an obstacle - ``inside``, the obstacle shrunk by
+    ``touch``, so going along its edge, the tool touching, is not meeting
+    it: its r there - ``r_from`` when it starts in it, ``r_to`` when it
+    meets nothing on the way."""
+    if inside.contains(Point(z, r_from)):
+        return r_from
+    hit = LineString([(z, r_from), (z, r_to)]).intersection(inside)
+    if hit.is_empty:
+        return r_to
+    return min(r_from, max(r for piece in getattr(hit, "geoms", [hit]) for _z, r in piece.coords) + touch)
+
+
+def edge_between(obstacle, a: Pt, b: Pt) -> List[Pt]:
+    """The edge of ``obstacle`` from ``a`` to ``b`` - two points on it - the
+    way round it that stays highest, as (z, r) points: what a control point
+    goes along from the one to the other with the tool on what is under it."""
+    polygon = min(getattr(obstacle, "geoms", [obstacle]), key=lambda p: p.distance(Point(a)))
+    ring = LineString(polygon.exterior.coords)
+    length = ring.length
+
+    def forward(start, end):
+        if start <= end:
+            return list(substring(ring, start, end).coords)
+        return list(substring(ring, start, length).coords) + list(substring(ring, 0.0, end).coords)[1:]
+
+    at_a, at_b = ring.project(Point(a)), ring.project(Point(b))
+    ways = [forward(at_a, at_b), forward(at_b, at_a)[::-1]]
+    return max(ways, key=lambda way: min(r for _z, r in way))
+
+
+def sweeps(shape: Sequence[Pt], points: Sequence[Pt]) -> List[Polygon]:
+    """What the convex ``shape`` covers going along ``points``: a polygon
+    for each stretch between two of them."""
+    outline = _anticlockwise_hull(shape)
+    return [_swept(outline, a, b) for a, b in zip(points, points[1:])]
+
 
 def sweep(shape: Sequence[Pt], a: Pt, b: Pt):
     """What the convex ``shape`` covers moving from ``a`` to ``b``."""
@@ -81,7 +166,7 @@ def _arc_points(start: Pt, arc) -> List[Pt]:
     else:
         while sweep_angle < 0:
             sweep_angle += 2 * math.pi
-    if radius < 1e-9:
+    if radius < ROUNDING:
         return [start, (arc.end_z, arc.end_x / 2.0)]
     step = 2 * math.acos(max(-1.0, 1 - ARC_TOLERANCE / radius))
     count = max(1, int(math.ceil(abs(sweep_angle) / step)))
@@ -96,12 +181,6 @@ def _arc_points(start: Pt, arc) -> List[Pt]:
                cr + radius * math.sin(a0 + sweep_angle * t)) for t in sorted(fractions)]
     points[-1] = (arc.end_z, arc.end_x / 2.0)
     return points
-
-#: The grid what is left is kept on, in mm: cut along the same lines again
-#: and again - a contour, then passes ending on it - a shape picks up edges a
-#: hair apart that GEOS cannot tell crossing or not ("non-noded
-#: intersection"); on the grid they either meet or do not.
-GRID = 1e-6
 
 def _on_grid(shape):
     from shapely.ops import transform

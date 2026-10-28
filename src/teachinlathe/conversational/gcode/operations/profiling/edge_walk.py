@@ -10,7 +10,8 @@ from typing import List, Optional, Tuple
 
 from shapely.geometry import LineString, Point
 
-from .shapes import Pt, TOLERANCE, _intersection
+from .geometry import DEGENERATE
+from .shapes import GRID, Pt, TOLERANCE, _intersection
 
 
 class EdgeWalk:
@@ -19,12 +20,19 @@ class EdgeWalk:
     profile's) or the stretch itself (the face at Z Start, X Start). A place
     on it is (i, t): ``t`` of the way along its stretch ``i``."""
 
+    #: mm at most between the points the edge is walked by - a quarter of
+    #: the depth of cut, when that is less.
+    MAX_SAMPLE = 0.2
+
+    #: mm past the nose a point of the edge is still within the tool's reach.
+    REACH_MARGIN = 0.1
+
     def __init__(self, planner, edge: List[Pt], touch: List[Tuple[Pt, Pt]]):
         self.planner = planner
         self.edge = edge
         self.touch = touch
         tool = planner.tool
-        self.reach = (tool.nose_radius if tool.known else 0.0) + 0.1
+        self.reach = (tool.nose_radius if tool.known else 0.0) + self.REACH_MARGIN
         # square to the passes, off the profile: (sin, cos) of their angle
         self.across = (planner.diagonal_sin, planner.diagonal_cos)
         # How far short of its control line, square to it, a pass cuts: at
@@ -33,7 +41,7 @@ class EdgeWalk:
         # measured to that pass's line - the depth of cut, as down X Start
         self.shortfall = max(0.0, min(e[0] * self.across[0] + e[1] * self.across[1]
                                       for e in planner.envelope))
-        self.sample = min(0.2, planner.doc / 4.0)
+        self.sample = min(self.MAX_SAMPLE, planner.doc / 4.0)
 
     def level(self, p: Pt) -> float:
         """Constant along a pass: which of the parallel lines ``p`` is on -
@@ -58,7 +66,7 @@ class EdgeWalk:
         for j in range(i, k + 1):
             t0 = t if j == i else 0.0
             t1 = u if j == k else 1.0
-            if t1 - t0 > 1e-12:
+            if t1 - t0 > DEGENERATE:
                 self.planner._add_drawn(self.at(j, t0), self.at(j, t1), self.drawn_at(j, t0), self.drawn_at(j, t1))
 
     def thickness(self, p: Pt) -> float:
@@ -108,16 +116,16 @@ class EdgeWalk:
             u0 = t if k == i else 0.0
             a, b = self.edge[k], self.edge[k + 1]
             length = math.hypot(b[0] - a[0], b[1] - a[1])
-            if length < 1e-12:
+            if length < DEGENERATE:
                 continue
             n = max(1, int(math.ceil((1.0 - u0) * length / self.sample)))
             lo = u0
             for j in range(1, n + 1):
                 u = u0 + (1.0 - u0) * j / n
-                if self.depth(self.at(k, u), after, made) >= doc - 1e-6:
+                if self.depth(self.at(k, u), after, made) >= doc - GRID:
                     for _ in range(12):
                         mid = (lo + u) / 2
-                        if self.depth(self.at(k, mid), after, made) >= doc - 1e-6:
+                        if self.depth(self.at(k, mid), after, made) >= doc - GRID:
                             u = mid
                         else:
                             lo = mid

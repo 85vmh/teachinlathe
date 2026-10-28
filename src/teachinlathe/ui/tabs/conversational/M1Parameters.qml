@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import TeachInLathe
 
 GroupBox {
     id: root
@@ -15,7 +16,8 @@ GroupBox {
     /* --- Public API --- */
     property var    m1Data: null
     property bool   include_m1: true
-    property string inspect_position: "G28"
+    // where it stops, a PauseToInspect.Position
+    property int    inspect_position: PauseToInspect.G28
     property bool   stop_spindle: false
     // offer a third place to stop: where the tool is (IN_PLACE) - Drilling's
     // and Tapping's
@@ -34,7 +36,7 @@ GroupBox {
         _loading = true
         m1Data = data || {}
         include_m1       = (m1Data.include_m1       !== undefined) ? !!m1Data.include_m1       : true
-        inspect_position = (m1Data.inspect_position !== undefined) ? m1Data.inspect_position   : "G28"
+        inspect_position = (m1Data.inspect_position !== undefined) ? m1Data.inspect_position   : PauseToInspect.G28
         stop_spindle     = (m1Data.stop_spindle     !== undefined) ? !!m1Data.stop_spindle     : false
         _loading = false
     }
@@ -89,8 +91,8 @@ GroupBox {
                 Layout.preferredWidth: 1
                 text: "Stay there"
                 font.pixelSize: Theme.fontBody
-                checked: root.inspect_position === "IN_PLACE"
-                onToggled: if (checked) { root.inspect_position = "IN_PLACE"; root.emitSave() }
+                checked: root.inspect_position === PauseToInspect.InPlace
+                onToggled: if (checked) { root.inspect_position = PauseToInspect.InPlace; root.emitSave() }
             }
 
             RadioButton {
@@ -99,8 +101,8 @@ GroupBox {
                 Layout.preferredWidth: 1
                 text: "Move to <b>G28</b>"
                 font.pixelSize: Theme.fontBody
-                checked: root.inspect_position === "G28"
-                onToggled: if (checked) { root.inspect_position = "G28"; root.emitSave() }
+                checked: root.inspect_position === PauseToInspect.G28
+                onToggled: if (checked) { root.inspect_position = PauseToInspect.G28; root.emitSave() }
             }
 
             RadioButton {
@@ -109,8 +111,8 @@ GroupBox {
                 Layout.preferredWidth: 1
                 text: "Move to <b>G30</b>"
                 font.pixelSize: Theme.fontBody
-                checked: root.inspect_position === "G30"
-                onToggled: if (checked) { root.inspect_position = "G30"; root.emitSave() }
+                checked: root.inspect_position === PauseToInspect.G30
+                onToggled: if (checked) { root.inspect_position = PauseToInspect.G30; root.emitSave() }
             }
         }
 

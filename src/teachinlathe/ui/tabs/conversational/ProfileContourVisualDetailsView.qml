@@ -21,8 +21,8 @@ Item {
     property string profileType: "od"
     property var    workpiece:   ({})
     // the tool it cuts with, as its Tool Library card
-    // shows it: editor.toolCard; {} with none
-    property var    toolCard:    ({})
+    // shows it: editor.toolCard, a ToolCard; null with none
+    property var    toolCard:    null
 
     // the values the boxes on the canvas show and edit
     property real   xStart: 0.0
@@ -81,7 +81,7 @@ Item {
         var stock = JSON.parse(JSON.stringify(profileOp.workpiece || {}))
         stock.break_after_profile = true
         workpiece   = stock
-        toolCard    = editor ? (editor.toolCard || {}) : {}
+        toolCard    = editor ? editor.toolCard : null
 
         // X Start defaults to the profile's largest diameter plus the retract
         var pp = opData.profiling_parameters || {}

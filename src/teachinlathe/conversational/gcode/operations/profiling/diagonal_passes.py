@@ -9,6 +9,7 @@ import math
 from shapely.geometry import LineString, box
 from teachinlathe.conversational.model.data_types import PassType
 
+from .geometry import RESOLUTION
 from .shapes import FAR, TOLERANCE
 from .edge_walk import EdgeWalk
 
@@ -191,7 +192,7 @@ class DiagonalPasses:
                 continue
             far = (start[0] - (self.r_start - start[1]) * self.diagonal_cos / self.diagonal_sin, self.r_start)
             runs = self._free_runs(start, far)
-            if not runs or math.hypot(runs[0][0][0] - start[0], runs[0][0][1] - start[1]) > 1e-3:
+            if not runs or math.hypot(runs[0][0][0] - start[0], runs[0][0][1] - start[1]) > RESOLUTION:
                 continue                     # the profile in the way straight away
             end = runs[0][1]
             if not self._cuts(start, end) or not self._feed_clear(start, end):
@@ -288,7 +289,7 @@ class DiagonalPasses:
             if z_to <= start[0] + TOLERANCE:
                 continue
             runs = self._free_runs(start, (z_to, start[1] - (z_to - start[0]) * self.diagonal_sin / self.diagonal_cos))
-            if not runs or math.hypot(runs[0][0][0] - start[0], runs[0][0][1] - start[1]) > 1e-3:
+            if not runs or math.hypot(runs[0][0][0] - start[0], runs[0][0][1] - start[1]) > RESOLUTION:
                 continue                     # the profile in the way straight away
             end = runs[0][1]
             if not self._cuts(start, end) or not self._feed_clear(start, end):

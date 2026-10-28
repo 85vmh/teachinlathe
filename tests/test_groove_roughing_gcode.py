@@ -9,6 +9,7 @@ os.environ["HOME"] = "/tmp"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from gcode_reading import groove_cut_of
 from teachinlathe.conversational.gcode.operations.groove_roughing import (
     generate_groove_roughing_gcode,
 )
@@ -76,7 +77,7 @@ def _op(blade=True, orientation=6):
 
 
 def test_groove_roughing_start_center_generates_pecks_and_contour():
-    lines = generate_groove_roughing_gcode(_op())
+    lines = generate_groove_roughing_gcode(groove_cut_of(_op()))
 
     assert "G97 M4 S1000" in lines
     assert "G95 F0.100" in lines
@@ -93,6 +94,6 @@ def test_groove_roughing_start_center_generates_pecks_and_contour():
 
 
 def test_groove_roughing_requires_blade_tool():
-    lines = generate_groove_roughing_gcode(_op(blade=False, orientation=1))
+    lines = generate_groove_roughing_gcode(groove_cut_of(_op(blade=False, orientation=1)))
 
     assert lines[-1] == "( ERROR: Groove Roughing -- current tool must be a parting or grooving blade )"

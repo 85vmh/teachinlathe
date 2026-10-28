@@ -11,7 +11,8 @@ from shapely.geometry import LineString, MultiPoint, Point, Polygon, box
 from shapely.ops import unary_union
 from teachinlathe.conversational.model.data_types import PassType, ProfilingType
 
-from .shapes import Pt, FAR, TOLERANCE, MIN_AREA, MIN_CUT, minkowski, path_points, _difference, _intersection, _mirror
+from .geometry import ROUNDING
+from .shapes import Pt, FAR, TOLERANCE, MIN_AREA, MIN_CUT, MIN_SLIVER, minkowski, path_points, _difference, _intersection, _mirror
 from .tool_shape import square_tool
 from .plan import Move, RoughingPlan
 
@@ -133,7 +134,7 @@ class PlannerBase:
             self.moves[-1].pass_end = True
 
     def _add(self, a: Pt, b: Pt, feed: bool, **kind):
-        if math.hypot(b[0] - a[0], b[1] - a[1]) < 1e-9:
+        if math.hypot(b[0] - a[0], b[1] - a[1]) < ROUNDING:
             return
         if feed:
             # taken off when what is left is next asked for - a run of cuts
@@ -184,7 +185,7 @@ class PlannerBase:
         else None. The insert has to stand on its control point: nothing of it
         under the point it is programmed to (over it, for ID). A tool held the
         other way round - an OD tool on an ID profile - cannot cut this."""
-        if min(r for _z, r in self.envelope) < -max(0.05, self.tool.nose_radius):
+        if min(r for _z, r in self.envelope) < -max(MIN_SLIVER, self.tool.nose_radius):
             side = "away from the axis" if self.is_id else "toward the axis"
             return RoughingPlan(tool=self.tool, error=(
                 f"{self.tool.label}: its tip does not point {side} - "
@@ -243,7 +244,7 @@ class PlannerBase:
 
     def _levels(self, v_start, v_end):
         levels, k = [], 1
-        while v_start - k * self.doc > v_end - 1e-9:
+        while v_start - k * self.doc > v_end - ROUNDING:
             levels.append(v_start - k * self.doc)
             k += 1
         if not levels or levels[-1] > v_end + TOLERANCE:
@@ -262,7 +263,7 @@ class PlannerBase:
         if piece.bounds[0] >= self.profile[0][0] - TOLERANCE:
             return False
         sliver = max(self.tool.nose_radius if self.tool.known else 0.0, self.sliver_radius)
-        return not piece.buffer(-max(0.05, sliver / 2)).is_empty
+        return not piece.buffer(-max(MIN_SLIVER, sliver / 2)).is_empty
 
     def _result(self) -> RoughingPlan:
         remaining = self.remaining

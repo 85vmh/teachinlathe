@@ -5,6 +5,8 @@ from __future__ import annotations
 
 from shapely.geometry import Point
 
+from .shapes import GRID
+
 
 class AxialRadialPasses:
     """Axial and radial passes - one part of _Planner (planner.py)."""
@@ -23,7 +25,7 @@ class AxialRadialPasses:
         for v in self._levels(v_start, v_end):
             start = at(u_start, v)
             runs = self._free_runs(start, at(u_far(v), v))
-            if not runs or Point(runs[0][0]).distance(Point(start)) > 1e-6:
+            if not runs or Point(runs[0][0]).distance(Point(start)) > GRID:
                 continue                       # the stock face is out of reach here
             end = runs[0][1]
             if not self._cuts(start, end):

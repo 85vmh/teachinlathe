@@ -3,7 +3,8 @@ from datetime import datetime
 
 from PyQt6.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, pyqtSlot
 
-from teachinlathe.conversational.model.qml_adapter import axial_tool_label
+from teachinlathe.conversational.model.qml_adapter import OperationRow, operation_title
+from teachinlathe.ui.common.dataclass_list_model import DataclassListModel
 from teachinlathe.core.date_utils import format_recent_datetime_string
 
 class ProgramListModel(QAbstractListModel):
@@ -109,69 +110,20 @@ class ProgramListModel(QAbstractListModel):
         self._sort_ascending = ascending
         self.layoutChanged.emit()
 
-    def _display_name_for_op(self, op, tool_label=None):
-        op_type = getattr(op, "type", "") or ""
-        if op_type == "positionAt":
-            return "Position At"
-        if op_type == "facing":
-            return "Facing"
-        if op_type in ("defineProfile", "importDxfProfile"):
-            profile_id = getattr(op, "profile_id", None)
-            profile_type = getattr(op, "profile_type", None)
-            pt = profile_type.value if hasattr(profile_type, "value") else str(profile_type or "od").lower()
-            type_str = "OD" if pt == "od" else "ID"
-            prefix = "Import DXF" if op_type == "importDxfProfile" else "Define"
-            return f"{prefix} {type_str} Profile (P{profile_id})" if profile_id is not None else f"{prefix} {type_str} Profile"
-        if op_type == "profiling":
-            profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
-            strategy = getattr(getattr(op, "profilingOptions", None), "strategy", None)
-            strategy_value = strategy.value if hasattr(strategy, "value") else str(strategy or "").lower()
-            prefix = "G71 " if strategy_value == "rough" else "G70 " if strategy_value == "finish" else ""
-            if profile_id is not None and strategy:
-                strategy_str = strategy.value.capitalize() if hasattr(strategy, "value") else str(strategy).capitalize()
-                return f"{prefix}Cut Profile (P{profile_id}, {strategy_str})"
-            if profile_id is not None:
-                return f"{prefix}Cut Profile (P{profile_id})"
-            return f"{prefix}Cut Profile" if prefix else "Cut Profile"
-        if op_type == "profileRoughing":
-            profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
-            profiling_type = getattr(getattr(op, "profileRoughingStrategy", None), "profiling_type", None)
-            pt = profiling_type.value if hasattr(profiling_type, "value") else str(profiling_type or "od").lower()
-            prefix = "OD" if pt == "od" else "ID"
-            name = f"{prefix} Profile Roughing (P{profile_id})" if profile_id is not None else f"{prefix} Profile Roughing"
-            return name + " · Rest" if getattr(op, "restMaterial", False) else name
-        if op_type == "profileContour":
-            profile_id = getattr(getattr(op, "profilingParameters", None), "profile_id", None)
-            profiling_type = getattr(getattr(op, "profileContourStrategy", None), "profiling_type", None)
-            pt = profiling_type.value if hasattr(profiling_type, "value") else str(profiling_type or "od").lower()
-            prefix = "OD" if pt == "od" else "ID"
-            return f"{prefix} Profile Contour (P{profile_id})" if profile_id is not None else f"{prefix} Profile Contour"
-        if op_type == "grooveRoughing":
-            profile_id = getattr(getattr(op, "roughingParameters", None), "profile_id", None)
-            return f"Groove Roughing (P{profile_id})" if profile_id is not None else "Groove Roughing"
-        if op_type == "grooveFinishing":
-            profile_id = getattr(getattr(op, "finishingParameters", None), "profile_id", None)
-            return f"Groove Finishing (P{profile_id})" if profile_id is not None else "Groove Finishing"
-        if op_type == "threading":
-            pitch = getattr(op, "pitch", None)
-            return f"G76 Threading (P: {pitch})" if pitch is not None else "G76 Threading"
-        if op_type == "g33Threading":
-            pitch = getattr(op, "pitch", None)
-            return f"G33 Threading (P: {pitch})" if pitch is not None else "G33 Threading"
-        if op_type == "drilling":
-            return f"Drilling {tool_label}" if tool_label else "Drilling"
-        if op_type == "tapping":
-            return f"Tapping {tool_label}" if tool_label else "Tapping"
-        if op_type == "parting":
-            return "Parting"
-        return op_type or "Unknown"
-
     def _operations_summary(self, program):
         ops = getattr(program, "operations", []) or []
         if not ops:
             return "No operations yet, tap to change that"
         return "||".join(
             f"{1 if bool(getattr(op, 'generate_gcode', False)) else 0}::"
-            f"{self._display_name_for_op(op, axial_tool_label(op, program))}"
+            f"{operation_title(op, program)}"
             for op in ops
         )
+
+
+class OperationListModel(DataclassListModel):
+    """The open program's operations as the editor lists them, an
+    OperationRow each, in order: a row's index is its operation's."""
+
+    def __init__(self, parent=None):
+        super().__init__(OperationRow, parent)
