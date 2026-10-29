@@ -10,11 +10,12 @@ The reason for the port rather than reuse: the backplot is a
 ``QQuickFramebufferObject`` drawing OpenGL into the scene graph, and the QML
 insert is a ``Canvas`` - a software rasteriser. A Canvas cannot be drawn
 inside the framebuffer. What crosses over is the geometry, which is plain
-arithmetic in both.
+arithmetic in both - and the planner cuts with the same outline, which is
+why it is in the domain and not with the backplot.
 
 Everything here is 2D and in the insert's own frame: +x and +y as the QML
 lays them out, origin at the centre of the inscribed circle. Placing that on
-a lathe's XZ plane is the actor's job, not this module's.
+a lathe's XZ plane is the caller's job, not this module's.
 """
 
 import math
@@ -128,7 +129,7 @@ class Insert:
         """``(vertices, cutting_indices)`` - the sharp outline, corners not yet
         rounded, walked in order around the shape.
 
-        In order is load-bearing: ``geometry.rounded_polygon`` builds each
+        In order is load-bearing: ``outlines.rounded_polygon`` builds each
         corner against its neighbours, and a vertex list that jumps produces a
         star. The trigon is the one that looks wrong written down - its six
         vertices alternate between two radii, and they are listed by angle.

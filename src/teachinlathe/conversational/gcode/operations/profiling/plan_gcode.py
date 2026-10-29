@@ -11,7 +11,7 @@ from ...toolpath import GcodeEmitter, comment
 from .geometry import DEGENERATE, ROUNDING
 
 
-def write_plan(path: GcodeEmitter, plan, stock, m1_params=None, spindle_sign=0, title=None):
+def write_plan(path: GcodeEmitter, plan, stock, m1_params=None, title=None):
     """``plan``'s G-code onto ``path``: the tool it was planned for, its
     warnings, ``title`` (a comment line, as it is) and its moves (emit_moves)."""
     if plan.tool is not None and plan.tool.known:
@@ -23,15 +23,15 @@ def write_plan(path: GcodeEmitter, plan, stock, m1_params=None, spindle_sign=0, 
     if any(move.contour and move.feed for move in plan.moves):
         path.note(comment(f"Contour with StockToLeave[radial={fmt(stock[0])} "
                           f"axial={fmt(stock[1])}]"))
-    emit_moves(path, plan.moves, stock, m1_params, spindle_sign)
+    emit_moves(path, plan.moves, stock, m1_params)
 
 
-def emit_moves(path: GcodeEmitter, moves, stock, m1_params=None, spindle_sign=0):
+def emit_moves(path: GcodeEmitter, moves, stock, m1_params=None):
     """``moves`` onto ``path`` as G0 / G1, the contour's runs of short chords
     fitted back into G2 / G3 arcs where they lie on one; ``stock`` (radial,
     axial) is the stock to leave the contour's comment names. With
     ``m1_params`` (M1Parameters) asking for it, a Pause to Inspect after each
-    pass, the spindle started again ``spindle_sign`` 1 (M3) or -1 (M4)."""
+    pass."""
     include_m1 = m1_params is not None and m1_params.include_m1
     contour = []                    # (z, r) points of the contour run under way
 
@@ -62,7 +62,7 @@ def emit_moves(path: GcodeEmitter, moves, stock, m1_params=None, spindle_sign=0)
             path.rapid(2 * move.r1, move.z1)
         if move.pass_end:
             if include_m1:
-                path.inspect_stop(m1_params, spindle_sign)
+                path.inspect_stop(m1_params)
             path.blank()
     flush_contour()
     path.blank()

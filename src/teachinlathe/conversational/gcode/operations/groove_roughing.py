@@ -12,7 +12,7 @@ from teachinlathe.conversational.model.data_types import (
 )
 from teachinlathe.conversational.model.data_types import StartPoint as ProfileStart
 
-from ..helpers.spindle import build_spindle_gcode
+from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 from ..helpers.utils import get_float
 from .profiling.geometry import (
     ROUNDING,
@@ -821,6 +821,7 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
 
     gcode.codes(build_spindle_gcode(op.speedsAndFeeds, ""))
     feed_rate = op.speedsAndFeeds.feed
+    gcode.code(build_feed_gcode(feed_rate))
     peck_depth = abs(cutting.peckDepth)
     clearance = abs(cutting.retract)
     dwell_time = cutting.dwellTime
@@ -830,7 +831,6 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     stock_radial = op.stockToLeave.stockToLeaveX if op.stockToLeaveEnabled else 0.0
     stock_axial = op.stockToLeave.stockToLeaveZ if op.stockToLeaveEnabled else 0.0
 
-    gcode.code(f"G95 F{_fmt(feed_rate)}")
     gcode.blank()
 
     if strategy is not GrooveRoughingStrategy.START_CENTER:

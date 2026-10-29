@@ -11,17 +11,23 @@ def _inspect_position(m1_params: M1Parameters) -> InspectPosition:
 
 
 def inspect_position_int(m1_params: M1Parameters) -> int:
-    """0 for G28, 1 for G30, 2 to stay where the tool is - what the LinuxCNC
-    subroutines (m1_handling.ngc) take."""
+    """M1's P: 0 to stay where the tool is, 1 for G28, 2 for G30 - what the
+    remap of M1 (subroutines/m1_remap.ngc) takes."""
     pos = _inspect_position(m1_params)
-    return {InspectPosition.G28: 0, InspectPosition.G30: 1, InspectPosition.IN_PLACE: 2}[pos]
+    return {InspectPosition.IN_PLACE: 0, InspectPosition.G28: 1, InspectPosition.G30: 2}[pos]
 
 
-def m1_handling_call(prefix: str, m1_params: M1Parameters, x_return, z_return, spindle_sign: int) -> str:
-    """The call to o<m1_handling> (subroutines/m1_handling.ngc) at a point the
-    operator may Pause to Inspect: where the tool waits, and where it goes
-    back to - ``x_return`` (a diameter), ``z_return`` - before going on, the
-    spindle started again ``spindle_sign`` 1 (M3) or -1 (M4)."""
-    from ..config import fmt
-    return (f"{prefix}o<m1_handling> call [{inspect_position_int(m1_params)}] "
-            f"[{fmt(x_return)}] [{fmt(z_return)}] [{int(spindle_sign)}]")
+_M1_COMMENTS = {
+    0: "Pause to inspect and stay there",
+    1: "Pause to inspect and retract to G28 position",
+    2: "Pause to inspect and retract to G30 position",
+}
+
+
+def m1_gcode(prefix: str, m1_params: M1Parameters) -> str:
+    """M1 P<where the tool waits>, and what it does as a comment, at a point
+    the operator may Pause to Inspect. M1 is remapped (subroutines/m1_remap.ngc):
+    with Optional Stop on, it stops the spindle, waits there, then starts the
+    spindle again as it was and goes back to where the tool was before going on."""
+    p = inspect_position_int(m1_params)
+    return f"{prefix}M1 P{p} ({_M1_COMMENTS[p]})"

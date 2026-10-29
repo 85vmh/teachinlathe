@@ -50,7 +50,7 @@ def insert_tool_shape(tool, clearance_degrees: float = CLEARANCE_DEGREES) -> Opt
     any other kind of tool."""
     from teachinlathe.tooling.model import insert_catalog, tool_angles
     from teachinlathe.tooling.model.data_types import TurningTool
-    from teachinlathe.ui.tabs.programs.backplot.actors.geometry import circle_loop, rounded_polygon
+    from teachinlathe.tooling.model.outlines import circle_loop, rounded_polygon
 
     if not isinstance(tool, TurningTool):
         return None

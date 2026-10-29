@@ -51,7 +51,6 @@ from teachinlathe.conversational.model.program_commands import (
     insert_default_operation,
     move_operation,
 )
-from teachinlathe.conversational.model.qml_adapter import build_details_payload
 from teachinlathe.conversational.model.updaters import (
     apply_cutting_update,
     apply_define_profile_update,
@@ -93,6 +92,11 @@ PROGRAMS_DIR = "/home/cnc/Work/teachinlathe/conversational"
 DXF_PROFILE_SUBFOLDER = "DXF Profiles"
 
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+def _details_payload(obj):
+    """What an editor is given of a program or an operation: its dict."""
+    return obj.to_dict() if hasattr(obj, "to_dict") else None
 
 
 def _set_if_given(op, payload, key, attr, convert):
@@ -200,7 +204,7 @@ class ConversationalUseCase:
 
         self.check_tools(program)
         gcode_dir, json_path = self.export_program(program)
-        return build_ngc_from_program(program, output_dir=gcode_dir, source_json=json_path)
+        return build_ngc_from_program(program, self._tool_library(), output_dir=gcode_dir, source_json=json_path)
 
     def gcode_job(self, program: Program):
         """What building the program's G-code away from the application
@@ -416,11 +420,11 @@ class ConversationalUseCase:
     def details_payload(self, program: Program, index: int) -> Optional[dict]:
         """What the details pane shows for the header (-1) or an operation."""
         if index == -1:
-            return build_details_payload(program)
+            return _details_payload(program)
         op = self.operation(program, index)
         if op is None:
             return None
-        data = self.with_workpiece(program, build_details_payload(op))
+        data = self.with_workpiece(program, _details_payload(op))
         if not data:
             return None
         # the way the operation's tool turns, which is the only way its
@@ -435,7 +439,7 @@ class ConversationalUseCase:
     def operation_payload(self, program: Program, index: int) -> dict:
         """An operation as its editor gets it, with the workpiece for profiles."""
         op = self.operation(program, index)
-        return self.with_workpiece(program, build_details_payload(op)) if op is not None else {}
+        return self.with_workpiece(program, _details_payload(op)) if op is not None else {}
 
     @staticmethod
     def with_workpiece(program: Optional[Program], payload):
@@ -474,7 +478,7 @@ class ConversationalUseCase:
             return {}
         for op in reversed(program.operations[:max(before_index, 0)]):
             if isinstance(op, DefineProfile):
-                return self.with_workpiece(program, build_details_payload(op)) or {}
+                return self.with_workpiece(program, _details_payload(op)) or {}
         return {}
 
     def radial_profile_before(self, program: Optional[Program], before_index: int, profile_id: int) -> dict:
@@ -484,7 +488,7 @@ class ConversationalUseCase:
             return {}
         for op in reversed(program.operations[:max(before_index, 0)]):
             if isinstance(op, DefineRadialProfile) and (not profile_id or int(op.profile_id) == int(profile_id)):
-                return build_details_payload(op) or {}
+                return _details_payload(op) or {}
         return {}
 
     def tool_entry(self, program: Optional[Program], index: int):

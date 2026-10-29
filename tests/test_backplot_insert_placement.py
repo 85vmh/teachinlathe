@@ -22,7 +22,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from teachinlathe.ui.tabs.programs.backplot.actors import inserts  # noqa: E402
+from teachinlathe.tooling.model import inserts  # noqa: E402
 from teachinlathe.ui.tabs.programs.backplot.actors.insert_tool import (  # noqa: E402
     _offset, _rotate, _to_plane, turn_angle,
 )

@@ -1,5 +1,7 @@
 from teachinlathe.conversational.model.data_types import SpeedsAndFeeds, SpindleMode
 
+from ..config import fmt
+
 
 
 def build_spindle_gcode(spindle: SpeedsAndFeeds, prefix: str, force_rpm: bool = False) -> list:
@@ -28,3 +30,9 @@ def build_spindle_gcode(spindle: SpeedsAndFeeds, prefix: str, force_rpm: bool = 
     if words:
         return [f"{prefix}{' '.join(words)}"]
     return []
+
+
+def build_feed_gcode(feed_rate, prefix: str = "") -> str:
+    """The feed's G-code line, G95 F in mm a turn: written right after the
+    spindle's, then again in an operation only where its feed changes."""
+    return f"{prefix}G95 F{fmt(feed_rate)}"

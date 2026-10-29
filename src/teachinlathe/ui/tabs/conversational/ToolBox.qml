@@ -9,7 +9,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import theme
 import TeachInLathe
-import "../tool_library/ToolTitles.js" as ToolTitles
 
 CanvasBox {
     id: root
@@ -24,9 +23,8 @@ CanvasBox {
     property real rowHeight: 0
 
     readonly property bool hasTool: !!toolCard && toolCard.hasTool
-    // the tool's title, its colours taken out: all of it the text's
-    readonly property string description: hasTool && toolCard.view
-        ? ToolTitles.listTitle(toolCard.card, toolCard.view, Theme).replace(/<[^>]*>/g, "") : "(empty)"
+    // the tool's list title as plain text: all of it the text's colour
+    readonly property string description: hasTool && toolCard.view ? toolCard.view.titleParts.text : "(empty)"
     // its border the inserts' colour, its fill that lighter: the colour this
     // much of the way from white to it - opaque, the canvas not showing through
     readonly property real fillStrength: 0.4

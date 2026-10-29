@@ -10,7 +10,7 @@ from typing import Optional
 
 from teachinlathe.conversational.model.data_types import Drilling, Program
 
-from ..helpers.spindle import build_spindle_gcode
+from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 from ..toolpath import GcodeEmitter, OperationPreview
 
 
@@ -51,8 +51,8 @@ def drilling_toolpath(op: Drilling, path: GcodeEmitter, program: Optional[Progra
         return
 
     path.codes(build_spindle_gcode(spindle, "", force_rpm=True))
+    path.code(build_feed_gcode(spindle.feed_rate))
     path.rapid(x=0)
-    path.code(f"G95 F{spindle.feed_rate}")
     path.rapid(z=retract_z)
     path.blank()
 
@@ -68,7 +68,7 @@ def drilling_toolpath(op: Drilling, path: GcodeEmitter, program: Optional[Progra
         path.rapid(z=retract_z)
         # between pecks, not after the last
         if index < len(targets) - 1 and m1_params.include_m1:
-            path.inspect_stop(m1_params, spindle.sign)
+            path.inspect_stop(m1_params)
         path.blank()
         depth = target
 

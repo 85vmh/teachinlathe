@@ -48,7 +48,7 @@ G91.1 ; but not for arcs
 			
 		G0 Z[#<z_start>]
 
-		o<m1_handling> call [#<x_inspect>] [#<z_inspect>] [#<_x> * 2] [#<z_start>] [-1]
+		M1 P0 (Pause to inspect and stay there)
 	O100 ENDWHILE
 
 	G0 X #<x_end>

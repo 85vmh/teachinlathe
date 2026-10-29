@@ -22,6 +22,7 @@ from teachinlathe.ui.tabs.tool_library.ReamingToolView import ReamingToolView
 from teachinlathe.ui.tabs.tool_library.TappingToolView import TappingToolView
 from teachinlathe.ui.tabs.tool_library.ThreadingToolView import ThreadingToolView
 from teachinlathe.ui.tabs.tool_library.TurningToolView import TurningToolView
+from teachinlathe.ui.tabs.tool_library.tool_title_parts import title_parts
 
 # ── Tool holders ────────────────────────────────────────────────────────────
 
@@ -141,6 +142,11 @@ class CuttingToolSummary(QObject):
     @pyqtProperty(str, constant=True)
     def text(self):
         return self._tool.summary()
+
+    @pyqtProperty("QVariantMap", constant=True)
+    def titleParts(self):
+        """Its card's and its list's titles, in parts (tool_title_parts)."""
+        return title_parts(self._tool)
 
 
 @dataclass(frozen=True)

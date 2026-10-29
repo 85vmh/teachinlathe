@@ -124,7 +124,7 @@ def test_no_depth_of_cut_is_an_error_not_an_endless_loop():
 # ── pause to inspect ───────────────────────────────────────────────────────
 
 def m1_calls(op):
-    return [line for line in generate_facing_gcode(op) if "o<m1_handling> call" in line]
+    return [line for line in generate_facing_gcode(op) if line.startswith("M1")]
 
 
 def test_no_m1_handling_unless_it_is_included():
@@ -132,10 +132,13 @@ def test_no_m1_handling_unless_it_is_included():
 
 
 def test_m1_handling_after_every_pass_but_the_last():
-    """Back at X Start on the face just cut, the spindle as it was (M4)."""
-    calls = m1_calls(facing(doc=1.0, include_m1=True))
-    args = [float(a) for call in calls for a in re.findall(r"\[([^\]]*)\]", call)]
-    assert args == pytest.approx([1, X_START, 0.0, -1, 1, X_START, -1.0, -1])
+    """At G30 (P2), the tool at X Start on the face just cut: where the remap
+    of M1 brings it back to."""
+    lines = generate_facing_gcode(facing(doc=1.0, include_m1=True))
+    stops = [i for i, line in enumerate(lines) if line.startswith("M1")]
+    assert [lines[i] for i in stops] == ["M1 P2 (Pause to inspect and retract to G30 position)"] * 2
+    assert [lines[i - 2:i] for i in stops] == [[f"G0 X{X_START:.3f}", "G0 Z0.000"],
+                                               [f"G0 X{X_START:.3f}", "G0 Z-1.000"]]
 
 
 # ── what was already there stays ───────────────────────────────────────────

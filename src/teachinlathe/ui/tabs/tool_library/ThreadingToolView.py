@@ -18,6 +18,7 @@ from PyQt6.QtGui import QColor
 from teachinlathe.tooling.model import insert_catalog, threading_catalog
 from teachinlathe.tooling.model.data_types import SpindleDirection, ThreadingTool
 from teachinlathe.ui.tabs.programs.backplot.actors import palette
+from teachinlathe.ui.tabs.tool_library.tool_title_parts import title_parts
 
 #: How far ThreadingInsert.qml is turned for each orientation. At 0 its tip
 #: points up (+X), which is orientation 6's: the body below, the tip up.
@@ -30,6 +31,11 @@ class ThreadingToolView(QObject):
     def __init__(self, tool: ThreadingTool, parent=None):
         super().__init__(parent)
         self._tool = tool
+
+    @pyqtProperty("QVariantMap", notify=changed)
+    def titleParts(self):
+        """Its card's and its list's titles, in parts (tool_title_parts)."""
+        return title_parts(self._tool)
 
     @pyqtProperty(str, constant=True)
     def toolType(self):

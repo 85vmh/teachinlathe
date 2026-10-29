@@ -19,8 +19,9 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from teachinlathe.tooling.model import inserts  # noqa: E402
 from teachinlathe.ui.tabs.programs.backplot.actors import (  # noqa: E402
-    geometry, inserts, screen, stepping,
+    geometry, screen, stepping,
 )
 from teachinlathe.ui.tabs.programs.backplot.actors.units import mm, to_mm  # noqa: E402
 

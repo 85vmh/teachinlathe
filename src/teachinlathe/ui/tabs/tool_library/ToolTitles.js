@@ -1,9 +1,11 @@
 .pragma library
 
-// A cutting tool's name as its card heads it, coloured part by part: an
-// insert's family blue, its size in the insert's colour, its corner radius
-// green; a threading insert's pitch green; a blade's width, a drill's or a
-// reamer's diameter and a tap's thread in the tool's own colour.
+// A cutting tool's titles, coloured part by part. The words are the
+// domain's (tooling/model/tool_titles.py), which the tool's view hands over
+// in parts, each with its role (`view.titleParts`); this only colours them:
+// an insert's family blue, its size in the insert's colour, its corner
+// radius green; a threading insert's pitch green; a blade's width, a drill's
+// or a reamer's diameter and a tap's thread in the tool's own colour.
 //
 // `card` is the cutting-tool models' card kind, `view` the tool's view and
 // `theme` the Theme singleton. Rich text, for a Text with StyledText.
@@ -12,32 +14,38 @@ function font(color, text) {
     return "<font color='" + color + "'>" + text + "</font>"
 }
 
-function mm(value) {
-    return Number(value.toFixed(3)) + " mm"
+// The colour of a title part's role, "" for the words between the parts.
+function roleColor(role, view, theme) {
+    switch (role) {
+    case "family":
+    case "hand":
+        return theme.accentStrong
+    case "insert":
+        return view.insertBodyColor
+    case "thickness":
+        return theme.foregroundStrong
+    case "radius":
+    case "pitch":
+        return theme.success
+    case "body":
+        return view.bodyColor
+    }
+    return ""
 }
 
-function richTitle(card, view, theme) {
-    if (!view)
-        return ""
-    switch (card) {
-    case "turning":
-        return font(theme.accentStrong, view.familyCode) + " "
-             + font(view.insertBodyColor, view.sizeCode)
-             + font(theme.foregroundStrong, view.thicknessCode)
-             + font(theme.success, view.radiusCode)
-    case "threading":
-        return font(view.insertBodyColor, view.sizeCode)
-             + font(theme.accentStrong, view.hand) + " "
-             + font(theme.success, view.pitchText)
-    case "blade":
-        return font(view.bodyColor, mm(view.bladeWidth))
-    case "drilling":
-    case "reaming":
-        return font(view.bodyColor, "Ø" + mm(view.diameter))
-    case "tapping":
-        return font(view.bodyColor, view.designation)
+function painted(parts, view, theme) {
+    var text = ""
+    for (var i = 0; i < parts.length; ++i) {
+        var color = roleColor(parts[i].role, view, theme)
+        text += color ? font(color, parts[i].text) : parts[i].text
     }
-    return view.text !== undefined ? view.text : ""
+    return text
+}
+
+// A cutting tool's name as its card heads it: "CCMT 060204", "16ER 1.5",
+// "3 mm", "Ø6.8 mm", "M10x1.5".
+function richTitle(card, view, theme) {
+    return view ? painted(view.titleParts.card, view, theme) : ""
 }
 
 // What a tool is, as the Tool Holders pane heads its box: "Turning Tool",
@@ -70,33 +78,7 @@ function kindTitle(card, view) {
 // "ER16 OD Threading", "RH Tap M10x1.5mm", "118° RH Drill Ø6.8mm",
 // "6.8mm Reamer". Coloured as richTitle colours the card's.
 function listTitle(card, view, theme) {
-    if (!view)
-        return ""
-    function size(v) { return Number(Number(v).toFixed(3)) + "mm" }
-    switch (card) {
-    case "turning":
-        return (view.toolType === "boring" ? "Boring " : "Turning ")
-             + richTitle(card, view, theme)
-    case "threading":
-        return font(theme.accentStrong, view.hand)
-             + font(view.insertBodyColor, view.sizeCode)
-             + (view.hand === "IR" ? " ID" : " OD") + " Threading"
-    case "blade": {
-        var kind = { 6: "Grooving/Parting Blade", 5: "Trepanning Blade",
-                     7: "Trepanning Blade", 8: "Grooving Blade" }[view.orientation] || "Blade"
-        return font(view.bodyColor, size(view.bladeWidth)) + " " + kind
-    }
-    case "drilling":
-        return Number(Number(view.tipAngle).toFixed(1)) + "° "
-             + (view.rightHand ? "RH" : "LH") + " Drill "
-             + font(view.bodyColor, "Ø" + size(view.diameter))
-    case "reaming":
-        return font(view.bodyColor, size(view.diameter)) + " Reamer"
-    case "tapping":
-        return (view.rightHand ? "RH" : "LH") + " Tap "
-             + font(view.bodyColor, view.designation + "mm")
-    }
-    return richTitle(card, view, theme)
+    return view ? painted(view.titleParts.list, view, theme) : ""
 }
 
 // The first two figures a tool's card shows, coloured as there:

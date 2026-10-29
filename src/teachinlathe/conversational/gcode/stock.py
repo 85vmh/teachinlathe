@@ -106,19 +106,17 @@ def _cut(feeds, tool: ToolShape, z_origin: float):
     return _on_grid(cut)
 
 
-def program_stock(program, tools=None) -> List[StockStep]:
+def program_stock(program, tools) -> List[StockStep]:
     """The stock as each of ``program``'s operations finds it and leaves it,
     nothing of it declared: a StockStep for each operation that is written.
-    ``tools``: a ToolSnapshot to look the tools up in, else the Tool Library."""
+    ``tools``: where the tools are looked up - the Tool Library, a ToolSnapshot."""
     from teachinlathe.tooling.model.data_types import MountedTool
 
-    from .gcode_builder import program_toolpath, tools_from
+    from .gcode_builder import program_toolpath
 
-    with tools_from(tools) as looked_up:
-        path = program_toolpath(program)
-        model = StockModel()
-        for operation in path.operations:
-            mounted = (MountedTool.of(looked_up, operation.tool_holder_id)
-                       if operation.tool_holder_id else None)
-            model.apply(operation, cutting_shape(mounted))
+    path = program_toolpath(program, tools)
+    model = StockModel()
+    for operation in path.operations:
+        mounted = MountedTool.of(tools, operation.tool_holder_id) if operation.tool_holder_id else None
+        model.apply(operation, cutting_shape(mounted))
     return model.steps

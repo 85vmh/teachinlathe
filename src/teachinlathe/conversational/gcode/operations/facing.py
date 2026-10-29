@@ -9,7 +9,7 @@ from typing import Optional
 
 from teachinlathe.conversational.model.data_types import Facing, Program
 
-from ..helpers.spindle import build_spindle_gcode
+from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 from ..toolpath import GcodeEmitter, OperationPreview
 
 
@@ -33,7 +33,7 @@ def facing_toolpath(op: Facing, path: GcodeEmitter, program: Optional[Program] =
         return
 
     path.codes(build_spindle_gcode(spindle, ""))
-    path.code(f"G95 F{spindle.feed_rate}")
+    path.code(build_feed_gcode(spindle.feed_rate))
     path.blank()
     path.rapid(x_start, z_start)
 
@@ -51,7 +51,7 @@ def facing_toolpath(op: Facing, path: GcodeEmitter, program: Optional[Program] =
         path.rapid(z=z)
         # back at X Start, on the face it cut
         if m1_params.include_m1:
-            path.inspect_stop(m1_params, spindle.sign)
+            path.inspect_stop(m1_params)
         path.blank()
 
     path.start_pass()

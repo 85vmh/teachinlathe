@@ -3,7 +3,7 @@ import math
 from teachinlathe.conversational.model.data_types import Knurling
 
 from ..config import fmt
-from ..helpers.m1 import m1_handling_call
+from ..helpers.m1 import m1_gcode
 from ..helpers.spindle import build_spindle_gcode
 
 
@@ -35,7 +35,7 @@ def generate_knurling_gcode(op: Knurling):
             lines.append(f"{line_prefix}G33 Z{fmt(z_to)} K{fmt(lead)} D{fmt(index * angle_step)}")
             lines.append(f"{line_prefix}G0 X{fmt(x_clear)}")
             if m1_params.include_m1:
-                lines.append(m1_handling_call(line_prefix, m1_params, x_clear, z_to, spindle.sign))
+                lines.append(m1_gcode(line_prefix, m1_params))
             lines.append("")
 
     lines.append(f"{line_prefix}G0 X{fmt(x_clear)} Z{fmt(geometry.zStart)}")

@@ -66,7 +66,7 @@ def program(tmp_path, use_case):
 
 
 def build(program, tmp_path, tools=TOOLS):
-    with open(build_ngc_from_program(program, output_dir=str(tmp_path / "ngc"), tools=tools)) as f:
+    with open(build_ngc_from_program(program, tools, output_dir=str(tmp_path / "ngc"))) as f:
         return f.read()
 
 
@@ -105,8 +105,8 @@ def test_program_gcode_rests_with_the_second_tool(program, use_case, tmp_path):
     assert "ERROR" not in ngc
     assert "( Planned for CCMT" in first and "1 region left for another tool" in first
     assert "( Planned for VBMT" in rest
-    assert "o<tc_at_g28> call [1]" in first
-    assert "o<tc_at_g28> call [3]" in rest
+    assert "M6 T1 ( Turning CCMT" in first
+    assert "M6 T3 ( Turning VBMT" in rest
     assert 0 < rest.count("G1 ") < first.count("G1 ")
 
 
@@ -168,12 +168,7 @@ def answers(planner, count, timeout_ms=60000):
 
 def _payload(program):
     """The Profile Roughing as its preview is asked for: profile and tool resolved."""
-    from teachinlathe.conversational.gcode import gcode_builder
-    gcode_builder._TOOLS = TOOLS
-    try:
-        return profile_cut(program, 1, program.operations[1], TOOLS)
-    finally:
-        gcode_builder._TOOLS = None
+    return profile_cut(program, 1, program.operations[1], TOOLS)
 
 
 def test_worker_previews_what_the_gui_would(planner, program):
@@ -208,8 +203,8 @@ def test_worker_generates_the_gcode_the_gui_would(planner, program, tmp_path):
     request = planner.submit("gcode", "generate_gcode", program, str(tmp_path / "worker"),
                              "program.json", TOOLS)
     ok, path = answers(planner, 1)[request]
-    here = build_ngc_from_program(program, output_dir=str(tmp_path / "here"),
-                                  source_json="program.json", tools=TOOLS)
+    here = build_ngc_from_program(program, TOOLS, output_dir=str(tmp_path / "here"),
+                                  source_json="program.json")
 
     def lines(name):
         with open(name) as f:

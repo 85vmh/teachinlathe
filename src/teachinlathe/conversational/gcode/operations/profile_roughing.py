@@ -12,7 +12,7 @@ from typing import Tuple
 
 from teachinlathe.conversational.model.data_types import PassType, ProfileRoughingConfig
 
-from ..helpers.spindle import build_spindle_gcode
+from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 from .profiling.operation_input import (
     NO_PROFILE,
     ProfileCut,
@@ -65,7 +65,7 @@ def profile_roughing_toolpath(cut: ProfileCut, path: GcodeEmitter):
     config = parse_profile_roughing_config(cut)
 
     path.codes(build_spindle_gcode(op.speedsAndFeeds, ""))
-    path.code(f"G95 F{config.feed_rate}")
+    path.code(build_feed_gcode(config.feed_rate))
     path.blank()
 
     plan = plan_profile_roughing(cut)
@@ -73,7 +73,7 @@ def profile_roughing_toolpath(cut: ProfileCut, path: GcodeEmitter):
         path.error(f"Profile Roughing -- {plan.error}")
         return
 
-    write_plan(path, plan, (config.stock_x, config.stock_z), op.m1Parameters, op.speedsAndFeeds.sign,
+    write_plan(path, plan, (config.stock_x, config.stock_z), op.m1Parameters,
                title=f"(----------Profiling Type: {_pass_type_label(config.pass_type)}----------)")
 
 

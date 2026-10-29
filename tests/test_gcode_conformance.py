@@ -36,7 +36,6 @@ from teachinlathe.tooling.model.data_types import (  # noqa: E402
     BladeTool, DrillingTool, InsertSpec, TappingTool, ThreadingTool, ToolHolder, TurningTool,
 )
 from teachinlathe.tooling.model.tool_snapshot import ToolSnapshot  # noqa: E402
-from teachinlathe.ui.tabs.programs.backplot import tool_source  # noqa: E402
 
 PROGRAMS = 40
 #: How far a kept move may be from the interpreter's, in mm (it prints 4 decimals).
@@ -156,11 +155,8 @@ def _program(rnd, folder):
     return program
 
 
-def _toolpath(program, monkeypatch):
-    # the drill sizes in the operations' titles: from the snapshot too
-    monkeypatch.setattr(tool_source, "_repository", lambda: LIBRARY)
-    monkeypatch.setattr(gcode_builder, "_TOOLS", LIBRARY)
-    return gcode_builder.program_toolpath(program)
+def _toolpath(program):
+    return gcode_builder.program_toolpath(program, LIBRARY)
 
 
 # ── the interpreter ─────────────────────────────────────────────────────────
@@ -172,14 +168,11 @@ def _interpreter_moves(ngc: str, folder: Path):
     """The interpreter's moves of ``ngc``: [(feed, z0, r0, z1, r1)], those
     of no length left out; and anything it said that is not a canonical
     call (an error)."""
-    subs = folder / "subs"
-    subs.mkdir(exist_ok=True)
-    # G30's tool change is the machine's own; it is G28's at G30
-    g28 = (ROOT / "subroutines" / "tc_at_g28.ngc").read_text()
-    (subs / "tc_at_g30.ngc").write_text(re.sub(r"\bG28\b", "G30", g28.replace("tc_at_g28", "tc_at_g30")))
     (folder / "rs.ini").write_text(
         "[RS274NGC]\n"
-        f"SUBROUTINE_PATH = {ROOT / 'subroutines'}:{subs}\n"
+        f"SUBROUTINE_PATH = {ROOT / 'subroutines'}\n"
+        "REMAP = M6 modalgroup=6 ngc=m6_remap\n"
+        "REMAP = M1 modalgroup=4 argspec=p ngc=m1_remap\n"
         "PARAMETER_FILE = rs.var\n"
         "[EMCIO]\nTOOL_TABLE = tool.tbl\n")
     (folder / "rs.var").write_text("")
@@ -236,9 +229,9 @@ def _same(move, made):
 # ── the test ────────────────────────────────────────────────────────────────
 
 @pytest.mark.parametrize("seed", range(PROGRAMS))
-def test_the_kept_moves_are_the_interpreters(seed, tmp_path, monkeypatch):
+def test_the_kept_moves_are_the_interpreters(seed, tmp_path):
     program = _program(random.Random(seed), tmp_path)
-    path = _toolpath(program, monkeypatch)
+    path = _toolpath(program)
     made, said = _interpreter_moves("\n".join(path.lines) + "\n", tmp_path)
     assert said == [], said
 

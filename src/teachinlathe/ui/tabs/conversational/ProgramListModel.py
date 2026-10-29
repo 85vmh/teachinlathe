@@ -3,7 +3,9 @@ from datetime import datetime
 
 from PyQt6.QtCore import Qt, QAbstractListModel, QModelIndex, QVariant, pyqtSlot
 
-from teachinlathe.conversational.model.qml_adapter import OperationRow, operation_title
+from teachinlathe.conversational.model.operation_titles import operation_title
+from teachinlathe.ui.tabs.conversational.qml_adapter import OperationRow
+from teachinlathe.ui.tabs.programs.backplot import tool_source
 from teachinlathe.ui.common.dataclass_list_model import DataclassListModel
 from teachinlathe.core.date_utils import format_recent_datetime_string
 
@@ -116,7 +118,7 @@ class ProgramListModel(QAbstractListModel):
             return "No operations yet, tap to change that"
         return "||".join(
             f"{1 if bool(getattr(op, 'generate_gcode', False)) else 0}::"
-            f"{operation_title(op, program)}"
+            f"{operation_title(op, program, tool_source)}"
             for op in ops
         )
 

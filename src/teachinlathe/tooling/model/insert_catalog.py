@@ -1,7 +1,7 @@
 """The ISO inserts the tool editor offers, and how an InsertSpec reads them.
 
-The catalogue itself is the one the backplot already draws from,
-``ui/tabs/programs/backplot/actors/inserts.py`` - families, sizes and nose radii -
+The catalogue itself is the one the backplot draws from,
+``tooling/model/inserts.py`` - families, sizes and nose radii -
 which ``tests/test_inserts.py`` keeps in step with the QML drawing. This only
 translates between it and the codes stored in cutting_tools.json: "ccmt",
 "06", "04".
@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 from teachinlathe.tooling.model.data_types import InsertSpec
-from teachinlathe.ui.tabs.programs.backplot.actors.inserts import FAMILIES, NOSE_RADII, Insert
+from teachinlathe.tooling.model.inserts import FAMILIES, NOSE_RADII, Insert
 
 #: Corner angles are read off the drawn outline; the trigon's comes out a
 #: hair under 80 degrees from its approximated flank radius.

@@ -1,7 +1,7 @@
 from teachinlathe.conversational.model.data_types import Profiling, Strategy
 
 from ..config import fmt
-from ..helpers.spindle import build_spindle_gcode
+from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 
 
 
@@ -19,7 +19,7 @@ def generate_profiling_gcode(op: Profiling):
 
     lines = []
     lines.extend(build_spindle_gcode(spindle, line_prefix))
-    lines.append(f"{line_prefix}G95 F{spindle.feed_rate}")
+    lines.append(build_feed_gcode(spindle.feed_rate, line_prefix))
     lines.append("")
 
     if options.strategy == Strategy.FINISH:

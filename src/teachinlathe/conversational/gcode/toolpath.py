@@ -15,8 +15,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Iterable, List, Optional, Tuple
 
-from teachinlathe.conversational.model.data_types import PredefinedPosition
-
 from .config import fmt
 
 
@@ -247,12 +245,11 @@ class GcodeEmitter:
     def dwell(self, seconds: float):
         self.code(f"G4 P{fmt(seconds)}")
 
-    def inspect_stop(self, m1_params, spindle_sign: int):
-        """Where the operator may Pause to Inspect (o<m1_handling>): the tool
-        comes back here, the spindle started again ``spindle_sign`` 1 (M3)
-        or -1 (M4)."""
-        from .helpers.m1 import m1_handling_call
-        self.lines.append(m1_handling_call(self.prefix, m1_params, self.x, self.z, spindle_sign))
+    def inspect_stop(self, m1_params):
+        """Where the operator may Pause to Inspect (M1 P, m1_remap.ngc): the
+        tool comes back here, the spindle started again as it was."""
+        from .helpers.m1 import m1_gcode
+        self.lines.append(m1_gcode(self.prefix, m1_params))
 
     def blank(self):
         self.lines.append("")
@@ -308,13 +305,13 @@ class GcodeEmitter:
         self._known = False
         self.forget_position()
 
-    def tool_change(self, tool_holder_id: int, position: PredefinedPosition):
-        """The change to holder ``tool_holder_id``, at ``position`` (G28 or
-        G30): subroutines/tc_at_g28.ngc, tc_at_g30.ngc. The machine goes to
-        that position in machine coordinates, so where it is after, in the
-        work's, is not known here."""
-        subroutine = "tc_at_g30" if position is PredefinedPosition.G30 else "tc_at_g28"
-        self.lines.append(f"o<{subroutine}> call [{int(tool_holder_id)}]")
+    def tool_change(self, tool_holder_id: int, title: str = ""):
+        """The change to holder ``tool_holder_id``, M6 T<n> with the tool's
+        ``title`` as a comment: M6 is remapped to subroutines/m6_remap.ngc,
+        which goes to the machine's tool change position, so where the
+        machine is after, in the work's coordinates, is not known here."""
+        line = f"M6 T{int(tool_holder_id)}"
+        self.lines.append(f"{line} {comment(title)}" if title else line)
         self.forget_position()
 
     def forget_position(self):

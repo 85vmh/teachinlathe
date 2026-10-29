@@ -105,15 +105,15 @@ def test_g33_threading_generator_emits_m1_after_each_g33_for_each_start():
     )
 
     g33_lines = [line for line in lines if line.startswith("G33 ")]
-    m1_lines = [line for line in lines if line.startswith("o<m1_handling> call")]
+    m1_lines = [line for line in lines if line.startswith("M1")]
 
     assert g33_lines == [
         "G33 Z-12.000 K3.000 D0.000",
         "G33 Z-12.000 K3.000 D180.000",
     ]
     assert m1_lines == [
-        "o<m1_handling> call [1] [21.000] [0.000] [-1]",
-        "o<m1_handling> call [1] [21.000] [0.000] [-1]",
+        "M1 P2 (Pause to inspect and retract to G30 position)",
+        "M1 P2 (Pause to inspect and retract to G30 position)",
     ]
 
 

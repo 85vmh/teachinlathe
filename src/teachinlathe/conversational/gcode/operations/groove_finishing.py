@@ -3,7 +3,7 @@ from typing import Optional
 
 from teachinlathe.conversational.model.data_types import GrooveFinishingStrategy
 
-from ..helpers.spindle import build_spindle_gcode
+from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 from .profiling.geometry import StartPoint
 from ..toolpath import Arrows, DrawnLine, GcodeEmitter, OperationPreview, Point
 from .profiling.plan_drawing import flatten_path
@@ -117,7 +117,7 @@ def groove_finishing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     strategy = finishing.strategy
 
     gcode.codes(build_spindle_gcode(op.speedsAndFeeds, ""))
-    gcode.code(f"G95 F{_fmt(feed_rate)}")
+    gcode.code(build_feed_gcode(feed_rate))
     gcode.blank()
 
     if not isinstance(strategy, GrooveFinishingStrategy):

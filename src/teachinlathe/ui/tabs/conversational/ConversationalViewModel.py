@@ -28,12 +28,13 @@ from teachinlathe.conversational.logic.conversational_use_case import Conversati
 from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
 from teachinlathe.conversational.gcode.gcode_builder import ToolsNotReady
 from teachinlathe.conversational.model.data_types import Program
-from teachinlathe.conversational.model.qml_adapter import build_selected_program_summary, operation_rows
 from teachinlathe.core.positions_bridge import PositionsBridge
 from teachinlathe.core.settings_repository import GCODE_PROGRESS_DELAY_MS, settings_repository
 from teachinlathe.ui.common.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.ui.tabs.conversational.OperationEditorViewModel import EMPTY_PREVIEW, editor_for, qml_preview, to_py
 from teachinlathe.ui.tabs.conversational.ProgramListModel import OperationListModel, ProgramListModel
+from teachinlathe.ui.tabs.conversational.qml_adapter import build_selected_program_summary, operation_rows
+from teachinlathe.ui.tabs.programs.backplot import tool_source
 from teachinlathe.ui.tabs.programs.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.ui.tabs.tool_library.ManualToolsViewModel import TouchedOffToolsModel
 
@@ -391,7 +392,7 @@ class ConversationalViewModel(QObject):
 
     def _program_changed(self):
         self.activeOpIndexChanged.emit()
-        self._operations_model.setRows(operation_rows(self.current_program) if self.current_program else [])
+        self._operations_model.setRows(operation_rows(self.current_program, tool_source) if self.current_program else [])
         self.programChanged.emit()
 
     @pyqtSlot(int)

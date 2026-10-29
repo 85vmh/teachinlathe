@@ -47,8 +47,7 @@ def _generate_gcode(program, gcode_dir, json_path, tools):
     """ConversationalUseCase.gcode_job's program built into its .ngc; the
     path. Profile Roughing plans already worked out for previews are reused."""
     from teachinlathe.conversational.gcode import build_ngc_from_program
-    return build_ngc_from_program(program, output_dir=gcode_dir, source_json=json_path,
-                                  tools=tools)
+    return build_ngc_from_program(program, tools, output_dir=gcode_dir, source_json=json_path)
 
 
 def _read_frame(stream):

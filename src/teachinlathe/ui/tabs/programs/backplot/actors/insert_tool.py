@@ -21,7 +21,8 @@ import logging
 import math
 from contextlib import contextmanager
 
-from teachinlathe.ui.tabs.programs.backplot.actors import (geometry, inserts, palette, screen, tool_outlines)
+from teachinlathe.tooling.model import inserts
+from teachinlathe.ui.tabs.programs.backplot.actors import (geometry, palette, screen, tool_outlines)
 from teachinlathe.ui.tabs.programs.backplot.actors.base import (Actor, line_width,
                                                        multisample)
 from teachinlathe.ui.tabs.programs.backplot.actors.units import mm, to_mm

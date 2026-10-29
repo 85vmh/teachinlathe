@@ -65,7 +65,7 @@ def g33_threading_toolpath(op: G33Threading, path: GcodeEmitter, program=None):
             path.rapid(x=safe_x)
             path.rapid(z=thread_pass.zStart)
             if op.m1Parameters.include_m1:
-                path.inspect_stop(op.m1Parameters, op.speedsAndFeeds.sign)
+                path.inspect_stop(op.m1Parameters)
                 path.blank()
 
 

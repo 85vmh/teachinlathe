@@ -41,9 +41,9 @@ OWORD_KEYWORD_PATTERN = re.compile(r"\b(?:SUB|ENDSUB|CALL)\b", re.IGNORECASE)
 WORD_PATTERN = re.compile(r"\b([A-Z])([+-]?(?:\d+(?:\.\d*)?|\.\d+))\b", re.IGNORECASE)
 NAMED_PARAMETER_PATTERN = re.compile(r"<[^>]+>")
 EXPRESSION_PATTERN = re.compile(r"\[[^\]]+\]")
-# The call that stops at an M1, in the generated programs: it does nothing
+# An M1 (remapped: m1_remap.ngc), "/" before it or not: it does nothing
 # unless Break on M1 is on, so with it off the line is shown as a comment is.
-M1_HANDLING_CALL_PATTERN = re.compile(r"^\s*O<m1_handling>\s*CALL\b", re.IGNORECASE)
+M1_PATTERN = re.compile(r"^\s*/?\s*M0*1(?![\d.])", re.IGNORECASE)
 # A block LinuxCNC skips while Skip "/" Blocks is on: shown as a comment then.
 BLOCK_DELETE_PATTERN = re.compile(r"^\s*/")
 THEME_PATH = os.path.join(os.path.dirname(__file__), "gcode_syntax_theme.json")
@@ -181,7 +181,7 @@ class _DocumentHighlighter(QSyntaxHighlighter):
             self.setFormat(start, end - start, self._formats[format_name])
 
     def highlightBlock(self, text):
-        if ((not self._parent.optional_stop and M1_HANDLING_CALL_PATTERN.match(text))
+        if ((not self._parent.optional_stop and M1_PATTERN.match(text))
                 or (self._parent.block_delete and BLOCK_DELETE_PATTERN.match(text))):
             self.setFormat(0, len(text), self._formats["inactive"])
             return
@@ -209,7 +209,7 @@ class GCodeSyntaxHighlighter(QObject):
         return self._block_delete
 
     def set_optional_stop(self, enabled):
-        """Break on M1 on or off: the m1_handling calls are shown as live
+        """Break on M1 on or off: the M1 lines are shown as live
         code while it is on, greyed out like a comment while it is off."""
         enabled = bool(enabled)
         if enabled != self._optional_stop:

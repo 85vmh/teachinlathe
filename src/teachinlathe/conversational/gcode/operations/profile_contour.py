@@ -4,7 +4,7 @@ tool-aware, compensated for the insert's nose - and written the same way."""
 
 from teachinlathe.conversational.model.data_types import PassType, ProfileContourConfig
 
-from ..helpers.spindle import build_spindle_gcode
+from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 from .profiling.operation_input import (
     NO_PROFILE,
     ProfileCut,
@@ -79,7 +79,7 @@ def profile_contour_toolpath(cut: ProfileCut, path: GcodeEmitter):
     config = parse_profile_contour_config(cut)
 
     path.codes(build_spindle_gcode(cut.op.speedsAndFeeds, ""))
-    path.code(f"G95 F{config.feed_rate}")
+    path.code(build_feed_gcode(config.feed_rate))
     path.blank()
 
     plan = plan_profile_contour(cut)

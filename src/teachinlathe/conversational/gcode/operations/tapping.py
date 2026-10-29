@@ -39,5 +39,5 @@ def tapping_toolpath(op: Tapping, path: GcodeEmitter, pitch: Optional[float] = N
         path.start_pass()
         path.rigid_tap(z_target, pitch)
         if m1_params.include_m1:
-            path.inspect_stop(m1_params, spindle.sign)
+            path.inspect_stop(m1_params)
     path.rapid(z=retract_z)

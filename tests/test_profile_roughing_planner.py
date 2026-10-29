@@ -362,7 +362,7 @@ def test_gcode_stops_for_inspection_after_each_pass():
     plan = plan_profile_roughing(op)
     lines = generate_profile_roughing_gcode(op)
 
-    assert sum("o<m1_handling> call" in line for line in lines) == sum(m.pass_end for m in plan.moves)
+    assert sum(line == "M1 P1 (Pause to inspect and retract to G28 position)" for line in lines) == sum(m.pass_end for m in plan.moves)
 
 
 def test_rest_roughing_without_its_tool_has_no_moves_in_the_gcode():
