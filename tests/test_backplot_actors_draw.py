@@ -298,21 +298,24 @@ def test_stock_draws_nothing_without_a_workpiece():
     assert drawn_vertices(ctx) == 0
 
 
-def test_stock_draws_an_outline_and_hatch():
+def test_stock_draws_an_outline_and_a_solid():
     ctx = lathe_frame()
     StockActor(FakeHost({"stock_length": 60.0,
                          "external_diameter": 40.0})).draw(ctx)
-    assert drawn_vertices(ctx) > 6
+    assert drawn_vertices(ctx) >= 6
+    assert solid_points(ctx)
 
 
-def test_stock_draws_a_bore_line_when_the_bar_is_bored():
+def test_stock_outlines_the_bore_when_the_bar_is_bored():
+    """Not the axis - a solid bar is solid to centre - but a bore."""
     plain = lathe_frame()
     StockActor(FakeHost({"stock_length": 60.0,
                          "external_diameter": 40.0})).draw(plain)
     bored = lathe_frame()
     StockActor(FakeHost({"stock_length": 60.0, "external_diameter": 40.0,
                          "internal_diameter": 20.0})).draw(bored)
-    assert len(bored.prim.lines) > len(plain.prim.lines)
+    points = lambda ctx: sum(len(line) for line, _colour, _alpha in ctx.prim.lines)  # noqa: E731
+    assert points(bored) > points(plain)
 
 
 def test_stock_ignores_a_workpiece_it_cannot_read():
@@ -682,17 +685,18 @@ def test_the_rapids_follow_the_programs_own_transform():
     assert RapidsActor.DEPTH_WRITE is False
 
 
-# ── the hatch stops at the part ────────────────────────────────────────────
+# ── the solid stops at the part ────────────────────────────────────────────
 
 FEED, ARC, TRAVERSE = 1, 2, 0
 
 
-def hatch_points(ctx):
-    """Just the hatching, told apart from the stock outline by its colour."""
+def solid_points(ctx):
+    """The material's triangles' corners, told apart from anything else
+    filled by its colour."""
     from teachinlathe.ui.tabs.programs.backplot.actors import palette
 
-    return [point for line, colour, _alpha in ctx.prim.lines
-            if colour == palette.HATCH for point in line]
+    return [tuple(row[0:3]) for verts in ctx.renderer.arrays for row in verts
+            if tuple(np.round(row[3:6], 6)) == tuple(np.round(palette.MATERIAL, 6))]
 
 
 def turned_program(radius_mm, from_z_mm, to_z_mm):
@@ -749,38 +753,23 @@ def test_a_plunge_pulls_in_the_column_it_is_at():
     assert found.at(mm(-15.0)) == pytest.approx(mm(6.0), abs=1e-4)
 
 
-def test_the_hatch_stops_at_the_turned_diameter():
-    """The bug this is here for: the material was hatched straight over the
-    toolpath that removes it."""
+def test_the_solid_still_fills_what_was_not_turned():
     ctx = lathe_frame()
     ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
     StockActor(FakeHost(BAR)).draw(ctx)
 
-    points = hatch_points(ctx)
-    assert points, "nothing was hatched"
-    turned = [p for p in points if p[2] > mm(-30.0) + 1e-9]
-    assert turned, "the turned half was not hatched at all"
-    for x, _y, z in turned:
-        assert x <= mm(10.0) + 1e-6, (x, z)
-
-
-def test_the_hatch_still_fills_what_was_not_turned():
-    ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
-    StockActor(FakeHost(BAR)).draw(ctx)
-
-    untouched = [p for p in hatch_points(ctx) if p[2] < mm(-35.0)]
-    assert untouched, "the untouched half lost its hatching"
+    untouched = [p for p in solid_points(ctx) if p[2] < mm(-35.0)]
+    assert untouched, "the untouched half lost its material"
     assert max(p[0] for p in untouched) > mm(15.0)
 
 
-def test_the_bar_hatches_whole_with_no_program():
+def test_the_bar_is_solid_whole_with_no_program():
     """No program is not a failure - it is a bar on its own."""
     ctx = lathe_frame()
     ctx.canon = None
     StockActor(FakeHost(BAR)).draw(ctx)
 
-    points = hatch_points(ctx)
+    points = solid_points(ctx)
     assert points
     assert max(p[0] for p in points) > mm(15.0)
 
@@ -799,15 +788,16 @@ def test_the_grid_is_drawn_transparent():
     assert palette.GRID_ALPHA < 1.0
 
 
-def test_the_centreline_is_drawn_transparent():
-    """A datum sitting under the drawing, not geometry in it."""
+def test_the_centreline_is_drawn_as_the_profile_canvases_draw_it():
+    """Opaque, in the Z axis's green."""
     from teachinlathe.ui.tabs.programs.backplot.actors import palette
 
     ctx = lathe_frame()
     CenterlineActor().draw(ctx)
     assert {alpha for _line, _colour, alpha in ctx.prim.lines} == {
         palette.CENTERLINE_ALPHA}
-    assert palette.CENTERLINE_ALPHA == 0.7
+    assert palette.CENTERLINE_ALPHA == 1.0
+    assert palette.CENTERLINE == palette.AXIS_Z
 
 
 def test_everything_else_is_drawn_opaque():
@@ -823,7 +813,7 @@ def test_an_alpha_in_a_colour_tuple_would_be_ignored():
     argument the two actors above pass."""
     from teachinlathe.ui.tabs.programs.backplot.actors import palette
 
-    for name in ("GRID", "CENTERLINE", "AXIS_Z", "AXIS_X", "STOCK", "HATCH",
+    for name in ("GRID", "CENTERLINE", "AXIS_Z", "AXIS_X", "STOCK", "MATERIAL",
                  "FEED", "TRAVERSE", "ORIGIN", "INSERT_BODY", "INSERT_EDGE"):
         assert len(getattr(palette, name)) == 3, name
 
@@ -1074,73 +1064,27 @@ def test_a_move_reaching_the_whole_bar_still_fits_one_chunk(monkeypatch):
     assert radii.max() == pytest.approx(mm(5))
 
 
-def test_the_profile_is_built_once_per_program():
-    """Reading it walks the whole program; the plot redraws every time the
-    machine moves. Rebuilding it per frame sat on the processor."""
+def test_the_solid_is_made_once_whatever_the_view():
+    """It is in the model, so neither another frame nor a zoom moves it."""
     ctx = lathe_frame()
     ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
     actor = StockActor(FakeHost(BAR))
 
     actor.draw(ctx)
-    first = actor._profile
-    actor.draw(ctx)
-    assert actor._profile is first
-
-
-def test_a_new_program_rebuilds_the_profile():
-    ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
-    actor = StockActor(FakeHost(BAR))
-    actor.draw(ctx)
-    first = actor._profile
-
-    ctx.canon = canon_with(turned_program(6.0, 0.0, -40.0))
-    actor.draw(ctx)
-    assert actor._profile is not first
-
-
-def test_the_hatch_is_cut_again_only_when_the_zoom_changes():
-    """Its pitch is in pixels, so the view is the only thing that moves it."""
-    ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
-    actor = StockActor(FakeHost(BAR))
-
-    actor.draw(ctx)
-    first = actor._hatch_edges
+    first = actor._solid_points
     actor.draw(lathe_frame_with(ctx))
-    assert actor._hatch_edges is first
+    assert actor._solid_points is first
 
     zoomed = lathe_frame(zoom=8.0)
     zoomed.canon = ctx.canon
     actor.draw(zoomed)
-    assert actor._hatch_edges is not first
+    assert actor._solid_points is first
 
 
 def lathe_frame_with(other):
     frame = lathe_frame()
     frame.canon = other.canon
     return frame
-
-
-def test_the_profile_cache_survives_a_recycled_address():
-    """``id()`` is only unique among live objects. CPython hands the same
-    address straight back once the object at it is freed, so a cache keyed on
-    one can serve the previous program's profile to its replacement."""
-    ctx = lathe_frame()
-    actor = StockActor(FakeHost(BAR))
-
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
-    actor.draw(ctx)
-    first = actor._profile
-    first_at = mm(-10.0)
-    assert first.at(first_at) == pytest.approx(mm(10.0), abs=1e-6)
-
-    # Drop the old program, then build a different one - which may well land
-    # at the same address.
-    ctx.canon = canon_with(turned_program(4.0, 0.0, -30.0))
-    actor.draw(ctx)
-    assert actor._profile is not first
-    assert actor._profile.at(first_at) == pytest.approx(mm(4.0), abs=1e-6)
 
 
 def test_the_rapids_cache_survives_a_recycled_address():
@@ -1159,30 +1103,11 @@ def test_the_rapids_cache_survives_a_recycled_address():
     assert len(again) == 2
 
 
-def test_a_new_program_on_the_same_bar_recuts_the_hatch():
-    """The zoom alone is not the key: the stock is unchanged and the view has
-    not moved, so nothing there says the shape being hatched around did."""
-    ctx = lathe_frame()
-    actor = StockActor(FakeHost(BAR))
-
-    ctx.canon = canon_with(turned_program(16.0, 0.0, -30.0))
-    actor.draw(ctx)
-    shallow = hatch_points(ctx)
-
-    ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(4.0, 0.0, -30.0))
-    actor.draw(ctx)
-    deep = hatch_points(ctx)
-
-    turned = lambda pts: [p for p in pts if p[2] > mm(-30.0) + 1e-9]  # noqa
-    assert max(p[0] for p in turned(deep)) < max(p[0] for p in turned(shallow))
-
-
 # ── what depends only on the view is built only when the view changes ──────
 
 VIEW_CACHED = [
     ("grid", lambda: GridActor(), "_edges"),
-    ("centerline", lambda: CenterlineActor(), "_edges"),
+    ("centerline", lambda: CenterlineActor(), "_centre"),
     ("ticks", lambda: TicksActor(), "_scales"),
     ("origin", lambda: OriginActor(), "_shapes"),
 ]
@@ -1243,72 +1168,3 @@ def test_the_view_key_is_none_when_the_frame_cannot_be_measured():
     """Callers treat that as "do not draw", not as a cache miss."""
     ctx = lathe_frame()
     assert screen.view_key(ctx, np.zeros((4, 4))) is None
-
-
-# ── a datum set mid-program moves the profile ──────────────────────────────
-
-def test_a_datum_change_rebuilds_the_profile():
-    """The bug this is here for: a facing pass whose last cut becomes the new
-    Z zero moves the profile without touching the program, the stock or the
-    view. The toolpath translated - its points are machine coordinates - and
-    the hatching stayed clipped to where the old origin had put the shape.
-    """
-    ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
-    actor = StockActor(FakeHost(BAR))
-
-    actor.draw(ctx)
-    first = actor._profile
-    assert first is not None
-
-    ctx.stat.g5x_offset = [0.0, 0.0, mm(-12.0)] + [0.0] * 6
-    actor.draw(ctx)
-    assert actor._profile is not first
-
-
-@pytest.mark.parametrize("field,value", [
-    ("g5x_offset", [0.0, 0.0, 1.0] + [0.0] * 6),
-    ("g92_offset", [0.0, 0.0, 1.0] + [0.0] * 6),
-    ("rotation_xy", 90.0),
-])
-def test_every_part_of_the_program_origin_rebuilds_the_profile(field, value):
-    """All three are what ``Actor.place`` applies, and the profile is built in
-    the frame that leaves."""
-    ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
-    actor = StockActor(FakeHost(BAR))
-    actor.draw(ctx)
-    first = actor._profile
-
-    setattr(ctx.stat, field, value)
-    actor.draw(ctx)
-    assert actor._profile is not first
-
-
-def test_a_still_frame_still_reuses_the_profile():
-    """Keying on the offsets must not turn into rebuilding every frame -
-    reading the profile walks the whole program."""
-    ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
-    actor = StockActor(FakeHost(BAR))
-
-    actor.draw(ctx)
-    first = actor._profile
-    for _ in range(3):
-        actor.draw(ctx)
-    assert actor._profile is first
-
-
-def test_the_hatch_is_recut_when_the_datum_moves():
-    """The profile is part of the hatch's own key, so moving one moves the
-    other - the whole point of putting it there."""
-    ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
-    actor = StockActor(FakeHost(BAR))
-
-    actor.draw(ctx)
-    first = actor._hatch_edges
-
-    ctx.stat.g5x_offset = [0.0, 0.0, mm(-12.0)] + [0.0] * 6
-    actor.draw(ctx)
-    assert actor._hatch_edges is not first

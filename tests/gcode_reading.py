@@ -9,8 +9,8 @@ from teachinlathe.conversational.gcode.operations.profiling.operation_input impo
 from teachinlathe.conversational.model.data_types import Operation, StockToLeave
 from teachinlathe.conversational.model.factories import make_default_operation
 
-_ROUGHING_START = "(----------Profiling Type:"
-_CONTOUR_START = "( Contour with StockToLeave"
+_ROUGHING_START = "(---Profiling Type:"
+_CONTOUR_START = "( StockToLeave["
 _MOTION = re.compile(
     r"^/?\s*(G[0-3])?\s*(?:X(-?[\d.]+))?\s*(?:Z(-?[\d.]+))?\s*(?:I(-?[\d.]+))?\s*(?:K(-?[\d.]+))?"
 )
@@ -87,8 +87,41 @@ def profile_cut_of(fixture):
         profile_data.update(profile_type=resolved["profile_type"],
                             profile_primitives=resolved["profile_primitives"])
         profile = Operation.from_dict(profile_data)
-    return ProfileCut(Operation.from_dict(op_data), profile, tool,
-                      tuple(p if isinstance(p, ProfileCut) else profile_cut_of(p) for p in previous))
+    op = Operation.from_dict(op_data)
+    if not previous:
+        return ProfileCut(op, profile, tool)
+    return _after(ProfileCut(op, profile, tool),
+                  [p if isinstance(p, ProfileCut) else profile_cut_of(p) for p in previous])
+
+
+def _after(cut, previous):
+    """``cut`` as a program has it below the roughings ``previous``, in
+    order: the stock they leave, its source and the last tool's nose."""
+    import dataclasses
+    from types import SimpleNamespace
+
+    from teachinlathe.conversational.gcode.operations.profile_roughing import profile_roughing_toolpath
+    from teachinlathe.conversational.gcode.operations.profiling.operation_input import resolve_tool_shape
+    from teachinlathe.conversational.gcode.operations.profiling.tool_shape import cutting_shape
+    from teachinlathe.conversational.gcode.stock import StockBefore, StockModel
+    from teachinlathe.conversational.gcode.toolpath import GcodeEmitter
+
+    model, source, nose_radius = StockModel(), None, 0.0
+    for prev in previous:
+        prev = dataclasses.replace(prev, stock=StockBefore(model.air, model.material),
+                                   source=source if prev.op.restMaterial else None, last_nose_radius=nose_radius)
+        emitter = GcodeEmitter()
+        with emitter.operation(0):
+            profile_roughing_toolpath(prev, emitter)
+        model.apply(emitter.operations[-1],
+                    cutting_shape(SimpleNamespace(tool=prev.tool)) if prev.tool is not None else None)
+        if not prev.op.restMaterial:
+            source = prev.op
+        shape = resolve_tool_shape(prev)
+        if shape is not None:
+            nose_radius = shape.nose_radius
+    return dataclasses.replace(cut, stock=StockBefore(model.air, model.material), source=source,
+                               last_nose_radius=nose_radius)
 
 
 def groove_cut_of(fixture):

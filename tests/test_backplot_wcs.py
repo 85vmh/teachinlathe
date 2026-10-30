@@ -35,7 +35,8 @@ def host(monkeypatch):
         _last_preview_wcs_signature=Canon._wcs_signature(stat),
         _wcs_signature=Canon._wcs_signature,
         _pixel_quantum=lambda: 0, soft_limits=lambda: (),
-        logger=SimpleNamespace(npts=0), fingerprint=None, update=lambda: None,
+        logger=SimpleNamespace(npts=0), feed=SimpleNamespace(observe=lambda: None),
+        fingerprint=None, update=lambda: None,
     )
 
     def reload(filename, *, sync_task):
@@ -63,7 +64,10 @@ def test_wcs_change_rebuilds_once_when_idle(monkeypatch, mode, field, value):
 
 
 @pytest.mark.parametrize("state", [linuxcnc.INTERP_READING, linuxcnc.INTERP_PAUSED])
-def test_wcs_rebuild_waits_for_interpreter(monkeypatch, state):
+def test_a_wcs_change_the_program_makes_is_not_read_again(monkeypatch, state):
+    """A Facing's new Z0: the geometry has it already. Read again from the new
+    origin once the program ends, its Facing would be drawn over the part it
+    faced."""
     obj, reloads = host(monkeypatch)
     obj.stat.task_mode = linuxcnc.MODE_AUTO
     obj.stat.interp_state = state
@@ -72,7 +76,7 @@ def test_wcs_rebuild_waits_for_interpreter(monkeypatch, state):
     assert not reloads
     obj.stat.interp_state = linuxcnc.INTERP_IDLE
     Canon.poll(obj)
-    assert reloads == [(obj.stat.file, False)]
+    assert not reloads
 
 
 def test_unchanged_wcs_does_not_reload(monkeypatch):

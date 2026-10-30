@@ -10,10 +10,13 @@ from teachinlathe.conversational.model.data_types import (
     Facing,
     G33Threading,
     GeometryParameters,
+    Groove,
+    GrooveBottom,
     GrooveFinishing,
     GrooveFinishingCuttingParameters,
     GrooveFinishingParameters,
     GrooveFinishingStrategy,
+    GrooveFlank,
     GrooveRoughing,
     GrooveRoughingCuttingParameters,
     GrooveRoughingParameters,
@@ -89,30 +92,12 @@ def make_default_operation(op_type: str, order: int = 1):
             is_optional_block=False,
             profile_id=1,
             profile_type=ProfilingType.OD,
-            profile_primitives=[
-                {
-                    "primitive_id": 1,
-                    "type": "groove",
-                    "right_flank": {
-                        "x_start": 30.0,
-                        "z_start": 0.0,
-                        "angle": 0.0,
-                        "start_blend": {"type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
-                    },
-                    "bottom": {
-                        "x_end_right": 20.0,
-                        "x_end_left": 20.0,
-                        "blend_right": {"type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
-                        "blend_left": {"type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
-                    },
-                    "left_flank": {
-                        "x_start": 30.0,
-                        "z_start": -5.0,
-                        "angle": 0.0,
-                        "start_blend": {"type": "none", "chamfer_width": 0.0, "fillet_radius": 0.0},
-                    },
-                }
-            ],
+            profile_primitives=[Groove(
+                primitive_id=1,
+                right_flank=GrooveFlank(x_start=30.0, z_start=0.0),
+                bottom=GrooveBottom(x_end_right=20.0, x_end_left=20.0),
+                left_flank=GrooveFlank(x_start=30.0, z_start=-5.0),
+            )],
         )
     if op_type == "facing":
         return Facing(

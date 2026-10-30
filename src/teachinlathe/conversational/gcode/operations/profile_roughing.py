@@ -74,7 +74,7 @@ def profile_roughing_toolpath(cut: ProfileCut, path: GcodeEmitter):
         return
 
     write_plan(path, plan, (config.stock_x, config.stock_z), op.m1Parameters,
-               title=f"(----------Profiling Type: {_pass_type_label(config.pass_type)}----------)")
+               title=f"(---Profiling Type: {_pass_type_label(config.pass_type)}---)")
 
 
 def generate_profile_roughing_gcode(cut: ProfileCut):
@@ -92,31 +92,46 @@ _NO_SOURCE = "rest material, but no Profile Roughing of this profile above it"
 _CHOOSE_TOOL = "Choose the tool to cut what is left"
 
 
+def _planned_config(cut: ProfileCut) -> ProfileRoughingConfig:
+    """The config a Profile Roughing is planned with: its own - a rest
+    roughing's with its source's start position and stock to leave: the same
+    finished size, and the same bar."""
+    config = parse_profile_roughing_config(cut)
+    if cut.op.restMaterial and cut.source is not None:
+        source_config = parse_profile_roughing_config(dataclasses.replace(cut, op=cut.source))
+        config = dataclasses.replace(
+            config, x_start=source_config.x_start, z_start=source_config.z_start,
+            stock_x=source_config.stock_x, stock_z=source_config.stock_z)
+    return config
+
+
 def roughing_plan_key(cut: ProfileCut) -> str:
     """What a Profile Roughing's plan depends on, and nothing else - not the
     feed, the spindle, M1, its place in the program, the workpiece drawn
     with the profile: where it starts and cuts, how deep and how much it
-    leaves, which way; the profile; the tool; and for rest material what
-    the roughings above it leave, by their own keys."""
-    config = parse_profile_roughing_config(cut)
+    leaves, which way; the profile; the tool; the stock it finds; and for
+    rest material whether it has a source and the last tool's nose."""
+    config = _planned_config(cut)
     rest = cut.op.restMaterial
     return plan_key(
         setup=[config.x_start, config.z_start, config.doc, config.retract, config.stock_x, config.stock_z,
                config.profiling_type.value, config.pass_type.value, _diagonal_angle()],
         **profile_and_tool_key(cut),
-        rest=[roughing_plan_key(prev) for prev in cut.previous] if rest else None,
+        stock=cut.stock.key() if cut.stock is not None else None,
+        rest=[cut.source is not None, cut.last_nose_radius] if rest else None,
     )
 
 
 def plan_profile_roughing(cut: ProfileCut):
     """The tool-aware plan of a Profile Roughing - see profiling.planner -
-    against ``cut``'s profile, with its tool; the one kept when it was
-    planned already with the same inputs (roughing_plan_key).
+    against ``cut``'s profile, with its tool, from the stock it finds; the
+    one kept when it was planned already with the same inputs
+    (roughing_plan_key).
 
-    Rest material (``restMaterial``): it starts from what the Profile
-    Roughings above it on the same profile leave - ``cut.previous``, in
-    order - and keeps to the stock to leave and the start position of the
-    last one that is not rest material itself, its source."""
+    Rest material (``restMaterial``): it keeps to the stock to leave and the
+    start position of its source, the last Profile Roughing above it on the
+    same profile that is not rest material itself, and cuts what the
+    operations above leave of that - the stock it finds."""
     return _PLANS.get(roughing_plan_key(cut), lambda: _plan(cut))
 
 
@@ -124,22 +139,14 @@ def _plan(cut: ProfileCut):
     from .profiling.plan import RoughingPlan, RoughingSetup
     from .profiling.planner import plan_leftover, plan_roughing
 
-    config = parse_profile_roughing_config(cut)
     path = profile_path(cut)
     if path is None:
         return RoughingPlan(error=NO_PROFILE)
     rest = cut.op.restMaterial
-    stock_before, last_tool = None, None
-    if rest:
-        source, stock_before, last_tool = _rest_start(cut.previous)
-        if source is None:
-            return RoughingPlan(error=_NO_SOURCE)
-        # the source's stock to leave and start position: the same finished
-        # size, and the same bar
-        source_config = parse_profile_roughing_config(source)
-        config = dataclasses.replace(
-            config, x_start=source_config.x_start, z_start=source_config.z_start,
-            stock_x=source_config.stock_x, stock_z=source_config.stock_z)
+    if rest and cut.source is None:
+        return RoughingPlan(error=_NO_SOURCE)
+    config = _planned_config(cut)
+    air = cut.stock.air if cut.stock is not None else None
     setup = RoughingSetup(
         x_start=config.x_start, z_start=config.z_start, doc=config.doc,
         retract=config.retract, stock_x=config.stock_x, stock_z=config.stock_z,
@@ -147,34 +154,11 @@ def _plan(cut: ProfileCut):
         diagonal_angle=_diagonal_angle())
     tool = resolve_tool_shape(cut)
     if rest and tool is None:
-        plan = plan_leftover(setup, path, stock_before,
-                             last_tool.nose_radius if last_tool is not None else 0.0)
+        plan = plan_leftover(setup, path, cut.last_nose_radius, air_before=air)
         plan.warnings.insert(0, _CHOOSE_TOOL)
         return plan
-    return plan_roughing(setup, path, tool, stock_before, rest=rest,
-                         sliver_radius=last_tool.nose_radius if rest and last_tool is not None else 0.0)
-
-
-def _rest_start(previous):
-    """(source, stock, tool) for a rest roughing below the roughings
-    ``previous`` (ProfileCuts): the last of them that is not rest material,
-    the material all of them together leave and the last tool that cut it -
-    or (None, None, None) with no source."""
-    source, stock, tool = None, None, None
-    for index, prev in enumerate(previous):
-        if not prev.op.restMaterial:
-            source, stock = prev, None
-        elif source is None:
-            continue
-        else:
-            # a rest roughing too: it starts from those above it in turn
-            prev = dataclasses.replace(prev, previous=previous[:index])
-        plan = plan_profile_roughing(prev)
-        if plan.error or plan.remaining_stock is None:
-            continue
-        stock = plan.remaining_stock
-        tool = plan.tool
-    return source, stock, tool
+    return plan_roughing(setup, path, tool, rest=rest,
+                         sliver_radius=cut.last_nose_radius if rest else 0.0, air_before=air)
 
 
 # ── what the editor draws ───────────────────────────────────────────────────

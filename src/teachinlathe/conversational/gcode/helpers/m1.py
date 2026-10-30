@@ -18,9 +18,9 @@ def inspect_position_int(m1_params: M1Parameters) -> int:
 
 
 _M1_COMMENTS = {
-    0: "Pause to inspect and stay there",
-    1: "Pause to inspect and retract to G28 position",
-    2: "Pause to inspect and retract to G30 position",
+    0: "Pause and stay there",
+    1: "Pause and move to G28",
+    2: "Pause and move to G30",
 }
 
 

@@ -560,28 +560,39 @@ class ConversationalUseCase:
         from teachinlathe.conversational.gcode.operations.drilling import drilling_preview
         return drilling_preview(Operation.from_dict(op_data))
 
-    def profile_roughing_preview(self, program, op_index: int, op_data: dict):
-        """What the Profile Roughing at ``op_index`` would cut with ``op_data``;
-        see profile_roughing_preview.
-        Worked out here, on the caller's thread - the editor has it done in
-        the planning worker (plan_worker) instead."""
-        from teachinlathe.conversational.gcode.operations.profile_roughing import profile_roughing_preview
-        return profile_roughing_preview(self.profile_cut(program, op_index, op_data))
-
     def profile_cut(self, program, op_index: int, op_data: dict):
         """The Profile Roughing or Contour at ``op_index`` as its editor has
         it - ``op_data``, the operation's dict - with what it is planned
-        against in the program, as its G-code is (a ProfileCut). It pickles,
-        so it can go to the planning worker as it is."""
+        against in the program, as its G-code is (a ProfileCut), but the
+        stock it finds: that is worked out where it is planned
+        (roughing_preview_job). It pickles, so it can go to the planning
+        worker as it is."""
         from teachinlathe.conversational.gcode.operations.profiling.operation_input import profile_cut
         return profile_cut(program, op_index, Operation.from_dict(op_data), self._tool_library())
 
-    @staticmethod
-    def profile_roughing_preview_key(cut) -> str:
-        """What a Profile Roughing's preview of ``cut`` depends on: its plan's
-        inputs (roughing_plan_key)."""
+    def roughing_preview_job(self, program, op_index: int, cut):
+        """What the planning worker's ``profile_roughing_preview`` takes for
+        ``cut``, the Profile Roughing at ``op_index``: it, and the program
+        and the Tool Library as they are now, which the stock it finds is
+        worked out from there."""
+        from teachinlathe.tooling.model.tool_snapshot import ToolSnapshot
+        return cut, program, op_index, ToolSnapshot.of(self._tool_library())
+
+    def stock_problems_job(self, program):
+        """The args of the planning worker's ``stock_problems``: the program
+        and the Tool Library as it is now."""
+        from teachinlathe.tooling.model.tool_snapshot import ToolSnapshot
+        return program, ToolSnapshot.of(self._tool_library())
+
+    def profile_roughing_preview_key(self, program, op_index: int, cut) -> str:
+        """What a Profile Roughing's preview of ``cut``, at ``op_index`` of
+        ``program``, depends on: its plan's inputs (roughing_plan_key) and
+        what the stock it finds is worked out from (stock_key) - known
+        without working that out."""
         from teachinlathe.conversational.gcode.operations.profile_roughing import roughing_plan_key
-        return roughing_plan_key(cut)
+        from teachinlathe.conversational.gcode.operations.profiling.plan_cache import plan_key
+        from teachinlathe.conversational.gcode.stock import stock_key
+        return plan_key(plan=roughing_plan_key(cut), stock=stock_key(program, op_index, self._tool_library()))
 
     def profile_contour_preview(self, program, op_index: int, op_data: dict):
         """What the Profile Contour at ``op_index`` would cut with ``op_data``;
@@ -593,8 +604,9 @@ class ConversationalUseCase:
         """The Groove Roughing or Finishing at ``op_index`` as its editor has
         it - ``op_data``, the operation's dict - with what it is cut against
         in the program, as its G-code is (a GrooveCut)."""
-        from teachinlathe.conversational.gcode.operations.profiling.operation_input import groove_cut
-        return groove_cut(program, op_index, Operation.from_dict(op_data), self._tool_library())
+        from teachinlathe.conversational.gcode.operations.profiling.operation_input import groove_cut, with_stock
+        tools = self._tool_library()
+        return with_stock(groove_cut(program, op_index, Operation.from_dict(op_data), tools), program, op_index, tools)
 
     def groove_roughing_preview(self, program, op_index: int, op_data: dict):
         """What the Groove Roughing at ``op_index`` would cut with ``op_data``;

@@ -21,7 +21,7 @@ def write_plan(path: GcodeEmitter, plan, stock, m1_params=None, title=None):
     if title:
         path.note(title)
     if any(move.contour and move.feed for move in plan.moves):
-        path.note(comment(f"Contour with StockToLeave[radial={fmt(stock[0])} "
+        path.note(comment(f"StockToLeave[radial={fmt(stock[0])} "
                           f"axial={fmt(stock[1])}]"))
     emit_moves(path, plan.moves, stock, m1_params)
 

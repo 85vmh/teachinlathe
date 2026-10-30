@@ -1,5 +1,4 @@
 import dataclasses
-import math
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Tuple
@@ -7,13 +6,10 @@ from typing import Optional, Tuple
 from shapely.geometry import LineString, Polygon, box
 from shapely.ops import linemerge
 
-from teachinlathe.conversational.model.data_types import (
-    BlendType, GrooveRoughingStrategy, LineTo, ProfileBlend, ProfilingType,
-)
-from teachinlathe.conversational.model.data_types import StartPoint as ProfileStart
+from teachinlathe.conversational.model.data_types import GrooveRoughingStrategy, ProfilingType
 
 from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
-from ..helpers.utils import get_float
+from .profiling.groove_outline import groove_outline
 from .profiling.geometry import (
     ROUNDING,
     SAME_MM,
@@ -32,20 +28,6 @@ from ..toolpath import Point as CanvasPoint
 from .profiling.operation_input import GrooveCut
 
 # ── Geometry ─────────────────────────────────────────────────────────────────
-
-#: Chords a fillet on a groove's corner is drawn with in its profile.
-FILLET_CHORDS = 10
-
-#: mm the outside is drawn on along Z from a groove's top corner, for the
-#: corner's blend: past any groove.
-OUTSIDE_LEG = 10000.0
-
-#: Radians: a corner turning less than this is straight - no blend is cut.
-MIN_CORNER_ANGLE = 0.001
-
-#: The cosine a corner's angle is kept within, short of a straight line
-#: either way, so its half-angle's tangent and sine are never zero.
-CORNER_DOT_LIMIT = 0.9999
 
 #: mm the bar is carried on past the groove's ends, either side, for the
 #: part's outline - more for more stock, so it still reaches past it.
@@ -107,197 +89,21 @@ def _blade_start_x(start_x, profile_type, clearance):
     return start_x + _outward(profile_type) * _on_diameter(clearance)
 
 
-def _groove_path(profile):
-    """The profile of the first groove of the radial ``profile``, as the
-    G-code goes along it - from its Z+ end to its Z- one - or None."""
-    groove = _first_groove(profile)
-    if not groove:
+def _groove_path(radial_profile):
+    """The profile of the first groove of ``radial_profile`` (a Define
+    Radial Profile, or None), as the G-code goes along it - from its Z+ end
+    to its Z- one - or None."""
+    groove = radial_profile.first_groove() if radial_profile is not None else None
+    if groove is None:
         return None
-    path = build_path(_radial_profile_primitives(groove), _profiling_type(profile.get("profile_type")))
+    path = build_path(list(groove_outline(groove).primitives), radial_profile.profile_type)
     if not path or not isinstance(path[0], StartPoint):
         return None
     return path
 
 
-def _profiling_type(value) -> ProfilingType:
-    return ProfilingType.ID if str(value or "od").lower() == "id" else ProfilingType.OD
-
-
 def _fmt(value):
     return f"{float(value):.3f}"
-
-
-def _first_groove(profile):
-    for primitive in (profile.get("profile_primitives", []) or []):
-        if isinstance(primitive, dict) and primitive.get("type") == "groove":
-            return primitive
-    return None
-
-
-#: A radial profile's blend types - the editor's, and "radius" as it once
-#: called a fillet - as the model's.
-_BLEND_TYPES = {"chamfer": BlendType.CHAMFER, "fillet": BlendType.FILLET, "radius": BlendType.FILLET}
-
-
-def _blend(blend) -> ProfileBlend:
-    """A blend of the radial profile (its dict) as the model's ProfileBlend."""
-    blend = blend or {}
-    return ProfileBlend(
-        blend_type=_BLEND_TYPES.get(str(blend.get("type", "none") or "none").lower(), BlendType.NONE),
-        chamfer_width=get_float(blend, "chamfer_width", 0.0),
-        fillet_radius=get_float(blend, "fillet_radius", 0.0),
-    )
-
-
-_NO_BLEND = ProfileBlend(blend_type=BlendType.NONE)
-
-
-@dataclass(frozen=True)
-class _At:
-    """A point of a groove's outline: its Z, and its X on the radius."""
-    z: float
-    xh: float
-
-    @property
-    def x(self) -> float:
-        return self.xh * 2.0
-
-    @staticmethod
-    def on_diameter(x, z) -> "_At":
-        return _At(z, x / 2.0)
-
-
-@dataclass(frozen=True)
-class _Corner:
-    """A top corner of a groove as its blend cuts it: from ``start`` to
-    ``end``, through ``arc`` for a fillet (its chords' ends, ``end`` last)."""
-    start: _At
-    end: _At
-    arc: Tuple[_At, ...] = ()
-
-
-def _unit_from(corner: _At, point: _At):
-    """(z, xh, length): the way from ``corner`` to ``point``, or None when
-    they are the same."""
-    dz = point.z - corner.z
-    dx = point.xh - corner.xh
-    length = math.hypot(dz, dx)
-    if length < SAME_MM:
-        return None
-    return dz / length, dx / length, length
-
-
-def _corner_blend(corner: _At, leg_a_end: _At, leg_b_end: _At, blend: ProfileBlend) -> _Corner:
-    """The corner between the legs from ``corner`` to ``leg_a_end`` and to
-    ``leg_b_end``, cut by ``blend``."""
-    ua = _unit_from(corner, leg_a_end)
-    ub = _unit_from(corner, leg_b_end)
-    if not ua or not ub or blend.blend_type is BlendType.NONE:
-        return _Corner(corner, corner)
-
-    fillet = blend.blend_type is BlendType.FILLET
-    amount = blend.fillet_radius if fillet else blend.chamfer_width
-    if amount <= SAME_MM:
-        return _Corner(corner, corner)
-
-    (ua_z, ua_x, ua_len), (ub_z, ub_x, ub_len) = ua, ub
-    dot = max(-CORNER_DOT_LIMIT, min(CORNER_DOT_LIMIT, ua_z * ub_z + ua_x * ub_x))
-    theta = math.acos(dot)
-    if theta < MIN_CORNER_ANGLE:
-        return _Corner(corner, corner)
-
-    tangent_distance = amount / math.tan(theta / 2.0) if fillet else amount
-    tangent_distance = min(tangent_distance, ua_len, ub_len)
-    t1 = _At(corner.z + ua_z * tangent_distance, corner.xh + ua_x * tangent_distance)
-    t2 = _At(corner.z + ub_z * tangent_distance, corner.xh + ub_x * tangent_distance)
-
-    if not fillet:
-        return _Corner(t1, t2)
-
-    bis_z = ua_z + ub_z
-    bis_x = ua_x + ub_x
-    bis_len = math.hypot(bis_z, bis_x)
-    if bis_len < SAME_MM:
-        return _Corner(t1, t2)
-
-    center_distance = amount / math.sin(theta / 2.0)
-    center = _At(corner.z + bis_z / bis_len * center_distance, corner.xh + bis_x / bis_len * center_distance)
-    start_angle = math.atan2(t1.xh - center.xh, t1.z - center.z)
-    end_angle = math.atan2(t2.xh - center.xh, t2.z - center.z)
-    delta = end_angle - start_angle
-    while delta > math.pi:
-        delta -= math.pi * 2.0
-    while delta < -math.pi:
-        delta += math.pi * 2.0
-
-    arc = []
-    for index in range(1, FILLET_CHORDS + 1):
-        angle = start_angle + delta * index / float(FILLET_CHORDS)
-        arc.append(_At(center.z + math.cos(angle) * amount, center.xh + math.sin(angle) * amount))
-    return _Corner(t1, t2, tuple(arc))
-
-
-def _same_point(a: _At, b_x, b_z) -> bool:
-    return abs(a.z - b_z) < SAME_MM and abs(a.x - b_x) < SAME_MM
-
-
-def _append_line(out, point: _At, blend: ProfileBlend = _NO_BLEND):
-    """A line on to ``point`` after ``out``'s last primitive - none when it
-    is there already and has no blend to make."""
-    last = out[-1]
-    last_x, last_z = (last.x_start, last.z_start) if isinstance(last, ProfileStart) else (last.x_end, last.z_end)
-    if _same_point(point, last_x, last_z) and blend.blend_type is BlendType.NONE:
-        return
-    out.append(LineTo(primitive_id=len(out) + 1, primitive_type="lineTo",
-                      x_end=point.x, z_end=point.z, blend=blend, input="xz"))
-
-
-def _groove_corner_points(groove):
-    """(right top, right bottom, left bottom, left top) of the groove."""
-    right = groove.get("right_flank", {}) or {}
-    bottom = groove.get("bottom", {}) or {}
-    left = groove.get("left_flank", {}) or {}
-
-    rx0 = get_float(right, "x_start", 0.0)
-    rz0 = get_float(right, "z_start", 0.0)
-    lx0 = get_float(left, "x_start", 0.0)
-    lz0 = get_float(left, "z_start", 0.0)
-    rxe = get_float(bottom, "x_end_right", 0.0)
-    lxe = get_float(bottom, "x_end_left", 0.0)
-    ra = abs(get_float(right, "angle", 0.0)) * math.pi / 180.0
-    la = abs(get_float(left, "angle", 0.0)) * math.pi / 180.0
-    rdz = abs((rx0 - rxe) / 2.0 * math.tan(ra))
-    ldz = abs((lx0 - lxe) / 2.0 * math.tan(la))
-
-    return (_At.on_diameter(rx0, rz0), _At.on_diameter(rxe, rz0 - rdz),
-            _At.on_diameter(lxe, lz0 + ldz), _At.on_diameter(lx0, lz0))
-
-
-def _radial_profile_primitives(groove):
-    """The groove's outline as profile primitives - the model's StartPoint
-    and LineTos - from the right flank's top to the left's: its top corners
-    cut by their blends here, its bottom corners by the lines' blends."""
-    right_top, right_bottom, left_bottom, left_top = _groove_corner_points(groove)
-    right = groove.get("right_flank", {}) or {}
-    left = groove.get("left_flank", {}) or {}
-    bottom = groove.get("bottom", {}) or {}
-
-    # each top corner is between its flank and the outside, along Z
-    right_corner = _corner_blend(right_top, _At(right_top.z + OUTSIDE_LEG, right_top.xh), right_bottom,
-                                 _blend(right.get("start_blend")))
-    left_corner = _corner_blend(left_top, left_bottom, _At(left_top.z - OUTSIDE_LEG, left_top.xh),
-                                _blend(left.get("start_blend")))
-
-    out = [ProfileStart(primitive_id=1, primitive_type="startPoint",
-                        x_start=right_corner.start.x, z_start=right_corner.start.z, blend=_NO_BLEND)]
-    for point in right_corner.arc or (right_corner.end,):
-        _append_line(out, point)
-    _append_line(out, right_bottom, _blend(bottom.get("blend_right")))
-    _append_line(out, left_bottom, _blend(bottom.get("blend_left")))
-    _append_line(out, left_corner.start)
-    for point in left_corner.arc or (left_corner.end,):
-        _append_line(out, point)
-    return out
 
 
 def _profile_bounds_from_path(path):
@@ -815,8 +621,7 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     op = cut.op
     cutting = op.cuttingParameters
     roughing = op.roughingParameters
-    # the radial profile's own primitives are dicts: the groove geometry reads them so
-    profile = cut.radial_profile.to_dict() if cut.radial_profile is not None else {}
+    profile = cut.radial_profile
     tool = cut.tool
 
     gcode.codes(build_spindle_gcode(op.speedsAndFeeds, ""))
@@ -836,7 +641,7 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     if strategy is not GrooveRoughingStrategy.START_CENTER:
         gcode.error("Groove Roughing -- only start_center strategy is implemented")
         return
-    if not profile:
+    if profile is None:
         gcode.error("Groove Roughing -- no Define Radial Profile found above this operation")
         return
     if not _tool_is_blade(tool):
@@ -848,8 +653,7 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
         gcode.error("Groove Roughing -- blade width is not defined in tool extras")
         return
 
-    groove = _first_groove(profile)
-    if not groove:
+    if profile.first_groove() is None:
         gcode.error("Groove Roughing -- radial profile has no groove primitive")
         return
 
@@ -862,7 +666,7 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     center_z = (z_min + z_max) / 2.0
     half_width = width / 2.0
 
-    profile_type = _profiling_type(profile.get("profile_type"))
+    profile_type = profile.profile_type
     # the pulley's outside; the start diameter, the plunges' start: that with
     # its radial stock to leave on; where the blade starts and backs off to:
     # the clearance out from the start diameter
@@ -991,9 +795,9 @@ class GrooveRoughingPreview(OperationPreview):
 def groove_path(cut: GrooveCut):
     """(path, profile_type, error) of the groove ``cut`` cuts: its radial
     profile, from its Z+ end, and "" - or None and why not."""
-    profile = cut.radial_profile.to_dict() if cut.radial_profile is not None else {}
-    profile_type = cut.radial_profile.profile_type if cut.radial_profile is not None else ProfilingType.OD
-    if not _first_groove(profile):
+    profile = cut.radial_profile
+    profile_type = profile.profile_type if profile is not None else ProfilingType.OD
+    if profile is None or profile.first_groove() is None:
         return None, profile_type, "no radial profile with a groove above this operation"
     path = _groove_path(profile)
     if path is None:

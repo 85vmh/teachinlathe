@@ -64,7 +64,7 @@ def facing_toolpath(op: Facing, path: GcodeEmitter, program: Optional[Program] =
 
     if op.zEndBecomesNewZ0:
         datum = int(program.header.datum) if program is not None else 1
-        path.code(f"G10 L20 P{datum} Z0 (Set the new datum at the current Z position)")
+        path.code(f"G10 L20 P{datum} Z0 (Set new datum)")
         path.set_z_zero()
 
 

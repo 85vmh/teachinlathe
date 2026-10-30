@@ -136,7 +136,7 @@ def test_m1_handling_after_every_pass_but_the_last():
     of M1 brings it back to."""
     lines = generate_facing_gcode(facing(doc=1.0, include_m1=True))
     stops = [i for i, line in enumerate(lines) if line.startswith("M1")]
-    assert [lines[i] for i in stops] == ["M1 P2 (Pause to inspect and retract to G30 position)"] * 2
+    assert [lines[i] for i in stops] == ["M1 P2 (Pause and move to G30)"] * 2
     assert [lines[i - 2:i] for i in stops] == [[f"G0 X{X_START:.3f}", "G0 Z0.000"],
                                                [f"G0 X{X_START:.3f}", "G0 Z-1.000"]]
 

@@ -194,7 +194,7 @@ Item {
     }
     BuildGcodeProgressDialog { id: buildGcodeProgressDialog }
 
-    // no G-code: what is wrong with the program's tools
+    // no G-code: what is wrong with the program - its tools, a rapid through the stock
     Popup {
         id: gcodeRefusedPopup
         property string problems: ""

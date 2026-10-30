@@ -112,8 +112,8 @@ def test_g33_threading_generator_emits_m1_after_each_g33_for_each_start():
         "G33 Z-12.000 K3.000 D180.000",
     ]
     assert m1_lines == [
-        "M1 P2 (Pause to inspect and retract to G30 position)",
-        "M1 P2 (Pause to inspect and retract to G30 position)",
+        "M1 P2 (Pause and move to G30)",
+        "M1 P2 (Pause and move to G30)",
     ]
 
 

@@ -26,14 +26,19 @@ from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.conversational.logic.conversational_use_case import ConversationalUseCase
 from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
-from teachinlathe.conversational.gcode.gcode_builder import ToolsNotReady
+from teachinlathe.conversational.gcode.gcode_builder import GcodeRefused, ToolsNotReady
 from teachinlathe.conversational.model.data_types import Program
 from teachinlathe.core.positions_bridge import PositionsBridge
 from teachinlathe.core.settings_repository import GCODE_PROGRESS_DELAY_MS, settings_repository
+from teachinlathe.ui.common.images import image_url
 from teachinlathe.ui.common.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
-from teachinlathe.ui.tabs.conversational.OperationEditorViewModel import EMPTY_PREVIEW, editor_for, qml_preview, to_py
+from teachinlathe.ui.tabs.conversational.OperationEditorViewModel import (
+    EMPTY_PREVIEW, editor_for, qml_preview, to_py,
+)
 from teachinlathe.ui.tabs.conversational.ProgramListModel import OperationListModel, ProgramListModel
-from teachinlathe.ui.tabs.conversational.qml_adapter import build_selected_program_summary, operation_rows
+from teachinlathe.ui.tabs.conversational.qml_adapter import (
+    build_selected_program_summary, groove_outline_payload, operation_rows,
+)
 from teachinlathe.ui.tabs.programs.backplot import tool_source
 from teachinlathe.ui.tabs.programs.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.ui.tabs.tool_library.ManualToolsViewModel import TouchedOffToolsModel
@@ -101,6 +106,8 @@ class ConversationalViewModel(QObject):
         self._planner.finished.connect(self._on_plan_finished)
         self._previews = {}
         self._preview_requests = {}     # request id -> (key, editor)
+        self._stock_problems = set()    # the operations with a rapid through the stock
+        self._problems_request = None
         self._gcode_request = None      # the G-code being generated, by the worker
         self._gcode_progress_shown = None   # when its dialog was shown
 
@@ -240,10 +247,12 @@ class ConversationalViewModel(QObject):
             title = f"Editing: {program_name}" if program_name else "Creating New Program"
             left_actions.append({"id": "back", "text": "← Back to Programs", "enabled": True})
             operations = self.current_program.operations if self.current_program is not None else []
-            right_actions.append({"id": "build_gcode", "text": "Generate GCode", "enabled": bool(operations)})
+            right_actions.append({"id": "build_gcode", "text": "Generate GCode", "enabled": bool(operations),
+                                  "leadingIcon": image_url("generate_ngc.svg")})
         else:
             title = "Conversational Programs"
-            right_actions.append({"id": "create_new", "text": "Create New", "enabled": True})
+            # "+", as the Tool Library's add buttons have it
+            right_actions.append({"id": "create_new", "text": "Create New", "enabled": True, "leadingText": "+"})
 
         return {
             "title": title,
@@ -392,8 +401,25 @@ class ConversationalViewModel(QObject):
 
     def _program_changed(self):
         self.activeOpIndexChanged.emit()
-        self._operations_model.setRows(operation_rows(self.current_program, tool_source) if self.current_program else [])
+        self._set_operation_rows()
         self.programChanged.emit()
+        self._request_stock_problems()
+
+    def _set_operation_rows(self):
+        prog = self.current_program
+        self._operations_model.setRows(operation_rows(prog, tool_source, self._stock_problems) if prog else [])
+
+    def _request_stock_problems(self):
+        """Which operations have a rapid through the stock, for the list: from
+        the planning worker, the list marked once it answers."""
+        if not self.current_program:
+            return
+        try:
+            job = self.use_case.stock_problems_job(self.current_program)
+        except Exception as e:
+            LOG.error("stock check failed: %s", e)
+            return
+        self._problems_request = self._planner.submit("stock-problems", "stock_problems", *job)
 
     @pyqtSlot(int)
     def showDetails(self, index):
@@ -448,21 +474,28 @@ class ConversationalViewModel(QObject):
 
     def _on_gcode_generated(self, ok, result):
         self._gcode_request = None
+        refused = result if not ok and isinstance(result, GcodeRefused) else None
         if ok:
             LOG.info("G-code generated: %s", result)
+        elif refused is not None:
+            LOG.warning("G-code not generated: %s", refused)
         else:
             LOG.error("G-code generation failed: %s", result)
         path = result if ok else None
-        if self._gcode_progress_shown is None:
+
+        def outcome():
             if path:
                 self.gcodeGenerated.emit(path)
+            elif refused is not None:
+                self.gcodeRefused.emit("\n".join(refused.problems))
+        if self._gcode_progress_shown is None:
+            outcome()
             return
         shown_ms = (time.monotonic() - self._gcode_progress_shown) * 1000
 
         def finish():
             self.gcodeGenerationFinished.emit()
-            if path:
-                self.gcodeGenerated.emit(path)
+            outcome()
         QTimer.singleShot(max(0, int(GCODE_PROGRESS_MIN_MS - shown_ms)), finish)
 
     @pyqtSlot(int, bool)
@@ -616,7 +649,7 @@ class ConversationalViewModel(QObject):
             if not draft.get("type"):
                 draft = {**editor.operation, **draft}
             cut = self.use_case.profile_cut(self.current_program, op_index, draft)
-            key = self.use_case.profile_roughing_preview_key(cut)
+            key = self.use_case.profile_roughing_preview_key(self.current_program, op_index, cut)
         except Exception as e:
             LOG.error("preview failed: %s", e)
             editor.previewReady.emit(dict(EMPTY_PREVIEW, error=str(e)))
@@ -625,12 +658,26 @@ class ConversationalViewModel(QObject):
         if key in self._previews:
             editor.previewReady.emit(self._previews[key])
             return
-        request_id = self._planner.submit("roughing-preview", "profile_roughing_preview", cut)
+        request_id = self._planner.submit("roughing-preview", "profile_roughing_preview",
+                                          *self.use_case.roughing_preview_job(self.current_program, op_index, cut))
         self._preview_requests[request_id] = (key, editor)
+
+    def _on_stock_problems(self, ok, result):
+        self._problems_request = None
+        if not ok:
+            LOG.error("stock check failed: %s", result)
+            return
+        problems = set(result)
+        if problems != self._stock_problems:
+            self._stock_problems = problems
+            self._set_operation_rows()
 
     def _on_plan_finished(self, request_id, ok, result):
         if request_id == self._gcode_request:
             self._on_gcode_generated(ok, result)
+            return
+        if request_id == self._problems_request:
+            self._on_stock_problems(ok, result)
             return
         key, editor = self._preview_requests.pop(request_id, (None, None))
         if key is None:
@@ -676,6 +723,12 @@ class ConversationalViewModel(QObject):
         op_order = self.use_case.operation_payload(self.current_program, op_index).get("order", "")
         self._open_editor(op_index, RADIAL_PROFILE_EDITOR,
                           f"Define Radial Profile Op #{op_order}" if op_order else "Define Radial Profile")
+
+    @pyqtSlot("QVariant", result="QVariant")
+    def grooveOutline(self, primitives):
+        """The first groove of a radial profile's ``primitives`` as its
+        canvas draws it (qml_adapter.groove_outline_payload)."""
+        return groove_outline_payload(to_py(primitives))
 
     def _open_dxf_import(self, op_index):
         self._open_editor(op_index, DXF_IMPORT)

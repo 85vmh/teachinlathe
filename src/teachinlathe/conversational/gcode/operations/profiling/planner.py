@@ -56,27 +56,28 @@ class _Planner(AxialRadialPasses, DiagonalPasses, Pockets, FinalContour, Edge, M
 
 
 def plan_roughing(setup: RoughingSetup, profile_path, tool: Optional[ToolShape],
-                  stock_before=None, rest: bool = False,
-                  sliver_radius: float = 0.0) -> RoughingPlan:
+                  rest: bool = False, sliver_radius: float = 0.0, air_before=None) -> RoughingPlan:
     """The moves of a Profile Roughing against ``profile_path`` - the finished
     profile as geometry.build_path gives it - with ``tool`` (None: square_tool).
 
-    ``stock_before`` is the material there is to cut, as a shapely shape in
-    (z, r); by default from X Start to the profile's smallest diameter (OD) or
-    its largest (ID), from Z Start back. ``rest``: what is left by another
-    roughing - the contour then runs only where there is material - and
-    ``sliver_radius`` the nose radius of the tool that left it: what that
-    nose's corners and the slivers between its passes leave is not cut again.
+    The material there is to cut is from X Start to the profile's smallest
+    diameter (OD) or its largest (ID), from Z Start back, less
+    ``air_before``: what is known to be air there already, cut by the
+    operations above, a shapely shape in (z, r). ``rest``: what is
+    left by another roughing - the contour then runs only where there is
+    material - and ``sliver_radius`` the nose radius of the tool that left
+    it: what that nose's corners and the slivers between its passes leave is
+    not cut again.
     """
-    return _Planner(setup, profile_path, tool, stock_before, rest, sliver_radius).plan()
+    return _Planner(setup, profile_path, tool, None, rest, sliver_radius, air_before).plan()
 
 
-def plan_leftover(setup: RoughingSetup, profile_path, stock_before,
-                  nose_radius: float = 0.0) -> RoughingPlan:
+def plan_leftover(setup: RoughingSetup, profile_path, nose_radius: float = 0.0,
+                  air_before=None) -> RoughingPlan:
     """No moves, only what there is to cut - for a rest roughing that has no
-    tool yet. ``nose_radius``: the last tool's, whose corners are not counted
-    as left over."""
-    return _Planner(setup, profile_path, None, stock_before, True, nose_radius)._result()
+    tool yet: the default stock less ``air_before``. ``nose_radius``: the last
+    tool's, whose corners are not counted as left over."""
+    return _Planner(setup, profile_path, None, None, True, nose_radius, air_before)._result()
 
 
 def plan_contour(setup: RoughingSetup, profile_path, tool: Optional[ToolShape]) -> RoughingPlan:

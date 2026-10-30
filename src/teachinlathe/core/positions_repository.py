@@ -127,6 +127,14 @@ class Positions(QObject):
         pos = self.getZPosition()
         return pos.machinePosition if machineCoordinate else pos.g5xPosition
 
+    def work_offset(self) -> int:
+        """The work offset in use: 1 for G54 ... 9 for G59.3 (stat.g5x_index)
+        - the one the program running has selected."""
+        try:
+            return int(self._stat.g5x_index)
+        except (AttributeError, TypeError, ValueError):
+            return 1
+
     def notify(self, callback: Callable) -> None:
         """Register *callback* to be invoked whenever the positions update.
 

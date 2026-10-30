@@ -51,6 +51,10 @@ Rectangle {
                 id: baseImg
                 anchors.fill: parent
                 source: root.iconSource
+                // rasterised at the size it is drawn at, not the size the
+                // SVG declares: shrunk from that, its lines go jagged
+                sourceSize.width: width
+                sourceSize.height: height
                 opacity: 0
                 fillMode: Image.PreserveAspectFit
                 smooth: true

@@ -1,7 +1,8 @@
 """The Programs tab's view model.
 
 Two screens over one strip of panes - the file system, and the loaded
-program with its backplot - and which of them is up (``screenIndex``); the
+program with its backplot - and which of them is up (``screenIndex``), or
+the simulation of a file over them (``simulate``, SimulateViewModel); the
 program running, completed or aborted; the app shell's header for each.
 The file browser, the DRO and the tool/feed/speed row have view models of
 their own, as properties of this one.
@@ -17,16 +18,20 @@ import os
 from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.core.ini_repository import ini_repository
+from teachinlathe.ui.common.images import image_url
 from teachinlathe.ui.tabs.programs.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.ui.tabs.programs.filesystemview.FileSystemBridge import FileSystemBridge, load_or_reload_program
 from teachinlathe.ui.tabs.programs.ProgramsDroViewModel import ProgramsDroViewModel
 from teachinlathe.ui.tabs.programs.ProgramsToolFeedSpeedViewModel import ProgramsToolFeedSpeedViewModel
+from teachinlathe.ui.tabs.programs.simulate.SimulateViewModel import SimulateViewModel
 
 from teachinlathe.programs.model.program_runtime import ProgramRuntimeStore
 from teachinlathe.programs.model.program_stack import ProgramCallStackResolver
 from teachinlathe.programs.model.programs_action_source import ProgramsActionSource
 from teachinlathe.programs.model.programs_screen import ProgramsScreen
 from teachinlathe.programs.model.run_time_tracker import RunTimeTracker
+from teachinlathe.programs.logic.simulate_use_case import SimulateUseCase
+from teachinlathe.programs.logic.final_profile_use_case import FinalProfileUseCase
 from teachinlathe.programs.logic.programs_use_case import ProgramsUseCase
 from teachinlathe.ui.tabs.programs.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
 
@@ -53,6 +58,7 @@ class ProgramsViewModel(QObject):
     currentFilePathChanged = pyqtSignal(str)
     currentFileContentChanged = pyqtSignal(str)
     currentFileDisplayPathChanged = pyqtSignal(str)
+    finalProfileChanged = pyqtSignal()
     executionViewChanged = pyqtSignal()
     runningStateChanged = pyqtSignal()
     programCompletedStateChanged = pyqtSignal()
@@ -142,6 +148,14 @@ class ProgramsViewModel(QObject):
         self._file_system.copyFailed.connect(lambda msg: self._shell.showToast("Copy failed: %s" % msg))
 
         self._dro = ProgramsDroViewModel(self)
+        # one planning worker for the screen's simulations and its parts, started
+        # when the first is asked for
+        self._planner = None
+        self._simulate = SimulateViewModel(SimulateUseCase(self, ini=ini, planner=self._background_planner), self)
+        self._stock = []
+        self._final_profile = {"state": "none", "message": "", "rings": [], "stock": [], "summary": None}
+        self._final_profile_use_case = FinalProfileUseCase(self._background_planner, self, ini=ini)
+        self._final_profile_use_case.ready.connect(self._on_final_profile)
         self._tool_feed_speed = ProgramsToolFeedSpeedViewModel(self._runtime_store, self)
 
         self.programLoadRequested.connect(self._prepare_preview_for_load)
@@ -159,6 +173,13 @@ class ProgramsViewModel(QObject):
         # boundary. Stepping into a subroutine does not change the geometry on
         # screen, so there is nothing to re-fit.
         self._set_preview_file(self.currentFilePath)
+        self._request_final_profile(self.currentFilePath)
+
+    def _background_planner(self):
+        if self._planner is None:
+            from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
+            self._planner = BackgroundPlanner(self)
+        return self._planner
 
     @property
     def bridge(self):
@@ -188,10 +209,62 @@ class ProgramsViewModel(QObject):
     def toolFeedSpeed(self):
         return self._tool_feed_speed
 
+    @pyqtProperty(QObject, constant=True)
+    def simulate(self):
+        return self._simulate
+
+    @pyqtProperty("QVariant", notify=finalProfileChanged)
+    def finalProfile(self):
+        """The part the file shown makes (FinalProfileView): ``state`` "none"
+        (not a program), "loading", "ready" or "empty" (with ``message``, why
+        not), ``rings``, [[z, r], ...] in mm - the outline of what is left of
+        the stock and of its holes - ``stock``, the stock it is cut from as
+        the program's header has it, the same way; [] with none - and
+        ``summary``, what the program is: {operations, toolChanges, duration -
+        seconds, -1 when not timed}, or None until it is read."""
+        return self._final_profile
+
+    def _request_final_profile(self, path):
+        from teachinlathe.ui.tabs.programs.backplot import workpiece
+
+        bar = workpiece.for_program(path) if path else {}
+        self._stock = _rings(_stock_shape(bar)) if path and path.lower().endswith(".ngc") else []
+        if path and path.lower().endswith(".ngc"):
+            self._set_final_profile({"state": "loading", "message": "", "rings": []})
+        self._final_profile_use_case.request(path or "", bar)
+
+    def _on_final_profile(self, path, result):
+        if path != (self.currentFilePath or ""):
+            return
+        if result is None:
+            self._set_final_profile({"state": "none", "message": "", "rings": []})
+            return
+        error = result.get("error", "")
+        summary = None
+        if "operations" in result:
+            duration = result.get("duration")
+            summary = {"operations": int(result["operations"]), "toolChanges": int(result["tool_changes"]),
+                       "duration": float(duration) if duration is not None else -1.0}
+        material = result.get("material")
+        rings = _rings(material) if material is not None else []
+        if rings:
+            self._set_final_profile({"state": "ready", "message": error, "rings": rings}, summary)
+        else:
+            why = error or ("No stock for this program" if not self._stock else "Nothing left of the stock")
+            self._set_final_profile({"state": "empty", "message": why, "rings": []}, summary)
+
+    def _set_final_profile(self, profile, summary=None):
+        self._final_profile = dict(profile, stock=self._stock, summary=summary)
+        self.finalProfileChanged.emit()
+
     @pyqtProperty(bool, notify=screenIndexChanged)
     def programShown(self):
         """The loaded program, rather than the file system."""
-        return self._screen_index != Screen.FileSystem
+        return self._screen_index in (Screen.ProgramLoaded, Screen.ProgramRunning)
+
+    @pyqtProperty(bool, notify=screenIndexChanged)
+    def simulateShown(self):
+        return self._screen_index == Screen.Simulate
 
     @pyqtProperty(bool, notify=screenIndexChanged)
     def running(self):
@@ -592,6 +665,7 @@ class ProgramsViewModel(QObject):
     def _on_current_file_changed(self, path):
         self._set_preview_file(path)
         self.headerStateChanged.emit()
+        self._request_final_profile(path)
 
     def _prepare_preview_for_load(self, path):
         self._pending_fit_path = os.path.abspath(path) if path else ''
@@ -639,7 +713,10 @@ class ProgramsViewModel(QObject):
         left_actions = []
         right_actions = []
         title = 'Machine FileSystem'
-        if self._screen_index != Screen.FileSystem:
+        if self._screen_index == Screen.Simulate:
+            left_actions.append({"id": "back", "text": "← Back to FileSystem", "enabled": True})
+            title = f'Simulate [{self._simulate.fileName}]'
+        elif self._screen_index != Screen.FileSystem:
             left_actions.append({"id": "back", "text": "← Back to FileSystem", "enabled": True})
             title = f'Loaded Program [{os.path.basename(self.currentFilePath or "") or "No file loaded"}]'
             # Cycle Start lives up here until the program is going; from then
@@ -663,6 +740,7 @@ class ProgramsViewModel(QObject):
             right_actions.append({
                 "id": "load_program",
                 "text": "Load Program",
+                "leadingIcon": image_url("load_program.svg"),
                 "enabled": bool(self._file_system.selectedIsFile
                                 and not self._file_system.isInMountedMedia),
             })
@@ -674,7 +752,11 @@ class ProgramsViewModel(QObject):
 
     def triggerHeaderAction(self, action_id):
         if action_id == "back":
-            self.showFilesScreen()
+            if self._screen_index == Screen.Simulate:
+                self._simulate.close()
+                self._set_screen_index(Screen.FileSystem)
+            else:
+                self.showFilesScreen()
         elif action_id == "cycle_start":
             self.triggerCycleStart()
         elif action_id == "load_program":
@@ -688,7 +770,54 @@ class ProgramsViewModel(QObject):
         elif action_id == "toggle_block_delete":
             self._actions.setBlockDeleteEnabled(not self._actions.blockDeleteAction.checked)
 
+    @pyqtProperty(bool, notify=headerStateChanged)
+    def simulateAvailable(self):
+        """A G-code file is selected that can be played on the Simulate
+        screen: one on the machine, not on a stick."""
+        return bool(self._file_system.selectedIsFile
+                    and not self._file_system.isInMountedMedia
+                    and self._file_system.selectedFilePath().lower().endswith(".ngc"))
+
+    @pyqtSlot()
+    def startSimulation(self):
+        """The selected file played on the Simulate screen, from the machine as
+        it is now - Break on M1 as it is set."""
+        path = self._file_system.selectedFilePath()
+        if not path:
+            return
+        self._simulate.open(path, self._file_system.selectedGeneratedJsonPathForEdit(),
+                           bool(self._actions.optionalStopAction.checked))
+        self._set_screen_index(Screen.Simulate)
+
     def showFileInGeneratedPrograms(self, ngc_path):
         """A program just generated: selected in Generated Programs."""
         self.showFilesScreen()
         self._file_system.showFileInGeneratedPrograms(os.path.abspath(ngc_path))
+
+
+def _rings(material):
+    """Every ring of ``material`` - a shapely (z, r) shape - as [[z, r], ...],
+    its outline first and then its holes, polygon by polygon."""
+    rings = []
+    for polygon in getattr(material, "geoms", [material]):
+        if polygon.is_empty or polygon.geom_type != "Polygon":
+            continue
+        for ring in [polygon.exterior] + list(polygon.interiors):
+            rings.append([[float(z), float(r)] for z, r in list(ring.coords)[:-1]])
+    return rings
+
+
+def _stock_shape(bar):
+    """The stock ``bar`` - the header's workpiece, as a dict - says, as a
+    shapely (z, r) shape; an empty one with none."""
+    from shapely.geometry import Polygon
+
+    from teachinlathe.conversational.gcode.stock import header_material
+    from teachinlathe.conversational.model.data_types import Workpiece
+
+    if not bar:
+        return Polygon()
+    try:
+        return header_material(Workpiece.from_dict(dict(bar)))
+    except (KeyError, TypeError, ValueError):
+        return Polygon()

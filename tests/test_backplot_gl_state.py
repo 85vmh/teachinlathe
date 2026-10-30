@@ -420,7 +420,7 @@ def test_the_cutting_part_sets_and_restores_its_width(monkeypatch):
 
 
 @pytest.mark.parametrize("name,expected", [
-    ("WIDTH_CENTERLINE", 1.0),
+    ("WIDTH_CENTERLINE", 1.5),
     ("WIDTH_HATCH", 1.0),
     ("WIDTH_FEED", 1.5),
 ])
@@ -432,7 +432,7 @@ def test_the_weights_are_what_was_asked_for(name, expected):
 
 def test_the_centreline_is_not_heavier_than_the_toolpath():
     """As a centre line is on any drawing: it marks where something is, it is
-    not the thing. It was the heaviest of the three, which was backwards.
+    not the thing.
 
     Compared on what is *drawn*, not on what is asked for - set_line_width
     floors a request at one pixel, so 0.9 and 1.0 are the same line and the
@@ -441,8 +441,7 @@ def test_the_centreline_is_not_heavier_than_the_toolpath():
     from teachinlathe.ui.tabs.programs.backplot.actors import palette
 
     drawn = lambda width: max(1.0, width)        # noqa: E731
-    assert drawn(palette.WIDTH_CENTERLINE) <= drawn(palette.WIDTH_TRAVERSE)
-    assert drawn(palette.WIDTH_CENTERLINE) < drawn(palette.WIDTH_FEED)
+    assert drawn(palette.WIDTH_CENTERLINE) <= drawn(palette.WIDTH_FEED)
 
 
 def test_the_tick_font_matches_the_profile_editors_weight():

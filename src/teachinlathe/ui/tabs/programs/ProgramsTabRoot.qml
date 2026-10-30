@@ -2,22 +2,28 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.programs.filesystemview
+import tabs.programs.simulate
 import tabs.programs.gcode_viewer
 import tabs.programs.program_loaded
 import theme
 import TeachInLathe
 
-// The Programs tab is one strip of three equal panes, two of them on screen:
+// The Programs tab is one strip of panes:
 //
-//     [ file system | program code | backplot ]
+//     files screen:            [ file system 35% | code 30% | the part 35% ]
+//     loaded-program screen:   [ code 30% | backplot - the rest ]
 //
-// The files screen shows the first two, the loaded-program screen the last
-// two. Loading a program pushes the strip one pane to the left - the files
-// slide out, the code moves from the right half to the left, the backplot
-// comes in on the right - and going back pushes it the other way. The code
-// pane is the same one on both screens, so it is the one thing that moves
-// across rather than being swapped; on the loaded-program screen it carries
-// the DRO and tool/feed/speed over the code.
+// Loading a program slides the strip to the left - the files go out, the code
+// moves to the left edge, and the pane on its right widens to take the room
+// they leave - and then what it showed (FinalProfileView: the stock, and what
+// is left of it once the program has run) gives way to the backplot. Going back
+// does the same the other way. A simulation slides the same: once the strip has
+// slid, the Simulate screen - laid out as the loaded program is - comes in over
+// it, where the loaded program's DRO and backplot would, and goes first on the
+// way back. The code pane is the same one on both screens,
+// so it is the one thing that moves across rather than being swapped; on the
+// loaded-program screen it carries the DRO over the code. The part's pane -
+// the stock above, the part below - has the Simulate button between the two.
 //
 Rectangle {
     id: root
@@ -38,18 +44,39 @@ Rectangle {
     // the internal screen tabs are hidden — only the loaded-program content shows.
     readonly property bool running: root.viewModel.running
     readonly property bool programShown: root.viewModel.programShown
+    readonly property bool simulateShown: root.viewModel.simulateShown
+    // The strip slides the same way to either screen of a file: the loaded
+    // program, or its simulation. Which it is going to - or coming back from -
+    // says what comes in once it has slid (programReveal, simulateReveal).
+    readonly property bool stripShown: programShown || simulateShown
+    property bool toSimulate: simulateShown
+    onSimulateShownChanged: if (simulateShown) toSimulate = true
+    onProgramShownChanged: if (programShown) toSimulate = false
 
     // Panes are separated by the gap the split views had as their handle.
     readonly property real gap: 6
-    readonly property real paneWidth: Math.max(0, (width - gap) / 2)
-    readonly property real stride: paneWidth + gap
+    // What the code takes of the width the gaps leave on the files screen;
+    // the file system and the part share the rest equally. The code keeps its
+    // width on the loaded-program screen, the backplot takes the rest there.
+    readonly property real codeShare: 0.3
+    readonly property real filesShare: (1 - codeShare) / 2
+    readonly property real filesWidth: Math.max(0, width - 2 * gap) * filesShare
+    readonly property real codeWidth: Math.max(0, width - 2 * gap) * codeShare
+    // the code pane's left edge: right of the files, to the left edge
+    readonly property real codeX: (1 - offset) * (filesWidth + gap)
+    // the pane right of the code - the part, then the backplot - to the right edge
+    readonly property real rightX: codeX + codeWidth + gap
+    readonly property real rightWidth: Math.max(0, width - rightX)
 
-    // 0: files + code on screen; 1: code + backplot.
-    property real offset: programShown ? 1 : 0
-    // How far the DRO row and the code's bottom bar are in, 0..1. On the way
-    // to the loaded program they come in after the slide; on the way back
-    // they go first.
-    property real reveal: programShown ? 1 : 0
+    // 0: files + code + the part on screen; 1: code + backplot.
+    property real offset: stripShown ? 1 : 0
+    // How far the screen the strip went to is in, 0..1. On the way to it, it
+    // comes in after the slide; on the way back it goes first.
+    property real reveal: stripShown ? 1 : 0
+    // the loaded program's DRO, code bar and backplot
+    readonly property real programReveal: toSimulate ? 0 : reveal
+    // the Simulate screen, over the strip: laid out as the loaded program is
+    readonly property real simulateReveal: toSimulate ? reveal : 0
     // How far the bar under the code reaches across under the backplot, 0..1:
     // all the way while a program runs, with Cycle Abort and Feed Hold at its
     // end.
@@ -61,8 +88,8 @@ Rectangle {
     // The bar's height, and the gap above it - the code pane leaves that room.
     readonly property int barHeight: Theme.barHeight
     readonly property int barGap: 6
-    // The DRO row's height, and the gap between it and the code.
-    readonly property int droRowHeight: 220
+    // The DRO's height, and the gap between it and the code.
+    readonly property int droRowHeight: dro.implicitHeight
     readonly property int droRowGap: Theme.spacingSmall
 
     // Only a switch made while this tab is already on screen animates: one
@@ -76,7 +103,7 @@ Rectangle {
     }
     Component.onCompleted: {
         // From here on offset and reveal are driven, not bound.
-        offset = programShown ? 1 : 0
+        offset = stripShown ? 1 : 0
         reveal = offset
         if (visible) settleTimer.restart()
     }
@@ -86,13 +113,13 @@ Rectangle {
         onTriggered: root._animate = root.visible
     }
 
-    onProgramShownChanged: {
+    onStripShownChanged: {
         showProgram.stop()
         showFiles.stop()
         if (!_animate) {
-            offset = programShown ? 1 : 0
+            offset = stripShown ? 1 : 0
             reveal = offset
-        } else if (programShown) {
+        } else if (stripShown) {
             // Each phase takes its share of the time it has left to go, so
             // one already done - after reversing mid-way - adds no pause.
             slideIn.duration = slideDurationMs * Math.abs(1 - offset)
@@ -140,19 +167,19 @@ Rectangle {
 
         FileSystemView {
             viewModel: root.viewModel.fileSystem
-            x: -root.offset * root.stride
-            width: root.paneWidth
+            x: -root.offset * (root.filesWidth + root.gap)
+            width: root.filesWidth
             height: parent.height
             // off screen once the program is shown
             visible: root.offset < 1
         }
 
-        // The code, with the DRO and tool/feed/speed over it on the
-        // loaded-program screen; on the files screen, the code alone.
+        // The code, with the DRO over it on the loaded-program screen; on
+        // the files screen, the code alone.
         Rectangle {
             id: codeColumn
-            x: (1 - root.offset) * root.stride
-            width: root.paneWidth
+            x: root.codeX
+            width: root.codeWidth
             height: parent.height
             color: Theme.surfaceSunken
 
@@ -160,31 +187,20 @@ Rectangle {
                 anchors.fill: parent
                 spacing: 0   // the DRO slot carries its own gap
 
-                // The DRO row comes down from the top edge, pushing the code
+                // The DRO comes down from the top edge, pushing the code
                 // down: it sits at the bottom of a slot that grows from nothing.
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: (root.droRowHeight + root.droRowGap) * root.reveal
-                    visible: root.reveal > 0
+                    Layout.preferredHeight: (root.droRowHeight + root.droRowGap) * root.programReveal
+                    visible: root.programReveal > 0
                     clip: true
 
-                    RowLayout {
+                    ProgramsDro {
+                        id: dro
                         y: parent.height - root.droRowHeight - root.droRowGap
                         width: parent.width
                         height: root.droRowHeight
-                        spacing: Theme.spacingSmall
-
-                        ProgramsDro {
-                            Layout.fillHeight: true
-                            Layout.preferredWidth: 600
-                            viewModel: root.viewModel.dro
-                        }
-
-                        ProgramsToolFeedSpeed {
-                            Layout.fillHeight: true
-                            Layout.fillWidth: true
-                            viewModel: root.viewModel.toolFeedSpeed
-                        }
+                        viewModel: root.viewModel.dro
                     }
                 }
 
@@ -192,18 +208,33 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     viewModel: root.viewModel
-                    actionBarReveal: root.reveal
+                    actionBarReveal: root.programReveal
                 }
             }
         }
 
+        // The part the file shown makes, right of the code; it widens with
+        // the slide and gives way to the backplot.
+        FinalProfileView {
+            x: root.rightX
+            width: root.rightWidth
+            height: parent.height
+            profile: root.viewModel.finalProfile
+            simulateEnabled: root.viewModel.simulateAvailable
+            onSimulateRequested: root.viewModel.startSimulation()
+            opacity: 1 - root.reveal
+            visible: opacity > 0
+        }
+
+        // In once the slide is done, over the part: the backplot is not
+        // resized - its framebuffer made again - at every step of the slide.
         ProgramLoadedScreen {
             viewModel: root.viewModel
-            x: (2 - root.offset) * root.stride
-            width: root.paneWidth
+            x: root.rightX
+            width: root.rightWidth
             height: parent.height
-            // off screen on the files screen; the backplot need not render there
-            visible: root.offset > 0
+            opacity: root.programReveal
+            visible: root.programReveal > 0
             shown: root.programShown
             runBarReveal: root.runBar
             z: 1
@@ -215,12 +246,23 @@ Rectangle {
         ProgramBottomActionBar {
             viewModel: root.viewModel
             x: codeColumn.x
-            y: parent.height - (root.barHeight + root.barGap) * root.reveal + root.barGap
-            width: root.paneWidth + root.stride * root.runBar
+            y: parent.height - (root.barHeight + root.barGap) * root.programReveal + root.barGap
+            width: root.codeWidth + (root.width - root.codeWidth) * root.runBar
             height: root.barHeight
-            visible: root.reveal > 0
+            visible: root.programReveal > 0
             runControlsReveal: root.runBar
             z: 2
         }
+    }
+
+    // A file played as the machine would run it: over the strip once it has
+    // slid as it does to the loaded program, which it is laid out as - it
+    // comes in where the loaded program's DRO and backplot would
+    SimulateScreen {
+        anchors.fill: parent
+        viewModel: root.viewModel.simulate
+        opacity: root.simulateReveal
+        visible: root.simulateReveal > 0
+        z: 3
     }
 }

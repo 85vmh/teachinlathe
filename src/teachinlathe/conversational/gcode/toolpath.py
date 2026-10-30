@@ -54,10 +54,12 @@ class Move:
 @dataclass
 class OperationPath:
     """What one operation of a program moves: ``index`` its place in the
-    program's operations, ``tool_holder_id`` the T number it cuts with (0 for
-    none). ``known`` False: its G-code is not written on the emitter - an
-    interpreter cycle (G76, G70/G71) or a generator not moved onto it yet -
-    so its moves are not known here. ``optional``: a "/" block, which may be
+    program's operations, ``tool_holder_id`` the current loaded tool while
+    it runs - its own, or the one before's for one that cuts with none, as
+    a Position At - 0 before the first tool change. ``known`` False: its
+    G-code is not written on the emitter - an interpreter cycle (G76,
+    G70/G71) or a generator not moved onto it yet - so its moves are not
+    known here. ``optional``: a "/" block, which may be
     skipped at run time. ``z_origin``: where its Z0 is, along Z in the
     program's first one - a Facing's Z End may have become the next Z0 -
     None when that is not known."""
@@ -148,6 +150,9 @@ class GcodeEmitter:
         self.pass_no = -1
         #: the moves are the finish contour's (begin_contour)
         self.in_contour = False
+        #: a program's stock along its operations (stock.ProgramStock), when
+        #: it is one's toolpath (gcode_builder.program_toolpath)
+        self.stock = None
 
     # ── moves ───────────────────────────────────────────────────────────────
 

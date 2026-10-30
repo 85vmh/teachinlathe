@@ -1,6 +1,5 @@
 from teachinlathe.conversational.model.data_types import (
     BlendType,
-    DefineRadialProfile,
     GrooveFinishingStrategy,
     GrooveRoughingStrategy,
     MoveSequence,
@@ -11,6 +10,7 @@ from teachinlathe.conversational.model.data_types import (
     SpindleMode,
     Strategy,
     ThreadLocation,
+    radial_primitives_from,
 )
 from teachinlathe.tooling.model.data_types import SpindleDirection
 
@@ -322,12 +322,7 @@ def apply_define_radial_profile_update(op, payload):
             pass
     primitives_payload = payload.get("profile_primitives")
     if isinstance(primitives_payload, list):
-        primitives = []
-        for i, primitive in enumerate(primitives_payload, start=1):
-            if not isinstance(primitive, dict):
-                continue
-            primitives.append(DefineRadialProfile._ordered_primitive(primitive, i))
-        op.profile_primitives = primitives
+        op.profile_primitives = radial_primitives_from(primitives_payload)
 
 
 def apply_position_details_update(details, payload):

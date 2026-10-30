@@ -1,6 +1,8 @@
 module tabs.programs
 AutoAxisDro 1.0 AutoAxisDro.qml
 BackplotIconButton 1.0 BackplotIconButton.qml
+BackplotView 1.0 BackplotView.qml
+FinalProfileView 1.0 FinalProfileView.qml
 OutlinedValue 1.0 OutlinedValue.qml
 ProgramButton 1.0 ProgramButton.qml
 ProgramContentFrame 1.0 ProgramContentFrame.qml

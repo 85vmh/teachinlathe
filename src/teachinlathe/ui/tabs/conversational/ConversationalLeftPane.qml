@@ -8,7 +8,7 @@ Rectangle {
     id: root
 
     // the program's operations, a row each - OperationListModel: number,
-    // title, toolLabel, generateGcode, optionalBlock - a row's index its
+    // title, toolLabel, generateGcode, optionalBlock, stockProblem - a row's index its
     // operation's
     property var operationsModel: null
     property int programDatum: 1          // the work offset's P number: 1 is G54
@@ -270,6 +270,7 @@ Rectangle {
                                 toolLabel: model.toolLabel
                                 generateGcode: model.generateGcode
                                 optionalBlock: model.optionalBlock
+                                stockProblem: model.stockProblem
                                 selected: opsList.currentIndex === index
                                 colOpNumW: root.colOpNumW
                                 colGenW: root.colGenW

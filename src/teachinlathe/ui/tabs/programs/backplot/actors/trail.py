@@ -4,7 +4,8 @@ The position logger records the point LinuxCNC moves - for a blade, the one it
 was touched off on. The program is drawn down the blade's middle, a contour
 along the corner it is cut with (``blade_middle``), and so is the trail: each
 point moved as the program's are for the tool in and the line being cut when
-it is logged.
+it is logged - or, for a simulation's trail, for the tool and the line that made
+it, which its logger knows (feeds.SimulatedLogger.blade_shifts).
 """
 
 import logging
@@ -47,15 +48,28 @@ class CentredTrailPart(_BACKPLOT_PART):
         if is_xyuv:
             super().upload_and_draw(ctx)
             return
+        corners = getattr(self._host, "blade_corners", None) or {}
+        units = getattr(ctx.stat, "linear_units", 1.0) or 1.0
+        # a simulation's logger knows what made each of its points: it says
+        made_by = getattr(logger, "blade_shifts", None)
+        if made_by is not None:
+            shifts = made_by(corners, units)
+            if shifts is None or not len(shifts) or not shifts[:npts].any():
+                super().upload_and_draw(ctx)
+                return
+            ctx.lp = _MovedLogger(logger, blade_middle.trail_points(raw, npts, shifts), npts, is_xyuv)
+            try:
+                super().upload_and_draw(ctx)
+            finally:
+                ctx.lp = logger
+            return
         if npts < len(self._shifts):
             # cleared, or full and moved down: from the start again
             self._shifts = np.zeros(0)
         new = npts - len(self._shifts)
         if new > 0:
             shift, half = blade_middle.blade_offsets(getattr(self._host, "insert", None))
-            corners = getattr(self._host, "blade_corners", None) or {}
             line = int(getattr(ctx.stat, "motion_line", 0) or 0)
-            units = getattr(ctx.stat, "linear_units", 1.0) or 1.0
             now = (shift + corners.get(line, 0) * half) * units
             self._shifts = np.concatenate([self._shifts, np.full(new, now)])
         if not self._shifts[:npts].any():

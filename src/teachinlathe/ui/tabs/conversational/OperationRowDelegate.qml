@@ -15,6 +15,8 @@ SwipeRow {
     property string toolLabel: ""
     property bool   generateGcode: false
     property bool   optionalBlock: false
+    // a rapid of it goes through the stock: no G-code for the program
+    property bool   stockProblem: false
     property int    rowIndex: -1
     property bool   isCurrentItem: false
 
@@ -35,7 +37,7 @@ SwipeRow {
     readonly property int operationLabelMinW: colOpNumW + colTypeW
     readonly property string operationLabel: {
         var numberText = number >= 1 && number <= 9 ? "0" + number : "" + number
-        return "[#" + numberText + "]    " + title
+        return "[#" + numberText + "]    " + (stockProblem ? "\u26a0 " : "") + title
     }
 
     // Signals back to parent
@@ -119,7 +121,7 @@ SwipeRow {
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: root.itemFontSize
-                color: root.gcodeEnabled ? "black" : Theme.outlineStrong
+                color: root.stockProblem ? Theme.danger : root.gcodeEnabled ? "black" : Theme.outlineStrong
             }
             Label {
                 id: toolNumber

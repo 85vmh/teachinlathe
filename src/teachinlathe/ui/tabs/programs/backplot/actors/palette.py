@@ -53,24 +53,31 @@ AXIS_Z = (0.180, 0.490, 0.196)        # #2E7D32
 AXIS_X = (0.082, 0.396, 0.753)        # #1565C0
 
 #: The dash-dot cross through the program origin - the spindle centreline and
-#: the face datum.
-CENTERLINE = (0.600, 0.600, 0.600)    # #999999
+#: the face datum: in the Z axis's green, as the conversational profile
+#: canvases draw their centre line (CenterLineActor.qml, Theme.success).
+CENTERLINE = AXIS_Z
 
-#: ...composited at this much, so the cross reads as a datum sitting under the
-#: drawing rather than as geometry in it.
+#: The Z0 line of the cross, along X: in the X axis's blue, as the canvases
+#: draw theirs (AxesActor.qml's zero line, Theme.accentStrong).
+ZERO_LINE = AXIS_X
+
+#: ...composited at this much: opaque, as the canvases draw it.
 #:
 #: The colour tuples here are rgb; a fourth element in one is read by nothing
 #: and would be ignored. Transparency is a separate argument to
 #: ``Actor.stroke``, which is what this is for.
-CENTERLINE_ALPHA = 0.7
+CENTERLINE_ALPHA = 1.0
 
 #: The origin symbol.
 ORIGIN = (0.133, 0.133, 0.133)        # #222222
 
-#: The stock outline, the bore line inside it, and the hatching that fills it.
+#: The outline of the stock - of what is left of it, the bore's too.
 STOCK = (0.612, 0.639, 0.686)         # #9ca3af
-STOCK_BORE = (0.682, 0.706, 0.741)    # #aeb4bd
-HATCH = (0.835, 0.851, 0.875)         # #d5d9df
+
+#: The material itself, solid: the part as it is being cut out of the bar,
+#: and the finished part under the toolpath. Dark enough that a solid reads
+#: as material and not as the page behind it.
+MATERIAL = (0.784, 0.804, 0.835)      # #c8cdd5
 
 #: The insert at the tool tip: the gold of a coated carbide, which is what
 #: the operator is looking at in the holder.
@@ -129,9 +136,13 @@ WIDTH_HATCH = 1.0
 WIDTH_TICK = 1.5
 WIDTH_STOCK = 1.5
 
-#: The datums. Thinnest of the drawn lines, as a centre line is on any
-#: drawing: it marks where something is, it is not the thing.
-WIDTH_CENTERLINE = 1.0
+#: The datums: a step over the one-pixel floor, so the dashes read on the
+#: plot as plainly as on the profile canvases.
+WIDTH_CENTERLINE = 1.5
+
+#: The Z0 line: thinner than the centre line, as on the canvases - the
+#: one-pixel floor.
+WIDTH_ZERO_LINE = 1.0
 
 #: The annotation the operator reads off the plot. Heaviest, so the hierarchy
 #: still runs three deep after the floor flattened its bottom step.
@@ -161,8 +172,8 @@ WIDTH_INSERT_HOLE = 1.0
 # ``geometry.dashed()`` before it is drawn, which only an actor that builds its
 # own vertices can do.
 
-#: The centreline cross: long, gap, dot, gap.
-DASH_CENTERLINE = (8.0, 5.0, 2.0, 5.0)
+#: The centreline cross: long, gap, dot, gap - CenterLineActor.qml's.
+DASH_CENTERLINE = (16.0, 4.0, 3.0, 4.0)
 
 #: The rapids. Upstream's baked buffer has no dash path, so the traverse moves
 #: are hidden from it and drawn by ``RapidsActor`` instead - which builds the

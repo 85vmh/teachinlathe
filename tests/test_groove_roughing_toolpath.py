@@ -14,13 +14,10 @@ from shapely.ops import unary_union
 
 from gcode_reading import groove_cut_of
 from teachinlathe.tooling.model.data_types import BladeTool, MountedTool, ZOffsetPlace
-from teachinlathe.conversational.gcode.operations.groove_roughing import (
-    _first_groove,
-    _radial_profile_primitives,
-    generate_groove_roughing_gcode,
-)
+from teachinlathe.conversational.gcode.operations.groove_roughing import generate_groove_roughing_gcode
+from teachinlathe.conversational.gcode.operations.profiling.groove_outline import groove_outline
 from teachinlathe.conversational.gcode.operations.profiling.geometry import build_path
-from teachinlathe.conversational.model.data_types import ProfilingType
+from teachinlathe.conversational.model.data_types import Groove, ProfilingType, radial_primitives_from
 from teachinlathe.conversational.gcode.operations.profiling.shapes import minkowski, path_points
 
 #: How far into the part or its stock a move may go, mm^2: rounding only.
@@ -161,8 +158,8 @@ def _part(op):
     under the groove's profile, the bar carried on past it either side."""
     profile = op["_resolved_radial_profile"]
     sign = -1.0 if profile["profile_type"] == "id" else 1.0
-    groove = _first_groove(profile)
-    path = build_path(_radial_profile_primitives(groove), ProfilingType(profile["profile_type"]))
+    groove = next(p for p in radial_primitives_from(profile["profile_primitives"]) if isinstance(p, Groove))
+    path = build_path(list(groove_outline(groove).primitives), ProfilingType(profile["profile_type"]))
     points = [(z, sign * r) for z, r in path_points(path)]
     if points[0][0] < points[-1][0]:
         points.reverse()

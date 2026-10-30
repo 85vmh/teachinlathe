@@ -38,9 +38,70 @@ _HEADER = struct.Struct("!I")
 
 
 def _jobs():
+    return {"profile_roughing_preview": _profile_roughing_preview,
+            "generate_gcode": _generate_gcode,
+            "stock_problems": _stock_problems,
+            "simulate": _simulate,
+            "final_material": _final_material}
+
+
+def _simulate(ngc_path, ini_path, material, machine, optional_stop, tools):
+    """programs.logic.simulate_use_case's program, read by LinuxCNC's own
+    interpreter and run on ``material``: a ProgramRun. Here, in a process of
+    its own: the interpreter's private tool table is the whole process's."""
+    from teachinlathe.core.gcode_moves import read_moves
+    from teachinlathe.core.ini_repository import IniRepository
+    from teachinlathe.simulation.logic.program_run import ProgramRun, tool_shapes
+    moves = read_moves(ngc_path, IniRepository(ini_path), optional_stop=optional_stop, machine=machine)
+    return ProgramRun(moves, material, tool_shapes(tools, moves))
+
+
+def _final_material(ngc_path, ini_path, material, tools):
+    """The program in ``ngc_path`` run on ``material``, read and cut as a dry
+    run is (``_simulate``), from the interpreter's own start rather than the
+    machine's: ``material`` what is left of it (a shapely (z, r) shape in mm),
+    ``error`` the interpreter's ("" with none), and what the program is -
+    ``operations`` (its conversational ones that move the tool: not a Define
+    Profile, which only says what another cuts), ``tool_changes`` (its M6s)
+    and ``duration`` (seconds, LinuxCNC's estimate; None, not timed)."""
+    from teachinlathe.core.gcode_moves import read_moves
+    from teachinlathe.core.ini_repository import IniRepository
+    from teachinlathe.simulation.logic.program_run import ProgramRun, tool_shapes
+    from teachinlathe.simulation.model.moves import Move, OperationStart, ToolChange
+    moves = read_moves(ngc_path, IniRepository(ini_path))
+    # no stock kept along the way: only the end is wanted
+    run = ProgramRun(moves, material, tool_shapes(tools, moves), keyframe_seconds=float("inf"))
+    return {"material": run.at(run.duration).material, "error": moves.error,
+            "operations": _moving_operations(moves.steps, OperationStart, Move),
+            "tool_changes": sum(isinstance(step, ToolChange) for step in moves.steps),
+            "duration": moves.duration}
+
+
+def _moving_operations(steps, operation_start, move):
+    """How many of the operations in ``steps`` move the tool: a move between
+    an operation's start and the next one's."""
+    count, moved, started = 0, False, False
+    for step in steps:
+        if isinstance(step, operation_start):
+            count += started and moved
+            started, moved = True, False
+        elif isinstance(step, move):
+            moved = True
+    return count + (started and moved)
+
+
+def _stock_problems(program, tools):
+    """The operations of ``program`` with a rapid through the stock."""
+    from teachinlathe.conversational.gcode.stock import operations_with_rapids_into_material
+    return operations_with_rapids_into_material(program, tools)
+
+
+def _profile_roughing_preview(cut, program, op_index, tools):
+    """ConversationalUseCase.roughing_preview_job's Profile Roughing
+    previewed, from the stock it finds in the program - worked out here."""
     from teachinlathe.conversational.gcode.operations.profile_roughing import profile_roughing_preview
-    return {"profile_roughing_preview": profile_roughing_preview,
-            "generate_gcode": _generate_gcode}
+    from teachinlathe.conversational.gcode.operations.profiling.operation_input import with_stock
+    return profile_roughing_preview(with_stock(cut, program, op_index, tools))
 
 
 def _generate_gcode(program, gcode_dir, json_path, tools):
@@ -75,6 +136,7 @@ def main() -> int:
     # the planners' warnings on the application's console, as its own are
     from teachinlathe.app.logging_setup import configure_console
     configure_console("INFO")
+    from teachinlathe.conversational.gcode.gcode_builder import GcodeRefused
     jobs = _jobs()
     while True:
         request = _read_frame(requests)
@@ -83,6 +145,8 @@ def main() -> int:
         request_id, job, args = request
         try:
             answer = (request_id, True, jobs[job](*args))
+        except GcodeRefused as error:   # as it is: the operator is told why
+            answer = (request_id, False, error)
         except Exception as error:      # reported back, the worker goes on
             answer = (request_id, False, f"{type(error).__name__}: {error}")
         _write_frame(answers, answer)

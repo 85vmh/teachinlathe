@@ -18,6 +18,12 @@ Rectangle {
     property bool _programmaticScroll: false
     property bool _userScrollActive: false
     readonly property real _centerTolerance: 2
+    // Scrolled by hand, the line in the middle becomes the highlighted one
+    // (lineScrolledTo) rather than the code leaving it behind; let go, the
+    // highlight is centred again. The simulation's: the code is a seek bar.
+    property bool followUserScroll: false
+
+    signal lineScrolledTo(int line)
 
     color: "#ffffff"
 
@@ -145,6 +151,19 @@ Rectangle {
 
     // animated: scroll to the line rather than jump - when the line moves on,
     // not when the text or the size changes under it.
+    // the line at the middle of the view, from 1
+    function _lineAtMiddle() {
+        var y = flick.contentY + flick.height / 2 - editor.y
+        var position = editor.positionAt(0, Math.max(0, y))
+        var offsets = root._lineOffsets, low = 0, high = offsets.length - 1
+        while (low < high) {
+            var mid = (low + high + 1) >> 1
+            if (offsets[mid] <= position) low = mid
+            else high = mid - 1
+        }
+        return low + 1
+    }
+
     function syncHighlight(animated) {
         var rect = root._highlightLineRect()
         if (!rect) {
@@ -153,6 +172,9 @@ Rectangle {
             return
         }
         root._applyHighlightRect(rect)
+        // the hand that scrolls the code moves the highlight, not the other way
+        if (followUserScroll && (flick.dragging || flick.flicking))
+            return
         if (centerOnHighlight && !userDetachedFromHighlight) {
             root.centerHighlight(animated === true)
         } else if (linesBelowHighlight > 0) {
@@ -217,10 +239,16 @@ Rectangle {
         }
         onMovementEnded: {
             root._userScrollActive = false
+            if (root.followUserScroll)
+                root.centerHighlight(true)
             root.updateRecenterButton()
         }
         onContentYChanged: {
             var userMovement = root._userScrollActive || flick.dragging || flick.flicking || flick.moving
+            if (root.followUserScroll && !root._programmaticScroll && userMovement) {
+                root.lineScrolledTo(root._lineAtMiddle())
+                return
+            }
             if (!root._programmaticScroll && userMovement && root.centerOnHighlight && root.highlightLine > 0)
                 root.userDetachedFromHighlight = true
             root.updateRecenterButton()

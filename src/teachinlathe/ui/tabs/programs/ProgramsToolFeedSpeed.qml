@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import theme
 
-// Sits to the right of ProgramsDro, above the gremlin. Shows the current /
+// Sits over the backplot's top right corner. Shows the current /
 // upcoming tool, movement speed and spindle state. Calculations live in the
 // view model; this component only displays formatted values.
 Rectangle {

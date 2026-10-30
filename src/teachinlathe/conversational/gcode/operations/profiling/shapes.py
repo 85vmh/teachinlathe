@@ -5,11 +5,12 @@ tried again on the shapes mended when it cannot work one out, and said so."""
 
 from __future__ import annotations
 
+import functools
 import logging
 import math
 
 from typing import List, Sequence, Tuple
-from shapely.geometry import LineString, MultiPoint, Point, Polygon
+from shapely.geometry import LineString, MultiPoint, Point, Polygon, box
 from shapely.ops import substring, unary_union
 
 from .geometry import ROUNDING, ToolpathArc
@@ -134,8 +135,33 @@ def edge_between(obstacle, a: Pt, b: Pt) -> List[Pt]:
 def sweeps(shape: Sequence[Pt], points: Sequence[Pt]) -> List[Polygon]:
     """What the convex ``shape`` covers going along ``points``: a polygon
     for each stretch between two of them."""
-    outline = _anticlockwise_hull(shape)
+    outline = _hull_of(tuple(map(tuple, shape)))
     return [_swept(outline, a, b) for a, b in zip(points, points[1:])]
+
+
+@functools.lru_cache(maxsize=64)
+def _hull_of(shape: Tuple[Pt, ...]) -> List[Pt]:
+    """_anticlockwise_hull, once for each shape: a tool's outline is swept
+    along every move it makes."""
+    return _anticlockwise_hull(shape)
+
+
+def turned(shape):
+    """``shape`` turned about the axis: as much on either side of it, r >= 0
+    kept - what a tool cuts on one side of the axis it cuts all round."""
+    return unary_union([shape, _mirror(shape)]).intersection(box(-FAR, 0.0, FAR, FAR))
+
+
+def goes_through(material, points: Sequence[Pt], outline=None) -> bool:
+    """Whether a tool going through ``points`` - (z, r), in order: a rapid -
+    goes through ``material``: its cutting ``outline`` swept along them and
+    turned about the axis, or with no outline known its tip's line."""
+    if material.is_empty or len(points) < 2 or points[0] == points[-1]:
+        return False
+    if outline is None:
+        return LineString(points).intersection(material).length > MIN_CUT
+    swept = turned(unary_union(sweeps(outline, points)))
+    return swept.intersects(material) and swept.intersection(material).area > MIN_AREA
 
 
 def sweep(shape: Sequence[Pt], a: Pt, b: Pt):

@@ -7,7 +7,8 @@ readable in one file rather than inferred from where each was registered.
 There are three kinds of edit, and they are not interchangeable:
 
     background   inserted before the program, with depth writes off, so the
-                 toolpath draws over them: grid, stock, centreline
+                 toolpath draws over them: grid, stock (and its mirror),
+                 centreline
     overlay      appended, so they draw over everything: ticks, arrows,
                  letters, origin
     replacement  swapped in place for an upstream part, keeping its position
@@ -43,10 +44,13 @@ from teachinlathe.ui.tabs.programs.backplot.actors.ticks import TicksActor
 
 LOG = logging.getLogger(__name__)
 
-#: Under the toolpath, in this order - the grid furthest back, the rapids
-#: nearest the front, immediately under the cutting moves they are hidden from
-#: upstream's buffer to make room for.
-BACKGROUND_ACTORS = (GridActor, StockActor, CenterlineActor, RapidsActor)
+#: Under the toolpath, in this order - the grid furthest back, then the stock
+#: and its mirror above the centre line (only while the mirror is on), the
+#: centre line over them, the rapids nearest the front, immediately under the
+#: cutting moves they are hidden from upstream's buffer to make room for. The
+#: picture, back to front: the stock, the centre line, the toolpath, the
+#: origin symbol (OVERLAY_ACTORS), the tool.
+BACKGROUND_ACTORS = (GridActor, StockActor, RemainingStockActor, CenterlineActor, RapidsActor)
 
 #: The annotation, in this order - the last drawn sits over the ones before
 #: it, which is why the origin symbol comes after the shafts that run through
@@ -86,8 +90,9 @@ def install(canon):
     # the rest of the order intact; a remove-then-add would not.
     for actor_type in BACKGROUND_ACTORS:
         try:
-            installed.append(
-                scene.insert_before(scene.program, actor_type(canon)))
+            gate = _GATES.get(actor_type)
+            args = (scene.program, actor_type(canon)) + ((gate(canon),) if gate else ())
+            installed.append(scene.insert_before(*args))
         except Exception as exc:
             LOG.warning("backplot actors: could not insert %s: %s",
                         actor_type.__name__, exc)
@@ -130,17 +135,15 @@ def install(canon):
         LOG.warning("backplot actors: could not replace the tool marker: %s",
                     exc)
 
-    # The material left, mirrored above the centre line, only while the
-    # mirror is on. In the moving part of the scene - after the trace, under
-    # the tool - because it changes as the machine cuts; the static layer
-    # would freeze it.
-    try:
-        installed.append(scene.insert_before(
-            scene.tool, RemainingStockActor(canon),
-            lambda ctx: bool(getattr(canon, "mirror", False))))
-    except Exception as exc:
-        LOG.warning("backplot actors: could not add the material left: %s", exc)
     return installed
+
+
+#: The background actors drawn only some of the time: what says when, made
+#: from the backplot item. The static layer is drawn again when what they
+#: read changes (``_static_signature``).
+_GATES = {
+    RemainingStockActor: lambda canon: lambda ctx: bool(getattr(canon, "mirror", False)),
+}
 
 
 def _move_last(scene, part):

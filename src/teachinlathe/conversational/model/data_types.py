@@ -1130,46 +1130,171 @@ class ImportDxfProfile(DefineProfile):
         return base
 
 
+# ------------------------ Radial Profile Primitives --------------------------
+
+#: A radial profile's blend types, as its editor writes them - and "radius",
+#: as it once called a fillet.
+_RADIAL_BLEND_TYPES = {"chamfer": BlendType.CHAMFER, "fillet": BlendType.FILLET, "radius": BlendType.FILLET}
+
+
+def _number(data: Dict[str, Any], key: str, default: float = 0.0) -> float:
+    """``data[key]`` as a float; ``default`` when it is missing or not one."""
+    try:
+        return float(data.get(key, default))
+    except (TypeError, ValueError):
+        return float(default)
+
+
+def _radial_blend(data) -> ProfileBlend:
+    """A blend of a radial profile, from its dict; none when there is none."""
+    data = data if isinstance(data, dict) else {}
+    return ProfileBlend(
+        blend_type=_RADIAL_BLEND_TYPES.get(str(data.get("type", "none") or "none").lower(), BlendType.NONE),
+        chamfer_width=_number(data, "chamfer_width"),
+        fillet_radius=_number(data, "fillet_radius"),
+    )
+
+
+def _radial_blend_dict(blend: ProfileBlend) -> Dict[str, Any]:
+    """A radial profile's blend as it is saved: its type and sizes, no undercut."""
+    return {"type": blend.blend_type.value, "chamfer_width": float(blend.chamfer_width),
+            "fillet_radius": float(blend.fillet_radius)}
+
+
+def _no_blend() -> ProfileBlend:
+    return ProfileBlend(blend_type=BlendType.NONE)
+
+
+@dataclass
+class GrooveFlank:
+    """A flank of a groove: where it starts at the top (X a diameter), the
+    angle it leans at from straight down, and the blend on its top corner."""
+    x_start: float
+    z_start: float
+    angle: float = 0.0
+    start_blend: ProfileBlend = field(default_factory=_no_blend)
+
+    @staticmethod
+    def from_dict(data) -> "GrooveFlank":
+        data = data if isinstance(data, dict) else {}
+        return GrooveFlank(x_start=_number(data, "x_start"), z_start=_number(data, "z_start"),
+                           angle=_number(data, "angle"), start_blend=_radial_blend(data.get("start_blend")))
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"x_start": float(self.x_start), "z_start": float(self.z_start), "angle": float(self.angle),
+                "start_blend": _radial_blend_dict(self.start_blend)}
+
+
+@dataclass
+class GrooveBottom:
+    """A groove's bottom: the diameter it ends at under either flank, and
+    the blend on either of its corners."""
+    x_end_right: float
+    x_end_left: float
+    blend_right: ProfileBlend = field(default_factory=_no_blend)
+    blend_left: ProfileBlend = field(default_factory=_no_blend)
+
+    @staticmethod
+    def from_dict(data) -> "GrooveBottom":
+        data = data if isinstance(data, dict) else {}
+        return GrooveBottom(x_end_right=_number(data, "x_end_right"), x_end_left=_number(data, "x_end_left"),
+                            blend_right=_radial_blend(data.get("blend_right")),
+                            blend_left=_radial_blend(data.get("blend_left")))
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"x_end_right": float(self.x_end_right), "x_end_left": float(self.x_end_left),
+                "blend_right": _radial_blend_dict(self.blend_right),
+                "blend_left": _radial_blend_dict(self.blend_left)}
+
+
+@dataclass
+class RadialPrimitive:
+    """What a radial profile is made of: a groove, or a groove repeated."""
+    TYPE: ClassVar[str] = ""
+    primitive_id: int
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "RadialPrimitive":
+        kind = data.get("type")
+        for cls in (Groove, RepeatGroove):
+            if kind == cls.TYPE:
+                return cls.from_dict(data)
+        raise ValueError(f"Unknown radial primitive type: {kind!r}")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"primitive_id": int(self.primitive_id), "type": self.TYPE}
+
+
+@dataclass
+class Groove(RadialPrimitive):
+    """A groove, from the top of its right flank (Z+) down, across its
+    bottom and up its left flank."""
+    TYPE: ClassVar[str] = "groove"
+    right_flank: GrooveFlank = field(default_factory=lambda: GrooveFlank(0.0, 0.0))
+    bottom: GrooveBottom = field(default_factory=lambda: GrooveBottom(0.0, 0.0))
+    left_flank: GrooveFlank = field(default_factory=lambda: GrooveFlank(0.0, 0.0))
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Groove":
+        return Groove(primitive_id=int(data.get("primitive_id", 0)),
+                      right_flank=GrooveFlank.from_dict(data.get("right_flank")),
+                      bottom=GrooveBottom.from_dict(data.get("bottom")),
+                      left_flank=GrooveFlank.from_dict(data.get("left_flank")))
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = super().to_dict()
+        d.update({"right_flank": self.right_flank.to_dict(), "bottom": self.bottom.to_dict(),
+                  "left_flank": self.left_flank.to_dict()})
+        return d
+
+
+@dataclass
+class RepeatGroove(RadialPrimitive):
+    """The groove ``repeat_primitive_id`` again, ``repeat_count`` times, each
+    ``z_offset`` along Z from the one before."""
+    TYPE: ClassVar[str] = "repeat"
+    repeat_primitive_id: int = 1
+    repeat_count: int = 1
+    z_offset: float = -5.0
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "RepeatGroove":
+        return RepeatGroove(primitive_id=int(data.get("primitive_id", 0)),
+                            repeat_primitive_id=int(_number(data, "repeat_primitive_id", 1)),
+                            repeat_count=int(_number(data, "repeat_count", 1)),
+                            z_offset=_number(data, "z_offset", -5.0))
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = super().to_dict()
+        d.update({"repeat_primitive_id": int(self.repeat_primitive_id), "repeat_count": int(self.repeat_count),
+                  "z_offset": float(self.z_offset)})
+        return d
+
+
+def radial_primitives_from(raw) -> List[RadialPrimitive]:
+    """A radial profile's primitives from their dicts, numbered from 1 in
+    their order; what is not one of them is left out."""
+    primitives = []
+    for data in raw or []:
+        if not isinstance(data, dict):
+            continue
+        try:
+            primitive = RadialPrimitive.from_dict(data)
+        except ValueError:
+            continue
+        primitive.primitive_id = len(primitives) + 1
+        primitives.append(primitive)
+    return primitives
+
+
 @dataclass
 class DefineRadialProfile(Operation):
     profile_id: int
     profile_type: ProfilingType
-    profile_primitives: List[Dict[str, Any]]
-
-    @staticmethod
-    def _ordered_primitive(primitive: Dict[str, Any], primitive_id: int) -> Dict[str, Any]:
-        p_data = dict(primitive)
-        p_data.setdefault("primitive_id", primitive_id)
-        p_type = p_data.get("type")
-        if p_type == "groove":
-            ordered = {
-                "primitive_id": p_data.get("primitive_id"),
-                "type": p_type,
-            }
-            for key in ("right_flank", "bottom", "left_flank"):
-                if key in p_data:
-                    ordered[key] = p_data[key]
-            for key, value in p_data.items():
-                if key not in ordered:
-                    ordered[key] = value
-            return ordered
-        ordered = {
-            "primitive_id": p_data.get("primitive_id"),
-            "type": p_type,
-        }
-        for key, value in p_data.items():
-            if key not in ordered:
-                ordered[key] = value
-        return ordered
+    profile_primitives: List[RadialPrimitive]
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "DefineRadialProfile":
-        raw = data.get("profile_primitives", [])
-        primitives = []
-        for i, primitive in enumerate(raw, start=1):
-            if not isinstance(primitive, dict):
-                continue
-            primitives.append(DefineRadialProfile._ordered_primitive(primitive, i))
         try:
             profile_type = ProfilingType(str(data.get("profile_type", "od")).lower())
         except ValueError:
@@ -1181,22 +1306,21 @@ class DefineRadialProfile(Operation):
             is_optional_block=bool(data.get("is_optional_block", False)),
             profile_id=int(data.get("profile_id", 0)),
             profile_type=profile_type,
-            profile_primitives=primitives,
+            profile_primitives=radial_primitives_from(data.get("profile_primitives", [])),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
-        primitives = []
-        for i, primitive in enumerate(self.profile_primitives or [], start=1):
-            if not isinstance(primitive, dict):
-                continue
-            primitives.append(self._ordered_primitive(primitive, i))
         base.update({
             "profile_id": int(self.profile_id),
             "profile_type": self.profile_type.value,
-            "profile_primitives": primitives,
+            "profile_primitives": [p.to_dict() for p in self.profile_primitives],
         })
         return base
+
+    def first_groove(self) -> Optional[Groove]:
+        """The profile's first groove - the one a groove operation cuts - or None."""
+        return next((p for p in self.profile_primitives if isinstance(p, Groove)), None)
 
     def display_name(self) -> str:
         """What the operation is called, in the program's list and its G-code."""

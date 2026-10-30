@@ -20,7 +20,7 @@ from .plan import Move, RoughingPlan
 class PlannerBase:
     """The planner's state and the checks every move goes through - one part of _Planner (planner.py)."""
 
-    def __init__(self, setup, profile_path, tool, stock_before, rest=False, sliver_radius=0.0):
+    def __init__(self, setup, profile_path, tool, stock_before, rest=False, sliver_radius=0.0, air_before=None):
         self.setup = setup
         self.rest = rest
         self.sliver_radius = sliver_radius
@@ -62,6 +62,7 @@ class PlannerBase:
         self.part_inside = self.part.buffer(-TOLERANCE)
         self.part_allow_inside = self.part_allow.buffer(-TOLERANCE)
 
+        known_air = air_before is not None and not air_before.is_empty
         if stock_before is None:
             # as deep as the profile goes and no deeper: what is in front of
             # the face below that is facing's to cut
@@ -70,14 +71,19 @@ class PlannerBase:
             z_face, r_face = points[0]
             if r_face > r_floor:
                 material = material.difference(box(z_face, r_floor, self.z_start + 1.0, r_face))
+            if known_air:
+                # less what the operations above are known to have cut
+                material = _difference(material, _mirror(air_before) if self.is_id else air_before)
         else:
             material = _mirror(stock_before) if self.is_id else stock_before
+        from_other = stock_before is not None or known_air
+        if from_other:
             # what another operation left, without the rounding slivers its
             # cuts leave along their edges
             material = material.buffer(-MIN_CUT).buffer(MIN_CUT)
         self.material = material
         self.to_remove = _difference(material, self.part_allow)
-        if stock_before is not None:
+        if from_other:
             # only what the roughing before reports as left (see _result)
             self.to_remove = unary_union([
                 piece for piece in getattr(self.to_remove, "geoms", [self.to_remove])
@@ -271,7 +277,6 @@ class PlannerBase:
         for piece in getattr(remaining, "geoms", [remaining]):
             if self._worth_cutting(piece):
                 residual.append([self._m(p) for p in piece.exterior.coords])
-        stock_after = _difference(self.material, _difference(self.to_remove, self.remaining))
         if residual:
             count = len(residual)
             self.warnings.append(f"{count} region{'' if count == 1 else 's'} left for another tool")
@@ -280,7 +285,6 @@ class PlannerBase:
             allowance=self.allowance_chain(),
             residual=residual,
             to_remove=_mirror(self.to_remove) if self.is_id else self.to_remove,
-            remaining_stock=_mirror(stock_after) if self.is_id else stock_after,
             tool=self.tool,
             warnings=self.warnings,
         )

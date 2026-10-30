@@ -16,10 +16,14 @@ Rectangle {
     //: checked - as the toggles in the screens are.
     property url iconSource: ""
     readonly property bool isIcon: iconSource.toString() !== ""
+    //: In front of the text: an icon, as high as the text is (leadingIcon),
+    //: or a glyph - "+" for a new one, as the Tool Library's add buttons.
+    property url leadingIcon: ""
+    property string leadingText: ""
 
     signal clicked()
 
-    implicitWidth: isIcon ? Theme.buttonHeight : Math.max(96, label.implicitWidth + 36)
+    implicitWidth: isIcon ? Theme.buttonHeight : Math.max(96, content.implicitWidth + 36)
     implicitHeight: Theme.buttonHeight
     radius: Theme.radius
     color: {
@@ -51,16 +55,43 @@ Rectangle {
         smooth: true
     }
 
-    Text {
-        id: label
+    Row {
+        id: content
         visible: !root.isIcon
         anchors.centerIn: parent
-        color: root.secondary ? (root.enabled ? Theme.foreground : "#8c97a8") : "white"
-        font.pixelSize: root.secondary ? 15 : 16
-        font.bold: true
-        elide: Text.ElideRight
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+        spacing: Theme.spacingSmall
+
+        Image {
+            visible: root.leadingIcon.toString() !== ""
+            anchors.verticalCenter: parent.verticalCenter
+            width: visible ? label.font.pixelSize * 1.4 : 0
+            height: width
+            source: root.leadingIcon
+            sourceSize.width: 2 * width
+            sourceSize.height: 2 * height
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+        }
+
+        Text {
+            visible: root.leadingText !== ""
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.leadingText
+            color: label.color
+            font.pixelSize: Theme.fontTitle
+            font.bold: true
+        }
+
+        Text {
+            id: label
+            anchors.verticalCenter: parent.verticalCenter
+            color: root.secondary ? (root.enabled ? Theme.foreground : "#8c97a8") : "white"
+            font.pixelSize: root.secondary ? 15 : 16
+            font.bold: true
+            elide: Text.ElideRight
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     MouseArea {

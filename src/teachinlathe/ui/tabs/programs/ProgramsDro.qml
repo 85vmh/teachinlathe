@@ -5,16 +5,25 @@ import theme
 
 Rectangle {
     id: root
+    // workOffsetName ("G54"...), xPosition, xDistanceToGo, zPosition,
+    // zDistanceToGo: the machine's (ProgramsDroViewModel) or a simulation's
     required property var viewModel
-    property int axisLabelWidth: 44
-    property int valueBoxWidth: 240
+    property int axisLabelWidth: 40
     property int valueBoxHeight: 60
     property int axisLabelFontSize: 60
     property int droValueFontSize: 40
     property int headerFontSize: 18
-    property int headerHeight: 30
-    property int rowSpacing: 20
-    property int columnSpacing: 18
+    property int headerHeight: 22
+    property int rowSpacing: 16
+    property int columnSpacing: 14
+    // in from the box's edges
+    property int margin: 8
+    // the two columns share what the axis letters leave
+    readonly property int valueBoxWidth: Math.max(0, (width - 2 * margin - axisLabelWidth - 2 * rowSpacing) / 2)
+    // what it needs, to the bottom of the second row
+    implicitHeight: 2 * margin + headerHeight + 2 * columnSpacing + 2 * valueBoxHeight - headerGap
+    // the header nearer the rows than the rows are to each other
+    readonly property int headerGap: 8
 
     color: Theme.hover
     border.color: Theme.separator
@@ -24,12 +33,13 @@ Rectangle {
     ColumnLayout {
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.leftMargin: 16
-        anchors.topMargin: 16
+        anchors.leftMargin: root.margin
+        anchors.topMargin: root.margin
         spacing: root.columnSpacing
 
         RowLayout {
             spacing: root.rowSpacing
+            Layout.bottomMargin: -root.headerGap
 
             Item {
                 Layout.preferredWidth: root.axisLabelWidth
@@ -39,7 +49,7 @@ Rectangle {
             Text {
                 Layout.preferredWidth: root.valueBoxWidth
                 Layout.preferredHeight: root.headerHeight
-                text: "G54 Position"
+                text: root.viewModel.workOffsetName + " Position"
                 color: Theme.foregroundSubtle
                 font.pixelSize: root.headerFontSize
                 font.bold: true

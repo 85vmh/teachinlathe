@@ -23,8 +23,6 @@ class RoughingPlan:
     residual: List[List[Pt]] = field(default_factory=list)
     #: the material before the operation, less the stock to leave
     to_remove: object = None
-    #: the material once the operation is done, as a shapely shape in (z, r)
-    remaining_stock: object = None
     tool: Optional[ToolShape] = None
     warnings: List[str] = field(default_factory=list)
     error: str = ""

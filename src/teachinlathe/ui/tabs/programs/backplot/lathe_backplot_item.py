@@ -32,10 +32,11 @@ from PyQt6.QtOpenGL import (QOpenGLFramebufferObject,
 from PyQt6.QtQml import qmlRegisterType
 from PyQt6.QtQuick import QQuickFramebufferObject
 
-from teachinlathe.ui.tabs.programs.backplot import actors, blade_middle, tool_source, workpiece
+from teachinlathe.ui.tabs.programs.backplot import actors, blade_middle, feeds, tool_source, workpiece
 from teachinlathe.ui.tabs.programs.backplot.actors.units import INTERNAL_PER_MM
 from teachinlathe.ui.tabs.programs.backplot.touch_gestures import ThreeFingerSwipe
 from teachinlathe.ui.tabs.programs.backplot.actors import base as actor_base
+from teachinlathe.ui.tabs.programs.backplot.actors import stock as stock_actor
 from teachinlathe.ui.tabs.programs.backplot.actors import palette, screen, text
 
 LOG = logging.getLogger(__name__)
@@ -271,6 +272,10 @@ class LatheBackplotCanon(_HostBase):
     Holds what ``Lcnc_3dGraphics.__init__`` would have set up - the position
     logger, the INI-derived options, the view defaults - plus this lathe's
     own configuration, which used to live in ``GremlinWidget``.
+
+    What it shows comes from ``feed`` (feeds.py): the machine, or a simulation of
+    a program. Its status and its logger are this canon's ``stat`` and
+    ``logger``; everything else is drawn the same from either.
     """
 
     percentLoaded = pyqtSignal(int)
@@ -278,9 +283,10 @@ class LatheBackplotCanon(_HostBase):
     yRotationChanged = pyqtSignal(int)
     zRotationChanged = pyqtSignal(int)
 
-    def __init__(self, item):
+    def __init__(self, item, feed=None):
         QObject.__init__(self)
         self._item = item
+        self.feed = feed if feed is not None else feeds.LiveFeed()
         # Set for real at the end of this constructor; declared here because
         # the grafted set-up below can already ask for a redraw.
         self._perf = None
@@ -306,17 +312,9 @@ class LatheBackplotCanon(_HostBase):
             rgb = self.colors[name]
             return [int(x * 255) for x in rgb + (alpha,)]
 
-        import _thread
-
         import linuxcnc
 
         inifile = os.environ.get("INI_FILE_NAME", "/dev/null")
-        stat = linuxcnc.stat()
-        try:
-            stat.poll()
-        except Exception:
-            from qtvcp.widgets.fake_status import fakeStatus
-            stat = fakeStatus()
 
         self.inifile = linuxcnc.ini(inifile)
         self.foam_option = self.inifile.getbool("DISPLAY", "FOAM", fallback=False)
@@ -327,13 +325,9 @@ class LatheBackplotCanon(_HostBase):
             trajcoordinates = "unknown"
         kinsmodule = self.inifile.find("KINS", "KINEMATICS")
 
-        self.logger = linuxcnc.positionlogger(
-            linuxcnc.stat(),
-            C("backplotjog"), C("backplottraverse"), C("backplotfeed"),
-            C("backplotarc"), C("backplottoolchange"), C("backplotprobing"),
-            self.get_geometry(), self.foam_option,
-        )
-        _thread.start_new_thread(self.logger.start, (.01,))
+        self.feed.start([C(name) for name in feeds.COLOR_NAMES], self.get_geometry(), self.foam_option)
+        stat = self.feed.stat
+        self.logger = self.feed.logger
         glcanon.GlCanonDraw.__init__(self, stat, self.logger)
         glcanon.GlCanonDraw.init_glcanondraw(
             self, trajcoordinates=trajcoordinates, kinsmodule=kinsmodule)
@@ -351,7 +345,10 @@ class LatheBackplotCanon(_HostBase):
         self.use_joints_mode = True
         self.use_commanded = True
         self.show_limits = True
-        self.show_extents_option = True
+        # No dimension lines round the toolpath: the scale round the edge
+        # gives the sizes, and they cluttered the part. The fit still reads
+        # the extents (extents_info); only their drawing is off.
+        self.show_extents_option = False
         self.gcode_properties = None
         self.show_live_plot = True
         self.show_velocity = True
@@ -448,6 +445,11 @@ class LatheBackplotCanon(_HostBase):
         self._pending_default_view = False
         self._last_preview_tool_signature = None
         self._last_preview_wcs_signature = None
+        #: The work offset the program was read with - (g5x, g92, XY
+        #: rotation), machine units - where the stock is drawn: a program
+        #: that moves the origin itself (a Facing's new Z0) moves the origin,
+        #: not the bar. None before a program is read.
+        self.preview_origin = None
         # The program the Programs screen loaded, which is not always the file
         # the interpreter is reading - see poll().
         self._program_file = ''
@@ -479,8 +481,8 @@ class LatheBackplotCanon(_HostBase):
         self.blade_corners = {}
 
         # Mirrored: the material left drawn above the centre line, by
-        # actors.remaining. See _mirror.
-        self.mirror = _mirror
+        # actors.remaining. See _mirror - or the feed's own (a simulation's).
+        self.mirror = _mirror if self.feed.MIRROR is None else self.feed.MIRROR
 
         # Upstream's own stock outlines, left on. It draws what
         # (WORKPIECE,...) comments in the G-code declare, and the stock actor
@@ -668,9 +670,10 @@ class LatheBackplotCanon(_HostBase):
         So what does not move is drawn once into a framebuffer of its own and
         copied back at the start of each frame. The split is by position in
         the scene's own parts list, at the live backplot trace: everything
-        before it - the grid, the stock and its hatching, the rapids, the
+        before it - the grid, the stock as it stands, the rapids, the
         toolpath, the extents, the limits box - is static until the operator
-        moves the view or a new program loads. Everything from the trace on is
+        moves the view, a new program loads or the tool cuts the stock.
+        Everything from the trace on is
         drawn as before, because it moves: the trace, the workpiece, the tool
         marker, and the annotation that has to sit over the tool.
 
@@ -816,9 +819,15 @@ class LatheBackplotCanon(_HostBase):
         Compared, not hashed - some of these are lists. Anything left out of
         here leaves a stale picture on screen, which is why ``STATIC_MAX_AGE_S``
         exists as well.
+
+        The material left is in it: the stock under the toolpath is drawn as
+        it stands, so the layer is drawn again as the tool cuts it.
         """
         stat = ctx.stat
+        left = stock_actor.material_left(self, ctx)
         return (
+            (left, left.version) if left is not None else None,
+            getattr(self, "preview_origin", None), bool(getattr(self, "mirror", False)),
             ctx.width, ctx.height,
             self._preview_mvp().tobytes(),
             getattr(ctx.canon, "program_geometry", None),
@@ -1000,24 +1009,11 @@ class LatheBackplotCanon(_HostBase):
 
         Touch off changes the interpreter's WCS before the parameter file on
         disk is saved. Re-parsing that file alone would keep the old origin.
-        Keep other coordinate systems and user parameters from the copy.
         """
-        parameters = {}
-        if os.path.exists(parameter_file):
-            with open(parameter_file, encoding="utf-8") as handle:
-                for line in handle:
-                    fields = line.split()
-                    if fields:
-                        parameters[int(fields[0])] = fields[1]
-        index = int(stat.g5x_index)
-        parameters[5220] = str(index)
-        base = 5200 + 20 * index
-        for axis, value in enumerate(stat.g5x_offset, 1):
-            parameters[base + axis] = format(value, ".17g")
-        parameters[base + 10] = format(stat.rotation_xy, ".17g")
-        with open(parameter_file, "w", encoding="utf-8") as handle:
-            for number, value in sorted(parameters.items()):
-                handle.write(f"{number} {value}\n")
+        from teachinlathe.core.gcode_moves import WorkOffset, write_work_offset
+
+        write_work_offset(parameter_file, WorkOffset(int(stat.g5x_index), tuple(stat.g5x_offset),
+                                                     float(stat.rotation_xy)))
 
     def _build_preview_initcodes(self, stat):
         initcodes = []
@@ -1104,6 +1100,7 @@ class LatheBackplotCanon(_HostBase):
             self._last_preview_tool_signature = (
                 stat.tool_in_spindle, tuple(stat.tool_offset))
             self._last_preview_wcs_signature = self._wcs_signature(stat)
+            self.preview_origin = (tuple(stat.g5x_offset), tuple(stat.g92_offset), float(stat.rotation_xy))
             random = int(self.inifile.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
             arcdivision = int(self.inifile.find("DISPLAY", "ARCDIVISION") or 64)
             canon = StatCanon(
@@ -1140,6 +1137,14 @@ class LatheBackplotCanon(_HostBase):
             blade_middle.centre_program(getattr(canon, "program_geometry", None),
                                         tool_source.describe, INTERNAL_PER_MM,
                                         int(stat.tool_in_spindle or 0), self.blade_corners)
+            # Uploaded again from the moved points. set_canon marked the
+            # program stale before the parse; a frame drawn since - the render
+            # thread does not wait for this one - took the points as they were
+            # parsed and marked it fresh, and the moved ones would never be
+            # drawn: the lines at the touched-off point, the dwells (read every
+            # frame) at the blade's middle. A simulation lost that race.
+            self.scene.program.invalidate()
+            self.invalidate_static()
             self.logger.set_depth(
                 self.from_internal_linear_unit(self.get_foam_z()),
                 self.from_internal_linear_unit(self.get_foam_w()),
@@ -1176,6 +1181,7 @@ class LatheBackplotCanon(_HostBase):
             stat.poll()
         except Exception:
             return None
+        self.feed.observe()
         machine_file = os.path.abspath(stat.file) if stat.file else ''
         call_level = int(getattr(stat, 'call_level', 0) or 0)
         task_mode = stat.task_mode
@@ -1203,9 +1209,16 @@ class LatheBackplotCanon(_HostBase):
                         and tool_signature != self._last_preview_tool_signature)
         # A redraw cannot move geometry already parsed in machine coordinates.
         # Wait until MDI has finished; also refresh in AUTO when it is idle,
-        # but never re-parse on WCS changes made by a running/paused program.
+        # but never re-parse on WCS changes made by a running/paused program:
+        # its geometry has them already - a Facing's new Z0 moves what comes
+        # after it - so they are taken as read, and the program is not read
+        # again from the new origin once it ends, as if it had not moved it.
+        wcs = self._wcs_signature(stat)
+        if (task_mode == linuxcnc.MODE_AUTO and stat.interp_state != linuxcnc.INTERP_IDLE
+                and wcs != self._last_preview_wcs_signature):
+            self._last_preview_wcs_signature = wcs
         wcs_changed = (stat.interp_state == linuxcnc.INTERP_IDLE
-                       and self._wcs_signature(stat) != self._last_preview_wcs_signature)
+                       and wcs != self._last_preview_wcs_signature)
         if self._current_file and (tool_changed or wcs_changed):
             self._reload_preview(self._current_file, sync_task=False)
             self._pending_default_view = True
@@ -1261,6 +1274,10 @@ class LatheBackplotCanon(_HostBase):
 
     # ── view control ────────────────────────────────────────────────────────
 
+    def material_left(self, ctx):
+        """The part as it is being cut, from the feed (feeds.py), or None."""
+        return self.feed.material_left(ctx, self)
+
     def set_program_file(self, path):
         """The program to preview, as opposed to whatever the interpreter has
         open. Empty falls back to following the machine's file."""
@@ -1272,7 +1289,9 @@ class LatheBackplotCanon(_HostBase):
         on = bool(on)
         if on == self.mirror:
             return
-        self.mirror = _mirror = on
+        self.mirror = on
+        if self.feed.MIRROR is None:
+            _mirror = on
         self.set_lathe_view()
 
     def extents_info(self):
@@ -1547,6 +1566,7 @@ class LatheBackplotItem(QQuickFramebufferObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._canon = None
+        self._simulation = None
         # The preview draws bottom-up, as OpenGL does; Quick composes
         # top-down.
         self.setMirrorVertically(True)
@@ -1581,9 +1601,23 @@ class LatheBackplotItem(QQuickFramebufferObject):
 
     # ── wiring ──────────────────────────────────────────────────────────────
 
+    def _get_simulation(self):
+        return self._simulation
+
+    def _set_simulation(self, source):
+        if self._canon is None:
+            self._simulation = source
+        elif source is not None and source is not self._simulation:
+            LOG.warning("backplot: a simulation set after the plot started is not followed")
+
+    #: A simulation to show instead of the machine - a SimulateViewModel - set
+    #: where the item is made; null, the machine.
+    simulation = pyqtProperty(QObject, _get_simulation, _set_simulation)
+
     def canon(self):
         if self._canon is None and LIB_GOOD:
-            self._canon = LatheBackplotCanon(self)
+            feed = feeds.SimulatedFeed(self._simulation) if self._simulation is not None else None
+            self._canon = LatheBackplotCanon(self, feed)
         return self._canon
 
     def createRenderer(self):
@@ -1612,8 +1646,9 @@ class LatheBackplotItem(QQuickFramebufferObject):
     mirrorChanged = pyqtSignal()
 
     def _get_mirror(self):
-        canon = self.canon()
-        return bool(canon.mirror) if canon is not None else _mirror
+        # not canon(): read by a binding, it would start the plot before the
+        # item's other properties - its simulation - are set
+        return bool(self._canon.mirror) if self._canon is not None else _mirror
 
     def _set_mirror(self, on):
         canon = self.canon()

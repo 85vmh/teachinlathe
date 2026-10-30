@@ -318,3 +318,67 @@ def annulus(radius, width, segments):
         triangles.extend([inner_0, outer_0, outer_1,
                           inner_0, outer_1, inner_1])
     return triangles
+
+
+def solid_triangles(rings):
+    """The inside of ``rings`` - closed (z, r) loops, the outline of a turned
+    part and its holes, as many as it has - as triangles: ``(r, 0, z)``
+    triples, three to a triangle, for ``Actor.fill``.
+
+    Cut into strips at every Z a corner is at: between two of them no edge
+    turns, so each run of material across a strip - from one edge up to the
+    next, every other one counted, the even-odd rule - is a trapezoid, two
+    triangles. All strips at once, as arrays: a part cut by a few hundred
+    moves has thousands of corners, and this is drawn as it changes.
+    """
+    import numpy as np
+
+    segments = []
+    for ring in rings:
+        points = np.asarray(ring, dtype=float)
+        if len(points) < 3:
+            continue
+        segments.append(np.column_stack([points, np.roll(points, -1, axis=0)]))
+    if not segments:
+        return []
+    edges = np.concatenate(segments)                     # z0, r0, z1, r1
+    edges = edges[np.abs(edges[:, 2] - edges[:, 0]) > 1e-12]
+    if not len(edges):
+        return []
+    z = np.unique(np.concatenate([edges[:, 0], edges[:, 2]]))
+    if len(z) < 2:
+        return []
+    za, zb = z[:-1], z[1:]
+    zm = (za + zb) / 2.0
+    low = np.minimum(edges[:, 0], edges[:, 2])
+    high = np.maximum(edges[:, 0], edges[:, 2])
+    # strips by edges: which edges cross each strip, and their radius at its
+    # middle and its two sides
+    across = (low[None, :] < zm[:, None]) & (zm[:, None] < high[None, :])
+    slope = (edges[:, 3] - edges[:, 1]) / (edges[:, 2] - edges[:, 0])
+
+    def radius_at(at):
+        return edges[None, :, 1] + (at[:, None] - edges[None, :, 0]) * slope[None, :]
+
+    middle = np.where(across, radius_at(zm), np.inf)
+    order = np.argsort(middle, axis=1)
+    counts = across.sum(axis=1)
+    ra = np.take_along_axis(radius_at(za), order, axis=1)
+    rb = np.take_along_axis(radius_at(zb), order, axis=1)
+    pairs = counts // 2
+    width = int(pairs.max()) if len(pairs) else 0
+    triangles = []
+    for k in range(width):
+        strip = np.flatnonzero(pairs > k)
+        a0, b0 = ra[strip, 2 * k], rb[strip, 2 * k]
+        a1, b1 = ra[strip, 2 * k + 1], rb[strip, 2 * k + 1]
+        z0, z1 = za[strip], zb[strip]
+        for corners in ((a0, z0, b0, z1, b1, z1), (a0, z0, b1, z1, a1, z0)):
+            ra_, za_, rb_, zb_, rc_, zc_ = corners
+            block = np.stack([np.column_stack([ra_, np.zeros_like(ra_), za_]),
+                              np.column_stack([rb_, np.zeros_like(rb_), zb_]),
+                              np.column_stack([rc_, np.zeros_like(rc_), zc_])], axis=1)
+            triangles.append(block.reshape(-1, 3))
+    if not triangles:
+        return []
+    return [tuple(point) for point in np.concatenate(triangles)]

@@ -1,0 +1,3 @@
+module tabs.programs.simulate
+SimulateScreen 1.0 SimulateScreen.qml
+SimulateSeekBar 1.0 SimulateSeekBar.qml

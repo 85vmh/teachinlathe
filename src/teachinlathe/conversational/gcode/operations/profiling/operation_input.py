@@ -2,13 +2,19 @@
 it comes from in a program: Profile Roughing and Contour (ProfileCut,
 profile_cut) and what both read of it alike - the profile, the tool, which
 side they cut and where they start, and those as a plan's key has them - and
-Groove Roughing and Finishing (GrooveCut, groove_cut)."""
+Groove Roughing and Finishing (GrooveCut, groove_cut).
+
+The stock each finds (``stock``, a stock.StockBefore) is the program's:
+a program's toolpath hands over its own as it goes; an operation on its own
+- its editor - has it worked out from those above it (with_stock). None:
+not worked out, nothing of it known."""
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 from teachinlathe.conversational.model.data_types import (
     DefineProfile, DefineRadialProfile, GrooveFinishing, GrooveRoughing, ProfileContour, ProfileRoughing,
@@ -28,19 +34,24 @@ class ProfileCut:
     """A Profile Roughing or Contour with what it is planned against: the
     profile it follows (None when the program has none of its id above it),
     the cutting tool it cuts with (None with none chosen, or one no longer as
-    chosen) and, for a rest roughing, the Profile Roughings of the same
-    profile above it, in order, each with what it is planned against."""
+    chosen), the stock it finds (see the module), and for a rest roughing
+    its source - the last Profile Roughing of the same profile above it that
+    is not rest material itself, whose start and stock to leave it keeps -
+    and the nose radius of the last tool that roughed that profile."""
     op: Union[ProfileRoughing, ProfileContour]
     profile: Optional[DefineProfile] = None
     tool: Optional[CuttingTool] = None
-    previous: Tuple["ProfileCut", ...] = ()
+    stock: Optional["StockBefore"] = None
+    source: Optional[ProfileRoughing] = None
+    last_nose_radius: float = 0.0
 
 
-def profile_cut(program: Program, op_index: int, op, tools) -> ProfileCut:
+def profile_cut(program: Program, op_index: int, op, tools, stock=None) -> ProfileCut:
     """``op`` - the Profile Roughing or Contour at ``op_index`` of
     ``program``, or a draft of it - with what it is planned against there.
     ``tools``: where its tool is looked up (the Tool Library, a ToolSnapshot);
-    only a tool still as chosen is taken."""
+    only a tool still as chosen is taken. ``stock``: what it finds there, a
+    StockBefore."""
     from teachinlathe.conversational.logic import program_tools
 
     profile_id = int(op.profilingParameters.profile_id or 0)
@@ -50,12 +61,31 @@ def profile_cut(program: Program, op_index: int, op, tools) -> ProfileCut:
                    None) if profile_id else None
     check = program_tools.check_for(program, op, tools)
     tool = tools.tool_in(check.tool_holder_id) if check.status is program_tools.ToolStatus.OK else None
-    previous = ()
+    source, nose_radius = None, 0.0
     if isinstance(op, ProfileRoughing) and op.restMaterial:
-        previous = tuple(profile_cut(program, index, prev, tools) for index, prev in enumerate(above)
-                         if isinstance(prev, ProfileRoughing)
-                         and int(prev.profilingParameters.profile_id or 0) == profile_id)
-    return ProfileCut(op, profile, tool, previous)
+        for prev in above:
+            if not (isinstance(prev, ProfileRoughing) and int(prev.profilingParameters.profile_id or 0) == profile_id):
+                continue
+            if not prev.restMaterial:
+                source = prev
+            prev_check = program_tools.check_for(program, prev, tools)
+            prev_tool = (tools.tool_in(prev_check.tool_holder_id)
+                         if prev_check.status is program_tools.ToolStatus.OK else None)
+            shape = resolve_tool_shape(ProfileCut(prev, tool=prev_tool))
+            if shape is not None:
+                nose_radius = shape.nose_radius
+    return ProfileCut(op, profile, tool, stock, source, nose_radius)
+
+
+def with_stock(cut, program: Program, op_index: int, tools):
+    """``cut`` - a ProfileCut or a GrooveCut, of the operation at
+    ``op_index`` of ``program`` - with the stock it finds there
+    (stock.stock_before), when it has none yet."""
+    from ...stock import stock_before
+
+    if cut.stock is not None:
+        return cut
+    return dataclasses.replace(cut, stock=stock_before(program, op_index, tools))
 
 
 def resolve_profile(cut: ProfileCut) -> list:
@@ -128,12 +158,14 @@ class GrooveCut:
     """A Groove Roughing or Finishing with what it is cut against: the
     radial profile it cuts (None when the program has none of its id above
     it), the tool it cuts with as mounted (None with none chosen, or one no
-    longer as chosen) and, for a finishing, the stock the Groove Roughing of
-    its profile above left (None for none left)."""
+    longer as chosen), for a finishing the stock to leave of the Groove
+    Roughing of its profile above (None for none left), and the stock it
+    finds (see the module)."""
     op: Union[GrooveRoughing, GrooveFinishing]
     radial_profile: Optional[DefineRadialProfile] = None
     tool: Optional[MountedTool] = None
     roughing_stock: Optional[StockToLeave] = None
+    stock: Optional["StockBefore"] = None
 
     @property
     def profile_id(self) -> int:
@@ -142,11 +174,11 @@ class GrooveCut:
         return int(parameters.profile_id or 0)
 
 
-def groove_cut(program: Program, op_index: int, op, tools) -> GrooveCut:
+def groove_cut(program: Program, op_index: int, op, tools, stock=None) -> GrooveCut:
     """``op`` - the Groove Roughing or Finishing at ``op_index`` of
     ``program``, or a draft of it - with what it is cut against there.
     ``tools``: where its tool is looked up; only a tool still as chosen is
-    taken."""
+    taken. ``stock``: what it finds there, a StockBefore."""
     from teachinlathe.conversational.logic import program_tools
 
     cut = GrooveCut(op)
@@ -158,11 +190,11 @@ def groove_cut(program: Program, op_index: int, op, tools) -> GrooveCut:
     check = program_tools.check_for(program, op, tools)
     tool = (MountedTool.of(tools, check.tool_holder_id)
             if check.status is program_tools.ToolStatus.OK else None)
-    stock = None
+    roughing_stock = None
     if isinstance(op, GrooveFinishing):
         # what the last Groove Roughing of its profile above left
         roughing = next((o for o in reversed(above) if isinstance(o, GrooveRoughing)
                          and int(o.roughingParameters.profile_id or 0) == profile_id), None)
         if roughing is not None and roughing.stockToLeaveEnabled:
-            stock = roughing.stockToLeave
-    return GrooveCut(op, radial_profile, tool, stock)
+            roughing_stock = roughing.stockToLeave
+    return GrooveCut(op, radial_profile, tool, roughing_stock, stock)

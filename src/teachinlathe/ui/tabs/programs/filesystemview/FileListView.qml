@@ -16,8 +16,8 @@ Item {
     // ── Dimensions ─────────────────────────────────────────────────────────
     readonly property int rowHeight:       72
     readonly property int headerHeight:    40
-    readonly property int sizeColWidth:    96
-    readonly property int modifiedColWidth: 150
+    readonly property int sizeColWidth:    70
+    readonly property int modifiedColWidth: 110
     // As wide as the operation list's Delete
     readonly property int deleteWidth:     100
     readonly property int nameLeftMargin:  10

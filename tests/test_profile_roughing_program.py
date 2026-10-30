@@ -10,7 +10,7 @@ from PyQt6.QtCore import QCoreApplication, QEventLoop, QTimer
 
 from teachinlathe.conversational.gcode import build_ngc_from_program
 from teachinlathe.conversational.gcode.gcode_builder import ToolsNotReady
-from teachinlathe.conversational.gcode.operations.profiling.operation_input import profile_cut
+from teachinlathe.conversational.gcode.operations.profiling.operation_input import profile_cut, with_stock
 from teachinlathe.conversational.gcode.operations.profile_roughing import (
     profile_roughing_preview,
 )
@@ -72,9 +72,9 @@ def build(program, tmp_path, tools=TOOLS):
 
 def section(ngc, number):
     """The G-code of operation #``number``."""
-    marker = f"Operation #{number}:"
+    marker = f"(---#{number:02d} "
     start = ngc.index(marker)
-    end = ngc.find("Operation #", start + len(marker))
+    end = ngc.find("(---#", start + len(marker))
     return ngc[start:end if end >= 0 else len(ngc)]
 
 
@@ -167,24 +167,25 @@ def answers(planner, count, timeout_ms=60000):
 
 
 def _payload(program):
-    """The Profile Roughing as its preview is asked for: profile and tool resolved."""
-    return profile_cut(program, 1, program.operations[1], TOOLS)
+    """The Profile Roughing as its preview is asked for: profile and tool
+    resolved, and what the worker works its stock out from."""
+    return profile_cut(program, 1, program.operations[1], TOOLS), program, 1, TOOLS
 
 
 def test_worker_previews_what_the_gui_would(planner, program):
     payload = _payload(program)
-    request = planner.submit("preview", "profile_roughing_preview", payload)
+    request = planner.submit("preview", "profile_roughing_preview", *payload)
 
     ok, result = answers(planner, 1)[request]
     assert ok
-    assert result == profile_roughing_preview(payload)
+    assert result == profile_roughing_preview(with_stock(*payload))
 
 
 def test_worker_keeps_only_the_last_of_the_requests_waiting(planner, program):
     payload = _payload(program)
-    first = planner.submit("preview", "profile_roughing_preview", payload)
-    dropped = planner.submit("preview", "profile_roughing_preview", payload)
-    last = planner.submit("preview", "profile_roughing_preview", payload)
+    first = planner.submit("preview", "profile_roughing_preview", *payload)
+    dropped = planner.submit("preview", "profile_roughing_preview", *payload)
+    last = planner.submit("preview", "profile_roughing_preview", *payload)
 
     got = answers(planner, 2)
     assert set(got) == {first, last}
@@ -195,7 +196,7 @@ def test_worker_reports_a_failed_job_and_goes_on(planner, program):
     failed = planner.submit("preview", "no_such_job")
     assert answers(planner, 1)[failed][0] is False
 
-    request = planner.submit("preview", "profile_roughing_preview", _payload(program))
+    request = planner.submit("preview", "profile_roughing_preview", *_payload(program))
     assert answers(planner, 1)[request][0] is True
 
 
@@ -215,9 +216,9 @@ def test_worker_generates_the_gcode_the_gui_would(planner, program, tmp_path):
 
 
 def test_worker_that_dies_answers_what_it_had_and_is_started_again(planner, program):
-    request = planner.submit("preview", "profile_roughing_preview", _payload(program))
+    request = planner.submit("preview", "profile_roughing_preview", *_payload(program))
     planner._process.kill()
 
     assert answers(planner, 1)[request] == (False, "the planning worker stopped")
-    again = planner.submit("preview", "profile_roughing_preview", _payload(program))
+    again = planner.submit("preview", "profile_roughing_preview", *_payload(program))
     assert answers(planner, 1)[again][0] is True

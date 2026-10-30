@@ -24,7 +24,6 @@ from .groove_roughing import (
     _groove_path,
     _outward,
     _profile_bounds_from_path,
-    _profiling_type,
     _reverse_path,
     _safe_x_for_contour,
     _split_path_at_z,
@@ -45,6 +44,28 @@ def roughing_stock(cut: GrooveCut):
     if stock is None:
         return 0.0, 0.0
     return abs(stock.stockToLeaveX), abs(stock.stockToLeaveZ)
+
+
+def finishing_start_x(cut: GrooveCut, path, profile_type, stock_radial):
+    """The start diameter: the pulley's outside with the radial stock the
+    roughing above left on it - or, where more material is known to be
+    there over the groove (the stock it finds), out of that."""
+    from shapely.geometry import box
+
+    from .profiling.shapes import FAR
+
+    start = _start_x(path, profile_type, stock_radial)
+    material = cut.stock.material if cut.stock is not None else None
+    if material is None or material.is_empty:
+        return start
+    _x_min, _x_max, z_min, z_max = _profile_bounds_from_path(path)
+    half_width = max(0.0, _blade_width(cut.tool)) / 2.0
+    over = material.intersection(box(z_min - half_width, 0.0, z_max + half_width, FAR))
+    if over.is_empty:
+        return start
+    if _outward(profile_type) > 0:
+        return max(start, 2.0 * over.bounds[3])
+    return min(start, 2.0 * over.bounds[1])
 
 
 def _emit_continuous_sections(gcode, safe_x, sections, corners, profile_type):
@@ -108,8 +129,7 @@ def groove_finishing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     """The G-code of a Groove Finishing, as it is cut (``cut``), onto ``gcode``."""
     op = cut.op
     finishing = op.finishingParameters
-    # the radial profile's own primitives are dicts: the groove geometry reads them so
-    profile = cut.radial_profile.to_dict() if cut.radial_profile is not None else {}
+    profile = cut.radial_profile
     tool = cut.tool
 
     feed_rate = op.speedsAndFeeds.feed
@@ -123,7 +143,7 @@ def groove_finishing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     if not isinstance(strategy, GrooveFinishingStrategy):
         gcode.error("Groove Finishing -- invalid strategy")
         return
-    if not profile:
+    if profile is None:
         gcode.error("Groove Finishing -- no Define Radial Profile found above this operation")
         return
     if not _tool_is_blade(tool):
@@ -137,12 +157,13 @@ def groove_finishing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
 
     _x_min, _x_max, z_min, z_max = _profile_bounds_from_path(path)
     center_z = (z_min + z_max) / 2.0
-    profile_type = _profiling_type(profile.get("profile_type"))
+    profile_type = profile.profile_type
     # what the Groove Roughing above left: the start diameter is the
-    # pulley's outside with that radial stock on it, and the blade starts
-    # the clearance out from it, as the roughing's did
+    # pulley's outside with that radial stock on it - or out of the material
+    # there is - and the blade starts the clearance out from it, as the
+    # roughing's did
     stock_radial = roughing_stock(cut)[0]
-    safe_x = _blade_start_x(_start_x(path, profile_type, stock_radial), profile_type, clearance)
+    safe_x = _blade_start_x(finishing_start_x(cut, path, profile_type, stock_radial), profile_type, clearance)
     width = _blade_width(tool)
     if width <= 0:
         gcode.error("Groove Finishing -- blade width is not defined in tool extras")
@@ -221,7 +242,7 @@ def groove_finishing_preview(cut: GrooveCut) -> GrooveFinishingPreview:
     _x_min, _x_max, z_min, z_max = _profile_bounds_from_path(path)
     center_z = (z_min + z_max) / 2.0
     clearance = abs(op.cuttingParameters.retract)
-    start_x = _start_x(path, profile_type, radial)
+    start_x = finishing_start_x(cut, path, profile_type, radial)
     blade_x = _blade_start_x(start_x, profile_type, clearance)
     drawn = dict(profile=flatten_path(path), offset=offset, start=Point(blade_x, center_z),
                  start_diameter=start_x)

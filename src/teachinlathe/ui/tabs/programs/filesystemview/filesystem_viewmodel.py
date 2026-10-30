@@ -477,6 +477,11 @@ class FileSystemViewModel(QObject):
     def selectedGeneratedJsonPathForEdit(self) -> str:
         return self._selected_generated_json_path()
 
+    def selectedFilePath(self) -> str:
+        """The selected file, as an absolute path; "" with none."""
+        path = self._selected_absolute_path()
+        return path if path and os.path.isfile(path) else ""
+
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
