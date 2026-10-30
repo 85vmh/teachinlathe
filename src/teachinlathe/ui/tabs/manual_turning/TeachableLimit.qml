@@ -16,6 +16,9 @@ Rectangle {
     property string toggleText: "Enable Limit"
     property bool toggleEnabled: false
     property bool teachEnabled: true
+    //: Whether the limit can be used at all: a tool limit only with the
+    //: current loaded tool's offset on its axis (TeachInLatheDroViewModel).
+    property bool available: true
     property int inputWidth: 110
     property int buttonHeight: 48
     property int contentMargin: 8
@@ -51,6 +54,8 @@ Rectangle {
     height: contentMargin * 2 + buttonHeight * 2 + sectionSpacing * 2 + 1
     radius: Theme.radius
     color: Theme.surfaceSunken
+    enabled: available
+    opacity: available ? 1.0 : 0.4
     border.color: activeColor
     border.width: status === 1 ? 1 : 3
 

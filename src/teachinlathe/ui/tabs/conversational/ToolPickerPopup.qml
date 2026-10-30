@@ -42,6 +42,9 @@ Popup {
     // the operation's tool's now, picked again in the popup
     property int currentToolchangePosition: ToolCard.G28
     property int toolchangePosition: ToolCard.G28
+    //: Where M6 takes the tool, as the editor says it: "Default Position
+    //: [X: .. Z: ..]" or "Custom Position [...]"
+    property string toolChangePositionText: ""
 
     // scope, a ToolCard.Scope: ThisOperation, ThisAndBelow - it and those
     // below cutting with its tool - or AllOperations cutting with it
@@ -193,7 +196,7 @@ Popup {
             GroupBox {
                 id: positionBox
                 anchors.centerIn: parent
-                title: "When doing a tool change"
+                title: "Toolchange Position (G53)"
                 font.pixelSize: Theme.fontBody
                 // the title centred over the box
                 label: Label {
@@ -205,20 +208,12 @@ Popup {
                     elide: Text.ElideRight
                 }
 
-                RowLayout {
-                    spacing: 20
-                    RadioButton {
-                        text: "Move to <b>G28</b>"
-                        font.pixelSize: Theme.fontBody
-                        checked: root.toolchangePosition === ToolCard.G28
-                        onToggled: if (checked) root.toolchangePosition = ToolCard.G28
-                    }
-                    RadioButton {
-                        text: "Move to <b>G30</b>"
-                        font.pixelSize: Theme.fontBody
-                        checked: root.toolchangePosition === ToolCard.G30
-                        onToggled: if (checked) root.toolchangePosition = ToolCard.G30
-                    }
+                // where the tool change goes, only shown: it is set on the
+                // Manual Turning tab
+                Label {
+                    text: root.toolChangePositionText
+                    font.pixelSize: Theme.fontBody
+                    color: Theme.foreground
                 }
             }
 

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Not set: a warning sign in the warning orange (Theme.warning). -->
+<svg width="40px" height="40px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12 2.5L22.5 20.5H1.5Z" fill="#ff9800" stroke="#ff9800" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M12 9V14" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="12" cy="17.3" r="1.4" fill="#ffffff"/>
+</svg>

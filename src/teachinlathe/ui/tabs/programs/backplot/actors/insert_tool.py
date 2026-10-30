@@ -334,6 +334,68 @@ def _build_outline(outline, angle, mirror_y=False):
     }
 
 
+def plane_outline(drawing):
+    """The tool ``drawing`` (``backplot.tool_source``) flat on the lathe's XZ
+    plane, in millimetres from its control point - for a 2D canvas, which
+    has no use for the GL vertex pairs ``_build`` makes: ``{"loop": [(x, z)],
+    "rings": [[(x, z)]], "lines": [[(x, z)]]}`` - the closed outline, the hole
+    and countersink, the flutes - X a radius, growing down the screen as the
+    backplot's. None for a drawing it cannot build. An insert without its
+    turn is drawn unturned: there is no tool table orientation to read here."""
+    def lathe(point):
+        return -point[1], point[0]
+
+    outline = _OUTLINES.get(type(drawing))
+    if outline is not None:
+        built = outline(drawing, 0.0)
+        if len(built.loop) < 3:
+            return None
+        angle = math.radians(drawing.rotation or 0.0)
+
+        def place(point):
+            x, y = _offset(point, built.tip)
+            if drawing.mirror_y:
+                y = -y
+            return lathe(_rotate((x, y), angle))
+
+        rings = [r for r in (built.hole or ()) if r > 0]
+        return {
+            "loop": [place(point) for point in built.loop],
+            "rings": [[place(point) for point in geometry.circle_loop(r, CIRCLE_SEGMENTS)] for r in rings],
+            "lines": [[place(point) for point in line] for line in built.lines],
+        }
+
+    if not isinstance(drawing, InsertDrawing):
+        return None
+    nose_radius = drawing.nose_radius if drawing.nose_radius is not None else DEFAULT_NOSE_RADIUS_MM
+    try:
+        insert = inserts.Insert(drawing.family or DEFAULT_FAMILY,
+                                drawing.size_index if drawing.size_index is not None else DEFAULT_SIZE_INDEX,
+                                nose_radius if nose_radius >= MIN_NOSE_RADIUS_MM else 0.0,
+                                drawing.active_corner)
+    except KeyError:
+        return None
+    loop = _outline(insert)
+    if len(loop) < 3:
+        return None
+    tip = insert.active_tip()
+    angle = math.radians(drawing.rotation or 0.0)
+
+    def place(point):
+        return lathe(_rotate(_offset(point, tip), angle))
+
+    hole = insert.hole()
+    rings = []
+    if hole:
+        reach = min(math.hypot(x, y) for x, y in loop)
+        rings = [hole[0] / 2.0] + ([hole[1] / 2.0] if hole[1] / 2.0 < reach else [])
+    return {
+        "loop": [place(point) for point in loop],
+        "rings": [[place(point) for point in geometry.circle_loop(r, CIRCLE_SEGMENTS)] for r in rings],
+        "lines": [],
+    }
+
+
 def _outline(insert):
     """The insert's closed outline in its own frame, corners rounded."""
     if insert.is_round:

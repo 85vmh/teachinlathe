@@ -49,7 +49,7 @@ Row {
         implicitHeight: Theme.zoomInOutFitMirrorButtonSize
         visible: root.showMirror
         iconSource: Images.url("mirror.svg")
-        active: root.canvas ? root.canvas.mirrorAcrossCenterline : false
+        active: root.canvas && root.showMirror ? root.canvas.mirrorAcrossCenterline : false
         onClicked: root.canvas.mirrorAcrossCenterline = !root.canvas.mirrorAcrossCenterline
     }
 }

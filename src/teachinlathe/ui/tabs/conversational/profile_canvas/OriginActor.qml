@@ -8,7 +8,8 @@ QtObject {
     property color fillColor: "#222222"
     property real lineWidth: 1.5
 
-    readonly property var quads: [
+    // the four quadrants, clockwise from 12 o'clock, and which are filled
+    property var quads: [
         { start: -Math.PI/2, end: 0,           fill: true  },
         { start: 0,          end: Math.PI/2,    fill: false },
         { start: Math.PI/2,  end: Math.PI,      fill: true  },

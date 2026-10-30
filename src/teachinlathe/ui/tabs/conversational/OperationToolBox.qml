@@ -23,6 +23,7 @@ ToolBox {
         currentToolNo: root.toolCard ? root.toolCard.suggestedToolNo : 0
         toolUsers: root.toolCard ? root.toolCard.users : 0
         currentToolchangePosition: root.toolCard ? root.toolCard.toolchangePosition : 0
+        toolChangePositionText: (root.editor && root.editor.toolChangePositionText) || ""
         onToolChosen: function(toolNo, position, scope) {
             if (root.editor) root.editor.useTool(toolNo, position, scope)
         }

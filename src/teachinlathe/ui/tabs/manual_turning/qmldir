@@ -1,6 +1,7 @@
 module tabs.manual_turning
 HandwheelToggle 1.0 HandwheelToggle.qml
 LimitsPanel 1.0 LimitsPanel.qml
+MachineLimitsView 1.0 MachineLimitsView.qml
 ManualFeedPanel 1.0 ManualFeedPanel.qml
 ManualHandwheelsPanel 1.0 ManualHandwheelsPanel.qml
 ManualJoystickPanel 1.0 ManualJoystickPanel.qml

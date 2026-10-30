@@ -505,6 +505,14 @@ class ConversationalUseCase:
             return program_tools.ToolCheck(program_tools.ToolStatus.NONE)
         return program_tools.check_for(program, op, self._tool_library())
 
+    @staticmethod
+    def tool_change_position():
+        """(x, z, custom): where M6 takes the tool, machine coordinates (X a
+        radius) - the operator's, set on the Manual Turning tab (custom), or
+        the INI's."""
+        from teachinlathe.core.predefined_positions_repository import predefined_positions
+        return predefined_positions().tool_change_position()
+
     def suitable_tool_nos(self, program: Optional[Program], index: int) -> list:
         """The holders - T numbers - whose tool the operation at ``index``
         can cut with (tool_fit), ready or not."""

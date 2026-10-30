@@ -294,6 +294,17 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
         """The program header's stock, as its dict, or {}."""
         return self._use_case.workpiece(self._program)
 
+    @pyqtProperty(str, constant=True)
+    def toolChangePositionText(self):
+        """Where M6 takes the tool, for the tool picker to show: "Default
+        Position [X: 75.000 Z: 200.000]" - the INI's - or "Custom Position
+        [...]" - the one set on the Manual Turning tab."""
+        x, z, custom = self._use_case.tool_change_position()
+        where = "Custom Position" if custom else "Default Position"
+        if x is None or z is None:
+            return f"{where} [not set]"
+        return f"{where} [X: {x:.3f} Z: {z:.3f}]"
+
     @pyqtProperty(QObject, constant=True)
     def toolCard(self):
         """The operation's tool, as its ToolCard."""

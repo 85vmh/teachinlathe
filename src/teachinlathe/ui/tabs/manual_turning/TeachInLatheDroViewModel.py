@@ -1,11 +1,12 @@
 from enum import Enum
 
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
-from teachinlathe.core.command_repository import issue_mdi
+from teachinlathe.core.command_repository import command_repository, issue_mdi
 from teachinlathe.core.status_repository import status_repository
 from teachinlathe.core.tool_library_repository import tool_library_repository
 
 from teachinlathe.core.positions_repository import Positions
+from teachinlathe.core.predefined_positions_repository import predefined_positions
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual.logic.machine_limits import MachineLimitsHandler
 
@@ -23,6 +24,24 @@ class TeachInLatheDroViewModel(QObject):
     limitsChanged = pyqtSignal()
     actionRejected = pyqtSignal(str)
     setDatumValueInputRequested = pyqtSignal()
+    #: The work offset in use, or whether it can be changed, changed.
+    workOffsetChanged = pyqtSignal()
+    #: Something the operator is told in a toast, not a refusal.
+    noticeShown = pyqtSignal(str)
+    #: Whether M6, G28 or G30 is set changed.
+    predefinedPositionsChanged = pyqtSignal()
+    #: The current loaded tool, or whether its offsets are set, changed.
+    toolStateChanged = pyqtSignal()
+    #: The current loaded tool, or what it is, changed: its drawing.
+    toolDrawingChanged = pyqtSignal()
+
+    #: The tool limits along each axis (LIMIT_KEYS): kept to the tool, so
+    #: there is none without the tool's offset on that axis.
+    TOOL_LIMIT_KEYS = {"x": ("xMinus", "xPlus"), "z": ("zMinus", "zPlus")}
+
+    #: The work offsets the operator can choose, as a program's header has
+    #: them (HeaderDetailsView): G54 is stat.g5x_index 1.
+    WORK_OFFSETS = ("G54", "G55", "G56", "G57", "G58", "G59")
 
     LIMIT_NONE = "--none--"
     LIMIT_KEYS = ("xMinus", "xPlus", "zMinus", "zPlus", "tailstock")
@@ -38,6 +57,9 @@ class TeachInLatheDroViewModel(QObject):
     def __init__(self, parent=None, tool_library=None):
         super().__init__(parent)
         self._tool_library = tool_library_repository() if tool_library is None else tool_library
+        # the current loaded tool's drawing, and the tool it was built for
+        self._tool_outline = None
+        self._tool_outline_key = None
         self.limitsHandler = MachineLimitsHandler()
         self.latheComponent = TeachInLatheComponent()
         self.setDefaultMachineLimits(self.limitsHandler.getDefaultMachineLimits())
@@ -55,6 +77,10 @@ class TeachInLatheDroViewModel(QObject):
         self.currentMachineLimits = None
         self.currentXAbsValue = 0
         self.currentZAbsValue = 0
+        # the machine coordinates, X on the radius: where the axes are, the
+        # work offset and the tool offset aside
+        self.currentXMachineValue = 0
+        self.currentZMachineValue = 0
         self.isXAbs = True
         self.lastXAbsValue = 0
         self.isZAbs = True
@@ -66,6 +92,8 @@ class TeachInLatheDroViewModel(QObject):
         self._z_secondary_value = "+0000.000"
         self._z_secondary_visible = False
         self._is_feeding = bool(self.latheComponent.comp.getPin(TeachInLatheComponent.PinJoystickIsFeeding).value)
+        # the work offset asked for and not in use yet: told once it is
+        self._work_offset_asked = None
 
         self.limit_status = {
             "xMinus": LimitStatus.DISABLED,
@@ -86,6 +114,16 @@ class TeachInLatheDroViewModel(QObject):
         self.toggle_enabled = {key: False for key in self.LIMIT_KEYS}
 
         self.status.program_units.notify(self.updateUnits, 'string')
+        self.status.g5x_index.notify(self._on_work_offset)
+        self._predefined = predefined_positions()
+        self._predefined.changed.connect(self.predefinedPositionsChanged)
+        self._predefined.changed.connect(self.limitsChanged)
+        # the current loaded tool's offsets: set on each axis, or not
+        self._tool_set = {"x": False, "z": False}
+        self._tool_library.toolsChanged.connect(self._on_tool_state)
+        self._tool_library.currentLoadedToolChanged.connect(self._on_tool_state)
+        self._tool_library.touchedOff.connect(self._on_tool_state)
+        self._on_tool_state()
         self.positions.notify(self.updateValues)
         self.positions.notify(self.onAbsPositionUpdated)
         self.limitsHandler.onLimitsChanged.connect(self.onMachineLimitsChanged)
@@ -114,6 +152,16 @@ class TeachInLatheDroViewModel(QObject):
     @pyqtProperty(bool, notify=droChanged)
     def xSecondaryVisible(self):
         return self._x_secondary_visible
+
+    @pyqtProperty(str, notify=droChanged)
+    def xMachineValue(self):
+        """X in machine coordinates, on the radius."""
+        return self._fmt % self.currentXMachineValue
+
+    @pyqtProperty(str, notify=droChanged)
+    def zMachineValue(self):
+        """Z in machine coordinates."""
+        return self._fmt % self.currentZMachineValue
 
     @pyqtProperty(str, notify=droChanged)
     def zPrimaryValue(self):
@@ -203,7 +251,7 @@ class TeachInLatheDroViewModel(QObject):
     @pyqtSlot(str)
     def teachLimit(self, key):
         key = str(key)
-        if key not in self.LIMIT_KEYS:
+        if key not in self.LIMIT_KEYS or not self._limit_available(key):
             return
         self.limit_values[key] = self._format_limit(self._teach_value_for_key(key))
         self.toggle_enabled[key] = True
@@ -213,7 +261,11 @@ class TeachInLatheDroViewModel(QObject):
         if key.startswith("x"):
             factor = 2.0 if self.isDiameterMode else 1.0
             return factor * self.positions.teachInX()
-        if key.startswith("z") or key == "tailstock":
+        if key == "tailstock":
+            # the tailstock is the machine's, whatever the tool: where the
+            # axis is, G53, no offset
+            return self.positions.teachInZ(machineCoordinate=True)
+        if key.startswith("z"):
             return self.positions.teachInZ()
         return 0
 
@@ -230,6 +282,8 @@ class TeachInLatheDroViewModel(QObject):
     @pyqtSlot(str)
     def toggleLimit(self, key):
         key = str(key)
+        if not self._limit_available(key):
+            return
         match key:
             case "xMinus":
                 self.xMinusLimitToggle()
@@ -293,24 +347,33 @@ class TeachInLatheDroViewModel(QObject):
         self.updateDro()
 
     def updateValues(self, pos=None):
-        self.currentXAbsValue = self.positions.getXPosition().g5xPosition
-        self.currentZAbsValue = self.positions.getZPosition().g5xPosition
+        x, z = self.positions.getXPosition(), self.positions.getZPosition()
+        self.currentXAbsValue = x.g5xPosition
+        self.currentZAbsValue = z.g5xPosition
+        self.currentXMachineValue = x.machinePosition
+        self.currentZMachineValue = z.machinePosition
         self.updateDro()
 
     @pyqtSlot()
     def xZeroClicked(self):
+        if not self._tool_set["x"]:
+            return
         self.isXAbs = False
         self.lastXAbsValue = self.currentXAbsValue
         self.updateDro()
 
     @pyqtSlot()
     def zZeroClicked(self):
+        if not self._tool_set["z"]:
+            return
         self.isZAbs = False
         self.lastZAbsValue = self.currentZAbsValue
         self.updateDro()
 
     @pyqtSlot()
     def xAbsRelClicked(self):
+        if not self._tool_set["x"]:
+            return
         self.isXAbs = not self.isXAbs
         if self.isXAbs:
             self.lastXAbsValue = 0
@@ -318,6 +381,8 @@ class TeachInLatheDroViewModel(QObject):
 
     @pyqtSlot()
     def zAbsRelClicked(self):
+        if not self._tool_set["z"]:
+            return
         self.isZAbs = not self.isZAbs
         if self.isZAbs:
             self.lastZAbsValue = 0
@@ -356,10 +421,241 @@ class TeachInLatheDroViewModel(QObject):
             datum_value = float(value)
         except Exception:
             return
+        if not self._tool_set["z"]:
+            # A tool with no Z offset yet: this point is its Z - the offset
+            # taken here, the tool reading the value here - as touching off
+            # Z at it and setting the datum there would. The datum stays.
+            if not self._tool_library.current_loaded_tool:
+                self.actionRejected.emit("No tool loaded to set the datum with")
+                return
+            self._tool_library.touch_off("z", datum_value)
+            return
         issue_mdi(f"G10 L20 P{self._current_g5x_index()} Z{datum_value:.3f}")
 
     def onJoystickFeedingChanged(self, value):
         self._is_feeding = bool(value)
+        self.workOffsetChanged.emit()
+
+    # ── the predefined positions: whether each is set ─────────────────────
+
+    @pyqtProperty(bool, notify=predefinedPositionsChanged)
+    def toolChangeSet(self):
+        """M6: a tool change position set, not the INI's (predefined_positions_repository)."""
+        return self._predefined.tool_change_set
+
+    @pyqtProperty(bool, notify=predefinedPositionsChanged)
+    def g28Set(self):
+        return self._predefined.g28_set
+
+    @pyqtProperty(bool, notify=predefinedPositionsChanged)
+    def g30Set(self):
+        return self._predefined.g30_set
+
+    # ── setting them, on the back of the limits panel ─────────────────────
+
+    @pyqtProperty("QVariant", notify=toolDrawingChanged)
+    def currentToolOutline(self):
+        """The current loaded tool as the backplot draws it, flat, in mm from
+        its tip (X a radius): {loop, rings, lines}, each point [x, z]; null
+        with no tool, or one the Tool Library cannot describe."""
+        from teachinlathe.ui.tabs.programs.backplot import tool_source
+        from teachinlathe.ui.tabs.programs.backplot.actors.insert_tool import plane_outline
+        tool_no = self._tool_library.current_loaded_tool
+        drawing = tool_source.describe(tool_no, repository=self._tool_library) if tool_no else None
+        key = (tool_no, drawing)
+        if key != self._tool_outline_key:
+            outline = plane_outline(drawing) if drawing is not None else None
+            if outline is not None:
+                outline = {name: ([list(p) for p in value] if name == "loop"
+                                  else [[list(p) for p in line] for line in value])
+                           for name, value in outline.items()}
+            self._tool_outline, self._tool_outline_key = outline, key
+        return self._tool_outline
+
+    @pyqtProperty("QVariant", notify=droChanged)
+    def workOffsetOrigin(self):
+        """Where the work offset in use (G54...) has its zero, machine
+        coordinates (G53, X a radius): its offsets and G92's - as AXIS draws
+        it, the same whatever the tool. Its name too."""
+        stat = self.status.stat
+        x = stat.g5x_offset[0] + stat.g92_offset[0]
+        z = stat.g5x_offset[2] + stat.g92_offset[2]
+        return {"x": float(x), "z": float(z), "name": self.workOffsetName}
+
+    @pyqtProperty("QVariant", notify=droChanged)
+    def toolTipPosition(self):
+        """Where the current loaded tool's tip is, machine coordinates (G53,
+        X a radius): the machine position - the point a tool without offsets
+        has its tip on - less the tool offset in use, as AXIS draws the tool."""
+        offset = self.status.stat.tool_offset
+        return {"x": float(self.currentXMachineValue) - offset[0],
+                "z": float(self.currentZMachineValue) - offset[2]}
+
+    @pyqtProperty(float, notify=droChanged)
+    def machineXValue(self):
+        """The machine position X, G53 - a radius - as a number: where the
+        drawing's cross is."""
+        return float(self.currentXMachineValue)
+
+    @pyqtProperty(float, notify=droChanged)
+    def machineZValue(self):
+        return float(self.currentZMachineValue)
+
+    @pyqtSlot()
+    def teachToolChange(self):
+        """The tool change position (M6) where the machine is now (G53)."""
+        self._predefined.set_tool_change(x=float(self.currentXMachineValue), z=float(self.currentZMachineValue))
+        self.noticeShown.emit("M6 position set to the machine position")
+
+    @pyqtSlot()
+    def teachG28(self):
+        """G28 where the machine is now: G28.1."""
+        self._teach_position("G28.1", "G28")
+
+    @pyqtSlot()
+    def teachG30(self):
+        self._teach_position("G30.1", "G30")
+
+    def _teach_position(self, command, name):
+        if self._is_feeding:
+            self.actionRejected.emit(f"Setting {name} not allowed when power feeding")
+            return
+        ready, why = command_repository().can_issue_mdi()
+        if not ready:
+            self.actionRejected.emit(why)
+            return
+        if issue_mdi(command):
+            self.noticeShown.emit(f"{name} set to the machine position")
+
+    # ── the current loaded tool: whether its offsets are set ──────────────
+
+    @pyqtProperty(bool, notify=toolStateChanged)
+    def xToolSet(self):
+        """The current loaded tool has its X offset: its X coordinate means
+        something - else none is shown, and its X tool limits are off."""
+        return self._tool_set["x"]
+
+    @pyqtProperty(bool, notify=toolStateChanged)
+    def zToolSet(self):
+        return self._tool_set["z"]
+
+    def _limit_available(self, key):
+        """A tool limit only with the tool's offset on its axis; the machine's
+        always."""
+        for axis, keys in self.TOOL_LIMIT_KEYS.items():
+            if key in keys:
+                return self._tool_set[axis]
+        return True
+
+    def _on_tool_state(self, *_args):
+        self._tool_outline_key = None
+        self.toolDrawingChanged.emit()
+        holder = self._tool_library.current_holder
+        has_tool = holder is not None and holder.has_tool
+        state = {"x": has_tool and holder.x_touched, "z": has_tool and holder.z_touched}
+        if state == self._tool_set:
+            return
+        self._tool_set = state
+        for axis, is_set in state.items():
+            if is_set:
+                continue
+            # nothing relative to a coordinate there is none of
+            if axis == "x":
+                self.isXAbs, self.lastXAbsValue = True, 0
+            else:
+                self.isZAbs, self.lastZAbsValue = True, 0
+            # and no tool limit left on, kept to an offset the tool has not
+            for key in self.TOOL_LIMIT_KEYS[axis]:
+                if self.limit_status[key] is not LimitStatus.DISABLED:
+                    self._turn_off_tool_limit(key)
+        self.toolStateChanged.emit()
+        self.limitsChanged.emit()
+        self.updateDro()
+
+    def _turn_off_tool_limit(self, key):
+        self.limit_status[key] = LimitStatus.DISABLED
+        {"xMinus": self.limitsHandler.setXMinusLimitActive,
+         "xPlus": self.limitsHandler.setXPlusLimitActive,
+         "zMinus": self.limitsHandler.setZMinusLimitActive,
+         "zPlus": self.limitsHandler.setZPlusLimitActive}[key](False)
+
+    # ── the machine limits, as drawn on the back of the limits panel ──────
+
+    @pyqtProperty("QVariant", notify=limitsChanged)
+    def machineLimitsMap(self):
+        """What the machine limits' drawing shows, machine coordinates (G53,
+        X a radius): ``travel`` {xMin, xMax, zMin, zMax} - the INI's axis
+        limits -, ``home`` {x, z} - where homing leaves the axes, the INI's
+        HOME -, ``tailstock`` its limit's Z (null with none) and whether it
+        is on, ``chuck`` the chuck limit's Z - its card's, 0 until it is set
+        (``chuckSet``) -, and
+        ``positions`` [{name, x, z, set}] - M6 (the tool change position), G28, G30."""
+        from teachinlathe.core.ini_repository import ini_repository
+        travel = self.limitsHandler.getDefaultMachineLimits()
+        try:
+            tailstock = float(str(self.limit_values["tailstock"]).strip())
+        except ValueError:
+            tailstock = None
+        try:
+            chuck = float(str(self.limit_values["chuck"]).strip())
+        except ValueError:
+            chuck = None
+        tc_x, tc_z, _custom = self._predefined.tool_change_position()
+        positions = [{"name": "M6", "x": tc_x, "z": tc_z, "set": self._predefined.tool_change_set}]
+        for name, (x, z), is_set in (("G28", self._predefined.g28_position(), self._predefined.g28_set),
+                                     ("G30", self._predefined.g30_position(), self._predefined.g30_set)):
+            positions.append({"name": name, "x": x, "z": z, "set": is_set})
+        return {
+            "travel": {"xMin": travel.x_min_limit, "xMax": travel.x_max_limit,
+                       "zMin": travel.z_min_limit, "zMax": travel.z_max_limit},
+            "home": {"x": ini_repository().axis_home("x"), "z": ini_repository().axis_home("z")},
+            "tailstock": tailstock,
+            "tailstockOn": self.limit_status["tailstock"] is not LimitStatus.DISABLED,
+            "chuck": chuck if chuck is not None else 0.0,
+            "chuckSet": chuck is not None,
+            "positions": [p for p in positions if p["x"] is not None and p["z"] is not None],
+        }
+
+    # ── the work offset (G54...) the tool coordinates are in ──────────────
+
+    @pyqtProperty(str, notify=workOffsetChanged)
+    def workOffsetName(self):
+        """The work offset in use: "G54" ... - "G59.3" past the ones offered."""
+        from teachinlathe.ui.tabs.programs.ProgramsDroViewModel import WORK_OFFSETS
+        return WORK_OFFSETS.get(self._current_g5x_index(), "G54")
+
+    @pyqtProperty("QStringList", constant=True)
+    def workOffsets(self):
+        return list(self.WORK_OFFSETS)
+
+    @pyqtProperty(bool, notify=workOffsetChanged)
+    def workOffsetSelectable(self):
+        """Whether another can be chosen: not while feeding - no MDI then."""
+        return not self._is_feeding
+
+    @pyqtSlot(str)
+    def selectWorkOffset(self, name):
+        """Put work offset ``name`` ("G55"...) in use, by MDI; the operator is
+        told once it is (noticeShown)."""
+        if name not in self.WORK_OFFSETS or name == self.workOffsetName:
+            return
+        if self._is_feeding:
+            self.actionRejected.emit("Changing the work coordinate system not allowed when power feeding")
+            return
+        ready, why = command_repository().can_issue_mdi()
+        if not ready:
+            self.actionRejected.emit(why)
+            return
+        self._work_offset_asked = name
+        if not issue_mdi(name):
+            self._work_offset_asked = None
+            self.actionRejected.emit(f"Could not change the work coordinate system to {name}")
+
+    def _on_work_offset(self, *_args):
+        self.workOffsetChanged.emit()
+        if self._work_offset_asked is not None and self.workOffsetName == self._work_offset_asked:
+            self._work_offset_asked = None
+            self.noticeShown.emit(f"Work Coordinate System changed to {self.workOffsetName}")
 
     def _current_g5x_index(self):
         try:

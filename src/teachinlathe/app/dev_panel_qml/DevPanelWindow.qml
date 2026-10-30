@@ -427,12 +427,13 @@ Window {
                 onPressed: (mouse) => wheel.dragAngle = wheel.pointerAngle(mouse.x, mouse.y)
                 onPositionChanged: (mouse) => {
                     var now = wheel.pointerAngle(mouse.x, mouse.y)
-                    var delta = now - wheel.dragAngle
-                    if (delta > 180) delta -= 360
-                    if (delta < -180) delta += 360
+                    // the shortest way round from where the last detent was
+                    // taken, so turn after turn adds up
+                    var delta = ((now - wheel.dragAngle) % 360 + 540) % 360 - 180
                     var detents = Math.trunc(delta / wheel.degreesPerDetent)
                     if (detents !== 0) {
-                        wheel.dragAngle += detents * wheel.degreesPerDetent
+                        // kept within one turn, as the pointer's angle is
+                        wheel.dragAngle = (wheel.dragAngle + detents * wheel.degreesPerDetent) % 360
                         wheel.turn(detents)
                     }
                 }

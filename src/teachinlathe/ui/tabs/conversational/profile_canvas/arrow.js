@@ -1,6 +1,8 @@
 // Leader arrows from something drawn on the canvas to a box laid over it.
 // Every one ends the same way: at a dot in front of the middle of the box's
-// left side, its arrowhead's tip on the dot's edge (paintToBox).
+// left side, its arrowhead's tip on the dot's edge (paintToBox) - or, for a
+// box above what it points from, under the middle of its bottom side
+// (paintUpToBox).
 .pragma library
 
 // how thick the arrows are drawn, and the borders of the boxes they point to
@@ -17,11 +19,28 @@ function anchorOf(rect) {
     return { x: rect.x - dotRadius, y: rect.y + rect.height / 2 }
 }
 
+// The centre of the dot an arrow up to box ``rect`` ends at: touching the
+// middle of its bottom side.
+function anchorBelow(rect) {
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height + dotRadius }
+}
+
+// An arrow from (sx, sy) up to box ``rect``, above it: as paintToBox, the
+// dot under the middle of the box's bottom side.
+function paintUpToBox(ctx, sx, sy, rect, color, gap) {
+    paintToDot(ctx, sx, sy, anchorBelow(rect), color, gap, false)
+}
+
 // An arrow from (sx, sy), starting ``gap`` px out, to box ``rect``: the dot
 // in front of the box, and the arrow's tip on the dot's edge; with
 // ``startDot``, a dot where the arrow starts as well.
 function paintToBox(ctx, sx, sy, rect, color, gap, startDot) {
-    var dot = anchorOf(rect)
+    paintToDot(ctx, sx, sy, anchorOf(rect), color, gap, startDot)
+}
+
+// An arrow from (sx, sy) to the dot centred on ``dot`` {x, y}, its tip on
+// the dot's edge.
+function paintToDot(ctx, sx, sy, dot, color, gap, startDot) {
     paintDot(ctx, dot.x, dot.y, color)
 
     var dx = dot.x - sx, dy = dot.y - sy

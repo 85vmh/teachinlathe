@@ -23,6 +23,9 @@ Item {
     // turning (spindle, feed, joystick, handwheels), dro and tools, each
     // handed to its panels below.
     readonly property var viewModel: ManualTabViewModel
+    // The title bar's area for what this tab shows there (AppShell
+    // .titleBarArea): the DRO's box titles and its work offset choice.
+    property Item titleBar: null
 
     // ── Color constants ───────────────────────────────────────────────
     readonly property color pageBackgroundColor: Theme.surface
@@ -134,8 +137,57 @@ Item {
         }
     }
 
+    // ── The menu's drawer ─────────────────────────────────────────────
+    // From the left, as high as the window, when the title bar's menu is
+    // tapped (ManualTabViewModel.menuRequested). Opened by the menu only: a
+    // swipe in from the screen's edge does not pull it out.
+    Drawer {
+        id: menuDrawer
+        // over the whole window - the title bar and the tab bar too - not
+        // this tab's area
+        parent: root.Overlay.overlay
+        edge: Qt.LeftEdge
+        width: root.menuDrawerWidth
+        height: parent ? parent.height : 0
+        dragMargin: 0
+        modal: true
+        // a tap anywhere outside it closes it, sliding back out
+        closePolicy: Popup.CloseOnPressOutside | Popup.CloseOnEscape
+        enter: Transition {
+            NumberAnimation { property: "position"; to: 1.0; duration: root.menuDrawerSlideMs; easing.type: Easing.OutCubic }
+        }
+        exit: Transition {
+            NumberAnimation { property: "position"; to: 0.0; duration: root.menuDrawerSlideMs; easing.type: Easing.InCubic }
+        }
+        background: Rectangle {
+            color: Theme.surface
+            border.color: Theme.outline
+            border.width: Theme.hairline
+        }
+
+        Label {
+            anchors.centerIn: parent
+            text: "Coming soon"
+            color: Theme.foregroundMuted
+            font.pixelSize: Theme.fontTitle
+        }
+    }
+
+    Connections {
+        target: root.viewModel
+        function onMenuRequested() { menuDrawer.open() }
+    }
+
     // ── Layout constants ──────────────────────────────────────────────
-    readonly property int droHeight: 190
+    readonly property int menuDrawerWidth: 500
+    readonly property int menuDrawerSlideMs: 250
+    readonly property int limitsFlipMs: 400
+    // the DRO's boxes - their tops level with the tool list's, their padding
+    // Theme.droBoxPadding - and under them the gap the columns have between
+    // them (columnGap) to the Limits
+    readonly property int droHeight: Math.ceil(dro.boxesHeight) + columnGap
+    // between the left column and the tool list
+    readonly property int columnGap: 6
     readonly property int sectionHeaderHeight: 39
     readonly property int panelHeight: 241
     readonly property int toolListWidth: 600
@@ -152,7 +204,7 @@ Item {
 
     RowLayout {
         anchors.fill: parent
-        spacing: 6
+        spacing: root.columnGap
 
         // ── Left column ───────────────────────────────────────────────
         ColumnLayout {
@@ -162,7 +214,10 @@ Item {
 
             // DRO (fixed height — two axis readouts)
             TeachInLatheDroRoot {
+                id: dro
                 viewModel: root.viewModel.dro
+                onPresetPositionsClicked: limitsFlip.flipped = !limitsFlip.flipped
+                titleBar: root.titleBar
                 Layout.fillWidth: true
                 Layout.minimumHeight: root.droHeight
                 Layout.preferredHeight: root.droHeight
@@ -171,226 +226,262 @@ Item {
                 onOpenNumPadRequested: function(field) { root.openNumpad(field) }
             }
 
-            // Limits (scalable — fills all remaining vertical space)
-            LimitsPanel {
-                viewModel: root.viewModel.dro
+            // Everything under the DRO - the limits (scalable, all the height
+            // left), the panels' headers and the panels. The DRO's preset
+            // positions tapped turn it all over, about its horizontal axis,
+            // to the machine limits drawn, and back.
+            Flipable {
+                id: limitsFlip
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                onOpenNumPadRequested: function(field) { root.openNumpad(field) }
-            }
 
-            // Section headers (fixed height), each placed over its panel
-            // below: Handwheels, Joystick Automatic Feed, Spindle.
-            Item {
-                Layout.fillWidth: true
-                Layout.minimumHeight: root.sectionHeaderHeight
-                Layout.preferredHeight: root.sectionHeaderHeight
-                Layout.maximumHeight: root.sectionHeaderHeight
+                property bool flipped: false
 
-                // "Spindle" label
-                Text {
-                    x: spindlePanel.x + 70; y: 0; width: 106; height: parent.height
-                    text: root.viewModel.turning.spindleTitle
-                    font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                // Spindle override %
-                Text {
-                    x: spindlePanel.x + 185; y: 0; width: 71; height: parent.height
-                    text: root.viewModel ? (root.viewModel.turning.spindleOverridePercent + "%") : "0%"
-                    font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
-                    verticalAlignment: Text.AlignVCenter
-                }
-                // "Manual Feed" label
-                Text {
-                    width: 156; height: parent.height; y: 0
-                    x: handwheelsPanel.x + (handwheelsPanel.width - width) / 2
-                    text: "Handwheels"
-                    font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                // "Automatic Feed" label
-                Text {
-                    x: joystickFeedFrame.x + 166; y: 0; width: 181; height: parent.height
-                    text: "Joystick Automatic Feed"
-                    font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                // Feed override %
-                Text {
-                    x: joystickFeedFrame.x + 361; y: 0; width: 76; height: parent.height
-                    text: root.viewModel ? (root.viewModel.turning.feedOverridePercent + "%") : "0%"
-                    font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
+                // everything under the DRO, to the tab bar: the limits, the
+                // panels' headers and the panels
+                front: ColumnLayout {
+                    anchors.fill: parent
+                    enabled: !limitsFlip.flipped
+                    spacing: 0
 
-            // Control panels (fixed height)
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.minimumHeight: root.panelHeight
-                Layout.preferredHeight: root.panelHeight
-                Layout.maximumHeight: root.panelHeight
-                spacing: root.panelMargin
+                    LimitsPanel {
+                        viewModel: root.viewModel.dro
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        onOpenNumPadRequested: function(field) { root.openNumpad(field) }
+                    }
 
-                ManualHandwheelsPanel {
-                    id: handwheelsPanel
-                    viewModel: root.viewModel.turning
-                    Layout.preferredWidth: root.handwheelsPanelWidth
-                    Layout.fillHeight: true
-                }
+                    // Section headers (fixed height), each placed over its panel
+                    // below: Handwheels, Joystick Automatic Feed, Spindle.
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: root.sectionHeaderHeight
+                        Layout.preferredHeight: root.sectionHeaderHeight
+                        Layout.maximumHeight: root.sectionHeaderHeight
 
-                // Joystick + Feed share a single bordered box
-                Rectangle {
-                    id: joystickFeedFrame
-                    readonly property bool angleFeedActive: root.viewModel.turning.angleFeedActive
-                    property color frameBorderColor: root.cardBorderColor
-                    property real glowOpacity: 0
-                    readonly property int glowDurationMs: 200
-                    readonly property int glowBorderWidth: 10
-                    readonly property int glowInset: 1
-                    readonly property real glowMaxOpacity: 0.7
-
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    color: root.cardBackgroundColor
-                    border.color: frameBorderColor
-                    border.width: Theme.hairline
-                    radius: Theme.radius
-
-                    onAngleFeedActiveChanged: {
-                        if (!angleFeedActive) {
-                            frameBorderColor = root.cardBorderColor
-                            glowOpacity = 0
+                        // "Spindle" label
+                        Text {
+                            x: spindlePanel.x + 70; y: 0; width: 106; height: parent.height
+                            text: root.viewModel.turning.spindleTitle
+                            font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        // Spindle override %
+                        Text {
+                            x: spindlePanel.x + 185; y: 0; width: 71; height: parent.height
+                            text: root.viewModel ? (root.viewModel.turning.spindleOverridePercent + "%") : "0%"
+                            font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        // "Manual Feed" label
+                        Text {
+                            width: 156; height: parent.height; y: 0
+                            x: handwheelsPanel.x + (handwheelsPanel.width - width) / 2
+                            text: "Handwheels"
+                            font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        // "Automatic Feed" label
+                        Text {
+                            x: joystickFeedFrame.x + 166; y: 0; width: 181; height: parent.height
+                            text: "Joystick Automatic Feed"
+                            font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        // Feed override %
+                        Text {
+                            x: joystickFeedFrame.x + 361; y: 0; width: 76; height: parent.height
+                            text: root.viewModel ? (root.viewModel.turning.feedOverridePercent + "%") : "0%"
+                            font.pixelSize: Theme.fontLarge; font.family: "Cantarell"
+                            verticalAlignment: Text.AlignVCenter
                         }
                     }
 
-                    SequentialAnimation {
-                        running: joystickFeedFrame.angleFeedActive
-                        loops: Animation.Infinite
-
-                        ParallelAnimation {
-                            ColorAnimation {
-                                target: joystickFeedFrame
-                                property: "frameBorderColor"
-                                to: root.angleFeedGlowColor
-                                duration: joystickFeedFrame.glowDurationMs
-                                easing.type: Easing.InOutQuad
-                            }
-                            NumberAnimation {
-                                target: joystickFeedFrame
-                                property: "glowOpacity"
-                                to: joystickFeedFrame.glowMaxOpacity
-                                duration: joystickFeedFrame.glowDurationMs
-                                easing.type: Easing.InOutQuad
-                            }
-                        }
-
-                        ParallelAnimation {
-                            ColorAnimation {
-                                target: joystickFeedFrame
-                                property: "frameBorderColor"
-                                to: root.cardBorderColor
-                                duration: joystickFeedFrame.glowDurationMs
-                                easing.type: Easing.InOutQuad
-                            }
-                            NumberAnimation {
-                                target: joystickFeedFrame
-                                property: "glowOpacity"
-                                to: 0
-                                duration: joystickFeedFrame.glowDurationMs
-                                easing.type: Easing.InOutQuad
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: joystickFeedFrame.glowInset
-                        radius: Math.max(0, joystickFeedFrame.radius - joystickFeedFrame.glowInset)
-                        color: "transparent"
-                        opacity: joystickFeedFrame.glowOpacity
-                        z: 2
-
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            height: 18
-                            gradient: Gradient {
-                                GradientStop { position: 0.0; color: root.angleFeedGlowColor }
-                                GradientStop { position: 1.0; color: "transparent" }
-                            }
-                        }
-
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
-                            height: 18
-                            gradient: Gradient {
-                                GradientStop { position: 0.0; color: "transparent" }
-                                GradientStop { position: 1.0; color: root.angleFeedGlowColor }
-                            }
-                        }
-
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.top: parent.top
-                            anchors.bottom: parent.bottom
-                            width: 18
-                            gradient: Gradient {
-                                orientation: Gradient.Horizontal
-                                GradientStop { position: 0.0; color: root.angleFeedGlowColor }
-                                GradientStop { position: 1.0; color: "transparent" }
-                            }
-                        }
-
-                        Rectangle {
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            anchors.bottom: parent.bottom
-                            width: 18
-                            gradient: Gradient {
-                                orientation: Gradient.Horizontal
-                                GradientStop { position: 0.0; color: "transparent" }
-                                GradientStop { position: 1.0; color: root.angleFeedGlowColor }
-                            }
-                        }
-                    }
-
+                    // Control panels (fixed height)
                     RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: joystickFeedFrame.glowBorderWidth
-                        spacing: 0
-                        z: 1
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: root.panelHeight
+                        Layout.preferredHeight: root.panelHeight
+                        Layout.maximumHeight: root.panelHeight
+                        spacing: root.panelMargin
 
-                        ManualJoystickPanel {
-                            id: joystickPanel
-                            Layout.preferredWidth: root.joystickPanelWidth
-                            Layout.fillHeight: true
+                        ManualHandwheelsPanel {
+                            id: handwheelsPanel
                             viewModel: root.viewModel.turning
+                            Layout.preferredWidth: root.handwheelsPanelWidth
+                            Layout.fillHeight: true
                         }
 
-                        ManualFeedPanel {
-                            id: feedPanel
-                            viewModel: root.viewModel.turning
+                        // Joystick + Feed share a single bordered box
+                        Rectangle {
+                            id: joystickFeedFrame
+                            readonly property bool angleFeedActive: root.viewModel.turning.angleFeedActive
+                            property color frameBorderColor: root.cardBorderColor
+                            property real glowOpacity: 0
+                            readonly property int glowDurationMs: 200
+                            readonly property int glowBorderWidth: 10
+                            readonly property int glowInset: 1
+                            readonly property real glowMaxOpacity: 0.7
+
                             Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            color: root.cardBackgroundColor
+                            border.color: frameBorderColor
+                            border.width: Theme.hairline
+                            radius: Theme.radius
+
+                            onAngleFeedActiveChanged: {
+                                if (!angleFeedActive) {
+                                    frameBorderColor = root.cardBorderColor
+                                    glowOpacity = 0
+                                }
+                            }
+
+                            SequentialAnimation {
+                                running: joystickFeedFrame.angleFeedActive
+                                loops: Animation.Infinite
+
+                                ParallelAnimation {
+                                    ColorAnimation {
+                                        target: joystickFeedFrame
+                                        property: "frameBorderColor"
+                                        to: root.angleFeedGlowColor
+                                        duration: joystickFeedFrame.glowDurationMs
+                                        easing.type: Easing.InOutQuad
+                                    }
+                                    NumberAnimation {
+                                        target: joystickFeedFrame
+                                        property: "glowOpacity"
+                                        to: joystickFeedFrame.glowMaxOpacity
+                                        duration: joystickFeedFrame.glowDurationMs
+                                        easing.type: Easing.InOutQuad
+                                    }
+                                }
+
+                                ParallelAnimation {
+                                    ColorAnimation {
+                                        target: joystickFeedFrame
+                                        property: "frameBorderColor"
+                                        to: root.cardBorderColor
+                                        duration: joystickFeedFrame.glowDurationMs
+                                        easing.type: Easing.InOutQuad
+                                    }
+                                    NumberAnimation {
+                                        target: joystickFeedFrame
+                                        property: "glowOpacity"
+                                        to: 0
+                                        duration: joystickFeedFrame.glowDurationMs
+                                        easing.type: Easing.InOutQuad
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: joystickFeedFrame.glowInset
+                                radius: Math.max(0, joystickFeedFrame.radius - joystickFeedFrame.glowInset)
+                                color: "transparent"
+                                opacity: joystickFeedFrame.glowOpacity
+                                z: 2
+
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    height: 18
+                                    gradient: Gradient {
+                                        GradientStop { position: 0.0; color: root.angleFeedGlowColor }
+                                        GradientStop { position: 1.0; color: "transparent" }
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    height: 18
+                                    gradient: Gradient {
+                                        GradientStop { position: 0.0; color: "transparent" }
+                                        GradientStop { position: 1.0; color: root.angleFeedGlowColor }
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.top: parent.top
+                                    anchors.bottom: parent.bottom
+                                    width: 18
+                                    gradient: Gradient {
+                                        orientation: Gradient.Horizontal
+                                        GradientStop { position: 0.0; color: root.angleFeedGlowColor }
+                                        GradientStop { position: 1.0; color: "transparent" }
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    anchors.bottom: parent.bottom
+                                    width: 18
+                                    gradient: Gradient {
+                                        orientation: Gradient.Horizontal
+                                        GradientStop { position: 0.0; color: "transparent" }
+                                        GradientStop { position: 1.0; color: root.angleFeedGlowColor }
+                                    }
+                                }
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: joystickFeedFrame.glowBorderWidth
+                                spacing: 0
+                                z: 1
+
+                                ManualJoystickPanel {
+                                    id: joystickPanel
+                                    Layout.preferredWidth: root.joystickPanelWidth
+                                    Layout.fillHeight: true
+                                    viewModel: root.viewModel.turning
+                                }
+
+                                ManualFeedPanel {
+                                    id: feedPanel
+                                    viewModel: root.viewModel.turning
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    onOpenNumPadRequested: function(field) { root.openNumpad(field) }
+                                }
+                            }
+                        }
+
+                        ManualSpindlePanel {
+                            id: spindlePanel
+                            viewModel: root.viewModel.turning
+                            Layout.preferredWidth: root.spindlePanelWidth
                             Layout.fillHeight: true
                             onOpenNumPadRequested: function(field) { root.openNumpad(field) }
                         }
                     }
                 }
-
-                ManualSpindlePanel {
-                    id: spindlePanel
-                    viewModel: root.viewModel.turning
-                    Layout.preferredWidth: root.spindlePanelWidth
-                    Layout.fillHeight: true
+                back: MachineLimitsView {
+                    anchors.fill: parent
+                    enabled: limitsFlip.flipped
+                    viewModel: root.viewModel.dro
                     onOpenNumPadRequested: function(field) { root.openNumpad(field) }
+                }
+
+                transform: Rotation {
+                    id: limitsRotation
+                    origin.x: limitsFlip.width / 2
+                    origin.y: limitsFlip.height / 2
+                    axis { x: 1; y: 0; z: 0 }
+                    angle: limitsFlip.flipped ? 180 : 0
+                    Behavior on angle {
+                        NumberAnimation { duration: root.limitsFlipMs; easing.type: Easing.InOutQuad }
+                    }
                 }
             }
         }
@@ -401,5 +492,24 @@ Item {
             Layout.fillHeight: true
             viewModel: root.viewModel.tools
         }
+    }
+
+    // The tool list's title, in the title bar over its middle - as the DRO's
+    // boxes have theirs (TeachInLatheDroRoot) - while this tab is up.
+    Text {
+        parent: root.titleBar
+        visible: root.titleBar !== null && root.visible
+        anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+        x: {
+            // the list's x and width, and both sides' widths, so the binding
+            // follows them - the window resized moves them all
+            var middle = toolList.x + toolList.width / 2
+            var resized = root.width + (root.titleBar ? root.titleBar.width : 0)
+            return (root.titleBar ? toolList.parent.mapToItem(root.titleBar, middle, 0).x : 0) - width / 2
+        }
+        text: "Tool Library"
+        color: Theme.foregroundSubtle
+        font.pixelSize: Theme.fontLarge
+        font.bold: true
     }
 }

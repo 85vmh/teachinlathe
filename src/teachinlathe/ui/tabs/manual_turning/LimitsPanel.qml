@@ -6,7 +6,8 @@
 //            turns down and ends in an arrow on the card's top. The cards
 //            hang below the line, into the corners the cross leaves free.
 //   Row 2 — Tool Limits cross: Limit X- (top) | Z-/label/Z+ (middle) | Limit X+ (bottom)
-//            An arrow from the label to each limit's box.
+//            An arrow from the label to each limit's box. A tool limit is off
+//            without the current loaded tool's offset on its axis.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -334,6 +335,7 @@ Rectangle {
                 settingName: "smart_numpad.x-minus-limit"
                 description: "Tool limit on X-"
                 status: root.viewModel.xMinusStatus
+                available: root.viewModel.xToolSet
                 toggleText: root.viewModel.xMinusToggleText
                 toggleEnabled: root.viewModel.xMinusToggleEnabled
                 onTeachClicked: root.viewModel.teachLimit("xMinus")
@@ -353,6 +355,7 @@ Rectangle {
                 settingName: "smart_numpad.x-plus-limit"
                 description: "Tool limit on X+"
                 status: root.viewModel.xPlusStatus
+                available: root.viewModel.xToolSet
                 toggleText: root.viewModel.xPlusToggleText
                 toggleEnabled: root.viewModel.xPlusToggleEnabled
                 onTeachClicked: root.viewModel.teachLimit("xPlus")
@@ -372,6 +375,7 @@ Rectangle {
                 settingName: "smart_numpad.z-minus-limit"
                 description: "Tool limit on Z-"
                 status: root.viewModel.zMinusStatus
+                available: root.viewModel.zToolSet
                 toggleText: root.viewModel.zMinusToggleText
                 toggleEnabled: root.viewModel.zMinusToggleEnabled
                 onTeachClicked: root.viewModel.teachLimit("zMinus")
@@ -391,6 +395,7 @@ Rectangle {
                 settingName: "smart_numpad.z-plus-limit"
                 description: "Tool limit on Z+"
                 status: root.viewModel.zPlusStatus
+                available: root.viewModel.zToolSet
                 toggleText: root.viewModel.zPlusToggleText
                 toggleEnabled: root.viewModel.zPlusToggleEnabled
                 onTeachClicked: root.viewModel.teachLimit("zPlus")

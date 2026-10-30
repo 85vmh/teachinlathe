@@ -44,6 +44,12 @@ class TeachInLatheComponent:
     PinAxisLimitXMax = 'axis-limits.x-max'
     PinAxisLimitZMin = 'axis-limits.z-min'
     PinAxisLimitZMax = 'axis-limits.z-max'
+    # The tool change position set on the Manual Turning tab, machine
+    # coordinates (X a radius), for iocontrol.0.tool-change-pos-x/z: with
+    # enable off, M6 goes to the INI's TOOL_CHANGE_POSITION.
+    PinToolChangePositionX = 'tool-change.position.x'
+    PinToolChangePositionZ = 'tool-change.position.z'
+    PinToolChangePositionEnable = 'tool-change.position.enable'
 
     # def __new__(cls, *args, **kwargs):
     #     if not cls._instance:
@@ -109,6 +115,9 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinProgramCompleted, 'bit', 'in')
         self.comp.addPin(self.PinProgramAborted, 'bit', 'in')
         self.comp.addPin(self.PinCycleStartLed, 'bit', 'in')
+        self.comp.addPin(self.PinToolChangePositionX, 'float', 'io')
+        self.comp.addPin(self.PinToolChangePositionZ, 'float', 'io')
+        self.comp.addPin(self.PinToolChangePositionEnable, 'bit', 'io')
         self.comp.ready()
         self.comp.getPin(self.PinToolChangeResponse).value = False
         self.comp.getPin(self.PinToolChangeCanceled).value = False

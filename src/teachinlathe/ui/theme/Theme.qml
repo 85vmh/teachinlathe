@@ -80,6 +80,12 @@ QtObject {
     readonly property int margin:        24
     // between the boxes of an editor screen, and between them and its canvas
     readonly property int innerSpacings: 12
+    // inside the Manual Turning DRO's boxes - the machine coordinates', the
+    // work coordinates' - all round their values and buttons
+    readonly property int droBoxPadding: 8
+    // the title bar's actions in from its edges - the menu's, on the left,
+    // is what the Manual Turning DRO lines its axis letters up with
+    readonly property int titleBarMargin: 16
 
     // The zoom in, zoom out, fit and mirror buttons over every profile
     // canvas and the backplot: each one's side, how far in from the canvas's

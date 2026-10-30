@@ -63,7 +63,9 @@ readonly property var tabOrder: ["manual", "tools", "conversational", "programs"
                 anchors.fill: parent
                 currentIndex: root.currentTabIndex
 
-                ManualTurningRoot {}
+                ManualTurningRoot {
+                    titleBar: shell.titleBarArea
+                }
 
                 ToolLibraryRoot {}
 

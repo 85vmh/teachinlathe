@@ -20,6 +20,8 @@ Item {
     id: root
 
     default property alias content: contentArea.data
+    // where a screen puts what it shows in the title bar (AppShellTopBar)
+    readonly property alias titleBarArea: topBar.customArea
 
     // Set while a screen is showing full screen: the program run view takes
     // the whole window, the profile editors keep the title bar.

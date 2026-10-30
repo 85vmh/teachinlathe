@@ -249,6 +249,15 @@ class IniRepository:
                       section, low, high)
             return None
 
+    def axis_home(self, axis: str) -> float:
+        """Where *axis* (a letter) is once homed: its joint's ``HOME`` - the
+        joint the letter's place in COORDINATES, as trivkins has it - and 0,
+        LinuxCNC's own, when the INI does not say."""
+        letter = axis.lower()
+        if letter not in self.coordinates:
+            return 0.0
+        return self._float("JOINT_{}".format(self.coordinates.index(letter)), "HOME", 0.0)
+
 
 _INSTANCE: Optional[IniRepository] = None
 

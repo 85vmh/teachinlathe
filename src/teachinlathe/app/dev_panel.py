@@ -20,7 +20,7 @@ import os
 import signal
 import sys
 
-from PyQt6.QtCore import QObject, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QEvent, QObject, Qt, QTimer, QUrl, pyqtProperty, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtQml import QQmlApplicationEngine, qmlRegisterSingletonInstance
 
@@ -49,6 +49,15 @@ SPINDLE_LEVER = {
 }
 
 JOYSTICK_DIRECTIONS = ("x-plus", "x-minus", "z-plus", "z-minus")
+
+#: The arrow keys, held down while the panel has the keyboard: the joystick
+#: that way, as the panel lays it out - X- up, X+ down, Z- left, Z+ right.
+ARROW_KEYS = {
+    Qt.Key.Key_Up: "x-minus",
+    Qt.Key.Key_Down: "x-plus",
+    Qt.Key.Key_Left: "z-minus",
+    Qt.Key.Key_Right: "z-plus",
+}
 
 
 class DevPanelViewModel(QObject):
@@ -241,9 +250,12 @@ class DevPanelViewModel(QObject):
 
     @pyqtSlot(str, int)
     def turnHandwheel(self, axis, detents):
-        """Turn the X or Z handwheel by *detents* clicks (negative: the other way)."""
+        """Turn the X or Z handwheel by *detents* clicks (negative: the other way).
+        Counted down for a clockwise turn: the HAL's scales are the machine's,
+        whose encoders count that way, so the axis moves the way the wheel on
+        the screen turns."""
         name = "mpg-{}-counts".format(axis)
-        self._set(name, int(self._get(name)) + int(detents) * COUNTS_PER_DETENT)
+        self._set(name, int(self._get(name)) - int(detents) * COUNTS_PER_DETENT)
 
     @pyqtSlot()
     def pressCycleStart(self):
@@ -291,6 +303,21 @@ class DevPanelViewModel(QObject):
             return  # the lever is already held in another direction
         self._write_joystick()
 
+    def holdJoystick(self, direction):
+        """The lever pushed ``direction`` while a key is held: as clicking
+        it, unless it is already held some way. Whether it was."""
+        if direction not in JOYSTICK_DIRECTIONS or self._joystick:
+            return False
+        self._joystick = direction
+        self._write_joystick()
+        return True
+
+    def releaseJoystick(self, direction):
+        """The key let go: back to neutral, if the lever is still that way."""
+        if self._joystick == direction:
+            self._joystick = ""
+            self._write_joystick()
+
     @pyqtSlot(bool)
     def setJoystickRapid(self, pressed):
         if pressed == self._rapid:
@@ -308,11 +335,49 @@ class DevPanelViewModel(QObject):
         self.joystickChanged.emit()
 
 
+class ArrowKeyJog(QObject):
+    """The arrow keys as the joystick, for as long as each is held: an
+    application-wide filter, so they work whichever of the panel's controls
+    has the focus. The repeats of a held key are swallowed; and the panel
+    losing the keyboard lets go of a key held, whose release it would not
+    see."""
+
+    def __init__(self, view_model, parent=None):
+        super().__init__(parent)
+        self._view_model = view_model
+        self._held = None
+
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.Type.ApplicationDeactivate:
+            self._let_go()
+            return False
+        if event.type() not in (QEvent.Type.KeyPress, QEvent.Type.KeyRelease):
+            return False
+        direction = ARROW_KEYS.get(event.key())
+        if direction is None:
+            return False
+        if not event.isAutoRepeat():
+            if event.type() == QEvent.Type.KeyPress:
+                # one at a time, as the lever: a second key held is ignored
+                if self._held is None and self._view_model.holdJoystick(direction):
+                    self._held = direction
+            elif direction == self._held:
+                self._let_go()
+        return True
+
+    def _let_go(self):
+        if self._held is not None:
+            self._view_model.releaseJoystick(self._held)
+            self._held = None
+
+
 def main(argv=None):
     app = QGuiApplication(sys.argv if argv is None else argv)
     app.setApplicationName("TeachInLathe Dev Panel")
 
     view_model = DevPanelViewModel()
+    arrow_keys = ArrowKeyJog(view_model)
+    app.installEventFilter(arrow_keys)
 
     # Creating the HAL component installed LinuxCNC's SIGTERM handler, which
     # raises KeyboardInterrupt under the event loop. halcmd stops userspace

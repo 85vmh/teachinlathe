@@ -33,6 +33,10 @@ RAPID_PERCENTAGE = 'rapid_speeds.percentage'
 HIDE_POINTER = 'interface.hide-pointer'
 SHOW_TOUCHES = 'interface.show-touches'
 GCODE_PROGRESS_DELAY_MS = 'interface.gcode-progress-delay-ms'
+#: The tool change position the operator set, machine coordinates (X a
+#: radius); none until one is - the INI's TOOL_CHANGE_POSITION is used then.
+TOOL_CHANGE_X = 'machine.tool-change-position.x'
+TOOL_CHANGE_Z = 'machine.tool-change-position.z'
 
 
 @dataclass(frozen=True)
@@ -93,6 +97,12 @@ class SettingsRepository(QObject):
                 default=self._ini.default_jog_velocity, value_type=float,
                 min_value=0.0, max_value=self._ini.max_jog_velocity,
                 description='Jog speed, in units per minute'),
+            TOOL_CHANGE_X: SettingSpec(
+                default=None, value_type=float,
+                description='The tool change position set, X in machine coordinates; none: the INI\'s'),
+            TOOL_CHANGE_Z: SettingSpec(
+                default=None, value_type=float,
+                description='The tool change position set, Z in machine coordinates; none: the INI\'s'),
             JOG_SPEED_PERCENTAGE: SettingSpec(
                 default=self._percentage_of(self._ini.default_jog_velocity),
                 value_type=int, min_value=0, max_value=100, persistent=False,
