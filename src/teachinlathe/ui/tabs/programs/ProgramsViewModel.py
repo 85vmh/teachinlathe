@@ -32,6 +32,7 @@ from teachinlathe.programs.model.programs_screen import ProgramsScreen
 from teachinlathe.programs.model.run_time_tracker import RunTimeTracker
 from teachinlathe.programs.logic.simulate_use_case import SimulateUseCase
 from teachinlathe.programs.logic.final_profile_use_case import FinalProfileUseCase
+from teachinlathe.programs.logic.tool_changes_use_case import ToolChangesUseCase
 from teachinlathe.programs.logic.programs_use_case import ProgramsUseCase
 from teachinlathe.ui.tabs.programs.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
 
@@ -95,6 +96,10 @@ class ProgramsViewModel(QObject):
         self._tool_change = ProgramsToolChangeViewModel(self)
         self._screen_index = Screen.FileSystem
         self._run_tracker = RunTimeTracker(self)
+        # the program loaded's next tool, for the tool box; its planner is the
+        # screen's, made at the first program read
+        self._planner = None
+        self._tool_changes = ToolChangesUseCase(self._background_planner, self, ini=ini)
         self._machine = ProgramsUseCase(parent=self) if use_case is None else use_case
         self._program_completed = False
         self._program_completed_name = ""
@@ -131,6 +136,10 @@ class ProgramsViewModel(QObject):
         self._bridge.setOptionalStop(self._actions.optionalStopAction.checked)
         self._actions.blockDeleteAction.checkedChanged.connect(self._bridge.setBlockDelete)
         self._bridge.setBlockDelete(self._actions.blockDeleteAction.checked)
+        self._actions.optionalStopAction.checkedChanged.connect(self._tool_changes.set_optional_stop)
+        self._tool_changes.set_optional_stop(self._actions.optionalStopAction.checked)
+        self.programLoadRequested.connect(self._tool_changes.load)
+        self._runtime_store.snapshotChanged.connect(self._tool_changes.follow)
 
         self._bind_program_completion_hal()
         self._sync_program_completed_from_hal()
@@ -148,15 +157,14 @@ class ProgramsViewModel(QObject):
         self._file_system.copyFailed.connect(lambda msg: self._shell.showToast("Copy failed: %s" % msg))
 
         self._dro = ProgramsDroViewModel(self)
-        # one planning worker for the screen's simulations and its parts, started
-        # when the first is asked for
-        self._planner = None
+        # one planning worker (self._planner) for the screen's simulations, its
+        # parts and its tool changes, started when the first is asked for
         self._simulate = SimulateViewModel(SimulateUseCase(self, ini=ini, planner=self._background_planner), self)
         self._stock = []
         self._final_profile = {"state": "none", "message": "", "rings": [], "stock": [], "summary": None}
         self._final_profile_use_case = FinalProfileUseCase(self._background_planner, self, ini=ini)
         self._final_profile_use_case.ready.connect(self._on_final_profile)
-        self._tool_feed_speed = ProgramsToolFeedSpeedViewModel(self._runtime_store, self)
+        self._tool_feed_speed = ProgramsToolFeedSpeedViewModel(self._runtime_store, self._tool_changes, self)
 
         self.programLoadRequested.connect(self._prepare_preview_for_load)
         self.enterRunFullScreenRequested.connect(self._shell.enterProgramRunFullScreen)
@@ -174,6 +182,9 @@ class ProgramsViewModel(QObject):
         # screen, so there is nothing to re-fit.
         self._set_preview_file(self.currentFilePath)
         self._request_final_profile(self.currentFilePath)
+        # a program LinuxCNC has loaded already, before the application started
+        if self._runtime_store.snapshot.call_level == 0:
+            self._tool_changes.load(self._runtime_store.snapshot.machine_file)
 
     def _background_planner(self):
         if self._planner is None:
@@ -471,10 +482,12 @@ class ProgramsViewModel(QObject):
         if tracking_active and not self._was_active:
             self._abort_requested = False
             self._run_tracker.start()
+            self._tool_changes.start_run(self._runtime_store.snapshot)
             self._set_screen_index(Screen.ProgramRunning)
             self.enterRunFullScreenRequested.emit()
         elif self._was_active and not tracking_active:
             self._run_tracker.stop()
+            self._tool_changes.stop_run()
             if self._abort_requested:
                 if self._screen_index == Screen.ProgramRunning:
                     self._set_screen_index(Screen.ProgramLoaded)

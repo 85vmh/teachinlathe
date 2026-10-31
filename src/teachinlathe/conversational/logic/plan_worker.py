@@ -42,6 +42,7 @@ def _jobs():
             "generate_gcode": _generate_gcode,
             "stock_problems": _stock_problems,
             "simulate": _simulate,
+            "tool_changes": _tool_changes,
             "final_material": _final_material}
 
 
@@ -54,6 +55,17 @@ def _simulate(ngc_path, ini_path, material, machine, optional_stop, tools):
     from teachinlathe.simulation.logic.program_run import ProgramRun, tool_shapes
     moves = read_moves(ngc_path, IniRepository(ini_path), optional_stop=optional_stop, machine=machine)
     return ProgramRun(moves, material, tool_shapes(tools, moves))
+
+
+def _tool_changes(ngc_path, ini_path, machine, optional_stop):
+    """programs.logic.tool_changes_use_case's program, read by LinuxCNC's own
+    interpreter from the machine as it is: its tool changes and when they
+    come, a programs.model.tool_changes.ToolChangePlan."""
+    from teachinlathe.core.gcode_moves import read_moves
+    from teachinlathe.core.ini_repository import IniRepository
+    from teachinlathe.programs.model.tool_changes import ToolChangePlan
+    moves = read_moves(ngc_path, IniRepository(ini_path), optional_stop=optional_stop, machine=machine)
+    return ToolChangePlan.of(moves)
 
 
 def _final_material(ngc_path, ini_path, material, tools):

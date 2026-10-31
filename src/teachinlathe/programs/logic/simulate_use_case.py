@@ -17,7 +17,7 @@ from typing import Optional
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from teachinlathe.core.gcode_moves import MachineState, WorkOffset
+from teachinlathe.core.gcode_moves import MachineState
 
 log = logging.getLogger(__name__)
 
@@ -71,11 +71,7 @@ class SimulateUseCase(QObject):
         current loaded tool, that tool's offset and the work offset in use."""
         stat = self._status_repository().stat
         stat.poll()
-        position, offset = tuple(stat.position), tuple(stat.tool_offset)
-        return MachineState(position=(position[0], position[2]), current_loaded_tool=int(stat.tool_in_spindle),
-                            tool_offset=(offset[0], offset[2]),
-                            work_offset=WorkOffset(int(stat.g5x_index), tuple(stat.g5x_offset),
-                                                   float(stat.rotation_xy)))
+        return MachineState.of(stat)
 
     def _ini_repository(self):
         if self._ini is None:

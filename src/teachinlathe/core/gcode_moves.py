@@ -62,6 +62,14 @@ class MachineState:
     tool_offset: Optional[Tuple[float, float]] = None
     work_offset: Optional[WorkOffset] = None
 
+    @classmethod
+    def of(cls, stat) -> "MachineState":
+        """The machine now, as a polled linuxcnc.stat() has it."""
+        position, offset = tuple(stat.position), tuple(stat.tool_offset)
+        return cls(position=(position[0], position[2]), current_loaded_tool=int(stat.tool_in_spindle),
+                   tool_offset=(offset[0], offset[2]),
+                   work_offset=WorkOffset(int(stat.g5x_index), tuple(stat.g5x_offset), float(stat.rotation_xy)))
+
 
 def write_work_offset(parameter_file: str, offset: WorkOffset) -> None:
     """``parameter_file`` - a copy, for a parse - with ``offset`` as the

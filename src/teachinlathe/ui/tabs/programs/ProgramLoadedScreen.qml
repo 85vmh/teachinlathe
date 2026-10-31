@@ -7,8 +7,8 @@ import TeachInLathe.Backplot
 import theme
 import common
 
-// The loaded-program screen's own pane - the backplot, the tool / feed /
-// speed card over its corner, and under it the run controls while the
+// The loaded-program screen's own pane - the spindle / feed / tool boxes,
+// the backplot under them, and under it the run controls while the
 // program runs - on the right of the strip ProgramsTabRoot slides; the code
 // beside it, with the DRO over it, is the strip's shared code pane.
 Item {
@@ -69,6 +69,14 @@ Item {
             anchors.fill: parent
             spacing: Theme.spacingSmall
 
+            // The spindle, the feed and the tool, between the top bar and
+            // the backplot.
+            ProgramsToolFeedSpeed {
+                Layout.fillWidth: true
+                Layout.preferredHeight: implicitHeight
+                viewModel: root.viewModel.toolFeedSpeed
+            }
+
             BackplotView {
                 id: backplotView
                 Layout.fillWidth: true
@@ -87,20 +95,6 @@ Item {
                     function onGremlinZoomOutRequested() { backplotView.plot.zoomOut() }
                     function onGremlinClearRequested() { backplotView.plot.clearPlot() }
                     function onGremlinFitRequested() { backplotView.plot.fitToWindow() }
-                }
-
-                // The tool, the feed and the spindle, over the plot's top
-                // right corner, under its clear button - where it sits is
-                // still being decided.
-                ProgramsToolFeedSpeed {
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.rightMargin: Theme.zoomInOutFitMirrorButtonMarginLeft
-                    anchors.topMargin: Theme.zoomInOutFitMirrorButtonMarginTop
-                                       + Theme.zoomInOutFitMirrorButtonSize + Theme.spacing
-                    width: 340
-                    height: 220
-                    viewModel: root.viewModel.toolFeedSpeed
                 }
             }
 

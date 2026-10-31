@@ -10,9 +10,12 @@ class ProgramsToolFeedSpeedViewModel(QObject):
     MODE_RPM = 0
     MODE_CSS = 1
 
-    def __init__(self, runtime_store, parent=None):
+    def __init__(self, runtime_store, tool_changes, parent=None):
+        """``tool_changes``: the program loaded's next tool
+        (programs.logic.tool_changes_use_case.ToolChangesUseCase)."""
         super().__init__(parent)
         self._runtime_store = runtime_store
+        self._tool_changes = tool_changes
         self._snapshot = runtime_store.snapshot
         self._actual_rpm = 0.0
 
@@ -23,6 +26,7 @@ class ProgramsToolFeedSpeedViewModel(QObject):
         )
 
         self._runtime_store.snapshotChanged.connect(self._on_runtime_snapshot_changed)
+        self._tool_changes.changed.connect(self.valuesChanged)
 
     def _on_runtime_snapshot_changed(self, snapshot):
         self._snapshot = snapshot
@@ -84,14 +88,34 @@ class ProgramsToolFeedSpeedViewModel(QObject):
         except Exception:
             return 0.0
 
+    def _current_loaded_tool(self):
+        return int(getattr(self._snapshot, 'current_loaded_tool', 0) or 0)
+
+    def _next_tool(self):
+        return self._tool_changes.next_tool(self._current_loaded_tool())
+
     @pyqtProperty(str, notify=valuesChanged)
     def currentLoadedToolText(self):
-        tool = int(getattr(self._snapshot, 'current_loaded_tool', 0) or 0)
-        return f"T{tool}"
+        return f"T{self._current_loaded_tool()}"
+
+    @pyqtProperty(bool, notify=valuesChanged)
+    def hasNextTool(self):
+        return self._next_tool() is not None
 
     @pyqtProperty(str, notify=valuesChanged)
     def nextToolText(self):
-        return "T-"
+        next_tool = self._next_tool()
+        return "" if next_tool is None else f"T{next_tool.tool}"
+
+    @pyqtProperty(str, notify=valuesChanged)
+    def nextToolTimeText(self):
+        """How long until the machine stops for the next tool, m:ss - "" while
+        the program is not running, or not timed."""
+        next_tool = self._next_tool()
+        if next_tool is None or next_tool.seconds is None:
+            return ""
+        minutes, seconds = divmod(int(round(next_tool.seconds)), 60)
+        return f"{minutes}:{seconds:02d}"
 
     @pyqtProperty(str, notify=valuesChanged)
     def movementLetter(self):
