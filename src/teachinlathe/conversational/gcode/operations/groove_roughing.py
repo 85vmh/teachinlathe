@@ -609,10 +609,10 @@ def _append_contour(gcode, safe_x, obstacle, path, center_z, clearance, profile_
     contour_safe_x = _safe_x_for_contour([z_plus, z_minus], safe_x, clearance, profile_type)
 
     gcode.begin_contour()
-    gcode.code("(----------Groove Roughing Finish Contour Z+ to Center----------)")
+    gcode.code("(---Groove Roughing Contour Z+ to Center---)")
     _emit_contour_section(gcode, contour_safe_x, z_plus, profile_type, Corner.RIGHT)
 
-    gcode.code("(----------Groove Roughing Finish Contour Z- to Center----------)")
+    gcode.code("(---Groove Roughing Contour Z- to Center---)")
     _emit_contour_section(gcode, contour_safe_x, z_minus, profile_type, Corner.LEFT)
 
 
@@ -699,10 +699,10 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     left_radius, right_radius = _blade_radii(tool)
 
     gcode.code(
-        f"(----------Groove Roughing: Start Center P{int(roughing.profile_id or 0)}----------)"
+        f"(---Groove Roughing: Start Center P{int(roughing.profile_id or 0)}---)"
     )
     gcode.code(
-        f"( blade width={_fmt(width)} left radius={_fmt(left_radius)} right radius={_fmt(right_radius)} touched off at {_CONTROL_NAMES[control]} )"
+        f"( blade touch point: {_CONTROL_NAMES[control]} )"
     )
 
     start_index = 0
@@ -712,7 +712,6 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
         first_target_x = _plunge_x(inside, first_z + z_control, start_x, profile_type)
         second_target_x = _plunge_x(inside, second_z + z_control, start_x, profile_type)
         if _plunges_into(first_target_x) and _plunges_into(second_target_x):
-            gcode.code("(----------Groove Roughing Initial Center Pair----------)")
             _append_center_pair_roughing(
                 gcode,
                 first_z + z_control,

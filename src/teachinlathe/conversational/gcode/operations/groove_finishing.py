@@ -107,21 +107,21 @@ def _append_finishing_contour(gcode, safe_x, obstacle, path, center_z, clearance
                                          profile_type)
 
     if strategy is GrooveFinishingStrategy.TOWARDS_LEFT:
-        gcode.code("(----------Groove Finishing Contour Towards Left----------)")
+        gcode.code("(---Groove Finishing Contour Towards Left---)")
         _emit_continuous_sections(gcode, contour_safe_x, [z_plus_to_center, z_minus_from_center],
                                   [Corner.RIGHT, Corner.LEFT], profile_type)
         return
 
     if strategy is GrooveFinishingStrategy.TOWARDS_RIGHT:
-        gcode.code("(----------Groove Finishing Contour Towards Right----------)")
+        gcode.code("(---Groove Finishing Contour Towards Right---)")
         _emit_continuous_sections(gcode, contour_safe_x, [z_minus_to_center, z_plus_from_center],
                                   [Corner.LEFT, Corner.RIGHT], profile_type)
         return
 
-    gcode.code("(----------Groove Finishing Contour Z+ to Center----------)")
+    gcode.code("(---Groove Finishing Contour Z+ to Center---)")
     _emit_contour_section(gcode, contour_safe_x, z_plus_to_center, profile_type, Corner.RIGHT)
 
-    gcode.code("(----------Groove Finishing Contour Z- to Center----------)")
+    gcode.code("(---Groove Finishing Contour Z- to Center---)")
     _emit_contour_section(gcode, contour_safe_x, z_minus_to_center, profile_type, Corner.LEFT)
 
 
@@ -173,10 +173,10 @@ def groove_finishing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     left_radius, right_radius = _blade_radii(tool)
 
     gcode.code(
-        f"(----------Groove Finishing: {strategy.value.replace('_', ' ').title()} P{int(finishing.profile_id or 0)}----------)"
+        f"(---Groove Finishing: {strategy.value.replace('_', ' ').title()} P{int(finishing.profile_id or 0)}--)"
     )
     gcode.code(
-        f"( blade width={_fmt(width)} left radius={_fmt(left_radius)} right radius={_fmt(right_radius)} touched off at {_CONTROL_NAMES[control]} )"
+        f"( blade touch point: {_CONTROL_NAMES[control]} )"
     )
 
     _append_finishing_contour(gcode, safe_x, _blade_obstacle(tool, path, profile_type, 0.0, 0.0), path,

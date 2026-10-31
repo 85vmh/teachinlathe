@@ -162,6 +162,8 @@ class ProgramsViewModel(QObject):
         self._simulate.run.runChanged.connect(self.headerStateChanged)
         self._simulate.run.changed.connect(self.headerStateChanged)
         self._simulate.loadingChanged.connect(self.headerStateChanged)
+        self._simulate.runChanged.connect(self._start_pending_simulation)
+        self._pending_simulation_start = False
         self._stock = []
         self._final_profile = {"state": "none", "message": "", "rings": [], "stock": [], "summary": None}
         self._final_profile_use_case = FinalProfileUseCase(self._background_planner, self, ini=ini)
@@ -270,7 +272,7 @@ class ProgramsViewModel(QObject):
 
     @pyqtProperty(bool, notify=screenIndexChanged)
     def simulateShown(self):
-        return self._screen_index in (Screen.Simulate, Screen.SimulateRunning)
+        return self._screen_index == Screen.SimulateRunning
 
     @pyqtProperty(bool, notify=screenIndexChanged)
     def running(self):
@@ -662,16 +664,9 @@ class ProgramsViewModel(QObject):
         left_actions = []
         right_actions = []
         title = 'Machine FileSystem'
-        if self._screen_index in (Screen.Simulate, Screen.SimulateRunning):
+        if self._screen_index == Screen.SimulateRunning:
             left_actions.append({"id": "back", "text": "← Back to FileSystem", "enabled": True})
             title = f'Simulate [{self._simulate.fileName}]'
-            if self._screen_index == Screen.Simulate:
-                right_actions.append({
-                    "id": "cycle_start",
-                    "text": "Cycle Start",
-                    "enabled": bool(self._simulate.ready and not self._simulate.loading),
-                    "active": False,
-                })
         elif self._screen_index != Screen.FileSystem:
             left_actions.append({"id": "back", "text": "← Back to FileSystem", "enabled": True})
             title = f'Loaded Program [{os.path.basename(self.currentFilePath or "") or "No file loaded"}]'
@@ -708,17 +703,14 @@ class ProgramsViewModel(QObject):
 
     def triggerHeaderAction(self, action_id):
         if action_id == "back":
-            if self._screen_index in (Screen.Simulate, Screen.SimulateRunning):
+            if self._screen_index == Screen.SimulateRunning:
                 self._simulate.close()
                 self._set_screen_index(Screen.FileSystem)
                 self.exitRunFullScreenRequested.emit()
             else:
                 self.showFilesScreen()
         elif action_id == "cycle_start":
-            if self._screen_index == Screen.Simulate:
-                self.startSimulationRun()
-            else:
-                self.triggerCycleStart()
+            self.triggerCycleStart()
         elif action_id == "load_program":
             self._file_system.openSelectedFile()
         elif action_id == "edit_program":
@@ -740,30 +732,31 @@ class ProgramsViewModel(QObject):
 
     @pyqtSlot()
     def startSimulation(self):
-        """The selected file played on the Simulate screen, from the machine as
-        it is now - Break on M1 as it is set."""
+        """Start the selected simulation in the full-screen run view."""
         path = self._file_system.selectedFilePath()
         if not path:
             return
         self._simulate.open(path, self._file_system.selectedGeneratedJsonPathForEdit(),
                            bool(self._actions.optionalStopAction.checked),
                            bool(self._actions.blockDeleteAction.checked))
-        self._set_screen_index(Screen.Simulate)
-
-    @pyqtSlot()
-    def startSimulationRun(self):
-        """Cycle Start from the common header: start and enter the run view."""
-        if not self._simulate.ready or self._simulate.loading:
-            return
-        self._simulate.run.cycleStart()
+        self._pending_simulation_start = True
         self._set_screen_index(Screen.SimulateRunning)
         self.enterRunFullScreenRequested.emit()
+        self._start_pending_simulation()
+
+    def _start_pending_simulation(self):
+        if not self._pending_simulation_start or not self._simulate.ready or self._simulate.loading:
+            return
+        self._pending_simulation_start = False
+        self._simulate.run.cycleStart()
 
     @pyqtSlot()
     def abortSimulationRun(self):
-        """Cycle Abort in the common run bar: stop, keeping the simulation open."""
+        """Cycle Abort: stop the run and return to the file browser."""
         self._simulate.run.cycleStop()
-        self._set_screen_index(Screen.Simulate)
+        self._simulate.close()
+        self._pending_simulation_start = False
+        self._set_screen_index(Screen.FileSystem)
         self.exitRunFullScreenRequested.emit()
 
     def showFileInGeneratedPrograms(self, ngc_path):

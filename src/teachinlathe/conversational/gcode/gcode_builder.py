@@ -306,11 +306,11 @@ def _write_define_profile(path, op, program, op_index, tools):
     if _define_profile_needs_subroutine(int(op.profile_id or 0), program.operations):
         path.foreign(generate_define_profile_gcode(op))
     else:
-        path.code("; The drawn profile is represented in the custom profiling section.")
+        path.code("; The profile is stored in the .json file.")
 
 
 def _write_radial_profile(path, op, program, op_index, tools):
-    path.code("; The radial profile is represented in the conversational JSON.")
+    path.code("; The profile is stored in the .json file.")
 
 
 #: The writer of each operation class.

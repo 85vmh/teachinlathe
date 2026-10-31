@@ -11,5 +11,4 @@ class ProgramsScreen(IntEnum):
     FileSystem = 0      # file system browser
     ProgramLoaded = 1     # loaded program (DRO + gremlin + execution)
     ProgramRunning = 2    # program running, full screen
-    Simulate = 3            # a file played as the machine would run it, on its stock
-    SimulateRunning = 4     # that simulation using the common full-screen run view
+    SimulateRunning = 3     # a simulation using the common full-screen run view

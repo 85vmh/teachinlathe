@@ -40,8 +40,8 @@ Rectangle {
     readonly property bool running: root.viewModel.running
     readonly property bool programShown: root.viewModel.programShown
     readonly property bool simulateShown: root.viewModel.simulateShown
-    // The strip slides the same way to either mode of a file: the loaded
-    // program or its simulation. Only the run source changes once it arrives.
+    // The strip slides to the loaded program or its simulation. Only the run
+    // source changes once it arrives.
     readonly property bool stripShown: programShown || simulateShown
     property bool toSimulate: simulateShown
     onSimulateShownChanged: if (simulateShown) toSimulate = true
