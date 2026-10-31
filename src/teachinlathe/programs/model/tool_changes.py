@@ -99,9 +99,11 @@ class NextTool:
 
 @dataclass(frozen=True)
 class ToolChangePlan:
-    """A program's moves, as Segments, and its tool changes, in order."""
+    """A program's moves, as Segments, and its tool changes, in order;
+    how long it runs (``duration``, seconds; None, not timed)."""
     segments: Tuple[Segment, ...]
     changes: Tuple[Change, ...]
+    duration: Optional[float] = None
 
     @classmethod
     def of(cls, moves: ProgramMoves) -> "ToolChangePlan":
@@ -120,7 +122,7 @@ class ToolChangePlan:
                 ended_at = step.ends_at if step.ends_at is not None else ended_at
             elif getattr(step, "ends_at", None) is not None:
                 ended_at = step.ends_at
-        return cls(tuple(segments), tuple(changes))
+        return cls(tuple(segments), tuple(changes), moves.duration)
 
     def next_tool(self, current_tool: int, after: int = -1) -> Optional[int]:
         """The first tool other than ``current_tool`` put in after move

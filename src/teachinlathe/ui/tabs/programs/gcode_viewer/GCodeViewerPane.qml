@@ -11,18 +11,20 @@ Rectangle {
     enum ViewerMode { ProgramWithoutStack, ProgramWithStack }
 
     required property var viewModel
+    required property var run
+    property var simulationViewModel: null
+    property bool simulation: false
 
     readonly property bool executionHighlightVisible: viewModel.executionHighlightVisible
     readonly property int currentMode: viewModel.hasExecutionStack
         ? GCodeViewerPane.ProgramWithStack
         : GCodeViewerPane.ProgramWithoutStack
-    readonly property bool actionBarVisible: viewModel.programShown
     // How much of the bottom action bar is in, 0..1: it rises from the
     // bottom edge, pushing the code up. ProgramsTabRoot animates this and
     // draws the bar itself - it reaches past this pane while a program runs -
     // so here there is only the room it takes.
-    property real actionBarReveal: actionBarVisible ? 1 : 0
-    readonly property int actionBarHeight: Theme.barHeight
+    property real actionBarReveal: 0
+    property int actionBarHeight: Theme.barHeight
     readonly property int actionBarGap: 6
 
     color: "#ffffff"
@@ -37,7 +39,7 @@ Rectangle {
 
             Loader {
                 anchors.fill: parent
-                sourceComponent: root.currentMode === GCodeViewerPane.ProgramWithStack
+                sourceComponent: !root.simulation && root.currentMode === GCodeViewerPane.ProgramWithStack
                     ? executionComponent
                     : viewerComponent
             }
@@ -55,19 +57,26 @@ Rectangle {
         id: viewerComponent
 
         ProgramContentFrame {
-            filePath: viewModel.currentFilePath
+            filePath: root.simulation ? root.simulationViewModel.programFile : viewModel.currentFilePath
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             GCodeTextArea {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                viewModel: root.viewModel
-                content: viewModel.currentFileContent
-                highlightLine: root.executionHighlightVisible && viewModel.mainHighlightLine
+                viewModel: root.simulation ? root.simulationViewModel : root.viewModel
+                content: root.simulation ? root.simulationViewModel.content : viewModel.currentFileContent
+                highlightLine: root.simulation
+                               ? (root.simulationViewModel.ready ? root.run.programLine : 0)
+                               : (root.executionHighlightVisible && viewModel.mainHighlightLine)
                 highlightColor: "#3A86FF"
                 highlightWidth: 1
-                centerOnHighlight: root.executionHighlightVisible
+                centerOnHighlight: root.simulation || root.executionHighlightVisible
+                followUserScroll: root.simulation && root.simulationViewModel.ready
+                onLineScrolledTo: function(line) {
+                    if (root.simulation)
+                        root.run.seekToLine(line)
+                }
                 emptyText: "Select a G-code file"
             }
         }

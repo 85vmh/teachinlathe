@@ -94,11 +94,12 @@ def write_work_offset(parameter_file: str, offset: WorkOffset) -> None:
 
 
 def read_moves(ngc_path: str, ini: IniRepository, optional_stop: bool = False,
-               machine: Optional[MachineState] = None) -> ProgramMoves:
+               machine: Optional[MachineState] = None, block_delete: bool = False) -> ProgramMoves:
     """The program in ``ngc_path`` as the machine of ``ini`` would run it,
     Optional Stop on or not (``optional_stop``: what M66 P0 - Optional Stop
     being on, as custom.hal wires it - reads, so an M1's remap takes its
-    branch as the machine would); M6 takes the tool to the INI's
+    branch as the machine would), and Skip ``/`` Blocks on or not
+    (``block_delete``); M6 takes the tool to the INI's
     TOOL_CHANGE_POSITION. ``machine``: the machine at cycle start; None, as
     the interpreter starts on its own. The steps are timed as LinuxCNC's
     preview times them, with the machine's limits from ``ini``."""
@@ -112,7 +113,7 @@ def read_moves(ngc_path: str, ini: IniRepository, optional_stop: bool = False,
         parameter_file = _parameter_copy(ini, scratch)
         if machine is not None and machine.work_offset is not None:
             write_work_offset(parameter_file, machine.work_offset)
-        canon = _Canon(parameter_file, optional_stop, _metric(ini), machine, limits)
+        canon = _Canon(parameter_file, optional_stop, block_delete, _metric(ini), machine, limits)
         result, line = gcode.parse(ngc_path, canon, "G21" if _metric(ini) else "G20",
                                    ini.find("RS274NGC", "RS274NGC_STARTUP_CODE") or "")
     error = f"line {line}: {gcode.strerror(result)}" if result > gcode.MIN_ERROR else ""
@@ -164,7 +165,7 @@ class _Canon:
     """What the interpreter calls (the gcode module's callback protocol),
     made into the steps of a ProgramMoves."""
 
-    def __init__(self, parameter_file: str, optional_stop: bool, metric: bool,
+    def __init__(self, parameter_file: str, optional_stop: bool, block_delete: bool, metric: bool,
                  machine: Optional["MachineState"], limits):
         self.parameter_file = parameter_file
         self.steps: List = []
@@ -176,6 +177,7 @@ class _Canon:
         self._machine = machine
         self._limits = limits
         self._optional_stop = optional_stop
+        self._block_delete = block_delete
         self._machine_mm = 1.0 if metric else MM_PER_INCH
         self._where = Where("", 0, 0, 0)
         self._plane = _PLANE_XZ
@@ -241,7 +243,7 @@ class _Canon:
         return 0b101                # X and Z
 
     def get_block_delete(self):
-        return False
+        return self._block_delete
 
     def check_abort(self):
         return False

@@ -621,8 +621,8 @@ class TeachInLatheDroViewModel(QObject):
     @pyqtProperty(str, notify=workOffsetChanged)
     def workOffsetName(self):
         """The work offset in use: "G54" ... - "G59.3" past the ones offered."""
-        from teachinlathe.ui.tabs.programs.ProgramsDroViewModel import WORK_OFFSETS
-        return WORK_OFFSETS.get(self._current_g5x_index(), "G54")
+        from teachinlathe.machine.model.work_offsets import work_offset_name
+        return work_offset_name(self._current_g5x_index())
 
     @pyqtProperty("QStringList", constant=True)
     def workOffsets(self):

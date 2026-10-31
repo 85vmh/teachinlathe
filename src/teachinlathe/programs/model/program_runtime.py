@@ -134,35 +134,41 @@ class ProgramRuntimeStore(QObject):
         return 1.0
 
     def _parse_call_stack(self, raw_stack):
-        if not raw_stack:
+        return parse_call_stack(raw_stack)
+
+
+def parse_call_stack(raw_stack) -> tuple:
+    """``linuxcnc.stat().call_stack`` as ProgramExecutionFrames, the
+    outermost call first: the frames the first ``call_level`` of it hold."""
+    if not raw_stack:
+        return ()
+
+    if isinstance(raw_stack, str):
+        try:
+            raw_stack = ast.literal_eval(raw_stack)
+        except Exception:
             return ()
 
-        if isinstance(raw_stack, str):
-            try:
-                raw_stack = ast.literal_eval(raw_stack)
-            except Exception:
-                return ()
+    if isinstance(raw_stack, dict):
+        raw_stack = [raw_stack]
 
-        if isinstance(raw_stack, dict):
-            raw_stack = [raw_stack]
+    if not isinstance(raw_stack, (list, tuple)):
+        return ()
 
-        if not isinstance(raw_stack, (list, tuple)):
-            return ()
-
-        frames = []
-        for entry in raw_stack:
-            if not isinstance(entry, dict):
-                continue
-            filename = os.path.abspath(str(entry.get('filename') or '')) if entry.get('filename') else ''
-            if not filename:
-                continue
-            try:
-                line_number = int(entry.get('line') or 0)
-            except (TypeError, ValueError):
-                line_number = 0
-            frames.append(ProgramExecutionFrame(
-                filename=filename,
-                line=line_number,
-                subname=str(entry.get('subname') or ''),
-            ))
-        return tuple(frames)
+    frames = []
+    for entry in raw_stack:
+        if not isinstance(entry, dict):
+            continue
+        filename = os.path.abspath(str(entry.get('filename') or '')) if entry.get('filename') else ''
+        if not filename:
+            continue
+        try:
+            line_number = int(entry.get('line') or 0)
+        except (TypeError, ValueError):
+            line_number = 0
+        frames.append(ProgramExecutionFrame(
+            filename=filename,
+            line=line_number,
+            subname=str(entry.get('subname') or ''),
+        ))
+    return tuple(frames)

@@ -234,8 +234,23 @@ Rectangle {
         ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
 
         onMovementStarted: {
-            if (!root._programmaticScroll && root.centerOnHighlight && root.highlightLine > 0)
+            if (root.followUserScroll && (flick.dragging || flick.flicking)) {
+                centerAnimation.stop()
+                root._programmaticScroll = false
                 root._userScrollActive = true
+            } else if (!root._programmaticScroll && root.centerOnHighlight && root.highlightLine > 0) {
+                root._userScrollActive = true
+            }
+        }
+        onDraggingChanged: {
+            // A hand taking over while the automatic line-centering animation
+            // runs must win immediately; its first movement performs the seek
+            // and therefore puts a simulated run in Feed Hold.
+            if (dragging && root.followUserScroll) {
+                centerAnimation.stop()
+                root._programmaticScroll = false
+                root._userScrollActive = true
+            }
         }
         onMovementEnded: {
             root._userScrollActive = false

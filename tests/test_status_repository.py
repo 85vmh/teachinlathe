@@ -287,7 +287,7 @@ class Listener:
     def on_optional(self, value=None):         # DroViewModel.updateValues
         self.optional.append(value)
 
-    def on_any(self, *args):                   # ProgramsDroViewModel._update
+    def on_any(self, *args):                   # Positions.notify callback
         self.varargs.append(args)
 
 

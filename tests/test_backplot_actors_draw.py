@@ -687,9 +687,6 @@ def test_the_rapids_follow_the_programs_own_transform():
 
 # ── the solid stops at the part ────────────────────────────────────────────
 
-FEED, ARC, TRAVERSE = 1, 2, 0
-
-
 def solid_points(ctx):
     """The material's triangles' corners, told apart from anything else
     filled by its colour."""
@@ -699,68 +696,7 @@ def solid_points(ctx):
             if tuple(np.round(row[3:6], 6)) == tuple(np.round(palette.MATERIAL, 6))]
 
 
-def turned_program(radius_mm, from_z_mm, to_z_mm):
-    """A single cutting pass along Z at one radius."""
-    points = [(mm(radius_mm), 0.0, mm(from_z_mm)),
-              (mm(radius_mm), 0.0, mm(to_z_mm))]
-    return FakeProgramGeometry(points, [FEED, FEED])
-
-
 BAR = {"stock_length": 60.0, "external_diameter": 40.0}
-
-
-def test_the_profile_is_the_smallest_radius_a_cut_reached():
-    from teachinlathe.ui.tabs.programs.backplot.actors import profile
-
-    ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
-    found = profile.finished(ctx, mm(-60.0), 0.0, mm(20.0))
-
-    assert found is not None
-    assert found.at(mm(-10.0)) == pytest.approx(mm(10.0), abs=1e-6)
-    # Past where the cut stopped the bar is still full size.
-    assert found.at(mm(-50.0)) == pytest.approx(mm(20.0), abs=1e-6)
-
-
-def test_the_profile_ignores_rapids():
-    """A rapid over the bar cuts nothing."""
-    from teachinlathe.ui.tabs.programs.backplot.actors import profile
-
-    ctx = lathe_frame()
-    points = [(mm(5.0), 0.0, 0.0), (mm(5.0), 0.0, mm(-30.0))]
-    ctx.canon = canon_with(FakeProgramGeometry(points, [TRAVERSE, TRAVERSE]))
-    assert profile.finished(ctx, mm(-60.0), 0.0, mm(20.0)) is None
-
-
-def test_the_profile_takes_arc_moves_as_cuts():
-    from teachinlathe.ui.tabs.programs.backplot.actors import profile
-
-    ctx = lathe_frame()
-    points = [(mm(8.0), 0.0, 0.0), (mm(8.0), 0.0, mm(-30.0))]
-    ctx.canon = canon_with(FakeProgramGeometry(points, [ARC, ARC]))
-    found = profile.finished(ctx, mm(-60.0), 0.0, mm(20.0))
-    assert found.at(mm(-10.0)) == pytest.approx(mm(8.0), abs=1e-6)
-
-
-def test_a_plunge_pulls_in_the_column_it_is_at():
-    """A move at constant Z spans no columns to interpolate across."""
-    from teachinlathe.ui.tabs.programs.backplot.actors import profile
-
-    ctx = lathe_frame()
-    points = [(mm(20.0), 0.0, mm(-15.0)), (mm(6.0), 0.0, mm(-15.0))]
-    ctx.canon = canon_with(FakeProgramGeometry(points, [FEED, FEED]))
-    found = profile.finished(ctx, mm(-60.0), 0.0, mm(20.0))
-    assert found.at(mm(-15.0)) == pytest.approx(mm(6.0), abs=1e-4)
-
-
-def test_the_solid_still_fills_what_was_not_turned():
-    ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
-    StockActor(FakeHost(BAR)).draw(ctx)
-
-    untouched = [p for p in solid_points(ctx) if p[2] < mm(-35.0)]
-    assert untouched, "the untouched half lost its material"
-    assert max(p[0] for p in untouched) > mm(15.0)
 
 
 def test_the_bar_is_solid_whole_with_no_program():
@@ -982,109 +918,19 @@ def test_the_shaft_still_starts_clear_of_the_bigger_symbol():
 
 # ── the profile is the expensive thing on this plot ────────────────────────
 
-def reference_profile(radii, z_start, step, starts, ends):
-    """The profile written the obvious way, a move at a time.
-
-    Kept as the thing the vectorised one is checked against: that version
-    exists only because this one put a Python loop over every cutting move on
-    the frame path, and a rewrite for speed is worth nothing if it quietly
-    computes something else.
-    """
-    out = radii.copy()
-    for start, end in zip(starts, ends):
-        x0, z0 = float(start[0]), float(start[2])
-        x1, z1 = float(end[0]), float(end[2])
-        if abs(z1 - z0) < 1e-12:
-            index = int(round((z0 - z_start) / step))
-            if 0 <= index < len(out):
-                out[index] = min(out[index], x0, x1)
-            continue
-        low, high = min(z0, z1), max(z0, z1)
-        first = max(0, int(np.ceil((low - z_start) / step)))
-        last = min(len(out) - 1, int(np.floor((high - z_start) / step)))
-        for column in range(first, last + 1):
-            z = z_start + column * step
-            out[column] = min(out[column],
-                              x0 + (z - z0) / (z1 - z0) * (x1 - x0))
-    return out
-
-
-def random_moves(count, seed=7):
-    rng = np.random.default_rng(seed)
-    z = np.sort(rng.uniform(mm(-60), 0.0, count + 1))
-    x = rng.uniform(mm(2), mm(20), count + 1)
-    # Every fourth move is a plunge - constant Z, which spans no columns.
-    z[1::4] = z[0::4][:len(z[1::4])]
-    points = np.stack([x, np.zeros(count + 1), z], axis=1)
-    return points[:-1], points[1:]
-
-
-@pytest.mark.parametrize("count", [1, 7, 200, 3000])
-def test_the_vectorised_profile_matches_the_obvious_one(count):
-    from teachinlathe.ui.tabs.programs.backplot.actors import profile
-
-    starts, ends = random_moves(count)
-    z_start, z_end = mm(-60), 0.0
-    step = (z_end - z_start) / (profile.SAMPLES - 1)
-    radii = np.full(profile.SAMPLES, mm(20))
-
-    mine = radii.copy()
-    profile._cut(mine, z_start, step, starts, ends)
-    assert mine == pytest.approx(
-        reference_profile(radii, z_start, step, starts, ends), abs=1e-12)
-
-
-def test_chunking_does_not_change_the_answer(monkeypatch):
-    """A slice boundary must fall between moves, not through one."""
-    from teachinlathe.ui.tabs.programs.backplot.actors import profile
-
-    starts, ends = random_moves(400)
-    z_start, z_end = mm(-60), 0.0
-    step = (z_end - z_start) / (profile.SAMPLES - 1)
-
-    whole = np.full(profile.SAMPLES, mm(20))
-    profile._cut(whole, z_start, step, starts, ends)
-
-    monkeypatch.setattr(profile, "CHUNK", 64)
-    chunked = np.full(profile.SAMPLES, mm(20))
-    profile._cut(chunked, z_start, step, starts, ends)
-    assert chunked == pytest.approx(whole, abs=1e-12)
-
-
-def test_a_move_reaching_the_whole_bar_still_fits_one_chunk(monkeypatch):
-    """The slice loop has to make progress even when one move alone is over
-    the cap, or it spins."""
-    from teachinlathe.ui.tabs.programs.backplot.actors import profile
-
-    monkeypatch.setattr(profile, "CHUNK", 4)
-    starts = np.array([[mm(5), 0.0, mm(-60)]])
-    ends = np.array([[mm(5), 0.0, 0.0]])
-    radii = np.full(profile.SAMPLES, mm(20))
-    profile._cut(radii, mm(-60), mm(60) / (profile.SAMPLES - 1), starts, ends)
-    assert radii.max() == pytest.approx(mm(5))
-
-
 def test_the_solid_is_made_once_whatever_the_view():
     """It is in the model, so neither another frame nor a zoom moves it."""
     ctx = lathe_frame()
-    ctx.canon = canon_with(turned_program(10.0, 0.0, -30.0))
     actor = StockActor(FakeHost(BAR))
 
     actor.draw(ctx)
     first = actor._solid_points
-    actor.draw(lathe_frame_with(ctx))
+    actor.draw(lathe_frame())
     assert actor._solid_points is first
 
     zoomed = lathe_frame(zoom=8.0)
-    zoomed.canon = ctx.canon
     actor.draw(zoomed)
     assert actor._solid_points is first
-
-
-def lathe_frame_with(other):
-    frame = lathe_frame()
-    frame.canon = other.canon
-    return frame
 
 
 def test_the_rapids_cache_survives_a_recycled_address():

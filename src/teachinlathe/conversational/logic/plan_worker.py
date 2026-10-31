@@ -46,14 +46,15 @@ def _jobs():
             "final_material": _final_material}
 
 
-def _simulate(ngc_path, ini_path, material, machine, optional_stop, tools):
+def _simulate(ngc_path, ini_path, material, machine, optional_stop, block_delete, tools):
     """programs.logic.simulate_use_case's program, read by LinuxCNC's own
     interpreter and run on ``material``: a ProgramRun. Here, in a process of
     its own: the interpreter's private tool table is the whole process's."""
     from teachinlathe.core.gcode_moves import read_moves
     from teachinlathe.core.ini_repository import IniRepository
     from teachinlathe.simulation.logic.program_run import ProgramRun, tool_shapes
-    moves = read_moves(ngc_path, IniRepository(ini_path), optional_stop=optional_stop, machine=machine)
+    moves = read_moves(ngc_path, IniRepository(ini_path), optional_stop=optional_stop,
+                       machine=machine, block_delete=block_delete)
     return ProgramRun(moves, material, tool_shapes(tools, moves))
 
 

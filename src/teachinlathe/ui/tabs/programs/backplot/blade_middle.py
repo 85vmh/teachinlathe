@@ -163,6 +163,41 @@ def _moved_point(point, dz):
     return type(point)((point[0], point[1], point[2] + dz))
 
 
+def trail_shifts(origins, corners, units, offsets_of):
+    """How far along Z each point of a trail is moved to be drawn as the
+    program is for a blade: by the blade that made it - ``offsets_of(tool)``,
+    its ``(shift, half)`` as blade_offsets gives them - and the line it was
+    cutting, a contour's along the corner ``corners`` (corner_lines') says.
+    ``origins``: the trail's TrailOrigins, or a slice of them; ``units``: the
+    trail's unit per mm. An array, one shift a point."""
+    tools, lines = np.asarray(origins.tools), np.asarray(origins.lines)
+    shifts = np.zeros(len(tools))
+    corner = _corner_of(lines, corners)
+    for tool in np.unique(tools):
+        tool = int(tool)
+        if not tool:
+            continue
+        shift, half = offsets_of(tool)
+        if not (shift or half):
+            continue
+        rows = tools == tool
+        shifts[rows] = (shift + corner[rows] * half) * units
+    return shifts
+
+
+def _corner_of(lines, corners):
+    """The corner (+1, -1, 0) each of ``lines`` is cut along."""
+    if not corners or not len(lines):
+        return np.zeros(len(lines))
+    table = np.zeros(max(corners) + 1)
+    for number, corner in corners.items():
+        table[number] = corner
+    inside = (lines >= 0) & (lines < len(table))
+    corner = np.zeros(len(lines))
+    corner[inside] = table[lines[inside]]
+    return corner
+
+
 def trail_points(raw, npts, shifts):
     """The position logger's points as ``raw`` holds them, each moved along
     Z by its own of ``shifts`` (in the logger's unit), as bytes."""

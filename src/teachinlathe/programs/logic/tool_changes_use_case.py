@@ -95,6 +95,17 @@ class ToolChangesUseCase(QObject):
             return None if tool is None else NextTool(tool, None)
         return self._plan.next_tool_at(current_tool, self._index, self._point)
 
+    def time(self) -> Optional[float]:
+        """Seconds from cycle start the running program is at, as LinuxCNC's
+        estimate has it; None while it is not running, or not timed."""
+        if not self._running or self._plan is None:
+            return None
+        return self._plan.time_at(self._index, self._point)
+
+    def duration(self) -> Optional[float]:
+        """How long the program loaded runs; None, not read yet or not timed."""
+        return self._plan.duration if self._plan is not None else None
+
     def _tool_point(self, snapshot):
         """Where the tip of the tool is: (z, r) in mm, in the work
         coordinates of the run's start - those the plan's moves are in."""

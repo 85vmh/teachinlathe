@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.programs.filesystemview
-import tabs.programs.simulate
 import tabs.programs.gcode_viewer
 import tabs.programs.program_loaded
 import theme
@@ -17,12 +16,8 @@ import TeachInLathe
 // moves to the left edge, and the pane on its right widens to take the room
 // they leave - and then what it showed (FinalProfileView: the stock, and what
 // is left of it once the program has run) gives way to the backplot. Going back
-// does the same the other way. A simulation slides the same: once the strip has
-// slid, the Simulate screen - laid out as the loaded program is - comes in over
-// it, where the loaded program's DRO and backplot would, and goes first on the
-// way back. The code pane is the same one on both screens,
-// so it is the one thing that moves across rather than being swapped; on the
-// loaded-program screen it carries the DRO over the code. The part's pane -
+// does the same the other way. A simulation uses that exact same code pane,
+// DRO, S/F/T row and backplot; only their run source changes. The part's pane -
 // the stock above, the part below - has the Simulate button between the two.
 //
 Rectangle {
@@ -45,13 +40,16 @@ Rectangle {
     readonly property bool running: root.viewModel.running
     readonly property bool programShown: root.viewModel.programShown
     readonly property bool simulateShown: root.viewModel.simulateShown
-    // The strip slides the same way to either screen of a file: the loaded
-    // program, or its simulation. Which it is going to - or coming back from -
-    // says what comes in once it has slid (programReveal, simulateReveal).
+    // The strip slides the same way to either mode of a file: the loaded
+    // program or its simulation. Only the run source changes once it arrives.
     readonly property bool stripShown: programShown || simulateShown
     property bool toSimulate: simulateShown
     onSimulateShownChanged: if (simulateShown) toSimulate = true
     onProgramShownChanged: if (programShown) toSimulate = false
+    // Keep showing the simulation while it fades/slides out; changing the
+    // source to the machine first would flash the machine plot on the way back.
+    readonly property bool simulationMode: toSimulate && (simulateShown || reveal > 0)
+    readonly property var activeRun: simulationMode ? root.viewModel.simulate.run : root.viewModel.run
 
     // Panes are separated by the gap the split views had as their handle.
     readonly property real gap: 6
@@ -73,10 +71,6 @@ Rectangle {
     // How far the screen the strip went to is in, 0..1. On the way to it, it
     // comes in after the slide; on the way back it goes first.
     property real reveal: stripShown ? 1 : 0
-    // the loaded program's DRO, code bar and backplot
-    readonly property real programReveal: toSimulate ? 0 : reveal
-    // the Simulate screen, over the strip: laid out as the loaded program is
-    readonly property real simulateReveal: toSimulate ? reveal : 0
     // How far the bar under the code reaches across under the backplot, 0..1:
     // all the way while a program runs, with Cycle Abort and Feed Hold at its
     // end.
@@ -86,7 +80,7 @@ Rectangle {
         NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
     }
     // The bar's height, and the gap above it - the code pane leaves that room.
-    readonly property int barHeight: Theme.barHeight
+    readonly property int barHeight: simulationMode && running ? 114 : Theme.barHeight
     readonly property int barGap: 6
     // The DRO's height, and the gap between it and the code.
     readonly property int droRowHeight: dro.implicitHeight
@@ -191,8 +185,8 @@ Rectangle {
                 // down: it sits at the bottom of a slot that grows from nothing.
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: (root.droRowHeight + root.droRowGap) * root.programReveal
-                    visible: root.programReveal > 0
+                    Layout.preferredHeight: (root.droRowHeight + root.droRowGap) * root.reveal
+                    visible: root.reveal > 0
                     clip: true
 
                     ProgramsDro {
@@ -200,7 +194,7 @@ Rectangle {
                         y: parent.height - root.droRowHeight - root.droRowGap
                         width: parent.width
                         height: root.droRowHeight
-                        viewModel: root.viewModel.dro
+                        viewModel: root.activeRun
                     }
                 }
 
@@ -208,7 +202,11 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     viewModel: root.viewModel
-                    actionBarReveal: root.programReveal
+                    run: root.activeRun
+                    simulationViewModel: root.viewModel.simulate
+                    simulation: root.simulationMode
+                    actionBarReveal: root.runBar
+                    actionBarHeight: root.barHeight
                 }
             }
         }
@@ -230,13 +228,18 @@ Rectangle {
         // resized - its framebuffer made again - at every step of the slide.
         ProgramLoadedScreen {
             viewModel: root.viewModel
+            run: root.activeRun
+            simulationViewModel: root.viewModel.simulate
+            simulation: root.simulationMode
+            programFile: root.simulationMode ? root.viewModel.simulate.programFile : root.viewModel.previewFile
             x: root.rightX
             width: root.rightWidth
             height: parent.height
-            opacity: root.programReveal
-            visible: root.programReveal > 0
+            opacity: root.reveal
+            visible: root.reveal > 0
             shown: root.programShown
             runBarReveal: root.runBar
+            runBarHeight: root.barHeight
             z: 1
         }
 
@@ -245,24 +248,17 @@ Rectangle {
         // pane as well.
         ProgramBottomActionBar {
             viewModel: root.viewModel
+            run: root.activeRun
+            simulationViewModel: root.viewModel.simulate
+            simulation: root.simulationMode
+            backplotLeftMargin: root.rightX - codeColumn.x
             x: codeColumn.x
-            y: parent.height - (root.barHeight + root.barGap) * root.programReveal + root.barGap
+            y: parent.height - (root.barHeight + root.barGap) * root.runBar + root.barGap
             width: root.codeWidth + (root.width - root.codeWidth) * root.runBar
             height: root.barHeight
-            visible: root.programReveal > 0
+            visible: root.runBar > 0
             runControlsReveal: root.runBar
             z: 2
         }
-    }
-
-    // A file played as the machine would run it: over the strip once it has
-    // slid as it does to the loaded program, which it is laid out as - it
-    // comes in where the loaded program's DRO and backplot would
-    SimulateScreen {
-        anchors.fill: parent
-        viewModel: root.viewModel.simulate
-        opacity: root.simulateReveal
-        visible: root.simulateReveal > 0
-        z: 3
     }
 }

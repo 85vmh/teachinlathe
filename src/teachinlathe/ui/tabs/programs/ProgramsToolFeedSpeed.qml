@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import tabs.programs.program_loaded
 import theme
 
 // Sits between the top bar and the backplot. Shows, each in its own box, the
@@ -11,6 +12,10 @@ Item {
     id: root
 
     required property var viewModel
+    property var actions: null
+    property var simulationViewModel: null
+    property bool simulation: false
+    readonly property bool moving: viewModel.state === "running" || viewModel.state === "held"
 
     // --- Metrics -----------------------------------------------------------
     property int inputHeight: 40
@@ -245,6 +250,40 @@ Item {
                     color: Theme.foreground
                     font.pixelSize: 26
                 }
+            }
+        }
+
+        // Program options live beside S/F/T in both modes. They no longer
+        // consume a separate bar below the code viewer.
+        LedToggleButton {
+            text: "Break on M1"
+            enabled: root.simulation
+                     ? !!root.simulationViewModel && !root.moving && !root.simulationViewModel.loading
+                     : !!root.actions && root.actions.optionalStopAction.enabled
+            checked: root.simulation
+                     ? !!root.simulationViewModel && root.simulationViewModel.optionalStop
+                     : !!root.actions && root.actions.optionalStopAction.checked
+            onClicked: {
+                if (root.simulation)
+                    root.simulationViewModel.setOptionalStop(!checked)
+                else
+                    root.actions.setOptionalStopEnabled(!checked)
+            }
+        }
+
+        LedToggleButton {
+            text: "Skip / Blocks"
+            enabled: root.simulation
+                     ? !!root.simulationViewModel && !root.moving && !root.simulationViewModel.loading
+                     : !!root.actions && root.actions.blockDeleteAction.enabled
+            checked: root.simulation
+                     ? !!root.simulationViewModel && root.simulationViewModel.blockDelete
+                     : !!root.actions && root.actions.blockDeleteAction.checked
+            onClicked: {
+                if (root.simulation)
+                    root.simulationViewModel.setBlockDelete(!checked)
+                else
+                    root.actions.setBlockDeleteEnabled(!checked)
             }
         }
 

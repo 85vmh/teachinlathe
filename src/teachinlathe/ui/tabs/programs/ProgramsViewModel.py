@@ -20,9 +20,8 @@ from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 from teachinlathe.core.ini_repository import ini_repository
 from teachinlathe.ui.common.images import image_url
 from teachinlathe.ui.tabs.programs.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
-from teachinlathe.ui.tabs.programs.filesystemview.FileSystemBridge import FileSystemBridge, load_or_reload_program
-from teachinlathe.ui.tabs.programs.ProgramsDroViewModel import ProgramsDroViewModel
-from teachinlathe.ui.tabs.programs.ProgramsToolFeedSpeedViewModel import ProgramsToolFeedSpeedViewModel
+from teachinlathe.ui.tabs.programs.filesystemview.FileSystemBridge import FileSystemBridge
+from teachinlathe.ui.tabs.programs.ProgramRunViewModel import ProgramRunViewModel
 from teachinlathe.ui.tabs.programs.simulate.SimulateViewModel import SimulateViewModel
 
 from teachinlathe.programs.model.program_runtime import ProgramRuntimeStore
@@ -33,6 +32,7 @@ from teachinlathe.programs.model.run_time_tracker import RunTimeTracker
 from teachinlathe.programs.logic.simulate_use_case import SimulateUseCase
 from teachinlathe.programs.logic.final_profile_use_case import FinalProfileUseCase
 from teachinlathe.programs.logic.tool_changes_use_case import ToolChangesUseCase
+from teachinlathe.programs.logic.run import MachineRunSource
 from teachinlathe.programs.logic.programs_use_case import ProgramsUseCase
 from teachinlathe.ui.tabs.programs.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
 
@@ -89,7 +89,7 @@ class ProgramsViewModel(QObject):
         self._pending_fit_path = ''
         ini = ini_repository() if ini is None else ini
         locations = program_locations(ini)
-        self._bridge = FileSystemBridge([(loc.name, loc.root_path) for loc in locations], self)
+        self._bridge = FileSystemBridge(self)
         self._runtime_store = ProgramRuntimeStore(self)
         self._call_stack_resolver = ProgramCallStackResolver(self)
         self._actions = ProgramsActionSource(self._runtime_store, self)
@@ -156,15 +156,21 @@ class ProgramsViewModel(QObject):
         self._file_system.deleteFailed.connect(lambda msg: self._shell.showToast("Delete failed: %s" % msg))
         self._file_system.copyFailed.connect(lambda msg: self._shell.showToast("Copy failed: %s" % msg))
 
-        self._dro = ProgramsDroViewModel(self)
         # one planning worker (self._planner) for the screen's simulations, its
         # parts and its tool changes, started when the first is asked for
         self._simulate = SimulateViewModel(SimulateUseCase(self, ini=ini, planner=self._background_planner), self)
+        self._simulate.run.runChanged.connect(self.headerStateChanged)
+        self._simulate.run.changed.connect(self.headerStateChanged)
+        self._simulate.loadingChanged.connect(self.headerStateChanged)
         self._stock = []
         self._final_profile = {"state": "none", "message": "", "rings": [], "stock": [], "summary": None}
         self._final_profile_use_case = FinalProfileUseCase(self._background_planner, self, ini=ini)
         self._final_profile_use_case.ready.connect(self._on_final_profile)
-        self._tool_feed_speed = ProgramsToolFeedSpeedViewModel(self._runtime_store, self._tool_changes, self)
+        # the machine running the program loaded, as every run is shown: the
+        # DRO, the spindle / feed / tool boxes, the backplot
+        from teachinlathe.ui.tabs.programs.backplot.plot_source import MachineSource
+        self._run = ProgramRunViewModel(
+            MachineRunSource(self._runtime_store, self._actions, self._tool_changes, self), MachineSource, self)
 
         self.programLoadRequested.connect(self._prepare_preview_for_load)
         self.enterRunFullScreenRequested.connect(self._shell.enterProgramRunFullScreen)
@@ -192,14 +198,6 @@ class ProgramsViewModel(QObject):
             self._planner = BackgroundPlanner(self)
         return self._planner
 
-    @property
-    def bridge(self):
-        return self._bridge
-
-    @property
-    def runtime_store(self):
-        return self._runtime_store
-
     @pyqtProperty(QObject, constant=True)
     def actions(self):
         return self._actions
@@ -213,12 +211,9 @@ class ProgramsViewModel(QObject):
         return self._file_system
 
     @pyqtProperty(QObject, constant=True)
-    def dro(self):
-        return self._dro
-
-    @pyqtProperty(QObject, constant=True)
-    def toolFeedSpeed(self):
-        return self._tool_feed_speed
+    def run(self):
+        """The machine running the program loaded (ProgramRunViewModel)."""
+        return self._run
 
     @pyqtProperty(QObject, constant=True)
     def simulate(self):
@@ -275,20 +270,16 @@ class ProgramsViewModel(QObject):
 
     @pyqtProperty(bool, notify=screenIndexChanged)
     def simulateShown(self):
-        return self._screen_index == Screen.Simulate
+        return self._screen_index in (Screen.Simulate, Screen.SimulateRunning)
 
     @pyqtProperty(bool, notify=screenIndexChanged)
     def running(self):
-        return self._screen_index == Screen.ProgramRunning
+        return self._screen_index in (Screen.ProgramRunning, Screen.SimulateRunning)
 
     @pyqtProperty(str, notify=previewFileChanged)
     def previewFile(self):
         """The file the backplot previews."""
         return self._preview_file
-
-    @pyqtProperty('QVariantList', constant=True)
-    def folderNames(self):
-        return self._bridge.folderNames
 
     @pyqtProperty(int, notify=screenIndexChanged)
     def screenIndex(self):
@@ -346,14 +337,6 @@ class ProgramsViewModel(QObject):
     def executionHighlightVisible(self):
         return self._execution_highlight_visible()
 
-    @pyqtProperty(bool, notify=currentFilePathChanged)
-    def hasCurrentFile(self):
-        return bool(self.currentFilePath)
-
-    @pyqtProperty(bool, notify=screenIndexChanged)
-    def isGremlinScreen(self):
-        return self._screen_index == Screen.ProgramLoaded
-
     @pyqtSlot(int)
     def navigateTo(self, screen):
         self._bridge.navigateTo(screen)
@@ -361,30 +344,6 @@ class ProgramsViewModel(QObject):
     @pyqtSlot()
     def showFilesScreen(self):
         self.navigateTo(Screen.FileSystem)
-
-    @pyqtSlot()
-    def showGremlinScreen(self):
-        self.navigateTo(Screen.ProgramLoaded)
-
-    @pyqtSlot(str, result='QVariantList')
-    def getFiles(self, folder_name):
-        return self._bridge.getFiles(folder_name)
-
-    @pyqtSlot(str, str, result='QVariantList')
-    def getFilesInPath(self, folder_name, relative_path):
-        return self._bridge.getFilesInPath(folder_name, relative_path)
-
-    @pyqtSlot(str, result=str)
-    def getFolderPath(self, folder_name):
-        return self._bridge.getFolderPath(folder_name)
-
-    @pyqtSlot(str, str)
-    def selectFile(self, folder_name, relative_path):
-        self._bridge.selectFile(folder_name, relative_path)
-
-    @pyqtSlot(str, str)
-    def openFile(self, folder_name, relative_path):
-        self._bridge.openFile(folder_name, relative_path)
 
     @pyqtSlot(QObject)
     def attachHighlighter(self, quick_document):
@@ -394,29 +353,6 @@ class ProgramsViewModel(QObject):
     def openFileByAbsolutePath(self, path: str) -> None:
         """Load a file into LinuxCNC by absolute path — called from FileSystemViewModel."""
         self._bridge.openFileByAbsolutePath(path)
-
-    @pyqtSlot()
-    def openCurrentFileInMachine(self):
-        file_path = self.currentFilePath
-        if not file_path:
-            return
-
-        folder_name = None
-        relative_path = None
-        for candidate_name, candidate_path in self._bridge._folders:
-            candidate_root = os.path.abspath(candidate_path)
-            if file_path == candidate_root or file_path.startswith(candidate_root + os.sep):
-                folder_name = candidate_name
-                relative_path = file_path[len(candidate_root):].lstrip(os.sep)
-                break
-
-        if folder_name is not None and relative_path is not None:
-            self._bridge.openFile(folder_name, relative_path)
-            return
-
-        self.programLoadRequested.emit(file_path)
-        load_or_reload_program(file_path)
-        self._bridge.navigateTo(Screen.ProgramLoaded)
 
     @pyqtSlot()
     def zoomGremlinIn(self):
@@ -726,9 +662,16 @@ class ProgramsViewModel(QObject):
         left_actions = []
         right_actions = []
         title = 'Machine FileSystem'
-        if self._screen_index == Screen.Simulate:
+        if self._screen_index in (Screen.Simulate, Screen.SimulateRunning):
             left_actions.append({"id": "back", "text": "← Back to FileSystem", "enabled": True})
             title = f'Simulate [{self._simulate.fileName}]'
+            if self._screen_index == Screen.Simulate:
+                right_actions.append({
+                    "id": "cycle_start",
+                    "text": "Cycle Start",
+                    "enabled": bool(self._simulate.ready and not self._simulate.loading),
+                    "active": False,
+                })
         elif self._screen_index != Screen.FileSystem:
             left_actions.append({"id": "back", "text": "← Back to FileSystem", "enabled": True})
             title = f'Loaded Program [{os.path.basename(self.currentFilePath or "") or "No file loaded"}]'
@@ -765,13 +708,17 @@ class ProgramsViewModel(QObject):
 
     def triggerHeaderAction(self, action_id):
         if action_id == "back":
-            if self._screen_index == Screen.Simulate:
+            if self._screen_index in (Screen.Simulate, Screen.SimulateRunning):
                 self._simulate.close()
                 self._set_screen_index(Screen.FileSystem)
+                self.exitRunFullScreenRequested.emit()
             else:
                 self.showFilesScreen()
         elif action_id == "cycle_start":
-            self.triggerCycleStart()
+            if self._screen_index == Screen.Simulate:
+                self.startSimulationRun()
+            else:
+                self.triggerCycleStart()
         elif action_id == "load_program":
             self._file_system.openSelectedFile()
         elif action_id == "edit_program":
@@ -799,8 +746,25 @@ class ProgramsViewModel(QObject):
         if not path:
             return
         self._simulate.open(path, self._file_system.selectedGeneratedJsonPathForEdit(),
-                           bool(self._actions.optionalStopAction.checked))
+                           bool(self._actions.optionalStopAction.checked),
+                           bool(self._actions.blockDeleteAction.checked))
         self._set_screen_index(Screen.Simulate)
+
+    @pyqtSlot()
+    def startSimulationRun(self):
+        """Cycle Start from the common header: start and enter the run view."""
+        if not self._simulate.ready or self._simulate.loading:
+            return
+        self._simulate.run.cycleStart()
+        self._set_screen_index(Screen.SimulateRunning)
+        self.enterRunFullScreenRequested.emit()
+
+    @pyqtSlot()
+    def abortSimulationRun(self):
+        """Cycle Abort in the common run bar: stop, keeping the simulation open."""
+        self._simulate.run.cycleStop()
+        self._set_screen_index(Screen.Simulate)
+        self.exitRunFullScreenRequested.emit()
 
     def showFileInGeneratedPrograms(self, ngc_path):
         """A program just generated: selected in Generated Programs."""

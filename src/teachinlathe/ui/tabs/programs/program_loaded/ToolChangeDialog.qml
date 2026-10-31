@@ -26,7 +26,10 @@ Popup {
     // A tool change is answered at the machine, with CycleStart or CycleAbort.
     // Nothing on screen dismisses it - a stray tap must not.
     closePolicy: Popup.NoAutoClose
-    visible: viewModel.requested
+    // The common run screen also shows simulations; machine tool-change
+    // requests must not put this dialog over a simulated run.
+    property bool enabledForMode: true
+    visible: enabledForMode && viewModel.requested
     padding: 0
 
     required property var viewModel

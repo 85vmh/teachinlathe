@@ -6,7 +6,7 @@ import theme
 Rectangle {
     id: root
     // workOffsetName ("G54"...), xPosition, xDistanceToGo, zPosition,
-    // zDistanceToGo: the machine's (ProgramsDroViewModel) or a simulation's
+    // zDistanceToGo: a run's (ProgramRunViewModel), the machine's or a simulation's
     required property var viewModel
     property int axisLabelWidth: 40
     property int valueBoxHeight: 60

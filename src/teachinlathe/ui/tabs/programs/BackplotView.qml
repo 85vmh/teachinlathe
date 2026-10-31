@@ -1,7 +1,7 @@
 // BackplotView.qml — the backplot as every screen shows it: the plot on its
 // panel, its gestures - pan, pinch, wheel, double tap to fit, three fingers
 // to clear - and the buttons over it: zoom, fit, mirror, clear. What it
-// shows is the machine, or a simulation (``simulation``): drawn the same.
+// shows is the machine, or a simulated run (``run``): drawn the same.
 import QtQuick
 import TeachInLathe.Backplot
 import theme
@@ -10,9 +10,9 @@ import common
 Rectangle {
     id: root
 
-    // A simulation to show instead of the machine (SimulateViewModel), set where
-    // this is made; null, the machine.
-    property var simulation: null
+    // The run to show - fixed before the framebuffer renderer is created.
+    // A renderer cannot safely swap this later.
+    required property var run
     // How far three fingers have to travel together, in px, for the swipe
     // that clears the plot.
     property int clearSwipeDistance: 80
@@ -33,7 +33,7 @@ Rectangle {
     // buttons rather than QPushButtons positioned by hand.
     LatheBackplot {
         id: backplot
-        simulation: root.simulation
+        run: root.run
 
         // three fingers swiped this far clear the plot
         clearSwipeDistance: root.clearSwipeDistance

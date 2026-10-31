@@ -1,4 +1,3 @@
 module tabs.programs.gcode_viewer
 GCodeTextArea 1.0 GCodeTextArea.qml
-GCodeViewer 1.0 GCodeViewer.qml
 GCodeViewerPane 1.0 GCodeViewerPane.qml

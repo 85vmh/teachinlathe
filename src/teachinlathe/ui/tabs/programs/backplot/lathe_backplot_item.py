@@ -32,7 +32,7 @@ from PyQt6.QtOpenGL import (QOpenGLFramebufferObject,
 from PyQt6.QtQml import qmlRegisterType
 from PyQt6.QtQuick import QQuickFramebufferObject
 
-from teachinlathe.ui.tabs.programs.backplot import actors, blade_middle, feeds, tool_source, workpiece
+from teachinlathe.ui.tabs.programs.backplot import actors, blade_middle, plot_source, tool_source, workpiece
 from teachinlathe.ui.tabs.programs.backplot.actors.units import INTERNAL_PER_MM
 from teachinlathe.ui.tabs.programs.backplot.touch_gestures import ThreeFingerSwipe
 from teachinlathe.ui.tabs.programs.backplot.actors import base as actor_base
@@ -273,9 +273,9 @@ class LatheBackplotCanon(_HostBase):
     logger, the INI-derived options, the view defaults - plus this lathe's
     own configuration, which used to live in ``GremlinWidget``.
 
-    What it shows comes from ``feed`` (feeds.py): the machine, or a simulation of
-    a program. Its status and its logger are this canon's ``stat`` and
-    ``logger``; everything else is drawn the same from either.
+    What it shows comes from ``source`` (a plot_source.PlotSource): the machine,
+    or a simulated run of a program. Its status and its trail are this canon's
+    ``stat`` and ``logger``; everything is drawn the same from either.
     """
 
     percentLoaded = pyqtSignal(int)
@@ -283,10 +283,10 @@ class LatheBackplotCanon(_HostBase):
     yRotationChanged = pyqtSignal(int)
     zRotationChanged = pyqtSignal(int)
 
-    def __init__(self, item, feed=None):
+    def __init__(self, item, source=None):
         QObject.__init__(self)
         self._item = item
-        self.feed = feed if feed is not None else feeds.LiveFeed()
+        self.source = source if source is not None else plot_source.MachineSource()
         # Set for real at the end of this constructor; declared here because
         # the grafted set-up below can already ask for a redraw.
         self._perf = None
@@ -325,12 +325,17 @@ class LatheBackplotCanon(_HostBase):
             trajcoordinates = "unknown"
         kinsmodule = self.inifile.find("KINS", "KINEMATICS")
 
-        self.feed.start([C(name) for name in feeds.COLOR_NAMES], self.get_geometry(), self.foam_option)
-        stat = self.feed.stat
-        self.logger = self.feed.logger
+        self.source.start([C(name) for name in plot_source.COLOR_NAMES], self.get_geometry(), self.foam_option)
+        stat = self.source.status
+        self.logger = self.source.trail
         glcanon.GlCanonDraw.__init__(self, stat, self.logger)
         glcanon.GlCanonDraw.init_glcanondraw(
             self, trajcoordinates=trajcoordinates, kinsmodule=kinsmodule)
+        # Lcnc_3dGraphics also owns these after the shared GlCanonDraw setup.
+        # Assign them explicitly so the graft keeps that host contract; the
+        # shared setup has already read their INI values.
+        self.axis_angular = self.axis_angular
+        self.axis_wrapped = self.axis_wrapped
 
         self.display_loaded = False
         self.fingerprint = ()
@@ -481,8 +486,8 @@ class LatheBackplotCanon(_HostBase):
         self.blade_corners = {}
 
         # Mirrored: the material left drawn above the centre line, by
-        # actors.remaining. See _mirror - or the feed's own (a simulation's).
-        self.mirror = _mirror if self.feed.MIRROR is None else self.feed.MIRROR
+        # actors.remaining. See _mirror - or the source's own (a simulation's).
+        self.mirror = _mirror if self.source.mirror is None else self.source.mirror
 
         # Upstream's own stock outlines, left on. It draws what
         # (WORKPIECE,...) comments in the G-code declare, and the stock actor
@@ -1177,11 +1182,7 @@ class LatheBackplotCanon(_HostBase):
             self._perf.polls += 1
 
         stat = self.stat
-        try:
-            stat.poll()
-        except Exception:
-            return None
-        self.feed.observe()
+        self.source.poll()
         machine_file = os.path.abspath(stat.file) if stat.file else ''
         call_level = int(getattr(stat, 'call_level', 0) or 0)
         task_mode = stat.task_mode
@@ -1275,8 +1276,8 @@ class LatheBackplotCanon(_HostBase):
     # ── view control ────────────────────────────────────────────────────────
 
     def material_left(self, ctx):
-        """The part as it is being cut, from the feed (feeds.py), or None."""
-        return self.feed.material_left(ctx, self)
+        """The part as it is being cut, from the source, or None."""
+        return self.source.material_left(ctx, self)
 
     def set_program_file(self, path):
         """The program to preview, as opposed to whatever the interpreter has
@@ -1290,7 +1291,7 @@ class LatheBackplotCanon(_HostBase):
         if on == self.mirror:
             return
         self.mirror = on
-        if self.feed.MIRROR is None:
+        if self.source.mirror is None:
             _mirror = on
         self.set_lathe_view()
 
@@ -1566,7 +1567,7 @@ class LatheBackplotItem(QQuickFramebufferObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._canon = None
-        self._simulation = None
+        self._run = None
         # The preview draws bottom-up, as OpenGL does; Quick composes
         # top-down.
         self.setMirrorVertically(True)
@@ -1601,23 +1602,23 @@ class LatheBackplotItem(QQuickFramebufferObject):
 
     # ── wiring ──────────────────────────────────────────────────────────────
 
-    def _get_simulation(self):
-        return self._simulation
+    def _get_run(self):
+        return self._run
 
-    def _set_simulation(self, source):
+    def _set_run(self, run):
         if self._canon is None:
-            self._simulation = source
-        elif source is not None and source is not self._simulation:
-            LOG.warning("backplot: a simulation set after the plot started is not followed")
+            self._run = run
+        elif run is not None and run is not self._run:
+            LOG.warning("backplot: a run set after the plot started is not followed")
 
-    #: A simulation to show instead of the machine - a SimulateViewModel - set
-    #: where the item is made; null, the machine.
-    simulation = pyqtProperty(QObject, _get_simulation, _set_simulation)
+    #: The run to show - something with ``plot_source()``, the PlotSource it
+    #: is drawn from - set where the item is made; null, the machine.
+    run = pyqtProperty(QObject, _get_run, _set_run)
 
     def canon(self):
         if self._canon is None and LIB_GOOD:
-            feed = feeds.SimulatedFeed(self._simulation) if self._simulation is not None else None
-            self._canon = LatheBackplotCanon(self, feed)
+            source = self._run.plot_source() if self._run is not None else None
+            self._canon = LatheBackplotCanon(self, source)
         return self._canon
 
     def createRenderer(self):
@@ -1647,7 +1648,7 @@ class LatheBackplotItem(QQuickFramebufferObject):
 
     def _get_mirror(self):
         # not canon(): read by a binding, it would start the plot before the
-        # item's other properties - its simulation - are set
+        # item's other properties - its run - are set
         return bool(self._canon.mirror) if self._canon is not None else _mirror
 
     def _set_mirror(self, on):

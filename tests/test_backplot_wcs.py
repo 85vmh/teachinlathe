@@ -35,7 +35,7 @@ def host(monkeypatch):
         _last_preview_wcs_signature=Canon._wcs_signature(stat),
         _wcs_signature=Canon._wcs_signature,
         _pixel_quantum=lambda: 0, soft_limits=lambda: (),
-        logger=SimpleNamespace(npts=0), feed=SimpleNamespace(observe=lambda: None),
+        logger=SimpleNamespace(npts=0), source=SimpleNamespace(poll=lambda: None),
         fingerprint=None, update=lambda: None,
     )
 

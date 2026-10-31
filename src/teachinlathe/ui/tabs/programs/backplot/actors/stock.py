@@ -15,7 +15,7 @@ whole bar.
 Facing that makes its Z End the new Z0 moves the origin, not the bar
 (``preview_origin``, the offsets the program was read with).
 
-What is left comes from the host's feed (``backplot.feeds``,
+What is left comes from the host's source (``backplot.plot_source``,
 ``material_left``): for the machine, cut from its live trail - what the
 machine actually did, so it follows a run that was stopped, restarted or run
 from a line - and for a simulation, from the run. Both are the one model of a tool
@@ -112,7 +112,7 @@ class StockActor(Actor):
 
 
 def material_left(host, ctx):
-    """The part as it is being cut, from ``host``'s feed - something with
+    """The part as it is being cut, from ``host``'s source - something with
     ``material`` (a shapely (z, r) shape, mm) and ``version`` - or None."""
     find = getattr(host, "material_left", None)
     try:

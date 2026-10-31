@@ -38,15 +38,17 @@ class SimulateUseCase(QObject):
         self._planner = None
         self._request = None
 
-    def start(self, ngc_path: str, json_path: str = "", optional_stop: bool = False) -> None:
+    def start(self, ngc_path: str, json_path: str = "", optional_stop: bool = False,
+              block_delete: bool = False) -> None:
         """A simulation of ``ngc_path``, the program behind it at ``json_path``
-        ("" for none) giving its stock, Optional Stop on or not: to ``ready``."""
+        ("" for none) giving its stock, Optional Stop and Skip ``/`` Blocks
+        on or not: to ``ready``."""
         from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
         from teachinlathe.tooling.model.tool_snapshot import ToolSnapshot
 
         try:
             args = (ngc_path, self._ini_repository().ini_path, _stock(json_path), self._machine(),
-                    bool(optional_stop), ToolSnapshot.of(self._tool_library()))
+                    bool(optional_stop), bool(block_delete), ToolSnapshot.of(self._tool_library()))
         except Exception as error:
             log.error("simulation of %s failed: %s", ngc_path, error)
             self.failed.emit(str(error))
