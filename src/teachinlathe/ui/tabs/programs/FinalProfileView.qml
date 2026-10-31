@@ -331,6 +331,7 @@ Item {
             buttonHeight: Theme.buttonHeight
             iconSize: 28
             fontPixelSize: 15
+            fontBold: true
             enabled: root.simulateEnabled
             onClicked: root.simulateRequested()
         }

@@ -26,6 +26,11 @@ Item {
     property int labelWidth: 80
     property int valueBoxWidth: 100
     property int unitsWidth: 72
+    property int optionSpacing: 28
+    property int toolBoxWidth: 236
+    property int toolColumnWidth: 58
+    property int toolTimerArrowSpacing: 0
+    property int toolArrowHorizontalPadding: 4
     // Every box is as tall as the spindle's in CSS mode, the tallest content
     // (the RPM and the surface speed, one over the other).
     readonly property int boxHeight: 2 * root.cssInputHeight + root.cssSpacing + 2 * root.boxPadding
@@ -33,7 +38,7 @@ Item {
     implicitHeight: root.boxHeight
     implicitWidth: boxesRow.implicitWidth
 
-    // One of the boxes: the card styling around a row of content.
+    // One of the boxes: the card styling around its contents.
     component Box: Rectangle {
         default property alias content: contentRow.data
         Layout.preferredHeight: root.boxHeight
@@ -190,72 +195,115 @@ Item {
             }
         }
 
-        // ---- Tool: Current -> Next, and while the program runs, under the
-        // arrow, how long until the machine stops for the next one. With no
-        // tool after the current one, the current one alone.
+        // ---- Tool: current and next, with the time until the next tool change.
         Box {
+            Layout.preferredWidth: root.toolBoxWidth
+
             ColumnLayout {
-                spacing: 0
+                Layout.preferredWidth: root.toolColumnWidth
+                Layout.minimumWidth: root.toolColumnWidth
+                Layout.maximumWidth: root.toolColumnWidth
+                Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
+                spacing: 8
 
                 Text {
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.fillWidth: true
                     text: "Current"
                     color: Theme.foregroundSubtle
-                    font.pixelSize: Theme.fontSmall
+                    font.pixelSize: Theme.fontBody
+                    horizontalAlignment: Text.AlignHCenter
                 }
 
                 Text {
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.fillWidth: true
                     text: root.viewModel.currentLoadedToolText
                     color: Theme.foreground
                     font.pixelSize: 26
+                    horizontalAlignment: Text.AlignHCenter
                 }
             }
 
-            ColumnLayout {
+            Item {
+                Layout.fillWidth: true
+                Layout.minimumWidth: 56
+                Layout.preferredWidth: 80
+                Layout.preferredHeight: 50
                 visible: root.viewModel.hasNextTool
-                spacing: 0
 
                 Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "⟶"
-                    color: Theme.foregroundSubtle
-                    font.pixelSize: 24
-                }
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.bottom: toolArrow.top
+                    anchors.bottomMargin: root.toolTimerArrowSpacing
                     visible: text !== ""
                     text: root.viewModel.nextToolTimeText
                     color: Theme.foreground
-                    font.pixelSize: Theme.fontBody
+                    font.pixelSize: Theme.fontSmall
                     font.family: "monospace"
+                }
+
+                Canvas {
+                    id: toolArrow
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: root.toolArrowHorizontalPadding
+                    anchors.rightMargin: root.toolArrowHorizontalPadding
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.verticalCenterOffset: 16
+                    height: 16
+                    implicitWidth: 80
+                    onWidthChanged: requestPaint()
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        var middle = height / 2
+                        var tip = width - 2
+                        ctx.clearRect(0, 0, width, height)
+                        ctx.strokeStyle = Theme.foregroundSubtle
+                        ctx.lineWidth = 2
+                        ctx.lineCap = "round"
+                        ctx.lineJoin = "round"
+                        ctx.beginPath()
+                        ctx.moveTo(1, middle)
+                        ctx.lineTo(tip, middle)
+                        ctx.lineTo(tip - 7, middle - 6)
+                        ctx.moveTo(tip, middle)
+                        ctx.lineTo(tip - 7, middle + 6)
+                        ctx.stroke()
+                    }
                 }
             }
 
             ColumnLayout {
+                Layout.preferredWidth: root.toolColumnWidth
+                Layout.minimumWidth: root.toolColumnWidth
+                Layout.maximumWidth: root.toolColumnWidth
+                Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                 visible: root.viewModel.hasNextTool
-                spacing: 0
+                spacing: 8
 
                 Text {
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.fillWidth: true
                     text: "Next"
                     color: Theme.foregroundSubtle
-                    font.pixelSize: Theme.fontSmall
+                    font.pixelSize: Theme.fontBody
+                    horizontalAlignment: Text.AlignHCenter
                 }
 
                 Text {
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.fillWidth: true
                     text: root.viewModel.nextToolText
                     color: Theme.foreground
                     font.pixelSize: 26
+                    horizontalAlignment: Text.AlignHCenter
                 }
             }
         }
 
         // Program options live beside S/F/T in both modes. They no longer
         // consume a separate bar below the code viewer.
+        Item { Layout.fillWidth: true }
+
         LedToggleButton {
+            Layout.leftMargin: root.optionSpacing
             text: "Break on M1"
             enabled: root.simulation
                      ? !!root.simulationViewModel && !root.moving && !root.simulationViewModel.loading
@@ -272,6 +320,8 @@ Item {
         }
 
         LedToggleButton {
+            Layout.leftMargin: root.optionSpacing
+            Layout.rightMargin: 16
             text: "Skip / Blocks"
             enabled: root.simulation
                      ? !!root.simulationViewModel && !root.moving && !root.simulationViewModel.loading
@@ -287,6 +337,5 @@ Item {
             }
         }
 
-        Item { Layout.fillWidth: true }
     }
 }

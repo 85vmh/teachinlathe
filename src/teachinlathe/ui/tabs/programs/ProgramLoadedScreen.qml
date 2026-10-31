@@ -75,7 +75,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: Theme.surfaceSunken
+        color: Theme.surface
 
         ColumnLayout {
             anchors.fill: parent

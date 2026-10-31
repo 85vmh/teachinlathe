@@ -14,6 +14,7 @@ Rectangle {
     property int buttonHeight: Theme.buttonHeightSmall
     property int iconSize: 20
     property int fontPixelSize: Theme.fontBody
+    property bool fontBold: false
 
     signal clicked()
 
@@ -74,6 +75,7 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             verticalAlignment: Text.AlignVCenter
             font.pixelSize: root.fontPixelSize
+            font.bold: root.fontBold
             elide: Text.ElideRight
         }
     }

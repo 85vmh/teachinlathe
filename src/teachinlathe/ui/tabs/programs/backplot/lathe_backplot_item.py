@@ -45,7 +45,7 @@ LOG = logging.getLogger(__name__)
 #: drawn above it. Off when the application starts, then as the operator last
 #: left it, for as long as it runs: kept here rather than on the canon, which
 #: is rebuilt with the item.
-_mirror = False
+_mirror = True
 
 #: How often the preview looks at the machine, in milliseconds.
 #:
