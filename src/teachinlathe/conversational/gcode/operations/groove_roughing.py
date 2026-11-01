@@ -129,6 +129,11 @@ def _blade_control(tool):
     return tool.z_control if tool is not None else 0
 
 
+def blade_touch_point_comment(tool):
+    """The setup note emitted once, when the grooving blade is loaded."""
+    return f"( blade touch point: {_CONTROL_NAMES[_blade_control(tool)]} )"
+
+
 def _path_end_point(path):
     if not path:
         return None
@@ -701,10 +706,6 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     gcode.code(
         f"(---Groove Roughing: Start Center P{int(roughing.profile_id or 0)}---)"
     )
-    gcode.code(
-        f"( blade touch point: {_CONTROL_NAMES[control]} )"
-    )
-
     start_index = 0
     if len(positions) >= 2 and initial_offset > 0:
         first_z = positions[0]

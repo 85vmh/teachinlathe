@@ -11,7 +11,6 @@ from .profiling.plan_gcode import fit_arcs
 from .profiling.operation_input import GrooveCut
 from .groove_roughing import (
     CONTOUR_ARC_TOLERANCE,
-    _CONTROL_NAMES,
     Corner,
     _blade_control,
     _blade_obstacle,
@@ -175,10 +174,6 @@ def groove_finishing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     gcode.code(
         f"(---Groove Finishing: {strategy.value.replace('_', ' ').title()} P{int(finishing.profile_id or 0)}--)"
     )
-    gcode.code(
-        f"( blade touch point: {_CONTROL_NAMES[control]} )"
-    )
-
     _append_finishing_contour(gcode, safe_x, _blade_obstacle(tool, path, profile_type, 0.0, 0.0), path,
                               center_z, clearance, profile_type, strategy, half_width, control)
 

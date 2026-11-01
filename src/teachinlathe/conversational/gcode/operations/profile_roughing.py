@@ -33,8 +33,8 @@ def _pass_type_label(pass_type: PassType) -> str:
     return {
         PassType.AXIAL: "Axial Passes",
         PassType.RADIAL: "Radial Passes",
-        PassType.DIAGONAL_INTERIOR: f"{angle} Passes toward interior",
-        PassType.DIAGONAL_EXTERIOR: f"{angle} Passes toward exterior",
+        PassType.DIAGONAL_INTERIOR: f"{angle} toward interior",
+        PassType.DIAGONAL_EXTERIOR: f"{angle} toward exterior",
     }.get(pass_type, str(pass_type.value if hasattr(pass_type, "value") else pass_type))
 
 

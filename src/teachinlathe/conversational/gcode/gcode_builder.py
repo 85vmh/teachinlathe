@@ -25,6 +25,7 @@ from teachinlathe.conversational.model.data_types import (
 )
 from teachinlathe.conversational.logic import program_tools
 from teachinlathe.conversational.model.operation_titles import operation_title
+from teachinlathe.tooling.model.data_types import MountedTool
 from teachinlathe.tooling.model.tool_titles import list_title
 
 from .operations import (
@@ -34,6 +35,7 @@ from .operations import (
     profile_contour_toolpath, profile_roughing_toolpath,
     generate_threading_gcode,
 )
+from .operations.groove_roughing import blade_touch_point_comment
 from .toolpath import GcodeEmitter
 
 log = logging.getLogger(__name__)
@@ -236,6 +238,10 @@ def program_toolpath(program: Program, tools, program_name: str = "") -> GcodeEm
             # G28/G30 (toolchange_position) are kept on the tool but not used: M6
             # goes to the machine's tool change position
             path.tool_change(tool.tool_holder_id, list_title(tools.tool_in(tool.tool_holder_id)))
+            if isinstance(op, (GrooveRoughing, GrooveFinishing)):
+                mounted_tool = MountedTool.of(tools, tool.tool_holder_id)
+                if mounted_tool is not None and mounted_tool.blade is not None:
+                    path.code(blade_touch_point_comment(mounted_tool))
             path.blank()
             loaded_tool = tool.tool_holder_id
 
