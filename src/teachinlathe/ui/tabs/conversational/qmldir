@@ -18,6 +18,8 @@ DrillingVisualDetailsView 1.0 DrillingVisualDetailsView.qml
 EdgeBreakBox 1.0 EdgeBreakBox.qml
 EditProfileButton 1.0 EditProfileButton.qml
 FacingVisualDetailsView 1.0 FacingVisualDetailsView.qml
+TurningVisualDetailsView 1.0 TurningVisualDetailsView.qml
+TurningPointBox 1.0 TurningPointBox.qml
 G33CuttingParams 1.0 G33CuttingParams.qml
 G33ThreadingVisualDetailsView 1.0 G33ThreadingVisualDetailsView.qml
 G76CuttingParams 1.0 G76CuttingParams.qml

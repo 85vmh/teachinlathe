@@ -52,6 +52,10 @@ from teachinlathe.conversational.model.data_types import (
     TappingParameters,
     ThreadLocation,
     Threading,
+    Turning,
+    TurningBlend,
+    TurningCuttingParameters,
+    TurningGeometryParameters,
     Workpiece,
     DefineProfile,
     ImportDxfProfile,
@@ -107,6 +111,19 @@ def make_default_operation(op_type: str, order: int = 1):
             geometryParameters=GeometryParameters(xStart=0.0, zStart=0.0, xEnd=0.0, zEnd=0.0),
             m1Parameters=m1_default,
             zEndBecomesNewZ0=False,
+        )
+    if op_type == "turning":
+        return Turning(
+            order=order, type=op_type, generate_gcode=True, is_optional_block=False,
+            speedsAndFeeds=_speeds(feed_rate=0.1),
+            cuttingParameters=TurningCuttingParameters(ap=0.5, toolClearance=1.0),
+            geometryParameters=TurningGeometryParameters(
+                xStart=0.0, zStart=0.0, xEnd=0.0, zEnd=0.0,
+                startBlend=TurningBlend(), shoulderBlend=TurningBlend(),
+            ),
+            stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
+            m1Parameters=M1Parameters(include_m1=True, inspect_position=InspectPosition.G28,
+                                      stop_spindle=False),
         )
     if op_type == "knurling":
         return Knurling(

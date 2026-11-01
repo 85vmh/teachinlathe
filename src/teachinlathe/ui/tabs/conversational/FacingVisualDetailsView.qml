@@ -7,6 +7,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.conversational.profile_canvas
 import theme
+import "define_radial_profile" as Radial
 
 Item {
     id: root
@@ -131,8 +132,33 @@ Item {
             startPosition: ({ x: root.xStart, z: root.zStart })
             endPosition:   ({ x: root.xEnd,   z: root.zEnd })
             roughingPreview: root.facingPreview
-            startPositionArrowRect: startBox.rect
-            endPositionArrowRect:   endBox.rect
+            startPositionArrowRect: null
+            endPositionArrowRect: null
+            readonly property real p1TagOffset: 56
+            readonly property real p1TagX: _cx(root.zStart) - p1TagOffset - p1Tag.width
+            readonly property real p1TagY: _cy(root.xStart) + p1TagOffset
+            readonly property real p2TagX: _cx(root.zEnd) + 56
+            readonly property real p2TagY: _cy(root.xEnd) - 56
+            markers: [
+                { leader: true, x: root.xStart, z: root.zStart, color: "#1565c0",
+                  toZ: root.zStart, dx: -profileCanvas.p1TagOffset, slope: 1 },
+                { leader: true, x: root.xEnd, z: root.zEnd, color: profileCanvas.endPositionColor,
+                  toZ: root.zEnd, dx: 56, slope: -1 }
+            ]
+            Radial.GroovePointTag {
+                id: p1Tag
+                point: 1
+                axes: "XZ"
+                x: profileCanvas.p1TagX
+                y: profileCanvas.p1TagY - height / 2
+            }
+            Radial.GroovePointTag {
+                point: 2
+                axes: "XZ"
+                x: profileCanvas.p2TagX
+                y: profileCanvas.p2TagY - height / 2
+                accent: profileCanvas.endPositionColor
+            }
 
             Rectangle {
                 anchors.fill: parent
@@ -149,24 +175,10 @@ Item {
             // The boxes stack down the right edge, each as wide as it needs;
             // the drawing is fitted into what the widest leaves free.
             readonly property real boxWidth: Math.max(docBox.implicitWidth, z0Check.implicitWidth,
-                                                      endBox.implicitWidth, startBox.implicitWidth)
+                                                      endBox.implicitWidth, startBox.implicitWidth,
+                                                      retractBox.implicitWidth)
             readonly property real boxGap: Theme.spacingLarge
             fitInsetRight: boxWidth + boxGap
-
-            // top to bottom: the end position, Ap / Retract halfway down to
-            // the start, the start at the bottom
-            DepthOfCutBox {
-                id: docBox
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: (endBox.y + endBox.height + startBox.y - height) / 2
-                docColor: profileCanvas.feedColor
-                retractColor: profileCanvas.rapidColor
-                doc: root.doc
-                retract: root.retract
-                onDocEdited: function(value) { root.doc = value; root.save() }
-                onRetractEdited: function(value) { root.retract = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
 
             // the tool it cuts with, at the top, in the middle
             OperationToolBox {
@@ -200,49 +212,82 @@ Item {
                 tipY: profileCanvas._cy(root.xStart)
             }
 
-            // the end position, and above it whether Z End becomes the new
-            // Z0, in its colour - at the top
+            // top to bottom: Tool Clearance (retract), P1, Ap, P2 and its Z0
+            // option; all position cards use the same labels and teach-in UI
+            DepthOfCutBox {
+                id: retractBox
+                x: profileCanvas.width - width - profileCanvas.boxGap
+                y: profileCanvas.boxGap
+                showDoc: false
+                retractLabel: "Tool Clearance"
+                docColor: profileCanvas.feedColor
+                retractColor: profileCanvas.rapidColor
+                retract: root.retract
+                onRetractEdited: function(value) { root.retract = value; root.save() }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            TurningPointBox {
+                id: startBox
+                point: 1
+                settingPrefix: "facing"
+                x: profileCanvas.width - width - profileCanvas.boxGap
+                y: retractBox.y + retractBox.height + Theme.spacingSmall
+                xValue: root.xStart
+                zValue: root.zStart
+                onFieldEdited: function(axis, value) {
+                    if (axis === "x") root.xStart = value; else root.zStart = value
+                    root.save()
+                }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            DepthOfCutBox {
+                id: docBox
+                x: profileCanvas.width - width - profileCanvas.boxGap
+                y: startBox.y + startBox.height + Theme.spacingSmall
+                showRetract: false
+                docColor: profileCanvas.feedColor
+                retractColor: profileCanvas.rapidColor
+                doc: root.doc
+                onDocEdited: function(value) { root.doc = value; root.save() }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            TurningPointBox {
+                id: endBox
+                point: 2
+                pointColor: profileCanvas.endPositionColor
+                settingPrefix: "facing"
+                x: profileCanvas.width - width - profileCanvas.boxGap
+                y: docBox.y + docBox.height + Theme.spacingSmall
+                xValue: root.xEnd
+                zValue: root.zEnd
+                onFieldEdited: function(axis, value) {
+                    if (axis === "x") root.xEnd = value; else root.zEnd = value
+                    root.save()
+                }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
             CheckBox {
                 id: z0Check
                 x: endBox.x
-                y: profileCanvas.boxGap
-                text: "Set Z End as the new Z0"
+                y: endBox.y + endBox.height + Theme.spacingSmall
+                text: "Set P2Z as the new Z0"
                 font.pixelSize: Theme.fontBody
-                font.bold: true
+                font.bold: false
                 checked: root.zEndBecomesNewZ0
                 onToggled: { root.zEndBecomesNewZ0 = checked; root.save() }
                 contentItem: Text {
-                    text: z0Check.text
+                    text: "Set P<sub>2</sub><span style=\"font-size: "
+                          + Math.round(Theme.fontBody * 0.78) + "px\">Z</span> as the new Z0"
+                    textFormat: Text.RichText
                     font: z0Check.font
                     color: profileCanvas.endPositionColor
                     verticalAlignment: Text.AlignVCenter
                     leftPadding: z0Check.indicator.width + z0Check.spacing
                 }
-            }
-
-            StartPositionBox {
-                id: endBox
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: z0Check.y + z0Check.height + Theme.spacingSmall
-                accent: profileCanvas.endPositionColor
-                xLabel: "X End Position"
-                zLabel: "Z End Position"
-                xStart: root.xEnd
-                zStart: root.zEnd
-                onXStartEdited: function(value) { root.xEnd = value; root.save() }
-                onZStartEdited: function(value) { root.zEnd = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            StartPositionBox {
-                id: startBox
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.height - height - profileCanvas.boxGap
-                xStart: root.xStart
-                zStart: root.zStart
-                onXStartEdited: function(value) { root.xStart = value; root.save() }
-                onZStartEdited: function(value) { root.zStart = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
             // zoom, fit to screen and mirror - top-left, as on every profile canvas

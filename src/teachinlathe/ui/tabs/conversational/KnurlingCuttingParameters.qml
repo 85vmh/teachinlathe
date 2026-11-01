@@ -58,7 +58,7 @@ GroupBox {
     GridLayout {
         anchors.fill: parent
         columns: 3
-        columnSpacing: 20
+        columnSpacing: Theme.spacing
         rowSpacing: 20
 
         Label { text: "Grooves Count"; font.pixelSize: Theme.fontBody }

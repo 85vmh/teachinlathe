@@ -849,6 +849,125 @@ class Facing(TurnableOperation):
 
 
 @dataclass
+class TurningBlend:
+    """A chamfer or fillet at one of Turning's two corners."""
+    blend_type: BlendType = BlendType.NONE
+    chamfer_width: float = 0.0
+    fillet_radius: float = 0.0
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "TurningBlend":
+        data = data if isinstance(data, dict) else {}
+        try:
+            blend_type = BlendType(data.get("type", BlendType.NONE.value))
+        except ValueError:
+            blend_type = BlendType.NONE
+        if blend_type is BlendType.UNDERCUT_DIN509:
+            blend_type = BlendType.NONE
+        return TurningBlend(
+            blend_type=blend_type,
+            chamfer_width=float(data.get("chamfer_width", 0.0) or 0.0),
+            fillet_radius=float(data.get("fillet_radius", 0.0) or 0.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "type": self.blend_type.value,
+            "chamfer_width": float(self.chamfer_width),
+            "fillet_radius": float(self.fillet_radius),
+        }
+
+
+@dataclass
+class TurningGeometryParameters:
+    xStart: float
+    zStart: float
+    xEnd: float
+    zEnd: float
+    startBlend: TurningBlend = field(default_factory=TurningBlend)
+    shoulderBlend: TurningBlend = field(default_factory=TurningBlend)
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "TurningGeometryParameters":
+        data = data if isinstance(data, dict) else {}
+        return TurningGeometryParameters(
+            xStart=float(data.get("x_start", 0.0) or 0.0),
+            zStart=float(data.get("z_start", 0.0) or 0.0),
+            xEnd=float(data.get("x_end", 0.0) or 0.0),
+            zEnd=float(data.get("z_end", 0.0) or 0.0),
+            startBlend=TurningBlend.from_dict(data.get("start_blend")),
+            shoulderBlend=TurningBlend.from_dict(data.get("shoulder_blend")),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "x_start": float(self.xStart),
+            "z_start": float(self.zStart),
+            "x_end": float(self.xEnd),
+            "z_end": float(self.zEnd),
+            "start_blend": self.startBlend.to_dict(),
+            "shoulder_blend": self.shoulderBlend.to_dict(),
+        }
+
+
+@dataclass
+class TurningCuttingParameters:
+    ap: float = 0.0
+    toolClearance: float = 0.0
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "TurningCuttingParameters":
+        data = data if isinstance(data, dict) else {}
+        return TurningCuttingParameters(
+            ap=float(data.get("ap", 0.0) or 0.0),
+            toolClearance=abs(float(data.get("tool_clearance", 0.0) or 0.0)),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"ap": float(self.ap), "tool_clearance": float(self.toolClearance)}
+
+
+@dataclass
+class Turning(TurnableOperation):
+    cuttingParameters: TurningCuttingParameters
+    geometryParameters: TurningGeometryParameters
+    stockToLeave: StockToLeave
+    m1Parameters: M1Parameters
+    passType: PassType = PassType.AXIAL
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Turning":
+        return Turning(
+            order=int(data["order"]),
+            type=data["type"],
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            speedsAndFeeds=TurnableOperation._parse_speeds_and_feeds(data),
+            cuttingParameters=TurningCuttingParameters.from_dict(data.get("cutting_parameters")),
+            geometryParameters=TurningGeometryParameters.from_dict(data.get("geometry_parameters")),
+            stockToLeave=StockToLeave.from_dict(data.get("stock_to_leave", {})),
+            m1Parameters=M1Parameters.from_dict(data.get("m1_parameters", {})),
+            passType=ProfileRoughingStrategy.from_dict(data.get("profile_roughing_strategy", {})).pass_type,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        self._add_speeds_and_feeds_to(base)
+        base.update({
+            "cutting_parameters": self.cuttingParameters.to_dict(),
+            "geometry_parameters": self.geometryParameters.to_dict(),
+            "stock_to_leave": self.stockToLeave.to_dict(),
+            "m1_parameters": self.m1Parameters.to_dict(),
+            "profile_roughing_strategy": {"profiling_type": ProfilingType.OD.value,
+                                          "pass_type": self.passType.value},
+        })
+        return base
+
+    def display_name(self) -> str:
+        return "Turning"
+
+
+@dataclass
 class Knurling(TurnableOperation):
     cuttingParameters: KnurlingCuttingParameters
     geometryParameters: KnurlingGeometryParameters
@@ -2019,6 +2138,7 @@ class Program:
 operation_types: Dict[str, Type[Operation]] = {
     "positionAt": PositionAt,
     "facing": Facing,
+    "turning": Turning,
     "knurling": Knurling,
     "defineProfile": DefineProfile,
     "importDxfProfile": ImportDxfProfile,

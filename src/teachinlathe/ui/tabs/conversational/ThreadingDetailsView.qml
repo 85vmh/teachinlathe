@@ -200,7 +200,7 @@ Item {
 
                     GridLayout {
                         columns: 3
-                        columnSpacing: 16
+                        columnSpacing: Theme.spacing
                         rowSpacing: 16
 
                         Label { text: "Pitch"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 80 }

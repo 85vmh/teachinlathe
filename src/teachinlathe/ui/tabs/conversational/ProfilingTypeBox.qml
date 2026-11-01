@@ -20,7 +20,7 @@ CanvasBox {
 
     component PassButton: RadioButton {
         property string value
-        font.pixelSize: Theme.fontSmall
+        font.pixelSize: Theme.fontBody
         checked: root.passType === value
         ButtonGroup.group: passGroup
         onToggled: if (checked) root.passTypeEdited(value)

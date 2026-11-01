@@ -253,7 +253,7 @@ GroupBox {
             enabled: root.feedEnabled
             opacity: root.feedEnabled ? 1.0 : 0.5
             columns: 3
-            columnSpacing: 20
+            columnSpacing: Theme.spacing
             rowSpacing: speedGrid.rowSpacing
 
             readonly property bool parting: root.feedKind === SpeedsAndFeeds.FeedKind.Parting

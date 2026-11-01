@@ -38,6 +38,7 @@ from teachinlathe.conversational.model.data_types import (
     Program,
     Tapping,
     Threading,
+    Turning,
     Workpiece,
     operation_types,
 )
@@ -75,6 +76,8 @@ from teachinlathe.conversational.model.updaters import (
     apply_stock_to_leave_update,
     apply_tapping_update,
     apply_threading_update,
+    apply_turning_cutting_update,
+    apply_turning_geometry_update,
     apply_turnable_operation_update,
 )
 from teachinlathe.conversational.logic import program_tools
@@ -117,6 +120,7 @@ class ConversationalUseCase:
             "defineProfile": (DefineProfile, apply_define_profile_update),
             "defineRadialProfile": (DefineRadialProfile, apply_define_radial_profile_update),
             "facing": (Facing, self._update_facing),
+            "turning": (Turning, self._update_turning),
             "profiling": (Profiling, self._update_profiling),
             "knurling": (Knurling, self._update_knurling),
             "profileRoughing": (ProfileRoughing, self._update_profile_roughing),
@@ -555,6 +559,12 @@ class ConversationalUseCase:
         return facing_preview(Operation.from_dict(op_data))
 
     @staticmethod
+    def turning_preview(op_data: dict, tool=None):
+        """What a Turning would cut as its editor has it."""
+        from teachinlathe.conversational.gcode.operations.turning import turning_preview
+        return turning_preview(Operation.from_dict(op_data), tool)
+
+    @staticmethod
     def parting_preview(op_data: dict):
         """What a Parting would cut as its editor has it - ``op_data``, the
         operation's dict - an OperationPreview."""
@@ -643,6 +653,18 @@ class ConversationalUseCase:
         apply_geometry_update(op.geometryParameters, p.get("geometry_parameters"))
         apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
         _set_if_given(op, p, "z_end_becomes_new_z0", "zEndBecomesNewZ0", bool)
+
+    @staticmethod
+    def _update_turning(op, p):
+        apply_turnable_operation_update(op, p)
+        apply_turning_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
+        apply_turning_geometry_update(op.geometryParameters, p.get("geometry_parameters"))
+        apply_stock_to_leave_update(op.stockToLeave, p.get("stock_to_leave"))
+        apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
+        strategy = p.get("profile_roughing_strategy")
+        if isinstance(strategy, dict) and strategy.get("pass_type") in ("axial", "radial"):
+            from teachinlathe.conversational.model.data_types import PassType
+            op.passType = PassType(strategy["pass_type"])
 
     @staticmethod
     def _update_profiling(op, p):

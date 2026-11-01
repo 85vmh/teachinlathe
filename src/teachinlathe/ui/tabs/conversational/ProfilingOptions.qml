@@ -131,7 +131,7 @@ GroupBox {
                         id: roughGrid
                         anchors.fill: parent
                         columns: 3
-                        columnSpacing: 20
+                        columnSpacing: Theme.spacing
                         rowSpacing: 16
 
                         Label {

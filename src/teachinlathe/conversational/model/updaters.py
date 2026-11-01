@@ -10,6 +10,7 @@ from teachinlathe.conversational.model.data_types import (
     SpindleMode,
     Strategy,
     ThreadLocation,
+    TurningBlend,
     radial_primitives_from,
 )
 from teachinlathe.tooling.model.data_types import SpindleDirection
@@ -112,6 +113,24 @@ def apply_geometry_update(geometry, payload):
     _set_attr_if_present(geometry, payload, "z_start", attr="zStart", coerce=float)
     _set_attr_if_present(geometry, payload, "x_end", attr="xEnd", coerce=float)
     _set_attr_if_present(geometry, payload, "z_end", attr="zEnd", coerce=float)
+
+
+def apply_turning_geometry_update(geometry, payload):
+    if geometry is None or not isinstance(payload, dict):
+        return
+    apply_geometry_update(geometry, payload)
+    if payload.get("start_blend") is not None:
+        geometry.startBlend = TurningBlend.from_dict(payload["start_blend"])
+    if payload.get("shoulder_blend") is not None:
+        geometry.shoulderBlend = TurningBlend.from_dict(payload["shoulder_blend"])
+
+
+def apply_turning_cutting_update(cutting, payload):
+    if cutting is None or not isinstance(payload, dict):
+        return
+    _set_attr_if_present(cutting, payload, "ap", coerce=float)
+    _set_attr_if_present(cutting, payload, "tool_clearance", attr="toolClearance",
+                         coerce=lambda value: abs(float(value)))
 
 
 def apply_drilling_update(drilling, payload):

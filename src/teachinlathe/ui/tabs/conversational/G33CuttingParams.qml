@@ -14,7 +14,7 @@ ColumnLayout {
     IntValidator { id: intValNonNeg; bottom: 0; top: 99 }
 
     RowLayout {
-        spacing: Theme.spacingLarge
+        spacing: Theme.spacing
         Label { text: "Initial DOC"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
         NumpadField {
             Layout.preferredWidth: 110
@@ -41,7 +41,7 @@ ColumnLayout {
     }
 
     RowLayout {
-        spacing: Theme.spacingLarge
+        spacing: Theme.spacing
         Label { text: "Retract"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
         NumpadField {
             Layout.preferredWidth: 110

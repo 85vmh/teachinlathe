@@ -40,6 +40,7 @@ Popup {
     property var options: [
         { label: "Position At",      type: "positionAt"      },
         { label: "Facing",           type: "facing"          },
+        { label: "Turning",          type: "turning"         },
         { label: "G33 Knurling",     type: "knurling"        },
         { label: "Define Profile",   type: "defineProfile"   },
         { label: "Import DXF Profile", type: "importDxfProfile" },

@@ -362,6 +362,15 @@ class FacingEditorViewModel(ToolOperationEditorViewModel):
     canvasMirror = pyqtProperty(bool, _get_canvas_mirror, _set_canvas_mirror)
 
 
+class TurningEditorViewModel(ToolOperationEditorViewModel):
+    update_type = "turning"
+
+    @pyqtSlot("QVariant", result="QVariant")
+    def preview(self, op_data):
+        tool = self._use_case.tool_of(self._program, self._index)
+        return self._preview(lambda op: qml_preview(self._use_case.turning_preview(op, tool)), op_data)
+
+
 class ProfileFollowingEditorViewModel(ToolOperationEditorViewModel):
     """Profile Roughing and Profile Contour: they cut the last profile above."""
 
@@ -607,6 +616,7 @@ class DefineRadialProfileEditorViewModel(OperationEditorViewModel):
 EDITORS = {
     "positionAt": PositionAtEditorViewModel,
     "facing": FacingEditorViewModel,
+    "turning": TurningEditorViewModel,
     "knurling": KnurlingEditorViewModel,
     "profiling": ProfilingEditorViewModel,
     "profileRoughing": ProfileRoughingEditorViewModel,

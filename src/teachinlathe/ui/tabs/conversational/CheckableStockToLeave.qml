@@ -50,7 +50,7 @@ GroupBox {
     GridLayout {
         anchors.fill: parent
         columns: 3
-        columnSpacing: 20
+        columnSpacing: Theme.spacing
         rowSpacing: 16
         enabled: root.stock_to_leave_enabled
         opacity: root.stock_to_leave_enabled ? 1.0 : 0.45

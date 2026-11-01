@@ -36,7 +36,7 @@ RowLayout {
     signal edited(string blendType, real chamferWidth, real filletRadius)
     signal openNumPadRequested(var field)
 
-    spacing: 20
+    spacing: Theme.spacing
 
     // the field shows the new kind's value - or nothing - even when the
     // number itself is the same

@@ -24,7 +24,7 @@ CanvasBox {
     DoubleValidator { id: dblVal; bottom: 0; notation: DoubleValidator.StandardNotation }
 
     RowLayout {
-        spacing: 20
+        spacing: Theme.spacing
 
         Label {
             id: labelText

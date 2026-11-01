@@ -33,7 +33,7 @@ CanvasBox {
 
     GridLayout {
         columns: 3
-        columnSpacing: 20
+        columnSpacing: Theme.spacing
         rowSpacing: 20
 
         Label { text: "Strategy"; color: root.accent; font.pixelSize: Theme.fontBody }

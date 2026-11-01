@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.conversational.profile_canvas
 import theme
+import "define_radial_profile" as Radial
 
 Item {
     id: root
@@ -31,6 +32,7 @@ Item {
     property real   doc: 0.0
     property real   retract: 0.0
     property string passType: "axial"
+    readonly property bool isIdProfile: String(profileType).toLowerCase() === "id"
 
     // what roughing will cut with the values above
     // Rest material: it cuts what the roughings above it leave, keeping to
@@ -178,8 +180,25 @@ Item {
             workpiece:   root.workpiece
             startPosition: root.primitives.length > 0 && !root.restMaterial ? { x: root.xStart, z: root.zStart } : null
             roughingPreview: root.roughingPreview
-            startPositionArrowRect: startBox.rect
-            stockToLeaveArrowRect:  root.restMaterial ? null : stockBox.rect
+            startPositionArrowRect: null
+            stockToLeaveArrowRect: null
+            readonly property real p1TagOffset: 56
+            readonly property real p1TagX: root.isIdProfile
+                ? _cx(root.zStart) + p1TagOffset
+                : _cx(root.zStart) - p1TagOffset - p1Tag.width
+            readonly property real p1TagY: _cy(root.xStart) + p1TagOffset
+            markers: root.primitives.length > 0 && !root.restMaterial ? [
+                { leader: true, x: root.xStart, z: root.zStart, color: "#1565c0",
+                  toZ: root.zStart, dx: root.isIdProfile ? p1TagOffset : -p1TagOffset, slope: 1 }
+            ] : []
+            Radial.GroovePointTag {
+                id: p1Tag
+                visible: root.primitives.length > 0 && !root.restMaterial
+                point: 1
+                axes: "XZ"
+                x: profileCanvas.p1TagX
+                y: profileCanvas.p1TagY - height / 2
+            }
 
             Rectangle {
                 anchors.fill: parent
@@ -272,69 +291,83 @@ Item {
                 }
             }
 
-            // The boxes stack down the right edge, each as wide as it needs;
-            // the drawing is fitted into what the widest leaves free.
-            readonly property real boxWidth: Math.max(strategyBox.implicitWidth, stockBox.implicitWidth,
-                                                      docBox.implicitWidth, startBox.implicitWidth)
-            readonly property real boxGap: Theme.spacingLarge
-            // top to bottom: strategy, stock to leave, Ap / retract, start -
-            // the first at the top, the last at the bottom, the space between
-            // them shared out equally
-            // A rest roughing has neither stock to leave nor start of its own:
-            // Ap / retract go right under the strategy.
-            readonly property real boxSpacing: root.restMaterial ? boxGap
-                : (height - 2 * boxGap - strategyBox.height - stockBox.height
-                   - docBox.height - startBox.height) / 3
-            fitInsetRight: root.primitives.length > 0 ? boxWidth + boxGap : 0
+            // Right-aligned cards, sized to their own content; they scroll
+            // inside the canvas when the viewport is shorter than the stack.
+            readonly property real boxWidth: fieldsScroll.width
+            fitInsetRight: root.primitives.length > 0 ? boxWidth + profileCanvas.tickBand : 0
 
-            ProfilingTypeBox {
-                id: strategyBox
-                visible: root.primitives.length > 0
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.boxGap
-                profilingType: root.profileType
-                passType: root.passType
-                onPassTypeEdited: function(value) { root.passType = value; root.save() }
-            }
+            Flickable {
+                id: fieldsScroll
+                width: Math.max(1, fields.implicitWidth)
+                height: profileCanvas.height - 2 * profileCanvas.tickBand
+                x: profileCanvas.width - width - profileCanvas.tickBand
+                y: profileCanvas.tickBand
+                contentWidth: width
+                contentHeight: fields.implicitHeight
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                ColumnLayout {
+                    id: fields
+                    width: parent.width
+                    spacing: Theme.spacingSmall
 
-            StockToLeaveBox {
-                id: stockBox
-                visible: root.primitives.length > 0 && !root.restMaterial
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: strategyBox.y + strategyBox.height + profileCanvas.boxSpacing
-                labelColor: profileCanvas.stockToLeaveColor
-                radial: root.stockRadial
-                axial: root.stockAxial
-                onRadialEdited: function(value) { root.stockRadial = value; root.save() }
-                onAxialEdited: function(value) { root.stockAxial = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            DepthOfCutBox {
-                id: docBox
-                visible: root.primitives.length > 0
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: root.restMaterial ? strategyBox.y + strategyBox.height + profileCanvas.boxSpacing
-                                     : stockBox.y + stockBox.height + profileCanvas.boxSpacing
-                docColor: profileCanvas.feedColor
-                retractColor: profileCanvas.rapidColor
-                doc: root.doc
-                retract: root.retract
-                onDocEdited: function(value) { root.doc = value; root.save() }
-                onRetractEdited: function(value) { root.retract = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            StartPositionBox {
-                id: startBox
-                visible: profileCanvas.startPosition !== null
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: docBox.y + docBox.height + profileCanvas.boxSpacing
-                xStart: root.xStart
-                zStart: root.zStart
-                onXStartEdited: function(value) { root.xStart = value; root.save() }
-                onZStartEdited: function(value) { root.zStart = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    ProfilingTypeBox {
+                        id: strategyBox
+                        visible: root.primitives.length > 0
+                        Layout.alignment: Qt.AlignRight
+                        profilingType: root.profileType
+                        passType: root.passType
+                        onPassTypeEdited: function(value) { root.passType = value; root.save() }
+                    }
+                    DimensionBox {
+                        id: clearanceBox
+                        visible: root.primitives.length > 0
+                        Layout.alignment: Qt.AlignRight
+                        label: "Tool Clearance"
+                        dimensionColor: profileCanvas.rapidColor
+                        settingName: "profile_roughing.tool_clearance"
+                        value: root.retract
+                        onValueEdited: function(value) { root.retract = value; root.save() }
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    }
+                    TurningPointBox {
+                        id: startBox
+                        visible: profileCanvas.startPosition !== null
+                        Layout.alignment: Qt.AlignRight
+                        point: 1
+                        settingPrefix: "profile_roughing"
+                        xValue: root.xStart
+                        zValue: root.zStart
+                        onFieldEdited: function(axis, value) {
+                            if (axis === "x") root.xStart = value; else root.zStart = value
+                            root.save()
+                        }
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    }
+                    DimensionBox {
+                        id: apBox
+                        visible: root.primitives.length > 0
+                        Layout.alignment: Qt.AlignRight
+                        label: "Ap"
+                        dimensionColor: profileCanvas.feedColor
+                        settingName: "profile_roughing.ap"
+                        value: root.doc
+                        onValueEdited: function(value) { root.doc = value; root.save() }
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    }
+                    StockToLeaveBox {
+                        id: stockBox
+                        visible: root.primitives.length > 0 && !root.restMaterial
+                        Layout.alignment: Qt.AlignRight
+                        labelColor: profileCanvas.stockToLeaveColor
+                        radial: root.stockRadial
+                        axial: root.stockAxial
+                        onRadialEdited: function(value) { root.stockRadial = value; root.save() }
+                        onAxialEdited: function(value) { root.stockAxial = value; root.save() }
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    }
+                }
             }
 
             // the tool it cuts with, at the top, in the middle; tapped, to

@@ -12,11 +12,13 @@ CanvasBox {
     property real doc: 0.0
     property real retract: 0.0
     property bool showDoc: true
+    property bool showRetract: true
+    property string retractLabel: "Retract"
     // the toolpath's colours: cuts for the depth of cut, rapids for retract
     property color docColor: Theme.foreground
     property color retractColor: Theme.foreground
 
-    accent: docColor
+    accent: showDoc ? docColor : retractColor
 
     signal docEdited(real value)
     signal retractEdited(real value)
@@ -26,7 +28,7 @@ CanvasBox {
 
     GridLayout {
         columns: 3
-        columnSpacing: 20
+        columnSpacing: Theme.spacing
         rowSpacing: 20
 
         Label { visible: root.showDoc; text: "Ap"; color: root.docColor; font.pixelSize: Theme.fontBody; font.bold: true }
@@ -43,8 +45,9 @@ CanvasBox {
         }
         Label { visible: root.showDoc; text: "(mm)"; font.pixelSize: Theme.fontBody }
 
-        Label { text: "Retract"; color: root.retractColor; font.pixelSize: Theme.fontBody }
+        Label { visible: root.showRetract; text: root.retractLabel; color: root.retractColor; font.pixelSize: Theme.fontBody }
         NumpadField {
+            visible: root.showRetract
             Layout.preferredWidth: 100
             settingName: "cutting.retract"
             validatorObject: dblVal
@@ -54,6 +57,6 @@ CanvasBox {
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
             onValueCommitted: function(value) { root.retractEdited(Number(value)) }
         }
-        Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
+        Label { visible: root.showRetract; text: "(mm)"; font.pixelSize: Theme.fontBody }
     }
 }

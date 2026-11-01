@@ -60,7 +60,7 @@ GroupBox {
         id: grid
         anchors.fill: parent
         columns: 3
-        columnSpacing: 20
+        columnSpacing: Theme.spacing
         rowSpacing: 20
 
         // Depth of Cut

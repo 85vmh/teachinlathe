@@ -4,6 +4,7 @@ writes each operation class."""
 
 from .define_profile import generate_define_profile_gcode
 from .facing import facing_toolpath
+from .turning import generate_turning_gcode, turning_preview, turning_toolpath
 from .knurling import generate_knurling_gcode
 from .drilling import drilling_toolpath
 from .g7x_profiling import generate_profiling_gcode

@@ -23,7 +23,7 @@ CanvasBox {
 
     GridLayout {
         columns: 3
-        columnSpacing: 20
+        columnSpacing: Theme.spacing
         rowSpacing: 20
 
         Label { text: "Radial"; color: root.labelColor; font.pixelSize: Theme.fontBody }

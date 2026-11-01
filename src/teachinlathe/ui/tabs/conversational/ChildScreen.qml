@@ -34,6 +34,7 @@ Item {
         "header": "HeaderDetailsView.qml",
         "positionAt": "PositionAtDetailsView.qml",
         "facing": "FacingVisualDetailsView.qml",
+        "turning": "TurningVisualDetailsView.qml",
         "knurling": "KnurlingDetailsView.qml",
         "profiling": "ProfilingDetailsView.qml",
         "profileRoughing": "ProfileRoughingVisualDetailsView.qml",
