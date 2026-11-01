@@ -239,6 +239,7 @@ Item {
     ToolChangeDialog {
         viewModel: root.viewModel.toolChange
         enabledForMode: !root.simulation
+        onVisibleChanged: if (visible && !root.simulation) machineBackplot.plot.refresh()
     }
 
     Connections {

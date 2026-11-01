@@ -2,7 +2,7 @@
 
 import math
 
-from teachinlathe.ui.tabs.programs.backplot.actors import geometry, palette, screen
+from teachinlathe.ui.tabs.programs.backplot.actors import geometry, palette, screen, text
 from teachinlathe.ui.tabs.programs.backplot.actors.base import Actor
 
 #: Radius of the symbol, in pixels.
@@ -70,6 +70,19 @@ class OriginActor(Actor):
         self.fill(ctx, disc, BACKGROUND, mvp)
         self.fill(ctx, wedges, COLOR, mvp)
         self.fill(ctx, ring, COLOR, mvp)
+
+        # Name the active work-coordinate origin, as Machine Coordinates
+        # does, just above and to the right of the sign at a 45-degree angle.
+        origin = text.to_screen(mvp, (0.0, 0.0, 0.0),
+                                (ctx.width, ctx.height))
+        if origin is not None:
+            from teachinlathe.machine.model.work_offsets import work_offset_name
+            name = work_offset_name(getattr(ctx.stat, "g5x_index", 1))
+            diagonal = RADIUS_PX / math.sqrt(2.0)
+            text.draw(ctx, [(name,
+                             origin[0] + diagonal + 2.0,
+                             origin[1] + diagonal,
+                             text.LEFT, text.BOTTOM)], COLOR, "axis")
 
     def _build(self, ctx, mvp):
         """The three shapes, in draw order. A fixed size on screen, so they

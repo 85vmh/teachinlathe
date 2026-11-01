@@ -100,9 +100,11 @@ try:
     from OpenGL.GL import (GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT,
                            GL_DRAW_FRAMEBUFFER, GL_DRAW_FRAMEBUFFER_BINDING,
                            GL_FALSE, GL_FRAMEBUFFER, GL_MULTISAMPLE,
-                           GL_NEAREST, GL_READ_FRAMEBUFFER, GL_TRUE, glBindFramebuffer,
+                           GL_NEAREST, GL_READ_FRAMEBUFFER, GL_SCISSOR_TEST,
+                           GL_TRUE, GL_DEPTH_WRITEMASK, glBindFramebuffer,
                            glBlitFramebuffer, glClear, glClearColor,
-                           glColorMask, glDisable, glGetIntegerv, glViewport)
+                           glColorMask, glDepthMask, glDisable, glEnable,
+                           glGetBooleanv, glGetIntegerv, glIsEnabled, glViewport)
     from rs274 import glcanon
     from qt5_graphics import Lcnc_3dGraphics
     LIB_GOOD = True
@@ -450,6 +452,10 @@ class LatheBackplotCanon(_HostBase):
         self._pending_default_view = False
         self._last_preview_tool_signature = None
         self._last_preview_wcs_signature = None
+        from teachinlathe.core.predefined_positions_repository import predefined_positions
+        self._predefined_positions = predefined_positions()
+        self.preset_positions = self._read_preset_positions()
+        self._predefined_positions.changed.connect(self._on_predefined_positions_changed)
         #: The work offset the program was read with - (g5x, g92, XY
         #: rotation), machine units - where the stock is drawn: a program
         #: that moves the origin itself (a Facing's new Z0) moves the origin,
@@ -575,6 +581,25 @@ class LatheBackplotCanon(_HostBase):
         # toolpath and the trace. See actors/scene.py for the whole cast.
         actors.install(self)
 
+    def _read_preset_positions(self):
+        """M6, G28 and G30 targets in machine units, as shown in Machine Limits."""
+        source = getattr(self, "_predefined_positions", None)
+        if source is None:
+            return ()
+        x, z, _custom = source.tool_change_position()
+        positions = [("M6", x, z)]
+        positions.extend((name, *point) for name, point in (
+            ("G28", source.g28_position()),
+            ("G30", source.g30_position()),
+        ))
+        return tuple((name, float(x), float(z)) for name, x, z in positions
+                     if x is not None and z is not None)
+
+    def _on_predefined_positions_changed(self):
+        self.preset_positions = self._read_preset_positions()
+        self.invalidate_static()
+        self.update()
+
     # ── the host contract GlCanonDraw still expects ─────────────────────────
 
     def set_viewport(self, width, height):
@@ -644,6 +669,13 @@ class LatheBackplotCanon(_HostBase):
             self._pending_default_view = False
             self.current_view = 'y'
             self.set_view_y()
+        scissor_enabled = bool(glIsEnabled(GL_SCISSOR_TEST))
+        depth_writes = bool(glGetBooleanv(GL_DEPTH_WRITEMASK))
+        # Qt Quick may leave a dirty-region scissor active. The backplot uses
+        # a persistent framebuffer, so both its clear and every drawing pass
+        # must cover the whole item or old tool-marker pixels can survive.
+        glDisable(GL_SCISSOR_TEST)
+        glDepthMask(GL_TRUE)
         self._set_multisample_baseline()
         self._seal_alpha()
         started = time.perf_counter() if self._perf is not None else 0.0
@@ -659,6 +691,9 @@ class LatheBackplotCanon(_HostBase):
             LOG.error("backplot render failed: %s", exc)
         finally:
             _set_alpha_writes(True)
+            glDepthMask(GL_TRUE if depth_writes else GL_FALSE)
+            if scissor_enabled:
+                glEnable(GL_SCISSOR_TEST)
         if self._perf is not None:
             self._perf.render_done(time.perf_counter() - started)
 
@@ -832,6 +867,7 @@ class LatheBackplotCanon(_HostBase):
         left = stock_actor.material_left(self, ctx)
         return (
             (left, left.version) if left is not None else None,
+            tuple(getattr(self, "preset_positions", ())),
             getattr(self, "preview_origin", None), bool(getattr(self, "mirror", False)),
             ctx.width, ctx.height,
             self._preview_mvp().tobytes(),
@@ -1098,6 +1134,9 @@ class LatheBackplotCanon(_HostBase):
         # Read before the parse rather than after it: a program that fails to
         # parse still has a bar, and the operator is better off seeing the
         # stock than an empty plot.
+        reset_material = getattr(self.source, "reset_material", None)
+        if reset_material is not None:
+            reset_material()
         self.stock = workpiece.for_program(filename)
         self.invalidate_static()
         canon = None
@@ -1332,7 +1371,13 @@ class LatheBackplotCanon(_HostBase):
         self.update()
 
     def clear_live_plot(self):
-        self.clear_live_plotter()
+        clear = getattr(self.source, "clear_live_plot", None)
+        if clear is None:
+            self.clear_live_plotter()
+        else:
+            clear(self)
+        self.invalidate_static()
+        self.update()
 
     def zoom_in(self):
         self.invalidate_static()
@@ -1666,6 +1711,14 @@ class LatheBackplotItem(QQuickFramebufferObject):
         canon = self.canon()
         if canon is not None:
             canon.clear_live_plot()
+
+    @pyqtSlot()
+    def refresh(self):
+        """Redraw the plot after an overlay changes the composition above it."""
+        canon = self.canon()
+        if canon is not None:
+            canon.invalidate_static()
+            canon.update()
 
     @pyqtSlot()
     def poll(self):

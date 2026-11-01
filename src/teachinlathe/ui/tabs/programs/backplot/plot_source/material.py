@@ -39,7 +39,8 @@ def stock_shape(stock):
 
 class TrailMaterial:
     """The material left cut from a trail as it grows: read again from the
-    bar when the bar, the frame it is in or the trail starts over."""
+    bar when the bar or its coordinate frame changes; clearing the displayed
+    trail keeps the material already cut."""
 
     def __init__(self):
         self._material = None
@@ -54,11 +55,12 @@ class TrailMaterial:
         no bar."""
         from teachinlathe.simulation.logic.material import MaterialLeft
 
-        basis = (tuple(sorted(stock.items())) if isinstance(stock, dict) else stock, origin, trail.generation)
+        basis = (tuple(sorted(stock.items())) if isinstance(stock, dict) else stock, origin)
         npts = trail.npts
-        # the bar again when it, or the frame it is in, changed, or the trail
-        # started over; a full logger moved its points down: read it again
-        if basis != self._basis or npts < 2 or self._material is None:
+        # the bar again when it or its coordinate frame changed; a full
+        # logger may move its points down, without restoring material removed
+        # by the earlier points.
+        if basis != self._basis or self._material is None:
             self._basis, self._done = basis, 0
             shape = stock_shape(stock)
             self._material = MaterialLeft(shape) if shape is not None else None
@@ -77,6 +79,20 @@ class TrailMaterial:
             tool = int(made_by.tools[at]) if made_by is not None and at < len(made_by) else 0
             self._material.cut([tuple(start), tuple(end)], self._shape(tool))
         return self._material
+
+    def clear_trace(self, trail, stat, stock, origin):
+        """Forget the displayed trail while keeping the material it cut."""
+        # Consume any logger points not yet incorporated before the logger is
+        # cleared. The toolpath trace is disposable; the material state is not.
+        self.material_left(trail, stat, stock, origin)
+        trail.clear()
+        self._done = 0
+
+    def reset(self):
+        """Start a fresh material model for a newly loaded program."""
+        self._material = None
+        self._basis = None
+        self._done = 0
 
     def _shape(self, tool):
         """What cuts of tool ``tool``, as the Tool Library has it now: its

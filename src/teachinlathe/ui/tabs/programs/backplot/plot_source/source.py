@@ -131,6 +131,19 @@ class MachineSource(PlotSource):
             tuple(status.g5x_offset), tuple(status.g92_offset), float(status.rotation_xy))
         return self._material.material_left(self.trail, status, getattr(host, "stock", None) or {}, origin)
 
+    def clear_live_plot(self, host):
+        """Clear the visible machine trail, preserving the material already cut."""
+        self.poll()
+        status = self.status
+        origin = getattr(host, "preview_origin", None) or (
+            tuple(status.g5x_offset), tuple(status.g92_offset), float(status.rotation_xy))
+        self._material.clear_trace(self.trail, status,
+                                  getattr(host, "stock", None) or {}, origin)
+
+    def reset_material(self):
+        """Forget cuts when a different program is loaded into the preview."""
+        self._material.reset()
+
 
 class RunPlayback(Protocol):
     """A simulated run as it plays: ``run`` (a ProgramRun, None until it is

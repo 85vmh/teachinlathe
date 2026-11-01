@@ -8,8 +8,8 @@ at - so it comes from the conversational program's own header, which
 **The material left is drawn solid**, under the toolpath: the bar as it stands
 now, cut back to wherever the tool has been, with every edge of what is left -
 the bore's too, not the axis - as its outline; what is cut away leaves no line
-behind. Before a program runs - or after the plot is cleared - that is the
-whole bar.
+behind. Before a program runs, that is the whole bar. Clearing the plot erases
+the live trace while keeping the cuts already made.
 
 **It is drawn where the program started**, not where the work offset is now: a
 Facing that makes its Z End the new Z0 moves the origin, not the bar
