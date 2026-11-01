@@ -43,6 +43,9 @@ from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 from teachinlathe.ui.tabs.programs.backplot.actors.remaining import RemainingStockActor
 from teachinlathe.ui.tabs.programs.backplot.actors.stock import StockActor
 from teachinlathe.ui.tabs.programs.backplot.actors.ticks import TicksActor
+from teachinlathe.ui.tabs.programs.backplot.actors.tool_change_offsets import (
+    ToolChangeOffsetsActor,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -144,6 +147,15 @@ def install(canon):
         installed.append(scene.tool)
     except Exception as exc:
         LOG.warning("backplot actors: could not replace the tool marker: %s",
+                    exc)
+
+    # This annotation is dynamic, so keep it after the live trail (outside
+    # the cached still layer) and just below the insert itself.
+    try:
+        installed.append(scene.insert_before(
+            scene.tool, ToolChangeOffsetsActor(canon)))
+    except Exception as exc:
+        LOG.warning("backplot actors: could not add tool-change offsets: %s",
                     exc)
 
     return installed

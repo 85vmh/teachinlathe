@@ -14,7 +14,8 @@ COLORS = {
 
 RADIUS_PX = 7.0
 CROSS_SCALE = 1.6
-FONT = "axis"
+FONT = "machine_label"
+LABEL_GAP_PX = 4.0
 
 
 class PresetPositionsActor(Actor):
@@ -41,7 +42,7 @@ class PresetPositionsActor(Actor):
         radius_x = RADIUS_PX / px_per_x
 
         labels = {name: [] for name in COLORS}
-        placed = []
+        label_bounds = []
         for name, x, z in positions:
             point = ctx.to_internal_units((x, 0.0, z))
             x_model, z_model = point[0], point[2]
@@ -70,28 +71,46 @@ class PresetPositionsActor(Actor):
             self.stroke(ctx, ring, color, mvp)
             self.stroke(ctx, cross, color, mvp)
 
-            corner = 0
-            for old_x, old_z, old_corner in placed:
-                if abs(old_x - x_model) < 1e-9 and abs(old_z - z_model) < 1e-9:
-                    corner = old_corner + 1
-            placed.append((x_model, z_model, corner))
             projected = text.to_screen(mvp, (x_model, 0.0, z_model),
                                        (ctx.width, ctx.height))
             if projected is None:
                 continue
-            # The canvas starts with the label at the target's top right;
-            # rotate through the other corners when targets coincide.
+            # Prefer the target's top right, then choose the first corner
+            # whose text box does not collide with a previously placed label.
             corners = (
                 (text.LEFT, text.BOTTOM, 1, 1),
-                (text.LEFT, text.TOP, 1, -1),
                 (text.RIGHT, text.BOTTOM, -1, 1),
+                (text.LEFT, text.TOP, 1, -1),
                 (text.RIGHT, text.TOP, -1, -1),
             )
-            align_x, align_y, sign_x, sign_y = corners[corner % len(corners)]
-            labels[name].append((name,
-                                 projected[0] + sign_x * RADIUS_PX,
-                                 projected[1] + sign_y * RADIUS_PX,
-                                 align_x, align_y))
+            best = None
+            best_collisions = None
+            width = text.width(name, FONT)
+            height = text.line_height(FONT)
+            for align_x, align_y, sign_x, sign_y in corners:
+                label_x = projected[0] + sign_x * (RADIUS_PX + 2.0)
+                label_y = projected[1] + sign_y * (RADIUS_PX + 2.0)
+                bounds = (
+                    label_x - width * align_x - LABEL_GAP_PX,
+                    label_y - height * align_y - LABEL_GAP_PX,
+                    label_x + width * (1.0 - align_x) + LABEL_GAP_PX,
+                    label_y + height * (1.0 - align_y) + LABEL_GAP_PX,
+                )
+                collisions = sum(_overlaps(bounds, old)
+                                 for old in label_bounds)
+                if best is None or collisions < best_collisions:
+                    best = (name, label_x, label_y, align_x, align_y)
+                    best_collisions = collisions
+                    best_bounds = bounds
+                if collisions == 0:
+                    break
+            labels[name].append(best)
+            label_bounds.append(best_bounds)
 
         for name, color in COLORS.items():
             text.draw(ctx, labels[name], color, FONT)
+
+
+def _overlaps(first, second):
+    return (first[0] < second[2] and first[2] > second[0]
+            and first[1] < second[3] and first[3] > second[1])

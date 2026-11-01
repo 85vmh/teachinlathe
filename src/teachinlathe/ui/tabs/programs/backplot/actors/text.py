@@ -75,7 +75,17 @@ except ImportError as exc:  # pragma: no cover - depends on the LinuxCNC install
 #: again, and the extra weight is weight twice over.
 FONTS = {
     "tick": ("Sans", 12),
+    "machine_label": ("Sans", 14),
+    "offset_dimension": ("Sans", 14),
     "axis": ("Sans Bold", 14),
+}
+
+# Extra advance between glyphs, in logical pixels. Kept to these machine
+# coordinate labels so dimensions and tick marks retain their normal spacing.
+MACHINE_LABEL_LETTER_SPACING_PX = 3.0
+MACHINE_LABEL_LETTER_DIGIT_SPACING_PX = 5.0
+LETTER_SPACING = {
+    "machine_label": MACHINE_LABEL_LETTER_SPACING_PX,
 }
 
 
@@ -254,7 +264,18 @@ def width(text, font="tick"):
     for character in text:
         glyph = built.glyphs.get(ord(character))
         total += built.char_width if glyph is None else glyph["advance"]
-    return total
+    return total + sum(_letter_spacing(font, left, right)
+                       for left, right in zip(text, text[1:]))
+
+
+def _letter_spacing(font, left=None, right=None):
+    if (font == "machine_label" and left is not None and right is not None
+            and ((left.isalpha() and right.isdigit())
+                 or (left.isdigit() and right.isalpha()))):
+        spacing = MACHINE_LABEL_LETTER_DIGIT_SPACING_PX
+    else:
+        spacing = LETTER_SPACING.get(font, 0.0)
+    return spacing * device_pixel_ratio()
 
 
 def line_height(font="tick"):
@@ -302,7 +323,16 @@ def draw(ctx, strings, color, font="tick"):
         # land wherever they land unless they are put back on the grid here.
         pen_x = round(x - width(string, font) * align_x)
         pen_y = round(y - built.line_space * align_y + built.descent)
-        verts.extend(built.string_quads(string, pen_x, pen_y))
+        if LETTER_SPACING.get(font, 0.0):
+            pen = pen_x
+            for index, character in enumerate(string):
+                verts.extend(built.string_quads(character, pen, pen_y))
+                glyph = built.glyphs.get(ord(character))
+                pen += built.char_width if glyph is None else glyph["advance"]
+                if index + 1 < len(string):
+                    pen += _letter_spacing(font, character, string[index + 1])
+        else:
+            verts.extend(built.string_quads(string, pen_x, pen_y))
     if not verts:
         return
 

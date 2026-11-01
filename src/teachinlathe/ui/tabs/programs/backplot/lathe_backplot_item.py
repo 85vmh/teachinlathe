@@ -452,6 +452,8 @@ class LatheBackplotCanon(_HostBase):
         self._pending_default_view = False
         self._last_preview_tool_signature = None
         self._last_preview_wcs_signature = None
+        self.show_tool_change_offsets = bool(
+            getattr(self._item, "_show_tool_change_offsets", False))
         from teachinlathe.core.predefined_positions_repository import predefined_positions
         self._predefined_positions = predefined_positions()
         self.preset_positions = self._read_preset_positions()
@@ -598,6 +600,13 @@ class LatheBackplotCanon(_HostBase):
     def _on_predefined_positions_changed(self):
         self.preset_positions = self._read_preset_positions()
         self.invalidate_static()
+        self.update()
+
+    def set_tool_change_offsets_visible(self, visible):
+        visible = bool(visible)
+        if visible == self.show_tool_change_offsets:
+            return
+        self.show_tool_change_offsets = visible
         self.update()
 
     # ── the host contract GlCanonDraw still expects ─────────────────────────
@@ -1613,6 +1622,7 @@ class LatheBackplotItem(QQuickFramebufferObject):
         super().__init__(parent)
         self._canon = None
         self._run = None
+        self._show_tool_change_offsets = False
         # The preview draws bottom-up, as OpenGL does; Quick composes
         # top-down.
         self.setMirrorVertically(True)
@@ -1690,6 +1700,7 @@ class LatheBackplotItem(QQuickFramebufferObject):
             canon.set_lathe_view()
 
     mirrorChanged = pyqtSignal()
+    toolChangeOffsetsChanged = pyqtSignal()
 
     def _get_mirror(self):
         # not canon(): read by a binding, it would start the plot before the
@@ -1705,6 +1716,26 @@ class LatheBackplotItem(QQuickFramebufferObject):
 
     #: The material left drawn above the centre line, the toolpath below it.
     mirror = pyqtProperty(bool, _get_mirror, _set_mirror, notify=mirrorChanged)
+
+    def _get_tool_change_offsets(self):
+        if self._canon is not None:
+            return bool(self._canon.show_tool_change_offsets)
+        return bool(self._show_tool_change_offsets)
+
+    def _set_tool_change_offsets(self, visible):
+        visible = bool(visible)
+        if visible == self._show_tool_change_offsets:
+            return
+        self._show_tool_change_offsets = visible
+        canon = self.canon()
+        if canon is not None:
+            canon.set_tool_change_offsets_visible(visible)
+        self.toolChangeOffsetsChanged.emit()
+
+    #: Show the G53 machine position and tool-offset dimensions.
+    showToolChangeOffsets = pyqtProperty(
+        bool, _get_tool_change_offsets, _set_tool_change_offsets,
+        notify=toolChangeOffsetsChanged)
 
     @pyqtSlot()
     def clearPlot(self):

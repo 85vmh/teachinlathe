@@ -82,7 +82,7 @@ class OriginActor(Actor):
             text.draw(ctx, [(name,
                              origin[0] + diagonal + 2.0,
                              origin[1] + diagonal,
-                             text.LEFT, text.BOTTOM)], COLOR, "axis")
+                             text.LEFT, text.BOTTOM)], COLOR, "machine_label")
 
     def _build(self, ctx, mvp):
         """The three shapes, in draw order. A fixed size on screen, so they

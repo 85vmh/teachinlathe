@@ -3,6 +3,7 @@
 // to clear - and the buttons over it: zoom, fit, mirror, clear. What it
 // shows is the machine, or a simulated run (``run``): drawn the same.
 import QtQuick
+import QtQuick.Controls
 import TeachInLathe.Backplot
 import theme
 import common
@@ -113,6 +114,34 @@ Rectangle {
                 iconSource: Images.url("mirror.svg")
                 active: backplot.mirror
                 onClicked: backplot.mirror = !backplot.mirror
+            }
+            Button {
+                id: toolChangeOffsetsButton
+                implicitWidth: Theme.zoomInOutFitMirrorButtonSize
+                implicitHeight: Theme.zoomInOutFitMirrorButtonSize
+                checkable: true
+                checked: backplot.showToolChangeOffsets
+                text: "TLO"
+                focusPolicy: Qt.NoFocus
+                hoverEnabled: true
+                onClicked: backplot.showToolChangeOffsets = checked
+                ToolTip.visible: hovered
+                ToolTip.text: "Show G53 position and tool offsets"
+                contentItem: Text {
+                    text: toolChangeOffsetsButton.text
+                    color: toolChangeOffsetsButton.checked ? Theme.accent : Theme.foreground
+                    font.pixelSize: Theme.fontSmall
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                background: Rectangle {
+                    radius: Theme.radius
+                    color: toolChangeOffsetsButton.checked ? Theme.selection
+                         : toolChangeOffsetsButton.hovered ? Theme.hover : Theme.surfaceAlt
+                    border.width: toolChangeOffsetsButton.checked ? 2 : Theme.hairline
+                    border.color: toolChangeOffsetsButton.checked ? Theme.accent : Theme.separator
+                }
             }
         }
 
