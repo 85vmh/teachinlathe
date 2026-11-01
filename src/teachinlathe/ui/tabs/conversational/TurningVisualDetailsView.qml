@@ -257,7 +257,7 @@ Item {
                             id: startBlendBox
                             Layout.alignment: Qt.AlignRight
                             RowLayout {
-                                Label { text: "Start Blend"; color: parent.parent.accent; font.pixelSize: Theme.fontBody }
+                                Label { text: "Start Blend"; color: startBlendBox.accent; font.pixelSize: Theme.fontBody }
                                 BlendPicker {
                                     Layout.fillWidth: true
                                     blendType: root.startBlend.type || "none"
@@ -272,7 +272,7 @@ Item {
                             id: shoulderBlendBox
                             Layout.alignment: Qt.AlignRight
                             RowLayout {
-                                Label { text: "Shoulder Blend"; color: parent.parent.accent; font.pixelSize: Theme.fontBody }
+                                Label { text: "Shoulder Blend"; color: shoulderBlendBox.accent; font.pixelSize: Theme.fontBody }
                                 BlendPicker {
                                     Layout.fillWidth: true
                                     blendType: root.shoulderBlend.type || "none"

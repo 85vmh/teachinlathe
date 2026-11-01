@@ -17,8 +17,10 @@ from dataclasses import dataclass
 from typing import Optional, Union
 
 from teachinlathe.conversational.model.data_types import (
-    DefineProfile, DefineRadialProfile, GrooveFinishing, GrooveRoughing, ProfileContour, ProfileRoughing,
-    ProfilingType, Program, StockToLeave,
+    BlendType, DefineProfile, DefineRadialProfile, GrooveFinishing, GrooveRoughing, LineTo,
+    ProfileBlend, ProfileContour, ProfileRoughing, ProfilingType, Program,
+    StartPoint as ProfileStart,
+    StockToLeave, Turning,
 )
 from teachinlathe.tooling.model.data_types import CuttingTool, MountedTool
 
@@ -30,6 +32,13 @@ NO_PROFILE = "no valid profile found"
 
 
 @dataclass(frozen=True)
+class ProfileGeometry:
+    """A profile shape without a program operation that defines it."""
+    profile_type: ProfilingType
+    profile_primitives: list
+
+
+@dataclass(frozen=True)
 class ProfileCut:
     """A Profile Roughing or Contour with what it is planned against: the
     profile it follows (None when the program has none of its id above it),
@@ -38,8 +47,8 @@ class ProfileCut:
     its source - the last Profile Roughing of the same profile above it that
     is not rest material itself, whose start and stock to leave it keeps -
     and the nose radius of the last tool that roughed that profile."""
-    op: Union[ProfileRoughing, ProfileContour]
-    profile: Optional[DefineProfile] = None
+    op: Union[ProfileRoughing, ProfileContour, Turning]
+    profile: Optional[Union[DefineProfile, ProfileGeometry]] = None
     tool: Optional[CuttingTool] = None
     stock: Optional["StockBefore"] = None
     source: Optional[ProfileRoughing] = None
@@ -54,11 +63,13 @@ def profile_cut(program: Program, op_index: int, op, tools, stock=None) -> Profi
     StockBefore."""
     from teachinlathe.conversational.logic import program_tools
 
-    profile_id = int(op.profilingParameters.profile_id or 0)
     above = program.operations[:max(op_index, 0)]
-    # the first of its id above it, as the G-code takes it
-    profile = next((o for o in above if isinstance(o, DefineProfile) and int(o.profile_id) == profile_id),
-                   None) if profile_id else None
+    profile = inline_turning_profile(op) if isinstance(op, Turning) else None
+    if not isinstance(op, Turning):
+        profile_id = int(op.profilingParameters.profile_id or 0)
+        # the first of its id above it, as the G-code takes it
+        profile = next((o for o in above if isinstance(o, DefineProfile) and int(o.profile_id) == profile_id),
+                       None) if profile_id else None
     check = program_tools.check_for(program, op, tools)
     tool = tools.tool_in(check.tool_holder_id) if check.status is program_tools.ToolStatus.OK else None
     source, nose_radius = None, 0.0
@@ -75,6 +86,35 @@ def profile_cut(program: Program, op_index: int, op, tools, stock=None) -> Profi
             if shape is not None:
                 nose_radius = shape.nose_radius
     return ProfileCut(op, profile, tool, stock, source, nose_radius)
+
+
+def inline_turning_profile(op: Turning) -> ProfileGeometry:
+    """Turning's profile geometry, embedded rather than listed above it."""
+    geometry = op.geometryParameters
+
+    def blend(value):
+        return ProfileBlend(
+            blend_type=value.blend_type,
+            chamfer_width=max(0.0, float(value.chamfer_width)),
+            fillet_radius=max(0.0, float(value.fillet_radius)),
+        )
+
+    return ProfileGeometry(
+        profile_type=ProfilingType.OD,
+        profile_primitives=[
+            ProfileStart(1, "startPoint", float(geometry.xEnd), float(geometry.zStart),
+                         blend(geometry.startBlend)),
+            LineTo(2, "lineTo", float(geometry.xEnd), float(geometry.zEnd),
+                   blend(geometry.shoulderBlend)),
+            LineTo(3, "lineTo", float(geometry.xStart), float(geometry.zEnd),
+                   ProfileBlend(blend_type=BlendType.NONE)),
+        ],
+    )
+
+
+def inline_turning_cut(op: Turning, tool=None) -> ProfileCut:
+    """A Turning cut for previews: its embedded OD profile and chosen tool."""
+    return ProfileCut(op, inline_turning_profile(op), tool)
 
 
 def with_stock(cut, program: Program, op_index: int, tools):
@@ -130,6 +170,17 @@ def common_config(cut: ProfileCut, strategy_type: ProfilingType) -> dict:
     where they start, how deep and how far back, the feed, which side, and
     the optional-block prefix - as keyword arguments of the configs."""
     op = cut.op
+    if isinstance(op, Turning):
+        geometry, cutting = op.geometryParameters, op.cuttingParameters
+        return dict(
+            x_start=float(geometry.xStart) + 2 * float(cutting.toolClearance),
+            z_start=float(geometry.zStart) + float(cutting.toolClearance),
+            doc=float(cutting.ap),
+            retract=float(cutting.ap) / 2,
+            feed_rate=op.speedsAndFeeds.feed,
+            profiling_type=ProfilingType.OD,
+            optional_prefix="/" if op.is_optional_block else "",
+        )
     return dict(
         x_start=float(op.profilingParameters.xStart),
         z_start=float(op.profilingParameters.zStart),

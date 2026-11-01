@@ -34,7 +34,7 @@ from .operations import (
     generate_knurling_gcode, groove_finishing_toolpath, groove_roughing_toolpath,
     generate_profiling_gcode, parting_toolpath, position_at_toolpath, tapping_toolpath,
     profile_contour_toolpath, profile_roughing_toolpath,
-    generate_threading_gcode, turning_toolpath,
+    generate_threading_gcode,
 )
 from .operations.groove_roughing import blade_touch_point_comment
 from .toolpath import GcodeEmitter
@@ -307,10 +307,6 @@ def _write_tapping(path, op, program, op_index, tools):
     tapping_toolpath(op, path, _resolve_tap_pitch(program, op, tools))
 
 
-def _write_turning(path, op, program, op_index, tools):
-    turning_toolpath(op, path, program, tools)
-
-
 def _write_define_profile(path, op, program, op_index, tools):
     # a profile G70/G71 cuts is a subroutine of the program; any other is
     # drawn by the operations that cut it
@@ -327,7 +323,7 @@ def _write_radial_profile(path, op, program, op_index, tools):
 #: The writer of each operation class.
 _WRITERS = {
     Facing: _on_emitter(facing_toolpath),
-    Turning: _write_turning,
+    Turning: _cut_on_emitter(profile_roughing_toolpath),
     Drilling: _on_emitter(drilling_toolpath),
     PositionAt: _on_emitter(position_at_toolpath),
     Knurling: _lines(generate_knurling_gcode),

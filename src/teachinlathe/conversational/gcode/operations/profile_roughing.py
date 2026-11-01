@@ -10,7 +10,7 @@ import dataclasses
 from dataclasses import dataclass
 from typing import Tuple
 
-from teachinlathe.conversational.model.data_types import PassType, ProfileRoughingConfig
+from teachinlathe.conversational.model.data_types import PassType, ProfileRoughingConfig, ProfilingType, Turning
 
 from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 from .profiling.operation_input import (
@@ -23,6 +23,7 @@ from .profiling.operation_input import (
     resolve_tool_shape,
 )
 from .profiling.plan_drawing import chain_points, flatten_path
+from .profiling.plan import RoughingPlan
 from ..toolpath import GcodeEmitter, OperationPreview, Point, drawn_lines
 from .profiling.plan_cache import PlanCache, plan_key
 from .profiling.plan_gcode import write_plan
@@ -46,13 +47,19 @@ def _diagonal_angle() -> float:
 
 
 def parse_profile_roughing_config(cut: ProfileCut) -> ProfileRoughingConfig:
-    strategy = cut.op.profileRoughingStrategy
+    if isinstance(cut.op, Turning):
+        pass_type = cut.op.passType
+        profile_type = ProfilingType.OD
+    else:
+        strategy = cut.op.profileRoughingStrategy
+        pass_type = strategy.pass_type
+        profile_type = strategy.profiling_type
     stock = cut.op.stockToLeave
     return ProfileRoughingConfig(
-        **common_config(cut, strategy.profiling_type),
+        **common_config(cut, profile_type),
         stock_x=float(stock.stockToLeaveX),
         stock_z=float(stock.stockToLeaveZ),
-        pass_type=strategy.pass_type,
+        pass_type=pass_type,
     )
 
 
@@ -70,7 +77,8 @@ def profile_roughing_toolpath(cut: ProfileCut, path: GcodeEmitter):
 
     plan = plan_profile_roughing(cut)
     if plan.error:
-        path.error(f"Profile Roughing -- {plan.error}")
+        label = "Turning" if isinstance(op, Turning) else "Profile Roughing"
+        path.error(f"{label} -- {plan.error}")
         return
 
     write_plan(path, plan, (config.stock_x, config.stock_z), op.m1Parameters,
@@ -97,7 +105,7 @@ def _planned_config(cut: ProfileCut) -> ProfileRoughingConfig:
     roughing's with its source's start position and stock to leave: the same
     finished size, and the same bar."""
     config = parse_profile_roughing_config(cut)
-    if cut.op.restMaterial and cut.source is not None:
+    if getattr(cut.op, "restMaterial", False) and cut.source is not None:
         source_config = parse_profile_roughing_config(dataclasses.replace(cut, op=cut.source))
         config = dataclasses.replace(
             config, x_start=source_config.x_start, z_start=source_config.z_start,
@@ -112,7 +120,7 @@ def roughing_plan_key(cut: ProfileCut) -> str:
     leaves, which way; the profile; the tool; the stock it finds; and for
     rest material whether it has a source and the last tool's nose."""
     config = _planned_config(cut)
-    rest = cut.op.restMaterial
+    rest = bool(getattr(cut.op, "restMaterial", False))
     return plan_key(
         setup=[config.x_start, config.z_start, config.doc, config.retract, config.stock_x, config.stock_z,
                config.profiling_type.value, config.pass_type.value, _diagonal_angle()],
@@ -132,6 +140,16 @@ def plan_profile_roughing(cut: ProfileCut):
     start position of its source, the last Profile Roughing above it on the
     same profile that is not rest material itself, and cuts what the
     operations above leave of that - the stock it finds."""
+    if isinstance(cut.op, Turning):
+        geometry, cutting = cut.op.geometryParameters, cut.op.cuttingParameters
+        if cutting.ap <= 0:
+            return RoughingPlan(error="Ap must be greater than zero")
+        if cutting.toolClearance < 0:
+            return RoughingPlan(error="Tool clearance cannot be negative")
+        if geometry.xStart <= geometry.xEnd or geometry.xEnd <= 0:
+            return RoughingPlan(error="P1 X must be greater than P2 X for OD turning")
+        if geometry.zStart <= geometry.zEnd:
+            return RoughingPlan(error="P1 Z must be greater than P2 Z")
     return _PLANS.get(roughing_plan_key(cut), lambda: _plan(cut))
 
 
@@ -142,7 +160,7 @@ def _plan(cut: ProfileCut):
     path = profile_path(cut)
     if path is None:
         return RoughingPlan(error=NO_PROFILE)
-    rest = cut.op.restMaterial
+    rest = bool(getattr(cut.op, "restMaterial", False))
     if rest and cut.source is None:
         return RoughingPlan(error=_NO_SOURCE)
     config = _planned_config(cut)

@@ -561,8 +561,9 @@ class ConversationalUseCase:
     @staticmethod
     def turning_preview(op_data: dict, tool=None):
         """What a Turning would cut as its editor has it."""
-        from teachinlathe.conversational.gcode.operations.turning import turning_preview
-        return turning_preview(Operation.from_dict(op_data), tool)
+        from teachinlathe.conversational.gcode.operations.profile_roughing import profile_roughing_preview
+        from teachinlathe.conversational.gcode.operations.profiling.operation_input import inline_turning_cut
+        return profile_roughing_preview(inline_turning_cut(Operation.from_dict(op_data), tool))
 
     @staticmethod
     def parting_preview(op_data: dict):
