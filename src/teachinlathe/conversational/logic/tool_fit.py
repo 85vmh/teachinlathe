@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from teachinlathe.conversational.model.data_types import (
     DefineRadialProfile, Drilling, Facing, G33Threading, GrooveFinishing, GrooveRoughing, Parting,
-    ProfileContour, ProfileRoughing, ProfilingType, Program, Tapping, ThreadLocation, Turning,
+    ProfileContour, ProfileRoughing, ProfilingType, Program, Tapping, ThreadLocation, Turning, TurningFinish,
 )
 from teachinlathe.tooling.model.data_types import BladeTool, CuttingTool, ToolKind, TurningTool, kind_of
 
@@ -56,7 +56,7 @@ def fits(program: Program, op, tool: CuttingTool) -> bool:
         return _groove_fits(program, op, tool, op.finishingParameters.profile_id)
     if isinstance(op, Facing):
         kinds = {ToolKind.TURNING, ToolKind.PARTING_BLADE}
-    elif isinstance(op, Turning):
+    elif isinstance(op, (Turning, TurningFinish)):
         kinds = {ToolKind.TURNING}
     elif isinstance(op, ProfileRoughing):
         kinds = _profile_kinds(op.profileRoughingStrategy.profiling_type)

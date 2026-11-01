@@ -24,9 +24,10 @@ def facing_toolpath(op: Facing, path: GcodeEmitter, program: Optional[Program] =
     m1_params = op.m1Parameters
     x_start, z_start, x_end, z_end = geometry.xStart, geometry.zStart, geometry.xEnd, geometry.zEnd
     doc = cutting.doc
-    # a retract of zero would leave the tool rubbing the face it just cut on
-    # the way back out: the depth of cut instead
-    retract = cutting.retract if cutting.retract > 0 else doc
+    # ``retract`` stores the tool clearance from P1. Between passes, retreat
+    # by half the depth of cut regardless of that clearance.
+    clearance = abs(cutting.retract)
+    retract = doc / 2.0
 
     if doc <= 0:
         path.error("Facing -- no depth of cut")
@@ -35,7 +36,8 @@ def facing_toolpath(op: Facing, path: GcodeEmitter, program: Optional[Program] =
     path.codes(build_spindle_gcode(spindle, ""))
     path.code(build_feed_gcode(spindle.feed_rate))
     path.blank()
-    path.rapid(x_start, z_start)
+    # X is programmed as a diameter, so radial clearance is doubled.
+    path.rapid(x_start + 2 * clearance, z_start + clearance)
 
     z = z_start
     # with a tolerance: Z End a whole number of cuts away, rounding must not
@@ -58,8 +60,8 @@ def facing_toolpath(op: Facing, path: GcodeEmitter, program: Optional[Program] =
     path.feed(z=z_end)
     path.feed(x=x_end)
     path.rapid(x_end + retract * 2, z_end + retract)
-    path.rapid(x=x_start + retract * 2)
-    path.rapid(z=z_end)
+    path.rapid(x=x_start + 2 * clearance)
+    path.rapid(z=z_start + clearance)
     path.blank()
 
     if op.zEndBecomesNewZ0:

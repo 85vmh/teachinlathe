@@ -20,7 +20,7 @@ from teachinlathe.conversational.model.data_types import (
     BlendType, DefineProfile, DefineRadialProfile, GrooveFinishing, GrooveRoughing, LineTo,
     ProfileBlend, ProfileContour, ProfileRoughing, ProfilingType, Program,
     StartPoint as ProfileStart,
-    StockToLeave, Turning,
+    StockToLeave, Turning, TurningFinish,
 )
 from teachinlathe.tooling.model.data_types import CuttingTool, MountedTool
 
@@ -47,7 +47,7 @@ class ProfileCut:
     its source - the last Profile Roughing of the same profile above it that
     is not rest material itself, whose start and stock to leave it keeps -
     and the nose radius of the last tool that roughed that profile."""
-    op: Union[ProfileRoughing, ProfileContour, Turning]
+    op: Union[ProfileRoughing, ProfileContour, Turning, TurningFinish]
     profile: Optional[Union[DefineProfile, ProfileGeometry]] = None
     tool: Optional[CuttingTool] = None
     stock: Optional["StockBefore"] = None
@@ -65,7 +65,29 @@ def profile_cut(program: Program, op_index: int, op, tools, stock=None) -> Profi
 
     above = program.operations[:max(op_index, 0)]
     profile = inline_turning_profile(op) if isinstance(op, Turning) else None
-    if not isinstance(op, Turning):
+    if isinstance(op, TurningFinish):
+        parent = next((candidate for candidate in reversed(above)
+                       if isinstance(candidate, Turning) and candidate.order == op.parentOrder), None)
+        if parent is None:
+            parent = next((candidate for candidate in reversed(above)
+                           if isinstance(candidate, Turning)), None)
+        if parent is not None:
+            profile = inline_turning_profile(parent)
+            shoulder_blend = parent.geometryParameters.shoulderBlend
+            if (op.addUndercut and shoulder_blend.blend_type is BlendType.NONE
+                    and len(profile.profile_primitives) > 1):
+                primitives = list(profile.profile_primitives)
+                primitives[1] = dataclasses.replace(
+                    primitives[1],
+                    blend=ProfileBlend(
+                        blend_type=BlendType.UNDERCUT_DIN509,
+                        undercut_radius=op.undercutParameters.radius,
+                        undercut_depth=op.undercutParameters.depth,
+                        undercut_length=op.undercutParameters.length,
+                    ),
+                )
+                profile = dataclasses.replace(profile, profile_primitives=primitives)
+    elif not isinstance(op, Turning):
         profile_id = int(op.profilingParameters.profile_id or 0)
         # the first of its id above it, as the G-code takes it
         profile = next((o for o in above if isinstance(o, DefineProfile) and int(o.profile_id) == profile_id),
@@ -110,11 +132,6 @@ def inline_turning_profile(op: Turning) -> ProfileGeometry:
                    ProfileBlend(blend_type=BlendType.NONE)),
         ],
     )
-
-
-def inline_turning_cut(op: Turning, tool=None) -> ProfileCut:
-    """A Turning cut for previews: its embedded OD profile and chosen tool."""
-    return ProfileCut(op, inline_turning_profile(op), tool)
 
 
 def with_stock(cut, program: Program, op_index: int, tools):
@@ -170,6 +187,13 @@ def common_config(cut: ProfileCut, strategy_type: ProfilingType) -> dict:
     where they start, how deep and how far back, the feed, which side, and
     the optional-block prefix - as keyword arguments of the configs."""
     op = cut.op
+    if isinstance(op, TurningFinish):
+        return dict(
+            x_start=float(op.p1X), z_start=float(op.p1Z),
+            doc=0.5, retract=0.5, feed_rate=op.speedsAndFeeds.feed,
+            profiling_type=ProfilingType.OD,
+            optional_prefix="/" if op.is_optional_block else "",
+        )
     if isinstance(op, Turning):
         geometry, cutting = op.geometryParameters, op.cuttingParameters
         return dict(

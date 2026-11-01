@@ -365,10 +365,102 @@ class FacingEditorViewModel(ToolOperationEditorViewModel):
 class TurningEditorViewModel(ToolOperationEditorViewModel):
     update_type = "turning"
 
+    previewReady = pyqtSignal("QVariant")
+
+    def __init__(self, tab, program, index, operation, parent=None):
+        super().__init__(tab, program, index, operation, parent)
+        self.wanted_preview = None
+
+    @pyqtProperty(bool, constant=True)
+    def hasFinishingOperation(self):
+        parent_order = int(self._operation.get("order", 0))
+        return any(getattr(op, "type", "") == "turningFinish"
+                   and int(getattr(op, "parentOrder", 0)) == parent_order
+                   for op in getattr(self._program, "operations", []))
+
+    @pyqtSlot()
+    def addTurningFinish(self):
+        self._tab.add_turning_finish(self._index)
+
+    @pyqtSlot("QVariant")
+    def requestPreview(self, op_data):
+        self._tab.request_roughing_preview(self, self._index, op_data)
+
+    @pyqtSlot("QVariant", result="QVariant")
+    def profile(self, op_data):
+        """The inline OD profile in the draft, for the canvas and stock cutout."""
+        from teachinlathe.conversational.gcode.operations.profiling.operation_input import inline_turning_profile
+        from teachinlathe.conversational.model.data_types import Operation
+        payload = to_py(op_data)
+        if not isinstance(payload, dict):
+            payload = {}
+        if payload.get("type") != "turning":
+            payload = {**self._operation, **payload}
+        if payload.get("type") != "turning":
+            return {}
+        operation = Operation.from_dict(payload)
+        profile = inline_turning_profile(operation)
+        return {
+            "profile_type": profile.profile_type.value,
+            "profile_primitives": [primitive.to_dict() for primitive in profile.profile_primitives],
+        }
+
+
+class TurningFinishEditorViewModel(ToolOperationEditorViewModel):
+    update_type = "turningFinish"
+
+    def _parent_turning(self):
+        from teachinlathe.conversational.model.data_types import Turning
+        parent_order = int(self._operation.get("parent_order", 0))
+        operations = getattr(self._program, "operations", [])
+        parent = next((op for op in operations
+                       if isinstance(op, Turning) and op.order == parent_order), None)
+        return parent or next((op for op in reversed(operations[:self._index])
+                               if isinstance(op, Turning)), None)
+
+    @pyqtProperty("QVariant", constant=True)
+    def parentProfile(self):
+        """The embedded OD profile this finish operation follows, for its canvas."""
+        parent = self._parent_turning()
+        if parent is None:
+            return {}
+        from teachinlathe.conversational.gcode.operations.profiling.operation_input import inline_turning_profile
+        profile = inline_turning_profile(parent)
+        return {
+            "profile_type": profile.profile_type.value,
+            "profile_primitives": [primitive.to_dict() for primitive in profile.profile_primitives],
+        }
+
+    @pyqtProperty("QVariant", constant=True)
+    def workpiece(self):
+        workpiece = self._use_case.workpiece(self._program)
+        parent = self._parent_turning()
+        if parent is None:
+            return workpiece
+        geometry = parent.geometryParameters
+        has_header_stock = float(workpiece.get("external_diameter", 0) or 0) > 0 and \
+            float(workpiece.get("stock_length", 0) or 0) > 0
+        if not has_header_stock and geometry.xStart > 0 and geometry.zStart > geometry.zEnd:
+            workpiece["external_diameter"] = geometry.xStart
+            workpiece["stock_length"] = max(10.0, max(0.0, -geometry.zEnd) + 10.0)
+        if geometry.xStart > 0 and geometry.zStart > geometry.zEnd:
+            workpiece["face_z"] = max(0.0, float(workpiece.get("face_z", 0) or 0), geometry.zStart)
+            workpiece["break_after_profile"] = True
+            workpiece.pop("break_after_z", None)
+            workpiece.pop("break_after_setback", None)
+        return workpiece
+
+    @pyqtProperty(bool, constant=True)
+    def undercutAvailable(self):
+        from teachinlathe.conversational.model.data_types import BlendType
+        parent = self._parent_turning()
+        return bool(parent and parent.geometryParameters.shoulderBlend.blend_type is BlendType.NONE)
+
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
-        tool = self._use_case.tool_of(self._program, self._index)
-        return self._preview(lambda op: qml_preview(self._use_case.turning_preview(op, tool)), op_data)
+        return self._preview(
+            lambda op: qml_preview(self._use_case.profile_contour_preview(self._program, self._index, op)),
+            op_data)
 
 
 class ProfileFollowingEditorViewModel(ToolOperationEditorViewModel):
@@ -617,6 +709,7 @@ EDITORS = {
     "positionAt": PositionAtEditorViewModel,
     "facing": FacingEditorViewModel,
     "turning": TurningEditorViewModel,
+    "turningFinish": TurningFinishEditorViewModel,
     "knurling": KnurlingEditorViewModel,
     "profiling": ProfilingEditorViewModel,
     "profileRoughing": ProfileRoughingEditorViewModel,

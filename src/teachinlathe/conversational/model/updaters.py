@@ -1,5 +1,6 @@
 from teachinlathe.conversational.model.data_types import (
     BlendType,
+    FinishingDirection,
     GrooveFinishingStrategy,
     GrooveRoughingStrategy,
     MoveSequence,
@@ -210,6 +211,12 @@ def apply_profile_contour_strategy_update(strategy, payload):
     if "profiling_type" in payload and payload["profiling_type"] is not None:
         try:
             strategy.profiling_type = _coerce_enum(payload["profiling_type"], ProfilingType, lambda v: str(v).lower())
+        except Exception:
+            pass
+    if "finishing_direction" in payload and payload["finishing_direction"] is not None:
+        try:
+            strategy.finishing_direction = _coerce_enum(
+                payload["finishing_direction"], FinishingDirection, lambda v: str(v).lower())
         except Exception:
             pass
 

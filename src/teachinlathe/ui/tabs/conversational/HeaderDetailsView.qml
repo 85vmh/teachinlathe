@@ -20,13 +20,22 @@ Item {
     readonly property int rowGap: 20
     readonly property int columnGap: 8
 
+    function datumNumber(value) {
+        if (typeof value === "string") {
+            var match = /^G(5[4-9])$/i.exec(value.trim())
+            if (match) return Number(match[1]) - 53
+        }
+        var number = Number(value)
+        return isFinite(number) ? number : 0
+    }
+
     // --- Input model ---
     // Expect either applyProgram(programDict) or applyData(_, programDict)
     property var programData: null          // { id, header: { name, last_edit, datum, units, workpiece{...} } }
 
     // --- Header fields (editable) ---
     property string programName:  (programData && programData.header && programData.header.name) ? programData.header.name : ""
-    property int    datum:        (programData && programData.header && programData.header.datum !== undefined) ? programData.header.datum : 0
+    property int    datum:        (programData && programData.header && programData.header.datum !== undefined) ? datumNumber(programData.header.datum) : 0
     // One of "do_nothing" | "g28" | "g30" — mirrors AfterLastOperation in data_types.py
     property string afterLastOperation: (programData && programData.header && programData.header.after_last_operation) ? programData.header.after_last_operation : "do_nothing"
 
@@ -45,7 +54,7 @@ Item {
     function applyProgram(program) {
         programData = program || {}
         programName = (programData.header && programData.header.name) ? programData.header.name : ""
-        datum       = (programData.header && programData.header.datum !== undefined) ? programData.header.datum : 0
+        datum       = (programData.header && programData.header.datum !== undefined) ? datumNumber(programData.header.datum) : 0
         afterLastOperation = (programData.header && programData.header.after_last_operation) ? programData.header.after_last_operation : "do_nothing"
 
         if (programData.header && programData.header.workpiece) {

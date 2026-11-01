@@ -203,6 +203,11 @@ QtObject {
                 } else {
                     Broken.paint(ctx, cx(face), cx(zEndBreak), cy(0), R, r, style)
                 }
+                // Facing leaves a flat front at ``facedTo``. Broken stock
+                // ends intentionally omit face outlines, so close this cut
+                // face explicitly in the stock outline colour.
+                if (facedTo !== null)
+                    _paintFaceOutline(ctx, face, stockX, innerX)
                 return
             }
             if (breakZ !== null) {
@@ -398,6 +403,24 @@ QtObject {
             ctx.clip()
             _hatchCurrentClip(ctx, far, top, face, bottom)
         }
+        ctx.restore()
+    }
+
+    function _paintFaceOutline(ctx, z, stockX, innerX) {
+        var faceX = cx(z)
+        var spans = innerX > 0
+            ? [[stockX, innerX], [-innerX, -stockX]]
+            : [[stockX, -stockX]]
+        ctx.save()
+        ctx.strokeStyle = outlineColor
+        ctx.lineWidth = outlineWidth
+        ctx.setLineDash([])
+        ctx.beginPath()
+        for (var i = 0; i < spans.length; i++) {
+            ctx.moveTo(faceX, cy(spans[i][0]))
+            ctx.lineTo(faceX, cy(spans[i][1]))
+        }
+        ctx.stroke()
         ctx.restore()
     }
 

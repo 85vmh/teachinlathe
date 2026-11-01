@@ -245,7 +245,7 @@ QtObject {
         var halfRight = m.halfRight !== undefined ? Math.abs(+m.halfRight) : half
         var left = cx((+m.z || 0) - half), right = cx((+m.z || 0) + halfRight)
         ctx.save()
-        ctx.setLineDash([])
+        ctx.setLineDash(m.dash || [])
         ctx.strokeStyle = color
         ctx.lineWidth = lineWidth
         ctx.beginPath()
@@ -254,6 +254,7 @@ QtObject {
         ctx.stroke()
         if (m.arrowToRect)
             Arrow.paintToBox(ctx, right, py, m.arrowToRect, color, 0, startDots)
+        ctx.setLineDash([])
         ctx.restore()
     }
 

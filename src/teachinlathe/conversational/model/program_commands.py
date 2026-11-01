@@ -4,13 +4,29 @@ import re
 import time
 from datetime import datetime
 
-from teachinlathe.conversational.model.data_types import Profiling, Program, Strategy
+from teachinlathe.conversational.model.data_types import (
+    FinishingDirection, PassType, Profiling, Program, Strategy, Turning, TurningFinish,
+)
 from teachinlathe.conversational.model.factories import make_default_operation, make_new_program
 
 
 def renumber_operations(operations):
+    parents = {}
+    for index, op in enumerate(operations):
+        if not isinstance(op, TurningFinish):
+            continue
+        candidates = [candidate for candidate in operations[:index]
+                      if isinstance(candidate, Turning) and candidate.order == op.parentOrder]
+        if not candidates:
+            candidates = [candidate for candidate in operations[:index] if isinstance(candidate, Turning)]
+        parents[id(op)] = candidates[-1] if candidates else None
     for i, op in enumerate(operations):
         op.order = i + 1
+    for op in operations:
+        if isinstance(op, TurningFinish):
+            parent = parents.get(id(op))
+            if parent is not None:
+                op.parentOrder = parent.order
 
 
 def insert_default_operation(program, op_type: str, insert_index: int):
@@ -66,6 +82,32 @@ def add_profiling_finish(program, index: int):
     program.operations.insert(insert_idx, new_op)
     renumber_operations(program.operations)
     return insert_idx
+
+
+def add_turning_finish(program, index: int):
+    """Add a contour finish that follows this Turning's embedded profile."""
+    if not (0 <= index < len(program.operations)) or not isinstance(program.operations[index], Turning):
+        raise TypeError("Selected operation is not Turning")
+    parent = program.operations[index]
+    existing = next((i for i, op in enumerate(program.operations)
+                     if isinstance(op, TurningFinish) and op.parentOrder == parent.order), None)
+    if existing is not None:
+        return existing
+    finish = make_default_operation("turningFinish")
+    finish.parentOrder = parent.order
+    finish.p1X = float(parent.geometryParameters.xStart)
+    finish.p1Z = float(parent.geometryParameters.zStart)
+    finish.stockToLeave = copy.deepcopy(parent.stockToLeave)
+    finish.speedsAndFeeds = copy.deepcopy(parent.speedsAndFeeds)
+    finish.toolRef = parent.toolRef
+    finish.m1Parameters = copy.deepcopy(parent.m1Parameters)
+    finish.finishingDirection = (FinishingDirection.TOWARDS_Z_PLUS
+                                 if parent.passType is PassType.RADIAL
+                                 else FinishingDirection.TOWARDS_Z_MINUS)
+    program.operations.insert(index + 1, finish)
+    renumber_operations(program.operations)
+    finish.parentOrder = parent.order
+    return index + 1
 
 
 def delete_program_file(program):

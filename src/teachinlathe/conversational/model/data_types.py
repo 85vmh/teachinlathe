@@ -93,6 +93,30 @@ class PassType(str, Enum):
     DIAGONAL_EXTERIOR = "diagonal_exterior"
 
 
+class FinishingDirection(str, Enum):
+    TOWARDS_Z_MINUS = "towards_z_minus"
+    TOWARDS_Z_PLUS = "towards_z_plus"
+
+
+@dataclass
+class TurningUndercutParameters:
+    radius: float = 0.4
+    depth: float = 0.4
+    length: float = 2.5
+
+    @staticmethod
+    def from_dict(data):
+        data = data if isinstance(data, dict) else {}
+        return TurningUndercutParameters(
+            radius=float(data.get("radius", 0.4) or 0.4),
+            depth=float(data.get("depth", 0.4) or 0.4),
+            length=float(data.get("length", 2.5) or 2.5),
+        )
+
+    def to_dict(self):
+        return {"radius": float(self.radius), "depth": float(self.depth), "length": float(self.length)}
+
+
 class GrooveRoughingStrategy(str, Enum):
     START_RIGHT = "start_right"
     START_LEFT = "start_left"
@@ -768,6 +792,7 @@ class ProfileRoughingStrategy:
 @dataclass
 class ProfileContourStrategy:
     profiling_type: ProfilingType
+    finishing_direction: FinishingDirection = FinishingDirection.TOWARDS_Z_MINUS
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "ProfileContourStrategy":
@@ -776,11 +801,17 @@ class ProfileContourStrategy:
             profiling_type = ProfilingType(pt_raw)
         except ValueError:
             profiling_type = ProfilingType.OD
-        return ProfileContourStrategy(profiling_type=profiling_type)
+        try:
+            finishing_direction = FinishingDirection(
+                data.get("finishing_direction", FinishingDirection.TOWARDS_Z_MINUS.value))
+        except ValueError:
+            finishing_direction = FinishingDirection.TOWARDS_Z_MINUS
+        return ProfileContourStrategy(profiling_type=profiling_type, finishing_direction=finishing_direction)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "profiling_type": self.profiling_type.value,
+            "finishing_direction": self.finishing_direction.value,
         }
 
 
@@ -965,6 +996,56 @@ class Turning(TurnableOperation):
 
     def display_name(self) -> str:
         return "Turning"
+
+
+@dataclass
+class TurningFinish(TurnableOperation):
+    parentOrder: int
+    p1X: float
+    p1Z: float
+    stockToLeave: StockToLeave
+    finishingDirection: FinishingDirection
+    addUndercut: bool
+    undercutParameters: TurningUndercutParameters
+    m1Parameters: M1Parameters
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "TurningFinish":
+        try:
+            direction = FinishingDirection(data.get("finishing_direction", FinishingDirection.TOWARDS_Z_MINUS.value))
+        except ValueError:
+            direction = FinishingDirection.TOWARDS_Z_MINUS
+        return TurningFinish(
+            order=int(data["order"]), type=data["type"],
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            speedsAndFeeds=TurnableOperation._parse_speeds_and_feeds(data),
+            parentOrder=int(data.get("parent_order", 0) or 0),
+            p1X=float(data.get("p1_x", 0.0) or 0.0),
+            p1Z=float(data.get("p1_z", 0.0) or 0.0),
+            stockToLeave=StockToLeave.from_dict(data.get("stock_to_leave", {})),
+            finishingDirection=direction,
+            addUndercut=bool(data.get("add_undercut", False)),
+            undercutParameters=TurningUndercutParameters.from_dict(data.get("undercut_parameters", {})),
+            m1Parameters=M1Parameters.from_dict(data.get("m1_parameters", {})),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        self._add_speeds_and_feeds_to(base)
+        base.update({
+            "parent_order": int(self.parentOrder),
+            "p1_x": float(self.p1X), "p1_z": float(self.p1Z),
+            "stock_to_leave": self.stockToLeave.to_dict(),
+            "finishing_direction": self.finishingDirection.value,
+            "add_undercut": bool(self.addUndercut),
+            "undercut_parameters": self.undercutParameters.to_dict(),
+            "m1_parameters": self.m1Parameters.to_dict(),
+        })
+        return base
+
+    def display_name(self) -> str:
+        return "Turning-Finish"
 
 
 @dataclass
@@ -2139,6 +2220,7 @@ operation_types: Dict[str, Type[Operation]] = {
     "positionAt": PositionAt,
     "facing": Facing,
     "turning": Turning,
+    "turningFinish": TurningFinish,
     "knurling": Knurling,
     "defineProfile": DefineProfile,
     "importDxfProfile": ImportDxfProfile,

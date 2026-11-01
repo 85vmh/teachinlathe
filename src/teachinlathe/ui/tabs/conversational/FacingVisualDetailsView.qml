@@ -30,8 +30,10 @@ Item {
     property real   xEnd: 0.0
     property real   zEnd: 0.0
     property real   doc: 0.0
-    property real   retract: 0.0
+    property real   toolClearance: 0.0
     property bool   zEndBecomesNewZ0: false
+    readonly property real stockDiameter: Number(workpiece && workpiece.external_diameter) > 0
+                                          ? Number(workpiece.external_diameter) : Math.abs(xStart)
     // the canvas mirrored or not: on unless the editor says otherwise; the
     // mirror button changes it, and the editor keeps it for the next Facing
     property bool   canvasMirror: true
@@ -51,7 +53,7 @@ Item {
         op.geometry_parameters = { x_start: xStart, z_start: zStart, x_end: xEnd, z_end: zEnd }
         op.cutting_parameters = op.cutting_parameters || {}
         op.cutting_parameters.doc = doc
-        op.cutting_parameters.retract = retract
+        op.cutting_parameters.retract = toolClearance
         op.z_end_becomes_new_z0 = zEndBecomesNewZ0
         return op
     }
@@ -78,7 +80,7 @@ Item {
         xEnd    = gp.x_end   !== undefined ? Number(gp.x_end)   : 0
         zEnd    = gp.z_end   !== undefined ? Number(gp.z_end)   : 0
         doc     = cp.doc     !== undefined ? Number(cp.doc)     : 0
-        retract = cp.retract !== undefined ? Number(cp.retract) : 0
+        toolClearance = cp.retract !== undefined ? Number(cp.retract) : 0
         zEndBecomesNewZ0 = !!opData.z_end_becomes_new_z0
 
         header.applyData(opData)
@@ -111,6 +113,7 @@ Item {
             showTransitions: false
             // no axes: the origin alone marks Z0
             showAxes: false
+            showZeroLine: true
             Layout.fillWidth: true
             Layout.fillHeight: true
             // pinch and the buttons zoom, a drag pans, a double tap fits
@@ -129,7 +132,8 @@ Item {
                 w.faced_to = root.zEnd
                 return w
             }
-            startPosition: ({ x: root.xStart, z: root.zStart })
+            startPosition: ({ x: root.xStart + 2 * root.toolClearance,
+                              z: root.zStart + root.toolClearance })
             endPosition:   ({ x: root.xEnd,   z: root.zEnd })
             roughingPreview: root.facingPreview
             startPositionArrowRect: null
@@ -140,6 +144,12 @@ Item {
             readonly property real p2TagX: _cx(root.zEnd) + 56
             readonly property real p2TagY: _cy(root.xEnd) - 56
             markers: [
+                // Extend the stock's outside diameter from Z End to Z0 on
+                // both mirrored sides, matching the stock outline colour.
+                { hline: true, x: root.stockDiameter, z: root.zEnd / 2,
+                  half: Math.abs(root.zEnd) / 2, dash: [6, 3], color: "#6b7280" },
+                { hline: true, x: -root.stockDiameter, z: root.zEnd / 2,
+                  half: Math.abs(root.zEnd) / 2, dash: [6, 3], color: "#6b7280" },
                 { leader: true, x: root.xStart, z: root.zStart, color: "#1565c0",
                   toZ: root.zStart, dx: -profileCanvas.p1TagOffset, slope: 1 },
                 { leader: true, x: root.xEnd, z: root.zEnd, color: profileCanvas.endPositionColor,
@@ -177,8 +187,8 @@ Item {
             readonly property real boxWidth: Math.max(docBox.implicitWidth, z0Check.implicitWidth,
                                                       endBox.implicitWidth, startBox.implicitWidth,
                                                       retractBox.implicitWidth)
-            readonly property real boxGap: Theme.spacingLarge
-            fitInsetRight: boxWidth + boxGap
+            readonly property real boxGap: profileCanvas.tickBand
+            fitInsetRight: boxWidth + profileCanvas.tickBand
 
             // the tool it cuts with, at the top, in the middle
             OperationToolBox {
@@ -198,7 +208,8 @@ Item {
                 if (!canvasTool.drawn) return []
                 var pts = canvasTool.outlineFromTip, out = []
                 for (var i = 0; i < pts.length; i++)
-                    out.push({ x: root.xStart + 2 * pts[i].y, z: root.zStart + pts[i].x })
+                    out.push({ x: root.xStart + 2 * root.toolClearance + 2 * pts[i].y,
+                               z: root.zStart + root.toolClearance + pts[i].x })
                 return out
             }
             onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
@@ -208,8 +219,8 @@ Item {
                 card: root.toolCard && root.toolCard.card ? root.toolCard.card : ""
                 view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
                 pxPerMm: profileCanvas._scale
-                tipX: profileCanvas._cx(root.zStart)
-                tipY: profileCanvas._cy(root.xStart)
+                tipX: profileCanvas._cx(root.zStart + root.toolClearance)
+                tipY: profileCanvas._cy(root.xStart + 2 * root.toolClearance)
             }
 
             // top to bottom: Tool Clearance (retract), P1, Ap, P2 and its Z0
@@ -222,8 +233,8 @@ Item {
                 retractLabel: "Tool Clearance"
                 docColor: profileCanvas.feedColor
                 retractColor: profileCanvas.rapidColor
-                retract: root.retract
-                onRetractEdited: function(value) { root.retract = value; root.save() }
+                retract: root.toolClearance
+                onRetractEdited: function(value) { root.toolClearance = value; root.save() }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -272,7 +283,7 @@ Item {
 
             CheckBox {
                 id: z0Check
-                x: endBox.x
+                x: profileCanvas.width - width - profileCanvas.tickBand
                 y: endBox.y + endBox.height + Theme.spacingSmall
                 text: "Set P2Z as the new Z0"
                 font.pixelSize: Theme.fontBody

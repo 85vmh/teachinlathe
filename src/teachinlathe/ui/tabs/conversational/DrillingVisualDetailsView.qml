@@ -11,6 +11,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.conversational.profile_canvas
 import theme
+import "define_radial_profile" as Radial
 
 Item {
     id: root
@@ -186,11 +187,37 @@ Item {
             // drill is wide, an arrow from it to its box; Peck Depth none yet
             readonly property real zLineDiameter: (root.drill ? Number(root.drill.diameter) : 10) * 1.6
             markers: [
-                { line: true, x: zLineDiameter, z: root.zStart,   color: root.zStartColor,   arrowToRect: zStartBox.rect },
-                { line: true, x: zLineDiameter, z: root.zEnd,     color: root.zEndColor,     arrowToRect: zEndBox.rect },
+                { line: true, x: zLineDiameter, z: root.zStart, color: root.zStartColor },
+                { line: true, x: zLineDiameter, z: root.zEnd, color: root.zEndColor },
+                // From the same upper ends of the Z markers, point at the
+                // P1Z/P2Z tags on a 45-degree up-right leader.
+                { leader: true, x: -zLineDiameter, z: root.zStart, color: root.zStartColor,
+                  toZ: root.zStart, dx: 56, slope: -1 },
+                { leader: true, x: -zLineDiameter, z: root.zEnd, color: root.zEndColor,
+                  toZ: root.zEnd, dx: 56, slope: -1 },
                 // its arrow to the box is the clearance dimension's
                 { line: true, x: zLineDiameter, z: root.retractZ, color: root.clearanceColor, arrowToRect: null }
             ]
+            readonly property real pointTagOffset: 56
+            readonly property real p1TagX: _cx(root.zStart) + pointTagOffset
+            readonly property real p1TagY: _cy(-zLineDiameter) - pointTagOffset - p1Tag.height
+            readonly property real p2TagX: _cx(root.zEnd) + pointTagOffset
+            readonly property real p2TagY: _cy(-zLineDiameter) - pointTagOffset - p2Tag.height
+            Radial.GroovePointTag {
+                id: p1Tag
+                point: 1
+                axes: "Z"
+                x: profileCanvas.p1TagX
+                y: profileCanvas.p1TagY
+            }
+            Radial.GroovePointTag {
+                id: p2Tag
+                point: 2
+                axes: "Z"
+                accent: profileCanvas.endPositionColor
+                x: profileCanvas.p2TagX
+                y: profileCanvas.p2TagY
+            }
 
             Rectangle {
                 anchors.fill: parent
@@ -202,8 +229,8 @@ Item {
             // the drawing is fitted into what the widest leaves free.
             readonly property real boxWidth: Math.max(zStartBox.implicitWidth, zEndBox.implicitWidth,
                                                       clearanceBox.implicitWidth, peckBox.implicitWidth)
-            readonly property real boxGap: Theme.spacingLarge
-            fitInsetRight: boxWidth + boxGap
+            readonly property real boxGap: profileCanvas.tickBand
+            fitInsetRight: boxWidth + profileCanvas.tickBand
 
             // two pairs, a gap apart within each: Z Start over Z End at the
             // top, as wide as each other; Clearance over Peck Depth at the
@@ -216,7 +243,9 @@ Item {
                 x: profileCanvas.width - width - profileCanvas.boxGap
                 y: profileCanvas.boxGap
                 accent: root.zStartColor
-                label: "Z Start"
+                label: "P1Z"
+                pointLabel: true
+                point: 1
                 settingName: "drilling.z_start"
                 value: root.zStart
                 onValueEdited: function(value) { root.zStart = value; root.save() }
@@ -229,7 +258,9 @@ Item {
                 x: profileCanvas.width - width - profileCanvas.boxGap
                 y: zStartBox.y + zStartBox.height + profileCanvas.boxGap
                 accent: root.zEndColor
-                label: "Z End"
+                label: "P2Z"
+                pointLabel: true
+                point: 2
                 settingName: "drilling.z_end"
                 value: root.zEnd
                 onValueEdited: function(value) { root.zEnd = value; root.save() }
@@ -253,7 +284,7 @@ Item {
             PeckBox {
                 id: peckBox
                 x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.height - height - profileCanvas.boxGap
+                y: profileCanvas.height - height - profileCanvas.tickBand
                 color: root.peckColor
                 peckDepth: root.peckDepth
                 dwellTime: root.dwellTime

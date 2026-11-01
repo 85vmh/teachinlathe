@@ -25,7 +25,22 @@ Item {
     property var startBlend: ({ type: "none", chamfer_width: 0, fillet_radius: 0 })
     property var shoulderBlend: ({ type: "none", chamfer_width: 0, fillet_radius: 0 })
 
-    readonly property var turningPreview: (opIndex >= 0 && editor) ? editor.preview(_draftOp()) : null
+    property var turningPreview: null
+    readonly property var turningProfile: (opIndex >= 0 && editor) ? editor.profile(_draftOp()) : ({})
+    readonly property string previewKey: (opIndex >= 0 && editor) ? JSON.stringify(_draftOp()) : ""
+    onPreviewKeyChanged: previewTimer.restart()
+    Timer {
+        id: previewTimer
+        interval: 150
+        onTriggered: {
+            if (root.previewKey === "") root.turningPreview = null
+            else root.editor.requestPreview(JSON.parse(root.previewKey))
+        }
+    }
+    Connections {
+        target: root.editor
+        function onPreviewReady(preview) { root.turningPreview = preview }
+    }
     signal openNumPadRequested(var field)
 
     function _draftOp() {
@@ -98,9 +113,11 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 showAxes: false
+                showZeroLine: true
                 selectable: false
                 mirrorAcrossCenterline: true
-                primitives: []
+                primitives: root.turningProfile.profile_primitives || []
+                profileType: root.turningProfile.profile_type || "od"
                 workpiece: {
                     var w = JSON.parse(JSON.stringify(root.workpiece || {}))
                     var hasHeaderStock = Number(w.external_diameter) > 0 && Number(w.stock_length) > 0
@@ -110,8 +127,9 @@ Item {
                     }
                     if (root.xStart > 0 && root.zStart > root.zEnd) {
                         w.face_z = Math.max(0, Number(w.face_z) || 0, root.zStart)
-                        w.break_after_z = root.zEnd
-                        w.break_after_setback = 10
+                        w.break_after_profile = true
+                        delete w.break_after_z
+                        delete w.break_after_setback
                     }
                     return w
                 }
@@ -289,9 +307,12 @@ Item {
                             labelColor: profileCanvas.stockToLeaveColor
                             radial: root.stockRadial
                             axial: root.stockAxial
+                            addFinishingPass: true
+                            finishingOperationExists: !!root.editor && !!root.editor.hasFinishingOperation
                             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                             onRadialEdited: function(value) { root.stockRadial = value; root.save() }
                             onAxialEdited: function(value) { root.stockAxial = value; root.save() }
+                            onAddFinishingOperationRequested: root.editor.addTurningFinish()
                         }
                     }
                 }

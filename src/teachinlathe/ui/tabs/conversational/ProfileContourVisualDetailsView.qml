@@ -6,6 +6,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.conversational.profile_canvas
 import theme
+import "define_radial_profile" as Radial
 
 Item {
     id: root
@@ -31,6 +32,8 @@ Item {
     property real   stockRadial: 0.0
     property real   stockAxial: 0.0
     property real   retract: 0.0
+    property string finishDirection: "towards_z_minus"
+    readonly property bool isIdProfile: String(profileType).toLowerCase() === "id"
 
     // what the contour will cut with the values above
     readonly property var contourPreview: (opIndex >= 0 && primitives.length > 0 && editor)
@@ -57,7 +60,10 @@ Item {
         op.stock_to_leave = { radial: stockRadial, axial: stockAxial }
         op.cutting_parameters = op.cutting_parameters || {}
         op.cutting_parameters.retract = retract
-        op.profile_contour_strategy = { profiling_type: profileType }
+        op.profile_contour_strategy = {
+            profiling_type: profileType,
+            finishing_direction: finishDirection
+        }
         return op
     }
 
@@ -87,8 +93,10 @@ Item {
         var pp = opData.profiling_parameters || {}
         var cp = opData.cutting_parameters || {}
         var st = opData.stock_to_leave || {}
+        var strategy = opData.profile_contour_strategy || {}
         var savedX = pp.x_start !== undefined ? Number(pp.x_start) : 0
         retract = cp.retract !== undefined ? Number(cp.retract) : 0
+        finishDirection = strategy.finishing_direction || "towards_z_minus"
         xStart  = savedX !== 0 ? savedX : _maxProfileDiameter() + retract
         zStart  = pp.z_start !== undefined ? Number(pp.z_start) : 0
         stockEnabled = !!opData.stock_to_leave_enabled
@@ -122,6 +130,7 @@ Item {
             showTransitions: false
             // no axes: the origin alone marks Z0
             showAxes: false
+            showZeroLine: true
             Layout.fillWidth: true
             Layout.fillHeight: true
             // pinch and the buttons zoom, a drag pans, a double tap fits
@@ -141,7 +150,7 @@ Item {
             roughingPreview: (!root.contourPreview || root.stockEnabled) ? root.contourPreview
                              : { profile: root.contourPreview.profile, offset: [],
                                  feeds: root.contourPreview.feeds, rapids: [] }
-            startPositionArrowRect: startBox.rect
+            startPositionArrowRect: null
             stockToLeaveArrowRect:  root.stockEnabled ? stockBox.rect : null
 
             Rectangle {
@@ -150,19 +159,62 @@ Item {
                 border.color: Theme.outline; border.width: Theme.hairline
             }
 
-            // The boxes stack down the right edge, each as wide as it needs;
-            // the drawing is fitted into what the widest leaves free.
-            readonly property real boxWidth: Math.max(stockCheck.implicitWidth, stockBox.implicitWidth,
-                                                      retractBox.implicitWidth, startBox.implicitWidth)
-            readonly property real boxGap: Theme.spacingLarge
-            fitInsetRight: root.primitives.length > 0 ? boxWidth + boxGap : 0
+            // The cards stack down the right edge, as on Profile Roughing.
+            readonly property real boxWidth: Math.max(finishDirectionBox.implicitWidth,
+                retractBox.implicitWidth, p1Box.implicitWidth, stockCheck.implicitWidth,
+                stockBox.implicitWidth)
+            readonly property real boxGap: profileCanvas.tickBand
+            readonly property real firstBoxY: profileCanvas.tickBand
+            fitInsetRight: root.primitives.length > 0 ? boxWidth + profileCanvas.tickBand : 0
+
+            TurningFinishDirectionBox {
+                id: finishDirectionBox
+                visible: root.primitives.length > 0
+                x: profileCanvas.width - width - profileCanvas.boxGap
+                y: profileCanvas.firstBoxY
+                direction: root.finishDirection
+                onDirectionEdited: function(value) {
+                    root.finishDirection = value
+                    root.save()
+                }
+            }
+
+            DepthOfCutBox {
+                id: retractBox
+                visible: root.primitives.length > 0
+                showDoc: false
+                retractLabel: "Tool Clearance"
+                x: profileCanvas.width - width - profileCanvas.boxGap
+                y: finishDirectionBox.y + finishDirectionBox.height + Theme.spacingSmall
+                docColor: profileCanvas.feedColor
+                retractColor: profileCanvas.rapidColor
+                retract: root.retract
+                onRetractEdited: function(value) { root.retract = value; root.save() }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
+
+            TurningPointBox {
+                id: p1Box
+                visible: root.primitives.length > 0
+                x: profileCanvas.width - width - profileCanvas.boxGap
+                y: retractBox.y + retractBox.height + Theme.spacingSmall
+                point: 1
+                settingPrefix: "profile_contour"
+                xValue: root.xStart
+                zValue: root.zStart
+                onFieldEdited: function(axis, value) {
+                    if (axis === "x") root.xStart = value; else root.zStart = value
+                    root.save()
+                }
+                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            }
 
             // turns the stock to leave on and off, in its colour
             CheckBox {
                 id: stockCheck
                 visible: root.primitives.length > 0
-                x: stockBox.x
-                y: profileCanvas.boxGap
+                x: profileCanvas.width - width - profileCanvas.boxGap
+                y: p1Box.y + p1Box.height + Theme.spacingSmall
                 text: "Stock to Leave"
                 font.pixelSize: Theme.fontBody
                 font.bold: true
@@ -192,31 +244,22 @@ Item {
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
-            // a single pass: retract only, no depth of cut
-            DepthOfCutBox {
-                id: retractBox
+            readonly property real p1TagOffset: 56
+            readonly property real p1TagX: root.isIdProfile
+                ? _cx(root.zStart) + p1TagOffset
+                : _cx(root.zStart) - p1TagOffset - p1Tag.width
+            readonly property real p1TagY: _cy(root.xStart) + p1TagOffset
+            markers: root.primitives.length > 0 ? [
+                { leader: true, x: root.xStart, z: root.zStart, color: "#1565c0",
+                  toZ: root.zStart, dx: root.isIdProfile ? p1TagOffset : -p1TagOffset, slope: 1 }
+            ] : []
+            Radial.GroovePointTag {
+                id: p1Tag
                 visible: root.primitives.length > 0
-                showDoc: false
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                // halfway between the stock to leave and start position boxes
-                y: (stockBox.y + stockBox.height + startBox.y - height) / 2
-                docColor: profileCanvas.feedColor
-                retractColor: profileCanvas.rapidColor
-                retract: root.retract
-                onRetractEdited: function(value) { root.retract = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            StartPositionBox {
-                id: startBox
-                visible: profileCanvas.startPosition !== null
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.height - height - profileCanvas.boxGap
-                xStart: root.xStart
-                zStart: root.zStart
-                onXStartEdited: function(value) { root.xStart = value; root.save() }
-                onZStartEdited: function(value) { root.zStart = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                point: 1
+                axes: "XZ"
+                x: profileCanvas.p1TagX
+                y: profileCanvas.p1TagY - height / 2
             }
 
             // the tool - a turning tool's insert or a blade - its control

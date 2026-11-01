@@ -8,6 +8,7 @@ import common.touchable_input
 import theme
 import common
 import TeachInLathe
+import "define_radial_profile/points.js" as Points
 
 CanvasBox {
     id: root
@@ -15,6 +16,8 @@ CanvasBox {
     property string label: ""
     property real   value: 0.0
     property string settingName: ""
+    property bool pointLabel: false
+    property int point: 1
     // "z", or "x": an X diameter, taught in as twice the radius read
     property string axis: "z"
     // the button after the value: TeachIn, or - given ``actionText`` - an
@@ -36,15 +39,16 @@ CanvasBox {
         Label {
             id: labelText
             Layout.preferredWidth: root.labelWidth
-            text: root.label
+            text: root.pointLabel ? Points.name(root.point, root.axis) : root.label
+            textFormat: root.pointLabel ? Text.RichText : Text.PlainText
             color: root.accent
-            font.pixelSize: Theme.fontBody
+            font.pixelSize: root.pointLabel ? Points.fontSize : Theme.fontBody
         }
         NumpadField {
             id: valueField
             Layout.preferredWidth: 100
             settingName: root.settingName
-            description: root.label
+            description: root.pointLabel ? "P" + root.point + " " + root.axis.toUpperCase() : root.label
             validatorObject: dblVal
             value: root.value
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }

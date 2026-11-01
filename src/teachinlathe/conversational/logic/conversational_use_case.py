@@ -39,11 +39,13 @@ from teachinlathe.conversational.model.data_types import (
     Tapping,
     Threading,
     Turning,
+    TurningFinish,
     Workpiece,
     operation_types,
 )
 from teachinlathe.conversational.model.program_commands import (
     add_profiling_finish,
+    add_turning_finish,
     create_new_program,
     delete_operation,
     delete_program_file,
@@ -121,6 +123,7 @@ class ConversationalUseCase:
             "defineRadialProfile": (DefineRadialProfile, apply_define_radial_profile_update),
             "facing": (Facing, self._update_facing),
             "turning": (Turning, self._update_turning),
+            "turningFinish": (TurningFinish, self._update_turning_finish),
             "profiling": (Profiling, self._update_profiling),
             "knurling": (Knurling, self._update_knurling),
             "profileRoughing": (ProfileRoughing, self._update_profile_roughing),
@@ -284,6 +287,9 @@ class ConversationalUseCase:
 
     def add_profiling_finish(self, program: Program, index: int) -> int:
         return add_profiling_finish(program, index)
+
+    def add_turning_finish(self, program: Program, index: int) -> int:
+        return add_turning_finish(program, index)
 
     def add_rest_roughing(self, program: Program, index: int) -> int:
         """For what the Profile Roughing at ``index`` leaves: right after it,
@@ -559,13 +565,6 @@ class ConversationalUseCase:
         return facing_preview(Operation.from_dict(op_data))
 
     @staticmethod
-    def turning_preview(op_data: dict, tool=None):
-        """What a Turning would cut as its editor has it."""
-        from teachinlathe.conversational.gcode.operations.profile_roughing import profile_roughing_preview
-        from teachinlathe.conversational.gcode.operations.profiling.operation_input import inline_turning_cut
-        return profile_roughing_preview(inline_turning_cut(Operation.from_dict(op_data), tool))
-
-    @staticmethod
     def parting_preview(op_data: dict):
         """What a Parting would cut as its editor has it - ``op_data``, the
         operation's dict - an OperationPreview."""
@@ -666,6 +665,24 @@ class ConversationalUseCase:
         if isinstance(strategy, dict) and strategy.get("pass_type") in ("axial", "radial"):
             from teachinlathe.conversational.model.data_types import PassType
             op.passType = PassType(strategy["pass_type"])
+
+    @staticmethod
+    def _update_turning_finish(op, p):
+        apply_turnable_operation_update(op, p)
+        if isinstance(p.get("finishing_direction"), str):
+            from teachinlathe.conversational.model.data_types import FinishingDirection
+            try:
+                op.finishingDirection = FinishingDirection(p["finishing_direction"])
+            except ValueError:
+                pass
+        _set_if_given(op, p, "p1_x", "p1X", float)
+        _set_if_given(op, p, "p1_z", "p1Z", float)
+        _set_if_given(op, p, "add_undercut", "addUndercut", bool)
+        undercut = p.get("undercut_parameters")
+        if isinstance(undercut, dict):
+            from teachinlathe.conversational.model.data_types import TurningUndercutParameters
+            op.undercutParameters = TurningUndercutParameters.from_dict(undercut)
+        apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
 
     @staticmethod
     def _update_profiling(op, p):

@@ -638,6 +638,19 @@ class ConversationalViewModel(QObject):
             return
         self._save_current_program()
 
+    def add_turning_finish(self, index):
+        prog = self.current_program
+        if not prog:
+            return
+        try:
+            new_index = self.use_case.add_turning_finish(prog, index)
+        except Exception as e:
+            LOG.error("add turning finish failed: %s", e)
+            return
+        self.current_op_index = new_index
+        self._save_current_program()
+        QTimer.singleShot(0, lambda: self.showDetails(new_index))
+
     def request_roughing_preview(self, editor, op_index, op_data):
         """The preview of the Profile Roughing at ``op_index`` with the
         editor's draft, to ``editor.previewReady`` once worked out - at once

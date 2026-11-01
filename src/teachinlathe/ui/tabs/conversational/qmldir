@@ -54,6 +54,9 @@ SpeedsAndFeeds 1.0 SpeedsAndFeeds.qml
 SpindleParameters 1.0 SpindleParameters.qml
 StartPositionBox 1.0 StartPositionBox.qml
 StockToLeaveBox 1.0 StockToLeaveBox.qml
+TurningFinishDirectionBox 1.0 TurningFinishDirectionBox.qml
+TurningUndercutBox 1.0 TurningUndercutBox.qml
+TurningFinishVisualDetailsView 1.0 TurningFinishVisualDetailsView.qml
 SwipeDismissArea 1.0 SwipeDismissArea.qml
 SwipeRow 1.0 SwipeRow.qml
 TappingVisualDetailsView 1.0 TappingVisualDetailsView.qml

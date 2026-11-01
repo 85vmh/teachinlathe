@@ -2,7 +2,10 @@
 as Profile Roughing plans the one it finishes with (profiling/planner.py) -
 tool-aware, compensated for the insert's nose - and written the same way."""
 
-from teachinlathe.conversational.model.data_types import PassType, ProfileContourConfig
+from teachinlathe.conversational.model.data_types import (
+    FinishingDirection, PassType, ProfileContour, ProfileContourConfig, TurningFinish,
+    ProfilingType,
+)
 
 from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 from .profiling.operation_input import (
@@ -22,6 +25,11 @@ from .profiling.plan_gcode import write_plan
 
 def parse_profile_contour_config(cut: ProfileCut) -> ProfileContourConfig:
     op = cut.op
+    if isinstance(op, TurningFinish):
+        return ProfileContourConfig(
+            **common_config(cut, ProfilingType.OD),
+            stock_x=0.0, stock_z=0.0, stock_enabled=False,
+        )
     stock_enabled = bool(op.stockToLeaveEnabled)
     return ProfileContourConfig(
         **common_config(cut, op.profileContourStrategy.profiling_type),
@@ -42,9 +50,20 @@ def contour_plan_key(cut: ProfileCut) -> str:
     config = parse_profile_contour_config(cut)
     return plan_key(
         setup=[config.x_start, config.z_start, config.doc, config.retract, config.stock_x, config.stock_z,
-               config.profiling_type.value],
+               config.profiling_type.value, _contour_pass_type(cut).value],
         **profile_and_tool_key(cut),
     )
+
+
+def _contour_pass_type(cut: ProfileCut) -> PassType:
+    direction = None
+    if isinstance(cut.op, TurningFinish):
+        direction = cut.op.finishingDirection
+    elif isinstance(cut.op, ProfileContour):
+        direction = cut.op.profileContourStrategy.finishing_direction
+    if direction is FinishingDirection.TOWARDS_Z_PLUS:
+        return PassType.RADIAL
+    return PassType.AXIAL
 
 
 def plan_profile_contour(cut: ProfileCut):
@@ -67,7 +86,8 @@ def _plan(cut: ProfileCut):
     setup = RoughingSetup(
         x_start=config.x_start, z_start=config.z_start, doc=config.doc,
         retract=config.retract, stock_x=config.stock_x, stock_z=config.stock_z,
-        profiling_type=config.profiling_type, pass_type=PassType.AXIAL)
+        profiling_type=config.profiling_type,
+        pass_type=_contour_pass_type(cut))
     return plan_contour(setup, path, resolve_tool_shape(cut))
 
 
@@ -84,7 +104,8 @@ def profile_contour_toolpath(cut: ProfileCut, path: GcodeEmitter):
 
     plan = plan_profile_contour(cut)
     if plan.error:
-        path.error(f"Profile Contour -- {plan.error}")
+        label = "Turning-Finish" if isinstance(cut.op, TurningFinish) else "Profile Contour"
+        path.error(f"{label} -- {plan.error}")
         return
 
     write_plan(path, plan, (config.stock_x, config.stock_z))

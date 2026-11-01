@@ -56,6 +56,9 @@ from teachinlathe.conversational.model.data_types import (
     TurningBlend,
     TurningCuttingParameters,
     TurningGeometryParameters,
+    TurningUndercutParameters,
+    TurningFinish,
+    FinishingDirection,
     Workpiece,
     DefineProfile,
     ImportDxfProfile,
@@ -124,6 +127,16 @@ def make_default_operation(op_type: str, order: int = 1):
             stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
             m1Parameters=M1Parameters(include_m1=True, inspect_position=InspectPosition.G28,
                                       stop_spindle=False),
+        )
+    if op_type == "turningFinish":
+        return TurningFinish(
+            order=order, type=op_type, generate_gcode=True, is_optional_block=False,
+            speedsAndFeeds=_speeds(feed_rate=0.1), parentOrder=0,
+            p1X=0.0, p1Z=0.0,
+            stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
+            finishingDirection=FinishingDirection.TOWARDS_Z_MINUS,
+            addUndercut=False, undercutParameters=TurningUndercutParameters(),
+            m1Parameters=m1_default,
         )
     if op_type == "knurling":
         return Knurling(

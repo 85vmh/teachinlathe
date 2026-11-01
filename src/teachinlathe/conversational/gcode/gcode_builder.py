@@ -23,6 +23,7 @@ from teachinlathe.conversational.model.data_types import (
     Tapping,
     Threading,
     Turning,
+    TurningFinish,
 )
 from teachinlathe.conversational.logic import program_tools
 from teachinlathe.conversational.model.operation_titles import operation_title
@@ -324,6 +325,7 @@ def _write_radial_profile(path, op, program, op_index, tools):
 _WRITERS = {
     Facing: _on_emitter(facing_toolpath),
     Turning: _cut_on_emitter(profile_roughing_toolpath),
+    TurningFinish: _cut_on_emitter(profile_contour_toolpath),
     Drilling: _on_emitter(drilling_toolpath),
     PositionAt: _on_emitter(position_at_toolpath),
     Knurling: _lines(generate_knurling_gcode),
