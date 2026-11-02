@@ -1,10 +1,9 @@
 """Facing's G-code, written out move by move by facing_toolpath.
 
-The retract was once in the UI and the JSON but never reached the cut, which
-backed off by the depth of cut instead: nothing errored, a smaller depth of
-cut quietly meant a smaller clearance. These check the moves use the retract,
-leave at 45 degrees, and are the moves the preview draws - the moves kept as
-they were written.
+The retract is the clearance from P1: where the tool starts and where it
+goes back to at the end. Between passes it leaves the cut at 45 degrees by
+half the depth of cut. These check those moves, and that they are the moves
+the preview draws - the moves kept as they were written.
 """
 
 import re
@@ -71,24 +70,30 @@ def diagonal_exits(op):
 
 # ── how it leaves the cut ──────────────────────────────────────────────────
 
-def test_it_leaves_every_cut_at_45_degrees_by_the_retract():
+def test_it_leaves_every_cut_at_45_degrees_by_half_the_depth_of_cut():
     """X a diameter, so 2R on X is R on the part."""
-    exits = diagonal_exits(facing(retract=2.0))
+    exits = diagonal_exits(facing(doc=1.0, retract=2.0))
     assert exits
     for dx, dz in exits:
-        assert dx == pytest.approx(4.0)
-        assert dz == pytest.approx(2.0)
-
-
-def test_the_retract_is_not_the_depth_of_cut():
-    for dx, dz in diagonal_exits(facing(doc=0.5, retract=3.0)):
-        assert dz == pytest.approx(3.0)
-
-
-def test_a_zero_retract_falls_back_to_the_depth_of_cut():
-    """Left at zero in the UI it would otherwise rub the face on the way out."""
-    for dx, dz in diagonal_exits(facing(doc=0.5, retract=0.0)):
+        assert dx == pytest.approx(1.0)
         assert dz == pytest.approx(0.5)
+
+
+def test_the_clearance_does_not_change_how_it_leaves_the_cut():
+    for dx, dz in diagonal_exits(facing(doc=0.5, retract=3.0)):
+        assert dz == pytest.approx(0.25)
+
+
+# ── the clearance from P1 ──────────────────────────────────────────────────
+
+def test_it_starts_the_clearance_out_from_p1():
+    """The retract is the clearance from P1: X a diameter, so twice it on X."""
+    assert moves(facing(retract=2.0))[0] == ("G0", X_START + 4.0, Z_START + 2.0)
+
+
+def test_it_ends_back_the_clearance_out_from_p1():
+    assert moves(facing(retract=2.0))[-2:] == [("G0", X_START + 4.0, pytest.approx(Z_END + 0.5)),
+                                               ("G0", X_START + 4.0, Z_START + 2.0)]
 
 
 # ── the passes ─────────────────────────────────────────────────────────────

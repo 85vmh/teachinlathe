@@ -18,9 +18,8 @@ from teachinlathe.tooling.model import insert_catalog, tool_angles  # noqa: E402
 from teachinlathe.tooling.model.data_types import (  # noqa: E402
     CuttingToolType, InsertSpec, SpindleDirection, TurningTool,
 )
-from teachinlathe.tooling.store.tool_library_store import (  # noqa: E402
-    CUTTING_TOOLS_FILE, ToolLibraryStore,
-)
+from teachinlathe.core.lathe_tool_extras_data_source import CUTTING_TOOLS_FILE  # noqa: E402
+from tool_library_fakes import tool_library, touch_off  # noqa: E402
 from teachinlathe.ui.tabs.tool_library.ToolsTabViewModel import (  # noqa: E402
     HeaderAction, ToolsTabViewModel,
 )
@@ -38,11 +37,11 @@ def qt_app():
 
 
 @pytest.mark.parametrize("corner, orientation, front, back", [
-    (80, 2, 5, 5),          # CCMT, the example the rule was given with
-    (55, 2, 3, 32),         # DCMT
-    (35, 3, 5, 50),         # VBMT in a corner
+    (80, 2, 95, 5),         # CCMT, 5 at the back: the example the rule was given with
+    (55, 2, 93, 32),        # DCMT in a 93 degree holder
+    (35, 3, 140, 5),        # VBMT in a corner
     (35, 6, 72.5, 72.5),    # VBMT held neutral
-    (80, 8, 5, 95),
+    (80, 8, 95, 5),
 ])
 def test_back_angle_follows_front(corner, orientation, front, back):
     assert tool_angles.complementary_angle(front, corner, orientation) == pytest.approx(back)
@@ -50,9 +49,9 @@ def test_back_angle_follows_front(corner, orientation, front, back):
 
 
 def test_angles_are_clamped_to_what_fits():
-    assert tool_angles.complementary_angle(20, 80, 2) == 0
-    assert tool_angles.complementary_angle(-3, 80, 2) == 10
-    assert tool_angles.clamp_angle(50, 80, 2) == 10
+    assert tool_angles.complementary_angle(120, 80, 2) == 0
+    assert tool_angles.complementary_angle(-3, 80, 2) == 100
+    assert tool_angles.clamp_angle(150, 80, 2) == 100
 
 
 def test_round_inserts_and_undirected_orientations_are_not_coupled():
@@ -65,18 +64,18 @@ def test_round_inserts_and_undirected_orientations_are_not_coupled():
 @pytest.mark.parametrize("orientation, tip", [
     (1, 45), (2, 135), (3, 225), (4, 315), (6, 90), (8, 270),
 ])
-def test_symmetric_tool_points_where_the_picture_does(orientation, tip):
-    """Equal angles put the tip on the diagonal - or the axis, for 6 and 8 -
-    that the orientation picture shows."""
-    clearance = 5 if orientation <= 4 else 50
-    assert tool_angles.insert_rotation(orientation, clearance, clearance, 0) == pytest.approx(tip)
+def test_an_80_degree_insert_points_where_the_picture_does(orientation, tip):
+    """With 5 at the back an 80 degree corner puts the tip on the diagonal the
+    orientation picture shows; held square, for 6 and 8, on the axis."""
+    front, back = (95, 5) if orientation <= 4 else (50, 50)
+    assert tool_angles.insert_rotation(orientation, front, back, 0) == pytest.approx(tip)
 
 
 def test_edges_leave_their_axes_by_the_angles():
-    geometry = tool_angles.edge_geometry(2, 3, 32)
-    # Front from the X axis (down), back from the Z axis (right), both
-    # turning into the body.
-    assert geometry.front_ray == 270 and geometry.front_edge == pytest.approx(273)
+    geometry = tool_angles.edge_geometry(2, 93, 32)
+    # Front from the Z axis on the left, back from the Z axis on the right,
+    # both turning into the body (down).
+    assert geometry.front_ray == 180 and geometry.front_edge == pytest.approx(273)
     assert geometry.back_ray == 0 and geometry.back_edge == pytest.approx(328)
 
 
@@ -123,23 +122,23 @@ def test_editor_titles(qt_app):
 def test_new_tool_starts_consistent(qt_app):
     tool = new_turning_tool(3)
     corner = insert_catalog.corner_angle(tool.insert)
-    assert tool.front_angle + corner + tool.back_angle == pytest.approx(90)
+    assert tool.front_angle + corner + tool.back_angle == pytest.approx(180)
 
 
 def test_editor_couples_the_angles(qt_app):
     editor = _editor()
-    editor.setFrontAngle(2)
+    editor.setFrontAngle(92)
     assert editor.backAngle == pytest.approx(8)
     editor.setBackAngle(9)
-    assert editor.frontAngle == pytest.approx(1)
+    assert editor.frontAngle == pytest.approx(91)
 
 
-def test_changing_the_insert_keeps_front_and_recomputes_back(qt_app):
+def test_changing_the_family_starts_from_its_usual_front_and_recomputes_back(qt_app):
     editor = _editor()
-    editor.setFamily(insert_catalog.families().index("DCMT"))
-    assert (editor.frontAngle, editor.backAngle) == (5, 30)
+    editor.setFamily(insert_catalog.families().index("DCMT"))     # a 93 degree holder
+    assert (editor.frontAngle, editor.backAngle) == (93, 32)
     editor.setOrientation(6)
-    assert (editor.frontAngle, editor.backAngle) == (5, 120)
+    assert (editor.frontAngle, editor.backAngle) == (62.5, 62.5)
 
 
 def test_family_change_keeps_size_position_clamped(qt_app):
@@ -159,8 +158,11 @@ def test_round_insert_leaves_angles_independent(qt_app):
 
 
 def test_inconsistent_stored_angles_are_fixed_on_open(qt_app):
-    editor = _editor(orientation=6)                  # 5 + 80 + 5 is not 180
-    assert (editor.frontAngle, editor.backAngle) == (5, 95)
+    """5 + 80 + 5 is not 180: the back angle is kept, the front fits it - or,
+    held square, both are what the corner leaves."""
+    assert (_editor().frontAngle, _editor().backAngle) == (95, 5)
+    editor = _editor(orientation=6)
+    assert (editor.frontAngle, editor.backAngle) == (50, 50)
 
 
 def test_only_turning_orientations_are_taken(qt_app):
@@ -188,19 +190,19 @@ def _saved_tools(tmp_path):
 
 
 def test_edit_save_writes_and_closes(qt_app, tmp_path):
-    tab = ToolsTabViewModel(ToolLibraryStore(tmp_path))
+    tab = ToolsTabViewModel(repository=tool_library(tmp_path))
     tab.editCuttingTool(1)
     assert tab.getHeaderState()["title"] == "Edit Turning Tool #1"
-    tab.editor.setFrontAngle(2)
+    tab.editor.setFrontAngle(92)
     tab.triggerHeaderAction(HeaderAction.SAVE.value)
 
     assert tab.editor is None and tab.getHeaderState() == {}
     saved = next(t for t in _saved_tools(tmp_path) if t["cutting_tool_id"] == 1)
-    assert (saved["front_angle"], saved["back_angle"]) == (2, 8)
+    assert (saved["front_angle"], saved["back_angle"]) == (92, 8)
 
 
 def test_back_discards(qt_app, tmp_path):
-    tab = ToolsTabViewModel(ToolLibraryStore(tmp_path))
+    tab = ToolsTabViewModel(repository=tool_library(tmp_path))
     before = _saved_tools(tmp_path)
     tab.addCuttingTool(CuttingToolType.TURNING.value)
     tab.editor.setFrontAngle(1)
@@ -210,24 +212,24 @@ def test_back_discards(qt_app, tmp_path):
 
 
 def test_add_save_appends_a_new_tool(qt_app, tmp_path):
-    store = ToolLibraryStore(tmp_path)
-    tab = ToolsTabViewModel(store)
+    store = tool_library(tmp_path)
+    tab = ToolsTabViewModel(repository=store)
     new_id = store.next_cutting_tool_id()
     turning_before = len(store.tools_of(CuttingToolType.TURNING))
     tab.addCuttingTool(CuttingToolType.TURNING.value)
     assert tab.getHeaderState()["title"] == "New Turning Tool"
     tab.triggerHeaderAction(HeaderAction.SAVE.value)
 
-    reloaded = ToolLibraryStore(tmp_path)
+    reloaded = tool_library(tmp_path)
     assert reloaded.find_tool(new_id).tool_type is CuttingToolType.TURNING
     assert len(reloaded.tools_of(CuttingToolType.TURNING)) == turning_before + 1
-    header = tab.cuttingToolsModel.headerRow(CuttingToolType.TURNING)
+    header = tab.cuttingToolsModel.categoryRow(CuttingToolType.TURNING)
     assert header.count == turning_before + 1
 
 
 def test_an_unknown_tool_opens_no_editor(qt_app, tmp_path):
-    store = ToolLibraryStore(tmp_path)
-    tab = ToolsTabViewModel(store)
+    store = tool_library(tmp_path)
+    tab = ToolsTabViewModel(repository=store)
     tab.editCuttingTool(999)
     assert tab.editor is None
     tab.editCuttingTool(store.tools_of(CuttingToolType.BORING)[0].cutting_tool_id)
@@ -238,16 +240,19 @@ def test_an_unknown_tool_opens_no_editor(qt_app, tmp_path):
 
 
 def test_mounting_a_tool_moves_it_out_of_its_old_holder(tmp_path):
-    store = ToolLibraryStore(tmp_path)
-    old = next(h for h in store.holders if h.is_ready)
+    old = next(h for h in tool_library(tmp_path).holders if h.has_tool)
+    touch_off(tmp_path, old.tool_holder_id, 1.5, -2.25)
+    store = tool_library(tmp_path)
+    old = store.find_holder(old.tool_holder_id)
+    assert old.is_ready
     empty = next(h for h in store.holders if not h.has_tool)
     tool_id = old.cutting_tool_id
 
     store.mount(empty.tool_holder_id, tool_id)
 
-    reloaded = ToolLibraryStore(tmp_path)
+    reloaded = tool_library(tmp_path)
     assert reloaded.find_holder(empty.tool_holder_id).cutting_tool_id == tool_id
     moved_from = reloaded.find_holder(old.tool_holder_id)
-    assert not moved_from.has_tool and moved_from.x_offset is None
+    assert not moved_from.has_tool and not moved_from.is_ready
     assert [h.tool_holder_id for h in reloaded.holders
             if h.cutting_tool_id == tool_id] == [empty.tool_holder_id]

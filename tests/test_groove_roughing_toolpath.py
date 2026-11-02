@@ -244,9 +244,9 @@ def test_the_contours_clean_the_bottom_to_the_middle(groove, blade, stock):
         # the Z a line leaves out is the one before it
         found = re.search(r"Z(-?[\d.]+)", line.split("(")[0])
         z = float(found.group(1)) if found else z
-        if "Finish Contour Z+" in line:
+        if "Contour Z+ to Center" in line:
             section = "right"
-        elif "Finish Contour Z-" in line:
+        elif "Contour Z- to Center" in line:
             section = "left"
         elif section and line.startswith(("G1", "G2", "G3")):
             ends[section] = z - tool["control"] * tool["width"] / 2      # the blade's middle

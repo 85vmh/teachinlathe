@@ -283,7 +283,7 @@ def test_45_degree_passes_cut_the_way_their_arrow_points(profile, pass_type, tow
 def test_45_degree_gcode_says_the_way_the_passes_cut(pass_type, toward):
     lines = generate_profile_roughing_gcode(operation("id_steps", pass_type))
 
-    assert any(f"{plan_module.DIAGONAL_ANGLE:g}° Passes toward {toward}" in line for line in lines)
+    assert any(f"{plan_module.DIAGONAL_ANGLE:g}° toward {toward}" in line for line in lines)
 
 
 @pytest.mark.parametrize("pass_type", DIAGONAL)

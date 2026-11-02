@@ -81,16 +81,15 @@ def test_groove_roughing_start_center_generates_pecks_and_contour():
 
     assert "G97 M4 S1000" in lines
     assert "G95 F0.100" in lines
-    assert "(----------Groove Roughing: Start Center P1----------)" in lines
     # the start diameter 40 + 2 x 0.5 radial stock, the blade the 1 mm
     # clearance (2 on the diameter) out from it
-    assert lines[lines.index("(----------Groove Roughing Initial Center Pair----------)") + 1] == "G0 X43.000"
+    assert lines[lines.index("(---Groove Roughing: Start Center P1---)") + 1] == "G0 X43.000"
     assert "G0 Z-24.250" in lines
     assert "G0 Z-25.750" in lines
     # the bottom at 30, with the radial stock to leave
-    assert "G1 X31.000 F0.100" in lines
-    assert "(----------Groove Roughing Finish Contour Z+ to Center----------)" in lines
-    assert "(----------Groove Roughing Finish Contour Z- to Center----------)" in lines
+    assert "G1 X31.000" in lines
+    assert "(---Groove Roughing Contour Z+ to Center---)" in lines
+    assert "(---Groove Roughing Contour Z- to Center---)" in lines
 
 
 def test_groove_roughing_requires_blade_tool():
