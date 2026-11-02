@@ -169,6 +169,11 @@ Rectangle {
         id: canvas
         anchors.fill: parent
 
+        // Home's mark: a house, in the place of its name
+        readonly property url homeIcon: Images.url("home_position.svg")
+        Component.onCompleted: loadImage(homeIcon)
+        onImageLoaded: requestPaint()
+
         OriginActor {
             id: workOrigin
             circleR: root.workOriginRadius
@@ -435,6 +440,12 @@ Rectangle {
             ctx.font = "bold " + Theme.fontSmall + "px sans-serif"
             ctx.fillStyle = color
             var right = corner === 0 || corner === 1, below = corner === 1 || corner === 3
+            if (name === "Home" && isImageLoaded(homeIcon)) {
+                // the house where the name would be, as high as a line of it
+                var size = Theme.fontSmall * 1.4
+                ctx.drawImage(homeIcon, right ? x + r : x - r - size, below ? y + r : y - r - size, size, size)
+                return
+            }
             ctx.textAlign = right ? "left" : "right"
             ctx.textBaseline = below ? "top" : "bottom"
             ctx.fillText(name, x + (right ? r : -r), y + (below ? r : -r))

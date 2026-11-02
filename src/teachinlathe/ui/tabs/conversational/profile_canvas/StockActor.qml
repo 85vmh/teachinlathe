@@ -163,7 +163,9 @@ QtObject {
                 var face = facedTo !== null ? Math.min(facedTo, faceZ) : faceZ
                 // G33's thread: from Z Start to Z End only what is inside its
                 // profile is stock - the grooves cut out, the profile its
-                // outline there
+                // outline there; an internal one's, what is outside it - the
+                // tube's wall with the grooves cut into its bore, and the
+                // bore's lines not across them
                 var thread = workpiece && workpiece.thread ? workpiece.thread : null
                 if (thread && thread.lower && thread.upper && thread.lower.length > 0
                         && thread.lower.length === thread.upper.length) {
@@ -186,13 +188,33 @@ QtObject {
                         // the near half's profile below, the far half's over
                         for (var l = 0; l < thread.lower.length; l++) {
                             var lo = thread.lower[l], up = thread.upper[l]
+                            if (thread.internal) {
+                                // out from each half's profile to past the skin
+                                var halves = [[lo, span], [up, -span]]
+                                for (var h = 0; h < 2; h++) {
+                                    var line = halves[h][0], out = cy(0) + halves[h][1]
+                                    c.moveTo(cx(+line[0].z), cy(+line[0].x))
+                                    for (var q = 1; q < line.length; q++) c.lineTo(cx(+line[q].z), cy(+line[q].x))
+                                    c.lineTo(cx(+line[line.length - 1].z), out)
+                                    c.lineTo(cx(+line[0].z), out)
+                                    c.closePath()
+                                }
+                                continue
+                            }
                             c.moveTo(cx(+lo[0].z), cy(+lo[0].x))
                             for (var p = 1; p < lo.length; p++) c.lineTo(cx(+lo[p].z), cy(+lo[p].x))
                             for (p = up.length - 1; p >= 0; p--) c.lineTo(cx(+up[p].z), cy(+up[p].x))
                             c.closePath()
                         }
                     }
-                    style.skinTo = cx(tTo)
+                    // the outline there is the profile: an external thread's
+                    // skin, an internal one's bore
+                    if (thread.internal) {
+                        style.boreGap = [cx(tTo), cx(tFrom)]
+                        style.fillBody = true
+                    } else {
+                        style.skinTo = cx(tTo)
+                    }
                 }
                 if (breakMiddle) {
                     // a stretch of its middle left out as well (Parting's,

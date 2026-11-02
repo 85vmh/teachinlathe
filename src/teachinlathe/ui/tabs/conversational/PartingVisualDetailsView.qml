@@ -59,14 +59,10 @@ Item {
     // short: the piece at the face 0.3 Ø, a gap, then the far piece with the
     // blade in its middle - Z Position 0.25 Ø on from the gap, and as far
     // past the blade to the far break.
-    // ``shift`` is how far right a real Z there is drawn; the axis marks the
-    // real Z.
-    readonly property bool breakMiddle: stockDiameter > 0 && Math.abs(zPos) > stockDiameter
-    readonly property real breakBend: Broken.reach(1.0) * stockDiameter / 2
-    readonly property real breakGap: (Broken.reach(1.0) + 0.06) * stockDiameter
-    readonly property real breakNear: -0.3 * stockDiameter
-    readonly property real breakFar: breakNear - breakGap
-    readonly property real zShift: breakMiddle ? (breakFar - 0.25 * stockDiameter) - zPos : 0
+    // ``zShift`` is how far right a real Z there is drawn; the axis marks
+    // the real Z. Null when nothing is left out.
+    readonly property var middleBreak: Broken.middleBreak(stockDiameter, zPos)
+    readonly property real zShift: middleBreak ? middleBreak.shift : 0
     // past Z Position to the far break: the blade, then as far again as
     // from the gap to it, so it is in the far piece's middle
     readonly property real breakSetback: 0.25 * stockDiameter + bladeWidth
@@ -190,11 +186,11 @@ Item {
                 var w = JSON.parse(JSON.stringify(root.workpiece || {}))
                 if (root.stockDiameter > 0) w.external_diameter = root.stockDiameter
                 w.break_after_z = root.zDrawn
-                w.break_middle = root.breakMiddle ? { near: root.breakNear, far: root.breakFar } : null
-                if (root.breakMiddle) w.break_after_setback = root.breakSetback
+                w.break_middle = root.middleBreak
+                if (root.middleBreak) w.break_after_setback = root.breakSetback
                 return w
             }
-            axisBreak: root.breakMiddle ? { near: root.breakNear, far: root.breakFar, shift: root.zShift } : null
+            axisBreak: root.middleBreak
 
             // where the dashed lines of the blade's path end: below, past
             // where it starts; above, past the stock's outside - or, with

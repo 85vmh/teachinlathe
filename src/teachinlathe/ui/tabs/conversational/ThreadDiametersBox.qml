@@ -87,8 +87,9 @@ CanvasBox {
                 calculatedField.value = Qt.binding(root._calculatedValue)
             }
         }
-        Button {
-            text: "Calculate"
+        // Calculate: the TeachIn button's size, a calculator on it
+        SquareIconButton {
+            iconSource: Images.url("calculate.svg")
             onClicked: root.calculateRequested()
         }
     }

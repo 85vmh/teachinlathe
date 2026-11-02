@@ -1,11 +1,13 @@
 // G33ThreadingVisualDetailsView.qml — G33 Threading on the profile canvas,
 // laid out as Parting's: the header's Speeds and Feeds (RPM only, Pitch and
-// Starts for its feeds) with Pause to Inspect, and a stock as big as the
-// thread's Major Ø drawn as Parting draws its: broken off past Z End, and
-// further from Z0 than its diameter its middle left out too, so Z End sits
-// a quarter diameter along the far piece. Z Start and Z End each a line across
-// the centre line, Major Ø and Minor Ø dimensioned in front of the stock; the
-// threading insert on Z Start, Clearance out from Major Ø. The values in cards
+// Starts for its feeds) with Pause to Inspect, and the thread cut in a stock
+// drawn as Parting draws its: broken off past the thread's far end, and
+// further from Z0 than its diameter its middle left out too, so that end sits
+// a quarter diameter along the far piece - for an OD thread a bar as big as
+// Major Ø, for an ID one a tube, its bore Minor Ø. The thread itself is
+// thread.js's. Z Start and Z End each a line across the centre line, Major Ø
+// and Minor Ø dimensioned in front of the stock; the threading insert on Z
+// Start, Clearance off the diameter it is taught in on. The values in cards
 // down the right edge, in a list that scrolls, as Turning has them: OD / ID,
 // Clearance, Z Start / Z End, Major Ø and Minor Ø, and the passes (DOC,
 // Infeed Angle, Spring Passes).
@@ -14,6 +16,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.conversational.profile_canvas
 import "profile_canvas/brokenstock.js" as Broken
+import "profile_canvas/thread.js" as Thread
 import theme
 
 Item {
@@ -73,191 +76,44 @@ Item {
         else minorDiameter = Number(r.calculatedDiameter)
     }
 
-    // the stock as drawn: as big as Major Ø, or the header's until that is set
-    readonly property real stockDiameter: majorDiameter > 0 ? majorDiameter
-                                          : (Number(workpiece && workpiece.external_diameter) || 0)
-    // Further from Z0 than its diameter, the stock's middle is left out, as
-    // Parting leaves it out: the piece at the face 0.3 Ø, a gap, Z End a
-    // quarter diameter along the far piece, broken off a quarter diameter
-    // past it. ``zShift`` is how far right a real Z on the far piece is drawn.
-    readonly property bool breakMiddle: stockDiameter > 0 && Math.abs(zEnd) > stockDiameter
-    readonly property real breakGap: (Broken.reach(1.0) + 0.06) * stockDiameter
-    readonly property real breakNear: -0.3 * stockDiameter
-    readonly property real breakFar: breakNear - breakGap
-    readonly property real zShift: breakMiddle ? (breakFar - 0.25 * stockDiameter) - zEnd : 0
-    // a real Z where it is drawn: on the far piece moved by the shift, in
-    // the stretch left out at the gap's middle
-    function drawnZ(z) {
-        if (!breakMiddle || z >= breakNear) return z
-        if (z + zShift <= breakFar) return z + zShift
-        return (breakNear + breakFar) / 2
+    // An ID thread is drawn in a tube: its bore Minor Ø - the hole before the
+    // thread is cut - its wall this many times the thread's depth on each
+    // side, as it is drawn: Major Ø + idWallFactor (Major Ø - Minor Ø)
+    // across. A drawing's measure, not the stock's: to be adapted.
+    readonly property real idWallFactor: 5
+    readonly property bool internal: location === "ID"
+    // the stock as drawn: as big as Major Ø - an ID thread's tube, its wall
+    // round it - or the header's until that is set
+    readonly property real stockDiameter: {
+        if (internal && majorDiameter > 0 && minorDiameter > 0)
+            return majorDiameter + idWallFactor * Math.abs(majorDiameter - minorDiameter)
+        if (!internal && majorDiameter > 0) return majorDiameter
+        return Number(workpiece && workpiece.external_diameter) || 0
     }
+    // The thread's ends along the stock, whichever way it is cut: ``zFar``
+    // the one toward the chuck - Z End cutting toward it (right-hand), Z
+    // Start cutting away from it (left-hand) - and ``zNear`` the one toward
+    // the face.
+    readonly property real zFar: Math.min(zStart, zEnd)
+    readonly property real zNear: Math.max(zStart, zEnd)
+    // Further from Z0 than its diameter, the stock's middle is left out, as
+    // Parting leaves it out, the thread's far end a quarter diameter along
+    // the far piece, broken off a quarter diameter past it; null when not
+    readonly property var middleBreak: Broken.middleBreak(stockDiameter, zFar)
+    function drawnZ(z) { return Broken.drawnZ(middleBreak, z) }
     readonly property real zEndDrawn: drawnZ(zEnd)
     readonly property real zStartDrawn: drawnZ(zStart)
+    readonly property real zFarDrawn: drawnZ(zFar)
 
-    // The thread seen from the side. Its lead - how far it advances in a
-    // turn - is the pitch times the starts, and its helix angle at Major Ø
-    // atan(lead / (pi Major Ø)). Under the centre line is the near half's
-    // profile, over it the far half's, half a turn round: shifted along Z
-    // by pi Major Ø tan(helix angle) / 2 - half the lead - inwards (to Z-)
-    // for a right-hand thread, outwards for a left-hand one. Each crest
-    // below joined to the crest above it reaches, each root to the root -
-    // the helix as it shows on the side facing us.
-    //
-    // A profile: crests on Major Ø, roots on Minor Ø, a pitch from crest to
-    // crest, the flanks at the form's angle - each flank runs the thread's
-    // depth times tan(angle / 2) along Z - what is left of the pitch flat,
-    // a third at the crest and two at the root, as ISO truncates them.
-    readonly property real lead: pitch * Math.max(1, starts)
-    readonly property real helixAngle: majorDiameter > 0 && lead > 0
-                                       ? Math.atan(lead / (Math.PI * majorDiameter)) * 180 / Math.PI : 0
-    // cut towards the chuck - Z End past Z Start - is right-hand, as the
-    // other threading screen has it
-    readonly property bool rightHand: zEnd < zStart
-    readonly property real halfTurnShift: Math.PI * majorDiameter * Math.tan(helixAngle * Math.PI / 180) / 2
+    // The thread seen from the side (thread.js): {lower, upper, crests,
+    // roots, face}, lines of drawn {z, x}
+    readonly property var thread: Thread.drawing({
+        zStart: zStart, zEnd: zEnd, pitch: pitch, starts: starts,
+        major: majorDiameter, minor: minorDiameter, angle: threadAngle, brk: middleBreak })
 
-    // the profile's measures: [crest flat, flank, root flat] along Z, mm
-    readonly property var _profile: {
-        if (!(pitch > 0)) return null
-        var depth = Math.abs(majorDiameter - minorDiameter) / 2
-        var flank = Math.min(pitch / 2, depth * Math.tan(threadAngle / 2 * Math.PI / 180))
-        var flats = pitch - 2 * flank
-        return { crest: flats / 3, flank: flank, root: flats - flats / 3 }
-    }
-    readonly property bool _threadDrawable: !!_profile && majorDiameter > 0 && minorDiameter > 0
-                                           && zStart !== zEnd && Math.abs(zEnd - zStart) / pitch <= 1000
-
-    // The profile's diameter at ``s`` mm along the thread from Z Start, its
-    // pattern moved ``phase`` mm on.
-    function _diameterAt(s, phase) {
-        var p = _profile
-        var u = ((s - phase) % pitch + pitch) % pitch
-        if (u < p.crest) return majorDiameter
-        u -= p.crest
-        if (u < p.flank) return majorDiameter + (minorDiameter - majorDiameter) * u / p.flank
-        u -= p.flank
-        if (u < p.root) return minorDiameter
-        u -= p.root
-        return minorDiameter + (majorDiameter - minorDiameter) * u / p.flank
-    }
-
-    // Its corners from Z Start to Z End, as [s along it], phase as above.
-    function _profileStations(phase) {
-        var p = _profile, length = Math.abs(zEnd - zStart)
-        var marks = [0, p.crest, p.crest + p.flank, p.crest + p.flank + p.root]
-        var out = [0, length]
-        for (var k = Math.floor(-phase / pitch) - 1; k * pitch + phase <= length; k++)
-            for (var m = 0; m < marks.length; m++) {
-                var s = k * pitch + phase + marks[m]
-                if (s > 0 && s < length) out.push(s)
-            }
-        out.sort(function(a, b) { return a - b })
-        return out
-    }
-
-    // a real Z's region of the drawing: past Z0, out of the stock and not
-    // drawn; the piece at the face, the far piece, or the stretch left out
-    // between them
-    function _regionOf(z) {
-        if (z > 0) return "out"
-        if (!breakMiddle || z >= breakNear) return "face"
-        if (z + zShift <= breakFar) return "far"
-        return "gap"
-    }
-
-    // where two neighbouring regions meet, real Z
-    function _boundary(a, b) {
-        if (a === "out" || b === "out") return 0
-        return a === "far" || b === "far" ? breakFar - zShift : breakNear
-    }
-
-    // The profile as lines of drawn {z, x}, x negative over the centre
-    // line (``sign`` -1), clipped at Z0 and split where the stock's middle
-    // is left out - each line run exactly to the edge of its piece.
-    function _profileLines(phase, sign) {
-        var lines = []
-        if (!_threadDrawable) return lines
-        var dir = zEnd < zStart ? -1 : 1
-        var stations = _profileStations(phase)
-        var current = [], region = null, last = null
-        function drawn(r) { return r === "face" || r === "far" }
-        for (var i = 0; i < stations.length; i++) {
-            var z = zStart + dir * stations[i], x = sign * _diameterAt(stations[i], phase)
-            var r = _regionOf(z)
-            if (r !== region) {
-                if (last && drawn(region)) {
-                    var e = _boundary(region, r)
-                    current.push({ z: drawnZ(e), x: last.x + (x - last.x) * (e - last.z) / (z - last.z) })
-                }
-                if (current.length > 1) lines.push(current)
-                current = []
-                if (last && drawn(r)) {
-                    var e2 = _boundary(region, r)
-                    current.push({ z: drawnZ(e2), x: last.x + (x - last.x) * (e2 - last.z) / (z - last.z) })
-                }
-                region = r
-            }
-            if (drawn(r)) current.push({ z: drawnZ(z), x: x })
-            last = { z: z, x: x }
-        }
-        if (current.length > 1) lines.push(current)
-        return lines
-    }
-
-    // the far half's pattern, half a turn round
-    readonly property real _upperPhase: rightHand ? halfTurnShift : -halfTurnShift
-    readonly property var threadLower: _profileLines(0, 1)
-    readonly property var threadUpper: _profileLines(_upperPhase, -1)
-
-    // the helix on the near side: each crest's middle below joined to the
-    // crest's above, each root's to the root's - {crests, roots}, each
-    // lines of drawn {z, x}. One that runs past Z Start or Z End - its crest
-    // or root on the other side is not on the thread: many starts make the
-    // lead, and so the half turn's shift, long - is cut there, as the thread
-    // ends; and every one clipped at Z0.
-    readonly property var helixLines: {
-        var out = { crests: [], roots: [] }
-        if (!_threadDrawable) return out
-        var p = _profile, length = Math.abs(zEnd - zStart), dir = zEnd < zStart ? -1 : 1
-        var shift = _upperPhase
-        var marks = [[p.crest / 2, majorDiameter], [p.crest + p.flank + p.root / 2, minorDiameter]]
-        // from the first line whose far end reaches Z Start to the last whose
-        // near end does not pass Z End
-        var kFirst = Math.floor(Math.min(0, -shift) / pitch) - 1
-        var kLast = Math.ceil(Math.max(length, length - shift) / pitch)
-        for (var k = kFirst; k <= kLast; k++)
-            for (var m = 0; m < marks.length; m++) {
-                var s0 = k * pitch + marks[m][0], s1 = s0 + shift
-                var x0 = marks[m][1], x1 = -marks[m][1]
-                // cut to the thread: s from 0 (Z Start) to its length (Z End)
-                if (s0 === s1) {
-                    if (s0 < 0 || s0 > length) continue
-                } else {
-                    var ta = -s0 / (s1 - s0), tb = (length - s0) / (s1 - s0)
-                    var t0 = Math.max(0, Math.min(ta, tb)), t1 = Math.min(1, Math.max(ta, tb))
-                    if (t1 - t0 <= 1e-9) continue
-                    var cut0 = { s: s0 + (s1 - s0) * t0, x: x0 + (x1 - x0) * t0 }
-                    var cut1 = { s: s0 + (s1 - s0) * t1, x: x0 + (x1 - x0) * t1 }
-                    s0 = cut0.s; x0 = cut0.x; s1 = cut1.s; x1 = cut1.x
-                }
-                var z0 = zStart + dir * s0, z1 = zStart + dir * s1
-                if (z0 > 0 && z1 > 0) continue
-                if (z0 > 0) { x0 = x0 + (x1 - x0) * z0 / (z0 - z1); z0 = 0 }
-                else if (z1 > 0) { x1 = x1 + (x0 - x1) * z1 / (z1 - z0); z1 = 0 }
-                var r0 = _regionOf(z0), r1 = _regionOf(z1)
-                if (r0 === "gap" || r0 !== r1) continue
-                out[m === 0 ? "crests" : "roots"].push([{ z: drawnZ(z0), x: x0 }, { z: drawnZ(z1), x: x1 }])
-            }
-        return out
-    }
-
-    // the face at Z0 across the thread's ends, when it starts past it
-    readonly property var threadFace: zStart > 0 && threadLower.length > 0 && threadUpper.length > 0
-                                      ? [[threadUpper[0][0], threadLower[0][0]]] : []
-
-    // where the insert starts each pass: Clearance out from Major Ø, as
-    // the G-code has it
-    readonly property real startX: majorDiameter + retract
+    // where the insert starts each pass, as the G-code has it: Clearance out
+    // from Major Ø, for an ID thread in from Minor Ø
+    readonly property real startX: internal ? minorDiameter - retract : majorDiameter + retract
     signal openNumPadRequested(var field)
 
     // opData with the values edited in the boxes
@@ -354,26 +210,28 @@ Item {
             // a dot at both ends of each arrow to a box
             arrowStartDots: true
             primitives: []
-            // the header's stock, as big as Major Ø, broken off past Z End -
-            // and its middle left out when that is far down it; the header's
-            // bore kept
+            // the header's stock, as big as Major Ø, broken off past the
+            // thread's far end - and its middle left out when that is far down
+            // it; the header's bore kept
             workpiece: {
                 var w = JSON.parse(JSON.stringify(root.workpiece || {}))
                 if (root.stockDiameter > 0) w.external_diameter = root.stockDiameter
-                w.stock_length = Math.max(Number(w.stock_length) || 0, Math.abs(root.zEnd) + root.stockDiameter)
+                // an ID thread's tube: its bore Minor Ø
+                if (root.internal && root.minorDiameter > 0) w.internal_diameter = root.minorDiameter
+                w.stock_length = Math.max(Number(w.stock_length) || 0, Math.abs(root.zFar) + root.stockDiameter)
                 w.break_far_end = false
-                w.break_after_z = root.zEndDrawn
-                w.break_middle = root.breakMiddle ? { near: root.breakNear, far: root.breakFar } : null
-                if (root.breakMiddle) w.break_after_setback = 0.25 * root.stockDiameter
+                w.break_after_z = root.zFarDrawn
+                w.break_middle = root.middleBreak
+                if (root.middleBreak) w.break_after_setback = 0.25 * root.stockDiameter
                 // the thread cut into it: its profile the stock's outline there
-                w.thread = { lower: root.threadLower, upper: root.threadUpper,
-                             from: root.drawnZ(Math.min(root.zStart, 0)), to: root.zEndDrawn }
+                w.thread = { lower: root.thread.lower, upper: root.thread.upper, internal: root.internal,
+                             from: root.drawnZ(Math.min(root.zNear, 0)), to: root.zFarDrawn }
                 return w
             }
-            axisBreak: root.breakMiddle ? { near: root.breakNear, far: root.breakFar, shift: root.zShift } : null
+            axisBreak: root.middleBreak
 
             // the Z lines across the centre line, past the stock
-            readonly property real zLineDiameter: Math.max(root.majorDiameter, 10) * 1.2
+            readonly property real zLineDiameter: Math.max(root.stockDiameter, root.majorDiameter, 10) * 1.2
             markers: [
                 { line: true, x: zLineDiameter, z: root.zStartDrawn, color: root.zStartColor },
                 { line: true, x: zLineDiameter, z: root.zEndDrawn, color: root.zEndColor },
@@ -383,12 +241,12 @@ Item {
                   z: (root.zStartDrawn + root.zEndDrawn) / 2, color: root.travelColor },
                 // the thread: its profile under the centre line, the far
                 // half's over it, and the helix joining them
-                { polyline: root.threadLower, color: "#455a64" },
-                { polyline: root.threadUpper, color: "#455a64", visible: mirrorAcrossCenterline },
-                { polyline: root.helixLines.crests, color: "#455a64", lineWidth: 1, visible: mirrorAcrossCenterline },
-                { polyline: root.helixLines.roots, color: "#ef6c00", lineWidth: 1, visible: mirrorAcrossCenterline },
+                { polyline: root.thread.lower, color: "#455a64" },
+                { polyline: root.thread.upper, color: "#455a64", visible: mirrorAcrossCenterline },
+                { polyline: root.thread.crests, color: "#455a64", lineWidth: 1, visible: mirrorAcrossCenterline },
+                { polyline: root.thread.roots, color: "#ef6c00", lineWidth: 1, visible: mirrorAcrossCenterline },
                 // the face, where the thread is clipped at Z0
-                { polyline: root.threadFace, color: "#455a64", visible: mirrorAcrossCenterline }
+                { polyline: root.thread.face, color: "#455a64", visible: mirrorAcrossCenterline }
             ]
             // Major Ø then Minor Ø in front of the stock, each at the middle
             // of its extension lines. Mirrored only
@@ -397,11 +255,11 @@ Item {
                 var dims = []
                 if (root.majorDiameter > 0)
                     dims.push({ axis: "x", from: -root.majorDiameter, to: root.majorDiameter,
-                                z: Math.max(0, root.zStart), offset: 24, extensionsCentred: true,
+                                z: Math.max(0, root.zNear), offset: 24, extensionsCentred: true,
                                 color: root.majorColor })
                 if (root.minorDiameter > 0)
                     dims.push({ axis: "x", from: -root.minorDiameter, to: root.minorDiameter,
-                                z: Math.max(0, root.zStart), offset: 48, extensionsCentred: true,
+                                z: Math.max(0, root.zNear), offset: 48, extensionsCentred: true,
                                 color: root.minorColor })
                 return dims
             }

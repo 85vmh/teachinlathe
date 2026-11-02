@@ -52,6 +52,27 @@ function reach(R) {
     return most
 }
 
+// A stock's middle left out, as an operation's canvas leaves it out when
+// what it shows - real Z ``z``, mm - is further from Z0 than the stock's
+// ``diameter``: the piece at the face 0.3 Ø long, a gap, then the far piece,
+// ``z`` a quarter diameter along it. {near, far}: where the two pieces are
+// broken off, drawn Z in mm; ``shift``: how far right a real Z on the far
+// piece is drawn. Null when nothing is left out. It is what a workpiece's
+// ``break_middle`` and the canvas's ``axisBreak`` take.
+function middleBreak(diameter, z) {
+    if (!(diameter > 0) || Math.abs(z) <= diameter) return null
+    var near = -0.3 * diameter, far = near - (reach(1.0) + 0.06) * diameter
+    return { near: near, far: far, shift: far - 0.25 * diameter - z }
+}
+
+// Real Z ``z`` where it is drawn with ``brk`` (middleBreak's, or null): on
+// the far piece moved by its shift, in the stretch left out at its middle.
+function drawnZ(brk, z) {
+    if (!brk || z >= brk.near) return z
+    if (z + brk.shift <= brk.far) return z + brk.shift
+    return (brk.near + brk.far) / 2
+}
+
 function bezierAt(s, t) {
     var u = 1 - t
     return [u*u*u*s[0][0] + 3*u*u*t*s[1][0] + 3*u*t*t*s[2][0] + t*t*t*s[3][0],
@@ -161,8 +182,11 @@ function faceEnd(x, cy, R) {
 // ``inside(ctx)``, called after the fill, clipped to the piece's body; and
 // ``fillInside(ctx)`` to fill only some of the body, in the fill colour set,
 // and ``skinTo``, the canvas x the skin's lines stop at short of the right end;
+// ``boreGap``, [from, to] canvas x where a tube's bore lines are not drawn;
 // ``material(ctx)``, paths (canvas px) for what is left of the stock - only
-// they are filled and a tube's walls hatched, within the body.
+// they are filled and a tube's walls hatched, within the body - with
+// ``fillBody``, the body filled whole all the same: in a tube, what is cut
+// away from its bore is as open as the bore.
 function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
     if (R <= 0 || rightX <= leftX) return
     var solid = r <= 0
@@ -200,7 +224,7 @@ function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
     // fills, or only over ``material(ctx)``'s paths, clipped to the body; the
     // cut faces on a darker ground
     ctx.fillStyle = style.fill
-    if (style.material) {
+    if (style.material && !style.fillBody) {
         ctx.save()
         body(); ctx.clip()
         ctx.beginPath(); style.material(ctx); ctx.fill()
@@ -271,7 +295,12 @@ function piece(ctx, leftX, rightX, cy, R, r, leftBroken, rightBroken, style) {
         for (k = 0; k < levels.length; k++) {
             var from = leftBroken ? pointAtY(left.segs, levels[k]) : [leftX, levels[k]]
             var to = rightBroken ? pointAtY(right.segs, levels[k]) : [rightX, levels[k]]
-            if (from && to) { ctx.moveTo(from[0], levels[k]); ctx.lineTo(to[0], levels[k]) }
+            if (!from || !to) continue
+            var runs = [[from[0], to[0]]]
+            if (style.boreGap)
+                runs = [[from[0], Math.min(to[0], style.boreGap[0])], [Math.max(from[0], style.boreGap[1]), to[0]]]
+            for (var g = 0; g < runs.length; g++)
+                if (runs[g][1] > runs[g][0]) { ctx.moveTo(runs[g][0], levels[k]); ctx.lineTo(runs[g][1], levels[k]) }
         }
         ctx.stroke()
     }
