@@ -101,6 +101,20 @@ def apply_groove_roughing_cutting_update(cutting, payload):
     _set_attr_if_present(cutting, payload, "dwell_time", attr="dwellTime", coerce=float)
 
 
+def apply_groove_bidirectional_cutting_update(cutting, payload):
+    if cutting is None or not isinstance(payload, dict):
+        return
+    _set_attr_if_present(cutting, payload, "doc", coerce=float)
+    _set_attr_if_present(cutting, payload, "retract", coerce=float)
+    _set_attr_if_present(cutting, payload, "dwell_time", attr="dwellTime", coerce=float)
+
+
+def apply_groove_bidirectional_parameters_update(params, payload):
+    if params is None or not isinstance(payload, dict):
+        return
+    _set_attr_if_present(params, payload, "profile_id", coerce=int)
+
+
 def apply_groove_finishing_cutting_update(cutting, payload):
     if cutting is None or not isinstance(payload, dict):
         return

@@ -13,6 +13,23 @@ from .parting import parting_toolpath
 from .position_at import generate_position_at_gcode, position_at_toolpath
 from .profile_contour import generate_profile_contour_gcode, profile_contour_toolpath
 from .profile_roughing import generate_profile_roughing_gcode, profile_roughing_toolpath
-from .groove_roughing import generate_groove_roughing_gcode, groove_roughing_toolpath
-from .groove_finishing import generate_groove_finishing_gcode, groove_finishing_toolpath
+from teachinlathe.conversational.model.data_types import GrooveBidirectional, GrooveFinishing, GrooveRoughing
+
+from .groove_roughing import generate_groove_roughing_gcode, groove_roughing_preview, groove_roughing_toolpath
+from .groove_bidirectional import (
+    generate_groove_bidirectional_gcode, groove_bidirectional_preview, groove_bidirectional_toolpath)
+from .groove_finishing import generate_groove_finishing_gcode, groove_finishing_preview, groove_finishing_toolpath
 from .tapping import tapping_toolpath
+
+#: What each groove operation class draws in its editor.
+_GROOVE_PREVIEWS = {
+    GrooveRoughing: groove_roughing_preview,
+    GrooveBidirectional: groove_bidirectional_preview,
+    GrooveFinishing: groove_finishing_preview,
+}
+
+
+def groove_preview(cut):
+    """What the groove operation of ``cut`` (a GrooveCut) will cut, as its
+    editor draws it."""
+    return _GROOVE_PREVIEWS[type(cut.op)](cut)

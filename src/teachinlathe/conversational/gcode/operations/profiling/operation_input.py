@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Optional, Union
 
 from teachinlathe.conversational.model.data_types import (
-    BlendType, DefineProfile, DefineRadialProfile, GrooveFinishing, GrooveRoughing, LineTo,
+    BlendType, DefineProfile, DefineRadialProfile, GrooveBidirectional, GrooveFinishing, GrooveRoughing, LineTo,
     ProfileBlend, ProfileContour, ProfileRoughing, ProfilingType, Program,
     StartPoint as ProfileStart,
     StockToLeave, Turning, TurningFinish,
@@ -230,13 +230,15 @@ def profile_and_tool_key(cut: ProfileCut) -> dict:
 
 @dataclass(frozen=True)
 class GrooveCut:
-    """A Groove Roughing or Finishing with what it is cut against: the
+    """A Groove Roughing, BiDirectional Grooving or Groove Finishing with
+    what it is cut against: the
     radial profile it cuts (None when the program has none of its id above
     it), the tool it cuts with as mounted (None with none chosen, or one no
     longer as chosen), for a finishing the stock to leave of the Groove
-    Roughing of its profile above (None for none left), and the stock it
+    Roughing or BiDirectional Grooving of its profile above (None for none
+    left), and the stock it
     finds (see the module)."""
-    op: Union[GrooveRoughing, GrooveFinishing]
+    op: Union[GrooveRoughing, GrooveBidirectional, GrooveFinishing]
     radial_profile: Optional[DefineRadialProfile] = None
     tool: Optional[MountedTool] = None
     roughing_stock: Optional[StockToLeave] = None
@@ -244,13 +246,11 @@ class GrooveCut:
 
     @property
     def profile_id(self) -> int:
-        parameters = (self.op.finishingParameters if isinstance(self.op, GrooveFinishing)
-                      else self.op.roughingParameters)
-        return int(parameters.profile_id or 0)
+        return self.op.radial_profile_id
 
 
 def groove_cut(program: Program, op_index: int, op, tools, stock=None) -> GrooveCut:
-    """``op`` - the Groove Roughing or Finishing at ``op_index`` of
+    """``op`` - the groove operation at ``op_index`` of
     ``program``, or a draft of it - with what it is cut against there.
     ``tools``: where its tool is looked up; only a tool still as chosen is
     taken. ``stock``: what it finds there, a StockBefore."""
@@ -267,9 +267,9 @@ def groove_cut(program: Program, op_index: int, op, tools, stock=None) -> Groove
             if check.status is program_tools.ToolStatus.OK else None)
     roughing_stock = None
     if isinstance(op, GrooveFinishing):
-        # what the last Groove Roughing of its profile above left
-        roughing = next((o for o in reversed(above) if isinstance(o, GrooveRoughing)
-                         and int(o.roughingParameters.profile_id or 0) == profile_id), None)
+        # what the last roughing of its profile above left
+        roughing = next((o for o in reversed(above) if isinstance(o, (GrooveRoughing, GrooveBidirectional))
+                         and o.radial_profile_id == profile_id), None)
         if roughing is not None and roughing.stockToLeaveEnabled:
             roughing_stock = roughing.stockToLeave
     return GrooveCut(op, radial_profile, tool, roughing_stock, stock)

@@ -1,8 +1,8 @@
 // GrooveCanvas.qml — the profile canvas of a groove operation, Groove Roughing
 // or Groove Finishing: the radial profile it cuts drawn on the header's stock,
 // filled as the pulley, what it would cut (preview), the blade where it
-// starts - the clearance out from the start diameter, dimensioned to the
-// view's Clearance box - the tool it cuts with at the top, picked among
+// starts - the clearance out from the start diameter, dimensioned beside it -
+// the tool it cuts with at the top, picked among
 // blades and tools held neutral, and why there is nothing to draw. The view
 // lays its own boxes down the right edge over it, boxWidth the widest of them.
 import QtQuick
@@ -23,9 +23,8 @@ RadialProfileCanvas {
     // where the blade starts, {x: diameter, z}, and the start diameter
     property var startPosition: null
     property real startDiameter: 0
-    // the clearance between them, and the box that edits it, in canvas px
+    // the clearance between them
     property real clearance: 0
-    property var clearanceBoxRect: null
     // the view's own marks, drawn with the clearance's
     property var extraMarkers: []
     // the widest of the view's boxes; the drawing is fitted into what it leaves
@@ -68,8 +67,7 @@ RadialProfileCanvas {
     dimensions: _showsClearance
                 ? [{ axis: "x", from: startDiameter, to: startPosition.x,
                      z: startPosition.z + bladeWidth / 2 + xLinePast, offset: 0,
-                     color: clearanceColor, arrowToRect: clearanceBoxRect,
-                     arrowsOutside: true, leaderFromOutsideEnd: "to" }]
+                     color: clearanceColor, arrowsOutside: true }]
                 : []
 
     // the blade where it starts, inside the ticks; in the fit too

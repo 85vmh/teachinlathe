@@ -25,7 +25,8 @@ class OperationRow:
     """An operation as the program's list shows it: ``number`` from 1,
     ``title`` its name (operation_title), ``toolLabel`` the T number where
     the tool changes - "T?" for one that cuts with no tool chosen, "" where
-    it cuts with the one before's or does not cut - and its two check boxes.
+    it cuts with the one before's, does not cut, or makes no G-code - and its
+    two check boxes.
     The fields are the roles QML reads (DataclassListModel)."""
     number: int
     title: str
@@ -39,12 +40,16 @@ class OperationRow:
 def operation_rows(program, tools, stock_problems=()) -> List[OperationRow]:
     """The rows of ``program``'s operation list, in order; the tools they
     name looked up in ``tools`` (operation_title). ``stock_problems``: the
-    indexes of the operations a rapid of which goes through the stock."""
+    indexes of the operations a rapid of which goes through the stock.
+
+    An operation that makes no G-code (its Generate G-code box clear) shows
+    no T and changes no tool: the T goes on the first one below it with the
+    box ticked that cuts with that tool, where the G-code changes to it."""
     rows = []
     previous_tool = None
     for index, op in enumerate(program.operations):
         tool_label = ""
-        if isinstance(op, TurnableOperation):
+        if isinstance(op, TurnableOperation) and op.generate_gcode:
             entry = program.tool_of(op)
             holder = entry.tool_holder_id if entry is not None else None
             if holder is None:

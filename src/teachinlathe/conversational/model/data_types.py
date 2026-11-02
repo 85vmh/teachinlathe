@@ -543,6 +543,32 @@ class GrooveRoughingCuttingParameters:
 
 
 @dataclass
+class GrooveBidirectionalCuttingParameters:
+    """How a BiDirectional Grooving cuts: ``doc`` how much deeper each pass
+    along Z goes (on the radius), ``retract`` the clearance out from the
+    start diameter it starts at and backs off to, ``dwellTime`` how long it
+    stays after each plunge down a flank."""
+    doc: float
+    retract: float
+    dwellTime: float
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "GrooveBidirectionalCuttingParameters":
+        return GrooveBidirectionalCuttingParameters(
+            doc=float(data.get("doc", 0.0) or 0.0),
+            retract=float(data.get("retract", 0.0) or 0.0),
+            dwellTime=float(data.get("dwell_time", 0.0) or 0.0),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "doc": float(self.doc),
+            "retract": float(self.retract),
+            "dwell_time": float(self.dwellTime),
+        }
+
+
+@dataclass
 class GrooveFinishingCuttingParameters:
     retract: float
 
@@ -1745,9 +1771,74 @@ class GrooveRoughing(TurnableOperation):
         })
         return base
 
+    @property
+    def radial_profile_id(self) -> int:
+        """The Define Radial Profile whose groove it cuts."""
+        return int(self.roughingParameters.profile_id or 0)
+
     def display_name(self) -> str:
         """What the operation is called, in the program's list and its G-code."""
-        return f"Groove Roughing (P{self.roughingParameters.profile_id})"
+        return f"Groove Roughing (P{self.radial_profile_id})"
+
+
+@dataclass
+class GrooveBidirectionalParameters:
+    profile_id: int
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "GrooveBidirectionalParameters":
+        return GrooveBidirectionalParameters(profile_id=int(data.get("profile_id", 0) or 0))
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"profile_id": int(self.profile_id)}
+
+
+@dataclass
+class GrooveBidirectional(TurnableOperation):
+    """BiDirectional Grooving: a groove roughed in passes along Z, one way
+    and back, each a Depth of Cut deeper, down the flanks between them, to
+    the profile with its stock to leave."""
+    cuttingParameters: GrooveBidirectionalCuttingParameters
+    groovingParameters: GrooveBidirectionalParameters
+    stockToLeave: StockToLeave
+    stockToLeaveEnabled: bool
+    m1Parameters: M1Parameters
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "GrooveBidirectional":
+        return cls(
+            order=int(data["order"]),
+            type=data["type"],
+            generate_gcode=bool(data.get("generate_gcode", True)),
+            is_optional_block=bool(data.get("is_optional_block", False)),
+            speedsAndFeeds=TurnableOperation._parse_speeds_and_feeds(data),
+            cuttingParameters=GrooveBidirectionalCuttingParameters.from_dict(data.get("cutting_parameters", {})),
+            groovingParameters=GrooveBidirectionalParameters.from_dict(data.get("grooving_parameters", {})),
+            stockToLeave=StockToLeave.from_dict(data.get("stock_to_leave", {})),
+            stockToLeaveEnabled=bool(data.get("stock_to_leave_enabled", False)),
+            m1Parameters=M1Parameters.from_dict(data.get("m1_parameters", {})),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        base = super().to_dict()
+        self._add_speeds_and_feeds_to(base)
+        base.update({
+            "cutting_parameters": self.cuttingParameters.to_dict(),
+            "grooving_parameters": self.groovingParameters.to_dict(),
+            "stock_to_leave": self.stockToLeave.to_dict(),
+            "stock_to_leave_enabled": bool(self.stockToLeaveEnabled),
+            "m1_parameters": self.m1Parameters.to_dict(),
+        })
+        return base
+
+    @property
+    def radial_profile_id(self) -> int:
+        """The Define Radial Profile whose groove it cuts."""
+        return int(self.groovingParameters.profile_id or 0)
+
+    def display_name(self) -> str:
+        """What the operation is called, in the program's list and its G-code."""
+        return f"BiDirectional Grooving (P{self.radial_profile_id})"
 
 
 @dataclass
@@ -1803,9 +1894,14 @@ class GrooveFinishing(TurnableOperation):
         })
         return base
 
+    @property
+    def radial_profile_id(self) -> int:
+        """The Define Radial Profile whose groove it cuts."""
+        return int(self.finishingParameters.profile_id or 0)
+
     def display_name(self) -> str:
         """What the operation is called, in the program's list and its G-code."""
-        return f"Groove Finishing (P{self.finishingParameters.profile_id})"
+        return f"Groove Finishing (P{self.radial_profile_id})"
 
 
 # ------------------------------- Threading -----------------------------------
@@ -2229,6 +2325,7 @@ operation_types: Dict[str, Type[Operation]] = {
     "profileRoughing": ProfileRoughing,
     "profileContour": ProfileContour,
     "grooveRoughing": GrooveRoughing,
+    "grooveBidirectional": GrooveBidirectional,
     "grooveFinishing": GrooveFinishing,
     "threading": Threading,
     "g33Threading": G33Threading,

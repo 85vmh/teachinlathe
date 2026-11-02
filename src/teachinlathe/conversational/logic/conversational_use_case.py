@@ -25,6 +25,7 @@ from teachinlathe.conversational.model.data_types import (
     Drilling,
     Facing,
     G33Threading,
+    GrooveBidirectional,
     GrooveFinishing,
     GrooveRoughing,
     Header,
@@ -64,6 +65,8 @@ from teachinlathe.conversational.model.updaters import (
     apply_geometry_update,
     apply_groove_finishing_cutting_update,
     apply_groove_finishing_parameters_update,
+    apply_groove_bidirectional_cutting_update,
+    apply_groove_bidirectional_parameters_update,
     apply_groove_roughing_cutting_update,
     apply_groove_roughing_parameters_update,
     apply_knurling_cutting_update,
@@ -129,6 +132,7 @@ class ConversationalUseCase:
             "profileRoughing": (ProfileRoughing, self._update_profile_roughing),
             "profileContour": (ProfileContour, self._update_profile_contour),
             "grooveRoughing": (GrooveRoughing, self._update_groove_roughing),
+            "grooveBidirectional": (GrooveBidirectional, self._update_groove_bidirectional),
             "grooveFinishing": (GrooveFinishing, self._update_groove_finishing),
             "drilling": (Drilling, self._update_drilling),
             "parting": (Parting, self._update_parting),
@@ -619,25 +623,19 @@ class ConversationalUseCase:
         return profile_contour_preview(self.profile_cut(program, op_index, op_data))
 
     def groove_cut(self, program, op_index: int, op_data: dict):
-        """The Groove Roughing or Finishing at ``op_index`` as its editor has
+        """The groove operation at ``op_index`` as its editor has
         it - ``op_data``, the operation's dict - with what it is cut against
         in the program, as its G-code is (a GrooveCut)."""
         from teachinlathe.conversational.gcode.operations.profiling.operation_input import groove_cut, with_stock
         tools = self._tool_library()
         return with_stock(groove_cut(program, op_index, Operation.from_dict(op_data), tools), program, op_index, tools)
 
-    def groove_roughing_preview(self, program, op_index: int, op_data: dict):
-        """What the Groove Roughing at ``op_index`` would cut with ``op_data``;
-        see groove_roughing_preview."""
-        from teachinlathe.conversational.gcode.operations.groove_roughing import groove_roughing_preview
-        return groove_roughing_preview(self.groove_cut(program, op_index, op_data))
-
-    def groove_finishing_preview(self, program, op_index: int, op_data: dict):
-        """What the Groove Finishing at ``op_index`` would cut with
-        ``op_data``, the stock the Groove Roughing of its profile above left
-        included; see groove_finishing_preview."""
-        from teachinlathe.conversational.gcode.operations.groove_finishing import groove_finishing_preview
-        return groove_finishing_preview(self.groove_cut(program, op_index, op_data))
+    def groove_preview(self, program, op_index: int, op_data: dict):
+        """What the groove operation at ``op_index`` would cut with
+        ``op_data`` - a Groove Finishing with the stock the roughing of its
+        profile above left; see operations.groove_preview."""
+        from teachinlathe.conversational.gcode.operations import groove_preview
+        return groove_preview(self.groove_cut(program, op_index, op_data))
 
     # ── the edit each operation type takes ──────────────────────────────────
 
@@ -729,13 +727,25 @@ class ConversationalUseCase:
             op.profileContourStrategy.profiling_type = resolved_type
 
     @staticmethod
-    def _update_groove_roughing(op, p):
+    def _update_groove_with_stock(op, p):
+        """What a Groove Roughing and a BiDirectional Grooving both take: the
+        speeds and feeds, the stock to leave and the inspection stop."""
         apply_turnable_operation_update(op, p)
-        apply_groove_roughing_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
-        apply_groove_roughing_parameters_update(op.roughingParameters, p.get("roughing_parameters"))
         apply_stock_to_leave_update(op.stockToLeave, p.get("stock_to_leave"))
         _set_if_given(op, p, "stock_to_leave_enabled", "stockToLeaveEnabled", bool)
         apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
+
+    @staticmethod
+    def _update_groove_roughing(op, p):
+        ConversationalUseCase._update_groove_with_stock(op, p)
+        apply_groove_roughing_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
+        apply_groove_roughing_parameters_update(op.roughingParameters, p.get("roughing_parameters"))
+
+    @staticmethod
+    def _update_groove_bidirectional(op, p):
+        ConversationalUseCase._update_groove_with_stock(op, p)
+        apply_groove_bidirectional_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
+        apply_groove_bidirectional_parameters_update(op.groovingParameters, p.get("grooving_parameters"))
 
     @staticmethod
     def _update_groove_finishing(op, p):

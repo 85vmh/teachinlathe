@@ -1,6 +1,7 @@
-// PeckBox.qml — Drilling's Peck Depth and, under it, the Dwell Time at the
-// bottom of each peck, picked from a list; laid over the profile canvas, the
-// peck's dimension on the canvas pointing to it, in its colour.
+// PeckBox.qml — Drilling's Peck Depth (or BiDirectional Grooving's Depth of
+// Cut, depthLabel) and, under it, the Dwell Time at the bottom of each peck,
+// picked from a list; laid over the profile canvas, the peck's dimension on
+// the canvas pointing to it, in its colour.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -18,6 +19,8 @@ CanvasBox {
     property var   dwellTimes: [0, 0.1, 0.2, 0.3, 0.5, 1, 1.5, 2, 3]
     // the numpad's setting for the peck depth
     property string peckSettingName: "drilling.peck_depth"
+    // what the depth is called: Peck Depth, or a Depth of Cut
+    property string depthLabel: "Peck Depth"
 
     signal peckDepthEdited(real value)
     signal dwellTimeEdited(real value)
@@ -30,12 +33,12 @@ CanvasBox {
         columnSpacing: Theme.spacing
         rowSpacing: 20
 
-        Label { text: "Peck Depth"; color: root.color; font.pixelSize: Theme.fontBody }
+        Label { text: root.depthLabel; color: root.color; font.pixelSize: Theme.fontBody }
         NumpadField {
             id: peckField
             Layout.preferredWidth: 100
             settingName: root.peckSettingName
-            description: "Peck Depth"
+            description: root.depthLabel
             validatorObject: dblVal
             value: root.peckDepth
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }

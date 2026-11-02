@@ -49,6 +49,7 @@ Popup {
         { label: "Profile Roughing", type: "profileRoughing"  },
         { label: "Profile Contour",  type: "profileContour"   },
         { label: "Groove Roughing",  type: "grooveRoughing"   },
+        { label: "BiDirectional Grooving", type: "grooveBidirectional" },
         { label: "Groove Finishing", type: "grooveFinishing"  },
         { label: "G76 Threading",    type: "threading"       },
         { label: "G33 Threading",    type: "g33Threading"    },

@@ -12,6 +12,9 @@ from teachinlathe.conversational.model.data_types import (
     GeometryParameters,
     Groove,
     GrooveBottom,
+    GrooveBidirectional,
+    GrooveBidirectionalCuttingParameters,
+    GrooveBidirectionalParameters,
     GrooveFinishing,
     GrooveFinishingCuttingParameters,
     GrooveFinishingParameters,
@@ -194,6 +197,16 @@ def make_default_operation(op_type: str, order: int = 1):
             ),
             stockToLeave=StockToLeave(stockToLeaveX=0.5, stockToLeaveZ=0.2),
             stockToLeaveEnabled=False,
+            m1Parameters=M1Parameters(include_m1=False, inspect_position=InspectPosition.G28, stop_spindle=False),
+        )
+    if op_type == "grooveBidirectional":
+        return GrooveBidirectional(
+            order=order, type=op_type, generate_gcode=True, is_optional_block=False,
+            speedsAndFeeds=_speeds(feed_rate=0.1),
+            cuttingParameters=GrooveBidirectionalCuttingParameters(doc=1.0, retract=1.0, dwellTime=0.0),
+            groovingParameters=GrooveBidirectionalParameters(profile_id=1),
+            stockToLeave=StockToLeave(stockToLeaveX=0.2, stockToLeaveZ=0.2),
+            stockToLeaveEnabled=True,
             m1Parameters=M1Parameters(include_m1=False, inspect_position=InspectPosition.G28, stop_spindle=False),
         )
     if op_type == "grooveFinishing":

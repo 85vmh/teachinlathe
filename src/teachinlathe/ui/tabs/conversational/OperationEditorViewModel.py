@@ -641,11 +641,9 @@ class ProfilingEditorViewModel(OperationEditorViewModel):
 
 
 class GrooveEditorViewModel(ToolOperationEditorViewModel):
-    """Groove Roughing and Groove Finishing: they cut a radial profile above,
-    and show what they would cut (``_cut_preview``: the use case's preview)."""
-
-    def _cut_preview(self, op):
-        raise NotImplementedError
+    """Groove Roughing, BiDirectional Grooving and Groove Finishing: they cut
+    a radial profile above, and show what they would cut (the use case's
+    groove_preview)."""
 
     @pyqtSlot(int, result="QVariant")
     def radialProfile(self, profile_id):
@@ -656,21 +654,20 @@ class GrooveEditorViewModel(ToolOperationEditorViewModel):
     @pyqtSlot("QVariant", result="QVariant")
     def preview(self, op_data):
         """What it would cut with ``op_data``."""
-        return self._preview(lambda op: qml_preview(self._cut_preview(op)), op_data)
+        return self._preview(
+            lambda op: qml_preview(self._use_case.groove_preview(self._program, self._index, op)), op_data)
 
 
 class GrooveRoughingEditorViewModel(GrooveEditorViewModel):
     update_type = "grooveRoughing"
 
-    def _cut_preview(self, op):
-        return self._use_case.groove_roughing_preview(self._program, self._index, op)
+
+class GrooveBidirectionalEditorViewModel(GrooveEditorViewModel):
+    update_type = "grooveBidirectional"
 
 
 class GrooveFinishingEditorViewModel(GrooveEditorViewModel):
     update_type = "grooveFinishing"
-
-    def _cut_preview(self, op):
-        return self._use_case.groove_finishing_preview(self._program, self._index, op)
 
 
 class DefineProfileEditorViewModel(OperationEditorViewModel):
@@ -715,6 +712,7 @@ EDITORS = {
     "profileRoughing": ProfileRoughingEditorViewModel,
     "profileContour": ProfileContourEditorViewModel,
     "grooveRoughing": GrooveRoughingEditorViewModel,
+    "grooveBidirectional": GrooveBidirectionalEditorViewModel,
     "grooveFinishing": GrooveFinishingEditorViewModel,
     "defineProfile": DefineProfileEditorViewModel,
     "importDxfProfile": DefineProfileEditorViewModel,

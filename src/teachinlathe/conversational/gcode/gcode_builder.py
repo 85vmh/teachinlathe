@@ -10,6 +10,7 @@ from teachinlathe.conversational.model.data_types import (
     Drilling,
     Facing,
     G33Threading,
+    GrooveBidirectional,
     GrooveFinishing,
     GrooveRoughing,
     ImportDxfProfile,
@@ -32,12 +33,12 @@ from teachinlathe.tooling.model.tool_titles import list_title
 
 from .operations import (
     drilling_toolpath, facing_toolpath, g33_threading_toolpath, generate_define_profile_gcode,
-    generate_knurling_gcode, groove_finishing_toolpath, groove_roughing_toolpath,
+    generate_knurling_gcode, groove_bidirectional_toolpath, groove_finishing_toolpath, groove_roughing_toolpath,
     generate_profiling_gcode, parting_toolpath, position_at_toolpath, tapping_toolpath,
     profile_contour_toolpath, profile_roughing_toolpath,
     generate_threading_gcode,
 )
-from .operations.groove_roughing import blade_touch_point_comment
+from .operations.groove_common import blade_touch_point_comment
 from .toolpath import GcodeEmitter
 
 log = logging.getLogger(__name__)
@@ -240,7 +241,7 @@ def program_toolpath(program: Program, tools, program_name: str = "") -> GcodeEm
             # G28/G30 (toolchange_position) are kept on the tool but not used: M6
             # goes to the machine's tool change position
             path.tool_change(tool.tool_holder_id, list_title(tools.tool_in(tool.tool_holder_id)))
-            if isinstance(op, (GrooveRoughing, GrooveFinishing)):
+            if isinstance(op, (GrooveRoughing, GrooveBidirectional, GrooveFinishing)):
                 mounted_tool = MountedTool.of(tools, tool.tool_holder_id)
                 if mounted_tool is not None and mounted_tool.blade is not None:
                     path.code(blade_touch_point_comment(mounted_tool))
@@ -336,6 +337,7 @@ _WRITERS = {
     ProfileRoughing: _cut_on_emitter(profile_roughing_toolpath),
     ProfileContour: _cut_on_emitter(profile_contour_toolpath),
     GrooveRoughing: _groove_on_emitter(groove_roughing_toolpath),
+    GrooveBidirectional: _groove_on_emitter(groove_bidirectional_toolpath),
     GrooveFinishing: _groove_on_emitter(groove_finishing_toolpath),
     Tapping: _write_tapping,
     DefineProfile: _write_define_profile,

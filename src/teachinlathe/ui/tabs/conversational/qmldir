@@ -21,7 +21,9 @@ FacingVisualDetailsView 1.0 FacingVisualDetailsView.qml
 G33CuttingParams 1.0 G33CuttingParams.qml
 G33ThreadingVisualDetailsView 1.0 G33ThreadingVisualDetailsView.qml
 G76CuttingParams 1.0 G76CuttingParams.qml
+GrooveBidirectionalVisualDetailsView 1.0 GrooveBidirectionalVisualDetailsView.qml
 GrooveCanvas 1.0 GrooveCanvas.qml
+GrooveDetailsView 1.0 GrooveDetailsView.qml
 GrooveFinishingVisualDetailsView 1.0 GrooveFinishingVisualDetailsView.qml
 GrooveRoughingVisualDetailsView 1.0 GrooveRoughingVisualDetailsView.qml
 GroovingBox 1.0 GroovingBox.qml

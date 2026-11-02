@@ -14,7 +14,7 @@ moved on by half its width, toward that corner - so it lies on the profile.
 Which corner that is, is not worked out from the moves - a contour down an
 upright flank moves along X alone, as a plunge does - but read off the
 program: the conversational G-code says it over each contour it writes
-(groove_roughing.corner_comment).
+(groove_common.corner_comment).
 
 The tool marker is not moved: it is drawn where the blade is, its control
 point on the touched-off point, and so lands on the moved line's middle.
@@ -33,7 +33,7 @@ except ImportError:  # pragma: no cover - depends on the LinuxCNC install
 
 
 #: What the conversational G-code puts over a contour it cuts with one of a
-#: blade's corners (groove_roughing.CORNER_COMMENT).
+#: blade's corners (groove_common.CORNER_COMMENT).
 _CORNER = re.compile(r"blade (right|left) corner on the contour")
 
 
