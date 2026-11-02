@@ -129,9 +129,10 @@ class InsertActor(_TOOL_PART):
     def _draw_at_tool(self, ctx, pos, rx, ry, rz):
         """Upstream's hook, with the cone/lathetool choice taken out.
 
-        Everything before the last line is upstream's ``_draw_at_tool``
-        verbatim: translate to the position the logger reports, then tilt by
-        the rotary axes in GEOMETRY order.
+        The position logger already reports the insert control point in the
+        frame used by the backplot. Applying ``stat.tool_offset`` again moves
+        the insert away from the plotted path, so preserve the logger's point
+        and only apply the rotary orientation here.
         """
         ctx.mv.translate(*pos)
         self._apply_rotary(ctx, rx, ry, rz)

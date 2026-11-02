@@ -22,6 +22,8 @@
     axis_arrows.py    the X and Z arrows
     axis_letters.py   the Z+ and X+ labels
     origin.py         the origin symbol
+    preset_positions.py M6, G28 and G30 machine-position targets
+    tool_change_offsets.py machine point and tool-offset dimensions
     insert_tool.py    the insert at the tool tip, in place of upstream's cone
 
     scene.py          the whole cast and its draw order, including upstream's

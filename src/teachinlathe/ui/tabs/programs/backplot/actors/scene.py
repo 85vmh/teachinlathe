@@ -36,11 +36,16 @@ from teachinlathe.ui.tabs.programs.backplot.actors import cutting, trail
 from teachinlathe.ui.tabs.programs.backplot.actors.centerline import CenterlineActor
 from teachinlathe.ui.tabs.programs.backplot.actors.grid import GridActor
 from teachinlathe.ui.tabs.programs.backplot.actors.insert_tool import InsertActor
+from teachinlathe.ui.tabs.programs.backplot.actors.limits_box import MachineLimitsBoxActor
 from teachinlathe.ui.tabs.programs.backplot.actors.origin import OriginActor
+from teachinlathe.ui.tabs.programs.backplot.actors.preset_positions import PresetPositionsActor
 from teachinlathe.ui.tabs.programs.backplot.actors.rapids import RapidsActor
 from teachinlathe.ui.tabs.programs.backplot.actors.remaining import RemainingStockActor
 from teachinlathe.ui.tabs.programs.backplot.actors.stock import StockActor
 from teachinlathe.ui.tabs.programs.backplot.actors.ticks import TicksActor
+from teachinlathe.ui.tabs.programs.backplot.actors.tool_change_offsets import (
+    ToolChangeOffsetsActor,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -62,7 +67,8 @@ BACKGROUND_ACTORS = (GridActor, StockActor, RemainingStockActor, CenterlineActor
 #: job is to say where the tool is. Moving it below the trace also puts it in
 #: the part of the scene that does not change while a program runs, so it is
 #: cached with the rest of the still picture rather than redrawn every frame.
-OVERLAY_ACTORS = (TicksActor, AxisArrowsActor, AxisLettersActor, OriginActor)
+OVERLAY_ACTORS = (TicksActor, AxisArrowsActor, AxisLettersActor,
+                  PresetPositionsActor, OriginActor)
 
 
 def install(canon):
@@ -83,6 +89,14 @@ def install(canon):
     # Upstream's own axes, emptied rather than removed - the scene's order is
     # load-bearing and the part is reached by name from its parent.
     scene.relative_coords.axes = InertActor()
+
+    # Keep the physical G53 travel box fixed when the active tool changes.
+    try:
+        scene.limits_box = scene.replace(
+            scene.limits_box, MachineLimitsBoxActor(canon))
+    except Exception as exc:
+        LOG.warning("backplot actors: could not fix the machine limits box: %s",
+                    exc)
 
     installed = []
 
@@ -133,6 +147,15 @@ def install(canon):
         installed.append(scene.tool)
     except Exception as exc:
         LOG.warning("backplot actors: could not replace the tool marker: %s",
+                    exc)
+
+    # This annotation is dynamic, so keep it after the live trail (outside
+    # the cached still layer) and just below the insert itself.
+    try:
+        installed.append(scene.insert_before(
+            scene.tool, ToolChangeOffsetsActor(canon)))
+    except Exception as exc:
+        LOG.warning("backplot actors: could not add tool-change offsets: %s",
                     exc)
 
     return installed
