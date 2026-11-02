@@ -79,6 +79,14 @@ STOCK = (0.612, 0.639, 0.686)         # #9ca3af
 #: as material and not as the page behind it.
 MATERIAL = (0.784, 0.804, 0.835)      # #c8cdd5
 
+#: The threading tooth's trace: the outline of the V each synced pass cuts
+#: into the material, one inside the next, the lines of the passes not drawn.
+#: Red, once the tooth has been there: the material in it is gone.
+THREAD_TRACE = (0.827, 0.184, 0.184)  # #d32f2f
+
+#: ...black where it is still to cut: the program's Vs, ahead of the tool.
+THREAD_PLANNED = (0.133, 0.133, 0.133)  # #222222
+
 #: The insert at the tool tip: the gold of a coated carbide, which is what
 #: the operator is looking at in the holder.
 #:

@@ -25,8 +25,8 @@ from typing import List, Optional, Sequence, Tuple
 
 from teachinlathe.core.ini_repository import IniRepository
 from teachinlathe.simulation.model.moves import (
-    At, Dwell, Move, MoveKind, OperationStart, OriginShift, ProgramMoves, Spindle, Stop, StopKind, ToolChange,
-    Where,
+    At, Dwell, Move, MoveKind, OperationStart, OriginShift, ProgramMoves, Spindle, SpindleSync, Stop, StopKind,
+    ToolChange, Where,
 )
 
 #: The canon's lengths are inches, whatever the machine's and the program's units.
@@ -185,6 +185,11 @@ class _Canon:
         # the current loaded tool: the machine's at cycle start
         self._tool = self.start_tool = int(machine.current_loaded_tool or 0) if machine is not None else 0
         self._spindle = Spindle()
+        # the spindle's angle from its index the next synced motion starts at
+        # (set_spindle_sync_angle, D), and, while the motion is synced, where
+        # the last synced move left the spindle: the next one goes on from it
+        self._sync_angle = 0.0
+        self._sync_phase: Optional[float] = None
         # the work offset (G5x + G92), (x, z) in mm: as at cycle start, and now
         self._g5x = self._g92 = (0.0, 0.0)
         self._origin_at_start: Optional[Tuple[float, float]] = None
@@ -285,6 +290,12 @@ class _Canon:
     def set_spindle_sync(self, units_per_rev):
         self._set_spindle(sync_pitch=_mm(units_per_rev))
 
+    def set_spindle_sync_angle(self, degrees):
+        # before each set_spindle_sync that starts or changes a synced
+        # motion (LinuxCNC's spindle-sync-info); 0 on a G76's way out, which
+        # goes on from its pass
+        self._sync_angle = float(degrees)
+
     def spindle_on(self, direction):
         self._set_spindle(turning=1 if direction > 0 else -1)
 
@@ -383,18 +394,34 @@ class _Canon:
         self._move(MoveKind.ARC, end, center=center, ccw=rotation > 0)
 
     def dwell(self, seconds):
+        self._sync_phase = None
         self._timed.append(len(self.steps))
         self.steps.append(Dwell(seconds, self._where))
 
     def _move(self, kind: MoveKind, end: At, center: Optional[At] = None, ccw: bool = False):
         if self._at is not None:
             self._timed.append(len(self.steps))
-            self.steps.append(Move(kind, self._at, end, self._tool, self._spindle, self._where, center, ccw))
+            self.steps.append(Move(kind, self._at, end, self._tool, self._spindle, self._where, center, ccw,
+                                   sync=self._synced(kind, self._at, end)))
         else:
             self._timed.append(None)
             if self.start is None:
                 self.start = end
         self._at = end
+
+    def _synced(self, kind: MoveKind, start: At, end: At) -> Optional[SpindleSync]:
+        """How a move from ``start`` to ``end`` turns with the spindle, None
+        when it is not synced with it: as the planner has it, a synced move
+        right after another goes on from where that one left the spindle -
+        it waits for no index, and no D - and the first waits for the index
+        and starts at D."""
+        pitch = self._spindle.sync_pitch
+        if kind is not MoveKind.FEED or pitch == 0.0:
+            self._sync_phase = None
+            return None
+        sync = SpindleSync(pitch, self._sync_phase if self._sync_phase is not None else self._sync_angle)
+        self._sync_phase = sync.angle_after(math.dist(start, end))
+        return sync
 
     # ── the tool change and the stops ────────────────────────────────────
 

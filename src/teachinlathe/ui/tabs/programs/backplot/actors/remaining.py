@@ -2,16 +2,22 @@
 
 With the mirror on, the half of the plot the toolpath is not on shows the bar
 as it stands now, as the half under the toolpath does (``StockActor``, which
-says where it comes from) - drawn with it, under the centre line.
+says where it comes from) - drawn with it, under the centre line. A thread
+is not the same all round: this half is the part across the axis from the
+tool's, with no trace over it - only its Vs, deeper pass after pass.
 """
 
+from teachinlathe.simulation.logic.material import FAR_SIDE
 from teachinlathe.ui.tabs.programs.backplot.actors.base import Actor
 from teachinlathe.ui.tabs.programs.backplot.actors.stock import StockActor
 
 
 class RemainingStockActor(StockActor):
     """The stock as StockActor draws it - the material left - mirrored
-    across the centre line."""
+    across the centre line: the part across the axis from the tool."""
+
+    SIDE = FAR_SIDE
+    TRACE = False
 
     def stroke(self, ctx, points, color, mvp=None, alpha=1.0):
         """As every actor strokes, on the other side of the centre line."""

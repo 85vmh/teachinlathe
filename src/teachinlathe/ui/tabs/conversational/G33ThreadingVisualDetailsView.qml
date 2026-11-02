@@ -4,11 +4,11 @@
 // thread's Major Ø drawn as Parting draws its: broken off past Z End, and
 // further from Z0 than its diameter its middle left out too, so Z End sits
 // a quarter diameter along the far piece. Z Start and Z End each a line across
-// the centre line, Major Ø and Minor Ø dimensioned in front of the stock -
-// each with an arrow to its box down the right edge - and Clearance (the
-// retract) and DOC in boxes of their own; the threading insert on Z Start,
-// Clearance out from Major Ø. Edits the same data as ThreadingDetailsView and
-// saves every change through the same updateG33Threading slot.
+// the centre line, Major Ø and Minor Ø dimensioned in front of the stock; the
+// threading insert on Z Start, Clearance out from Major Ø. The values in cards
+// down the right edge, in a list that scrolls, as Turning has them: OD / ID,
+// Clearance, Z Start / Z End, Major Ø and Minor Ø, and the passes (DOC,
+// Infeed Angle, Spring Passes).
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -32,6 +32,9 @@ Item {
     property var    toolCard: null
 
     // the values the boxes on the canvas show and edit
+    // "OD" | "ID": an ID thread is taught in on its Minor Ø, its Major Ø
+    // calculated
+    property string location: "OD"
     property real   pitch: 0.0
     property int    starts: 1
     property real   majorDiameter: 0.0
@@ -40,6 +43,8 @@ Item {
     property real   zEnd: 0.0
     property real   retract: 0.0
     property real   initialDoc: 0.0
+    property real   compoundAngle: 0.0
+    property int    springPasses: 0
 
     // the boxes' and their marks' colours
     readonly property color zStartColor:  "#1565c0"
@@ -48,7 +53,6 @@ Item {
     readonly property color travelColor:  Theme.success
     readonly property color majorColor:   "#00838f"
     readonly property color minorColor:   profileCanvas.feedColor
-    readonly property color retractColor: "#6d4c41"
     readonly property color docColor:     "#ad1457"
 
     // the thread's form - metric for now (ThreadForm, data_types.py) - and
@@ -56,13 +60,17 @@ Item {
     property string threadForm: "metric"
     readonly property real threadAngle: editor ? editor.threadAngle(threadForm) : 60
 
-    // Minor Ø from Major Ø and the pitch (external)
-    function calculateMinor() {
-        if (!root.editor) return
-        var r = root.editor.calculateThreadDiameter("OD", pitch, majorDiameter, minorDiameter)
+    // The diameter calculated from the one taught in and the pitch: Minor Ø
+    // from Major Ø for an OD thread, Major Ø from Minor Ø for an ID one. Set,
+    // not saved; nothing while the one taught in is not set yet.
+    function _recalculateDiameter() {
+        if (!root.editor || !(pitch > 0)) return
+        var taught = location === "ID" ? minorDiameter : majorDiameter
+        if (!(taught > 0)) return
+        var r = root.editor.calculateThreadDiameter(location, pitch, majorDiameter, minorDiameter)
         if (!r || !r.valid) return
-        minorDiameter = Number(r.calculatedDiameter)
-        save()
+        if (location === "ID") majorDiameter = Number(r.calculatedDiameter)
+        else minorDiameter = Number(r.calculatedDiameter)
     }
 
     // the stock as drawn: as big as Major Ø, or the header's until that is set
@@ -203,18 +211,36 @@ Item {
 
     // the helix on the near side: each crest's middle below joined to the
     // crest's above, each root's to the root's - {crests, roots}, each
-    // lines of drawn {z, x}, clipped at Z0
+    // lines of drawn {z, x}. One that runs past Z Start or Z End - its crest
+    // or root on the other side is not on the thread: many starts make the
+    // lead, and so the half turn's shift, long - is cut there, as the thread
+    // ends; and every one clipped at Z0.
     readonly property var helixLines: {
         var out = { crests: [], roots: [] }
         if (!_threadDrawable) return out
         var p = _profile, length = Math.abs(zEnd - zStart), dir = zEnd < zStart ? -1 : 1
+        var shift = _upperPhase
         var marks = [[p.crest / 2, majorDiameter], [p.crest + p.flank + p.root / 2, minorDiameter]]
-        for (var k = -1; k * pitch <= length; k++)
+        // from the first line whose far end reaches Z Start to the last whose
+        // near end does not pass Z End
+        var kFirst = Math.floor(Math.min(0, -shift) / pitch) - 1
+        var kLast = Math.ceil(Math.max(length, length - shift) / pitch)
+        for (var k = kFirst; k <= kLast; k++)
             for (var m = 0; m < marks.length; m++) {
-                var s0 = k * pitch + marks[m][0], s1 = s0 + _upperPhase
-                if (s0 < 0 || s0 > length || s1 < 0 || s1 > length) continue
-                var z0 = zStart + dir * s0, z1 = zStart + dir * s1
+                var s0 = k * pitch + marks[m][0], s1 = s0 + shift
                 var x0 = marks[m][1], x1 = -marks[m][1]
+                // cut to the thread: s from 0 (Z Start) to its length (Z End)
+                if (s0 === s1) {
+                    if (s0 < 0 || s0 > length) continue
+                } else {
+                    var ta = -s0 / (s1 - s0), tb = (length - s0) / (s1 - s0)
+                    var t0 = Math.max(0, Math.min(ta, tb)), t1 = Math.min(1, Math.max(ta, tb))
+                    if (t1 - t0 <= 1e-9) continue
+                    var cut0 = { s: s0 + (s1 - s0) * t0, x: x0 + (x1 - x0) * t0 }
+                    var cut1 = { s: s0 + (s1 - s0) * t1, x: x0 + (x1 - x0) * t1 }
+                    s0 = cut0.s; x0 = cut0.x; s1 = cut1.s; x1 = cut1.x
+                }
+                var z0 = zStart + dir * s0, z1 = zStart + dir * s1
                 if (z0 > 0 && z1 > 0) continue
                 if (z0 > 0) { x0 = x0 + (x1 - x0) * z0 / (z0 - z1); z0 = 0 }
                 else if (z1 > 0) { x1 = x1 + (x0 - x1) * z1 / (z1 - z0); z1 = 0 }
@@ -245,6 +271,9 @@ Item {
         op.z_end = zEnd
         op.retract = retract
         op.initial_doc = initialDoc
+        op.location = location
+        op.compound_angle = compoundAngle
+        op.spring_passes = springPasses
         return op
     }
 
@@ -262,6 +291,7 @@ Item {
         workpiece = editor ? (editor.workpiece || {}) : {}
         toolCard  = editor ? editor.toolCard : null
 
+        location      = opData.location === "ID" ? "ID" : "OD"
         pitch         = opData.pitch          !== undefined ? Number(opData.pitch) : 0
         starts        = opData.starts         !== undefined ? Math.max(1, Math.round(Number(opData.starts))) : 1
         majorDiameter = opData.major_diameter !== undefined ? Number(opData.major_diameter) : 0
@@ -270,6 +300,8 @@ Item {
         zEnd          = opData.z_end          !== undefined ? Number(opData.z_end) : 0
         retract       = opData.retract        !== undefined ? Number(opData.retract) : 0
         initialDoc    = opData.initial_doc    !== undefined ? Number(opData.initial_doc) : 0
+        compoundAngle = opData.compound_angle !== undefined ? Number(opData.compound_angle) : 0
+        springPasses  = opData.spring_passes  !== undefined ? Math.round(Number(opData.spring_passes)) : 0
 
         header.pitch = pitch
         header.starts = starts
@@ -293,7 +325,12 @@ Item {
                 op.speeds_and_feeds = speeds
                 root.save(op)
             }
-            onPitchEdited: function(value) { root.pitch = value; root.save() }
+            // the calculated diameter follows the pitch
+            onPitchEdited: function(value) {
+                root.pitch = value
+                root._recalculateDiameter()
+                root.save()
+            }
             onStartsEdited: function(value) { root.starts = value; root.save() }
             onM1Edited: function(m1) {
                 var op = root._draftOp()
@@ -341,10 +378,9 @@ Item {
                 { line: true, x: zLineDiameter, z: root.zStartDrawn, color: root.zStartColor },
                 { line: true, x: zLineDiameter, z: root.zEndDrawn, color: root.zEndColor },
                 // the way the thread is cut, across the lines' top ends, to
-                // Z End; from its middle the leader to the Z Start / End box
+                // Z End
                 { travel: true, x: -zLineDiameter, from: root.zStartDrawn, to: root.zEndDrawn,
-                  z: (root.zStartDrawn + root.zEndDrawn) / 2, color: root.travelColor,
-                  leaderColor: root.zStartColor, arrowToRect: zRangeBox.rect },
+                  z: (root.zStartDrawn + root.zEndDrawn) / 2, color: root.travelColor },
                 // the thread: its profile under the centre line, the far
                 // half's over it, and the helix joining them
                 { polyline: root.threadLower, color: "#455a64" },
@@ -355,19 +391,18 @@ Item {
                 { polyline: root.threadFace, color: "#455a64", visible: mirrorAcrossCenterline }
             ]
             // Major Ø then Minor Ø in front of the stock, each at the middle
-            // of its extension lines; their leaders from a dot above the
-            // centre line. Mirrored only
+            // of its extension lines. Mirrored only
             dimensions: {
                 if (!mirrorAcrossCenterline) return []
                 var dims = []
                 if (root.majorDiameter > 0)
                     dims.push({ axis: "x", from: -root.majorDiameter, to: root.majorDiameter,
                                 z: Math.max(0, root.zStart), offset: 24, extensionsCentred: true,
-                                color: root.majorColor, arrowToRect: majorBox.rect, leaderAt: 0.25 })
+                                color: root.majorColor })
                 if (root.minorDiameter > 0)
                     dims.push({ axis: "x", from: -root.minorDiameter, to: root.minorDiameter,
                                 z: Math.max(0, root.zStart), offset: 48, extensionsCentred: true,
-                                color: root.minorColor, arrowToRect: minorBox.rect, leaderAt: 0.25 })
+                                color: root.minorColor })
                 return dims
             }
 
@@ -397,100 +432,143 @@ Item {
                 border.color: Theme.outline; border.width: Theme.hairline
             }
 
-            // The boxes stack down the right edge, each as wide as it needs;
-            // the drawing is fitted into what the widest leaves free.
-            readonly property real boxWidth: Math.max(zRangeBox.implicitWidth,
-                                                      majorBox.implicitWidth, minorBox.implicitWidth,
-                                                      retractBox.implicitWidth, docBox.implicitWidth)
-            readonly property real boxGap: Theme.spacingLarge
-            fitInsetRight: boxWidth + boxGap
+            // The cards down the right edge, in a list that scrolls, as
+            // Turning has them: a card cut at the list's top or bottom edge
+            // fades there. The drawing is fitted into what the list leaves free.
+            fitInsetRight: fieldsScroll.width + profileCanvas.tickBand
 
-            // top to bottom: Z Start and Z End in one box, Major Ø, Minor Ø
-            // together, a gap apart; Retract and DOC at the bottom. The
-            // position boxes as wide as each other, their labels lined up
-            readonly property real positionBoxWidth: Math.max(zRangeBox.implicitWidth,
-                                                              majorBox.implicitWidth, minorBox.implicitWidth)
-            readonly property real positionLabelWidth: Math.max(zRangeBox.labelImplicitWidth,
-                                                                majorBox.labelImplicitWidth,
-                                                                minorBox.labelImplicitWidth)
+            Flickable {
+                id: fieldsScroll
+                width: fields.implicitWidth
+                readonly property real edgePadding: profileCanvas.tickBand
+                readonly property real fadeExtent: Theme.scrollFadeHeight * 2
+                height: profileCanvas.height - 2 * edgePadding
+                x: profileCanvas.width - width - edgePadding
+                y: edgePadding
+                contentWidth: width
+                contentHeight: fields.implicitHeight
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                readonly property var cards: [locationBox, clearanceBox, zRangeBox, diametersBox, passesBox]
+                function cardAtContentY(position) {
+                    for (var i = 0; i < cards.length; i++) {
+                        var card = cards[i]
+                        if (card.y < position && card.y + card.height > position)
+                            return card
+                    }
+                    return null
+                }
+                readonly property var topCutCard: contentY > 0 ? cardAtContentY(contentY) : null
+                readonly property var bottomCutCard: contentY + height < contentHeight
+                    ? cardAtContentY(contentY + height) : null
 
-            ZRangeBox {
-                id: zRangeBox
-                width: profileCanvas.positionBoxWidth
-                labelWidth: profileCanvas.positionLabelWidth
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.boxGap
-                accent: root.zStartColor
-                startColor: root.zStartColor
-                endColor: root.zEndColor
-                startSettingName: "threading.z_start"
-                endSettingName: "threading.z_end"
-                zStart: root.zStart
-                zEnd: root.zEnd
-                onZStartEdited: function(value) { root.zStart = value; root.save() }
-                onZEndEdited: function(value) { root.zEnd = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                ColumnLayout {
+                    id: fields
+                    width: parent.width
+                    spacing: Theme.spacingSmall
+
+                    ThreadLocationBox {
+                        id: locationBox
+                        Layout.alignment: Qt.AlignRight
+                        location: root.location
+                        onLocationEdited: function(value) { root.location = value; root.save() }
+                    }
+
+                    DimensionBox {
+                        id: clearanceBox
+                        Layout.alignment: Qt.AlignRight
+                        label: "Clearance"
+                        dimensionColor: profileCanvas.rapidColor
+                        settingName: "threading.retract"
+                        value: root.retract
+                        onValueEdited: function(value) { root.retract = Math.abs(value); root.save() }
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    }
+
+                    ZRangeBox {
+                        id: zRangeBox
+                        Layout.alignment: Qt.AlignRight
+                        accent: root.zStartColor
+                        startColor: root.zStartColor
+                        endColor: root.zEndColor
+                        startSettingName: "threading.z_start"
+                        endSettingName: "threading.z_end"
+                        zStart: root.zStart
+                        zEnd: root.zEnd
+                        onZStartEdited: function(value) { root.zStart = value; root.save() }
+                        onZEndEdited: function(value) { root.zEnd = value; root.save() }
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    }
+
+                    // the one taught in first (Major Ø OD, Minor Ø ID), the
+                    // other calculated from it and the pitch
+                    ThreadDiametersBox {
+                        id: diametersBox
+                        Layout.alignment: Qt.AlignRight
+                        accent: root.location === "ID" ? root.minorColor : root.majorColor
+                        majorColor: root.majorColor
+                        minorColor: root.minorColor
+                        location: root.location
+                        majorDiameter: root.majorDiameter
+                        minorDiameter: root.minorDiameter
+                        onMajorEdited: function(value) { root.majorDiameter = value; root.save() }
+                        onMinorEdited: function(value) { root.minorDiameter = value; root.save() }
+                        onCalculateRequested: { root._recalculateDiameter(); root.save() }
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    }
+
+                    ThreadPassesBox {
+                        id: passesBox
+                        Layout.alignment: Qt.AlignRight
+                        accent: root.docColor
+                        docColor: root.docColor
+                        initialDoc: root.initialDoc
+                        infeedAngle: root.compoundAngle
+                        springPasses: root.springPasses
+                        finalRadialDepth: Math.abs(root.majorDiameter - root.minorDiameter) / 2
+                        starts: root.starts
+                        onInitialDocEdited: function(value) { root.initialDoc = value; root.save() }
+                        onInfeedAngleEdited: function(value) { root.compoundAngle = value; root.save() }
+                        onSpringPassesEdited: function(value) { root.springPasses = value; root.save() }
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    }
+                }
             }
 
-            ZPositionBox {
-                id: majorBox
-                width: profileCanvas.positionBoxWidth
-                labelWidth: profileCanvas.positionLabelWidth
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: zRangeBox.y + zRangeBox.height + profileCanvas.boxGap
-                axis: "x"
-                accent: root.majorColor
-                label: "Major Ø"
-                settingName: "threading.teach_diam"
-                value: root.majorDiameter
-                onValueEdited: function(value) { root.majorDiameter = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            Rectangle {
+                visible: !!fieldsScroll.topCutCard
+                x: fieldsScroll.x + (fieldsScroll.topCutCard ? fieldsScroll.topCutCard.x : 0)
+                y: fieldsScroll.y
+                width: fieldsScroll.topCutCard ? fieldsScroll.topCutCard.width : 0
+                height: fieldsScroll.topCutCard
+                    ? Math.min(fieldsScroll.fadeExtent,
+                               fieldsScroll.topCutCard.y + fieldsScroll.topCutCard.height - fieldsScroll.contentY)
+                    : 0
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { position: 0; color: Theme.surface }
+                    GradientStop { position: 1; color: "transparent" }
+                }
             }
-
-            ZPositionBox {
-                id: minorBox
-                width: profileCanvas.positionBoxWidth
-                labelWidth: profileCanvas.positionLabelWidth
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: majorBox.y + majorBox.height + profileCanvas.boxGap
-                axis: "x"
-                accent: root.minorColor
-                label: "Minor Ø"
-                settingName: "threading.calc_diam"
-                // worked out from Major Ø and the pitch, not taught in
-                actionText: "Calculate"
-                onActionRequested: root.calculateMinor()
-                value: root.minorDiameter
-                onValueEdited: function(value) { root.minorDiameter = value; root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            DimensionBox {
-                id: retractBox
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: docBox.y - height - profileCanvas.boxGap
-                label: "Clearance"
-                dimensionColor: root.retractColor
-                settingName: "threading.retract"
-                value: root.retract
-                onValueEdited: function(value) { root.retract = Math.abs(value); root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            DimensionBox {
-                id: docBox
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.height - height - profileCanvas.boxGap
-                label: "DOC"
-                dimensionColor: root.docColor
-                settingName: "threading.initial_doc"
-                value: root.initialDoc
-                onValueEdited: function(value) { root.initialDoc = Math.abs(value); root.save() }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+            Rectangle {
+                visible: !!fieldsScroll.bottomCutCard
+                x: fieldsScroll.x + (fieldsScroll.bottomCutCard ? fieldsScroll.bottomCutCard.x : 0)
+                width: fieldsScroll.bottomCutCard ? fieldsScroll.bottomCutCard.width : 0
+                height: fieldsScroll.bottomCutCard
+                    ? Math.min(fieldsScroll.fadeExtent,
+                               fieldsScroll.contentY + fieldsScroll.height - fieldsScroll.bottomCutCard.y)
+                    : 0
+                y: fieldsScroll.y + fieldsScroll.height - height
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { position: 0; color: "transparent" }
+                    GradientStop { position: 1; color: Theme.surface }
+                }
             }
 
             // the tool it cuts with, at the top, in the middle; tapped, to
-            // pick it - only an external (OD) threading tool for now
+            // pick it - an OD or an ID threading tool, as the thread is
             OperationToolBox {
                 editor: root.editor
                 pickerWidth: root.width

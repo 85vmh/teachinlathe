@@ -5,11 +5,18 @@ touched off on. The program is drawn down the blade's middle, a contour along
 the corner it is cut with (``blade_middle``), and so is the trail: each point
 moved as the program's are for the tool and the line that made it - which
 the trail knows (plot_source.Trail.made_by), whichever source made it.
+
+A thread's pass - a line made synced with the spindle (the trail's
+``synced``) on one of the lines the loaded program cuts a thread with (the
+host's ``thread_plan``) - is not drawn: the threading tooth's Vs stand for it
+(actors.stock). It is drawn fully transparent. With no Vs - no stock, a
+tap's G33.1 - it is drawn as any other line.
 """
 
 import logging
 
 from teachinlathe.ui.tabs.programs.backplot import blade_middle, tool_source
+from teachinlathe.ui.tabs.programs.backplot.plot_source.trail import HIDDEN_COLOR
 
 try:
     import numpy as np
@@ -40,13 +47,18 @@ class CentredTrailPart(_BACKPLOT_PART):
         self._basis = None
         #: (shift, half) of each blade, as it was when the trail started
         self._blades = {}
+        #: the thread plan whose lines are hidden, and its lines as an array
+        self._plan_lines = (None, None)
 
     def upload_and_draw(self, ctx):
         trail = ctx.lp
         raw, npts, is_xyuv = trail.points()
         made_by = trail.made_by() if np is not None and not is_xyuv else None
+        hidden = self._hidden(trail, npts, is_xyuv, made_by)
+        if hidden is not None:
+            raw = _without(raw, npts, hidden)
         if made_by is None:
-            super().upload_and_draw(ctx)
+            self._draw(ctx, trail, raw, npts, is_xyuv, hidden is not None)
             return
         corners = getattr(self._host, "blade_corners", None) or {}
         units = getattr(ctx.stat, "linear_units", 1.0) or 1.0
@@ -64,18 +76,60 @@ class CentredTrailPart(_BACKPLOT_PART):
             last = shifts[-1] if len(shifts) else 0.0
             shifts = np.concatenate([shifts, np.full(npts - len(shifts), last)])
         if not shifts.any():
+            self._draw(ctx, trail, raw, npts, is_xyuv, hidden is not None)
+            return
+        self._draw(ctx, trail, blade_middle.trail_points(raw, npts, shifts), npts, is_xyuv, True)
+
+    def _draw(self, ctx, trail, raw, npts, is_xyuv, changed):
+        """The trail drawn from ``raw`` - its own points unless ``changed``."""
+        if not changed:
             super().upload_and_draw(ctx)
             return
-        ctx.lp = _MovedLogger(trail, blade_middle.trail_points(raw, npts, shifts), npts, is_xyuv)
+        ctx.lp = _MovedLogger(trail, raw, npts, is_xyuv)
         try:
             super().upload_and_draw(ctx)
         finally:
             ctx.lp = trail
 
+    def _hidden(self, trail, npts, is_xyuv, made_by):
+        """Which of the trail's points end a thread's pass, not drawn; None
+        for none. A synced point whose line is not known yet - logged since
+        the last poll - is taken to be a pass: a point drawn stays as it was
+        drawn, and the program cuts threads."""
+        find = getattr(self._host, "thread_plan", None)
+        plan = find() if find is not None else None
+        if np is None or plan is None or is_xyuv or npts < 2:
+            return None
+        try:
+            synced = trail.synced(npts)
+        except Exception as exc:
+            LOG.debug("backplot trail: which lines are synced not known: %s", exc)
+            return None
+        if synced is None or made_by is None:
+            return synced
+        if self._plan_lines[0] is not plan:
+            self._plan_lines = (plan, np.fromiter(plan.synced_lines, dtype=np.int64))
+        on_plan = np.ones(npts, dtype=bool)
+        known = min(npts, len(made_by.lines))
+        on_plan[:known] = np.isin(made_by.lines[:known], self._plan_lines[1])
+        hidden = synced & on_plan
+        return hidden if hidden.any() else None
+
     def _blade(self, tool):
         if tool not in self._blades:
             self._blades[tool] = blade_middle.blade_offsets(tool_source.describe(tool))
         return self._blades[tool]
+
+
+def _without(raw, npts, hidden):
+    """The trail's points ``raw`` with the lines ending at ``hidden`` ones
+    fully transparent: an array, which is read as the bytes are."""
+    from rs274.glcanon_bake import LOGGER_DTYPE
+
+    points = np.frombuffer(raw, dtype=LOGGER_DTYPE, count=npts).copy()
+    points["c"][hidden] = HIDDEN_COLOR
+    points["c2"][hidden] = HIDDEN_COLOR
+    return points
 
 
 def _sliced(origins, first, last):

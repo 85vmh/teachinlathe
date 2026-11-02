@@ -55,6 +55,9 @@ StockToLeaveBox 1.0 StockToLeaveBox.qml
 SwipeDismissArea 1.0 SwipeDismissArea.qml
 SwipeRow 1.0 SwipeRow.qml
 TappingVisualDetailsView 1.0 TappingVisualDetailsView.qml
+ThreadDiametersBox 1.0 ThreadDiametersBox.qml
+ThreadLocationBox 1.0 ThreadLocationBox.qml
+ThreadPassesBox 1.0 ThreadPassesBox.qml
 ThreadingDetailsView 1.0 ThreadingDetailsView.qml
 ToolBox 1.0 ToolBox.qml
 ToolPickerPopup 1.0 ToolPickerPopup.qml

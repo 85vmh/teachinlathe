@@ -38,6 +38,18 @@ def machine_status():
     return stat
 
 
+def _position_logger(linuxcnc, colors, geometry, foam):
+    """The machine's position logger: noting how each line it logs is synced
+    with the spindle (``sync_points``, a thread's passes) where LinuxCNC can
+    (spindle-sync-info), as before where it cannot."""
+    if hasattr(linuxcnc, "SPINDLE_SYNC_POSITION"):
+        try:
+            return linuxcnc.positionlogger(linuxcnc.stat(), *colors, geometry, foam, sync=True)
+        except TypeError as exc:
+            LOG.warning("backplot: position logger without spindle sync: %s", exc)
+    return linuxcnc.positionlogger(linuxcnc.stat(), *colors, geometry, foam)
+
+
 class PlotSource(ABC):
     """What the plot shows: a ``status``, a ``trail`` and the material left,
     brought up to date by ``poll``. ``mirror``: mirrored or not when the plot
@@ -45,9 +57,15 @@ class PlotSource(ABC):
 
     mirror: Optional[bool] = None
 
-    def __init__(self):
+    def __init__(self, thread_plans=None):
         self.status = PlotStatus()
         self.trail: Optional[Trail] = None
+        self._thread_plans = thread_plans
+
+    def thread_plan(self, path: str):
+        """The threads of program ``path`` (a programs.model.thread_plans
+        ThreadPlan), None while they are not known, or it cuts none."""
+        return self._thread_plans.get(path) if self._thread_plans is not None and path else None
 
     @abstractmethod
     def start(self, colors, geometry, foam) -> None:
@@ -60,7 +78,7 @@ class PlotSource(ABC):
     @abstractmethod
     def material_left(self, ctx, host):
         """The part as it is being cut - something with ``material`` (a
-        shapely (z, r) shape in mm, in the work coordinates) and ``version``
+        simulation.logic.material.Part, mm, in the work coordinates) and ``version``
         - or None with no stock to cut. ``host``: the plot, for the bar it
         holds (``stock``) and the frame the bar is drawn in (``preview_origin``)."""
 
@@ -78,8 +96,8 @@ class MachineSource(PlotSource):
     point made with the tool in and on the line of the program run when the
     poll after it was logged - and the material left cut from that trail."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, thread_plans=None):
+        super().__init__(thread_plans)
         self._stat = None
         self._material = TrailMaterial()
         # (file, line) of the innermost call -> the file it runs
@@ -91,7 +109,7 @@ class MachineSource(PlotSource):
         import linuxcnc
 
         self._stat = machine_status()
-        logger = linuxcnc.positionlogger(linuxcnc.stat(), *colors, geometry, foam)
+        logger = _position_logger(linuxcnc, colors, geometry, foam)
         self.trail = LoggerTrail(logger, colors)
         _thread.start_new_thread(logger.start, (.01,))
         self._update()
@@ -167,8 +185,8 @@ class SimulationSource(PlotSource):
 
     mirror = True
 
-    def __init__(self, playback: RunPlayback):
-        super().__init__()
+    def __init__(self, playback: RunPlayback, thread_plans=None):
+        super().__init__(thread_plans)
         self._playback = playback
         self._machine = None
         self._run = self._moment = _UNSEEN

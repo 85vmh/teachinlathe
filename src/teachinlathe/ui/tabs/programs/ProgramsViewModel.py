@@ -28,12 +28,14 @@ from teachinlathe.programs.model.program_runtime import ProgramRuntimeStore
 from teachinlathe.programs.model.program_stack import ProgramCallStackResolver
 from teachinlathe.programs.model.programs_action_source import ProgramsActionSource
 from teachinlathe.programs.model.programs_screen import ProgramsScreen
+from teachinlathe.programs.model.thread_plans import ThreadPlan, ThreadPlans
 from teachinlathe.programs.model.run_time_tracker import RunTimeTracker
 from teachinlathe.programs.logic.simulate_use_case import SimulateUseCase
 from teachinlathe.programs.logic.final_profile_use_case import FinalProfileUseCase
 from teachinlathe.programs.logic.tool_changes_use_case import ToolChangesUseCase
 from teachinlathe.programs.logic.run import MachineRunSource
 from teachinlathe.programs.logic.programs_use_case import ProgramsUseCase
+from teachinlathe.simulation.logic.material import FAR_SIDE, TOOL_SIDE
 from teachinlathe.ui.tabs.programs.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
 
 Screen = ProgramsScreen
@@ -156,9 +158,13 @@ class ProgramsViewModel(QObject):
         self._file_system.deleteFailed.connect(lambda msg: self._shell.showToast("Delete failed: %s" % msg))
         self._file_system.copyFailed.connect(lambda msg: self._shell.showToast("Copy failed: %s" % msg))
 
+        # the threads of the programs read (with their parts, below), for
+        # both plots to draw as the threading tooth's Vs
+        self._thread_plans = ThreadPlans()
         # one planning worker (self._planner) for the screen's simulations, its
         # parts and its tool changes, started when the first is asked for
-        self._simulate = SimulateViewModel(SimulateUseCase(self, ini=ini, planner=self._background_planner), self)
+        self._simulate = SimulateViewModel(SimulateUseCase(self, ini=ini, planner=self._background_planner), self,
+                                           thread_plans=self._thread_plans)
         self._simulate.run.runChanged.connect(self.headerStateChanged)
         self._simulate.run.changed.connect(self.headerStateChanged)
         self._simulate.loadingChanged.connect(self.headerStateChanged)
@@ -172,7 +178,8 @@ class ProgramsViewModel(QObject):
         # DRO, the spindle / feed / tool boxes, the backplot
         from teachinlathe.ui.tabs.programs.backplot.plot_source import MachineSource
         self._run = ProgramRunViewModel(
-            MachineRunSource(self._runtime_store, self._actions, self._tool_changes, self), MachineSource, self)
+            MachineRunSource(self._runtime_store, self._actions, self._tool_changes, self),
+            lambda: MachineSource(self._thread_plans), self)
 
         self.programLoadRequested.connect(self._prepare_preview_for_load)
         self.enterRunFullScreenRequested.connect(self._shell.enterProgramRunFullScreen)
@@ -254,9 +261,13 @@ class ProgramsViewModel(QObject):
             summary = {"operations": int(result["operations"]), "toolChanges": int(result["tool_changes"]),
                        "duration": float(duration) if duration is not None else -1.0}
         material = result.get("material")
-        rings = _rings(material) if material is not None else []
+        self._thread_plans.put(path, ThreadPlan(frozenset(result.get("synced_lines") or ()),
+                                                tuple(material.trace) if material is not None else ()))
+        rings = _rings(material.section(TOOL_SIDE)) if material is not None else []
         if rings:
-            self._set_final_profile({"state": "ready", "message": error, "rings": rings}, summary)
+            far = _rings(material.section(FAR_SIDE)) if material.threaded else rings
+            self._set_final_profile({"state": "ready", "message": error, "rings": rings, "farRings": far},
+                                    summary)
         else:
             why = error or ("No stock for this program" if not self._stock else "Nothing left of the stock")
             self._set_final_profile({"state": "empty", "message": why, "rings": []}, summary)

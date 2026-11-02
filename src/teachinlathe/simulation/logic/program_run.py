@@ -5,11 +5,12 @@ other, in time, the tool taking off the stock what it goes through.
 What is cut is as material.py has it - the tool's cutting outline swept
 along each feed, turned about the axis - the model the backplot cuts the
 machine's own trail with too. A move synced with the spindle (G33, G33.1, G76) cuts
-a thread, not all round, and takes nothing off here. A rapid - or the move
+a thread, not all round: the tooth's V in each section of the part, once a
+turn (material.Part). A rapid - or the move
 to the tool change position - that goes through the material is a collision:
 it is kept (``collisions``), and takes nothing off either.
 
-The stock is in (z, r) - r the radius - in the work coordinates of cycle
+The stock is a material.Part in (z, r) - r the radius - in the work coordinates of cycle
 start, as the moves are. Seeking anywhere is quick: the stock is kept at
 every operation's start and every few seconds of the run (KEYFRAME_SECONDS),
 and from there the moves up to the moment are cut again; going forward a
@@ -25,9 +26,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
-from shapely.geometry import Polygon
 
-from teachinlathe.conversational.gcode.operations.profiling.shapes import _on_grid, goes_through
+from teachinlathe.conversational.gcode.operations.profiling.shapes import goes_through
 from teachinlathe.conversational.gcode.operations.profiling.tool_shape import ToolShape
 from teachinlathe.conversational.gcode.toolpath import arc_points
 from teachinlathe.simulation.logic import material as cutting
@@ -77,8 +77,8 @@ class Collision:
 class Moment:
     """The run at ``time``: the tool's tip at ``at`` (None before it is
     known), ``tool`` the current loaded tool, the run in step ``step`` - the one
-    under way, or the last one done - the stock, ``material``, a shapely
-    shape in (z, r), and where the program has its work origin then
+    under way, or the last one done - the stock, ``material``, a
+    material.Part in (z, r), and where the program has its work origin then
     (``origin``, moved from cycle start's by a G10 L20 or a G92) and in which
     work offset (``work_offset``, 1 for G54 ... 9 for G59.3)."""
     time: float
@@ -114,9 +114,9 @@ class ProgramRun:
         self._origins = _origins(self._steps, program.start_work_offset)
         self.collisions: Tuple[Collision, ...] = ()
         self._kept: List[_Kept] = []
-        self._run_through(_on_grid(material) if not material.is_empty else Polygon(), keyframe_seconds)
+        self._run_through(cutting.part_of(material), keyframe_seconds)
         # where the last moment asked was: playing goes on from there
-        self._cursor = self._kept[0] if self._kept else _Kept(0, Polygon())
+        self._cursor = self._kept[0] if self._kept else _Kept(0, cutting.Part())
 
     def shape_of(self, tool: int) -> Optional[ToolShape]:
         return self.shapes.get(tool)
@@ -148,12 +148,12 @@ class ProgramRun:
 
     def _cut(self, material, move: Move, fraction: float):
         """``material`` less what ``move`` takes off it, up to ``fraction`` of it."""
-        return cutting.cut(material, move_points(move, fraction), self.shape_of(move.tool))
+        return cutting.cut(material, move_points(move, fraction), self.shape_of(move.tool), move.sync)
 
     def _hits(self, material, move: Move) -> bool:
         """Whether rapid ``move`` goes through ``material``."""
         tool = self.shape_of(move.tool)
-        return goes_through(material, move_points(move, 1.0), tool.outline if tool is not None else None)
+        return goes_through(material.turned, move_points(move, 1.0), tool.outline if tool is not None else None)
 
     def _marks(self):
         for index, step in enumerate(self._steps):
@@ -225,8 +225,10 @@ class ProgramRun:
 
 
 def _cuts(move: Move) -> bool:
-    """A feed that takes off all round: not a rapid, not synced with the spindle."""
-    return move.kind in (MoveKind.FEED, MoveKind.ARC) and move.spindle.sync_pitch == 0.0
+    """A feed - all round, or a thread when synced with the spindle on
+    position - not a rapid. A move synced with nothing to say how it turns
+    with the spindle (an old LinuxCNC's) cuts nothing."""
+    return move.kind in (MoveKind.FEED, MoveKind.ARC) and (move.spindle.sync_pitch == 0.0 or move.sync is not None)
 
 
 def _origins(steps: Sequence[Step], work_offset: int) -> List[Tuple[At, int]]:
@@ -286,13 +288,14 @@ def move_points(move: Move, fraction: float = 1.0) -> List[Tuple[float, float]]:
 def tool_shapes(tools, program: ProgramMoves) -> Dict[int, ToolShape]:
     """What cuts of each tool ``program`` moves with - its T number, the
     holder it is in - of ``tools`` (the Tool Library, a ToolSnapshot):
-    ProgramRun's shapes."""
-    from teachinlathe.conversational.gcode.operations.profiling.tool_shape import cutting_shape
+    ProgramRun's shapes; a threading tool's tooth."""
+    from teachinlathe.conversational.gcode.operations.profiling.tool_shape import cutting_shape, thread_tooth_shape
     from teachinlathe.tooling.model.data_types import MountedTool
 
     shapes = {}
     for tool in sorted({move.tool for move in program.moves if move.tool}):
-        shape = cutting_shape(MountedTool.of(tools, tool))
+        mounted = MountedTool.of(tools, tool)
+        shape = cutting_shape(mounted) or thread_tooth_shape(mounted)
         if shape is not None:
             shapes[tool] = shape
     return shapes

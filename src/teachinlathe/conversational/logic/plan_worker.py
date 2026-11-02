@@ -72,11 +72,14 @@ def _tool_changes(ngc_path, ini_path, machine, optional_stop):
 def _final_material(ngc_path, ini_path, material, tools):
     """The program in ``ngc_path`` run on ``material``, read and cut as a dry
     run is (``_simulate``), from the interpreter's own start rather than the
-    machine's: ``material`` what is left of it (a shapely (z, r) shape in mm),
+    machine's: ``material`` what is left of it (a material.Part, (z, r) in mm),
     ``error`` the interpreter's ("" with none), and what the program is -
     ``operations`` (its conversational ones that move the tool: not a Define
     Profile, which only says what another cuts), ``tool_changes`` (its M6s)
-    and ``duration`` (seconds, LinuxCNC's estimate; None, not timed)."""
+    and ``duration`` (seconds, LinuxCNC's estimate; None, not timed);
+    ``synced_lines``: the program's lines that move synced with the spindle on
+    position with a threading tool - a thread's passes, which the material's
+    ``trace`` draws as Vs - none with no stock to cut them in."""
     from teachinlathe.core.gcode_moves import read_moves
     from teachinlathe.core.ini_repository import IniRepository
     from teachinlathe.simulation.logic.program_run import ProgramRun, tool_shapes
@@ -87,7 +90,15 @@ def _final_material(ngc_path, ini_path, material, tools):
     return {"material": run.at(run.duration).material, "error": moves.error,
             "operations": _moving_operations(moves.steps, OperationStart, Move),
             "tool_changes": sum(isinstance(step, ToolChange) for step in moves.steps),
-            "duration": moves.duration}
+            "duration": moves.duration,
+            "synced_lines": _thread_lines(moves.moves, run) if not material.is_empty else []}
+
+
+def _thread_lines(moves, run):
+    """The lines of ``moves`` synced with the spindle that ``run`` cuts a
+    thread with: a tool whose tooth it knows (not a tap's)."""
+    return sorted({move.where.program_line for move in moves
+                   if move.sync is not None and run.shape_of(move.tool) is not None})
 
 
 def _moving_operations(steps, operation_start, move):

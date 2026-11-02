@@ -61,12 +61,30 @@ class Spindle:
 
 
 @dataclass(frozen=True)
+class SpindleSync:
+    """How a move synced with the spindle on position (G33, G33.1, G76's
+    passes) turns with it: ``pitch`` mm along the move a turn - K, or a G76
+    taper's - and ``angle``, where the spindle is when the move starts, in
+    degrees from its index. A move carried on from the one before it in the
+    same synced motion goes on from where that one left the spindle; only
+    the first of them waits for the index (and D)."""
+    pitch: float
+    angle: float
+
+    def angle_after(self, length: float) -> float:
+        """Where the spindle is ``length`` mm along the move, degrees from
+        its index."""
+        return self.angle + 360.0 * length / self.pitch
+
+
+@dataclass(frozen=True)
 class Move:
     """A move of the tool from ``start`` to ``end``, as ``kind`` says, with
     tool ``tool`` (its T number, 0 for none) and ``spindle``; an arc goes
     round ``center``, counter-clockwise (G3) with Z to the right and X up
     when ``ccw``. ``where``: the line it is written on. ``ends_at``: when it
-    ends, None when the program is not timed."""
+    ends, None when the program is not timed. ``sync``: how it turns with
+    the spindle while synced with it on position, None otherwise."""
     kind: MoveKind
     start: At
     end: At
@@ -76,6 +94,7 @@ class Move:
     center: Optional[At] = None
     ccw: bool = False
     ends_at: Optional[float] = None
+    sync: Optional[SpindleSync] = None
 
 
 class StopKind(Enum):

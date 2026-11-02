@@ -17,8 +17,11 @@ import theme
 Item {
     id: root
 
-    // {state: "none" | "loading" | "ready" | "empty", message, rings, stock}:
-    // rings and stock [[[z, r], ...], ...]
+    // {state: "none" | "loading" | "ready" | "empty", message, rings,
+    // farRings, stock}: rings and stock [[[z, r], ...], ...]; rings the part
+    // through the axis on the tool's side, drawn under the centre line, and
+    // farRings across the axis from it, over it - a thread's Vs half a pitch
+    // apart on a single start
     property var profile: ({ state: "none", message: "", rings: [], stock: [] })
     property bool simulateEnabled: false
 
@@ -26,6 +29,8 @@ Item {
 
     readonly property var stockRings: profile && profile.stock ? profile.stock : []
     readonly property var partRings: profile && profile.state === "ready" ? (profile.rings || []) : []
+    readonly property var partFarRings: profile && profile.state === "ready"
+        ? (profile.farRings || profile.rings || []) : []
 
     // as the backplot's material left and its outline (backplot palette MATERIAL, STOCK)
     readonly property color materialColor: "#c8cdd5"
@@ -61,7 +66,7 @@ Item {
     // y of the centre line.
     function fit(w, h) {
         var zMin = 0, zMax = 0, rMax = 0     // Z0 always in view: the program is set from it
-        var drawings = [root.stockRings, root.partRings]
+        var drawings = [root.stockRings, root.partRings, root.partFarRings]
         for (var d = 0; d < drawings.length; d++)
             for (var i = 0; i < drawings[d].length; i++)
                 for (var j = 0; j < drawings[d][i].length; j++) {
@@ -80,6 +85,8 @@ Item {
 
         property string title: ""
         property var rings: []
+        // the half over the centre line: as the one under it, unless set
+        property var farRings: rings
         property string message: ""
         property color messageColor: Theme.foregroundMuted
 
@@ -154,17 +161,19 @@ Item {
                     return
                 var f = root.fit(width, height)
 
-                // solid, below the centre line and mirrored above it
+                // solid, below the centre line and, across the axis,
+                // above it
+                var far = box.farRings || rings
                 ctx.fillStyle = root.materialColor
                 ctx.fillRule = Qt.OddEvenFill
-                for (var side = -1; side <= 1; side += 2) {
-                    path(ctx, rings, f, side)
-                    ctx.fill()
-                }
+                path(ctx, rings, f, 1)
+                ctx.fill()
+                path(ctx, far, f, -1)
+                ctx.fill()
                 ctx.strokeStyle = root.outlineColor
                 ctx.lineWidth = 1
                 outline(ctx, rings, f, 1)
-                outline(ctx, rings, f, -1)
+                outline(ctx, far, f, -1)
 
                 // the centre line, and the Z0 line across it
                 ctx.setLineDash(root.dashPattern)
@@ -344,6 +353,7 @@ Item {
         height: stockBox.height
         title: "Finished Part"
         rings: root.partRings
+        farRings: root.partFarRings
         message: {
             var p = root.profile || {}
             if (p.state === "loading") return "Working out the part…"

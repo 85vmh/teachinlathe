@@ -30,13 +30,15 @@ class SimulateViewModel(QObject):
     optionalStopChanged = pyqtSignal()
     blockDeleteChanged = pyqtSignal()
 
-    def __init__(self, use_case, parent=None):
-        """``use_case``: what works the run out (SimulateUseCase)."""
+    def __init__(self, use_case, parent=None, thread_plans=None):
+        """``use_case``: what works the run out (SimulateUseCase);
+        ``thread_plans``: the programs' threads, as the plot draws them
+        (programs.model.thread_plans)."""
         super().__init__(parent)
         from teachinlathe.ui.tabs.programs.backplot.plot_source import SimulationSource
 
         self._source = SimulatedRunSource(use_case, self)
-        self._run = ProgramRunViewModel(self._source, lambda: SimulationSource(self._source), self)
+        self._run = ProgramRunViewModel(self._source, lambda: SimulationSource(self._source, thread_plans), self)
         self._source.loadingChanged.connect(self.loadingChanged)
         self._source.errorChanged.connect(self.errorChanged)
         self._source.runChanged.connect(self.runChanged)

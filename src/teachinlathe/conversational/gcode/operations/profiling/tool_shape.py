@@ -172,6 +172,48 @@ def cutting_shape(mounted) -> Optional[ToolShape]:
     return None
 
 
+#: mm a threading tooth's body is carried up from its flanks' ends: past any
+#: thread's depth.
+THREAD_TOOTH_BODY = 10.0
+
+#: Chords round a threading tooth's rounded tip.
+TOOTH_TIP_SEGMENTS = 8
+
+
+def thread_tooth_shape(mounted) -> Optional[ToolShape]:
+    """The tooth of a threading tool of ``mounted`` (a MountedTool), what
+    it cuts the thread with: its V and rounded tip, as the insert's own
+    (threading_catalog.TEETH), round the tip - the point it touches off on,
+    on the V's bisector - its body carried on up past its flanks; pointing
+    to the axis for an external thread, away from it for an internal one.
+    None for any other tool."""
+    from teachinlathe.tooling.model import threading_catalog
+    from teachinlathe.tooling.model.data_types import ThreadingTool
+
+    tool = mounted.tool if mounted is not None else None
+    if not isinstance(tool, ThreadingTool):
+        return None
+    radius, angle, _along, _back, height = threading_catalog.tooth(
+        threading_catalog.size_of(tool.insert.size), float(tool.pitch))
+    half = math.radians(angle / 2.0)
+    # the tip's centre ``radius`` over the tip, the flanks tangent to it;
+    # they go ``height`` up from where they would meet, the sharp apex
+    apex = radius - radius / math.sin(half)
+    flank_top = apex + height
+    spread = height * math.tan(half)
+    # round the tip from the left flank's tangent point to the right's
+    sweep = math.pi - 2.0 * half
+    tip = [(radius * math.cos(t), radius + radius * math.sin(t))
+           for t in (math.pi + half + sweep * i / TOOTH_TIP_SEGMENTS for i in range(TOOTH_TIP_SEGMENTS + 1))]
+    # anticlockwise: up the right flank's body, across, down the left, round the tip
+    outline = [(spread, flank_top), (spread, flank_top + THREAD_TOOTH_BODY),
+               (-spread, flank_top + THREAD_TOOTH_BODY), (-spread, flank_top)] + tip
+    if threading_catalog.hand_of(tool.insert.geometry, tool.orientation) == "IR":
+        # mirrored across the axis, anticlockwise still
+        outline = [(z, -r) for z, r in reversed(outline)]
+    return ToolShape(tuple(outline), tuple(outline), radius, "thread tooth")
+
+
 def _control_point(centre: Pt, radius: float, tip_dir: Pt) -> Pt:
     """The point the tool is programmed to: where touching off in X and in Z
     measures it - the nose's tangent in each direction the tip points. A tip

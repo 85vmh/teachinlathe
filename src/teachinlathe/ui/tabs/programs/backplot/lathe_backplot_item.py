@@ -347,6 +347,8 @@ class LatheBackplotCanon(_HostBase):
         self.maxlat = 90
 
         self._current_file = None
+        # the loaded program's threads whose lines were taken out of the preview
+        self._thread_plan_shown = None
         self.highlight_line = None
         self.program_alpha = False
         self.use_joints_mode = True
@@ -1101,6 +1103,7 @@ class LatheBackplotCanon(_HostBase):
         import gcode
         import linuxcnc
         from qt5_graphics import DummyProgress, Progress, StatCanon
+        from rs274.program_time import MachineLimits
 
         reload_started = time.perf_counter() if self._perf is not None else 0.0
 
@@ -1147,6 +1150,8 @@ class LatheBackplotCanon(_HostBase):
         if reset_material is not None:
             reset_material()
         self.stock = workpiece.for_program(filename)
+        # a new preview: its thread's lines are hidden again (poll)
+        self._thread_plan_shown = None
         self.invalidate_static()
         canon = None
         try:
@@ -1156,11 +1161,15 @@ class LatheBackplotCanon(_HostBase):
             self.preview_origin = (tuple(stat.g5x_offset), tuple(stat.g92_offset), float(stat.rotation_xy))
             random = int(self.inifile.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
             arcdivision = int(self.inifile.find("DISPLAY", "ARCDIVISION") or 64)
+            # StatCanon(..., stat, random, text, linecount, ...)
             canon = StatCanon(
                 self.colors, self.get_geometry(), self.foam_option,
-                self.lathe_option, stat, "", random, i, progress, arcdivision,
+                self.lathe_option, stat, random, "", i, progress, arcdivision,
             )
             canon.output_notify_message = self.output_notify_message
+            # The machine's limits, so the parse times the program
+            # (canon.run_time()); without them it is left untimed.
+            canon.motion_limits = MachineLimits.from_ini(self.inifile)
             parameter = self.inifile.find("RS274NGC", "PARAMETER_FILE")
             temp_parameter = os.path.join(td, os.path.basename(parameter or "linuxcnc.var"))
             if parameter:
@@ -1179,6 +1188,9 @@ class LatheBackplotCanon(_HostBase):
                 result, seq = self.load_preview(filename, canon, initcodes)
             else:
                 result, seq = self.load_preview(filename, canon, unitcode, initcode)
+            # A (PREVIEW,notify) comment is passed on by next_line, which the
+            # rendered moves do not get: the last one goes out here.
+            canon.show_notification()
             if result > gcode.MIN_ERROR:
                 self.report_gcode_error(result, seq, filename)
             # a blade's moves down its middle - a contour along the corner
@@ -1286,6 +1298,9 @@ class LatheBackplotCanon(_HostBase):
         # they change every poll and move the marker by a fraction of a pixel,
         # and the frame that draws it costs the same as one where the tool
         # crossed the screen.
+        if self._show_thread_plan():
+            self.invalidate_static()
+            self.update()
         quantum = self._pixel_quantum()
         fingerprint = (
             self.logger.npts,
@@ -1302,6 +1317,37 @@ class LatheBackplotCanon(_HostBase):
         if fingerprint != self.fingerprint:
             self.fingerprint = fingerprint
             self.update()
+        return True
+
+    # ── a thread: its Vs, not its lines ─────────────────────────────────────
+
+    def thread_plan(self):
+        """The loaded program's threads (programs.model.thread_plans
+        ThreadPlan), None while not known or with none."""
+        return self.source.thread_plan(self._current_file) if self._current_file else None
+
+    def _show_thread_plan(self):
+        """Once the loaded program's threads are known, its lines synced with
+        the spindle are taken out of the preview - the threading tooth's Vs
+        are drawn for them (actors.stock) - as records the shaders do not
+        draw: a coordinate jump's kind. Whether the preview changed."""
+        plan = self.thread_plan()
+        if plan is self._thread_plan_shown:
+            return False
+        self._thread_plan_shown = plan
+        # the trail's passes drawn before it was known: drawn again, hidden
+        trail_part = getattr(self.scene, "backplot", None)
+        if trail_part is not None:
+            trail_part.invalidate()
+        geometry = getattr(self.canon, "program_geometry", None) if self.canon else None
+        if plan is None or geometry is None:
+            return plan is not None
+        try:
+            hide_synced_lines(geometry, plan.synced_lines)
+        except Exception as exc:
+            LOG.debug("backplot: thread lines left in the preview: %s", exc)
+            return True
+        self.scene.program.invalidate()
         return True
 
     # ── the lathe DRO overlay: Tool / Z / Dia ───────────────────────────────
@@ -1845,3 +1891,24 @@ def register_qml_types():
     """Make the item available to QML as ``TeachInLathe.Backplot 1.0``."""
     qmlRegisterType(LatheBackplotItem, "TeachInLathe.Backplot", 1, 0,
                     "LatheBackplot")
+
+
+def hide_synced_lines(geometry, lines):
+    """The feed vertices of ``lines`` in the parsed ``geometry`` (a
+    glcanon_bake.ProgramGeometry) made coordinate jumps (KIND_NOOP), which
+    the shaders do not draw: the line into each is not drawn, the one out of
+    it is, as its own kind. The arrays the parse wrapped are read-only: copied
+    once."""
+    import numpy as np
+    from rs274.glcanon_bake import KIND_FEED, KIND_MASK, KIND_NOOP
+
+    if not lines:
+        return
+    attrs = geometry._attrs
+    if not attrs.flags.writeable:
+        attrs = attrs.copy()
+        geometry._attrs = attrs
+    n = len(geometry.lines)
+    kindtool = attrs["kindtool"][:n]
+    synced = np.isin(attrs["line"][:n], np.fromiter(lines, dtype=np.uint32)) & ((kindtool & KIND_MASK) == KIND_FEED)
+    kindtool[synced] = (kindtool[synced] & ~np.uint32(KIND_MASK)) | np.uint32(KIND_NOOP)

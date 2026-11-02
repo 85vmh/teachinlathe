@@ -20,15 +20,29 @@ LOG = logging.getLogger(__name__)
 try:
     import numpy as np
     from rs274.glcanon_bake import LOGGER_DTYPE
+    #: A point's sync with the spindle, as ``positionlogger.sync_points()``
+    #: has it: the mode (linuxcnc.SPINDLE_SYNC_*), the pitch (machine units a
+    #: turn), the angle from the index the synced motion started at.
+    SYNC_DTYPE = np.dtype([("mode", "u1"), ("pad", "u1", 3), ("pitch", "f4"), ("angle", "f4")])
 except ImportError as exc:  # pragma: no cover - depends on the LinuxCNC install
     LOG.error("backplot trail: preview modules unavailable: %s", exc)
     np = None
+
+try:
+    from linuxcnc import SPINDLE_SYNC_POSITION
+except ImportError:  # a LinuxCNC without spindle-sync-info: no line is synced as far as is known
+    SPINDLE_SYNC_POSITION = None
 
 #: The position logger's colours, in the order it is given them - and its
 #: index of each: the machine's motion type (EMC_MOTION_TYPE_*), 0 a jog.
 COLOR_NAMES = ("backplotjog", "backplottraverse", "backplotfeed", "backplotarc",
                "backplottoolchange", "backplotprobing")
 TRAVERSE, FEED, ARC, TOOL_CHANGE = 1, 2, 3, 4
+
+#: What a line not drawn is coloured: a thread's pass, which the threading
+#: tooth's Vs stand for (actors.stock, actors.trail). Fully transparent, so
+#: the line is there to the trail, and not to the eye.
+HIDDEN_COLOR = (0, 0, 0, 0)
 
 
 def _empty_ints():
@@ -61,6 +75,17 @@ class Trail(ABC):
     def __init__(self, colors: Sequence[Sequence[int]]):
         self._colors = [tuple(int(v) for v in color) for color in colors]
         self.generation = 0
+
+    def sync_points(self):
+        """For each point, how the line ending there was synced with the
+        spindle: a SYNC_DTYPE array - or None when the trail does not know."""
+        return None
+
+    def synced(self, npts: int):
+        """For each of the first ``npts`` points, whether the line ending
+        there was synced with the spindle on position - a bool array; None
+        when none was, or that is not known."""
+        return None
 
     @abstractmethod
     def points(self):
@@ -115,9 +140,36 @@ class LoggerTrail(Trail):
         self._logger = logger
         self._tools = _empty_ints() if np is not None else None
         self._lines = _empty_ints() if np is not None else None
+        # synced()'s last answer, and what it was for: (generation, npts)
+        self._synced = (None, None)
 
     def points(self):
         return self._logger.points()
+
+    def sync_points(self):
+        # a logger made with sync=True (LinuxCNC's spindle-sync-info) has them
+        read = getattr(self._logger, "sync_points", None)
+        found = read() if read is not None and np is not None else None
+        if found is None:
+            return None
+        raw, count = found
+        return np.frombuffer(raw, dtype=SYNC_DTYPE, count=int(count))
+
+    def synced(self, npts):
+        # read again only when there are other points: the last one moving on
+        # along its line is synced as it was
+        key = (self.generation, npts)
+        if self._synced[0] == key:
+            return self._synced[1]
+        sync = self.sync_points() if SPINDLE_SYNC_POSITION is not None else None
+        mask = None
+        if sync is not None:
+            mask = np.zeros(npts, dtype=bool)
+            known = min(npts, len(sync))
+            mask[:known] = sync["mode"][:known] == SPINDLE_SYNC_POSITION
+            mask = mask if mask.any() else None
+        self._synced = (key, mask)
+        return mask
 
     @property
     def npts(self):
@@ -190,6 +242,8 @@ class RunTrail(Trail):
         self._shown = np.zeros(0, dtype=LOGGER_DTYPE) if np is not None else None
         self._shown_made_by = self._made_by
         self._skip = 0
+        # by point: whether the line ending there is synced with the spindle
+        self._master_synced = self._shown_synced = np.zeros(0, dtype=bool) if np is not None else None
 
     def set_run(self, run, origin, units, program_file):
         """The trail of ``run``: ``origin`` the work origin it started from,
@@ -207,10 +261,11 @@ class RunTrail(Trail):
         colours = {MoveKind.RAPID: TRAVERSE, MoveKind.FEED: FEED, MoveKind.ARC: ARC,
                    MoveKind.TOOL_CHANGE: TOOL_CHANGE}
         points, colors, ends, self._step_colors = [], [], [], {}
-        tools, lines = [], []
+        tools, lines, synced = [], [], []
         start = run.program.start
         if start is not None:
             points.append(tuple(start))
+            synced.append(False)
             colors.append(TRAVERSE)
             tools.append(run.program.start_tool)
             lines.append(0)
@@ -221,15 +276,18 @@ class RunTrail(Trail):
                 line = _line(step.where, program_file)
                 if not points:
                     points.append(drawn[0])
+                    synced.append(False)
                     colors.append(colours[step.kind])
                     tools.append(step.tool)
                     lines.append(line)
                 points.extend(drawn[1:])
                 colors.extend([colours[step.kind]] * (len(drawn) - 1))
+                synced.extend([step.sync is not None] * (len(drawn) - 1))
                 tools.extend([step.tool] * (len(drawn) - 1))
                 lines.extend([line] * (len(drawn) - 1))
             ends.append(len(points))
         self._master = self._points(points, colors)
+        self._master_synced = np.asarray(synced, dtype=bool)
         self._made_by = TrailOrigins(np.asarray(tools, dtype=np.int64), np.asarray(lines, dtype=np.int64))
         self._ends = ends
         self._program_file = program_file
@@ -244,21 +302,25 @@ class RunTrail(Trail):
             return
         if self._master is None or step is None:
             self._shown = np.zeros(0, dtype=LOGGER_DTYPE)
+            self._shown_synced = np.zeros(0, dtype=bool)
             self._shown_made_by = TrailOrigins.none()
             return
         before = len(self._shown)
         done = self._ends[step - 1] if step > 0 else (1 if self._run.program.start is not None else 0)
         trail = self._master[:done]
+        synced = self._master_synced[:done]
         tools, lines = self._made_by.tools[:done], self._made_by.lines[:done]
         current = self._run.program.steps[step] if step < len(self._run.program.steps) else None
         if isinstance(current, Move) and 0.0 < fraction < 1.0:
             partial = move_points(current, fraction)[1:]
             extra = self._points(partial, [self._step_colors.get(step, FEED)] * len(partial))
             trail = np.concatenate([trail, extra])
+            synced = np.concatenate([synced, np.full(len(partial), current.sync is not None)])
             line = _line(current.where, self._program_file)
             tools = np.concatenate([tools, np.full(len(partial), current.tool, dtype=np.int64)])
             lines = np.concatenate([lines, np.full(len(partial), line, dtype=np.int64)])
         self._shown = trail
+        self._shown_synced = synced
         self._shown_made_by = TrailOrigins(tools, lines)
         if len(trail) < before:
             # gone back: not the points shown before and new ones
@@ -295,6 +357,12 @@ class RunTrail(Trail):
             return None
         x, y, z = (float(v) for v in self._shown["pos"][-1])
         return (x, y, z, 0.0, 0.0, 0.0)
+
+    def synced(self, npts):
+        if self._shown_synced is None:
+            return None
+        mask = self._shown_synced[self._skip:self._skip + npts]
+        return mask if mask.any() else None
 
     def made_by(self):
         if self._shown_made_by is None:
