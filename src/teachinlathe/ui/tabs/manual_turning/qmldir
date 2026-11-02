@@ -10,5 +10,6 @@ ManualSpindleAngle 1.0 ManualSpindleAngle.qml
 ManualSpindlePanel 1.0 ManualSpindlePanel.qml
 ManualTurningRoot 1.0 ManualTurningRoot.qml
 ManualValueRow 1.0 ManualValueRow.qml
+SpindleLever 1.0 SpindleLever.qml
 TeachInLatheDroRoot 1.0 TeachInLatheDroRoot.qml
 TeachableLimit 1.0 TeachableLimit.qml

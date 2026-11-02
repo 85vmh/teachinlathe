@@ -196,6 +196,9 @@ Item {
     // 286 for the RPM/CSS content, then a 1 px divider and the 100 px
     // spindle direction column.
     readonly property int spindlePanelWidth: 387
+    //: the spindle's lever, right of its panel; the Joystick / Feed box
+    //: beside them gives up the room
+    readonly property int spindleLeverWidth: 40
     readonly property int handwheelsPanelWidth: 216
     readonly property int joystickPanelWidth: 260
 
@@ -463,6 +466,18 @@ Item {
                             Layout.preferredWidth: root.spindlePanelWidth
                             Layout.fillHeight: true
                             onOpenNumPadRequested: function(field) { root.openNumpad(field) }
+                        }
+
+                        // the spindle's lever, outside its panel, its stops
+                        // level with the panel's M4, OFF and M3
+                        SpindleLever {
+                            Layout.preferredWidth: root.spindleLeverWidth
+                            Layout.fillHeight: true
+                            topY: spindlePanel.m4CenterY
+                            bottomY: spindlePanel.m3CenterY
+                            position: spindlePanel.lever
+                            knobColor: spindlePanel.leverColor
+                            travelMs: spindlePanel.changeMs
                         }
                     }
                 }

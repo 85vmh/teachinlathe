@@ -39,6 +39,11 @@ class JoystickDirection(Enum):
     Z_MINUS = auto()
 
 
+def _sign(value) -> int:
+    value = int(value or 0)
+    return (value > 0) - (value < 0)
+
+
 class SpindleLever(Enum):
     REV = -1
     NONE = 0
@@ -67,6 +72,8 @@ class ManualTurningUseCase(QObject):
     spindleCoverOpenedChanged = pyqtSignal(bool)
     spindleResetRequiredChanged = pyqtSignal(bool)
     spindleAngleChanged = pyqtSignal(float)
+    #: which way LinuxCNC turns the spindle: 1 forward (M3), -1 reverse (M4), 0 stopped
+    spindleDirectionChanged = pyqtSignal(int)
     actualRpmChanged = pyqtSignal(int)
     # 1 or 2
     gearChanged = pyqtSignal(int)
@@ -148,6 +155,8 @@ class ManualTurningUseCase(QObject):
 
         self._status.spindle[0].override.signal.connect(
             lambda value: self.spindleOverrideChanged.emit(float(value)))
+        self._status.spindle[0].direction.signal.connect(
+            lambda value: self.spindleDirectionChanged.emit(_sign(value)))
         self._status.feedrate.signal.connect(
             lambda value: self.feedOverrideChanged.emit(float(value)))
 
@@ -172,6 +181,12 @@ class ManualTurningUseCase(QObject):
     @property
     def gear(self) -> int:
         return 1 if self._pin(TeachInLatheComponent.PinSpindleIsFirstGear) else 2
+
+    @property
+    def spindle_direction(self) -> int:
+        """Which way LinuxCNC turns the spindle: 1 forward (M3), -1 reverse
+        (M4), 0 stopped."""
+        return _sign(self._status.spindle[0].direction.value)
 
     @property
     def spindle_override(self) -> float:

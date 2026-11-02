@@ -15,9 +15,40 @@ Rectangle {
     readonly property int selectedSpindleMode: viewModel.spindleMode
     readonly property int headerHeight: 50
     //: The column right of the RPM/CSS content, past a divider: M4 at the
-    //: top, M3 at the bottom.
+    //: top, OFF in the middle, M3 at the bottom.
     readonly property int sideWidth: 100
     readonly property int directionIconSize: 64
+    //: How long the marks take to change, as the lever beside the panel
+    //: (SpindleLever) takes to move.
+    readonly property int changeMs: 350
+
+    // Where the spindle's lever is: 1 M3, -1 M4, 0 OFF. M3 or M4 is drawn
+    // green - the lever's knob's green - while the spindle turns that way with no fault (cover opened, reset
+    // required); OFF red for a while once it is stopped.
+    readonly property int lever: viewModel.spindleLever
+    // for the lever beside the panel (SpindleLever): its colour, and the
+    // middles of M4 and M3, where its stops are - in the panel's own y
+    readonly property color leverColor: turning ? onColor : (justStopped ? offColor : neutralColor)
+    readonly property color neutralColor: "#9aa3b0"
+    readonly property real m4CenterY: sideColumn.y + m4Icon.y + m4Icon.height / 2
+    readonly property real m3CenterY: sideColumn.y + m3Icon.y + m3Icon.height / 2
+    readonly property bool turning: lever !== 0 && !viewModel.spindleFault
+    readonly property color onColor: Theme.success
+    readonly property color offColor: Theme.danger
+    readonly property int offShownMs: 2000
+    property bool justStopped: false
+    property int _lastLever: 0
+    onLeverChanged: {
+        justStopped = lever === 0 && _lastLever !== 0
+        _lastLever = lever
+        if (justStopped) offTimer.restart()
+        else offTimer.stop()
+    }
+    Timer {
+        id: offTimer
+        interval: root.offShownMs
+        onTriggered: root.justStopped = false
+    }
     readonly property color warningColor: Theme.warning
     readonly property color warningBaseColor: Theme.foreground
     readonly property int warningPulseDurationMs: 200
@@ -355,21 +386,36 @@ Rectangle {
         width: root.sideWidth
 
         SpindleDirectionIcon {
+            id: m4Icon
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
             anchors.topMargin: Theme.spacingSmall
             size: root.directionIconSize
             clockwise: false            // M4
+            // green while the spindle turns that way
+            on: root.turning && root.lever === -1
         }
 
-        // The middle is left empty for now.
+        Text {
+            id: offText
+            anchors.horizontalCenter: m4Icon.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            text: "OFF"
+            font.pixelSize: Theme.fontLarge
+            font.bold: true
+            color: root.justStopped ? root.offColor : Theme.foregroundMuted
+            Behavior on color { ColorAnimation { duration: root.changeMs } }
+        }
 
         SpindleDirectionIcon {
-            anchors.horizontalCenter: parent.horizontalCenter
+            id: m3Icon
+            anchors.horizontalCenter: m4Icon.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Theme.spacingSmall
             size: root.directionIconSize
             clockwise: true             // M3
+            on: root.turning && root.lever === 1
         }
+
     }
 }

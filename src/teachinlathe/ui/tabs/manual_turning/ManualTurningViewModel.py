@@ -34,6 +34,7 @@ class ManualTurningViewModel(QObject):
         self._spindle_running = False
         self._spindle_cover_opened = False
         self._spindle_reset_required = False
+        self._spindle_direction = 0
         self._feeding = False
         self._joystick_reset_required = False
         self._actual_feed = "0.0"
@@ -62,6 +63,7 @@ class ManualTurningViewModel(QObject):
         uc.spindleCoverOpenedChanged.connect(self.setSpindleCoverOpened)
         uc.spindleResetRequiredChanged.connect(self.setSpindleResetRequired)
         uc.spindleAngleChanged.connect(self.setSpindleAngle)
+        uc.spindleDirectionChanged.connect(self.setSpindleDirection)
         uc.actualRpmChanged.connect(self.setActualRpm)
         uc.gearChanged.connect(lambda gear: self.setGearSuffix(str(gear)))
         uc.spindleOverrideChanged.connect(self.setSpindleOverride)
@@ -79,6 +81,7 @@ class ManualTurningViewModel(QObject):
         self.setSpindleCoverOpened(uc.spindle_cover_opened)
         self.setSpindleResetRequired(uc.spindle_reset_required)
         self.setSpindleAngle(uc.spindle_angle)
+        self.setSpindleDirection(uc.spindle_direction)
         self.setSpindleOverride(uc.spindle_override)
         self.setFeedOverride(uc.feed_override)
         self.setFeeding(uc.feeding)
@@ -186,6 +189,17 @@ class ManualTurningViewModel(QObject):
     @pyqtProperty(bool, notify=spindleValuesChanged)
     def spindleResetRequired(self):
         return self._spindle_reset_required
+
+    @pyqtProperty(int, notify=spindleValuesChanged)
+    def spindleLever(self):
+        """Where the spindle panel's lever stands: 1 at M3 (turning forward),
+        -1 at M4 (in reverse), 0 at OFF."""
+        return self._spindle_direction if self._spindle_running else 0
+
+    @pyqtProperty(bool, notify=spindleValuesChanged)
+    def spindleFault(self):
+        """The spindle cover opened, or a reset is needed: its panel says so."""
+        return self._spindle_cover_opened or self._spindle_reset_required
 
     @pyqtProperty(str, notify=spindleValuesChanged)
     def spindlePanelMode(self):
@@ -378,6 +392,13 @@ class ManualTurningViewModel(QObject):
 
     def setActualRpm(self, value):
         self._actual_rpm = str(abs(int(value or 0)))
+        self.spindleValuesChanged.emit()
+
+    def setSpindleDirection(self, direction):
+        direction = int(direction)
+        if self._spindle_direction == direction:
+            return
+        self._spindle_direction = direction
         self.spindleValuesChanged.emit()
 
     def setSpindleRunning(self, running):
