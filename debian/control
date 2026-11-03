@@ -23,6 +23,8 @@ Depends: ${python3:Depends}, ${misc:Depends},
  python3-pyqt6,
  python3-pyqt6.qtquick,
  python3-ezdxf,
+# the G-code generation's geometry (stock, toolpaths, grooves)
+ python3-shapely,
 # LinuxCNC's qt5_graphics reaches Qt through qtpy, and LinuxCNC does not
 # depend on it.
  python3-qtpy,

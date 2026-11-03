@@ -125,7 +125,7 @@ say "Checking the installation"
 
 "$([ "$MODE" = venv ] && echo "$VENV/bin/python" || echo python3)" - <<'PY'
 import importlib, sys
-missing = [m for m in ("PyQt6.QtCore", "PyQt6.QtQuickWidgets", "ezdxf", "OpenGL")
+missing = [m for m in ("PyQt6.QtCore", "PyQt6.QtQuickWidgets", "ezdxf", "shapely", "OpenGL")
            if not importlib.util.find_spec(m)]
 print("    python modules:", "ok" if not missing else "MISSING " + ", ".join(missing))
 sys.exit(1 if missing else 0)

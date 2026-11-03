@@ -93,10 +93,13 @@ Each TurnableOperation contains: SpeedsAndFeeds (speeds_and_feeds: direction "M3
 
 An operation that cuts (a `TurnableOperation`) names its tool by `toolRef`: the id of one of the program's
 `tools` (`"tools"` above `"operations"` in the JSON). A `ProgramTool` keeps the holder (the T number), the
-cutting tool, where the tool change goes (G28/G30) and a snapshot of both as they were when chosen;
+cutting tool and a snapshot of both as they were when chosen (its old G28/G30 `toolchange_position` is kept but
+unused);
 `conversational/logic/program_tools.py` checks it against the Tool Library (ok / moved / changed / missing),
 chooses tools and drops the unused ones. There is no Change Tool operation: the G-code builder writes
-`o<tc_at_g28|g30> call` where the tool differs from the one before, and generates nothing while an operation
+`M6 T<n>` where the tool differs from the one before - M6 is remapped to `subroutines/m6_remap.ngc` (the INI's
+`[RS274NGC] REMAP = M6 ...`), which moves to the machine's tool change position: `[EMCIO]TOOL_CHANGE_POSITION`,
+or the one set on the Manual Turning tab through `iocontrol.0.tool-change-pos-*` - and generates nothing while an operation
 that cuts has no tool or one not as it was chosen (`ToolsNotReady`).
 
 Programs are stored as JSON files in `conversational/` (`PROGRAMS_DIR` in `conversational_use_case.py`). The `Operation` registry maps string keys to classes:
