@@ -1,4 +1,5 @@
-// SmartNumpadDialog.qml — QML numpad dialog.
+// SmartNumpadDialog.qml — QML numpad dialog, on the frame the numpad
+// dialogs share (NumpadPopup).
 //
 // Driven by the `viewModel` property, which defaults to the app's
 // NumpadDialogViewModel singleton (module TeachInLathe). Open it with:
@@ -8,7 +9,7 @@
 //
 // Two modes:
 //   • "select"  — predefined value buttons (when the JSON entry has options)
-//   • "numpad"  — numeric keypad (default / "Other values..." / no options)
+//   • "numpad"  — numeric keypad, NumpadKeypad (default / "Other values..." / no options)
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -16,7 +17,7 @@ import theme
 import common
 import TeachInLathe
 
-Popup {
+NumpadPopup {
     id: root
 
     // Which numpad view model drives this dialog. Each screen has its own
@@ -24,44 +25,23 @@ Popup {
     // it is passed in rather than read from a single context property.
     property var viewModel: NumpadDialogViewModel
 
-    // ── State for the currently edited field ──────────────────────────
-    property var    targetField: null
+    // ── State for the currently edited field (targetField: NumpadPopup) ─
     property string settingName: ""
     property string titleText: "Enter value"
     property var    options: []
     property bool   hasOptions: false
     property string valueType: ""
     property string mode: "numpad"          // "select" | "numpad"
-    property string buffer: ""
-    property bool   bufferSelected: false
-    readonly property int buttonHeight: mode === "numpad" ? 70 : 60
-    readonly property int buttonFontSize: mode === "numpad" ? 24 : 18
+    // the select mode's buttons
+    readonly property int optionHeight: 60
+    readonly property int optionFontSize: 18
     readonly property int buttonSpacing: 20
-    readonly property int buttonRadius: 8
-    readonly property color buttonBorderColor: "#9aa3b0"
-    readonly property color buttonBg: Theme.surface
-    readonly property color buttonPressedBg: Theme.selection
-    readonly property color buttonDisabledBg: Theme.outlineDisabled
 
-    modal: true
-    focus: true
-    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-    parent: Overlay.overlay
-    x: parent ? (parent.width  - width)  / 2 : 0
-    y: parent ? (parent.height - height) / 2 : 0
     width: 500
-    height: 660
-    leftPadding: 24
-    rightPadding: 24
-    topPadding: 24
-    bottomPadding: 24
-
-    background: Rectangle {
-        color: Theme.surfaceSunken
-        border.color: "#9aa3b0"
-        border.width: Theme.hairline
-        radius: Theme.radiusLarge
-    }
+    // as high as the numpad mode needs: the title and the keypad - the
+    // select mode the same height
+    height: topPadding + bottomPadding + titleLabel.implicitHeight + buttonSpacing
+            + keypad.implicitHeight
 
     // ── Public API ────────────────────────────────────────────────────
     function openFor(field, settingName, descriptionOverride) {
@@ -81,57 +61,9 @@ Popup {
                       : (cfg.description || "")
         root.titleText = title.length > 0 ? title : "Enter value"
 
-        root.buffer = root._initialBufferFor(field)
-        root.bufferSelected = root.buffer.length > 0
+        keypad.resetTo(field ? field.value : null, field ? field.formatter : null)
         root.mode = root.hasOptions ? "select" : "numpad"
         root.open()
-    }
-
-    function _initialBufferFor(field) {
-        if (!field)
-            return ""
-        var value = field.value
-        if (value === null || value === undefined || value === "")
-            return ""
-        var text = field.formatter ? String(field.formatter(value)) : String(value)
-        var numericValue = Number(text)
-        if (!isFinite(numericValue) || numericValue === 0)
-            return ""
-        return text
-    }
-
-    function _appendToken(token) {
-        if (root.bufferSelected) {
-            root.buffer = token === "." ? "0." : String(token)
-            root.bufferSelected = false
-            return
-        }
-        root.buffer += String(token)
-    }
-
-    function _backspace() {
-        if (root.bufferSelected) {
-            root.buffer = ""
-            root.bufferSelected = false
-            return
-        }
-        root.buffer = root.buffer.slice(0, -1)
-    }
-
-    function _clearBuffer() {
-        root.buffer = ""
-        root.bufferSelected = false
-    }
-
-    function _toggleSign() {
-        if (root.buffer.length === 0) {
-            root.buffer = "-"
-            root.bufferSelected = false
-            return
-        }
-        root.buffer = root.buffer.charAt(0) === "-"
-                    ? root.buffer.slice(1)
-                    : "-" + root.buffer
     }
 
     function _accept(value) {
@@ -145,16 +77,12 @@ Popup {
         root.close()
     }
 
-    onClosed: {
-        if (targetField && targetField.defocus) targetField.defocus()
-        targetField = null
-    }
-
     // ── Content ───────────────────────────────────────────────────────
     contentItem: ColumnLayout {
         spacing: root.buttonSpacing
 
         Text {
+            id: titleLabel
             Layout.fillWidth: true
             text: root.titleText
             font.pixelSize: Theme.fontTitle
@@ -187,17 +115,11 @@ Popup {
 
                     Repeater {
                         model: root.options
-                        delegate: Button {
+                        delegate: NumpadButton {
                             width: optionsFlow.btnW
-                            height: root.buttonHeight
+                            height: root.optionHeight
                             text: String(modelData)
-                            font.pixelSize: root.buttonFontSize
-                            background: Rectangle {
-                                radius: root.buttonRadius
-                                color: parent.pressed ? root.buttonPressedBg : root.buttonBg
-                                border.color: root.buttonBorderColor
-                                border.width: Theme.hairline
-                            }
+                            font.pixelSize: root.optionFontSize
                             onClicked: root._accept(modelData)
                         }
                     }
@@ -210,167 +132,27 @@ Popup {
             }
         }
 
-        Button {
+        NumpadButton {
             visible: root.mode === "select" && root.valueType !== "str"
             Layout.alignment: Qt.AlignHCenter
             implicitWidth: 266
-            implicitHeight: root.buttonHeight
+            implicitHeight: root.optionHeight
             text: "Other values..."
-            font.pixelSize: root.buttonFontSize
-            background: Rectangle {
-                radius: root.buttonRadius
-                color: parent.pressed ? root.buttonPressedBg : root.buttonBg
-                border.color: root.buttonBorderColor
-                border.width: Theme.hairline
-            }
+            font.pixelSize: root.optionFontSize
             onClicked: {
-                root.bufferSelected = root.buffer.length > 0
+                keypad.bufferSelected = keypad.buffer.length > 0
                 root.mode = "numpad"
             }
         }
 
         // ── NUMPAD mode ────────────────────────────────────────────────
-        ColumnLayout {
+        NumpadKeypad {
+            id: keypad
             visible: root.mode === "numpad"
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: root.buttonSpacing
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: root.buttonSpacing
-
-                Label {
-                    id: display
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 60
-                    text: root.buffer
-                    horizontalAlignment: Text.AlignRight
-                    verticalAlignment: Text.AlignVCenter
-                    padding: 10
-                    font.pixelSize: 24
-                    font.family: "Noto Sans Mono"
-                    color: root.bufferSelected ? Theme.surface : "#141414"
-                    background: Rectangle {
-                        color: root.bufferSelected ? Theme.focusBorder : Theme.surfaceSunken
-                        border.color: root.bufferSelected ? "#1d4ed8" : "#77767b"
-                        radius: 5
-                    }
-                }
-                Button {
-                    Layout.preferredWidth: 60
-                    Layout.preferredHeight: root.buttonHeight
-                    text: "←"
-                    font.pixelSize: root.buttonFontSize
-                    background: Rectangle {
-                        radius: root.buttonRadius
-                        color: parent.pressed ? root.buttonPressedBg : root.buttonBg
-                        border.color: root.buttonBorderColor
-                        border.width: Theme.hairline
-                    }
-                    onClicked: root._backspace()
-                }
-                Button {
-                    Layout.preferredWidth: 80
-                    Layout.preferredHeight: root.buttonHeight
-                    text: "Clear"
-                    font.pixelSize: root.buttonFontSize
-                    background: Rectangle {
-                        radius: root.buttonRadius
-                        color: parent.pressed ? root.buttonPressedBg : root.buttonBg
-                        border.color: root.buttonBorderColor
-                        border.width: Theme.hairline
-                    }
-                    onClicked: root._clearBuffer()
-                }
-            }
-
-            GridLayout {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 4 * root.buttonHeight + 3 * root.buttonSpacing
-                columns: 3
-                columnSpacing: root.buttonSpacing
-                rowSpacing: root.buttonSpacing
-
-                Repeater {
-                    model: ["7", "8", "9", "4", "5", "6", "1", "2", "3"]
-                    delegate: Button {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.buttonHeight
-                        text: modelData
-                        font.pixelSize: root.buttonFontSize
-                        background: Rectangle {
-                            radius: root.buttonRadius
-                            color: parent.pressed ? root.buttonPressedBg : root.buttonBg
-                            border.color: root.buttonBorderColor
-                            border.width: Theme.hairline
-                        }
-                        onClicked: root._appendToken(modelData)
-                    }
-                }
-
-                Button {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: root.buttonHeight
-                    text: "±"
-                    font.pixelSize: root.buttonFontSize
-                    background: Rectangle {
-                        radius: root.buttonRadius
-                        color: parent.pressed ? root.buttonPressedBg : root.buttonBg
-                        border.color: root.buttonBorderColor
-                        border.width: Theme.hairline
-                    }
-                    onClicked: root._toggleSign()
-                }
-                Button {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: root.buttonHeight
-                    text: "0"
-                    font.pixelSize: root.buttonFontSize
-                    background: Rectangle {
-                        radius: root.buttonRadius
-                        color: parent.pressed ? root.buttonPressedBg : root.buttonBg
-                        border.color: root.buttonBorderColor
-                        border.width: Theme.hairline
-                    }
-                    onClicked: root._appendToken("0")
-                }
-                Button {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: root.buttonHeight
-                    text: "."
-                    font.pixelSize: root.buttonFontSize
-                    // An int setting takes no decimals.
-                    enabled: root.valueType !== "int"
-                             && (root.bufferSelected || root.buffer.indexOf(".") === -1)
-                    background: Rectangle {
-                        radius: root.buttonRadius
-                        color: parent.enabled ? (parent.pressed ? root.buttonPressedBg : root.buttonBg) : root.buttonDisabledBg
-                        border.color: root.buttonBorderColor
-                        border.width: Theme.hairline
-                    }
-                    onClicked: root._appendToken(".")
-                }
-            }
-
-            Item {
-                Layout.fillHeight: true
-            }
-
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: root.buttonHeight
-                text: "Input"
-                font.pixelSize: root.buttonFontSize
-                enabled: root.buffer.length > 0 && root.buffer !== "-" && root.buffer !== "."
-                background: Rectangle {
-                    radius: root.buttonRadius
-                    color: parent.enabled ? (parent.pressed ? root.buttonPressedBg : root.buttonBg) : root.buttonDisabledBg
-                    border.color: root.buttonBorderColor
-                    border.width: Theme.hairline
-                }
-                onClicked: root._accept(root.buffer)
-            }
+            valueType: root.valueType
+            onAccepted: function(value) { root._accept(value) }
         }
     }
 }

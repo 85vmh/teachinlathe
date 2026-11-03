@@ -13,3 +13,5 @@ ManualValueRow 1.0 ManualValueRow.qml
 SpindleLever 1.0 SpindleLever.qml
 TeachInLatheDroRoot 1.0 TeachInLatheDroRoot.qml
 TeachableLimit 1.0 TeachableLimit.qml
+TouchOffCanvas 1.0 TouchOffCanvas.qml
+TouchOffDialog 1.0 TouchOffDialog.qml

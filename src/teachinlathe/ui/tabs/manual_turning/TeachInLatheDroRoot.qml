@@ -19,6 +19,9 @@ Rectangle {
     //: machine limits' drawing and back (ManualTurningRoot).
     signal presetPositionsClicked()
     signal openNumPadRequested(var field)
+    //: A touch-off's value asked for: the touch-off dialog (TouchOffDialog),
+    //: for a TouchOffField.
+    signal touchOffRequested(var field)
 
     QtObject {
         id: zDatumField
@@ -43,14 +46,15 @@ Rectangle {
     // distance to Z0 in Z.
     component TouchOffField: QtObject {
         property string axis
-        property string settingName
-        property string description
         property var value: 0.0
+        // a blade's Z: which of its points - "-1", "0", "1" - the touch-off
+        // dialog sets before commit; empty for every other tool and axis
+        property string place: ""
 
         function commit(v) {
             value = v
             if (root.viewModel) {
-                root.viewModel.touchOff(axis, v)
+                root.viewModel.touchOff(axis, v, place)
             }
             return true
         }
@@ -62,15 +66,11 @@ Rectangle {
     TouchOffField {
         id: xTouchOffField
         axis: "x"
-        settingName: "smart_numpad.x-offset"
-        description: "Measured diameter with current tool"
     }
 
     TouchOffField {
         id: zTouchOffField
         axis: "z"
-        settingName: "smart_numpad.z-offset"
-        description: "Distance to Z0 with current tool"
     }
 
     // The two boxes the axes' values are in, round both rows: the machine
@@ -341,7 +341,7 @@ Rectangle {
             root.openNumPadRequested(zDatumField)
         }
         function onTouchOffValueInputRequested(axis) {
-            root.openNumPadRequested(axis === "x" ? xTouchOffField : zTouchOffField)
+            root.touchOffRequested(axis === "x" ? xTouchOffField : zTouchOffField)
         }
     }
 }

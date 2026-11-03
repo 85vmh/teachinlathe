@@ -10,6 +10,8 @@ Rectangle {
     id: root
 
     property string title: ""
+    // where the title sits over the box's content: left, or centred
+    property bool titleCentred: false
     property color accent: Theme.accentStrong
     default property alias content: body.data
 
@@ -54,6 +56,7 @@ Rectangle {
 
         Label {
             visible: root.title !== ""
+            Layout.alignment: root.titleCentred ? Qt.AlignHCenter : Qt.AlignLeft
             text: root.title
             font.pixelSize: Theme.fontBody
             font.bold: true

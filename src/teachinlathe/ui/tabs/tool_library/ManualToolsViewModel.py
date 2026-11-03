@@ -3,8 +3,7 @@ knows them - holder N is tool TN.
 
 One is the current loaded tool; tapping another loads it (M61), unless the
 machine is feeding. Nothing else is edited here: the offsets come from
-touching off, which the tool library repository runs. A blade touched off
-in Z is asked which of its points that was.
+touching off, which the tool library repository runs.
 """
 
 from __future__ import annotations
@@ -18,10 +17,10 @@ from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.core.tool_library_repository import ToolLibraryRepository, tool_library_repository
-from teachinlathe.tooling.model.data_types import BladeTool, ToolHolder, ZOffsetPlace
+from teachinlathe.tooling.model.data_types import ToolHolder
 from teachinlathe.ui.common.images import image_url
 from teachinlathe.ui.tabs.tool_library.tool_library_models import (
-    DataclassListModel, MountedToolViews, offset_text,
+    DataclassListModel, MountedToolViews, card_and_view, offset_text,
 )
 
 log = logging.getLogger(__name__)
@@ -98,8 +97,9 @@ class ManualToolsViewModel(QObject):
     #: The current loaded tool moved in the list, or the list was refilled.
     currentLoadedToolRowChanged = pyqtSignal()
     feedingChanged = pyqtSignal()
-    #: A blade was touched off in Z: which of its points was it? (its width)
-    bladePlaceRequested = pyqtSignal(float)
+    #: Another tool loaded, or the one loaded edited: the touch-off dialog
+    #: draws it.
+    currentLoadedToolViewChanged = pyqtSignal()
 
     def __init__(self, parent=None, repository: ToolLibraryRepository = None, hal=None):
         super().__init__(parent)
@@ -109,13 +109,15 @@ class ManualToolsViewModel(QObject):
         self._views = MountedToolViews(self)
         self._recent_only = False
         self._feeding = False
-        self._blade_holder_id = 0
         self._current_loaded_tool_row = -1
         self._row_count = 0
+        # the current loaded tool as the Tool Library's card draws it - its own
+        # view, kept while the repository holds the same tool
+        self._current_tool = None
+        self._current_tool_view = None
 
         repository.toolsChanged.connect(self.refresh)
         repository.currentLoadedToolChanged.connect(self._on_current_loaded_tool_changed)
-        repository.touchedOff.connect(self._on_touched_off)
 
         # No tool change while the joystick is feeding.
         comp = (TeachInLatheComponent() if hal is None else hal).comp
@@ -150,6 +152,12 @@ class ManualToolsViewModel(QObject):
         """The row the current loaded tool is on, -1 when it is not listed:
         the list keeps it in view."""
         return self._current_loaded_tool_row
+
+    @pyqtProperty(QObject, notify=currentLoadedToolViewChanged)
+    def currentLoadedToolView(self):
+        """The current loaded tool as the Tool Library's card draws it (a
+        TurningToolView, ...), or None: the touch-off dialog draws it."""
+        return self._current_tool_view
 
     @pyqtProperty(bool, notify=feedingChanged)
     def feeding(self):
@@ -190,13 +198,6 @@ class ManualToolsViewModel(QObject):
             self.feedingChanged.emit()
             self.refresh()
 
-    @pyqtSlot(str)
-    def setBladePlace(self, place: str) -> None:
-        """Answer to bladePlaceRequested: "-1", "0" or "1"."""
-        if self._blade_holder_id:
-            self._repository.set_z_offset_place(self._blade_holder_id, ZOffsetPlace(place))
-            self._blade_holder_id = 0
-
     # ── The list ────────────────────────────────────────────────────────────
 
     def refresh(self) -> None:
@@ -208,6 +209,18 @@ class ManualToolsViewModel(QObject):
             self._current_loaded_tool_row = row
             self._row_count = len(holders)
             self.currentLoadedToolRowChanged.emit()
+        self._refresh_current_tool()
+
+    def _refresh_current_tool(self) -> None:
+        tool = self._repository.tool_in(self._repository.current_loaded_tool)
+        if tool is self._current_tool:
+            return
+        old = self._current_tool_view
+        self._current_tool = tool
+        self._current_tool_view = card_and_view(tool, self)[1]
+        self.currentLoadedToolViewChanged.emit()
+        if old is not None:
+            old.deleteLater()
 
     def _shown_holders(self) -> List[ToolHolder]:
         """The holders with a tool in them: an empty one is nothing to load."""
@@ -222,14 +235,6 @@ class ManualToolsViewModel(QObject):
     def _on_current_loaded_tool_changed(self, _tool_no: int) -> None:
         self.currentLoadedToolChanged.emit()
         self.refresh()
-
-    def _on_touched_off(self, tool_holder_id: int, axis: str) -> None:
-        if axis != "z":
-            return
-        tool = self._repository.tool_in(tool_holder_id)
-        if isinstance(tool, BladeTool):
-            self._blade_holder_id = tool_holder_id
-            self.bladePlaceRequested.emit(tool.blade_width)
 
 
 def _recently_used(holders: List[ToolHolder]) -> List[ToolHolder]:

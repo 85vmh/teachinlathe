@@ -28,7 +28,10 @@ import "arrow.js" as Arrow
 // of the outside arrow at that end, straight to the box; ``noExtensionLines``,
 // for one drawn between lines already there; ``extensionsCentred``, on a
 // diameter, the extension lines run on past the arrow as far as they come to
-// it, the arrow at their middle.
+// it, the arrow at their middle; ``extensionPast``, on a diameter, how far
+// past the arrow the extension lines run, px - out to a tool on one, say;
+// ``noFromExtension``, on a diameter, no extension line at ``from`` - the
+// centre line there, say.
 QtObject {
     property var  dimensions: []
     property var  cx: null
@@ -65,8 +68,11 @@ QtObject {
             if (d.offset > 0) {
                 // with ``extensionsCentred``, run on past the arrow as far as
                 // they come to it, so the arrow is at their middle
-                var past = d.extensionsCentred ? Math.max(overshoot, d.offset - gap) : overshoot
-                ctx.moveTo(edge + gap, y0); ctx.lineTo(lineX + past, y0)
+                // ``extensionPast``, set, how far past the arrow they run
+                var past = d.extensionPast !== undefined ? d.extensionPast
+                         : d.extensionsCentred ? Math.max(overshoot, d.offset - gap) : overshoot
+                // ``noFromExtension``: none at ``from`` - a line already there
+                if (!d.noFromExtension) { ctx.moveTo(edge + gap, y0); ctx.lineTo(lineX + past, y0) }
                 ctx.moveTo(edge + gap, y1); ctx.lineTo(lineX + past, y1)
             }
             a = { x: lineX, y: y0 }; b = { x: lineX, y: y1 }

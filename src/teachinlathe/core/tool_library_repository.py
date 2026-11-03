@@ -181,11 +181,6 @@ class ToolLibraryRepository(QObject):
         self.holders.remove(holder)
         self._save_holders()
 
-    def set_z_offset_place(self, tool_holder_id: int, place: Optional[ZOffsetPlace]) -> None:
-        """Which point of the blade in the holder its Z offset is taken from."""
-        self._holder(tool_holder_id).z_offset_place = place
-        self._save_holders()
-
     # ── Cutting tools ───────────────────────────────────────────────────────
 
     def save_cutting_tool(self, tool: CuttingTool) -> None:
@@ -237,19 +232,23 @@ class ToolLibraryRepository(QObject):
             return False
         return self._commands.issue_mdi(f"M61 Q{tool_holder_id} G43")
 
-    def touch_off(self, axis: str, value) -> bool:
+    def touch_off(self, axis: str, value, z_offset_place: Optional[ZOffsetPlace] = None) -> bool:
         """Touch the current loaded tool's holder off in `axis` ("x" or "z"):
         LinuxCNC works the offset out and writes it to the tool table. Once
         it has, the holder counts as touched off in that axis, and
-        touchedOff says so."""
+        touchedOff says so. A blade's Z: `z_offset_place` is which of its
+        points it was taken with; not given - setting the datum on a blade
+        not touched off in Z - its left corner, the one toward Z-."""
         holder = self.current_holder
         if holder is None or not holder.has_tool:
             log.warning("no current loaded tool to touch off")
             return False
         if not self._commands.issue_mdi(f"o<touch_off_{axis}> call [{value}]"):
             return False
+        if z_offset_place is None and isinstance(self.tool_in(holder.tool_holder_id), BladeTool):
+            z_offset_place = ZOffsetPlace.LEFT
         self._touch_off = {"axis": axis, "holder": holder.tool_holder_id,
-                           "busy": False, "polls": 0}
+                           "place": z_offset_place, "busy": False, "polls": 0}
         return True
 
     def _poll_touch_off(self) -> None:
@@ -272,6 +271,9 @@ class ToolLibraryRepository(QObject):
             return
         self._read_offsets()
         setattr(holder, f"{touch_off['axis']}_touched", True)
+        if touch_off["axis"] == "z":
+            # a new Z offset: taken with the point given (a blade's), or none
+            holder.z_offset_place = touch_off["place"]
         self._write_holders()
         self.toolsChanged.emit()
         self.touchedOff.emit(holder.tool_holder_id, touch_off["axis"])

@@ -2,16 +2,20 @@ import QtQuick
 import "../../tool_library/shapes/drill.js" as DrillShape
 import "../../tool_library/shapes/tap.js" as TapShape
 
-// The drill or tap loaded, on the centre line: its point at ``z``,
-// its body running on towards +Z, drawn by the Tool Library's own drawing
-// (ui/tabs/tool_library/shapes) - one drawing of each, wherever it shows.
+// The drill or tap loaded, on the centre line - or off it, at ``pointX`` -
+// its point at ``z``, its body running on towards +Z, drawn by the Tool
+// Library's own drawing (ui/tabs/tool_library/shapes) - one drawing of each,
+// wherever it shows.
 QtObject {
     // the drill (a DrillingToolView, Drilling's editor.drill) or the tap (a
     // TappingToolView, Tapping's editor.tap) drawn; with neither, nothing is
     property var   drill: null
     property var   tap: null
-    // where its point is, mm
+    // where its point is, mm: along Z, and the diameter it is on - 0, the
+    // centre line, wherever it drills or taps (the touch-off dialog draws
+    // one off it)
     property real  z: 0
+    property real  pointX: 0
     // the one drawn
     readonly property var tool: drill || tap
     property var   cx: null
@@ -43,7 +47,7 @@ QtObject {
             helixAngle: 30, helixLineWidth: 1, helixGapPx: 3,
             fluteLengthD: 5, shankLengthD: 2, length: 0,
             bodyColor: bodyColor, edgeColor: edgeColor,
-            pxPerMm: scale, tipX: cx(z), tipY: cy(0)
+            pxPerMm: scale, tipX: cx(z), tipY: cy(pointX)
         }
     }
 
@@ -54,7 +58,7 @@ QtObject {
             leadThreads: 3, threadLengthD: 2, minThreads: 8, shankRatio: 0.8,
             shankLengthD: 2, helixLineWidth: 1, length: 0,
             bodyColor: bodyColor, edgeColor: edgeColor,
-            pxPerMm: scale, tipX: cx(z), tipY: cy(0)
+            pxPerMm: scale, tipX: cx(z), tipY: cy(pointX)
         }
     }
 

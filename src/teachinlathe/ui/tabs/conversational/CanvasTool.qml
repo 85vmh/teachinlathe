@@ -66,7 +66,10 @@ Item {
     // draws it: x along Z, y down the screen (radius) - [{x, y}], for a fit
     // to take in.
     readonly property var outlineFromTip: {
-        if (isBlade) return BladeShape.corners(_blade())
+        // its shape alone - not _blade(), which reads pxPerMm and the tip, so
+        // a fit worked out from this does not loop back into it
+        if (isBlade) return BladeShape.corners({ width: view.bladeWidth, length: view.bladeLength,
+                                                 rotation: view.bladeRotation, mirrored: view.bladeMirrored })
         if (isThreading) {
             if (!threadingInsert.specValid) return []
             var tt = turnedThreading(threadingInsert.activeTip()), pts = threadingInsert.outlinePoints(), res = []

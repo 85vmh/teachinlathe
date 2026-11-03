@@ -9,6 +9,7 @@ from teachinlathe.core.positions_repository import Positions
 from teachinlathe.core.predefined_positions_repository import predefined_positions
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual.logic.machine_limits import MachineLimitsHandler
+from teachinlathe.tooling.model.data_types import ZOffsetPlace
 
 
 class LimitStatus(Enum):
@@ -243,10 +244,13 @@ class TeachInLatheDroViewModel(QObject):
             return
         self.touchOffValueInputRequested.emit("z")
 
-    @pyqtSlot(str, "QVariant")
-    def touchOff(self, axis, value):
-        # A blade is asked which of its points this was once the offset is in.
-        self._tool_library.touch_off(str(axis), value)
+    @pyqtSlot(str, "QVariant", str)
+    def touchOff(self, axis, value, place=""):
+        """A blade's Z: ``place`` is which of its points it was taken with -
+        "-1", "0" or "1" - chosen in the touch-off dialog; empty for every
+        other tool and axis (tool_library_repository.touch_off)."""
+        z_offset_place = ZOffsetPlace(place) if place else None
+        self._tool_library.touch_off(str(axis), value, z_offset_place)
 
     @pyqtSlot(str)
     def teachLimit(self, key):
