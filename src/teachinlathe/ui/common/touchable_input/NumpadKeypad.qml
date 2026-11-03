@@ -5,7 +5,9 @@
 // resetTo(value, formatter) starts it on a value, selected: the first key
 // typed replaces it. SmartNumpadDialog has it in its numpad mode; the
 // touch-off dialog (TouchOffDialog) has it alone. Its keys have a fixed size,
-// so its implicitHeight is the height it needs, shown or not.
+// so its implicitHeight is the height it needs, shown or not. The computer's
+// keyboard types into it while it has the focus - given it by its dialog
+// (NumpadPopup.keyboardItem) or when it is shown - never while hidden.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -29,9 +31,36 @@ ColumnLayout {
     readonly property int inputHeight: 70
     readonly property int buttonSpacing: 24
 
+    // what can be typed now: a decimal point (none for an int, one at most),
+    // and Input (a number, not "-" or "." alone)
+    readonly property bool canTypePoint: valueType !== "int" && (bufferSelected || buffer.indexOf(".") === -1)
+    readonly property bool canAccept: buffer.length > 0 && buffer !== "-" && buffer !== "."
+
     signal accepted(string value)
 
+    // A key of the computer's keyboard, as the keypad's own: the digits (the
+    // number pad's too), "." or "," for the point, "-" the sign, Backspace,
+    // Delete clearing, Enter as Input. True when it was one of those.
+    function _handleKey(event) {
+        var text = event.text
+        if (text.length === 1 && text >= "0" && text <= "9") { _appendToken(text); return true }
+        if (text === "." || text === ",") { if (canTypePoint) _appendToken("."); return true }
+        if (text === "-") { _toggleSign(); return true }
+        switch (event.key) {
+        case Qt.Key_Backspace: _backspace(); return true
+        case Qt.Key_Delete: _clearBuffer(); return true
+        case Qt.Key_Return:
+        case Qt.Key_Enter: if (canAccept) accepted(buffer); return true
+        }
+        return false
+    }
+
     spacing: buttonSpacing
+
+    // not while hidden, though it kept the focus from when it was last shown
+    Keys.onPressed: function(event) { event.accepted = root.visible && root._handleKey(event) }
+    // shown in an open dialog - SmartNumpadDialog's "Other values...": typed into
+    onVisibleChanged: if (visible) forceActiveFocus()
 
     // Starts on ``value`` - as ``formatter`` writes it, if given - selected;
     // on nothing when there is none, or it is 0.
@@ -195,8 +224,7 @@ ColumnLayout {
         GridKey {
             text: "."
             // An int setting takes no decimals.
-            enabled: root.valueType !== "int"
-                     && (root.bufferSelected || root.buffer.indexOf(".") === -1)
+            enabled: root.canTypePoint
             onClicked: root._appendToken(".")
         }
     }
@@ -217,7 +245,7 @@ ColumnLayout {
         keyDisabledColor: Theme.primaryDisabled
         keyBorderColor: Theme.primaryPressed
         textColor: "white"
-        enabled: root.buffer.length > 0 && root.buffer !== "-" && root.buffer !== "."
+        enabled: root.canAccept
         onClicked: root.accepted(root.buffer)
     }
 }

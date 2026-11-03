@@ -42,6 +42,7 @@ NumpadPopup {
     // as high as the title and the keypad
     height: topPadding + bottomPadding + titleLabel.implicitHeight + keypad.buttonSpacing
             + keypad.implicitHeight
+    keyboardItem: keypad
 
     function openFor(field) {
         root.targetField = field

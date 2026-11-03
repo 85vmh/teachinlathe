@@ -1,4 +1,8 @@
-// QwertyKeyboardDialog.qml
+// QwertyKeyboardDialog.qml — the on-screen keyboard for a text field. The
+// computer's keyboard types into it too: what a key types is added as typed
+// (its own Shift, not the on-screen one), Backspace deletes, Enter is Input,
+// Escape closes. None of its keys takes the focus, so the keyboard goes on
+// typing into it after a tap.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -132,6 +136,25 @@ Popup {
         root.close()
     }
 
+    onOpened: contentItem.forceActiveFocus()
+
+    // A key of the computer's keyboard; true when it was one it handles.
+    function _handleKey(event) {
+        switch (event.key) {
+        case Qt.Key_Backspace: root._backspace(); return true
+        case Qt.Key_Return:
+        case Qt.Key_Enter: root._accept(); return true
+        }
+        // what it types - printable, not a shortcut with Ctrl or Alt
+        if (event.text.length > 0 && event.text >= " "
+                && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier))) {
+            root._append(event.text)
+            if (!root.shiftLocked) root.shiftOn = false
+            return true
+        }
+        return false
+    }
+
     onClosed: {
         if (targetField && targetField.defocus)
             targetField.defocus()
@@ -142,6 +165,8 @@ Popup {
         id: keyButtonComponent
 
         Button {
+
+            focusPolicy: Qt.NoFocus
             id: keyButton
             property string keyLabel: ""
             property int keyUnits: 1
@@ -179,6 +204,7 @@ Popup {
 
     contentItem: ColumnLayout {
         spacing: root.verticalSpacing
+        Keys.onPressed: function(event) { event.accepted = root._handleKey(event) }
 
         Label {
             Layout.fillWidth: true
@@ -206,6 +232,8 @@ Popup {
                 height: parent.height
                 text: root.buffer
                 readOnly: true
+                // shows the text; the dialog keeps the keyboard's focus
+                activeFocusOnPress: false
                 font.pixelSize: 26
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
@@ -221,6 +249,8 @@ Popup {
             }
 
             Button {
+
+                focusPolicy: Qt.NoFocus
                 width: root.keyWidth * 1.35
                 height: parent.height
                 text: "<- Back"
@@ -241,6 +271,8 @@ Popup {
             }
 
             Button {
+
+                focusPolicy: Qt.NoFocus
                 width: root.keyWidth * 1.85
                 height: parent.height
                 text: "Clear All"
@@ -303,6 +335,8 @@ Popup {
                 anchors.horizontalCenter: parent.horizontalCenter
 
                 Button {
+
+                    focusPolicy: Qt.NoFocus
                     width: root.sideKeyWidth
                     height: root.keyHeight
                     text: "Shift"
@@ -346,6 +380,8 @@ Popup {
                 anchors.horizontalCenter: parent.horizontalCenter
 
                 Button {
+
+                    focusPolicy: Qt.NoFocus
                     width: root.sideKeyWidth
                     height: root.keyHeight
                     text: root.symbolMode ? "ABC" : "123"
@@ -370,6 +406,8 @@ Popup {
                 }
 
                 Button {
+
+                    focusPolicy: Qt.NoFocus
                     width: root.bottomSpaceWidth
                     height: root.keyHeight
                     text: "Space"
@@ -394,6 +432,8 @@ Popup {
                 }
 
                 Button {
+
+                    focusPolicy: Qt.NoFocus
                     width: root.inputButtonWidth
                     height: root.keyHeight
                     text: "Input"

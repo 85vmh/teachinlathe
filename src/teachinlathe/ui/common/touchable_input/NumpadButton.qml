@@ -14,6 +14,9 @@ Button {
     property color keyBorderColor: "#9aa3b0"
 
     font.pixelSize: 24
+    // the dialog keeps the focus, so the computer's keyboard goes on typing
+    // into it after a tap (and Space or Enter do not press the key tapped)
+    focusPolicy: Qt.NoFocus
 
     background: Rectangle {
         radius: 8

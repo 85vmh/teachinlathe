@@ -42,6 +42,9 @@ NumpadPopup {
     // select mode the same height
     height: topPadding + bottomPadding + titleLabel.implicitHeight + buttonSpacing
             + keypad.implicitHeight
+    // typed into from the computer's keyboard while it is shown - not over
+    // the predefined values
+    keyboardItem: keypad
 
     // ── Public API ────────────────────────────────────────────────────
     function openFor(field, settingName, descriptionOverride) {

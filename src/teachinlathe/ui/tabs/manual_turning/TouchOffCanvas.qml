@@ -452,6 +452,8 @@ Rectangle {
                     readonly property bool chosen: root.bladePlace === modelData.place
                     width: 96
                     height: 44
+                    // the dialog keeps the keyboard's focus
+                    focusPolicy: Qt.NoFocus
                     text: modelData.text
                     font.pixelSize: Theme.fontBody
                     font.bold: chosen

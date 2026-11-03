@@ -2,6 +2,8 @@
 // the touch-off dialog): modal, in the middle of the window, on the sunken
 // ground with its outline, and the field it edits - ``targetField``, a
 // NumpadField or one like it - let go when it closes, its defocus() called.
+// ``keyboardItem`` - its NumpadKeypad - takes the focus when it opens, so
+// the computer's keyboard types into it.
 import QtQuick
 import QtQuick.Controls
 import theme
@@ -10,6 +12,9 @@ Popup {
     id: root
 
     property var targetField: null
+    // the item the computer's keyboard types into, given the focus when the
+    // dialog opens - if it is shown then
+    property Item keyboardItem: null
 
     modal: true
     focus: true
@@ -25,6 +30,8 @@ Popup {
         border.width: Theme.hairline
         radius: Theme.radiusLarge
     }
+
+    onOpened: if (keyboardItem && keyboardItem.visible) keyboardItem.forceActiveFocus()
 
     onClosed: {
         if (targetField && targetField.defocus) targetField.defocus()
