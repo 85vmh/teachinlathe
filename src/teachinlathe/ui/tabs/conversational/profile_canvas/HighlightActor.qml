@@ -9,6 +9,9 @@ QtObject {
     property var    cx
     property var    cy
     property var    geometry
+    // the drawn profile (Geometry.buildRenderSegments): the solid the
+    // mirrored overlay is kept within
+    property var    renderSegs: []
     property bool   mirrorAcrossCenterline: false
     property color highlightStrokeColor: "#E53935"
     property color highlightFillColor: "#E53935"
@@ -32,8 +35,23 @@ QtObject {
 
         if (mirrorAcrossCenterline) {
             if (sel.trace) {
-                _paintOverlay(ctx, sel, false)
-                _paintOverlay(ctx, sel, true)
+                ctx.save()
+                var outline = (renderSegs && renderSegs.length > 1)
+                        ? geometry.solidOutline(renderSegs, cx, cy) : []
+                if (outline.length > 2) {
+                    ctx.beginPath()
+                    ctx.moveTo(outline[0].x, outline[0].y)
+                    for (var i = 1; i < outline.length; i++)
+                        ctx.lineTo(outline[i].x, outline[i].y)
+                    ctx.closePath()
+                    ctx.clip()
+                }
+                // a stretch that turns back towards Z+ (an undercut's) bounds
+                // the overhang outside it, any other the part inside it
+                var towardsX = sel.endZ > sel.startZ + 1e-9 ? _largestDiameter() + 1 : 0
+                _paintOverlay(ctx, sel, false, towardsX)
+                _paintOverlay(ctx, sel, true, towardsX)
+                ctx.restore()
             } else if (sel.startPoint) {
                 // A start point has no extent; join it to its mirror instead.
                 ctx.strokeStyle = sel.color
@@ -82,17 +100,26 @@ QtObject {
         ctx.restore()
     }
 
-    // The area between the selection and the centre line, from where it
-    // starts along Z to where it ends; drawn once per half, the two together
-    // fill the band between the selection and its mirror image.
-    function _paintOverlay(ctx, sel, mirrored) {
+    function _largestDiameter() {
+        var largest = 0
+        for (var i = 0; i < (renderSegs || []).length; i++)
+            largest = Math.max(largest, Math.abs(Number(renderSegs[i].x) || 0))
+        return largest
+    }
+
+    // The part of the solid the selection bounds, from where it starts along
+    // Z to where it ends: between it and diameter ``towardsX`` - the centre
+    // line (0), or past the outside for an undercut's overhang - kept within
+    // the solid by the clip paint() sets. Drawn once per half, the two
+    // together fill the band between the selection and its mirror image.
+    function _paintOverlay(ctx, sel, mirrored, towardsX) {
         _beginHalf(ctx, mirrored)
         ctx.globalAlpha = overlayOpacity
         ctx.fillStyle = sel.color
         ctx.beginPath()
         sel.trace(ctx)
-        ctx.lineTo(cx(sel.endZ), cy(0))
-        ctx.lineTo(cx(sel.startZ), cy(0))
+        ctx.lineTo(cx(sel.endZ), cy(towardsX))
+        ctx.lineTo(cx(sel.startZ), cy(towardsX))
         ctx.closePath()
         ctx.fill()
         ctx.restore()

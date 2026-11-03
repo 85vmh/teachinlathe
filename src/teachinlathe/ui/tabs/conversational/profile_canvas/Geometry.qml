@@ -883,6 +883,65 @@ QtObject {
         return pts
     }
 
+    // The outline of the solid the profile and its mirror enclose, as canvas
+    // points: the profile, then its mirror back. At its end the part goes on
+    // along the last diameter, so the outline does too, out to the profile's
+    // smallest Z, before it crosses the centre line - a stretch that turns
+    // back towards Z+ (an undercut) leaves its groove outside the solid
+    // rather than closed off by a line straight across where the profile
+    // ends. Its start likewise, to the profile's largest Z.
+    function solidOutline(segs, cx, cy) {
+        var half = flattenRenderSegments(segs, cx, cy)
+        if (half.length < 2) return half
+        var minX = Infinity, maxX = -Infinity
+        for (var i = 0; i < half.length; i++) {
+            minX = Math.min(minX, half[i].x)
+            maxX = Math.max(maxX, half[i].x)
+        }
+        var first = half[0], last = half[half.length - 1]
+        if (last.x > minX + 1e-6) half.push({ x: minX, y: last.y })
+        if (first.x < maxX - 1e-6) half.unshift({ x: maxX, y: first.y })
+        var axisY = cy(0)
+        var outline = half.slice()
+        for (var m = half.length - 1; m >= 0; m--)
+            outline.push({ x: half[m].x, y: 2 * axisY - half[m].y })
+        return outline
+    }
+
+    // The stretches of the vertical line at canvas ``x``, from ``yFrom`` to
+    // ``yTo``, that run through the solid ``outline`` or along its edge -
+    // with the solid on at least one side - and reach one of the line's two
+    // ends, as [[y1, y2], ...]: a transition across the part from its point
+    // on the profile and from that point's mirror, stopping where it leaves
+    // the part (an undercut's groove) instead of going on into the core
+    // beyond.
+    function solidSpansFromEnds(outline, x, yFrom, yTo) {
+        var lo = Math.min(yFrom, yTo), hi = Math.max(yFrom, yTo)
+        var cuts = [lo, hi]
+        for (var i = 0, j = outline.length - 1; i < outline.length; j = i++) {
+            var a = outline[j], b = outline[i]
+            if (x < Math.min(a.x, b.x) - 1e-6 || x > Math.max(a.x, b.x) + 1e-6) continue
+            if (Math.abs(b.x - a.x) < 1e-6) { cuts.push(a.y); cuts.push(b.y) }
+            else cuts.push(a.y + (b.y - a.y) * (x - a.x) / (b.x - a.x))
+        }
+        cuts = cuts.filter(function(y) { return y >= lo && y <= hi })
+        cuts.sort(function(p, q) { return p - q })
+        var spans = []
+        for (var k = 0; k + 1 < cuts.length; k++) {
+            var y1 = cuts[k], y2 = cuts[k + 1]
+            if (y2 - y1 < 1e-6) continue
+            var mid = (y1 + y2) / 2
+            if (!pointInPolygon(x - 1, mid, outline) && !pointInPolygon(x + 1, mid, outline)) continue
+            if (spans.length > 0 && Math.abs(spans[spans.length - 1][1] - y1) < 1e-6)
+                spans[spans.length - 1][1] = y2
+            else
+                spans.push([y1, y2])
+        }
+        return spans.filter(function(span) {
+            return span[0] <= lo + 0.5 || span[1] >= hi - 0.5
+        })
+    }
+
     // Even-odd point-in-polygon; ``pts`` is a closed outline of {x, y}.
     function pointInPolygon(px, py, pts) {
         var inside = false

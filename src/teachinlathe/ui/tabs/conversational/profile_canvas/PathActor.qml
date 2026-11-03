@@ -5,6 +5,8 @@ QtObject {
     property real scale: 1
     property var cx
     property var cy
+    // Geometry: the solid's outline, which the lines across are kept within
+    required property var geometry
     property color strokeColor: "#333333"
     property real lineWidth: 1
     property bool mirrorAcrossCenterline: false
@@ -79,10 +81,18 @@ QtObject {
             var endZ = renderSegs[renderSegs.length - 1].z
             joins = joins.slice(1).filter(function(j) { return Math.abs(j.z - endZ) > 1e-6 })
         }
+        // each only as far as it crosses the part from its point on the
+        // profile: not over the groove an undercut leaves, nor on past it
+        // through the core under the groove
+        var outline = geometry.solidOutline(renderSegs, cx, cy)
         ctx.beginPath()
         for (var k = 0; k < joins.length; k++) {
-            ctx.moveTo(cx(joins[k].z), cy(joins[k].x))
-            ctx.lineTo(cx(joins[k].z), cy(-joins[k].x))
+            var x = cx(joins[k].z)
+            var spans = geometry.solidSpansFromEnds(outline, x, cy(joins[k].x), cy(-joins[k].x))
+            for (var n = 0; n < spans.length; n++) {
+                ctx.moveTo(x, spans[n][0])
+                ctx.lineTo(x, spans[n][1])
+            }
         }
         ctx.stroke()
     }

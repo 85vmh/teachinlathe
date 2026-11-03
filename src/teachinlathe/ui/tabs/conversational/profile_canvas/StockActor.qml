@@ -474,7 +474,11 @@ QtObject {
         ctx.lineWidth = outlineWidth
         ctx.setLineDash([])
         ctx.beginPath()
-        ctx.moveTo(hasProfile && !isId ? Math.max(right, cx(profileEndZ())) : left, bottom)
+        // from where the profile ends - not its smallest Z, which an undercut
+        // puts further in, under the overhang the skin goes on over
+        var skinFrom = hasProfile && !isId
+                ? Math.max(right, cx(Number(renderSegs[renderSegs.length - 1].z))) : left
+        ctx.moveTo(skinFrom, bottom)
         ctx.lineTo(right, bottom)
         ctx.lineTo(right, top)
         if (faceZ > 0) {

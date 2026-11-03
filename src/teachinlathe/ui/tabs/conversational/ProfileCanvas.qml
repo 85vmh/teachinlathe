@@ -591,6 +591,7 @@ Canvas {
         scale: root._scale
         cx: root._cx
         cy: root._cy
+        geometry: geom
         mirrorAcrossCenterline: root.mirrorAcrossCenterline
         showTransitions: root.showTransitions
         showEnds: root.showProfileEnds
@@ -690,6 +691,7 @@ Canvas {
     HighlightActor {
         id: highlightActor
         primitives: root._resolvedPrimitives
+        renderSegs: root._renderSegs
         selectedPrimIndex: root.selectedPrimIndex
         selectedBlendIndex: root.selectedBlendIndex
         profileType: root.profileType
@@ -807,37 +809,38 @@ Canvas {
         var segs = root._renderSegs
         if (!segs || segs.length < 2) return null
 
-        var lower = geom.flattenRenderSegments(segs, _cx, _cy)
-        var outline = lower.slice()
-        for (var m = lower.length - 1; m >= 0; m--)
-            outline.push({ x: lower[m].x, y: 2 * _originY - lower[m].y })
-        if (!geom.pointInPolygon(px, py, outline)) return null
+        if (!geom.pointInPolygon(px, py, geom.solidOutline(segs, _cx, _cy))) return null
 
-        // Fold the click onto the lower half, then take the nearest segment
-        // among those spanning its Z; vertical ones span none, so they only
-        // win when nothing else does.
+        // Fold the click onto the lower half, then look along its Z for the
+        // profile: the stretch the solid ends at outward from the click, or,
+        // with none outward - under an undercut's overhang - the one it ends
+        // at inward, the stretch that turns back. Only if the profile does not
+        // cross the click's Z at all (vertical stretches cross none), the
+        // nearest segment.
         var foldedY = _originY + Math.abs(py - _originY)
-        var best = null
-        var bestDistance = Infinity
-        var bestSpans = false
+        var outward = null, outwardY = Infinity
+        var inward = null, inwardY = -Infinity
+        var nearest = null, nearestDistance = Infinity
         var prevZ = 0
         var prevX = 0
         for (var i = 0; i < segs.length; i++) {
             var s = segs[i]
             if (s.type !== "move") {
-                var startX = _cx(prevZ)
-                var spans = px >= Math.min(startX, _cx(s.z)) && px <= Math.max(startX, _cx(s.z))
-                var distance = _distToRenderSeg(px, foldedY, s, prevZ, prevX)
-                if ((spans && !bestSpans) || (spans === bestSpans && distance < bestDistance)) {
-                    best = s
-                    bestDistance = distance
-                    bestSpans = spans
+                var pts = geom.flattenRenderSegments([{ type: "move", z: prevZ, x: prevX }, s], _cx, _cy)
+                for (var k = 0; k + 1 < pts.length; k++) {
+                    var a = pts[k], b = pts[k + 1]
+                    if (Math.abs(b.x - a.x) < 1e-6 || px < Math.min(a.x, b.x) || px > Math.max(a.x, b.x)) continue
+                    var y = a.y + (b.y - a.y) * (px - a.x) / (b.x - a.x)
+                    if (y >= foldedY && y < outwardY) { outward = s; outwardY = y }
+                    if (y < foldedY && y > inwardY) { inward = s; inwardY = y }
                 }
+                var distance = _distToRenderSeg(px, foldedY, s, prevZ, prevX)
+                if (distance < nearestDistance) { nearest = s; nearestDistance = distance }
             }
             prevZ = s.z
             prevX = s.x
         }
-        return best
+        return outward || inward || nearest
     }
 
     // ── Touch: two-finger pinch zooms, and pans with the fingers ──────────────
