@@ -9,6 +9,7 @@ authors = [
 ]
 description = "TeachInLathe - A LinuxCNC controller for TeachIn Lathes"
 readme = "README.md"
+license = "GPL-3.0-or-later"
 version = "0.0.1"
 
 packages = [
