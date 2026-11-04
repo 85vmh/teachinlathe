@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.conversational
+import tabs.conversational.define_radial_profile
 import common.touchable_input
 import theme
 import common
@@ -63,8 +64,27 @@ Item {
     function primUpdated(idx, newData) {
         var arr = JSON.parse(JSON.stringify(root.primitives))
         arr[idx] = newData
+        _keepOneCornerBlend(arr, idx)
         root.primitives = _renumber(arr)
         root.emitSave()
+    }
+
+    function _hasBlend(blend) { return !!blend && !!blend.type && blend.type !== "none" }
+
+    // A corner before a groove has two cards that can give it a blend: the
+    // primitive ending there and the groove starting there. The one just
+    // edited (``idx``) takes it from the other.
+    function _keepOneCornerBlend(arr, idx) {
+        var item = arr[idx]
+        var before = idx > 0 ? arr[idx - 1] : null
+        var after = idx + 1 < arr.length ? arr[idx + 1] : null
+        if (item.type === "grooveTo" && before && _hasBlend(item.right_flank.start_blend)) {
+            if (before.type === "grooveTo") before.left_flank.start_blend = { type: "none" }
+            else if (before.type !== "startPoint") before.blend = { type: "none" }
+        }
+        var endBlend = item.type === "grooveTo" ? item.left_flank.start_blend : item.blend
+        if (item.type !== "startPoint" && after && after.type === "grooveTo" && _hasBlend(endBlend))
+            after.right_flank.start_blend = { type: "none" }
     }
 
     function primDeleted(idx) {
@@ -117,6 +137,9 @@ Item {
             } else if (item.type === "arcTo") {
                 currentX = item.x_end !== undefined ? Number(item.x_end) : 0
                 currentZ = item.z_end !== undefined ? Number(item.z_end) : 0
+            } else if (item.type === "grooveTo") {
+                currentX = Number(item.left_flank.x_start)
+                currentZ = Number(item.left_flank.z_start)
             }
         }
         return { x: currentX, z: currentZ }
@@ -130,6 +153,14 @@ Item {
         if (primType === "lineTo") {
             newPrim = { type: "lineTo", primitive_id: 0, input: "xz", angle: 0,
                         x_end: rx, z_end: rz, blend: { type: "none" } }
+        } else if (primType === "grooveTo") {
+            // 3 wide and 2 deep on the radius, into the part from where the profile is
+            var bottomX = root.profileType === "id" ? rx + 4 : Math.max(0, rx - 4)
+            newPrim = { type: "grooveTo", primitive_id: 0,
+                        right_flank: { x_start: 0, z_start: 0, angle: 0, start_blend: { type: "none" } },
+                        bottom: { x_end_right: bottomX, x_end_left: bottomX,
+                                  blend_right: { type: "none" }, blend_left: { type: "none" } },
+                        left_flank: { x_start: rx, z_start: rz - 3, angle: 0, start_blend: { type: "none" } } }
         } else {
             newPrim = { type: "arcTo", primitive_id: 0, direction: "cw", arc_radius: 10,
                         x_end: rx, z_end: rz, x_center: 0, z_center: 0, blend: { type: "none" } }
@@ -365,6 +396,7 @@ Item {
                                             if (md.type === "startPoint") return startPointComp
                                             if (md.type === "lineTo")     return lineToComp
                                             if (md.type === "arcTo")      return arcToComp
+                                            if (md.type === "grooveTo")   return grooveToComp
                                             return null
                                         }
                                         onLoaded: {
@@ -450,23 +482,27 @@ Item {
                     // Add primitive buttons
                     Item {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 80
+                        Layout.preferredHeight: 146
 
-                        RowLayout {
+                        GridLayout {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.verticalCenterOffset: -4
                             anchors.leftMargin: 16
                             anchors.rightMargin: 16
-                            spacing: Theme.margin
+                            columns: 3
+                            columnSpacing: Theme.margin
+                            rowSpacing: Theme.spacingSmall
 
                             Repeater {
                                 model: [
                                     { label: "LineTo", direction: "Above", type: "lineTo", iconEnd: Images.url("move_up_icon.svg") },
                                     { label: "ArcTo", direction: "Above", type: "arcTo", iconEnd: Images.url("move_up_icon.svg") },
+                                    { label: "Groove", direction: "Above", type: "grooveTo", iconEnd: Images.url("move_up_icon.svg") },
                                     { label: "LineTo", direction: "Below", type: "lineTo", iconEnd: Images.url("move_down_icon.svg") },
-                                    { label: "ArcTo", direction: "Below", type: "arcTo", iconEnd: Images.url("move_down_icon.svg") }
+                                    { label: "ArcTo", direction: "Below", type: "arcTo", iconEnd: Images.url("move_down_icon.svg") },
+                                    { label: "Groove", direction: "Below", type: "grooveTo", iconEnd: Images.url("move_down_icon.svg") }
                                 ]
 
                                 delegate: Button {
@@ -618,6 +654,7 @@ Item {
     Component { id: startPointComp; StartPointCard {} }
     Component { id: lineToComp;     LineToCard {}     }
     Component { id: arcToComp;      ArcToCard {}      }
+    Component { id: grooveToComp;   GrooveProfileCard { startFromProfile: true } }
     Component { id: chamferFilletBlendComp; ChamferFilletBlendCard {} }
     Component { id: undercutDin509BlendComp; UndercutDin509BlendCard {} }
 }

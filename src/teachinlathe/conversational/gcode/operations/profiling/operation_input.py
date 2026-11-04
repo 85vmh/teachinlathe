@@ -25,6 +25,7 @@ from teachinlathe.conversational.model.data_types import (
 from teachinlathe.tooling.model.data_types import CuttingTool, MountedTool
 
 from .geometry import StartPoint, build_path
+from .profile_grooves import expanded_primitives
 
 log = logging.getLogger(__name__)
 
@@ -150,7 +151,7 @@ def resolve_profile(cut: ProfileCut) -> list:
     without one."""
     if cut.profile is None:
         return []
-    return build_path(cut.profile.profile_primitives, cut.profile.profile_type)
+    return build_path(expanded_primitives(cut.profile.profile_primitives), cut.profile.profile_type)
 
 
 def profile_path(cut: ProfileCut):

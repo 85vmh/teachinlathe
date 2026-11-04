@@ -3,6 +3,7 @@
 // Coordinate convention: Z+ → right, X+ → down (lathe radial, outward = positive).
 // Scale and origin are computed from fixed viewport margins.
 import QtQuick
+import TeachInLathe
 import theme
 import tabs.conversational.profile_canvas
 import "profile_canvas/brokenstock.js" as Broken
@@ -247,7 +248,8 @@ Canvas {
     property real _originX: 0     // canvas px → world Z = 0
     property real _originY: 0     // canvas px → world X = 0
     property var  _renderSegs: [] // cached render segments in world coords
-    property var  _resolvedPrimitives: []
+    property var  _resolvedPrimitives: [] // one per card
+    property var  _drawnPrimitives: []    // what is drawn: the grooves expanded, each with its ``source`` card
     property bool _manualView: false  // when true, primitive/size changes don't reset fit
     // false until fitToScreen has placed the drawing: until then only the
     // background is painted, or the first frame of a screen would show it at
@@ -344,7 +346,7 @@ Canvas {
         _fitPending = false
         if (width <= 0 || height <= 0) return
         var hasProfile = primitives && primitives.length > 0
-        var b = hasProfile ? geom.computeBounds(_resolvedPrimitives) : null
+        var b = hasProfile ? geom.computeBounds(_drawnPrimitives) : null
         // nothing to fit: drawn as it stands
         if (hasProfile && !b) { _showUnfitted(); return }
         // with no profile, the workpiece and the tool's positions, if any
@@ -520,7 +522,17 @@ Canvas {
 
     function _rebuildRenderCache() {
         _resolvedPrimitives = geom.resolvePrimitives(primitives)
-        _renderSegs = geom.buildRenderSegments(_resolvedPrimitives, root.profileType)
+        _drawnPrimitives = _hasGroove()
+                ? geom.resolvePrimitives(ConversationalViewModel.expandedProfile(primitives))
+                : _resolvedPrimitives
+        _renderSegs = geom.buildRenderSegments(_drawnPrimitives, root.profileType)
+    }
+
+    function _hasGroove() {
+        for (var i = 0; primitives && i < primitives.length; i++) {
+            if (primitives[i] && primitives[i].type === "grooveTo") return true
+        }
+        return false
     }
 
     // ── Actor orchestration ───────────────────────────────────────────────────
@@ -691,6 +703,7 @@ Canvas {
     HighlightActor {
         id: highlightActor
         primitives: root._resolvedPrimitives
+        drawnPrimitives: root._drawnPrimitives
         renderSegs: root._renderSegs
         selectedPrimIndex: root.selectedPrimIndex
         selectedBlendIndex: root.selectedBlendIndex
@@ -704,25 +717,26 @@ Canvas {
 
     // ── Hit testing ────────────────────────────────────────────────────────────
     function _hitTest(px, py) {
-        var hitPrimitives = root._resolvedPrimitives
+        var hitPrimitives = root._drawnPrimitives
         if (!hitPrimitives || hitPrimitives.length === 0) return -1
         var HIT = 10    // pixel tolerance
         var currentZ = 0
         var currentX = 0
         for (var i = 0; i < hitPrimitives.length; i++) {
             var p = hitPrimitives[i]
+            var card = p.source !== undefined ? p.source : i
             if (p.type === "startPoint") {
                 var startZ = +(p.z_start || 0)
                 var startX = +(p.x_start || 0)
                 var deltaX = px - _cx(startZ)
                 var deltaY = py - _cy(startX)
-                if (deltaX * deltaX + deltaY * deltaY <= HIT * HIT) return i
+                if (deltaX * deltaX + deltaY * deltaY <= HIT * HIT) return card
                 currentZ = startZ
                 currentX = startX
             } else if (p.type === "lineTo") {
                 var endZ = +(p.z_end || 0)
                 var endX = +(p.x_end || 0)
-                if (geom.distToSegment(px, py, _cx(currentZ), _cy(currentX), _cx(endZ), _cy(endX)) <= HIT) return i
+                if (geom.distToSegment(px, py, _cx(currentZ), _cy(currentX), _cx(endZ), _cy(endX)) <= HIT) return card
                 currentZ = endZ
                 currentX = endX
             } else if (p.type === "arcTo") {
@@ -737,7 +751,7 @@ Canvas {
                 var radiusCanvas = Math.sqrt(Math.pow(_cx(currentZ) - centerCanvasX, 2) + Math.pow(_cy(currentX) - centerCanvasY, 2))
                 var startAngle = Math.atan2(_cy(currentX) - centerCanvasY, _cx(currentZ) - centerCanvasX)
                 var endAngle = Math.atan2(_cy(arcEndX) - centerCanvasY, _cx(arcEndZ) - centerCanvasX)
-                if (geom.distToArc(px, py, centerCanvasX, centerCanvasY, radiusCanvas, startAngle, endAngle, !isClockwise) <= HIT) return i
+                if (geom.distToArc(px, py, centerCanvasX, centerCanvasY, radiusCanvas, startAngle, endAngle, !isClockwise) <= HIT) return card
                 currentZ = arcEndZ
                 currentX = arcEndX
             }
@@ -935,7 +949,7 @@ Canvas {
                     hit = root._solidHitTest(mouse.x, mouse.y)
 
                 if (!hit) root.selectionCleared()
-                else if (hit.blend) root.blendSelected(hit.prim)
+                else if (hit.blend && !hit.ofGroove) root.blendSelected(hit.prim)
                 else root.primitiveSelected(hit.prim)
             }
 

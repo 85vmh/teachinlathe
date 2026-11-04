@@ -40,6 +40,13 @@ QtObject {
             } else if (p.type === "arcTo") {
                 currentX = +(p.x_end || 0)
                 currentZ = +(p.z_end || 0)
+            } else if (p.type === "grooveTo") {
+                // one per card: where it ends, for what follows it. Its lines
+                // come from ConversationalViewModel.expandedProfile
+                p.x_end = +(p.left_flank && p.left_flank.x_start || 0)
+                p.z_end = +(p.left_flank && p.left_flank.z_start || 0)
+                currentX = p.x_end
+                currentZ = p.z_end
             }
             out.push(p)
         }
@@ -164,6 +171,8 @@ QtObject {
             p.x_start = diameter
         } else if (p.type === "arcTo") {
             p.x_end = diameter
+        } else if (p.type === "grooveTo") {
+            p.left_flank.x_start = diameter
         } else if (p.type === "lineTo") {
             var mode = String(p.input !== undefined ? p.input : "xz").toLowerCase()
             if (mode !== "az") p.x_end = diameter
@@ -797,7 +806,20 @@ QtObject {
                 logX = aex
             }
         }
+        _toSources(segs, primitives)
         return segs
+    }
+
+    // With grooves expanded, ``prim`` as the cards have it: the primitive a
+    // segment was made for, or a blend's the one that carries it. ``ofGroove``
+    // marks a blend edited in a groove's card, not selected on its own.
+    function _toSources(segs, primitives) {
+        for (var i = 0; i < segs.length; i++) {
+            var p = primitives[segs[i].prim]
+            if (p.source === undefined) continue
+            segs[i].ofGroove = !!segs[i].blend && p.groove_blend
+            segs[i].prim = segs[i].blend ? p.blend_source : p.source
+        }
     }
 
     function walkToIndex(primitives, targetIdx) {
@@ -808,7 +830,7 @@ QtObject {
             if (p.type === "startPoint") {
                 logZ = +(p.z_start || 0)
                 logX = +(p.x_start || 0)
-            } else if (p.type === "lineTo") {
+            } else if (p.type === "lineTo" || p.type === "grooveTo") {
                 logZ = +(p.z_end || 0)
                 logX = +(p.x_end || 0)
             } else if (p.type === "arcTo") {

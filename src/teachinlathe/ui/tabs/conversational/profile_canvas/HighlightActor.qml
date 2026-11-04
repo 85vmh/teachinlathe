@@ -2,6 +2,8 @@ import QtQuick
 
 QtObject {
     property var    primitives: []
+    // what is drawn: the grooves expanded, each with its ``source`` in primitives
+    property var    drawnPrimitives: []
     property int    selectedPrimIndex: -1
     property int    selectedBlendIndex: -1
     property string profileType: "od"
@@ -209,6 +211,57 @@ QtObject {
         }
     }
 
+    // A groove as it is drawn, its blends cut: every segment of it.
+    function _groove(index) {
+        var stretch = []
+        var prevZ = 0
+        var prevX = 0
+        for (var i = 0; i < (renderSegs || []).length; i++) {
+            var s = renderSegs[i]
+            if (s.prim === index && s.type !== "move")
+                stretch.push({ seg: s, fromZ: prevZ, fromX: prevX })
+            prevZ = s.z
+            prevX = s.x
+        }
+        if (stretch.length === 0) return null
+        var dots = []
+        for (var d = 0; d < stretch.length; d++)
+            dots.push(_point(stretch[d].seg.z, stretch[d].seg.x, endPointRadius, highlightFillColor))
+        return {
+            color: highlightStrokeColor, lineWidth: highlightLineWidth,
+            trace: function(ctx) {
+                ctx.moveTo(cx(stretch[0].fromZ), cy(stretch[0].fromX))
+                for (var k = 0; k < stretch.length; k++) {
+                    var part = stretch[k]
+                    if (part.seg.type !== "arc") {
+                        ctx.lineTo(cx(part.seg.z), cy(part.seg.x))
+                        continue
+                    }
+                    var ccx = cx(part.seg.zc)
+                    var ccy = cy(part.seg.xc)
+                    var cr = Math.sqrt(Math.pow(cx(part.fromZ) - ccx, 2) + Math.pow(cy(part.fromX) - ccy, 2))
+                    ctx.arc(ccx, ccy, cr,
+                            Math.atan2(cy(part.fromX) - ccy, cx(part.fromZ) - ccx),
+                            Math.atan2(cy(part.seg.x) - ccy, cx(part.seg.z) - ccx),
+                            part.seg.anticlockwise)
+                }
+            },
+            startZ: stretch[0].fromZ, endZ: stretch[stretch.length - 1].seg.z,
+            points: dots
+        }
+    }
+
+    // What comes after primitive ``index``, for its blend: a groove's first line
+    // when it is a groove.
+    function _nextOf(index) {
+        var next = (index + 1 < primitives.length) ? primitives[index + 1] : null
+        if (!next || next.type !== "grooveTo") return next
+        for (var i = 0; i < (drawnPrimitives || []).length; i++) {
+            if (drawnPrimitives[i].source === index + 1) return drawnPrimitives[i]
+        }
+        return null
+    }
+
     function _selection() {
         if (selectedPrimIndex < 0 && selectedBlendIndex < 0) return null
         if (!primitives) return null
@@ -255,12 +308,13 @@ QtObject {
                              _point(acz, acx, centerPointRadius, highlightCenterColor)]
                 }
             }
+            if (p.type === "grooveTo") return _groove(targetIdx)
             return null
         }
 
         // Blend geometry only (amber)
         if (!p.blend || p.blend.type === "none") return null
-        var bNextP = (targetIdx + 1 < primitives.length) ? primitives[targetIdx + 1] : null
+        var bNextP = _nextOf(targetIdx)
         var bNextPH = geometry.halfXPrim(bNextP)
 
         if (p.type === "startPoint") {

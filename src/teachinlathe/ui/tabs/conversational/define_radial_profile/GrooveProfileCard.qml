@@ -16,7 +16,11 @@ Rectangle {
 
     property var primData: ({})
     property int primIdx: 0
+    property int primCount: 0
     property bool isSelected: false
+    // a groove in a Define Profile: its right flank starts where the profile
+    // has got to, so P1 has no X or Z of its own
+    property bool startFromProfile: false
 
     signal primUpdated(int idx, var data)
     signal openNumPadRequested(var field)
@@ -41,7 +45,7 @@ Rectangle {
 
     function _clone() {
         var d = JSON.parse(JSON.stringify(primData || {}))
-        d.type = "groove"
+        d.type = d.type || "groove"
         if (!d.right_flank) d.right_flank = {}
         if (!d.bottom) d.bottom = {}
         if (!d.left_flank) d.left_flank = {}
@@ -201,6 +205,7 @@ Rectangle {
                 Layout.fillWidth: true
                 point: 1
                 flankStart: true
+                showPosition: !root.startFromProfile
                 xValue: root._value("right_flank", "x_start", 30)
                 zValue: root._value("right_flank", "z_start", 0)
                 angleValue: root._value("right_flank", "angle", 0)

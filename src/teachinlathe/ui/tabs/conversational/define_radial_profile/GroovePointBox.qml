@@ -22,6 +22,8 @@ CanvasBox {
 
     property int    point: 1               // 1..4
     property bool   flankStart: true       // P1, P4: Z and the angle too
+    // false leaves X and Z out: P1 of a groove in a profile, where the profile has got to
+    property bool   showPosition: true
     property real   xValue: 0.0            // a diameter
     property real   zValue: 0.0
     property real   angleValue: 0.0
@@ -40,8 +42,8 @@ CanvasBox {
 
     // the labels' column - the blend's drop-down in it too - each label at
     // its right, by the field it is for; the fields lined up at its right
-    readonly property real labelWidth: Math.max(xLabel.implicitWidth,
-                                                root.flankStart ? zLabel.implicitWidth : 0,
+    readonly property real labelWidth: Math.max(root.showPosition ? xLabel.implicitWidth : 0,
+                                                root.flankStart && root.showPosition ? zLabel.implicitWidth : 0,
                                                 root.flankStart ? angleLabel.implicitWidth : 0,
                                                 blendPicker.comboWidth)
 
@@ -55,6 +57,7 @@ CanvasBox {
 
         Label {
             id: xLabel
+            visible: root.showPosition
             Layout.preferredWidth: root.labelWidth
             horizontalAlignment: Text.AlignRight
             text: root._name("X")
@@ -64,6 +67,7 @@ CanvasBox {
         }
         NumpadField {
             id: xField
+            visible: root.showPosition
             Layout.preferredWidth: 100
             settingName: root.settingPrefix + ".x"
             description: "P" + root.point + " X"
@@ -76,12 +80,13 @@ CanvasBox {
             onValueCommitted: function(value) { root.fieldEdited("x", Number(value)) }
         }
         TeachInButton {
+            visible: root.showPosition
             onClicked: xField.commit(PositionsBridge.teachInX() * 2)
         }
 
         Label {
             id: zLabel
-            visible: root.flankStart
+            visible: root.flankStart && root.showPosition
             Layout.preferredWidth: root.labelWidth
             horizontalAlignment: Text.AlignRight
             text: root._name("Z")
@@ -91,7 +96,7 @@ CanvasBox {
         }
         NumpadField {
             id: zField
-            visible: root.flankStart
+            visible: root.flankStart && root.showPosition
             Layout.preferredWidth: 100
             settingName: root.settingPrefix + ".z"
             description: "P" + root.point + " Z"
@@ -104,7 +109,7 @@ CanvasBox {
             onValueCommitted: function(value) { root.fieldEdited("z", Number(value)) }
         }
         TeachInButton {
-            visible: root.flankStart
+            visible: root.flankStart && root.showPosition
             onClicked: zField.commit(PositionsBridge.teachInZ())
         }
 

@@ -37,7 +37,7 @@ from teachinlathe.ui.tabs.conversational.OperationEditorViewModel import (
 )
 from teachinlathe.ui.tabs.conversational.ProgramListModel import OperationListModel, ProgramListModel
 from teachinlathe.ui.tabs.conversational.qml_adapter import (
-    build_selected_program_summary, groove_outline_payload, operation_rows,
+    build_selected_program_summary, expanded_profile_payload, groove_outline_payload, operation_rows,
 )
 from teachinlathe.ui.tabs.programs.backplot import tool_source
 from teachinlathe.ui.tabs.programs.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
@@ -742,6 +742,12 @@ class ConversationalViewModel(QObject):
         """The first groove of a radial profile's ``primitives`` as its
         canvas draws it (qml_adapter.groove_outline_payload)."""
         return groove_outline_payload(to_py(primitives))
+
+    @pyqtSlot("QVariant", result="QVariant")
+    def expandedProfile(self, primitives):
+        """A Define Profile's ``primitives`` with its grooves expanded, as its
+        canvas draws them (qml_adapter.expanded_profile_payload)."""
+        return expanded_profile_payload(to_py(primitives))
 
     def _open_dxf_import(self, op_index):
         self._open_editor(op_index, DXF_IMPORT)

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 from teachinlathe.conversational.model.data_types import (
-    ArcTo, BlendType, Groove, LineTo, ProfileBlend, ProfilePrimitive, StartPoint,
+    ArcTo, BlendType, Groove, GrooveBottom, GrooveFlank, LineTo, ProfileBlend, ProfilePrimitive, StartPoint,
 )
 
 from .geometry import SAME_MM
@@ -98,11 +98,18 @@ def groove_points(groove: Groove) -> Tuple[At, At, At, At]:
     """P1-P4 of ``groove``: where its right flank starts, that flank's
     bottom, the left flank's bottom and where the left flank starts - each
     flank's bottom along Z as far in as its angle leans it."""
-    right, bottom, left = groove.right_flank, groove.bottom, groove.left_flank
-    right_dz = abs((right.x_start - bottom.x_end_right) / 2.0 * math.tan(math.radians(abs(right.angle))))
+    right = groove.right_flank
+    return groove_points_from(At.on_diameter(right.x_start, right.z_start), right.angle, groove.bottom,
+                              groove.left_flank)
+
+
+def groove_points_from(start: At, right_angle: float, bottom: GrooveBottom, left: GrooveFlank) -> Tuple[At, At, At, At]:
+    """P1-P4 of a groove whose right flank starts at ``start``, leaning at
+    ``right_angle``."""
+    right_dz = abs((start.x - bottom.x_end_right) / 2.0 * math.tan(math.radians(abs(right_angle))))
     left_dz = abs((left.x_start - bottom.x_end_left) / 2.0 * math.tan(math.radians(abs(left.angle))))
-    return (At.on_diameter(right.x_start, right.z_start),
-            At.on_diameter(bottom.x_end_right, right.z_start - right_dz),
+    return (start,
+            At.on_diameter(bottom.x_end_right, start.z - right_dz),
             At.on_diameter(bottom.x_end_left, left.z_start + left_dz),
             At.on_diameter(left.x_start, left.z_start))
 
@@ -163,6 +170,13 @@ def corner_cut(corner: At, leg_a_end: At, leg_b_end: At, blend: ProfileBlend) ->
     return CornerCut(t1, t2, center, amount, clockwise=delta > 0)
 
 
+def cut_arc(cut: CornerCut, primitive_id: int) -> ArcTo:
+    """The fillet ``cut`` as a primitive."""
+    return ArcTo(primitive_id=primitive_id, primitive_type="arcTo", direction="cw" if cut.clockwise else "ccw",
+                 x_end=cut.end.x, z_end=cut.end.z, x_center=cut.center.x, z_center=cut.center.z,
+                 arc_radius=cut.radius, blend=_NO_BLEND)
+
+
 def _end_of(primitive: ProfilePrimitive) -> At:
     if isinstance(primitive, StartPoint):
         return At.on_diameter(primitive.x_start, primitive.z_start)
@@ -196,10 +210,7 @@ class _Outline:
         if cut.center is None:
             self.line(part, cut.end)
             return
-        self.primitives.append(ArcTo(
-            primitive_id=len(self.primitives) + 1, primitive_type="arcTo",
-            direction="cw" if cut.clockwise else "ccw", x_end=cut.end.x, z_end=cut.end.z,
-            x_center=cut.center.x, z_center=cut.center.z, arc_radius=cut.radius, blend=_NO_BLEND))
+        self.primitives.append(cut_arc(cut, len(self.primitives) + 1))
         self.parts.append(part)
 
 

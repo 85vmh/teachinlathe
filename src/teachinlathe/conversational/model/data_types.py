@@ -1161,6 +1161,8 @@ class ProfilePrimitive:
             return LineTo.from_dict(data)
         if t in ("arcTo", "arc"):
             return ArcTo.from_dict(data)
+        if t == "grooveTo":
+            return GrooveTo.from_dict(data)
         raise ValueError(f"Unknown primitive type: {t!r}")
 
     def to_dict(self) -> Dict[str, Any]:
@@ -1428,6 +1430,40 @@ class GrooveBottom:
         return {"x_end_right": float(self.x_end_right), "x_end_left": float(self.x_end_left),
                 "blend_right": _radial_blend_dict(self.blend_right),
                 "blend_left": _radial_blend_dict(self.blend_left)}
+
+
+@dataclass
+class GrooveTo(ProfilePrimitive):
+    """A groove in a Define Profile, from where the profile has got to (never
+    stored) down its right flank, across its bottom and up its left flank, to
+    where ``left_flank`` starts. ``right_flank`` gives its angle and the blend
+    on the corner it starts from; its x_start and z_start mean nothing. The
+    primitives it is drawn and cut along: profile_grooves.expand_grooves."""
+    right_flank: GrooveFlank
+    bottom: GrooveBottom
+    left_flank: GrooveFlank
+
+    @property
+    def x_end(self) -> float:
+        return self.left_flank.x_start
+
+    @property
+    def z_end(self) -> float:
+        return self.left_flank.z_start
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "GrooveTo":
+        return GrooveTo(primitive_id=int(data.get("primitive_id", 0)), primitive_type="grooveTo",
+                        right_flank=GrooveFlank.from_dict(data.get("right_flank")),
+                        bottom=GrooveBottom.from_dict(data.get("bottom")),
+                        left_flank=GrooveFlank.from_dict(data.get("left_flank")))
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = super().to_dict()
+        d.update({"right_flank": self.right_flank.to_dict(), "bottom": self.bottom.to_dict(),
+                  "left_flank": self.left_flank.to_dict(),
+                  "x_end": float(self.x_end), "z_end": float(self.z_end)})
+        return d
 
 
 @dataclass

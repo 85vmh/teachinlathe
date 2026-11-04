@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from typing import List
 
 from teachinlathe.conversational.gcode.operations.profiling import groove_outline as outline
-from teachinlathe.conversational.model.data_types import Groove, TurnableOperation, radial_primitives_from
+from teachinlathe.conversational.gcode.operations.profiling.profile_grooves import expand_grooves
+from teachinlathe.conversational.model.data_types import (
+    Groove, GrooveTo, ProfilePrimitive, TurnableOperation, radial_primitives_from,
+)
 from teachinlathe.conversational.model.operation_titles import operation_title
 
 
@@ -65,6 +68,21 @@ def operation_rows(program, tools, stock_problems=()) -> List[OperationRow]:
 
 def _point(at) -> dict:
     return {"z": at.z, "x": at.x}
+
+
+def expanded_profile_payload(raw_primitives) -> list:
+    """A Define Profile's ``raw_primitives`` - the dicts its editor has - with
+    its grooves expanded (profile_grooves), as ProfileCanvas draws them: each
+    with ``source`` the index of the primitive it was made for, ``blend_source``
+    that of the one whose blend it carries, and ``groove_blend`` whether that
+    one is a groove. As they came when they cannot be read."""
+    try:
+        primitives = [ProfilePrimitive.from_dict(raw) for raw in raw_primitives]
+    except (ValueError, TypeError, AttributeError):
+        return raw_primitives
+    return [{**expanded.primitive.to_dict(), "source": expanded.source, "blend_source": expanded.blend_source,
+             "groove_blend": isinstance(primitives[expanded.blend_source], GrooveTo)}
+            for expanded in expand_grooves(primitives)]
 
 
 def groove_outline_payload(raw_primitives) -> dict:

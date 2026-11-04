@@ -2,6 +2,7 @@ from teachinlathe.conversational.model.data_types import ArcTo, BlendType, Defin
 
 from ..config import fmt as _f
 from .profiling.geometry import line_end, undercut_din509
+from .profiling.profile_grooves import expanded_primitives
 
 
 def _undercut_lines(blend, prev_x, prev_z, end_x, end_z, next_x, next_z):
@@ -27,11 +28,12 @@ def generate_define_profile_gcode(op: DefineProfile):
     if not isinstance(op.profile_primitives[0], StartPoint):
         return []
 
+    primitives = expanded_primitives(op.profile_primitives)
     profile_id = int(op.profile_id)
     lines = [f"O{profile_id} SUB"]
     body_lines = []
 
-    start = op.profile_primitives[0]
+    start = primitives[0]
     cx = float(start.x_start)
     cz = float(start.z_start)
     blend_type = start.blend.blend_type
@@ -46,7 +48,7 @@ def generate_define_profile_gcode(op: DefineProfile):
     else:
         body_lines.append(f"G0 X{_f(cx)} Z{_f(cz)}")
 
-    rest = op.profile_primitives[1:]
+    rest = primitives[1:]
     for idx, primitive in enumerate(rest):
         if isinstance(primitive, LineTo):
             end_x, end_z = line_end(primitive, cx, cz)
