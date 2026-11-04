@@ -88,27 +88,16 @@ ToolLibraryPane {
     // last.
     headerActionsRightMargin: Theme.spacingSmall + Theme.spacing
     headerActions: [
-        Rectangle {
+        // Drawn as Program Operations' Add New, the "+" alone.
+        OperationIconTextButton {
             width: Theme.buttonHeight
-            height: Theme.buttonHeight
-            radius: Theme.radius
-            color: addArea.pressed ? Theme.primaryPressed : Theme.primary
-            border.width: Theme.hairline
-            border.color: addArea.pressed ? Theme.primaryPressed : Theme.primary
-
-            Text {
-                anchors.centerIn: parent
-                text: "+"
-                color: Theme.foregroundOnAccent
-                font.pixelSize: Theme.fontTitle
-                font.bold: true
-            }
-
-            MouseArea {
-                id: addArea
-                anchors.fill: parent
-                onClicked: root.addRequested()
-            }
+            iconSource: Images.url("add_icon.svg")
+            compact: true
+            tint: Theme.success
+            color: Theme.surface
+            buttonHeight: Theme.buttonHeight
+            iconSize: 28
+            onClicked: root.addRequested()
         }
     ]
 
