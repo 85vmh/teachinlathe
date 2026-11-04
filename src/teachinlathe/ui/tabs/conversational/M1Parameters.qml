@@ -18,7 +18,6 @@ GroupBox {
     property bool   include_m1: true
     // where it stops, a PauseToInspect.Position
     property int    inspect_position: PauseToInspect.G28
-    property bool   stop_spindle: false
     // offer a third place to stop: where the tool is (IN_PLACE) - Drilling's
     // and Tapping's
     property bool   allowStayInPlace: false
@@ -37,7 +36,6 @@ GroupBox {
         m1Data = data || {}
         include_m1       = (m1Data.include_m1       !== undefined) ? !!m1Data.include_m1       : true
         inspect_position = (m1Data.inspect_position !== undefined) ? m1Data.inspect_position   : PauseToInspect.G28
-        stop_spindle     = (m1Data.stop_spindle     !== undefined) ? !!m1Data.stop_spindle     : false
         _loading = false
     }
 
@@ -46,8 +44,7 @@ GroupBox {
         root.saveRequested({
             m1_parameters: {
                 include_m1:       !!include_m1,
-                inspect_position: inspect_position,
-                stop_spindle:     !!stop_spindle
+                inspect_position: inspect_position
             }
         })
     }

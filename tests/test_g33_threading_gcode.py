@@ -68,7 +68,6 @@ def _op(**overrides):
         "m1Parameters": M1Parameters(
             include_m1=False,
             inspect_position=PredefinedPosition.G28,
-            stop_spindle=False,
         ),
     }
     values.update(overrides)
@@ -99,7 +98,6 @@ def test_g33_threading_generator_emits_m1_after_each_g33_for_each_start():
             m1Parameters=M1Parameters(
                 include_m1=True,
                 inspect_position=PredefinedPosition.G30,
-                stop_spindle=False,
             ),
         )
     )

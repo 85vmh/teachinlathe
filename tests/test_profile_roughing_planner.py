@@ -357,8 +357,7 @@ def test_gcode_comments_are_never_nested(profile, tool, pass_type):
 
 
 def test_gcode_stops_for_inspection_after_each_pass():
-    op = operation("neck", CCMT_95, m1_parameters={"include_m1": True, "inspect_position": "G28",
-                                                    "stop_spindle": False})
+    op = operation("neck", CCMT_95, m1_parameters={"include_m1": True, "inspect_position": "G28"})
     plan = plan_profile_roughing(op)
     lines = generate_profile_roughing_gcode(op)
 

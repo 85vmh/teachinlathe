@@ -75,7 +75,6 @@ def apply_m1_update(m1, payload):
             m1.inspect_position = _coerce_enum(payload["inspect_position"], InspectPosition, lambda v: str(v).upper())
         except Exception:
             pass
-    _set_attr_if_present(m1, payload, "stop_spindle", coerce=bool)
 
 
 def apply_cutting_update(cutting, payload):

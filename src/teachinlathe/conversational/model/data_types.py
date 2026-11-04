@@ -453,7 +453,6 @@ class PositionAt(Operation):
 class M1Parameters:
     include_m1: bool
     inspect_position: InspectPosition
-    stop_spindle: bool
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "M1Parameters":
@@ -466,14 +465,12 @@ class M1Parameters:
         return M1Parameters(
             include_m1=bool(data.get("include_m1", True)),
             inspect_position=inspect_position,
-            stop_spindle=bool(data.get("stop_spindle", False))
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "include_m1": bool(self.include_m1),
             "inspect_position": self.inspect_position.value,
-            "stop_spindle": bool(self.stop_spindle)
         }
 
 

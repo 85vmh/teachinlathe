@@ -27,7 +27,8 @@ _M1_COMMENTS = {
 def m1_gcode(prefix: str, m1_params: M1Parameters) -> str:
     """M1 P<where the tool waits>, and what it does as a comment, at a point
     the operator may Pause to Inspect. M1 is remapped (subroutines/m1_remap.ngc):
-    with Optional Stop on, it stops the spindle, waits there, then starts the
-    spindle again as it was and goes back to where the tool was before going on."""
+    with Optional Stop on, it always stops the spindle and waits there; after
+    cycle start it starts the spindle again as it was, goes back to where the tool
+    was and stops once more (M0), so the operator sees it there before going on."""
     p = inspect_position_int(m1_params)
     return f"{prefix}M1 P{p} ({_M1_COMMENTS[p]})"

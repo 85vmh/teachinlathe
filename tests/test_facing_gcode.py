@@ -39,7 +39,7 @@ def facing(doc=1.0, retract=2.0, optional=False, new_datum=False, include_m1=Fal
         geometryParameters=GeometryParameters(
             xStart=X_START, zStart=Z_START, xEnd=X_END, zEnd=Z_END),
         m1Parameters=M1Parameters(
-            include_m1=include_m1, inspect_position=InspectPosition.G30, stop_spindle=False),
+            include_m1=include_m1, inspect_position=InspectPosition.G30),
         zEndBecomesNewZ0=new_datum,
     )
 

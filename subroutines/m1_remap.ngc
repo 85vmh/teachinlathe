@@ -20,6 +20,7 @@ o<m1_remap> sub
     o<asked> endif
 
     #<was_diameter> = #<_lathe_diameter_mode>
+    #<was_incremental> = #<_incremental>
     #<spindle_on>   = #<_spindle_on>
     #<spindle_cw>   = #<_spindle_cw>
     #<x_return>     = #<_x> (a radius, in G7 too)
@@ -42,10 +43,14 @@ o<m1_remap> sub
     o<start> endif
 
     G8 (the return point is a radius)
+    G90 (and absolute, in G91 too)
     G0 X#<x_return> Z#<z_return>
     o<mode> if [#<was_diameter>]
         G7
     o<mode> endif
+    o<distance> if [#<was_incremental>]
+        G91
+    o<distance> endif
 
     o<wait> if [#<spindle_on>]
         M66 P1 L3 Q5 (wait max 5 seconds until motion.digital-in-01, spindle at speed, turns ON)

@@ -44,7 +44,6 @@ def test_groove_roughing_default_roundtrip_and_json_shape():
     assert data["m1_parameters"] == {
         "include_m1": False,
         "inspect_position": "G28",
-        "stop_spindle": False,
     }
 
     loaded = Operation.from_dict(data)
