@@ -1,6 +1,15 @@
 import QtQuick
 
 QtObject {
+    // two lengths the same, as the G-code's SAME_MM (profiling/geometry.py)
+    readonly property real sameMm: 0.0001
+    // the sine of the least change of way that makes a corner
+    readonly property real minTurn: 0.001
+
+    function isIdProfile(profileType) {
+        return String(profileType || "od").toLowerCase() === "id"
+    }
+
     function resolveLineEndpoint(startX, startZ, p) {
         var mode = String((p && p.input !== undefined) ? p.input : "xz").toLowerCase()
         if (mode !== "xz" && mode !== "ax" && mode !== "az") mode = "xz"
@@ -58,13 +67,13 @@ QtObject {
     // resolvePrimitives returns, so a line given by angle counts by where it
     // actually ends.
 
-    function _resolvedEndX(p) {
+    function resolvedEndX(p) {
         return p.type === "startPoint" ? +(p.x_start || 0) : +(p.x_end || 0)
     }
 
     function _isCylinder(resolved, i, diameter) {
         if (i < 1 || i >= resolved.length || resolved[i].type !== "lineTo") return false
-        var startX = _resolvedEndX(resolved[i - 1])
+        var startX = resolvedEndX(resolved[i - 1])
         var endX = +(resolved[i].x_end || 0)
         if (Math.abs(startX - endX) > 1e-6) return false
         return diameter === undefined || Math.abs(endX - diameter) <= 1e-6
@@ -82,15 +91,15 @@ QtObject {
         while (_isCylinder(resolved, last + 1, diameter)) last++
         return {
             first: first, last: last, diameter: diameter,
-            zStart: _resolvedEndZ(resolved[first - 1]),
+            zStart: resolvedEndZ(resolved[first - 1]),
             zEnd: +(resolved[last].z_end || 0),
             // the selected line's own stretch, for marking it
-            zSelectedStart: _resolvedEndZ(resolved[index - 1]),
+            zSelectedStart: resolvedEndZ(resolved[index - 1]),
             zSelectedEnd: +(resolved[index].z_end || 0)
         }
     }
 
-    function _resolvedEndZ(p) {
+    function resolvedEndZ(p) {
         return p.type === "startPoint" ? +(p.z_start || 0) : +(p.z_end || 0)
     }
 
@@ -112,7 +121,7 @@ QtObject {
         // an arc ending where the run starts: its start stays put
         var before = out[run.first - 1]
         if (before.type === "arcTo" && run.first >= 2)
-            _refitArc(before, _resolvedEndZ(resolved[run.first - 2]), _resolvedEndX(resolved[run.first - 2]),
+            _refitArc(before, resolvedEndZ(resolved[run.first - 2]), resolvedEndX(resolved[run.first - 2]),
                       +(before.z_end || 0), diameter, false)
         // an arc starting where the run ends: its end stays put
         var after = out[run.last + 1]
@@ -179,7 +188,8 @@ QtObject {
         }
     }
 
-    function undercutBlendValue(blend, field, defaultValue) {
+    function undercutBlendValue(blend, field) {
+        var defaultValue = BlendDefaults.values.undercut_din509[field]
         if (!blend) return defaultValue
         return blend[field] !== undefined ? +(blend[field] || defaultValue) : defaultValue
     }
@@ -211,14 +221,8 @@ QtObject {
             fZMin = Math.min(fZMin, vz); fZMax = Math.max(fZMax, vz)
             fXMin = Math.min(fXMin, vx); fXMax = Math.max(fXMax, vx)
             if (p.type === "lineTo" && p.blend && p.blend.type === "undercut_din509") {
-                var undercutGeom = undercutDin509Geom(
-                    prevZ, prevX / 2,
-                    vz, vx / 2,
-                    halfXPrim(_nextPrim(primitives, i)),
-                    undercutBlendValue(p.blend, "undercut_radius", 0.4),
-                    undercutBlendValue(p.blend, "undercut_depth", 0.4),
-                    undercutBlendValue(p.blend, "undercut_length", 2.5)
-                )
+                var undercutGeom = _undercutGeomOf(prevZ, prevX / 2, vz, vx / 2,
+                                                   halfXPrim(_nextPrim(primitives, i)), p.blend)
                 if (undercutGeom) {
                     fZMin = Math.min(fZMin, undercutGeom.entryZ)
                     fZMax = Math.max(fZMax, undercutGeom.entryZ)
@@ -552,6 +556,122 @@ QtObject {
         }
     }
 
+    // undercutDin509Geom where the corner can have it, as the G-code's
+    // fitting_undercut: the line in a cylinder, the line out rising away from
+    // the material, the undercut ending within both. Null anywhere else.
+    function fittingUndercutGeom(startZ, startX, cornerZ, cornerX, nextP, blend, isID) {
+        if (!_undercutCorner(startZ, startX, cornerZ, cornerX, nextP, isID)) return null
+        var geom = _undercutGeomOf(startZ, startX, cornerZ, cornerX, nextP, blend)
+        if (!geom) return null
+        var nextZ = +(nextP.z_end || 0), nextX = +(nextP.x_end || 0)
+        var fitsBefore = Math.hypot(geom.entryX - cornerX, geom.entryZ - cornerZ)
+                         <= Math.hypot(startX - cornerX, startZ - cornerZ) + sameMm
+        var fitsAfter = Math.hypot(geom.exitX - cornerX, geom.exitZ - cornerZ)
+                        <= Math.hypot(nextX - cornerX, nextZ - cornerZ) + sameMm
+        return fitsBefore && fitsAfter ? geom : null
+    }
+
+    function _undercutGeomOf(startZ, startX, cornerZ, cornerX, nextP, blend) {
+        return undercutDin509Geom(startZ, startX, cornerZ, cornerX, nextP,
+                                  undercutBlendValue(blend, "undercut_radius"),
+                                  undercutBlendValue(blend, "undercut_depth"),
+                                  undercutBlendValue(blend, "undercut_length"))
+    }
+
+    function _undercutCorner(startZ, startX, cornerZ, cornerX, nextP, isID) {
+        if (!nextP || nextP.type !== "lineTo") return false
+        if (Math.abs(cornerX - startX) > sameMm || Math.abs(cornerZ - startZ) < sameMm) return false
+        var nextX = +(nextP.x_end || 0)
+        return (isID ? cornerX - nextX : nextX - cornerX) >= sameMm
+    }
+
+    // ── A profile's corners ──────────────────────────────────────────────────
+    // For each primitive the corner it ends, for the blends it can have and
+    // the way their icons turn:
+    //   blendable          a next primitive, and the way changes in the corner
+    //   undercutAvailable  the corner's shape can have a DIN 509 undercut
+    //   undercutProblem    why the undercut it has is not cut, or ""
+    //   rotation           degrees clockwise a chamfer's or a fillet's icon
+    //                      turns, its legs on the corner's on screen
+    //   scaleX, scaleY     the flips of an undercut's: its surface on the line
+    //                      in, its shoulder on the line out
+    // On screen Z+ is right and X+ down. A start point's corner is with the
+    // outside: an OD profile's comes from a smaller diameter, an ID's a larger.
+    function cornersOf(primitives, profileType) {
+        var isID = isIdProfile(profileType)
+        var resolved = resolvePrimitives(primitives)
+        var out = []
+        var atZ = 0, atX = 0
+        for (var i = 0; i < resolved.length; i++) {
+            var p = resolved[i]
+            var endZ = resolvedEndZ(p)
+            var endX = resolvedEndX(p) / 2
+            var back = _backLeg(p, atZ, atX, endZ, endX, isID)
+            var next = i + 1 < resolved.length ? resolved[i + 1] : null
+            var forward = _forwardLeg(next, endZ, endX)
+            out.push(_corner(p, back, forward, atZ, atX, endZ, endX, next, isID))
+            atZ = endZ
+            atX = endX
+        }
+        return out
+    }
+
+    function _unit(z, x) {
+        var length = Math.hypot(z, x)
+        return length < sameMm ? null : { z: z / length, x: x / length }
+    }
+
+    // The way along an arc at the point (z, x) on it, radius space.
+    function _arcWay(arc, z, x) {
+        var rz = z - (+(arc.z_center || 0))
+        var rx = x - (+(arc.x_center || 0)) / 2
+        return arc.direction === "cw" ? _unit(-rx, rz) : _unit(rx, -rz)
+    }
+
+    function _backLeg(p, atZ, atX, endZ, endX, isID) {
+        if (p.type === "startPoint") return { z: 0, x: isID ? 1 : -1 }
+        if (p.type === "lineTo") return _unit(atZ - endZ, atX - endX)
+        if (p.type === "arcTo") {
+            var way = _arcWay(p, endZ, endX)
+            return way ? { z: -way.z, x: -way.x } : null
+        }
+        return null
+    }
+
+    function _forwardLeg(next, endZ, endX) {
+        if (!next) return null
+        if (next.type === "lineTo") return _unit(+(next.z_end || 0) - endZ, (+(next.x_end || 0)) / 2 - endX)
+        if (next.type === "arcTo") return _arcWay(next, endZ, endX)
+        if (next.type === "grooveTo") {
+            // its right flank, down to the bottom and leaning to Z-
+            var down = (+(next.bottom && next.bottom.x_end_right || 0)) / 2 - endX
+            var lean = Math.tan(Math.abs(+(next.right_flank && next.right_flank.angle || 0)) * Math.PI / 180)
+            return _unit(-Math.abs(down) * lean, down)
+        }
+        return null
+    }
+
+    function _corner(p, back, forward, atZ, atX, endZ, endX, next, isID) {
+        var corner = { blendable: false, undercutAvailable: false, undercutProblem: "",
+                       rotation: isID ? 90 : 180, scaleX: 1, scaleY: isID ? 1 : -1 }
+        if (back && forward) {
+            corner.blendable = Math.abs(back.z * forward.x - back.x * forward.z) >= minTurn
+            var towardZ = back.z + forward.z, towardX = back.x + forward.x
+            corner.rotation = towardX >= 0 ? (towardZ >= 0 ? 0 : 90) : (towardZ >= 0 ? 270 : 180)
+            corner.scaleX = back.z >= 0 ? 1 : -1
+            corner.scaleY = forward.x > 0 ? -1 : 1
+        }
+        var nextHalf = halfXPrim(next)
+        corner.undercutAvailable = p.type === "lineTo" && _undercutCorner(atZ, atX, endZ, endX, nextHalf, isID)
+        if (p.blend && p.blend.type === "undercut_din509") {
+            if (!corner.undercutAvailable)
+                corner.undercutProblem = "Needs a cylinder, then a shoulder"
+            else if (!fittingUndercutGeom(atZ, atX, endZ, endX, nextHalf, p.blend, isID))
+                corner.undercutProblem = "Does not fit this corner"
+        }
+        return corner
+    }
+
     function chamferGeomLine(logZ, logX, ez, ex, nextP, cw) {
         var sdz = ez - logZ
         var sdx = ex - logX
@@ -620,7 +740,7 @@ QtObject {
         if (!primitives || primitives.length === 0) {
             return segs
         }
-        var isID = (String(profileType || "od").toLowerCase() === "id")
+        var isID = isIdProfile(profileType)
 
         var logZ = 0
         var logX = 0
@@ -702,12 +822,9 @@ QtObject {
                         segs.push({ prim: i, type: "line", z: ez, x: ex })
                     }
                 } else if (p.blend && p.blend.type === "undercut_din509") {
-                    var undercutRadius = undercutBlendValue(p.blend, "undercut_radius", 0.4)
-                    var undercutDepth = undercutBlendValue(p.blend, "undercut_depth", 0.4)
-                    var undercutLength = undercutBlendValue(p.blend, "undercut_length", 2.5)
                     var nextPrimU = _nextPrim(primitives, i)
                     var nextPrimUH = halfXPrim(nextPrimU)
-                    var undercutGeom = undercutDin509Geom(logZ, logX / 2, ez, ex / 2, nextPrimUH, undercutRadius, undercutDepth, undercutLength)
+                    var undercutGeom = fittingUndercutGeom(logZ, logX / 2, ez, ex / 2, nextPrimUH, p.blend, isID)
                     if (undercutGeom) {
                         segs.push({ prim: i, type: "line", z: undercutGeom.entryZ, x: undercutGeom.entryX * 2 })
                         // Only the undercut's entry and exit are transitions of
@@ -720,7 +837,7 @@ QtObject {
                                             interior: undercutInterior, blend: true })
                             } else {
                                 segs.push({ prim: i, type: "arc", z: undercutSegment.z, x: undercutSegment.x * 2,
-                                            zc: undercutSegment.cz, xc: undercutSegment.cx * 2, r: undercutRadius,
+                                            zc: undercutSegment.cz, xc: undercutSegment.cx * 2, r: undercutSegment.r,
                                             anticlockwise: undercutSegment.anticlockwise, interior: undercutInterior, blend: true })
                             }
                         }

@@ -5,18 +5,21 @@
      stroke-linecap="round"
      stroke-linejoin="round">
 
+  <!-- Same extent as chamfer.svg, as high as undercut.svg: x 96..416, y 96..416.
+       The two black lines equally long: 130 -->
+
   <!-- Top horizontal (black) -->
-  <line x1="480" y1="80" x2="320" y2="80"
-        stroke="#000000" stroke-width="32"/>
+  <line x1="416" y1="96" x2="286" y2="96"
+        stroke="#000000" stroke-width="22.86"/>
 
   <!-- Left vertical (black) -->
-  <line x1="80" y1="320" x2="80" y2="480"
-        stroke="#000000" stroke-width="32"/>
+  <line x1="96" y1="286" x2="96" y2="416"
+        stroke="#000000" stroke-width="22.86"/>
 
-  <!-- Large fillet (orange, radius 240) -->
-  <path d="M320 80
-           A240 240 0 0 0 80 320"
+  <!-- Fillet (orange, radius 190) -->
+  <path d="M286 96
+           A190 190 0 0 0 96 286"
         stroke="#F2992E"
-        stroke-width="32"/>
+        stroke-width="22.86"/>
 
 </svg>

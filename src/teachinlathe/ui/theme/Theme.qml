@@ -61,6 +61,7 @@ QtObject {
     readonly property int barHeightSmall: 42  // the rapid-override strip
     readonly property int scrollFadeHeight: 40 // scrolling lists, top and bottom
     readonly property int hairline:       1   // separators
+    readonly property real disabledOpacity: 0.35
 
     // Four steps, from what is actually drawn: 6 (41 uses), 8 (29), 4 (12),
     // 10 (7). The first scale here guessed 2/6/10 and had no token for 8,
@@ -138,6 +139,13 @@ QtObject {
     // ── Semantic ────────────────────────────────────────────────────────────
 
     readonly property color success:    "#2e7d32"   // 5 - confirm
+    readonly property color blendStroke: "#D97706"  // a selected blend's line on the canvas
+    //: blendStroke at 15% over white: a blend's card
+    readonly property color blendSoft:  "#F9EBDA"
+    //: blendStroke at 30%, see-through: what stands for a blend on another card
+    readonly property color blendTint:  "#4DD97706"
+    readonly property color ink:        "#000000"   // a card's number
+    readonly property color cardDivider: "#d0d0d0"  // inside a Define Profile's card
     readonly property color danger:     "#c62828"   // 10 - delete, abort
     readonly property color dangerSoft: "#ffebee"   // 4
     readonly property color dangerPressed: "#b71c1c"

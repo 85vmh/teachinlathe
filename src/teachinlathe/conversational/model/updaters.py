@@ -3,6 +3,7 @@ from teachinlathe.conversational.model.data_types import (
     FinishingDirection,
     GrooveFinishingStrategy,
     GrooveRoughingStrategy,
+    ImportDxfProfile,
     MoveSequence,
     PassType,
     InspectPosition,
@@ -329,7 +330,9 @@ def apply_define_profile_update(op, payload):
     apply_operation_update(op, payload)
     _set_attr_if_present(op, payload, "dxfFilePath", coerce=str)
     _set_attr_if_present(op, payload, "profile_id", coerce=int)
-    if "profile_type" in payload and payload["profile_type"] is not None:
+    # OD or ID is chosen when a Define Profile is created, and stays. Only a
+    # DXF's is set afterwards, on its editor.
+    if isinstance(op, ImportDxfProfile) and payload.get("profile_type") is not None:
         try:
             op.profile_type = _coerce_enum(payload["profile_type"], ProfilingType, lambda v: str(v).lower())
         except Exception:

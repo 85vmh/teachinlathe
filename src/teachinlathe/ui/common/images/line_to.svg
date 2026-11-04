@@ -5,18 +5,18 @@
      stroke-linecap="round"
      stroke-linejoin="round">
 
-  <!-- end circles -->
-  <circle cx="420" cy="120" r="24" fill="#000"/>
-  <circle cx="100" cy="420" r="24" fill="#000"/>
+  <!-- end circles: 6 px across at 56 px -->
+  <circle cx="420" cy="120" r="27.43" fill="#000"/>
+  <circle cx="100" cy="420" r="27.43" fill="#000"/>
 
-  <!-- shaft (2 o'clock -> 8 o'clock) -->
-  <line x1="402.50" y1="136.42" x2="179.99" y2="344.97"
-        stroke="#000" stroke-width="12"/>
+  <!-- shaft (2 o'clock -> 8 o'clock), half a line's width clear of the first circle -->
+  <line x1="383.31" y1="154.40" x2="201.30" y2="325.03"
+        stroke="#000" stroke-width="22.86"/>
 
-  <!-- sharp isosceles arrow head (base ~ 2/3 of side), tip intersects target circle ~20% -->
-  <path d="M113.99 406.87
-           L158.10 321.64
-           L201.88 368.30
+  <!-- isosceles arrow head, base 84, its tip half a line's width clear of the second circle -->
+  <path d="M128.35 393.42
+           L172.58 294.39
+           L230.03 355.67
            Z"
         fill="#000"/>
 

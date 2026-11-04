@@ -1,14 +1,16 @@
-from teachinlathe.conversational.model.data_types import ArcTo, BlendType, DefineProfile, LineTo, StartPoint
+from teachinlathe.conversational.model.data_types import (
+    ArcTo, BlendType, DefineProfile, LineTo, ProfilingType, StartPoint,
+)
 
 from ..config import fmt as _f
-from .profiling.geometry import line_end, undercut_din509
+from .profiling.geometry import fitting_undercut, line_end
 from .profiling.profile_grooves import expanded_primitives
 
 
-def _undercut_lines(blend, prev_x, prev_z, end_x, end_z, next_x, next_z):
+def _undercut_lines(blend, prev_x, prev_z, end_x, end_z, next_x, next_z, is_id):
     """(lines, exit X, exit Z) of the DIN 509 undercut ``blend`` cuts into
     the corner at (end_x, end_z) - the G-code's X, diameters - or None."""
-    undercut = undercut_din509(prev_x / 2, prev_z, end_x / 2, end_z, next_x / 2, next_z, blend)
+    undercut = fitting_undercut(prev_x / 2, prev_z, end_x / 2, end_z, next_x / 2, next_z, blend, is_id)
     if undercut is None:
         return None
     arc = "G3" if undercut.anticlockwise else "G2"
@@ -57,7 +59,8 @@ def generate_define_profile_gcode(op: DefineProfile):
                 next_prim = rest[idx + 1] if idx + 1 < len(rest) else None
                 if next_prim is not None and isinstance(next_prim, LineTo):
                     next_x, next_z = line_end(next_prim, end_x, end_z)
-                    undercut = _undercut_lines(primitive.blend, cx, cz, end_x, end_z, next_x, next_z)
+                    undercut = _undercut_lines(primitive.blend, cx, cz, end_x, end_z, next_x, next_z,
+                                               op.profile_type is ProfilingType.ID)
                     if undercut:
                         lines_of_it, cx, cz = undercut
                         body_lines.extend(lines_of_it)

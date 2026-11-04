@@ -4,6 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.conversational
 import tabs.conversational.define_radial_profile
+import tabs.conversational.profile_canvas
 import common.touchable_input
 import theme
 import common
@@ -17,6 +18,7 @@ Item {
     property var editor: null
     property int    opIndex:             -1
     property var    opData:              null
+    readonly property bool isDxfProfile: !!opData && opData.type === "importDxfProfile"
     property int    profileId:           0
     property string profileType:         "od"
     property bool   _loading:            false
@@ -24,8 +26,18 @@ Item {
     property var    workpiece:           ({})
     property int    selectedPrimIndex:   -1
     property int    selectedBlendIndex:  -1
+    // The selected primitive shown on the canvas by its end point alone, as
+    // when chosen on its card; picked on the canvas, its whole stretch.
+    property bool   selectedEndOnly:     true
     // The card swiped open on its Delete (a SwipeRow), or null
     property var    openSwipeRow:        null
+    // What each primitive's end corner can have, and how its blend's icon turns
+    readonly property var _corners: cornerGeometry.cornersOf(root.primitives, root.profileType)
+
+    readonly property int addRowHeight:    80
+    readonly property int addButtonHeight: 60
+
+    Geometry { id: cornerGeometry }
 
     signal backRequested()
     signal openNumPadRequested(var field)
@@ -69,6 +81,25 @@ Item {
         root.emitSave()
     }
 
+    function _selectPrimitive(idx, endOnly) {
+        root.selectedEndOnly    = endOnly
+        root.selectedPrimIndex  = idx
+        root.selectedBlendIndex = -1
+    }
+
+    // A primitive's blend button: which blend, then on it with what that starts with
+    function _chooseBlend(idx) {
+        blendPopup.primIdx = idx
+        blendPopup.corner = root._corners[idx] || null
+        blendPopup.open()
+    }
+
+    function _addBlend(idx, blendType) {
+        var d = JSON.parse(JSON.stringify(root.primitives[idx]))
+        d.blend = Object.assign({ type: blendType }, BlendDefaults.values[blendType])
+        root.primUpdated(idx, d)
+    }
+
     function _hasBlend(blend) { return !!blend && !!blend.type && blend.type !== "none" }
 
     // A corner before a groove has two cards that can give it a blend: the
@@ -94,8 +125,7 @@ Item {
         root.primitives = _renumber(arr)
         var newLen = root.primitives.length
         var nextIdx = (newLen === 0) ? -1 : Math.min(idx, newLen - 1)
-        root.selectedPrimIndex  = nextIdx
-        root.selectedBlendIndex = -1
+        _selectPrimitive(nextIdx, true)
         root.emitSave()
         if (nextIdx >= 0) {
             Qt.callLater(function() {
@@ -170,8 +200,7 @@ Item {
                         : Math.max(1, insertIdx)
         arr.splice(actualIdx, 0, newPrim)
         root.primitives = _renumber(arr)
-        root.selectedPrimIndex  = actualIdx
-        root.selectedBlendIndex = -1
+        _selectPrimitive(actualIdx, true)
         root.emitSave()
         Qt.callLater(function() {
             Qt.callLater(function() {
@@ -262,8 +291,10 @@ Item {
                     anchors.fill: parent
                     spacing: Theme.spacingSmall
 
-                    // Profile ID + Type row
+                    // Profile ID + Type row: a DXF's alone. A Define Profile
+                    // got its id and its type when it was created.
                     Item {
+                        visible: root.isDxfProfile
                         Layout.fillWidth: true
                         Layout.preferredHeight: 80
                         Layout.leftMargin: 12; Layout.rightMargin: 12
@@ -326,6 +357,7 @@ Item {
 
                     // Divider
                     Rectangle {
+                        visible: root.isDxfProfile
                         Layout.fillWidth: true; height: 1
                         color: Theme.surfaceAlt
                         Layout.leftMargin: 4; Layout.rightMargin: 4
@@ -357,15 +389,19 @@ Item {
 
                             Repeater {
                                 id: primRepeater
-                                model: root.primitives
+                                // by their number, not the array: an edit, a new array,
+                                // keeps the cards; only adding and deleting remake them
+                                model: root.primitives.length
 
                                 delegate: Column {
-                                    property var md: modelData
+                                    property var md: root.primitives[index]
                                     property int mi: index
                                     width: parent ? parent.width : 0
                                     spacing: Theme.spacingSmall
 
                                     onMdChanged: {
+                                        // past the end, for a moment, as a card is deleted
+                                        if (!md) return
                                         if (primLdr.item)  primLdr.item.primData  = md
                                         if (blendLdr.item) blendLdr.item.primData = md
                                     }
@@ -402,11 +438,13 @@ Item {
                                         onLoaded: {
                                             item.primData   = md
                                             item.primIdx    = mi
-                                            item.primCount  = Qt.binding(function() { return root.primitives.length })
                                             item.isSelected = Qt.binding(function() { return root.selectedPrimIndex === mi })
+                                            if ("corner" in item) {
+                                                item.corner = Qt.binding(function() { return root._corners[mi] || null })
+                                                item.blendRequested.connect(root._chooseBlend)
+                                            }
                                             item.tapped.connect(function() {
-                                                root.selectedPrimIndex  = mi
-                                                root.selectedBlendIndex = -1
+                                                root._selectPrimitive(mi, true)
                                             })
                                             item.primUpdated.connect(root.primUpdated)
                                             item.openNumPadRequested.connect(root.openNumPadRequested)
@@ -430,9 +468,9 @@ Item {
                                             root.openSwipeRow = null
                                             var d = JSON.parse(JSON.stringify(root.primitives[mi]))
                                             d.blend = { type: "none" }
-                                            root.primUpdated(mi, d)
                                             if (root.selectedBlendIndex === mi)
                                                 root.selectedBlendIndex = -1
+                                            root.primUpdated(mi, d)
                                         }
 
                                     Loader {
@@ -451,6 +489,7 @@ Item {
                                             item.primData   = md
                                             item.primIdx    = mi
                                             item.isSelected = Qt.binding(function() { return root.selectedBlendIndex === mi })
+                                            item.corner     = Qt.binding(function() { return root._corners[mi] || null })
                                             item.tapped.connect(function() {
                                                 root.selectedBlendIndex = mi
                                                 root.selectedPrimIndex  = -1
@@ -482,33 +521,29 @@ Item {
                     // Add primitive buttons
                     Item {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 146
+                        Layout.preferredHeight: root.addRowHeight
 
-                        GridLayout {
+                        RowLayout {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.verticalCenterOffset: -4
                             anchors.leftMargin: 16
                             anchors.rightMargin: 16
-                            columns: 3
-                            columnSpacing: Theme.margin
-                            rowSpacing: Theme.spacingSmall
+                            spacing: Theme.margin
 
                             Repeater {
                                 model: [
                                     { label: "LineTo", direction: "Above", type: "lineTo", iconEnd: Images.url("move_up_icon.svg") },
                                     { label: "ArcTo", direction: "Above", type: "arcTo", iconEnd: Images.url("move_up_icon.svg") },
-                                    { label: "Groove", direction: "Above", type: "grooveTo", iconEnd: Images.url("move_up_icon.svg") },
                                     { label: "LineTo", direction: "Below", type: "lineTo", iconEnd: Images.url("move_down_icon.svg") },
-                                    { label: "ArcTo", direction: "Below", type: "arcTo", iconEnd: Images.url("move_down_icon.svg") },
-                                    { label: "Groove", direction: "Below", type: "grooveTo", iconEnd: Images.url("move_down_icon.svg") }
+                                    { label: "ArcTo", direction: "Below", type: "arcTo", iconEnd: Images.url("move_down_icon.svg") }
                                 ]
 
                                 delegate: Button {
                                     id: addPrimitiveButton
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: 60
+                                    Layout.preferredHeight: root.addButtonHeight
                                     enabled: modelData.direction === "Above" ? root.selectedPrimIndex > 0 : root.primitives.length > 0
                                     font.pixelSize: Theme.fontBody
                                     font.family: "Noto Sans"
@@ -523,7 +558,7 @@ Item {
                                             sourceSize.height: 36
                                             source: Images.url("add_op_icon.svg")
                                             fillMode: Image.PreserveAspectFit
-                                            opacity: addPrimitiveButton.enabled ? 1.0 : 0.35
+                                            opacity: addPrimitiveButton.enabled ? 1.0 : Theme.disabledOpacity
                                         }
 
                                         Text {
@@ -535,7 +570,7 @@ Item {
                                             verticalAlignment: Text.AlignVCenter
                                             wrapMode: Text.WordWrap
                                             maximumLineCount: 1
-                                            opacity: addPrimitiveButton.enabled ? 1.0 : 0.35
+                                            opacity: addPrimitiveButton.enabled ? 1.0 : Theme.disabledOpacity
                                         }
 
                                         Image {
@@ -545,7 +580,7 @@ Item {
                                             sourceSize.height: 32
                                             source: modelData.iconEnd
                                             fillMode: Image.PreserveAspectFit
-                                            opacity: addPrimitiveButton.enabled ? 1.0 : 0.35
+                                            opacity: addPrimitiveButton.enabled ? 1.0 : Theme.disabledOpacity
                                         }
                                     }
 
@@ -602,9 +637,9 @@ Item {
                         workpiece:          root.workpiece
                         selectedPrimIndex:  root.selectedPrimIndex
                         selectedBlendIndex: root.selectedBlendIndex
+                        selectionEndOnly:   root.selectedEndOnly
                         onPrimitiveSelected: function(idx) {
-                            root.selectedPrimIndex  = idx
-                            root.selectedBlendIndex = -1
+                            root._selectPrimitive(idx, false)
                         }
                         onBlendSelected: function(idx) {
                             root.selectedBlendIndex = idx
@@ -651,6 +686,12 @@ Item {
     }
 
     // ── Card component references ────────────────────────────────────────────────
+    BlendTypePopup {
+        id: blendPopup
+        property int primIdx: -1
+        onBlendChosen: function(blendType) { root._addBlend(primIdx, blendType) }
+    }
+
     Component { id: startPointComp; StartPointCard {} }
     Component { id: lineToComp;     LineToCard {}     }
     Component { id: arcToComp;      ArcToCard {}      }

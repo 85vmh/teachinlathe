@@ -1316,7 +1316,7 @@ class DefineProfile(Operation):
 
     def display_name(self) -> str:
         """What the operation is called, in the program's list and its G-code."""
-        return f"{self.NAME_PREFIX} {_od_or_id(self.profile_type)} Profile (P{self.profile_id})"
+        return f"{self.NAME_PREFIX} Profile [{_od_or_id(self.profile_type)} P{self.profile_id}]"
 
 
 @dataclass

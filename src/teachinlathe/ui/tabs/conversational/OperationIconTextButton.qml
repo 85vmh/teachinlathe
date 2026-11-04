@@ -30,7 +30,7 @@ Rectangle {
     color: (enabled && area.pressed) ? Theme.accentSoft : "transparent"
     border.width: Theme.hairline
     border.color: enabled ? (area.pressed ? Theme.accentBorder : Theme.outlineStrong) : Theme.outlineDisabled
-    opacity: enabled ? 1.0 : 0.35
+    opacity: enabled ? 1.0 : Theme.disabledOpacity
 
     RowLayout {
         id: contentRow

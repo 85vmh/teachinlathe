@@ -1,4 +1,5 @@
 import QtQuick
+import theme
 
 QtObject {
     property var    primitives: []
@@ -6,6 +7,8 @@ QtObject {
     property var    drawnPrimitives: []
     property int    selectedPrimIndex: -1
     property int    selectedBlendIndex: -1
+    // the selected primitive shown by the point it ends at alone
+    property bool   endPointOnly: false
     property string profileType: "od"
     property real   scale: 1
     property var    cx
@@ -18,7 +21,7 @@ QtObject {
     property color highlightStrokeColor: "#E53935"
     property color highlightFillColor: "#E53935"
     property color highlightCenterColor: "#888888"
-    property color blendColor: "#D97706"
+    property color blendColor: Theme.blendStroke
     property real highlightLineWidth: 2
     property real blendLineWidth: 2
     property real startPointRadius: 4
@@ -275,6 +278,14 @@ QtObject {
         var p = primitives[targetIdx]
 
         if (selectedPrimIndex >= 0) {
+            if (endPointOnly) {
+                return {
+                    color: highlightStrokeColor, lineWidth: highlightLineWidth,
+                    points: [_point(geometry.resolvedEndZ(p), geometry.resolvedEndX(p),
+                                    p.type === "startPoint" ? startPointRadius : endPointRadius,
+                                    highlightFillColor)]
+                }
+            }
             // Full theoretical primitive (ignore blend trimming)
             if (p.type === "startPoint") {
                 var sz = +(p.z_start || 0)
@@ -320,7 +331,7 @@ QtObject {
         if (p.type === "startPoint") {
             var spLogZ = +(p.z_start || 0)
             var spLX2 = +(p.x_start || 0) / 2
-            var isID = String(profileType || "od").toLowerCase() === "id"
+            var isID = geometry.isIdProfile(profileType)
 
             if (p.blend.type === "chamfer") {
                 var scw = +(p.blend.chamfer_width || 0)
@@ -352,11 +363,8 @@ QtObject {
                                : geometry.filletGeom(logZ, logX / 2, ez, ex / 2, bNextPH, fr))
             }
             if (p.blend.type === "undercut_din509") {
-                var undercutRadius = geometry.undercutBlendValue(p.blend, "undercut_radius", 0.4)
-                var undercutDepth = geometry.undercutBlendValue(p.blend, "undercut_depth", 0.4)
-                var undercutLength = geometry.undercutBlendValue(p.blend, "undercut_length", 2.5)
-                return _undercut(geometry.undercutDin509Geom(logZ, logX / 2, ez, ex / 2, bNextPH,
-                                                             undercutRadius, undercutDepth, undercutLength))
+                return _undercut(geometry.fittingUndercutGeom(logZ, logX / 2, ez, ex / 2, bNextPH, p.blend,
+                                                              geometry.isIdProfile(profileType)))
             }
             return null
         }

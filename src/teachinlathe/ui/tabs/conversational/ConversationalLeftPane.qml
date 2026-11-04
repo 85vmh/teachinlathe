@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import theme
 import common
+import TeachInLathe
 
 Rectangle {
     id: root
@@ -39,6 +40,7 @@ Rectangle {
     signal operationSelected(int index)
     signal addOperationRequested()
     signal operationTypeChosen(string type, int insertIndex)
+    signal defineProfileChosen(string profileType, int insertIndex)
     signal generateToggled(int index, bool checked)
     signal optionalToggled(int index, bool checked)
     signal deleteOperationRequested(int index)
@@ -143,6 +145,13 @@ Rectangle {
         sourceComponent: AddOperationPopup {
             id: addPopup
             onOperationChosen: function(type, insertIndex) {
+                // a Define Profile is OD or ID from the start: asked first
+                if (type === "defineProfile") {
+                    newProfilePopup.profileId = ConversationalViewModel.nextProfileId()
+                    newProfilePopup.insertIndex = insertIndex
+                    newProfilePopup.open()
+                    return
+                }
                 root._scrollToLastPending = true
                 root.operationTypeChosen(type, insertIndex)
             }
@@ -157,6 +166,14 @@ Rectangle {
                 item.insertBelowIndex = current >= 0 ? current + 1 : -1
                 if (item.open) item.open()
             }
+        }
+    }
+
+    NewProfilePopup {
+        id: newProfilePopup
+        onProfileTypeChosen: function(profileType, insertIndex) {
+            root._scrollToLastPending = true
+            root.defineProfileChosen(profileType, insertIndex)
         }
     }
 

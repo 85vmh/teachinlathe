@@ -21,6 +21,9 @@ TextField {
     }
     property var    validatorObject: null
     property bool   seedNumpadFromValue: false
+    // ``value`` is bound to a model that valueCommitted updates: a commit leaves
+    // the binding in place, and the field shows what the model then says
+    property bool   valueFollowsModel: false
 
     // control vizual reutilizabil
     property int    hAlign: Text.AlignRight     // aliniere text
@@ -126,6 +129,12 @@ TextField {
             var s = String(v), pos = 0
             var st = validatorObject.validate(s, pos)
             if (st !== Validator.Acceptable && st !== 2) return false
+        }
+        if (valueFollowsModel) {
+            valueCommitted(v)
+            var shown = formatter(value)
+            if (text !== shown) text = shown
+            return true
         }
         if (value !== v) {
             value = v

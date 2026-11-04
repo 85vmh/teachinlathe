@@ -1,22 +1,13 @@
 // LineToCard.qml
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
-import tabs.conversational
-import common.touchable_input
 import theme
-import common
 
-Rectangle {
+PrimitiveCard {
     id: root
 
-    property var  primData:   ({})
-    property int  primIdx:    0
-    property int  primCount:  0
-    property bool isSelected: false
+    iconName: "line_to.svg"
 
-    readonly property string _blendType:
-        (primData && primData.blend && primData.blend.type) ? primData.blend.type : "none"
     readonly property string _inputMode: _normalizedInput()
     readonly property string _firstFieldName:  _inputMode === "xz" ? "x_end" : "angle"
     readonly property string _secondFieldName: _inputMode === "ax" ? "x_end" : "z_end"
@@ -27,49 +18,9 @@ Rectangle {
     readonly property string _secondDescription:
         _secondFieldName === "x_end" ? "Line End on X" : "Line End on Z"
 
-    signal primUpdated(int idx, var data)
-    signal openNumPadRequested(var field)
-    signal tapped()
-
-    // ── Colors ────────────────────────────────────────────────────────────────
-    readonly property color clrCardBg:            Theme.surfaceAlt
-    readonly property color clrCardBgSel:         Theme.selection
-    readonly property color clrBorder:            Theme.outline
-    readonly property color clrBorderSel:         Theme.accent
-    readonly property color clrSeparator:         "#d0d0d0"
-    readonly property color clrBlendBtnHover:     Theme.accentSoft
-    readonly property color clrBlendBtnHoverBorder: Theme.accentBorder
-    readonly property color clrBtnBorder:         Theme.outlineStrong
-
-    // ── Sizes ─────────────────────────────────────────────────────────────────
-    readonly property int szCardRadius:    8
-    readonly property int szCardPadding:   24
-    readonly property int szMargin:        12
-    readonly property int szSpacing:       8
-    readonly property int szIconArea:      56
-    readonly property int szIconSize:      56
-    readonly property int szFont:          16
-    readonly property int szGridRowGap:    20
-    readonly property int szGridColGap:    8
-    readonly property int szGridWidth:     196
-    readonly property int szInputWidth:    120
-    readonly property int szTabHeight:     46
-    readonly property int szTabFont:       16
-    readonly property int szSepInset:      4
-    readonly property int szSepGap:        8
-    readonly property int szBtn:           50
-    readonly property int szBtnIcon:       36
-    readonly property int szBtnIconSrc:    112
-
-    color:        isSelected ? clrCardBgSel : clrCardBg
-    radius:       szCardRadius
-    border.color: isSelected ? clrBorderSel : clrBorder
-    border.width: isSelected ? 2 : 1
-    height:       ltRow.implicitHeight + szCardPadding
-
-    TapHandler { onTapped: root.tapped() }
-
-    DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
+    readonly property color clrTabBorder: "#cbd5e1"
+    readonly property color clrTabText:   "#1f2937"
+    readonly property int   szTabHeight:  46
 
     function _normalizedInput() {
         var mode = String(primData && primData.input !== undefined ? primData.input : "xz").toLowerCase()
@@ -112,109 +63,88 @@ Rectangle {
         root.primUpdated(primIdx, d)
     }
 
-    RowLayout {
-        id: ltRow
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: szMargin }
-        spacing: szSpacing
+    function _openField(field) {
+        root.tapped()
+        root.openNumPadRequested(field)
+    }
 
+    ColumnLayout {
+        spacing: CardMetrics.rowGap
+        Layout.fillWidth: true
+
+        // from where the first label starts to where the last input ends
         Item {
-            implicitWidth: szIconArea
-            Layout.fillHeight: true
-
-            Text {
-                anchors.top: parent.top
-                anchors.left: parent.left
-                text: (primIdx + 1) + "."
-                font.pixelSize: szFont; font.bold: true
-            }
-
-            Image {
-                anchors.centerIn: parent
-                width: szIconSize; height: szIconSize
-                sourceSize.width: szIconSize; sourceSize.height: szIconSize
-                source: Images.url("line_to.svg")
-                fillMode: Image.PreserveAspectFit; smooth: true
-            }
-        }
-
-        Rectangle {
-            width: Theme.hairline; Layout.fillHeight: true
-            Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
-            Layout.leftMargin: 0; Layout.rightMargin: szSepGap
-            color: clrSeparator
-        }
-
-        ColumnLayout {
-            spacing: szGridRowGap
             Layout.fillWidth: true
+            Layout.preferredHeight: root.szTabHeight
 
             Rectangle {
                 id: inputModeBar
-                Layout.fillWidth: true
-                Layout.preferredHeight: szTabHeight
+                x: firstCell.x + firstCell.contentLeft
+                width: secondCell.x + secondCell.contentRight - x
+                height: parent.height
                 radius: Theme.radiusLarge
                 color: "transparent"
 
                 Row {
                     anchors.fill: parent
 
-                Repeater {
-                    model: [
-                        { label: "X & Z End",     mode: "xz" },
-                        { label: "Angle & X End",     mode: "ax" },
-                        { label: "Angle & Z End",     mode: "az" }
-                    ]
-                    delegate: Item {
-                        id: tabItem
-                        readonly property bool selected: root._inputMode === modelData.mode
-                        readonly property color tabColor: selected ? "#1f6feb" : Theme.surface
-                        readonly property bool isFirst: index === 0
-                        readonly property bool isLast: index === 2
-                        width: inputModeBar.width / 3
-                        height: inputModeBar.height
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: (tabItem.isFirst || tabItem.isLast) ? inputModeBar.radius : 0
-                            color: tabItem.tabColor
+                    Repeater {
+                        model: [
+                            { label: "XZ End",        mode: "xz" },
+                            { label: "Angle + X End", mode: "ax" },
+                            { label: "Angle + Z End", mode: "az" }
+                        ]
+                        delegate: Item {
+                            id: tabItem
+                            readonly property bool selected: root._inputMode === modelData.mode
+                            readonly property color tabColor: selected ? Theme.outlineDisabled : Theme.surface
+                            readonly property bool isFirst: index === 0
+                            readonly property bool isLast: index === 2
+                            width: inputModeBar.width / 3
+                            height: inputModeBar.height
 
                             Rectangle {
+                                anchors.fill: parent
+                                radius: (tabItem.isFirst || tabItem.isLast) ? inputModeBar.radius : 0
+                                color: tabItem.tabColor
+
+                                Rectangle {
+                                    anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+                                    width: inputModeBar.radius
+                                    visible: tabItem.isFirst
+                                    color: parent.color
+                                }
+
+                                Rectangle {
+                                    anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                                    width: inputModeBar.radius
+                                    visible: tabItem.isLast
+                                    color: parent.color
+                                }
+                            }
+
+                            Rectangle {
+                                visible: !tabItem.isLast
                                 anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-                                width: inputModeBar.radius
-                                visible: tabItem.isFirst
-                                color: parent.color
+                                width: Theme.hairline
+                                color: root.clrTabBorder
+                                z: 1
                             }
 
-                            Rectangle {
-                                anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                                width: inputModeBar.radius
-                                visible: tabItem.isLast
-                                color: parent.color
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData.label
+                                color: parent.selected ? Theme.surfaceInverse : root.clrTabText
+                                font.pixelSize: Theme.fontBody
+                                font.bold: parent.selected
+                                z: 2
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: root._setInputMode(modelData.mode)
                             }
                         }
-
-                        Rectangle {
-                            visible: !tabItem.isLast
-                            anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-                            width: Theme.hairline
-                            color: "#cbd5e1"
-                            z: 1
-                        }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData.label
-                            color: parent.selected ? Theme.surface : "#1f2937"
-                            font.pixelSize: szTabFont
-                            font.bold: parent.selected
-                            z: 2
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: root._setInputMode(modelData.mode)
-                        }
-                    }
                 }
                 }
 
@@ -222,153 +152,35 @@ Rectangle {
                     anchors.fill: parent
                     radius: inputModeBar.radius
                     color: "transparent"
-                    border.color: "#cbd5e1"
+                    border.color: root.clrTabBorder
                     border.width: Theme.hairline
                     z: 3
                 }
             }
-
-            RowLayout {
-                spacing: szSpacing
-                Layout.fillWidth: true
-
-            GridLayout {
-                columns: 2
-                rowSpacing: szGridRowGap; columnSpacing: szGridColGap
-                Layout.preferredWidth: szGridWidth
-                Layout.maximumWidth:  szGridWidth
-
-                Label { text: root._firstLabel; font.pixelSize: szFont; Layout.fillWidth: true }
-                NumpadField {
-                    description: root._firstDescription
-                    Layout.preferredWidth: szInputWidth
-                    settingName: root._settingName(root._firstFieldName)
-                    validatorObject: dblVal
-                    seedNumpadFromValue: true
-                    value: root._fieldValue(root._firstFieldName)
-                    formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                    hAlign: Text.AlignRight
-                    onOpenRequested: function(field) {
-                        root.tapped()
-                        root.openNumPadRequested(field)
-                    }
-                    onValueCommitted: function(value) { root._updateField(root._firstFieldName, value) }
-                }
-
-                Label { text: root._secondLabel; font.pixelSize: szFont; Layout.fillWidth: true }
-                NumpadField {
-                    description: root._secondDescription
-                    Layout.preferredWidth: szInputWidth
-                    settingName: root._settingName(root._secondFieldName)
-                    validatorObject: dblVal
-                    seedNumpadFromValue: true
-                    value: root._fieldValue(root._secondFieldName)
-                    formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                    hAlign: Text.AlignRight
-                    onOpenRequested: function(field) {
-                        root.tapped()
-                        root.openNumPadRequested(field)
-                    }
-                    onValueCommitted: function(value) { root._updateField(root._secondFieldName, value) }
-                }
-            }
-
-        Rectangle {
-            width: Theme.hairline; Layout.fillHeight: true
-            Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
-            Layout.leftMargin: szSepGap; Layout.rightMargin: szSepGap
-            color: clrSeparator
         }
 
-        Rectangle {
-            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
-            enabled: root._blendType === "none" && root.primIdx < root.primCount - 1
-            opacity: enabled ? 1.0 : 0.35
-            color:   chamferMA.pressed ? clrBlendBtnHover : "transparent"
-            border.width: enabled ? 1 : 0
-            border.color: chamferMA.pressed ? clrBlendBtnHoverBorder : clrBtnBorder
-            Layout.alignment: Qt.AlignVCenter
-            Image {
-                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
-                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: Images.url("chamfer.svg")
-                fillMode: Image.PreserveAspectFit; smooth: true
-            }
-            MouseArea {
-                id: chamferMA; anchors.fill: parent; enabled: parent.enabled
-                onClicked: {
-                    var d = JSON.parse(JSON.stringify(primData))
-                    if (!d.blend) d.blend = {}
-                    d.blend.type = "chamfer"
-                    if (d.blend.chamfer_width === undefined) d.blend.chamfer_width = 1.0
-                    root.primUpdated(primIdx, d)
-                }
-            }
-        }
+        RowLayout {
+            spacing: 0
+            Layout.fillWidth: true
 
-        Item {
-            Layout.preferredWidth: 8
-        }
-
-        Rectangle {
-            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
-            enabled: root._blendType === "none" && root.primIdx < root.primCount - 1
-            opacity: enabled ? 1.0 : 0.35
-            color:   filletMA.pressed ? clrBlendBtnHover : "transparent"
-            border.width: enabled ? 1 : 0
-            border.color: filletMA.pressed ? clrBlendBtnHoverBorder : clrBtnBorder
-            Layout.alignment: Qt.AlignVCenter
-            Image {
-                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
-                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: Images.url("fillet.svg")
-                fillMode: Image.PreserveAspectFit; smooth: true
+            ProfileField {
+                id: firstCell
+                label: root._firstLabel
+                description: root._firstDescription
+                settingName: root._settingName(root._firstFieldName)
+                value: root._fieldValue(root._firstFieldName)
+                onOpenRequested: function(field) { root._openField(field) }
+                onCommitted: function(value) { root._updateField(root._firstFieldName, value) }
             }
-            MouseArea {
-                id: filletMA; anchors.fill: parent; enabled: parent.enabled
-                onClicked: {
-                    var d = JSON.parse(JSON.stringify(primData))
-                    if (!d.blend) d.blend = {}
-                    d.blend.type = "fillet"
-                    if (d.blend.fillet_radius === undefined) d.blend.fillet_radius = 1.0
-                    root.primUpdated(primIdx, d)
-                }
-            }
-        }
 
-        Item {
-            Layout.preferredWidth: 8
-        }
-
-        Rectangle {
-            implicitWidth: szBtn; implicitHeight: szBtn; radius: szCardRadius
-            enabled: root._blendType === "none" && root.primIdx < root.primCount - 1
-            opacity: enabled ? 1.0 : 0.35
-            color:   undercutMA.pressed ? clrBlendBtnHover : "transparent"
-            border.width: enabled ? 1 : 0
-            border.color: undercutMA.pressed ? clrBlendBtnHoverBorder : clrBtnBorder
-            Layout.alignment: Qt.AlignVCenter
-            Image {
-                anchors.centerIn: parent; width: szBtnIcon; height: szBtnIcon
-                sourceSize.width: szBtnIconSrc; sourceSize.height: szBtnIconSrc
-                source: Images.url("undercut.svg")
-                fillMode: Image.PreserveAspectFit; smooth: true
-            }
-            MouseArea {
-                id: undercutMA; anchors.fill: parent; enabled: parent.enabled
-                onClicked: {
-                    var d = JSON.parse(JSON.stringify(primData))
-                    if (!d.blend) d.blend = {}
-                    d.blend.type = "undercut_din509"
-                    if (d.blend.undercut_radius === undefined) d.blend.undercut_radius = 0.4
-                    if (d.blend.undercut_depth === undefined) d.blend.undercut_depth = 0.4
-                    if (d.blend.undercut_length === undefined) d.blend.undercut_length = 2.5
-                    root.primUpdated(primIdx, d)
-                }
-            }
-        }
-
-        Item { Layout.fillWidth: true }
+            ProfileField {
+                id: secondCell
+                label: root._secondLabel
+                description: root._secondDescription
+                settingName: root._settingName(root._secondFieldName)
+                value: root._fieldValue(root._secondFieldName)
+                onOpenRequested: function(field) { root._openField(field) }
+                onCommitted: function(value) { root._updateField(root._secondFieldName, value) }
             }
         }
     }

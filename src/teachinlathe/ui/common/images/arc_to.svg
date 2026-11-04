@@ -9,16 +9,24 @@
   <!-- center -->
   <circle cx="260" cy="260" r="24" fill="#000"/>
 
-  <!-- start (-60°) -->
-  <circle cx="370" cy="69.47" r="24" fill="#000"/>
+  <!-- start (-60°), as line_to.svg's: 6 px across at 56 px -->
+  <circle cx="370" cy="69.47" r="27.43" fill="#000"/>
 
-  <!-- end (-180°) -->
-  <circle cx="40" cy="260" r="24" fill="#000"/>
+  <!-- end (-180°), as line_to.svg's: 6 px across at 56 px -->
+  <circle cx="40" cy="260" r="27.43" fill="#000"/>
 
-  <!-- 120° arc CW -->
-  <path d="M370 69.47
-           A220 220 0 0 0 40 260"
+  <!-- arc CCW on the same circle (radius 220), half a line's width clear of the start -->
+  <path d="M323.86 49.47
+           A220 220 0 0 0 82.94 129.43"
         stroke="#000"
-        stroke-width="12"/>
+        stroke-width="22.86"/>
+
+  <!-- arrow head as line_to.svg's: base 84, 100 long, its tip and its base's middle on
+       the arc, the tip half a line's width clear of the end -->
+  <path d="M43.43 221.29
+           L44.36 112.83
+           L121.52 146.02
+           Z"
+        fill="#000"/>
 
 </svg>

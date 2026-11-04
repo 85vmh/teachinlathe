@@ -26,6 +26,7 @@ RowLayout {
     property string noneText: "\u2190 Add Blend"
     property color  noneTextColor: Theme.foreground
     property bool   noneTextBold: false
+    property alias  valueFollowsModel: valueField.valueFollowsModel
     // the drop-down's column, laid out as a label: the drop-down at its
     // right, by what it sets - so a box can line the size up with its other
     // fields, and its other labels with the drop-down

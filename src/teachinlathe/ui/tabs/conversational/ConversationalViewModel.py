@@ -523,6 +523,28 @@ class ConversationalViewModel(QObject):
         except Exception as e:
             LOG.error("failed to add %r: %s", op_type, e)
             return
+        self._operation_added(op_type, idx)
+
+    @pyqtSlot(result=int)
+    def nextProfileId(self):
+        """The id the next profile added to the program gets."""
+        prog = self.current_program
+        return self.use_case.next_profile_id(prog) if prog else 1
+
+    @pyqtSlot(str, int)
+    def addDefineProfile(self, profile_type, insert_index):
+        """A new Define Profile, OD or ID as chosen in its dialog."""
+        prog = self.current_program
+        if not prog:
+            return
+        try:
+            idx = self.use_case.insert_define_profile(prog, profile_type, insert_index)
+        except Exception as e:
+            LOG.error("failed to add a %r Define Profile: %s", profile_type, e)
+            return
+        self._operation_added("defineProfile", idx)
+
+    def _operation_added(self, op_type, idx):
         self.current_op_index = idx
         self._save_current_program()
         # The profiles are drawn as soon as they are added.
@@ -726,11 +748,8 @@ class ConversationalViewModel(QObject):
         self._push(screen)
 
     def open_profile_editor(self, op_index):
-        op_data = self.use_case.operation_payload(self.current_program, op_index)
-        type_str = "ID" if str(op_data.get("profile_type", "od")).lower() == "id" else "OD"
-        op_order = op_data.get("order", "")
-        self._open_editor(op_index, PROFILE_EDITOR,
-                          f"Define {type_str} Profile Op #{op_order}" if op_order else f"Define {type_str} Profile")
+        op = self.use_case.operation(self.current_program, op_index)
+        self._open_editor(op_index, PROFILE_EDITOR, f"Op#{op.order} {op.display_name()}")
 
     def open_radial_profile_editor(self, op_index):
         op_order = self.use_case.operation_payload(self.current_program, op_index).get("order", "")

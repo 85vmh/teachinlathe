@@ -20,6 +20,7 @@ Item {
     signal backRequested()
     signal generateGcodeRequested()
     signal addOperationTypeChosen(string type, int insertIndex)
+    signal addDefineProfileChosen(string profileType, int insertIndex)
     signal toggleGenerateGcode(int index, bool checked)
     signal toggleOptionalBlock(int index, bool checked)
     signal detailsRequested(int index)
@@ -100,6 +101,9 @@ Item {
                 }
                 onOperationTypeChosen: function(type, insertIndex) {
                     operationEditor.addOperationTypeChosen(type, insertIndex)
+                }
+                onDefineProfileChosen: function(profileType, insertIndex) {
+                    operationEditor.addDefineProfileChosen(profileType, insertIndex)
                 }
                 onGenerateToggled: function(index, checked) {
                     operationEditor.toggleGenerateGcode(index, checked)

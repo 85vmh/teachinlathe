@@ -53,7 +53,9 @@ from teachinlathe.conversational.model.program_commands import (
     duplicate_operation,
     duplicate_program,
     insert_default_operation,
+    insert_define_profile,
     move_operation,
+    next_profile_id,
 )
 from teachinlathe.conversational.model.updaters import (
     apply_cutting_update,
@@ -278,6 +280,12 @@ class ConversationalUseCase:
 
     def insert_operation(self, program: Program, op_type: str, index: int) -> int:
         return insert_default_operation(program, op_type, index)
+
+    def insert_define_profile(self, program: Program, profile_type: str, index: int) -> int:
+        return insert_define_profile(program, profile_type, index)
+
+    def next_profile_id(self, program: Program) -> int:
+        return next_profile_id(program)
 
     def move_operation(self, program: Program, from_index: int, to_index: int) -> bool:
         return move_operation(program, from_index, to_index) is not None

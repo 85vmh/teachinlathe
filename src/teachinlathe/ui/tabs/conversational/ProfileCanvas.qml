@@ -15,6 +15,10 @@ Canvas {
     property var    primitives:        []    // array of primitive objects from JSON
     property int    selectedPrimIndex:  -1  // index into primitives; -1 = none
     property int    selectedBlendIndex: -1  // index of primitive whose blend is selected; -1 = none
+    // The selected primitive shown by the point it ends at alone, with no tag:
+    // chosen from outside the canvas, its stretch is not what is being picked.
+    property bool   selectionEndOnly:   false
+    onSelectionEndOnlyChanged: requestPaint()
     property string profileType:       "od" // "od" or "id" — controls startPoint blend entry direction
     property var    workpiece:         ({})
     property bool   mirrorAcrossCenterline: true  // also draw the profile and its hatched stock above the centre line
@@ -153,6 +157,7 @@ Canvas {
     readonly property var _tag: _currentTag()
 
     function _currentTag() {
+        if (selectedPrimIndex >= 0 && selectionEndOnly) return null
         if (selectedPrimIndex >= 0 && extraTag) {
             var extra = extraTag(selectedPrimIndex)
             if (extra) {
@@ -707,6 +712,7 @@ Canvas {
         renderSegs: root._renderSegs
         selectedPrimIndex: root.selectedPrimIndex
         selectedBlendIndex: root.selectedBlendIndex
+        endPointOnly: root.selectionEndOnly
         profileType: root.profileType
         scale: root._scale
         cx: root._cx

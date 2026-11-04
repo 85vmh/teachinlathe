@@ -2,6 +2,7 @@ module tabs.conversational.profile_canvas
 AxesActor 1.0 AxesActor.qml
 AxialToolActor 1.0 AxialToolActor.qml
 BackgroundActor 1.0 BackgroundActor.qml
+singleton BlendDefaults 1.0 BlendDefaults.qml
 CenterLineActor 1.0 CenterLineActor.qml
 DiameterLeaderActor 1.0 DiameterLeaderActor.qml
 DimensionActor 1.0 DimensionActor.qml

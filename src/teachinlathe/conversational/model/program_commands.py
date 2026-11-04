@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 from teachinlathe.conversational.model.data_types import (
-    FinishingDirection, PassType, Profiling, Program, Strategy, Turning, TurningFinish,
+    DefineProfile, FinishingDirection, PassType, Profiling, ProfilingType, Program, Strategy, Turning, TurningFinish,
 )
 from teachinlathe.conversational.model.factories import make_default_operation, make_new_program
 
@@ -29,16 +29,27 @@ def renumber_operations(operations):
                 op.parentOrder = parent.order
 
 
+def next_profile_id(program) -> int:
+    """The id a new profile of ``program`` gets: one past the highest."""
+    existing_ids = [op.profile_id for op in program.operations if isinstance(op, DefineProfile)]
+    return (max(existing_ids) + 1) if existing_ids else 1
+
+
 def insert_default_operation(program, op_type: str, insert_index: int):
     new_op = make_default_operation(op_type)
     if op_type in ("defineProfile", "importDxfProfile"):
-        from teachinlathe.conversational.model.data_types import DefineProfile
-        existing_ids = [op.profile_id for op in program.operations if isinstance(op, DefineProfile)]
-        new_op.profile_id = (max(existing_ids) + 1) if existing_ids else 1
+        new_op.profile_id = next_profile_id(program)
     ops = program.operations
     idx = max(0, min(insert_index, len(ops)))
     ops.insert(idx, new_op)
     renumber_operations(ops)
+    return idx
+
+
+def insert_define_profile(program, profile_type: str, insert_index: int):
+    """A new Define Profile of ``profile_type``, "od" or "id", which it stays."""
+    idx = insert_default_operation(program, "defineProfile", insert_index)
+    program.operations[idx].profile_type = ProfilingType(profile_type)
     return idx
 
 
@@ -47,6 +58,9 @@ def duplicate_operation(program, src_index: int, insert_index: int):
     if src_index < 0 or src_index >= len(ops):
         raise IndexError(f"src_index {src_index} out of range")
     new_op = copy.deepcopy(ops[src_index])
+    # a profile's id names its subroutine: the copy needs its own
+    if isinstance(new_op, DefineProfile):
+        new_op.profile_id = next_profile_id(program)
     idx = max(0, min(insert_index, len(ops)))
     ops.insert(idx, new_op)
     renumber_operations(ops)

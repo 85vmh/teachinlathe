@@ -5,8 +5,11 @@ BuildGcodeProgressDialog 1.0 BuildGcodeProgressDialog.qml
 CanvasBox 1.0 CanvasBox.qml
 CanvasTool 1.0 CanvasTool.qml
 CanvasViewButtons 1.0 CanvasViewButtons.qml
+CardNumber 1.0 CardNumber.qml
 CheckableStockToLeave 1.0 CheckableStockToLeave.qml
 ChildScreen 1.0 ChildScreen.qml
+ChoiceButton 1.0 ChoiceButton.qml
+ChoicePopup 1.0 ChoicePopup.qml
 ConfirmDialog 1.0 ConfirmDialog.qml
 ConversationalLeftPane 1.0 ConversationalLeftPane.qml
 ConversationalTabRoot 1.0 ConversationalTabRoot.qml
@@ -33,6 +36,7 @@ KnurlingDetailsView 1.0 KnurlingDetailsView.qml
 KnurlingGeometry 1.0 KnurlingGeometry.qml
 M1Parameters 1.0 M1Parameters.qml
 MainScreen 1.0 MainScreen.qml
+NewProfilePopup 1.0 NewProfilePopup.qml
 OperationHeader 1.0 OperationHeader.qml
 OperationIconTextButton 1.0 OperationIconTextButton.qml
 OperationListItem 1.0 OperationListItem.qml

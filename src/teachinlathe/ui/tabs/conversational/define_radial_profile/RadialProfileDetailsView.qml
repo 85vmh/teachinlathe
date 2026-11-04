@@ -48,7 +48,7 @@ Item {
             }
 
             EditProfileButton {
-                text: "Edit Radial Profile P" + root.profileId
+                text: "Edit Radial Profile  P" + root.profileId
                 onClicked: root.editor.openEditor()
             }
 

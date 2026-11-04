@@ -76,7 +76,7 @@ Item {
             }
 
             EditProfileButton {
-                text: "Edit Profile P" + root.profileId
+                text: "Edit Profile  P" + root.profileId
                 onClicked: root.editor.openEditor()
             }
 

@@ -1,18 +1,9 @@
 // ChamferFilletBlendCard.qml
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
-import tabs.conversational
-import common.touchable_input
-import theme
-import common
 
-Rectangle {
+BlendCard {
     id: root
-
-    property var  primData:   ({})
-    property int  primIdx:    0
-    property bool isSelected: false
 
     readonly property string _blendType:
         (primData && primData.blend && primData.blend.type) ? primData.blend.type : "none"
@@ -25,31 +16,6 @@ Rectangle {
         return 0
     }
 
-    signal primUpdated(int idx, var data)
-    signal openNumPadRequested(var field)
-    signal tapped()
-
-    // Colors
-    readonly property color clrCardBg:            Theme.surfaceAlt
-    readonly property color clrCardBgSel:         Theme.selection
-    readonly property color clrBorder:            Theme.outline
-    readonly property color clrBorderSel:         Theme.accent
-    readonly property color clrSeparator:         "#d0d0d0"
-
-    // Sizes
-    readonly property int szCardRadius:    8
-    readonly property int szCardPadding:   24
-    readonly property int szMargin:        12
-    readonly property int szSpacing:       8
-    readonly property int szIconArea:      56
-    readonly property int szIconSize:      56
-    readonly property int szFont:          16
-    readonly property int szGridColGap:    8
-    readonly property int szGridWidth:     196
-    readonly property int szInputWidth:    120
-    readonly property int szSepInset:      4
-    readonly property int szSepGap:        8
-
     function _commitBlend(v) {
         var d = JSON.parse(JSON.stringify(primData))
         if (!d.blend) d.blend = { type: "chamfer" }
@@ -58,73 +24,16 @@ Rectangle {
         root.primUpdated(primIdx, d)
     }
 
-    color:        isSelected ? clrCardBgSel : clrCardBg
-    radius:       szCardRadius
-    border.color: isSelected ? clrBorderSel : clrBorder
-    border.width: isSelected ? 2 : 1
-    height:       blendRow.implicitHeight + szCardPadding
+    blendType: _blendType === "chamfer" ? "chamfer" : "fillet"
 
-    TapHandler { onTapped: root.tapped() }
-
-    DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
-
-    RowLayout {
-        id: blendRow
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: szMargin }
-        spacing: szSpacing
-
-        Item {
-            implicitWidth: szIconArea
-            Layout.fillHeight: true
-
-            Text {
-                anchors.top: parent.top
-                anchors.left: parent.left
-                text: (primIdx + 1) + "."
-                font.pixelSize: szFont; font.bold: true
-            }
-
-            Image {
-                anchors.centerIn: parent
-                width: szIconSize; height: szIconSize
-                sourceSize.width: szIconSize; sourceSize.height: szIconSize
-                source: root._blendType === "chamfer" ? Images.url("chamfer.svg") : Images.url("fillet.svg")
-                fillMode: Image.PreserveAspectFit; smooth: true
-            }
-        }
-
-        Rectangle {
-            width: Theme.hairline; Layout.fillHeight: true
-            Layout.topMargin: szSepInset; Layout.bottomMargin: szSepInset
-            Layout.leftMargin: 0; Layout.rightMargin: szSepGap
-            color: clrSeparator
-        }
-
-        RowLayout {
-            spacing: szGridColGap
-            Layout.preferredWidth: szGridWidth
-            Layout.maximumWidth:   szGridWidth
-
-            Label {
-                text: root._blendType === "chamfer" ? "Width" : "Radius"
-                font.pixelSize: szFont
-                Layout.alignment: Qt.AlignVCenter
-                Layout.fillWidth: true
-            }
-
-            NumpadField {
-                Layout.preferredWidth: szInputWidth
-                settingName: root._blendType === "chamfer" ? "profiling.chamfer_width" : "profiling.fillet_radius"
-                validatorObject: dblVal
-                seedNumpadFromValue: true
-                value: root._blendValue
-                formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-                hAlign: Text.AlignRight
-                onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root._commitBlend(value) }
-            }
-        }
-
-        Item { Layout.fillWidth: true }
+    ProfileField {
+        label: root._blendType === "chamfer" ? "Width" : "Radius"
+        settingName: root._blendType === "chamfer" ? "profiling.chamfer_width" : "profiling.fillet_radius"
+        value: root._blendValue
+        onOpenRequested: function(field) { root.openNumPadRequested(field) }
+        onCommitted: function(value) { root._commitBlend(value) }
     }
+
+    // the second field's place
+    Item { Layout.fillWidth: true; Layout.preferredWidth: 0 }
 }

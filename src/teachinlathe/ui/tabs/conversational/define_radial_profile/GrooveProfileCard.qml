@@ -9,6 +9,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import theme
 import common
+import tabs.conversational
 import tabs.programs as Programs
 
 Rectangle {
@@ -16,7 +17,6 @@ Rectangle {
 
     property var primData: ({})
     property int primIdx: 0
-    property int primCount: 0
     property bool isSelected: false
     // a groove in a Define Profile: its right flank starts where the profile
     // has got to, so P1 has no X or Z of its own
@@ -116,10 +116,18 @@ Rectangle {
         anchors.margins: 12
         spacing: 10
 
-        Label {
-            text: (primIdx + 1) + ". Groove"
-            font.pixelSize: Theme.fontBody
-            font.bold: true
+        RowLayout {
+            spacing: Theme.spacingSmall
+
+            CardNumber {
+                number: primIdx + 1
+                fill: root.color
+            }
+            Label {
+                text: "Groove"
+                font.pixelSize: Theme.fontBody
+                font.bold: true
+            }
         }
 
         Rectangle {

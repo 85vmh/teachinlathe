@@ -73,6 +73,7 @@ CanvasBox {
             description: "P" + root.point + " X"
             validatorObject: dblVal
             seedNumpadFromValue: true
+            valueFollowsModel: true
             value: root.xValue
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
@@ -102,6 +103,7 @@ CanvasBox {
             description: "P" + root.point + " Z"
             validatorObject: dblVal
             seedNumpadFromValue: true
+            valueFollowsModel: true
             value: root.zValue
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
@@ -129,6 +131,7 @@ CanvasBox {
             description: "P" + root.point + " flank angle"
             validatorObject: dblVal
             seedNumpadFromValue: true
+            valueFollowsModel: true
             value: root.angleValue
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
@@ -143,6 +146,7 @@ CanvasBox {
 
         // the drop-down in the labels' column, the size in the fields'
         BlendPicker {
+            valueFollowsModel: true
             id: blendPicker
             Layout.columnSpan: 3
             leadWidth: root.labelWidth

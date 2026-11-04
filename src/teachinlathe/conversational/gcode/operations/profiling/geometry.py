@@ -139,7 +139,7 @@ def build_path(primitives, profile_type: ProfilingType = ProfilingType.OD) -> li
                 else:
                     path.append(ToolpathLine(end_x, end_z))
             elif blend.blend_type is BlendType.UNDERCUT_DIN509:
-                undercut = (undercut_din509(at_x / 2, at_z, end_x / 2, end_z, after.x, after.z, blend)
+                undercut = (fitting_undercut(at_x / 2, at_z, end_x / 2, end_z, after.x, after.z, blend, is_id)
                             if isinstance(after, _NextLine) else None)
                 if undercut:
                     path.append(ToolpathLine(undercut.entry_x * 2, undercut.entry_z))
@@ -541,6 +541,28 @@ def undercut_din509(start_x, start_z, corner_x, corner_z, next_x, next_z,
     return Undercut(ramp_start_x, ramp_start_z, ramp_end_x, ramp_end_z, arc_start_x, arc_start_z,
                     arc_start_x + undercut_radius * normal_x, arc_start_z + undercut_radius * normal_z,
                     exit_x, exit_z, cross < 0)
+
+
+def fitting_undercut(start_x, start_z, corner_x, corner_z, next_x, next_z,
+                     blend: ProfileBlend, is_id: bool) -> Optional[Undercut]:
+    """undercut_din509, where the corner can have it: all in radius space. The
+    line into the corner is a cylinder, the line out of it rises away from the
+    material - to a larger diameter on an OD profile, a smaller one on an ID -
+    and the undercut ends within both. None anywhere else, so what is left is
+    the plain corner."""
+    if abs(corner_x - start_x) > SAME_MM or abs(corner_z - start_z) < SAME_MM:
+        return None
+    rise = corner_x - next_x if is_id else next_x - corner_x
+    if rise < SAME_MM:
+        return None
+    undercut = undercut_din509(start_x, start_z, corner_x, corner_z, next_x, next_z, blend)
+    if undercut is None:
+        return None
+    fits_before = (math.hypot(undercut.entry_x - corner_x, undercut.entry_z - corner_z)
+                   <= math.hypot(start_x - corner_x, start_z - corner_z) + SAME_MM)
+    fits_after = (math.hypot(undercut.exit_x - corner_x, undercut.exit_z - corner_z)
+                  <= math.hypot(next_x - corner_x, next_z - corner_z) + SAME_MM)
+    return undercut if fits_before and fits_after else None
 
 
 # ── On a path ───────────────────────────────────────────────────────────────

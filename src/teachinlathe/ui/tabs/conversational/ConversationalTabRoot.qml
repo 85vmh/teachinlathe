@@ -117,6 +117,7 @@ Item {
             onGenerateGcodeRequested: root.viewModel.generateGcode()
             onDetailsRequested: function(index) { root.viewModel.showDetails(index) }
             onAddOperationTypeChosen: function(type, insertIndex) { root.viewModel.addOperation(type, insertIndex) }
+            onAddDefineProfileChosen: function(profileType, insertIndex) { root.viewModel.addDefineProfile(profileType, insertIndex) }
             onMoveOperationRequested: function(fromIndex, toIndex) { root.viewModel.moveOperation(fromIndex, toIndex) }
             onDeleteOperationRequested: function(index) { root.viewModel.deleteOperation(index) }
             onDuplicateOperationRequested: function(index) { root.viewModel.duplicateOperation(index) }
