@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <!-- Zero the axis: two parallel lines, bottom left to top right, each as
+       long as the ABS/REL toggle's diagonal (6,42 - 42,6), either side of it. -->
+  <path d="M3 39 L39 3" stroke="#101010" stroke-width="2" stroke-linecap="round"/>
+  <path d="M9 45 L45 9" stroke="#101010" stroke-width="2" stroke-linecap="round"/>
+</svg>

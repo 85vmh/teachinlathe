@@ -1,0 +1,90 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import common.touchable_input
+import theme
+
+Rectangle {
+    id: root
+
+    property var primData: ({})
+    property int primIdx: 0
+    property bool isSelected: false
+
+    signal primUpdated(int idx, var data)
+    signal openNumPadRequested(var field)
+    signal tapped()
+
+    // selected: its border alone
+    color: Theme.surfaceAlt
+    radius: Theme.radiusLarge
+    border.color: isSelected ? Theme.accent : Theme.outline
+    border.width: isSelected ? 2 : 1
+    height: content.implicitHeight + 24
+
+    TapHandler { onTapped: root.tapped() }
+    IntValidator { id: intVal; bottom: 1; top: 999 }
+    DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
+
+    function _commit(key, value) {
+        var d = JSON.parse(JSON.stringify(primData || {}))
+        d.type = "repeat"
+        d[key] = value
+        root.primUpdated(primIdx, d)
+    }
+
+    RowLayout {
+        id: content
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: 12
+        spacing: 10
+
+        Label {
+            text: (primIdx + 1) + ". Repeat"
+            font.pixelSize: Theme.fontBody
+            font.bold: true
+            Layout.preferredWidth: 92
+        }
+
+        Label { text: "Primitive"; font.pixelSize: Theme.fontSmall }
+        NumpadField {
+            Layout.preferredWidth: 72
+            settingName: "radial_profile.repeat_primitive_id"
+            validatorObject: intVal
+            value: primData.repeat_primitive_id !== undefined ? primData.repeat_primitive_id : 1
+            formatter: function(v) { return v == null ? "" : String(Math.round(Number(v))) }
+            hAlign: Text.AlignHCenter
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root._commit("repeat_primitive_id", Math.round(value)) }
+        }
+
+        Label { text: "Count"; font.pixelSize: Theme.fontSmall }
+        NumpadField {
+            Layout.preferredWidth: 72
+            settingName: "radial_profile.repeat_count"
+            validatorObject: intVal
+            value: primData.repeat_count !== undefined ? primData.repeat_count : 1
+            formatter: function(v) { return v == null ? "" : String(Math.round(Number(v))) }
+            hAlign: Text.AlignHCenter
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root._commit("repeat_count", Math.round(value)) }
+        }
+
+        Label { text: "Z Offset"; font.pixelSize: Theme.fontSmall }
+        NumpadField {
+            Layout.preferredWidth: 100
+            settingName: "radial_profile.repeat_z_offset"
+            validatorObject: dblVal
+            seedNumpadFromValue: true
+            value: primData.z_offset !== undefined ? primData.z_offset : 0
+            formatter: function(v) { return v == null ? "" : Number(v).toFixed(3) }
+            hAlign: Text.AlignRight
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root._commit("z_offset", Number(value)) }
+        }
+
+        Item { Layout.fillWidth: true }
+    }
+}

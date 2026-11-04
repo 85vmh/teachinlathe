@@ -1,0 +1,2 @@
+module tabs.conversational.import_dxf_profile
+ImportDxfProfileScreen 1.0 ImportDxfProfileScreen.qml

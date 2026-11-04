@@ -1,0 +1,58 @@
+O<boring> sub
+
+#<x_start>          = #1
+#<z_start>          = #2
+#<x_end>            = #3
+#<z_end>            = #4
+#<doc>              = #5
+#<turn_angle>       = #6
+#<fillet_radius>    = #7
+
+G8 ; Radius mode (easier maths)
+G18 ; XZ Plane
+G21 ; Metric Units
+G90 ; Absolute Distance
+G91.1 ; but not for arcs
+
+#<x_start> = [#<x_start> / 2] ; because of radius mode
+#<x_end> = [#<x_end> / 2] ; because of radius mode
+
+
+#20 = [#<fillet_radius> * SIN[#<turn_angle>]]
+#21 = [-#<fillet_radius> * COS[#<turn_angle>]]
+#22 = [#<fillet_radius> / COS[#<turn_angle>]]
+#23 = [#<z_end> + #<fillet_radius> - #20]
+#24 = [[#23 - #<z_start>] * TAN[#<turn_angle>]]
+
+
+	O100 WHILE [#<x_start> LT [#<x_end> - #<doc>]]
+        G0 X #<x_start>
+		
+		#<x_start>=[#<x_start> + #<doc>]
+
+		G1 X #<x_start>
+		G1 Z #23 X[#<x_start> + #24]
+			O101 IF [#<fillet_radius> GT 0]
+				G3 Z#<z_end> X[#<x_start> + #24 + #21] I#21 K#20
+				G1 X[#<x_start> + #24 + #21 - #<doc>]
+			O101 ELSE
+				G1 X[#<x_start> + #24 - [#<doc> * 1.5]]
+			O101 ENDIF
+		G0 Z[#<z_start>]
+	O100 ENDWHILE
+
+	G0 X #<x_end>
+	G1 Z #23 X[#<x_end> + #24]
+
+	O102 IF [#<fillet_radius> GT 0]
+		G3 Z#<z_end> X[#<x_end> + #24 + #21] I#21 K#20
+		G1 X[#<x_end> + #24 + #21 - #<doc>]
+	O102 ELSE
+		G1 X[#<x_end> + #24 - #<doc>]
+	O102 ENDIF
+	
+	G0 Z #<z_start>
+	G0 X #<x_end> ; For touch-off
+
+	G7 (switch back to diameter mode)
+O<boring> endsub

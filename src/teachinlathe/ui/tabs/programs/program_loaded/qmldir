@@ -1,0 +1,5 @@
+module tabs.programs.program_loaded
+LedToggleButton 1.0 LedToggleButton.qml
+ProgramBottomActionBar 1.0 ProgramBottomActionBar.qml
+RunActionButton 1.0 RunActionButton.qml
+ToolChangeDialog 1.0 ToolChangeDialog.qml

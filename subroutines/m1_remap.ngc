@@ -1,0 +1,55 @@
+o<m1_remap> sub
+(Remap of M1: [RS274NGC] REMAP = M1 modalgroup=4 argspec=p ngc=m1_remap)
+(Pause to Inspect, while Optional Stop is on - motion.digital-in-00 - and the program)
+(reaches an M1. P is where the tool waits: P0, or no P, where it is; P1 at G28; P2 at G30.)
+(The spindle is stopped, the program stops at the built-in M1; after cycle start the)
+(spindle starts again as it was, the tool goes back where it was and the program stops)
+(once more, M0, so the operator sees it there before going on.)
+
+    #<where> = 0
+    o<p> if [EXISTS[#<p>]]
+        #<where> = #<p>
+    o<p> endif
+    o<valid> if [[#<where> NE 0] AND [#<where> NE 1] AND [#<where> NE 2]]
+        (abort, M1: P not allowed. Allowed: P0 or no P - the tool waits where it is, P1 - it waits at G28, P2 - it waits at G30)
+    o<valid> endif
+
+    M66 P0 L0 (samples motion.digital-in-00, Optional Stop on, into #5399, no wait)
+    o<asked> if [#5399 NE 1]
+        o<m1_remap> return
+    o<asked> endif
+
+    #<was_diameter> = #<_lathe_diameter_mode>
+    #<spindle_on>   = #<_spindle_on>
+    #<spindle_cw>   = #<_spindle_cw>
+    #<x_return>     = #<_x> (a radius, in G7 too)
+    #<z_return>     = #<_z>
+
+    M5 (stop the spindle)
+    o<go> if [#<where> EQ 1]
+        G28
+    o<go> elseif [#<where> EQ 2]
+        G30
+    o<go> endif
+    M1 (built-in M1 inside its own remap: inspect, cycle start to go on)
+
+    o<start> if [#<spindle_on>]
+        o<dir> if [#<spindle_cw>]
+            M3
+        o<dir> else
+            M4
+        o<dir> endif
+    o<start> endif
+
+    G8 (the return point is a radius)
+    G0 X#<x_return> Z#<z_return>
+    o<mode> if [#<was_diameter>]
+        G7
+    o<mode> endif
+
+    o<wait> if [#<spindle_on>]
+        M66 P1 L3 Q5 (wait max 5 seconds until motion.digital-in-01, spindle at speed, turns ON)
+    o<wait> endif
+    M0 (back where the tool was: cycle start to go on)
+
+o<m1_remap> endsub

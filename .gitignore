@@ -1,0 +1,6 @@
+**/__pycache__/
+.idea
+/conversational/program_*.json
+/subroutines/Conversational Json/*
+/subroutines/Conversational Gcode/*
+/subroutines/DXF Profiles/

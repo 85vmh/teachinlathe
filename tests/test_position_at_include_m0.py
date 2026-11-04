@@ -1,0 +1,44 @@
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from teachinlathe.conversational.gcode.operations.position_at import generate_position_at_gcode
+from teachinlathe.conversational.model.data_types import (
+    MoveSequence,
+    PositionAt,
+    PositionDetails,
+)
+
+def test_position_at_include_m0_serializes_and_generates_pause():
+    details = PositionDetails(
+        x_pos=12.0,
+        z_pos=-5.0,
+        move_sequence=MoveSequence.XZ,
+        stop_spindle_before_positioning=True,
+        include_m0=True,
+    )
+    op = PositionAt(
+        order=1,
+        type="positionAt",
+        generate_gcode=True,
+        is_optional_block=False,
+        position_details=details,
+    )
+
+    assert op.to_dict()["position_details"]["include_m0"] is True
+    assert op.to_dict()["position_details"]["stop_spindle_before_positioning"] is True
+    assert "coordinate_type" not in op.to_dict()["position_details"]
+    assert generate_position_at_gcode(op) == [
+        "M5   (stop the spindle)",
+        "",
+        "G90  (absolute distance mode)",
+        "G0 X12.000",
+        "G0 Z-5.000",
+        "",
+        "M0   (pause program)",
+    ]

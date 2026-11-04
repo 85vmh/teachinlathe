@@ -1,0 +1,95 @@
+// Leader arrows from something drawn on the canvas to a box laid over it.
+// Every one ends the same way: at a dot in front of the middle of the box's
+// left side, its arrowhead's tip on the dot's edge (paintToBox) - or, for a
+// box above what it points from, under the middle of its bottom side
+// (paintUpToBox).
+.pragma library
+
+// how thick the arrows are drawn, and the borders of the boxes they point to
+var lineWidth = 1.5
+// the arrowhead, in px
+var headLength = 16
+var headHalfWidth = 6
+// px, the dot in front of the box an arrow points to
+var dotRadius = 3
+
+// The centre of the dot an arrow to box ``rect`` {x, y, width, height} ends
+// at: touching the middle of its left side.
+function anchorOf(rect) {
+    return { x: rect.x - dotRadius, y: rect.y + rect.height / 2 }
+}
+
+// The centre of the dot an arrow up to box ``rect`` ends at: touching the
+// middle of its bottom side.
+function anchorBelow(rect) {
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height + dotRadius }
+}
+
+// An arrow from (sx, sy) up to box ``rect``, above it: as paintToBox, the
+// dot under the middle of the box's bottom side.
+function paintUpToBox(ctx, sx, sy, rect, color, gap) {
+    paintToDot(ctx, sx, sy, anchorBelow(rect), color, gap, false)
+}
+
+// An arrow from (sx, sy), starting ``gap`` px out, to box ``rect``: the dot
+// in front of the box, and the arrow's tip on the dot's edge; with
+// ``startDot``, a dot where the arrow starts as well.
+function paintToBox(ctx, sx, sy, rect, color, gap, startDot) {
+    paintToDot(ctx, sx, sy, anchorOf(rect), color, gap, startDot)
+}
+
+// An arrow from (sx, sy) to the dot centred on ``dot`` {x, y}, its tip on
+// the dot's edge.
+function paintToDot(ctx, sx, sy, dot, color, gap, startDot) {
+    paintDot(ctx, dot.x, dot.y, color)
+
+    var dx = dot.x - sx, dy = dot.y - sy
+    var length = Math.sqrt(dx * dx + dy * dy)
+    if (length <= dotRadius) return
+    if (startDot)
+        paintDot(ctx, sx + dx / length * (gap || 0), sy + dy / length * (gap || 0), color)
+    paint(ctx, sx, sy, dot.x - dx / length * dotRadius, dot.y - dy / length * dotRadius, color, gap)
+}
+
+// The dot an arrow ends at, or starts from, centred on (x, y).
+function paintDot(ctx, x, y, color) {
+    ctx.save()
+    ctx.fillStyle = color
+    ctx.beginPath()
+    ctx.arc(x, y, dotRadius, 0, 2 * Math.PI)
+    ctx.fill()
+    ctx.restore()
+}
+
+// A line from (sx, sy), starting ``gap`` px out, to (ex, ey), with the
+// arrowhead at (ex, ey).
+function paint(ctx, sx, sy, ex, ey, color, gap) {
+    var arrowLength = headLength
+    var arrowHalfWidth = headHalfWidth
+    var dx = ex - sx
+    var dy = ey - sy
+    var length = Math.sqrt(dx * dx + dy * dy)
+    if (length <= (gap || 0) + arrowLength) return
+    var ux = dx / length
+    var uy = dy / length
+    var baseX = ex - ux * arrowLength
+    var baseY = ey - uy * arrowLength
+
+    ctx.save()
+    ctx.setLineDash([])
+    ctx.globalAlpha = 1.0
+    ctx.strokeStyle = color
+    ctx.fillStyle = color
+    ctx.lineWidth = lineWidth
+    ctx.beginPath()
+    ctx.moveTo(sx + ux * (gap || 0), sy + uy * (gap || 0))
+    ctx.lineTo(baseX, baseY)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(ex, ey)
+    ctx.lineTo(baseX - uy * arrowHalfWidth, baseY + ux * arrowHalfWidth)
+    ctx.lineTo(baseX + uy * arrowHalfWidth, baseY - ux * arrowHalfWidth)
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+}

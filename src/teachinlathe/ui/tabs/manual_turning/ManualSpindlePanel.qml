@@ -1,0 +1,421 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational
+import tabs.tool_library
+import theme
+
+Rectangle {
+    id: root
+    required property var viewModel
+    readonly property string panelMode: viewModel.spindlePanelMode
+    readonly property bool editableMode: panelMode === "Editable"
+    readonly property bool runningMode: panelMode === "ReadOnly"
+    readonly property bool readOnlyMode: !editableMode
+    readonly property int selectedSpindleMode: viewModel.spindleMode
+    readonly property int headerHeight: 50
+    //: The column right of the RPM/CSS content, past a divider: M4 at the
+    //: top, OFF in the middle, M3 at the bottom.
+    readonly property int sideWidth: 100
+    readonly property int directionIconSize: 64
+    //: How long the marks take to change, as the lever beside the panel
+    //: (SpindleLever) takes to move.
+    readonly property int changeMs: 350
+
+    // Where the spindle's lever is: 1 M3, -1 M4, 0 OFF. M3 or M4 is drawn
+    // green - the lever's knob's green - while the spindle turns that way with no fault (cover opened, reset
+    // required); OFF red for a while once it is stopped.
+    readonly property int lever: viewModel.spindleLever
+    // for the lever beside the panel (SpindleLever): its colour, and the
+    // middles of M4 and M3, where its stops are - in the panel's own y
+    readonly property color leverColor: turning ? onColor : (justStopped ? offColor : neutralColor)
+    readonly property color neutralColor: "#9aa3b0"
+    readonly property real m4CenterY: sideColumn.y + m4Icon.y + m4Icon.height / 2
+    readonly property real m3CenterY: sideColumn.y + m3Icon.y + m3Icon.height / 2
+    readonly property bool turning: lever !== 0 && !viewModel.spindleFault
+    readonly property color onColor: Theme.success
+    readonly property color offColor: Theme.danger
+    readonly property int offShownMs: 2000
+    property bool justStopped: false
+    property int _lastLever: 0
+    onLeverChanged: {
+        justStopped = lever === 0 && _lastLever !== 0
+        _lastLever = lever
+        if (justStopped) offTimer.restart()
+        else offTimer.stop()
+    }
+    Timer {
+        id: offTimer
+        interval: root.offShownMs
+        onTriggered: root.justStopped = false
+    }
+    readonly property color warningColor: Theme.warning
+    readonly property color warningBaseColor: Theme.foreground
+    readonly property int warningPulseDurationMs: 200
+    property color warningTitleColor: warningBaseColor
+    signal openNumPadRequested(Item field)
+
+    function contentIndex() {
+        if (root.editableMode) {
+            return root.selectedSpindleMode
+        }
+        if (root.runningMode) {
+            return root.selectedSpindleMode + 2
+        }
+        return 4
+    }
+
+    onPanelModeChanged: {
+        if (root.panelMode === "CoverOpened" || root.panelMode === "ResetRequired") {
+            root.warningTitleColor = root.warningBaseColor
+        }
+    }
+
+    color: Theme.surfaceSunken
+    border.color: Theme.outline
+    border.width: Theme.hairline
+    radius: Theme.radius
+
+    TabBar {
+        id: tabBar
+        visible: !root.readOnlyMode
+        anchors.left: parent.left
+        anchors.leftMargin: 1
+        anchors.right: sideDivider.left
+        anchors.rightMargin: 0
+        anchors.top: parent.top
+        anchors.topMargin: 1
+        height: root.headerHeight
+        currentIndex: viewModel.spindleMode
+        onCurrentIndexChanged: viewModel.setSpindleMode(currentIndex)
+        background: Rectangle {
+            color: Theme.surfaceSunken
+        }
+
+        TabButton {
+            text: "RPM"
+            height: root.headerHeight
+            implicitHeight: root.headerHeight
+            font.pixelSize: Theme.fontLarge
+            contentItem: Text {
+                text: parent.text
+                font: parent.font
+                color: Theme.surfaceInverse
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            background: Rectangle {
+                color: parent.checked ? Theme.surface : Theme.outlineDisabled
+                border.color: "#8c8c8c"
+                border.width: Theme.hairline
+            }
+        }
+        TabButton {
+            text: "CSS"
+            height: root.headerHeight
+            implicitHeight: root.headerHeight
+            font.pixelSize: Theme.fontLarge
+            contentItem: Text {
+                text: parent.text
+                font: parent.font
+                color: Theme.surfaceInverse
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            background: Rectangle {
+                color: parent.checked ? Theme.surface : Theme.outlineDisabled
+                border.color: "#8c8c8c"
+                border.width: Theme.hairline
+            }
+        }
+    }
+
+    Rectangle {
+        id: readOnlyHeader
+        visible: root.readOnlyMode
+        anchors.left: parent.left
+        anchors.leftMargin: 1
+        anchors.right: sideDivider.left
+        anchors.rightMargin: 0
+        anchors.top: parent.top
+        anchors.topMargin: 1
+        height: root.headerHeight
+        color: Theme.surfaceSunken
+
+        Text {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            height: root.headerHeight - 1
+            text: "Spindle Mode: " + (viewModel.spindleModeLabel)
+            color: Theme.foreground
+            font.pixelSize: Theme.fontLarge
+            font.bold: true
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: Theme.hairline
+            color: Theme.outline
+        }
+    }
+
+    Rectangle {
+        id: contentArea
+        anchors.left: parent.left
+        anchors.leftMargin: 1
+        anchors.right: sideDivider.left
+        anchors.rightMargin: 0
+        anchors.top: root.readOnlyMode ? readOnlyHeader.bottom : tabBar.bottom
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 1
+        color: Theme.surfaceSunken
+
+        StackLayout {
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            anchors.top: parent.top
+            anchors.topMargin: 10
+            anchors.bottom: root.readOnlyMode ? parent.bottom : spindleAngleFooter.top
+            anchors.bottomMargin: root.readOnlyMode ? 10 : 0
+            currentIndex: root.contentIndex()
+
+            Item {
+                ColumnLayout {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    spacing: 0
+
+                    ManualValueRow {
+                        label: "Set RPM:"
+                        unit: "rev/min"
+                        settingName: viewModel.rpmSettingName
+                        value: viewModel.inputRpm
+                        editable: true
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                        onCommitted: function(value) { viewModel.setInputRpm(String(value)) }
+                    }
+                }
+            }
+
+            Item {
+                ColumnLayout {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    spacing: 20
+
+                    ManualValueRow {
+                        label: "Max RPM:"
+                        unit: "rev/min"
+                        settingName: viewModel.maxRpmSettingName
+                        value: viewModel.inputMaxRpm
+                        editable: true
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                        onCommitted: function(value) { viewModel.setInputMaxRpm(String(value)) }
+                    }
+
+                    ManualValueRow {
+                        label: "Set CSS:"
+                        unit: "m/min"
+                        settingName: viewModel.cssSettingName
+                        value: viewModel.inputCss
+                        editable: true
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                        onCommitted: function(value) { viewModel.setInputCss(String(value)) }
+                    }
+                }
+            }
+
+            ColumnLayout {
+                spacing: 6
+                ManualValueRow {
+                    label: "Set RPM:"
+                    unit: "rev/min"
+                    value: viewModel.inputRpm
+                    editable: false
+                }
+                ManualValueRow {
+                    label: "Actual RPM:"
+                    unit: "rev/min"
+                    value: viewModel.actualRpm
+                    editable: false
+                    valueBold: true
+                }
+                Item { Layout.fillHeight: true }
+            }
+
+            ColumnLayout {
+                spacing: 6
+                ManualValueRow {
+                    label: "Max RPM:"
+                    unit: "rev/min"
+                    value: viewModel.inputMaxRpm
+                    editable: false
+                }
+                ManualValueRow {
+                    label: "Actual RPM:"
+                    unit: "rev/min"
+                    value: viewModel.actualRpm
+                    editable: false
+                    valueBold: true
+                }
+                ManualValueRow {
+                    label: "Set CSS:"
+                    unit: "m/min"
+                    value: viewModel.inputCss
+                    editable: false
+                }
+                ManualValueRow {
+                    label: "Actual CSS:"
+                    unit: "m/min"
+                    value: viewModel.actualCss
+                    editable: false
+                    valueBold: true
+                }
+            }
+
+            Item {
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 10
+
+                    Item { Layout.fillHeight: true }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: viewModel.spindlePanelMessageTitle
+                        color: root.warningTitleColor
+                        font.pixelSize: Theme.fontTitle
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: viewModel.spindlePanelMessageBody
+                        color: Theme.foreground
+                        font.pixelSize: Theme.fontLarge
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Item { Layout.fillHeight: true }
+                }
+            }
+        }
+
+        SequentialAnimation {
+            running: root.panelMode === "CoverOpened" || root.panelMode === "ResetRequired"
+            loops: Animation.Infinite
+
+            ColorAnimation {
+                target: root
+                property: "warningTitleColor"
+                to: root.warningColor
+                duration: root.warningPulseDurationMs
+                easing.type: Easing.InOutQuad
+            }
+
+            ColorAnimation {
+                target: root
+                property: "warningTitleColor"
+                to: root.warningBaseColor
+                duration: root.warningPulseDurationMs
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        Item {
+            id: spindleAngleFooter
+            visible: root.editableMode
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            anchors.bottom: parent.bottom
+            height: 50
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                height: Theme.hairline
+                color: Theme.outline
+            }
+
+            ManualSpindleAngle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                value: viewModel.spindleAngleText
+            }
+        }
+    }
+
+    // ── Right of the content: a divider, then the spindle directions ────
+    Rectangle {
+        id: sideDivider
+        anchors.right: sideColumn.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.topMargin: 1
+        anchors.bottomMargin: 1
+        width: Theme.hairline
+        color: Theme.outline
+    }
+
+    Item {
+        id: sideColumn
+        anchors.right: parent.right
+        anchors.rightMargin: 1
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.topMargin: 1
+        anchors.bottomMargin: 1
+        width: root.sideWidth
+
+        SpindleDirectionIcon {
+            id: m4Icon
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: Theme.spacingSmall
+            size: root.directionIconSize
+            clockwise: false            // M4
+            // green while the spindle turns that way
+            on: root.turning && root.lever === -1
+        }
+
+        Text {
+            id: offText
+            anchors.horizontalCenter: m4Icon.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            text: "OFF"
+            font.pixelSize: Theme.fontLarge
+            font.bold: true
+            color: root.justStopped ? root.offColor : Theme.foregroundMuted
+            Behavior on color { ColorAnimation { duration: root.changeMs } }
+        }
+
+        SpindleDirectionIcon {
+            id: m3Icon
+            anchors.horizontalCenter: m4Icon.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Theme.spacingSmall
+            size: root.directionIconSize
+            clockwise: true             // M3
+            on: root.turning && root.lever === 1
+        }
+
+    }
+}

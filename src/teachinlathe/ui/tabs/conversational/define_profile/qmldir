@@ -1,0 +1,8 @@
+module tabs.conversational.define_profile
+ArcToCard 1.0 ArcToCard.qml
+ChamferFilletBlendCard 1.0 ChamferFilletBlendCard.qml
+LineToCard 1.0 LineToCard.qml
+ProfileDetailsView 1.0 ProfileDetailsView.qml
+ProfileEditorScreen 1.0 ProfileEditorScreen.qml
+StartPointCard 1.0 StartPointCard.qml
+UndercutDin509BlendCard 1.0 UndercutDin509BlendCard.qml

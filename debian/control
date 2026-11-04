@@ -1,0 +1,50 @@
+Source: teachinlathe
+Section: cnc
+Priority: optional
+Maintainer: John Doe <doe.john@example.com>
+Build-Depends: debhelper-compat (= 13), dh-python, python3-all, python3-dev,
+ python3-poetry-core, pybuild-plugin-pyproject
+Standards-Version: 4.5.1
+Homepage: https://github.com/85vmh/teachinlathe
+Vcs-Git: https://github.com/85vmh/teachinlathe.git
+X-Python3-Version: >= 3.11
+#Testsuite: autopkgtest-pkg-python
+Rules-Requires-Root: no
+
+Package: python3-teachinlathe
+Architecture: all
+Description: TeachInLathe - A PyQt6 based Virtual Control Panel for LinuxCNC
+# Meant for a machine that already runs LinuxCNC, so what LinuxCNC brings
+# along is not repeated here: python3-numpy, python3-opengl, python3-gi,
+# python3-cairo, tcl, fonts-dejavu-core and fonts-liberation. LinuxCNC itself
+# is not listed either, so a run-in-place build satisfies it as well as the
+# linuxcnc-uspace package.
+Depends: ${python3:Depends}, ${misc:Depends},
+ python3-pyqt6,
+ python3-pyqt6.qtquick,
+ python3-ezdxf,
+# the G-code generation's geometry (stock, toolpaths, grooves)
+ python3-shapely,
+# LinuxCNC's qt5_graphics reaches Qt through qtpy, and LinuxCNC does not
+# depend on it.
+ python3-qtpy,
+ qml6-module-qtquick,
+ qml6-module-qtquick-controls,
+# Controls is built on Templates, but qml6-module-qtquick-controls only
+# depends on the templates *library*, not on the QML module that installs
+# its plugin. Without this every Popup, Button, ScrollBar and SplitView
+# fails to load, so it is named explicitly.
+ qml6-module-qtquick-templates,
+ qml6-module-qtquick-layouts,
+ qml6-module-qtquick-window,
+ qml6-module-qt5compat-graphicaleffects,
+# QtQuick imports QtQml, which in turn needs these two, yet no qml6 package
+# depends on them; without them nothing loads ("QtQml.WorkerScript is not
+# installed").
+ qml6-module-qtqml-workerscript,
+ qml6-module-qtqml-models,
+# Image loads the .svg icons through Qt's svg image-format plugin.
+ libqt6svg6,
+ fonts-noto-core,
+ fonts-noto-mono,
+ fonts-cantarell

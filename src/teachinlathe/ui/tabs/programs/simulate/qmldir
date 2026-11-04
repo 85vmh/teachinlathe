@@ -1,0 +1,3 @@
+module tabs.programs.simulate
+SimulateSeekBar 1.0 SimulateSeekBar.qml
+SimulationSeekControls 1.0 SimulationSeekControls.qml

@@ -1,0 +1,132 @@
+"""ViewModel behind the not-ready splash and the machine settings screen.
+
+Both screens show the same four facts about the machine - E-stop, power, and
+whether each axis is homed - and offer the same row of LinuxCNC diagnostic
+tools, so one ViewModel serves both.
+
+The ``*Ok`` properties say whether a state is *good*, not whether a lamp is
+lit: the .ui lit its LEDs when something was wrong, and the QML keeps that by
+showing the warning colour when ``...Ok`` is false.
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Optional
+
+from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
+
+from teachinlathe.app.app_identity import MACHINE_NAME
+from teachinlathe.core.command_repository import command_repository
+from teachinlathe.core.machine_repository import machine_repository
+from teachinlathe.core.status_repository import status_repository
+from teachinlathe.core.tools_repository import tools_repository
+
+log = logging.getLogger(__name__)
+
+
+class MachineViewModel(QObject):
+    stateChanged = pyqtSignal()
+
+    def __init__(self, parent: Optional[QObject] = None,
+                 machine=None, status=None, tools=None, commands=None) -> None:
+        super().__init__(parent)
+        self._machine = machine_repository() if machine is None else machine
+        self._commands = command_repository() if commands is None else commands
+        self._status = status_repository() if status is None else status
+        self._tools = tools_repository() if tools is None else tools
+
+        for channel in ('task_state', 'estop', 'enabled', 'homed'):
+            try:
+                getattr(self._status, channel).notify(self._onStateChanged)
+            except AttributeError:
+                log.debug("status has no %s channel", channel)
+
+    def _onStateChanged(self, *_args) -> None:
+        self.stateChanged.emit()
+
+    # -- what the screens show --------------------------------------------
+
+    @pyqtProperty(str, constant=True)
+    def machineName(self) -> str:
+        return MACHINE_NAME
+
+    @pyqtProperty(bool, notify=stateChanged)
+    def estopOk(self):
+        """True when the E-stop is released."""
+        return not self._machine.is_estopped
+
+    @pyqtProperty(str, notify=stateChanged)
+    def estopText(self):
+        return "E-Stop Free" if self.estopOk else "E-Stop Button Pressed"
+
+    @pyqtProperty(bool, notify=stateChanged)
+    def powerOk(self):
+        """True when the machine is on."""
+        return self._machine.is_on
+
+    @pyqtProperty(str, notify=stateChanged)
+    def powerText(self):
+        return "NC Enabled" if self.powerOk else "NC not Enabled"
+
+    @pyqtProperty(bool, notify=stateChanged)
+    def xHomed(self):
+        return self._machine.is_axis_homed('x')
+
+    @pyqtProperty(str, notify=stateChanged)
+    def xHomedText(self):
+        return "X axis homed" if self.xHomed else "X axis NOT homed"
+
+    @pyqtProperty(bool, notify=stateChanged)
+    def zHomed(self):
+        return self._machine.is_axis_homed('z')
+
+    @pyqtProperty(str, notify=stateChanged)
+    def zHomedText(self):
+        return "Z axis homed" if self.zHomed else "Z axis NOT homed"
+
+    @pyqtProperty(bool, notify=stateChanged)
+    def allHomed(self):
+        return self._machine.all_homed
+
+    @pyqtProperty(bool, notify=stateChanged)
+    def machineReady(self):
+        """Whether the machine can be worked with.
+
+        The rule the .ui's stacked widget switched on: out of E-stop, powered,
+        and every axis homed.
+        """
+        return self.estopOk and self.powerOk and self.xHomed and self.zHomed
+
+    # -- the predefined positions -----------------------------------------
+
+    @pyqtSlot()
+    def setG28(self):
+        self._commands.issue_mdi("G28.1")
+
+    @pyqtSlot()
+    def goToG28(self):
+        self._commands.issue_mdi("G28")
+
+    @pyqtSlot()
+    def setG30(self):
+        self._commands.issue_mdi("G30.1")
+
+    @pyqtSlot()
+    def goToG30(self):
+        self._commands.issue_mdi("G30")
+
+    # -- the diagnostic tools ---------------------------------------------
+
+    @pyqtProperty('QVariantList', constant=True)
+    def tools(self):
+        """The launchable tools, as QML needs them: a key and a label."""
+        return [{"key": tool.key, "label": tool.label} for tool in self._tools.tools]
+
+    @pyqtSlot(str, result=bool)
+    def launchTool(self, key):
+        return self._tools.launch(str(key))
+
+    @pyqtSlot(str, result=bool)
+    def canLaunchTool(self, key):
+        return self._tools.can_launch(str(key))[0]

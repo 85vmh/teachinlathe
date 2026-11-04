@@ -1,0 +1,623 @@
+// ProfileEditorScreen.qml — full-screen editor for Define Profile primitives
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import tabs.conversational
+import common.touchable_input
+import theme
+import common
+
+Item {
+    id: root
+    objectName: "profileEditorScreen"
+
+    // ── Public API ──────────────────────────────────────────────────────────────
+    // The view model of the operation this edits (OperationEditorViewModel.py).
+    property var editor: null
+    property int    opIndex:             -1
+    property var    opData:              null
+    property int    profileId:           0
+    property string profileType:         "od"
+    property bool   _loading:            false
+    property var    primitives:          []
+    property var    workpiece:           ({})
+    property int    selectedPrimIndex:   -1
+    property int    selectedBlendIndex:  -1
+    // The card swiped open on its Delete (a SwipeRow), or null
+    property var    openSwipeRow:        null
+
+    signal backRequested()
+    signal openNumPadRequested(var field)
+
+    // ── Data functions ──────────────────────────────────────────────────────────
+    function applyData(index, data) {
+        _loading  = true
+        opIndex   = index
+        opData    = data || {}
+        profileId   = opData.profile_id   !== undefined ? Math.round(Number(opData.profile_id)) : 0
+        profileType = opData.profile_type !== undefined ? String(opData.profile_type) : "od"
+        primitives  = JSON.parse(JSON.stringify(opData.profile_primitives || []))
+        workpiece   = JSON.parse(JSON.stringify(opData.workpiece || {}))
+        selectedPrimIndex  = -1
+        selectedBlendIndex = -1
+        _loading  = false
+        profileCanvas.resetView()
+    }
+
+    function emitSave() {
+        if (_loading) return
+        var merged = JSON.parse(JSON.stringify(opData || {}))
+        merged.profile_id         = root.profileId
+        merged.profile_type       = root.profileType
+        merged.profile_primitives = root.primitives
+        opData = merged
+        root.editor.save(merged)
+    }
+
+    function _renumber(arr) {
+        for (var i = 0; i < arr.length; i++)
+            arr[i].primitive_id = i + 1
+        return arr
+    }
+
+    function primUpdated(idx, newData) {
+        var arr = JSON.parse(JSON.stringify(root.primitives))
+        arr[idx] = newData
+        root.primitives = _renumber(arr)
+        root.emitSave()
+    }
+
+    function primDeleted(idx) {
+        if (idx <= 0) return
+        var arr = JSON.parse(JSON.stringify(root.primitives))
+        arr.splice(idx, 1)
+        root.primitives = _renumber(arr)
+        var newLen = root.primitives.length
+        var nextIdx = (newLen === 0) ? -1 : Math.min(idx, newLen - 1)
+        root.selectedPrimIndex  = nextIdx
+        root.selectedBlendIndex = -1
+        root.emitSave()
+        if (nextIdx >= 0) {
+            Qt.callLater(function() {
+                Qt.callLater(function() {
+                    root._scrollTo(nextIdx, idx >= newLen)
+                })
+            })
+        }
+    }
+
+    function _refEndCoords(refIdx) {
+        if (refIdx < 0 || refIdx >= root.primitives.length) return { x: 0, z: 0 }
+        var currentX = 0
+        var currentZ = 0
+        for (var i = 0; i <= refIdx; i++) {
+            var item = root.primitives[i]
+            if (!item) continue
+            if (item.type === "startPoint") {
+                currentX = item.x_start !== undefined ? Number(item.x_start) : 0
+                currentZ = item.z_start !== undefined ? Number(item.z_start) : 0
+            } else if (item.type === "lineTo") {
+                var mode = String(item.input !== undefined ? item.input : "xz").toLowerCase()
+                if (mode !== "xz" && mode !== "ax" && mode !== "az") mode = "xz"
+                var endX = item.x_end !== undefined ? Number(item.x_end) : 0
+                var endZ = item.z_end !== undefined ? Number(item.z_end) : 0
+                if (mode === "az") {
+                    var azTan = Math.tan((Number(item.angle || 0) * Math.PI) / 180.0)
+                    currentX = currentX + 2.0 * (endZ - currentZ) * azTan
+                    currentZ = endZ
+                } else if (mode === "ax") {
+                    var axTan = Math.tan((Number(item.angle || 0) * Math.PI) / 180.0)
+                    var radialDelta = (endX - currentX) / 2.0
+                    currentZ = Math.abs(axTan) < 1e-12 ? currentZ : currentZ + radialDelta / axTan
+                    currentX = endX
+                } else {
+                    currentX = endX
+                    currentZ = endZ
+                }
+            } else if (item.type === "arcTo") {
+                currentX = item.x_end !== undefined ? Number(item.x_end) : 0
+                currentZ = item.z_end !== undefined ? Number(item.z_end) : 0
+            }
+        }
+        return { x: currentX, z: currentZ }
+    }
+
+    function primInserted(insertIdx, primType, refX, refZ) {
+        var arr = JSON.parse(JSON.stringify(root.primitives))
+        var rx = (refX !== undefined) ? refX : 0
+        var rz = (refZ !== undefined) ? refZ : 0
+        var newPrim
+        if (primType === "lineTo") {
+            newPrim = { type: "lineTo", primitive_id: 0, input: "xz", angle: 0,
+                        x_end: rx, z_end: rz, blend: { type: "none" } }
+        } else {
+            newPrim = { type: "arcTo", primitive_id: 0, direction: "cw", arc_radius: 10,
+                        x_end: rx, z_end: rz, x_center: 0, z_center: 0, blend: { type: "none" } }
+        }
+        var actualIdx = (insertIdx < 0 || insertIdx >= arr.length)
+                        ? arr.length
+                        : Math.max(1, insertIdx)
+        arr.splice(actualIdx, 0, newPrim)
+        root.primitives = _renumber(arr)
+        root.selectedPrimIndex  = actualIdx
+        root.selectedBlendIndex = -1
+        root.emitSave()
+        Qt.callLater(function() {
+            Qt.callLater(function() {
+                root._scrollTo(actualIdx, true)
+            })
+        })
+    }
+
+    function addPrimitiveAbove(primType) {
+        if (root.selectedPrimIndex <= 0) return
+        var ref = root._refEndCoords(root.selectedPrimIndex - 1)
+        root.primInserted(root.selectedPrimIndex, primType, ref.x, ref.z)
+    }
+
+    function addPrimitiveBelow(primType) {
+        var idx = root.selectedPrimIndex < 0
+                ? root.primitives.length
+                : root.selectedPrimIndex + 1
+        var ref = root._refEndCoords(root.selectedPrimIndex)
+        root.primInserted(idx, primType, ref.x, ref.z)
+    }
+
+    onSelectedPrimIndexChanged:  Qt.callLater(_scrollToSelected)
+    onSelectedBlendIndexChanged: Qt.callLater(_scrollToBlend)
+
+    function _scrollToSelected() {
+        if (root.selectedPrimIndex < 0) return
+        _scrollTo(root.selectedPrimIndex, false)
+    }
+    function _scrollToBlend() {
+        if (root.selectedBlendIndex < 0) return
+        _scrollTo(root.selectedBlendIndex, true)
+    }
+
+    function _scrollTo(targetIdx, scrollBottom) {
+        var col = primRepeater.parent
+        if (!col) return
+        for (var i = 0; i < col.children.length; i++) {
+            var child = col.children[i]
+            if (typeof child.mi !== "undefined" && child.mi === targetIdx) {
+                var childY = child.y
+                var childH = child.height
+                var fl     = primScroll.contentItem
+                var visTop = fl.contentY
+                var visBot = visTop + primScroll.height
+                if (scrollBottom) {
+                    if (childY + childH > visBot)
+                        fl.contentY = childY + childH - primScroll.height + 8
+                    else if (childY < visTop)
+                        fl.contentY = Math.max(0, childY - 8)
+                } else {
+                    if (childY < visTop)
+                        fl.contentY = Math.max(0, childY - 8)
+                    else if (childY + childH > visBot)
+                        fl.contentY = childY + childH - primScroll.height + 8
+                }
+                break
+            }
+        }
+    }
+
+    IntValidator { id: intVal; bottom: 1; top: 999 }
+
+    // ── Screen background ────────────────────────────────────────────────────────
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.surfaceAlt
+    }
+
+    // ── Full layout ──────────────────────────────────────────────────────────────
+    // No title bar here — the AppShell QML title bar is used (Back/Done driven via headerState)
+    Item {
+        anchors.fill: parent
+
+        // ── Editor area: 35% list | 65% canvas ───────────────────────────────────
+        Item {
+            anchors.fill: parent
+
+            // ── Left panel ────────────────────────────────────────────────────────
+            Rectangle {
+                id: leftPanelBg
+                anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                width: parent.width * 0.35
+                color: Theme.surface
+
+                ColumnLayout {
+                    id: leftPanel
+                    anchors.fill: parent
+                    spacing: Theme.spacingSmall
+
+                    // Profile ID + Type row
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 80
+                        Layout.leftMargin: 12; Layout.rightMargin: 12
+
+                        // Left half: Profile ID
+                        RowLayout {
+                            anchors { left: parent.left; right: centerDivider.left; top: parent.top; bottom: parent.bottom }
+                            spacing: Theme.spacingSmall
+                            Label {
+                                text: "Profile ID:"
+                                font.pointSize: 11; font.family: "Noto Sans"
+                                color: Theme.foreground
+                            }
+                            NumpadField {
+                                Layout.preferredWidth: 70
+                                settingName: "defineProfile.profile_id"
+                                validatorObject: intVal
+                                value: root.profileId
+                                formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
+                                hAlign: Text.AlignHCenter
+                                onOpenRequested: function(field) { root.openNumPadRequested(field) }
+                                onValueCommitted: function(value) { root.profileId = Math.round(value); root.emitSave() }
+                            }
+                        }
+
+                        Rectangle {
+                            id: centerDivider
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Theme.hairline; height: Theme.inputHeight; color: Theme.separator
+                        }
+
+                        // Right half: Type OD/ID
+                        RowLayout {
+                            anchors { left: centerDivider.right; right: parent.right; top: parent.top; bottom: parent.bottom }
+                            spacing: Theme.spacingSmall
+                            Item { Layout.preferredWidth: 8 }
+                            Label {
+                                text: "Type:"
+                                font.pointSize: 11; font.family: "Noto Sans"
+                                color: Theme.foreground
+                            }
+                            ButtonGroup { id: profileTypeGroup }
+                            RadioButton {
+                                text: "OD"
+                                font.pointSize: 11; font.family: "Noto Sans"
+                                checked: root.profileType === "od"
+                                ButtonGroup.group: profileTypeGroup
+                                onToggled: if (checked) { root.profileType = "od"; root.emitSave() }
+                            }
+                            RadioButton {
+                                text: "ID"
+                                font.pointSize: 11; font.family: "Noto Sans"
+                                checked: root.profileType === "id"
+                                ButtonGroup.group: profileTypeGroup
+                                onToggled: if (checked) { root.profileType = "id"; root.emitSave() }
+                            }
+                        }
+                    }
+
+                    // Divider
+                    Rectangle {
+                        Layout.fillWidth: true; height: 1
+                        color: Theme.surfaceAlt
+                        Layout.leftMargin: 4; Layout.rightMargin: 4
+                    }
+
+                    // Scrollable primitive cards
+                    Item {
+                        Layout.fillWidth:  true
+                        Layout.fillHeight: true
+                        Layout.leftMargin: 6; Layout.rightMargin: 6
+
+                    ScrollView {
+                        id: primScroll
+                        anchors.fill: parent
+
+                        Connections {
+                            target: primScroll.contentItem
+                            function onMovementStarted() { root.openSwipeRow = null }
+                        }
+                        clip: true
+                        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                        contentWidth: availableWidth
+                        background: Rectangle { color: Theme.surface }
+
+                        Column {
+                            width: primScroll.availableWidth
+                            spacing: Theme.spacingSmall
+                            topPadding: 4; bottomPadding: 8
+
+                            Repeater {
+                                id: primRepeater
+                                model: root.primitives
+
+                                delegate: Column {
+                                    property var md: modelData
+                                    property int mi: index
+                                    width: parent ? parent.width : 0
+                                    spacing: Theme.spacingSmall
+
+                                    onMdChanged: {
+                                        if (primLdr.item)  primLdr.item.primData  = md
+                                        if (blendLdr.item) blendLdr.item.primData = md
+                                    }
+
+                                    // Swiped left a card shows Delete (see SwipeRow);
+                                    // the start point is never deleted
+                                    SwipeRow {
+                                        id: primSwipe
+                                        width: parent.width
+                                        height: primLdr.height
+                                        swipeEnabled: mi > 0
+                                        duplicateEnabled: false
+                                        actionGap: Theme.spacingSmall
+                                        actionRadius: 8
+                                        swipeSide: root.openSwipeRow === primSwipe ? 1 : 0
+                                        onSwipeOpened: root.openSwipeRow = primSwipe
+                                        onSwipeClosed: if (root.openSwipeRow === primSwipe) root.openSwipeRow = null
+                                        onDeleteRequested: {
+                                            root.openSwipeRow = null
+                                            root.primDeleted(mi)
+                                        }
+
+                                    Loader {
+                                        id: primLdr
+                                        width: parent.width
+                                        sourceComponent: {
+                                            if (!md) return null
+                                            if (md.type === "startPoint") return startPointComp
+                                            if (md.type === "lineTo")     return lineToComp
+                                            if (md.type === "arcTo")      return arcToComp
+                                            return null
+                                        }
+                                        onLoaded: {
+                                            item.primData   = md
+                                            item.primIdx    = mi
+                                            item.primCount  = Qt.binding(function() { return root.primitives.length })
+                                            item.isSelected = Qt.binding(function() { return root.selectedPrimIndex === mi })
+                                            item.tapped.connect(function() {
+                                                root.selectedPrimIndex  = mi
+                                                root.selectedBlendIndex = -1
+                                            })
+                                            item.primUpdated.connect(root.primUpdated)
+                                            item.openNumPadRequested.connect(root.openNumPadRequested)
+                                        }
+                                    }
+                                    }
+
+                                    // Swiped left a blend's card shows Delete, which clears the blend
+                                    SwipeRow {
+                                        id: blendSwipe
+                                        width: parent.width
+                                        height: blendLdr.height
+                                        visible: blendLdr.active
+                                        duplicateEnabled: false
+                                        actionGap: Theme.spacingSmall
+                                        actionRadius: 8
+                                        swipeSide: root.openSwipeRow === blendSwipe ? 1 : 0
+                                        onSwipeOpened: root.openSwipeRow = blendSwipe
+                                        onSwipeClosed: if (root.openSwipeRow === blendSwipe) root.openSwipeRow = null
+                                        onDeleteRequested: {
+                                            root.openSwipeRow = null
+                                            var d = JSON.parse(JSON.stringify(root.primitives[mi]))
+                                            d.blend = { type: "none" }
+                                            root.primUpdated(mi, d)
+                                            if (root.selectedBlendIndex === mi)
+                                                root.selectedBlendIndex = -1
+                                        }
+
+                                    Loader {
+                                        id: blendLdr
+                                        width: parent.width
+                                        active:  md !== null && md !== undefined &&
+                                                 md.blend !== undefined && md.blend !== null &&
+                                                 md.blend.type !== "none"
+                                        sourceComponent: {
+                                            if (!md || !md.blend) return null
+                                            if (md.blend.type === "undercut_din509") return undercutDin509BlendComp
+                                            if (md.blend.type === "chamfer" || md.blend.type === "fillet") return chamferFilletBlendComp
+                                            return null
+                                        }
+                                        onLoaded: {
+                                            item.primData   = md
+                                            item.primIdx    = mi
+                                            item.isSelected = Qt.binding(function() { return root.selectedBlendIndex === mi })
+                                            item.tapped.connect(function() {
+                                                root.selectedBlendIndex = mi
+                                                root.selectedPrimIndex  = -1
+                                            })
+                                            item.primUpdated.connect(root.primUpdated)
+                                            item.openNumPadRequested.connect(root.openNumPadRequested)
+                                        }
+                                    }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    ScrollFades {
+                        anchors.fill: parent
+                        flickable: primScroll.contentItem
+                        color: Theme.surface
+                    }
+
+                    } // Item wrapper for scroll + fades
+
+                    Rectangle {
+                        Layout.fillWidth: true; height: 1
+                        color: Theme.surfaceAlt
+                        Layout.leftMargin: 4; Layout.rightMargin: 4
+                    }
+
+                    // Add primitive buttons
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 80
+
+                        RowLayout {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.verticalCenterOffset: -4
+                            anchors.leftMargin: 16
+                            anchors.rightMargin: 16
+                            spacing: Theme.margin
+
+                            Repeater {
+                                model: [
+                                    { label: "LineTo", direction: "Above", type: "lineTo", iconEnd: Images.url("move_up_icon.svg") },
+                                    { label: "ArcTo", direction: "Above", type: "arcTo", iconEnd: Images.url("move_up_icon.svg") },
+                                    { label: "LineTo", direction: "Below", type: "lineTo", iconEnd: Images.url("move_down_icon.svg") },
+                                    { label: "ArcTo", direction: "Below", type: "arcTo", iconEnd: Images.url("move_down_icon.svg") }
+                                ]
+
+                                delegate: Button {
+                                    id: addPrimitiveButton
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 60
+                                    enabled: modelData.direction === "Above" ? root.selectedPrimIndex > 0 : root.primitives.length > 0
+                                    font.pixelSize: Theme.fontBody
+                                    font.family: "Noto Sans"
+
+                                    contentItem: RowLayout {
+                                        spacing: 4
+
+                                        Image {
+                                            Layout.preferredWidth: 36
+                                            Layout.preferredHeight: Theme.buttonHeightSmall
+                                            sourceSize.width: 36
+                                            sourceSize.height: 36
+                                            source: Images.url("add_op_icon.svg")
+                                            fillMode: Image.PreserveAspectFit
+                                            opacity: addPrimitiveButton.enabled ? 1.0 : 0.35
+                                        }
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: modelData.label
+                                            font: addPrimitiveButton.font
+                                            color: Theme.foreground
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            wrapMode: Text.WordWrap
+                                            maximumLineCount: 1
+                                            opacity: addPrimitiveButton.enabled ? 1.0 : 0.35
+                                        }
+
+                                        Image {
+                                            Layout.preferredWidth: 32
+                                            Layout.preferredHeight: 32
+                                            sourceSize.width: 32
+                                            sourceSize.height: 32
+                                            source: modelData.iconEnd
+                                            fillMode: Image.PreserveAspectFit
+                                            opacity: addPrimitiveButton.enabled ? 1.0 : 0.35
+                                        }
+                                    }
+
+                                    background: Rectangle {
+                                        radius: Theme.radius
+                                        color: parent.pressed ? Theme.selection : parent.hovered ? Theme.hover : Theme.surfaceAlt
+                                        border.color: Theme.separator
+                                        border.width: Theme.hairline
+                                        opacity: parent.enabled ? 1.0 : 0.55
+                                    }
+
+                                    onClicked: {
+                                        if (modelData.direction === "Above")
+                                            root.addPrimitiveAbove(modelData.type)
+                                        else
+                                            root.addPrimitiveBelow(modelData.type)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Vertical separator
+            Rectangle {
+                anchors { left: leftPanelBg.right; top: parent.top; bottom: parent.bottom }
+                width: Theme.hairline; color: Theme.separator
+            }
+
+            // ── Right panel: canvas ────────────────────────────────────────────────
+            ColumnLayout {
+                anchors {
+                    left:   leftPanelBg.right; right:  parent.right
+                    top:    parent.top;         bottom: parent.bottom
+                    leftMargin: 14; rightMargin: 12
+                    topMargin: 10;  bottomMargin: 10
+                }
+                spacing: Theme.spacingSmall
+
+                Item {
+                    Layout.fillWidth:  true
+                    Layout.fillHeight: true
+
+                    ProfileCanvas {
+                        id: profileCanvas
+                        anchors.fill: parent
+                        // the profile in the stock's outline colour and
+                        // weight, as the operations draw it
+                        profileLineColor: "#6b7280"
+                        profileLineWidth: 1.5
+                        primitives:         root.primitives
+                        profileType:        root.profileType
+                        workpiece:          root.workpiece
+                        selectedPrimIndex:  root.selectedPrimIndex
+                        selectedBlendIndex: root.selectedBlendIndex
+                        onPrimitiveSelected: function(idx) {
+                            root.selectedPrimIndex  = idx
+                            root.selectedBlendIndex = -1
+                        }
+                        onBlendSelected: function(idx) {
+                            root.selectedBlendIndex = idx
+                            root.selectedPrimIndex  = -1
+                        }
+                        tagEditable: true
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                        onDiameterEdited: function(idx, diameter) {
+                            var arr = profileCanvas.primitivesWithDiameter(idx, diameter)
+                            if (!arr) return
+                            root.primitives = root._renumber(arr)
+                            root.emitSave()
+                        }
+                        onBlendEdited: function(idx, field, value) {
+                            var d = JSON.parse(JSON.stringify(root.primitives[idx]))
+                            d.blend[field] = value
+                            root.primUpdated(idx, d)
+                        }
+                        onSelectionCleared: {
+                            root.selectedPrimIndex = -1
+                            root.selectedBlendIndex = -1
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            color: "transparent"
+                            border.color: Theme.separator; border.width: Theme.hairline
+                        }
+                    }
+
+                    // zoom, fit to screen and mirror - top-left, as on every profile canvas
+                    CanvasViewButtons {
+                        canvas: profileCanvas
+                    }
+                }
+            }
+        }
+    }
+
+    // A press anywhere but on the open card's Delete closes it
+    SwipeDismissArea {
+        openRow: root.openSwipeRow
+        onDismissed: root.openSwipeRow = null
+    }
+
+    // ── Card component references ────────────────────────────────────────────────
+    Component { id: startPointComp; StartPointCard {} }
+    Component { id: lineToComp;     LineToCard {}     }
+    Component { id: arcToComp;      ArcToCard {}      }
+    Component { id: chamferFilletBlendComp; ChamferFilletBlendCard {} }
+    Component { id: undercutDin509BlendComp; UndercutDin509BlendCard {} }
+}

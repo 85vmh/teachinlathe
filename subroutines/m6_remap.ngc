@@ -1,0 +1,16 @@
+o<m6_remap> sub
+(Remap of M6: [RS274NGC] REMAP = M6 modalgroup=6 ngc=m6_remap)
+(Does what tc_at_g28 does. The move to the tool change position is made by the)
+(built-in M6 below: [EMCIO]TOOL_CHANGE_POSITION, or the iocontrol.0.tool-change-pos-*)
+(pins when iocontrol.0.tool-change-pos-enable is TRUE.)
+
+    o<skip> if [#<_selected_tool> EQ #<_current_tool>]
+        o<m6_remap> return
+    o<skip> endif
+
+    M5  (stop the spindle)
+    M6  (built-in M6 inside its own remap: moves to the tool change position, then changes the tool)
+    G43 (tool length offset of the new tool)
+    M0  (pause the program, requires a cycle start after confirming the tool change)
+
+o<m6_remap> endsub

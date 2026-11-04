@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg fill="#ffffff" width="800px" height="800px" viewBox="0 0 32 32" id="icon" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <title>generate-ngc</title>
+  <!-- .ngc, a letter at a time: spaced out, which letter-spacing may not be where it is drawn -->
+  <g font-family="sans-serif" font-weight="bold" font-size="12" text-anchor="middle">
+    <text x="3.5" y="12">.</text>
+    <text x="10" y="12">n</text>
+    <text x="18.5" y="12">g</text>
+    <text x="26.5" y="12">c</text>
+  </g>
+  <path d="M27,24v4H5V24H3v4a2,2,0,0,0,2,2H27a2,2,0,0,0,2-2V24Z"/>
+  <polygon points="21 21 19.586 19.586 17 22.172 17 16 15 16 15 22.172 12.414 19.586 11 21 16 26 21 21"/>
+  <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" class="cls-1" width="32" height="32"/>
+</svg>

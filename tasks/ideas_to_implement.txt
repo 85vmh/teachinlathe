@@ -1,0 +1,37 @@
+0. De reparat:
+- teach in
+- smart numpad pe tipuri de inputs
+- thread calculator
+- enable/disable/update inputs in functie de spindle/feed on/off si current spindle gear.
+- rapid speed in program vs jog speed
+
+
+1.Define profile as fullscreen.
+- taburile de jos nu sunt relevante
+- events nu sunt relevante
+- Titlul: Define Profile (Op #3)
+- In main list of operations, o sa vad doar graficul cu buton de edit.
+- Din main cand dau add operation de DefineProfile, intru direct in screenul fullscreen.
+- Input fields trebuie sa fie la o distanta mai mare unul de altul incat sa fie ok pt touch screen.
+- Butoatele de delete sa fie cu rosu.
+- Tap pe grafic inafara unei linii face unselect la un element din lista.
+- Trebuie sa adaug primitiva de undercut.
+- Trebuie sa pot pune chamfer sau radius incepand de la start point, pornesc cu el drept si adaug raza sau chamfer.
+- Butoanele mai mari si mai spatiate
+- Undercut parametrizabil
+
+
+2. Profile Roughing
+- pentru acum scoatem pass-urile la 45 grade
+-
+
+3. M1 Pause to inspect.
+- adauga un dwell dupa ce am repornit spindle pana cand incep miscarea?
+- adauga un dwell dupa repozitionare, inainte de a incepe?
+- adauga o pauza ce sa necesite inca un cycle start? ca sa inceapa miscarea efectiva?
+
+4. Program running screen.
+- fullscreen, no tabs
+- Gcode viewer are un buton care atunci cand dau click pe el, linia curenta este a 5-a linie vizibila.
+Daca fac scroll mai jos, butonul se dezactiveaza, cand ajunge din nou la a 5-a linie, se reactiveaza singur.
+Daca ne apropiem de final, linia curenta, o sa coboare spre finalul programului.

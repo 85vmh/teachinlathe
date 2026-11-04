@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+# There is no test suite to run.
+override_dh_auto_test:
+
+# Extra files go in after dh_install: anything written to the package
+# directory before dh_prep (as dh_auto_test used to do) is wiped.
+override_dh_install:
+	dh_install
+
+	# create icons directory if it doesn't exist
+	mkdir -p debian/python3-teachinlathe/usr/share/icons/hicolor/scalable/apps/
+	# copy icons from source to icons directory
+	install -m 644 src/teachinlathe/ui/common/images/home_folder.svg debian/python3-teachinlathe/usr/share/icons/hicolor/scalable/apps/teachinlathe.svg
+
+	# install desktop launcher so desktop shells can associate the Qt window
+	mkdir -p debian/python3-teachinlathe/usr/share/applications/
+	install -m 644 debian/teachinlathe.desktop debian/python3-teachinlathe/usr/share/applications/org.teachinlathe.TeachInLathe.desktop
