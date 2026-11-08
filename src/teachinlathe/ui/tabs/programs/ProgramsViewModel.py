@@ -425,7 +425,11 @@ class ProgramsViewModel(QObject):
             self._on_running_state_changed()
 
     def _on_running_state_changed(self):
-        active = self._actions.isActive
+        # the loaded program's run, not an MDI command: the cycle start LED
+        # blinks while a program is loaded and idle, so _run_started is often
+        # set, and an MDI move from the Manual Turning tab would otherwise
+        # count as the program running - the run screen, full screen, there
+        active = self._actions.isProgramActive
         loaded = self._has_loaded_program_for_run()
         tracking_active = active and loaded and self._run_started
         if tracking_active and not self._was_active:

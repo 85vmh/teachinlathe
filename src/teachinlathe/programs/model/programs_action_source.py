@@ -85,6 +85,7 @@ class ProgramsActionSource(QObject):
         self._runtime_store = runtime_store
         self._is_running = False
         self._is_active = False
+        self._is_program_active = False
         self._cycle_start_led_active = False
         self._start = ProgramButtonState('Start Program', self)
         self._stop = ProgramButtonState('Stop Program', self)
@@ -107,6 +108,12 @@ class ProgramsActionSource(QObject):
     @pyqtProperty(bool, notify=stateChanged)
     def isActive(self):
         return self._is_active
+
+    @pyqtProperty(bool, notify=stateChanged)
+    def isProgramActive(self):
+        """isActive, for the loaded program alone: running or paused in
+        AUTO - not an MDI command."""
+        return self._is_program_active
 
     @pyqtProperty(bool, notify=stateChanged)
     def cycleStartLedActive(self):
@@ -146,6 +153,7 @@ class ProgramsActionSource(QObject):
             getattr(STATUS, 'enabled', None),
             getattr(STATUS, 'all_axes_homed', None),
             getattr(STATUS, 'interp_state', None),
+            getattr(STATUS, 'task_mode', None),
             getattr(STATUS, 'file', None),
             getattr(STATUS, 'state', None),
             getattr(STATUS, 'paused', None),
@@ -204,6 +212,11 @@ class ProgramsActionSource(QObject):
         # "active" = a program is in progress (running OR paused); used to drive
         # the full-screen run view so a pause doesn't look like completion.
         self._is_active = interp_active or paused
+        # a program of its own: in AUTO. An MDI command - a Move to G28, a work
+        # offset chosen, a TeachIn on the Manual Turning tab - runs the
+        # interpreter too, but in MDI, and is not the loaded program running.
+        task_mode = int(_channel_value('task_mode', getattr(stat, 'task_mode', 0)) or 0)
+        self._is_program_active = self._is_active and task_mode == linuxcnc.MODE_AUTO
         self._start.update(
             enabled=start_enabled,
             active=running,
