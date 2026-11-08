@@ -75,14 +75,20 @@ Rectangle {
         return offsets[lineNumber - 1]
     }
 
+    // the scroll's range, its margins in: past the text's ends in the
+    // simulation (flick.topMargin, bottomMargin)
+    function _minContentY() {
+        return -flick.topMargin
+    }
+
     function _maxContentY() {
-        return Math.max(0, flick.contentHeight - flick.height)
+        return Math.max(root._minContentY(), flick.contentHeight - flick.height + flick.bottomMargin)
     }
 
     function _clampContentY(value) {
         if (!isFinite(value))
-            return 0
-        return Math.max(0, Math.min(root._maxContentY(), value))
+            return root._minContentY()
+        return Math.max(root._minContentY(), Math.min(root._maxContentY(), value))
     }
 
     function _highlightLineRect() {
@@ -229,6 +235,11 @@ Rectangle {
         boundsBehavior: Flickable.StopAtBounds
         contentWidth: contentRow.width
         contentHeight: Math.max(viewport.height, contentRow.height)
+        // The simulation seeks to the line in the middle of the view: half a
+        // view of empty room over the first line and under the last, so every
+        // line - the first ones and the last ones too - can be scrolled there.
+        topMargin: root.followUserScroll ? height / 2 : 0
+        bottomMargin: root.followUserScroll ? height / 2 : 0
 
         ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
         ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
