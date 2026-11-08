@@ -4,8 +4,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import common.touchable_input
 import theme
+import common
 
-GroupBox {
+TitledCard {
     id: root
     title: "Profiling Options"
     Layout.fillWidth: true

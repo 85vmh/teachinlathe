@@ -2,11 +2,13 @@ module common
 Card 1.0 Card.qml
 Dropdown 1.0 Dropdown.qml
 singleton Images 1.0 Images.qml
+OperationIconTextButton 1.0 OperationIconTextButton.qml
 RapidOverrideSelector 1.0 RapidOverrideSelector.qml
 SafetyButton 1.0 SafetyButton.qml
 ScrollFades 1.0 ScrollFades.qml
 SegmentedTabs 1.0 SegmentedTabs.qml
 SquareIconButton 1.0 SquareIconButton.qml
 TeachInButton 1.0 TeachInButton.qml
+TitledCard 1.0 TitledCard.qml
 ToggleBox 1.0 ToggleBox.qml
 ToggleSwitch 1.0 ToggleSwitch.qml

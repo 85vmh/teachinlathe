@@ -12,10 +12,10 @@ Two things here are not decoration:
 
 * **The level is set on the package logger, not left to root.** Root defaults
   to WARNING, and a logger with no level of its own inherits it, so every
-  ``log.info`` would be dropped before any handler saw it. The in-app event
-  log (``app_state.StoreLogHandler``, which listens on root at INFO) would
-  then show nothing.
-* **Propagation is left on**, so records still reach root and that event log.
+  ``log.info`` would be dropped before any handler saw it.
+* **Propagation is left on**, so records still reach root and the Events
+  list's handler there (``events.logic.events_use_case.EventsLogHandler``,
+  WARNING and above).
 """
 
 from __future__ import annotations

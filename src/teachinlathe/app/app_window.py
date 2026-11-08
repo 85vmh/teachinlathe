@@ -20,6 +20,7 @@ from teachinlathe.app.app_state import AppState
 from teachinlathe.app.app_identity import APPLICATION_DISPLAY_NAME
 from teachinlathe.app.touch_feedback import TouchFeedback
 from teachinlathe.app.app_shell_qml import AppShellBridge
+from teachinlathe.app.events_view_model import EventsViewModel
 from teachinlathe.ui.tabs.programs.backplot import register_qml_types as register_backplot_type
 from teachinlathe.ui.tabs.conversational.ConversationalViewModel import ConversationalViewModel
 from teachinlathe.ui.tabs.machine_settings.FixturesViewModel import FixturesViewModel
@@ -71,6 +72,8 @@ class AppWindow(QObject):
         """Everything QML binds to, built before the scene is loaded."""
         # First: the tabs are handed it, for full screen, toasts and tab switches.
         self.appShellBridge = AppShellBridge(self.appState, parent=self)
+        self.eventsViewModel = EventsViewModel(self.appShellBridge, self.appState.navigationStore,
+                                               self.application.events, self)
 
         self.manualTabViewModel = ManualTabViewModel(self)
         self.toolsTabViewModel = ToolsTabViewModel(self.appShellBridge, self)
@@ -121,6 +124,7 @@ class AppWindow(QObject):
             ("TouchFeedback", self.touchFeedback),
             ("NavigationStore", self.appState.navigationStore),
             ("AppShellBridge", self.appShellBridge),
+            ("EventsViewModel", self.eventsViewModel),
             ("ManualTabViewModel", self.manualTabViewModel),
             ("ToolsTabViewModel", self.toolsTabViewModel),
             ("ConversationalViewModel", self.conversationalViewModel),
@@ -172,7 +176,7 @@ class AppWindow(QObject):
         has to happen on the machine side when it does."""
         tab_id = self.appState.navigationStore.currentTab or "manual"
         self.manualTabViewModel.dro.limitsHandler.setChuckLimitsActive(tab_id != "settings")
-        self.appState.cncStore.addEvent("INFO", "navigation", f"Switched to {tab_id}")
+        LOG.debug("switched to %s", tab_id)
 
     def showGeneratedProgram(self, ngc_path: str):
         if not ngc_path:

@@ -110,7 +110,7 @@ Item {
             Layout.fillWidth: true
             spacing: Theme.innerSpacings
 
-            GroupBox {
+            TitledCard {
                 id: programDetails
                 title: "Program Details"
                 Layout.alignment: Qt.AlignTop
@@ -159,7 +159,7 @@ Item {
                 }
             }
 
-            GroupBox {
+            TitledCard {
                 title: "On Program Finished"
                 Layout.alignment: Qt.AlignTop
                 // whatever width Program Details leaves, and as tall

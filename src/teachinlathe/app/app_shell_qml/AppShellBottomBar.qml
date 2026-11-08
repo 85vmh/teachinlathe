@@ -148,6 +148,25 @@ Rectangle {
                 font.pixelSize: Theme.fontBody
             }
 
+            // the errors that came since the Events were last open
+            Rectangle {
+                visible: EventsViewModel.unreadErrors > 0
+                anchors { right: parent.right; top: parent.top; rightMargin: 10; topMargin: 6 }
+                height: 22
+                width: Math.max(height, badgeText.implicitWidth + 12)
+                radius: height / 2
+                color: Theme.danger
+
+                Text {
+                    id: badgeText
+                    anchors.centerIn: parent
+                    text: EventsViewModel.unreadErrors > 99 ? "99+" : EventsViewModel.unreadErrors
+                    color: Theme.foregroundOnAccent
+                    font.pixelSize: Theme.fontXSmall
+                    font.bold: true
+                }
+            }
+
             MouseArea {
                 id: eventsArea
                 anchors.fill: parent

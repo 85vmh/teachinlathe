@@ -48,7 +48,11 @@ app/             → application.py (Application: builds the HAL component and t
 core/            → repositories: the only layer that talks to LinuxCNC (HAL, INI, status, commands);
                    lathe_hal_component.py is the singleton owning all HAL pin definitions;
                    tool_library_repository.py is the only way to the tool table and the tool library
-                   files (through ToolTblFileDataSource and LatheToolExtrasDataSource)
+                   files (through ToolTblFileDataSource and LatheToolExtrasDataSource); machine_messages_repository.py is the
+                   only reader of LinuxCNC's error channel (through LinuxCncErrorDataSource, replaceable by
+                   any MachineMessageSource)
+events/          → model/ (event.py: Event, Severity, Category) + logic/ (events_use_case.py: the one Events
+                   list - LinuxCNC's messages, what the app posts, its WARNING+ log records; classify.py)
 manual/          → logic/ (manual_turning_use_case.py: spindle lever, joystick, handwheels, angle feed;
                    machine_limits.py: teach-in limits)
 machine/         → model/ (fixtures)

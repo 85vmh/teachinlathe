@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
@@ -10,6 +11,12 @@ from teachinlathe.core.predefined_positions_repository import predefined_positio
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.manual.logic.machine_limits import MachineLimitsHandler
 from teachinlathe.tooling.model.data_types import ZOffsetPlace
+
+log = logging.getLogger(__name__)
+
+#: The tool limits along each axis (LIMIT_KEYS): kept to the tool, so there is
+#: none without the tool's offset on that axis.
+TOOL_LIMIT_KEYS = {"x": ("xMinus", "xPlus"), "z": ("zMinus", "zPlus")}
 
 
 class LimitStatus(Enum):
@@ -36,9 +43,7 @@ class TeachInLatheDroViewModel(QObject):
     #: The current loaded tool, or what it is, changed: its drawing.
     toolDrawingChanged = pyqtSignal()
 
-    #: The tool limits along each axis (LIMIT_KEYS): kept to the tool, so
-    #: there is none without the tool's offset on that axis.
-    TOOL_LIMIT_KEYS = {"x": ("xMinus", "xPlus"), "z": ("zMinus", "zPlus")}
+    TOOL_LIMIT_KEYS = TOOL_LIMIT_KEYS
 
     #: The work offsets the operator can choose, as a program's header has
     #: them (HeaderDetailsView): G54 is stat.g5x_index 1.
@@ -129,6 +134,9 @@ class TeachInLatheDroViewModel(QObject):
         self._tool_library.currentLoadedToolChanged.connect(self._on_tool_state)
         self._tool_library.touchedOff.connect(self._on_tool_state)
         self._on_tool_state()
+        # each axis's offset the tool limits were last put on the machine with
+        self._offsets = self._current_offsets()
+        self.positions.notify(self._follow_offsets)
         self.positions.notify(self.updateValues)
         self.positions.notify(self.onAbsPositionUpdated)
         self.limitsHandler.onLimitsChanged.connect(self.onMachineLimitsChanged)
@@ -292,17 +300,10 @@ class TeachInLatheDroViewModel(QObject):
         key = str(key)
         if not self._limit_available(key):
             return
-        match key:
-            case "xMinus":
-                self.xMinusLimitToggle()
-            case "xPlus":
-                self.xPlusLimitToggle()
-            case "zMinus":
-                self.zMinusLimitToggle()
-            case "zPlus":
-                self.zPlusLimitToggle()
-            case "tailstock":
-                self.tailstockLimitToggle()
+        if key == "tailstock":
+            self.tailstockLimitToggle()
+        elif key in self.TOOL_LIMIT_AXIS:
+            self._toggle_tool_limit(key)
 
     def _toggle_status(self, key):
         if self.limit_status[key] in (LimitStatus.ENABLED, LimitStatus.PENDING):
@@ -314,29 +315,49 @@ class TeachInLatheDroViewModel(QObject):
     def _limit_float(self, key):
         return float(str(self.limit_values[key]).strip())
 
-    def xMinusLimitToggle(self):
-        self._toggle_status("xMinus")
-        x_offset = self.positions.getXPosition().offset
-        self.limitsHandler.setXMinusLimit(x_offset + self._limit_float("xMinus") / 2)
-        self.limitsHandler.setXMinusLimitActive(self.limit_status["xMinus"] is not LimitStatus.DISABLED)
+    #: The axis each tool limit is on.
+    TOOL_LIMIT_AXIS = {key: axis for axis, keys in TOOL_LIMIT_KEYS.items() for key in keys}
+    #: What of a tool limit's value is its axis's: X's are diameters, the
+    #: axis goes by the radius.
+    AXIS_FACTOR = {"x": 0.5, "z": 1.0}
 
-    def xPlusLimitToggle(self):
-        self._toggle_status("xPlus")
-        x_offset = self.positions.getXPosition().offset
-        self.limitsHandler.setXPlusLimit(x_offset + self._limit_float("xPlus") / 2)
-        self.limitsHandler.setXPlusLimitActive(self.limit_status["xPlus"] is not LimitStatus.DISABLED)
+    def _current_offsets(self):
+        return {"x": self.positions.getXPosition().offset,
+                "z": self.positions.getZPosition().offset}
 
-    def zMinusLimitToggle(self):
-        self._toggle_status("zMinus")
-        z_offset = self.positions.getZPosition().offset
-        self.limitsHandler.setZMinusLimit(z_offset + self._limit_float("zMinus"))
-        self.limitsHandler.setZMinusLimitActive(self.limit_status["zMinus"] is not LimitStatus.DISABLED)
+    def _tool_limit_on_machine(self, key):
+        """Where a tool limit, set in the current loaded tool's coordinates,
+        is on the machine: the axis's offset (work offset, G92, tool) plus it."""
+        axis = self.TOOL_LIMIT_AXIS[key]
+        return self._offsets[axis] + self.AXIS_FACTOR[axis] * self._limit_float(key)
 
-    def zPlusLimitToggle(self):
-        self._toggle_status("zPlus")
-        z_offset = self.positions.getZPosition().offset
-        self.limitsHandler.setZPlusLimit(z_offset + self._limit_float("zPlus"))
-        self.limitsHandler.setZPlusLimitActive(self.limit_status["zPlus"] is not LimitStatus.DISABLED)
+    def _toggle_tool_limit(self, key):
+        self._toggle_status(key)
+        self._offsets = self._current_offsets()
+        self.limitsHandler.setToolLimit(key, self._tool_limit_on_machine(key))
+        self.limitsHandler.setToolLimitActive(key, self.limit_status[key] is not LimitStatus.DISABLED)
+
+    def _follow_offsets(self, pos=None):
+        """The tool limits are in the coordinates of the current loaded tool:
+        Z -10 stops each tool at its own -10. Where that is on the machine
+        moves with the axis's offset - another tool, a touch-off, another
+        work offset - so a limit in use is put on the machine again whenever
+        its axis's offset changes. Pending, not enabled, until the axis is on
+        the right side of it again: only then is the pin written
+        (onAbsPositionUpdated). The tailstock is the machine's, and stays."""
+        offsets = self._current_offsets()
+        moved = {axis for axis in offsets if abs(offsets[axis] - self._offsets[axis]) >= 1e-9}
+        if not moved:
+            return
+        self._offsets = offsets
+        following = {}
+        for key, axis in self.TOOL_LIMIT_AXIS.items():
+            if axis in moved and self.limit_status[key] is not LimitStatus.DISABLED:
+                self.limit_status[key] = LimitStatus.PENDING
+                following[key] = self._tool_limit_on_machine(key)
+        if following:
+            log.debug("offsets now %s: limits follow to %s", offsets, following)
+            self.limitsHandler.moveToolLimits(following)
 
     def tailstockLimitToggle(self):
         self._toggle_status("tailstock")
@@ -635,10 +656,7 @@ class TeachInLatheDroViewModel(QObject):
 
     def _turn_off_tool_limit(self, key):
         self.limit_status[key] = LimitStatus.DISABLED
-        {"xMinus": self.limitsHandler.setXMinusLimitActive,
-         "xPlus": self.limitsHandler.setXPlusLimitActive,
-         "zMinus": self.limitsHandler.setZMinusLimitActive,
-         "zPlus": self.limitsHandler.setZPlusLimitActive}[key](False)
+        self.limitsHandler.setToolLimitActive(key, False)
 
     # ── the machine limits, as drawn on the back of the limits panel ──────
 
@@ -751,68 +769,53 @@ class TeachInLatheDroViewModel(QObject):
         self.currentMachineLimits = machine_limits
         self.onAbsPositionUpdated()
 
+    #: Each limit pin, once: the axis it is on, which side of the axis it
+    #: bounds (+1 the upper, -1 the lower), the computed limit it takes
+    #: (MachineLimits' field) and the limits that set it.
+    LIMIT_PINS = (
+        (TeachInLatheComponent.PinAxisLimitXMin, "x", -1, "x_min_limit", ("xMinus",)),
+        (TeachInLatheComponent.PinAxisLimitXMax, "x", +1, "x_max_limit", ("xPlus",)),
+        (TeachInLatheComponent.PinAxisLimitZMin, "z", -1, "z_min_limit", ("zMinus",)),
+        (TeachInLatheComponent.PinAxisLimitZMax, "z", +1, "z_max_limit", ("zPlus", "tailstock")),
+    )
+    #: How near a limit the axis counts as on it (REACHED).
+    LIMIT_REACHED_TOLERANCE = 0.005
+
     def onAbsPositionUpdated(self, pos=None):
-        if self.previousMachineLimits == self.currentMachineLimits:
+        """Put the computed limits on the machine, each pin from here alone.
+
+        A limit is written to its pin only while the axis is inside it, or
+        when it moves away from the axis (a limit given up, or widened). One
+        written with the axis already past it - by as little as a taught
+        value's rounding - puts LinuxCNC on a soft limit: an error, and the
+        handwheels stop, both ways (control.c skips axis_handle_jogwheels).
+        So a limit the axis is past stays pending, the pin keeping what it
+        had, until the axis comes back inside it.
+        """
+        if self.currentMachineLimits is None:
             return
-        x_abs = self.positions.getXPosition().machinePosition
-        z_abs = self.positions.getZPosition().machinePosition
-        x_min_limit = self.currentMachineLimits.x_min_limit
-        x_max_limit = self.currentMachineLimits.x_max_limit
-        z_min_limit = self.currentMachineLimits.z_min_limit
-        z_max_limit = self.currentMachineLimits.z_max_limit
-        tolerance = 0.005
-        pin_written = {key: False for key in ("xMinus", "xPlus", "zMinus", "zPlus", "tailstock")}
+        statuses = dict(self.limit_status)
+        position = {"x": self.positions.getXPosition().machinePosition,
+                    "z": self.positions.getZPosition().machinePosition}
 
-        if x_abs >= x_min_limit and self.limit_status["xMinus"] == LimitStatus.PENDING:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = x_min_limit
-            pin_written["xMinus"] = True
-            self.limit_status["xMinus"] = LimitStatus.ENABLED
-        elif self.limit_status["xMinus"] == LimitStatus.DISABLED:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMin).value = x_min_limit
-            pin_written["xMinus"] = True
-        elif self.limit_status["xMinus"] in (LimitStatus.ENABLED, LimitStatus.REACHED):
-            self.limit_status["xMinus"] = LimitStatus.REACHED if abs(x_abs - x_min_limit) < tolerance else LimitStatus.ENABLED
+        for pin_name, axis, side, field, keys in self.LIMIT_PINS:
+            limit = getattr(self.currentMachineLimits, field)
+            pin = self.latheComponent.comp.getPin(pin_name)
+            at = position[axis]
+            inside = (at <= limit) if side > 0 else (at >= limit)
+            widened = (limit >= pin.value) if side > 0 else (limit <= pin.value)
+            if inside or widened:
+                if pin.value != limit:
+                    pin.value = limit
+                reached = abs(at - limit) < self.LIMIT_REACHED_TOLERANCE
+                in_use = LimitStatus.REACHED if reached else LimitStatus.ENABLED
+            else:
+                in_use = LimitStatus.PENDING
+            for key in keys:
+                if self.limit_status[key] is not LimitStatus.DISABLED:
+                    self.limit_status[key] = in_use
 
-        if x_abs <= x_max_limit and self.limit_status["xPlus"] == LimitStatus.PENDING:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = x_max_limit
-            pin_written["xPlus"] = True
-            self.limit_status["xPlus"] = LimitStatus.ENABLED
-        elif self.limit_status["xPlus"] == LimitStatus.DISABLED:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitXMax).value = x_max_limit
-            pin_written["xPlus"] = True
-        elif self.limit_status["xPlus"] in (LimitStatus.ENABLED, LimitStatus.REACHED):
-            self.limit_status["xPlus"] = LimitStatus.REACHED if abs(x_abs - x_max_limit) < tolerance else LimitStatus.ENABLED
-
-        if z_abs >= z_min_limit and self.limit_status["zMinus"] == LimitStatus.PENDING:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
-            pin_written["zMinus"] = True
-            self.limit_status["zMinus"] = LimitStatus.ENABLED
-        elif self.limit_status["zMinus"] == LimitStatus.DISABLED:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMin).value = z_min_limit
-            pin_written["zMinus"] = True
-        elif self.limit_status["zMinus"] in (LimitStatus.ENABLED, LimitStatus.REACHED):
-            self.limit_status["zMinus"] = LimitStatus.REACHED if abs(z_abs - z_min_limit) < tolerance else LimitStatus.ENABLED
-
-        if z_abs <= z_max_limit and self.limit_status["zPlus"] == LimitStatus.PENDING:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
-            pin_written["zPlus"] = True
-            self.limit_status["zPlus"] = LimitStatus.ENABLED
-        elif self.limit_status["zPlus"] == LimitStatus.DISABLED:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
-            pin_written["zPlus"] = True
-        elif self.limit_status["zPlus"] in (LimitStatus.ENABLED, LimitStatus.REACHED):
-            self.limit_status["zPlus"] = LimitStatus.REACHED if abs(z_abs - z_max_limit) < tolerance else LimitStatus.ENABLED
-
-        if z_abs <= z_max_limit and self.limit_status["tailstock"] == LimitStatus.PENDING:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
-            pin_written["tailstock"] = True
-            self.limit_status["tailstock"] = LimitStatus.ENABLED
-        elif self.limit_status["tailstock"] == LimitStatus.DISABLED:
-            self.latheComponent.comp.getPin(TeachInLatheComponent.PinAxisLimitZMax).value = z_max_limit
-            pin_written["tailstock"] = True
-        elif self.limit_status["tailstock"] in (LimitStatus.ENABLED, LimitStatus.REACHED):
-            self.limit_status["tailstock"] = LimitStatus.REACHED if abs(z_abs - z_max_limit) < tolerance else LimitStatus.ENABLED
-
-        self.limitsChanged.emit()
-        if all(pin_written.values()):
+        # every position update comes here: the screen is told only of a change
+        if self.limit_status != statuses or self.previousMachineLimits is not self.currentMachineLimits:
             self.previousMachineLimits = self.currentMachineLimits
+            self.limitsChanged.emit()

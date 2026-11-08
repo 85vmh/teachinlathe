@@ -92,7 +92,12 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredWidth: root.inputWidth
                 enabled: root.status === 1
+                // the view model's value, always: a value typed in and one
+                // taught both come back through it - assigning the field's
+                // value here would cut it off, and TeachIn would no longer
+                // show over a typed value
                 value: root.value
+                valueFollowsModel: true
                 settingName: root.settingName
                 description: root.description
                 hAlign: Text.AlignRight
@@ -100,9 +105,7 @@ Rectangle {
                 parser: function(s) { return String(s) }
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
                 onValueCommitted: function(value) {
-                    var formattedValue = root.formatLimitValue(value)
-                    limitInput.value = formattedValue
-                    root.committed(formattedValue)
+                    root.committed(root.formatLimitValue(value))
                 }
             }
 
@@ -113,7 +116,4 @@ Rectangle {
         }
     }
 
-    function setDisplayValue(v) {
-        root.value = v
-    }
 }

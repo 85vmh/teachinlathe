@@ -3,8 +3,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import common.touchable_input
 import theme
+import common
 
-GroupBox {
+TitledCard {
     id: root
     title: ""
     Layout.fillWidth: true

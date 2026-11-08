@@ -3,9 +3,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import common
 import TeachInLathe
 
-GroupBox {
+TitledCard {
     id: root
     title: "Pause to Inspect"
     Layout.fillWidth: true

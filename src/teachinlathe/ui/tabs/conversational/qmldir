@@ -38,7 +38,6 @@ M1Parameters 1.0 M1Parameters.qml
 MainScreen 1.0 MainScreen.qml
 NewProfilePopup 1.0 NewProfilePopup.qml
 OperationHeader 1.0 OperationHeader.qml
-OperationIconTextButton 1.0 OperationIconTextButton.qml
 OperationListItem 1.0 OperationListItem.qml
 OperationRowDelegate 1.0 OperationRowDelegate.qml
 OperationToolBox 1.0 OperationToolBox.qml

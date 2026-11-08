@@ -6,7 +6,7 @@ import theme
 import common
 import TeachInLathe
 
-GroupBox {
+TitledCard {
     id: root
     title: "Cutting Geometry"
     Layout.fillWidth: true

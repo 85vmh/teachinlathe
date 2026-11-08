@@ -46,7 +46,7 @@ def test_package_logger_carries_its_own_level(app_logger):
 
 
 def test_info_records_reach_the_root_handlers(app_logger):
-    """This is what feeds app_state.StoreLogHandler, which listens on root."""
+    """This is what feeds the Events list's handler, which listens on root."""
     _, _ = app_logger
     root = logging.getLogger()
     seen = []

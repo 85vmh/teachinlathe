@@ -94,7 +94,7 @@ Item {
                     }
                 }
 
-                GroupBox {
+                TitledCard {
                     title: "Position At"
                     font.pixelSize: Theme.fontBody
                     Layout.fillWidth: true
@@ -169,7 +169,7 @@ Item {
                 }
             }
 
-            GroupBox {
+            TitledCard {
                 title: "Move Sequence"
                 font.pixelSize: Theme.fontBody
                 Layout.fillWidth: true

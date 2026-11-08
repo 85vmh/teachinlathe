@@ -64,22 +64,31 @@ Item {
         }
     }
 
-    // Leave the bottom bar available while the drawer is open. Tapping the
-    // uncovered area to the left dismisses it.
-    MouseArea {
+    // Behind the open drawer, what it covers is dimmed - as behind the
+    // Manual tab's menu drawer (the Controls' modal shade). The bottom bar
+    // stays available; tapping the dimmed area dismisses the drawer.
+    Rectangle {
         z: 99
-        x: 0
-        y: 0
-        width: drawer.x
+        width: root.width
         height: root.height - (bottomBar.visible ? bottomBar.height : 0)
-        enabled: NavigationStore.logsExpanded
-        onClicked: AppShellBridge.toggleLogs()
+        color: "#80000000"
+        opacity: NavigationStore.logsExpanded ? 1 : 0
+        visible: opacity > 0
+        Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+
+        MouseArea {
+            anchors.fill: parent
+            enabled: NavigationStore.logsExpanded
+            onClicked: AppShellBridge.toggleLogs()
+        }
     }
 
     AppShellEventsDrawer {
         id: drawer
-        visible: true
-        width: Math.min(Math.max(420, root.width / 2), Math.max(0, root.width - 24))
+        // off the screen when closed: hidden there too, so that the events
+        // coming in meanwhile make no cards no one sees
+        visible: x < root.width
+        width: Math.round(root.width / 3)
         height: root.height - (bottomBar.visible ? bottomBar.height : 0)
         x: root.width
         y: 0

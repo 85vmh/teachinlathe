@@ -142,8 +142,32 @@ def _program_units(value, fmt: str = "short") -> str:
         return names[0]
 
 
+#: The task's states and modes, by name.
+TASK_STATE_NAMES = {
+    linuxcnc.STATE_ESTOP: "E-Stop",
+    linuxcnc.STATE_ESTOP_RESET: "Off",
+    linuxcnc.STATE_OFF: "Off",
+    linuxcnc.STATE_ON: "On",
+}
+TASK_MODE_NAMES = {
+    linuxcnc.MODE_MANUAL: "Manual",
+    linuxcnc.MODE_AUTO: "Auto",
+    linuxcnc.MODE_MDI: "MDI",
+}
+
+
+def _named(names):
+    def formatter(value, fmt: str = "short") -> str:
+        return names.get(value, "-")
+    return formatter
+
+
 #: Channels needing more than ``str()`` to render as text.
-FORMATTERS = {"program_units": _program_units}
+FORMATTERS = {
+    "program_units": _program_units,
+    "task_state": _named(TASK_STATE_NAMES),
+    "task_mode": _named(TASK_MODE_NAMES),
+}
 
 #: Channels computed here rather than read off ``linuxcnc.stat``.
 DERIVED = ("all_axes_homed",)
@@ -199,6 +223,8 @@ class StatusRepository(QObject):
     """The machine's status, polled on one timer."""
 
     polled = pyqtSignal()
+    #: True when the status channel stopped answering, False when it answers again
+    staleChanged = pyqtSignal(bool)
 
     def __init__(self, cycle_time_ms: int = DEFAULT_CYCLE_TIME_MS,
                  parent: Optional[QObject] = None,
@@ -307,13 +333,16 @@ class StatusRepository(QObject):
             # each time buries the log and the in-app event list.
             if not self._poll_failing:
                 self._poll_failing = True
+                # the Events list reports it through staleChanged
                 log.exception("linuxcnc.stat.poll() failed; "
-                              "status is stale until it recovers")
+                              "status is stale until it recovers", extra={"events": False})
+                self.staleChanged.emit(True)
             return
 
         if self._poll_failing:
             self._poll_failing = False
             log.info("linuxcnc.stat.poll() recovered")
+            self.staleChanged.emit(False)
 
         # Snapshots, not live views: a listener woken by one channel may ask
         # for another that does not exist yet, and creating it mid-iteration

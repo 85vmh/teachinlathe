@@ -9,6 +9,8 @@ Rectangle {
 
     property url iconSource: ""
     property color tint: Theme.foregroundMuted
+    // the border at rest - pressed, it is the accent's
+    property color borderTint: Theme.outlineStrong
     property string text: ""
     property bool compact: false
     property int buttonHeight: Theme.buttonHeightSmall
@@ -29,7 +31,7 @@ Rectangle {
     radius: Theme.radius
     color: (enabled && area.pressed) ? Theme.accentSoft : "transparent"
     border.width: Theme.hairline
-    border.color: enabled ? (area.pressed ? Theme.accentBorder : Theme.outlineStrong) : Theme.outlineDisabled
+    border.color: enabled ? (area.pressed ? Theme.accentBorder : root.borderTint) : Theme.outlineDisabled
     opacity: enabled ? 1.0 : Theme.disabledOpacity
 
     RowLayout {

@@ -5,8 +5,9 @@ import QtQuick.Layouts
 import common.touchable_input
 import tabs.tool_library
 import theme
+import common
 
-GroupBox {
+TitledCard {
     id: root
     title: "Spindle Parameters"
     Layout.fillWidth: true

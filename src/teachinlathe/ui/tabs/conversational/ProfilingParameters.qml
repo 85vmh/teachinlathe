@@ -7,7 +7,7 @@ import theme
 import common
 import TeachInLathe
 
-GroupBox {
+TitledCard {
     id: root
     title: "Profiling Parameters"
     Layout.fillWidth: true

@@ -190,7 +190,7 @@ Item {
                 }
 
                 // G76's pitch and starts; G33's are in the header
-                GroupBox {
+                TitledCard {
                     id: threadParametersBox
                     visible: !root.isG33Threading
                     title: "Thread Parameters"
@@ -231,7 +231,7 @@ Item {
                     }
                 }
 
-                GroupBox {
+                TitledCard {
                     id: zLimitsBox
                     title: "Z Limits"
                     Layout.fillWidth: true
@@ -332,7 +332,7 @@ Item {
                 spacing: root.isG33Threading ? Theme.margin : 40
 
                 // G33's under Z Limits, so the columns come out even
-                GroupBox {
+                TitledCard {
                     id: threadLocationBox
                     parent: root.isG33Threading ? leftColumn : rightColumn
                     title: "Thread Location"
@@ -360,7 +360,7 @@ Item {
                     }
                 }
 
-                GroupBox {
+                TitledCard {
                     id: diametersBox
                     title: "Thread Diameters"
                     Layout.fillWidth: true
@@ -425,7 +425,7 @@ Item {
                     }
                 }
 
-                GroupBox {
+                TitledCard {
                     id: cuttingParamsBox
                     title: "Cutting Parameters"
                     Layout.fillWidth: true

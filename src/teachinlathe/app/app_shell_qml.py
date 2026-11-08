@@ -6,6 +6,9 @@ AppShell.qml. What this module holds is the bridge those bars read from.
 
 from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
+from teachinlathe.core.command_repository import command_repository
+from teachinlathe.core.status_repository import status_repository
+
 
 class AppShellBridge(QObject):
     currentTabChanged = pyqtSignal()
@@ -14,18 +17,20 @@ class AppShellBridge(QObject):
     leftActionsChanged = pyqtSignal()
     rightActionsChanged = pyqtSignal()
     logsExpandedChanged = pyqtSignal()
-    eventsChanged = pyqtSignal()
     statusSummaryChanged = pyqtSignal()
     toastChanged = pyqtSignal()
     #: how long a toast stays, unless showToastFor says
     TOAST_MS = 3000
     chromeChanged = pyqtSignal()
 
-    def __init__(self, app_state, feature_controllers=None, parent=None):
+    def __init__(self, app_state, feature_controllers=None, parent=None,
+                 status=None, commands=None):
         super().__init__(parent)
         self._app_state = app_state
         self._nav_store = app_state.navigationStore
-        self._cnc_store = app_state.cncStore
+        self._status = status_repository() if status is None else status
+        self._commands = command_repository() if commands is None else commands
+        self._last_command = ""
         self._feature_controllers = feature_controllers or {}
         self._title = ""
         self._left_actions = []
@@ -44,11 +49,9 @@ class AppShellBridge(QObject):
         self._nav_store.currentTitleChanged.connect(self._refresh)
         self._nav_store.headerVisibleChanged.connect(self._refresh)
         self._nav_store.logsExpandedChanged.connect(self.logsExpandedChanged)
-        self._cnc_store.eventsChanged.connect(self.eventsChanged)
-        self._cnc_store.taskModeChanged.connect(self._refresh_status_summary)
-        self._cnc_store.machineStateChanged.connect(self._refresh_status_summary)
-        self._cnc_store.activeFileChanged.connect(self._refresh_status_summary)
-        self._cnc_store.lastCommandChanged.connect(self._refresh_status_summary)
+        for field in ("task_state", "task_mode", "file"):
+            getattr(self._status, field).notify(lambda *_: self._refresh_status_summary())
+        self._commands.commandIssued.connect(self._on_command_issued)
 
         for controller in self._feature_controllers.values():
             self._follow_header_state(controller)
@@ -90,10 +93,6 @@ class AppShellBridge(QObject):
     @pyqtProperty(bool, notify=logsExpandedChanged)
     def logsExpanded(self):
         return self._nav_store.logsExpanded
-
-    @pyqtProperty("QVariantList", notify=eventsChanged)
-    def events(self):
-        return self._cnc_store.events
 
     @pyqtProperty(str, notify=statusSummaryChanged)
     def statusSummary(self):
@@ -145,10 +144,6 @@ class AppShellBridge(QObject):
     @pyqtSlot()
     def toggleLogs(self):
         self._nav_store.toggleLogs()
-
-    @pyqtSlot()
-    def clearEvents(self):
-        self._cnc_store.clearEvents()
 
     @pyqtSlot(str)
     def triggerHeaderAction(self, action_id):
@@ -212,12 +207,16 @@ class AppShellBridge(QObject):
         if right_changed:
             self.rightActionsChanged.emit()
 
+    def _on_command_issued(self, command):
+        self._last_command = command
+        self._refresh_status_summary()
+
     def _refresh_status_summary(self):
         summary = (
-            f"State: {self._cnc_store.machineState or '-'}\n"
-            f"Task Mode: {self._cnc_store.taskMode or '-'}\n"
-            f"Active File: {self._cnc_store.activeFile or '-'}\n"
-            f"Last Command: {self._cnc_store.lastCommand or '-'}"
+            f"State: {self._status.task_state.getString()}   "
+            f"Mode: {self._status.task_mode.getString()}\n"
+            f"File: {self._status.file.value or '-'}\n"
+            f"Last command: {self._last_command or '-'}"
         )
         if self._status_summary != summary:
             self._status_summary = summary

@@ -22,6 +22,7 @@ from teachinlathe.core.status_repository import StatusRepository, status_reposit
 from teachinlathe.core.tool_library_repository import (
     ToolLibraryRepository, tool_library_repository,
 )
+from teachinlathe.events.logic.events_use_case import EventsUseCase, events_use_case
 from teachinlathe.machine.model.fixtures import LatheFixturesRepository
 
 log = logging.getLogger(__name__)
@@ -31,6 +32,9 @@ class Application:
     def __init__(self) -> None:
         self.ini: IniRepository = ini_repository()
         self.status: StatusRepository = status_repository()
+        # The Events list, and behind it the error channel's only reader: from
+        # the start, so that no message is lost before the first screen.
+        self.events: EventsUseCase = events_use_case()
         self.commands: CommandRepository = command_repository()
         self.machine: MachineRepository = machine_repository()
         self.hal: TeachInLatheComponent = TeachInLatheComponent()

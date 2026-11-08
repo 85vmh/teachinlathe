@@ -7,6 +7,9 @@ log = logging.getLogger(__name__)
 
 INI = ini_repository()
 
+#: The tool limits, set in the current loaded tool's coordinates.
+TOOL_LIMIT_KEYS = ("xMinus", "xPlus", "zMinus", "zPlus")
+
 
 class MachineLimits:
     def __init__(self, x_min_limit=None, x_max_limit=None, z_min_limit=None, z_max_limit=None):
@@ -43,18 +46,12 @@ class MachineLimitsHandler(QObject):
             self._is_initialized = True
 
             self._chuck_limit_active = False
-            self._x_minus_limit_active = False
-            self._x_plus_limit_active = False
-            self._z_minus_limit_active = False
-            self._z_plus_limit_active = False
             self._tailstock_limit_active = False
-
             self._chuck_limit = 0
             self._tailstock_limit = 0
-            self._custom_x_minus_limit = None
-            self._custom_x_plus_limit = None
-            self._custom_z_minus_limit = None
-            self._custom_z_plus_limit = None
+            # the tool limits on the machine, by key, and whether each is in use
+            self._tool_limits = {key: None for key in TOOL_LIMIT_KEYS}
+            self._tool_limits_active = {key: False for key in TOOL_LIMIT_KEYS}
 
             self._default_x_minus_limit = _x_bounds.min
             self._default_x_plus_limit = _x_bounds.max
@@ -67,18 +64,18 @@ class MachineLimitsHandler(QObject):
                              self._default_z_minus_limit,
                              self._default_z_plus_limit)
 
+    def _tool_limit(self, key, default):
+        return self._tool_limits[key] if self._tool_limits_active[key] else default
+
     def getComputedMachineLimits(self):
         computed_chuck_limit = self._chuck_limit if self._chuck_limit_active else self._default_z_minus_limit
-        computed_z_minus_limit = self._custom_z_minus_limit if self._z_minus_limit_active else self._default_z_minus_limit
-        computed_z_minus = max(computed_chuck_limit, computed_z_minus_limit)
+        computed_z_minus = max(computed_chuck_limit, self._tool_limit("zMinus", self._default_z_minus_limit))
 
         computed_tailstock_limit = self._tailstock_limit if self._tailstock_limit_active else self._default_z_plus_limit
-        computed_z_plus_limit = self._custom_z_plus_limit if self._z_plus_limit_active else self._default_z_plus_limit
-        computed_z_plus = min(computed_tailstock_limit, computed_z_plus_limit)
+        computed_z_plus = min(computed_tailstock_limit, self._tool_limit("zPlus", self._default_z_plus_limit))
 
-        # For X axis, use custom limits if active; otherwise, use default limits
-        computed_x_minus = self._custom_x_minus_limit if self._x_minus_limit_active else self._default_x_minus_limit
-        computed_x_plus = self._custom_x_plus_limit if self._x_plus_limit_active else self._default_x_plus_limit
+        computed_x_minus = self._tool_limit("xMinus", self._default_x_minus_limit)
+        computed_x_plus = self._tool_limit("xPlus", self._default_x_plus_limit)
 
         return MachineLimits(computed_x_minus, computed_x_plus, computed_z_minus, computed_z_plus)
 
@@ -87,24 +84,10 @@ class MachineLimitsHandler(QObject):
         self._chuck_limit_active = value
         self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
-    def setXMinusLimitActive(self, value):
-        log.debug("X- limit active: %s", value)
-        self._x_minus_limit_active = value
-        self.onLimitsChanged.emit(self.getComputedMachineLimits())
-
-    def setXPlusLimitActive(self, value):
-        log.debug("X+ limit active: %s", value)
-        self._x_plus_limit_active = value
-        self.onLimitsChanged.emit(self.getComputedMachineLimits())
-
-    def setZMinusLimitActive(self, value):
-        log.debug("Z- limit active: %s", value)
-        self._z_minus_limit_active = value
-        self.onLimitsChanged.emit(self.getComputedMachineLimits())
-
-    def setZPlusLimitActive(self, value):
-        log.debug("Z+ limit active: %s", value)
-        self._z_plus_limit_active = value
+    def setToolLimitActive(self, key, active):
+        """A tool limit - "xMinus", "xPlus", "zMinus" or "zPlus" - in use or not."""
+        log.debug("%s limit active: %s", key, active)
+        self._tool_limits_active[key] = active
         self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     def setTailstockLimitActive(self, value):
@@ -117,21 +100,19 @@ class MachineLimitsHandler(QObject):
         log.debug("Chuck limit set to %s", self._chuck_limit)
         self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
-    def setZMinusLimit(self, value):
-        self._custom_z_minus_limit = value
-        log.debug("Z- limit set to %s", self._custom_z_minus_limit)
+    def setToolLimit(self, key, value):
+        """Where a tool limit is on the machine; told with its being in use
+        (setToolLimitActive)."""
+        self._tool_limits[key] = value
+        log.debug("%s limit set to %s", key, value)
 
-    def setZPlusLimit(self, value):
-        self._custom_z_plus_limit = value
-        log.debug("Z+ limit set to %s", self._custom_z_plus_limit)
-
-    def setXMinusLimit(self, value):
-        self._custom_x_minus_limit = value
-        log.debug("X- limit set to %s", self._custom_x_minus_limit)
-
-    def setXPlusLimit(self, value):
-        self._custom_x_plus_limit = value
-        log.debug("X+ limit set to %s", self._custom_x_plus_limit)
+    def moveToolLimits(self, limits):
+        """Tool limits in use somewhere else on the machine, {key: value}: the
+        current loaded tool's offset changed, and the limits, set in its
+        coordinates, go with it. Told once, for all of them."""
+        self._tool_limits.update(limits)
+        log.debug("tool limits moved: %s", limits)
+        self.onLimitsChanged.emit(self.getComputedMachineLimits())
 
     # Setter for tailstock_limit
     def setTailstockLimit(self, value):

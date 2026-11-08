@@ -16,7 +16,7 @@ import tabs.tool_library
 import theme
 import common
 
-GroupBox {
+TitledCard {
     id: root
     title: "Speeds and Feeds"
     font.pixelSize: Theme.fontBody
