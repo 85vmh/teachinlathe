@@ -4,10 +4,9 @@ import QtQuick.Layouts
 import theme
 import common
 
-Rectangle {
+Item {
     id: root
 
-    color: Theme.surface
 
     required property var viewModel
     // The title bar's area (AppShell.titleBarArea): the boxes' titles and
@@ -246,25 +245,10 @@ Rectangle {
             text: "Tool Coordinates in"
         }
 
-        ComboBox {
+        // the same dropdown as the program header's Datum
+        Dropdown {
             id: workOffsetCombo
             anchors.verticalCenter: parent.verticalCenter
-            // as wide as the program header's Datum (HeaderDetailsView's
-            // Choice): its text and the arrow, the padding on the right
-            // holding the arrow
-            implicitWidth: leftPadding + contentItem.implicitWidth + rightPadding
-            implicitHeight: Theme.buttonHeight
-            font.pixelSize: Theme.fontTitle
-            contentItem: Text {
-                leftPadding: 8
-                rightPadding: 8
-                text: workOffsetCombo.displayText
-                font: workOffsetCombo.font
-                color: Theme.foregroundStrong
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-                elide: Text.ElideRight
-            }
             model: root.viewModel.workOffsets
             // as in use - G59.1 and past, not offered, are shown as they are
             currentIndex: model.indexOf(root.viewModel.workOffsetName)

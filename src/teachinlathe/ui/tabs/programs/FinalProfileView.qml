@@ -45,7 +45,7 @@ Item {
     // solid to centre
     readonly property real onAxis: 0.001
     // between the boxes, as between the screen's panes
-    readonly property real boxGap: 6
+    readonly property real boxGap: Theme.paneGap
     // the bar between the drawings: as high as the Programs screen's bars
     readonly property real barHeight: Theme.barHeight
 
@@ -80,7 +80,7 @@ Item {
     }
 
     // A box: its title over the drawing of ``rings``, or ``message`` with none.
-    component ProfileBox: Rectangle {
+    component ProfileBox: Card {
         id: box
 
         property string title: ""
@@ -90,10 +90,6 @@ Item {
         property string message: ""
         property color messageColor: Theme.foregroundMuted
 
-        color: Theme.surface
-        radius: Theme.radius
-        border.color: Theme.outline
-        border.width: Theme.hairline
         clip: true
 
         onRingsChanged: canvas.requestPaint()

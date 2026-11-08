@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import tabs.conversational
 import tabs.tool_library
 import theme
+import common
 
 Rectangle {
     id: root
@@ -76,61 +77,25 @@ Rectangle {
     border.width: Theme.hairline
     radius: Theme.radius
 
-    TabBar {
+    // RPM / CSS, the same tabs as the Line card's (SegmentedTabs), inside
+    // the panel's padding
+    SegmentedTabs {
         id: tabBar
         visible: !root.readOnlyMode
         anchors.left: parent.left
-        anchors.leftMargin: 1
+        anchors.leftMargin: Theme.spacingSmall
         anchors.right: sideDivider.left
-        anchors.rightMargin: 0
+        anchors.rightMargin: Theme.spacingSmall
         anchors.top: parent.top
-        anchors.topMargin: 1
-        height: root.headerHeight
+        anchors.topMargin: Theme.spacingSmall
+        height: root.headerHeight - Theme.spacingSmall
+        labels: ["RPM", "CSS"]
         currentIndex: viewModel.spindleMode
-        onCurrentIndexChanged: viewModel.setSpindleMode(currentIndex)
-        background: Rectangle {
-            color: Theme.surfaceSunken
-        }
-
-        TabButton {
-            text: "RPM"
-            height: root.headerHeight
-            implicitHeight: root.headerHeight
-            font.pixelSize: Theme.fontLarge
-            contentItem: Text {
-                text: parent.text
-                font: parent.font
-                color: Theme.surfaceInverse
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            background: Rectangle {
-                color: parent.checked ? Theme.surface : Theme.outlineDisabled
-                border.color: "#8c8c8c"
-                border.width: Theme.hairline
-            }
-        }
-        TabButton {
-            text: "CSS"
-            height: root.headerHeight
-            implicitHeight: root.headerHeight
-            font.pixelSize: Theme.fontLarge
-            contentItem: Text {
-                text: parent.text
-                font: parent.font
-                color: Theme.surfaceInverse
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            background: Rectangle {
-                color: parent.checked ? Theme.surface : Theme.outlineDisabled
-                border.color: "#8c8c8c"
-                border.width: Theme.hairline
-            }
-        }
+        onActivated: function(index) { viewModel.setSpindleMode(index) }
     }
 
-    Rectangle {
+    // no fill of its own: the panel's shows, with its rounded corners
+    Item {
         id: readOnlyHeader
         visible: root.readOnlyMode
         anchors.left: parent.left
@@ -140,7 +105,6 @@ Rectangle {
         anchors.top: parent.top
         anchors.topMargin: 1
         height: root.headerHeight
-        color: Theme.surfaceSunken
 
         Text {
             anchors.left: parent.left
@@ -164,7 +128,8 @@ Rectangle {
         }
     }
 
-    Rectangle {
+    // no fill of its own: the panel's shows, with its rounded corners
+    Item {
         id: contentArea
         anchors.left: parent.left
         anchors.leftMargin: 1
@@ -173,7 +138,6 @@ Rectangle {
         anchors.top: root.readOnlyMode ? readOnlyHeader.bottom : tabBar.bottom
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 1
-        color: Theme.surfaceSunken
 
         StackLayout {
             anchors.left: parent.left

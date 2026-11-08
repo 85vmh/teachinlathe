@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import app_shell_qml as Shell
 import theme
 import TeachInLathe
 
@@ -43,21 +42,6 @@ Rectangle {
                         checked: TouchFeedback.showTouches
                         onToggled: TouchFeedback.showTouches = checked
                     }
-                }
-            }
-
-            GroupPanel {
-                title: "Predefined Positions"
-                Layout.fillWidth: true
-
-                content: RowLayout {
-                    spacing: 10
-                    Shell.ShellActionButton { text: "Set G28";   onClicked: root.viewModel.setG28() }
-                    Shell.ShellActionButton { text: "Go to G28"; onClicked: root.viewModel.goToG28() }
-                    Rectangle { width: 1; Layout.fillHeight: true; color: Theme.separator }
-                    Shell.ShellActionButton { text: "Set G30";   onClicked: root.viewModel.setG30() }
-                    Shell.ShellActionButton { text: "Go to G30"; onClicked: root.viewModel.goToG30() }
-                    Item { Layout.fillWidth: true }
                 }
             }
 

@@ -28,7 +28,7 @@ Item {
     property Item titleBar: null
 
     // ── Color constants ───────────────────────────────────────────────
-    readonly property color pageBackgroundColor: Theme.surface
+    readonly property color pageBackgroundColor: Theme.windowBackground
     readonly property color cardBackgroundColor: Theme.surfaceSunken
     readonly property color cardBorderColor: Theme.outline
     readonly property color angleFeedGlowColor: Theme.warning
@@ -104,7 +104,7 @@ Item {
     // them (columnGap) to the Limits
     readonly property int droHeight: Math.ceil(dro.boxesHeight) + columnGap
     // between the left column and the tool list
-    readonly property int columnGap: 6
+    readonly property int columnGap: Theme.paneGap
     readonly property int sectionHeaderHeight: 39
     readonly property int panelHeight: 241
     readonly property int toolListWidth: 600

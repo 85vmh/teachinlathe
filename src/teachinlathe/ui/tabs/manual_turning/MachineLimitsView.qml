@@ -25,7 +25,8 @@
 // Laid over the canvas: the chuck's and the tailstock's cards at the top, the
 // zoom buttons between them as the profile canvases' (CanvasViewButtons), and
 // in a row in the bottom right corner M6's, G28's and G30's, each with its
-// TeachIn (TeachInLatheDroViewModel). A tap on one of those shows its
+// TeachIn (TeachInLatheDroViewModel), and in the bottom left corner Move to G28
+// and Move to G30, held to act (SafetyButton). A tap on one of those shows its
 // position's X and Z in a bubble over its target; a tap on the canvas hides it.
 import QtQuick
 import QtQuick.Controls
@@ -50,11 +51,14 @@ Rectangle {
     clip: true
 
     readonly property var map: viewModel.machineLimitsMap
+    // Move to G28 and Move to G30, as wide as each other
+    readonly property int moveButtonWidth: 170
 
-    // each position's colour: its card, its target and its name on the grid
-    readonly property color toolChangeColor: "#e65100"
-    readonly property color g28Color: "#6a1b9a"
-    readonly property color g30Color: "#00838f"
+    // each position's colour: its card, its target and its name on the grid,
+    // its Move to button - the Theme's
+    readonly property color toolChangeColor: Theme.positionToolChange
+    readonly property color g28Color: Theme.positionG28
+    readonly property color g30Color: Theme.positionG30
     readonly property color chuckColor: Theme.foregroundSubtle
     readonly property color tailstockColor: Theme.accentStrong
     readonly property color homeColor: Theme.accentStrong
@@ -718,6 +722,33 @@ Rectangle {
             name: "G30"
             // G30.1
             onTeach: root.viewModel.teachG30()
+        }
+    }
+
+    // ── Move to G28, Move to G30: in the bottom left corner ───────────────
+    // They move the machine: held for their time (SafetyButton). Only to a
+    // position that is set, and not while the machine is at it.
+    Row {
+        id: moveButtons
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.margins: Theme.spacingLarge
+        spacing: Theme.spacingLarge
+
+        SafetyButton {
+            width: root.moveButtonWidth
+            text: "Move to G28"
+            accent: root.g28Color
+            // set, and not there already: a move would do nothing
+            enabled: root.viewModel.g28Set && !root.viewModel.atG28
+            onTriggered: root.viewModel.moveToG28()
+        }
+        SafetyButton {
+            width: root.moveButtonWidth
+            text: "Move to G30"
+            accent: root.g30Color
+            enabled: root.viewModel.g30Set && !root.viewModel.atG30
+            onTriggered: root.viewModel.moveToG30()
         }
     }
 

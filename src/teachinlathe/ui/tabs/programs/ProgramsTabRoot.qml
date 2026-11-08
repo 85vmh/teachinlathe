@@ -22,7 +22,7 @@ import TeachInLathe
 //
 Rectangle {
     id: root
-    color: Theme.surface
+    color: Theme.windowBackground
 
     readonly property var viewModel: ProgramsViewModel
 
@@ -52,7 +52,7 @@ Rectangle {
     readonly property var activeRun: simulationMode ? root.viewModel.simulate.run : root.viewModel.run
 
     // Panes are separated by the gap the split views had as their handle.
-    readonly property real gap: 6
+    readonly property real gap: Theme.paneGap
     // What the code takes of the width the gaps leave on the files screen;
     // the file system and the part share the rest equally. The code keeps its
     // width on the loaded-program screen, the backplot takes the rest there.
@@ -81,10 +81,10 @@ Rectangle {
     }
     // The bar's height, and the gap above it - the code pane leaves that room.
     readonly property int barHeight: simulationMode && running ? 114 : Theme.barHeight
-    readonly property int barGap: 6
+    readonly property int barGap: Theme.paneGap
     // The DRO's height, and the gap between it and the code.
     readonly property int droRowHeight: dro.implicitHeight
-    readonly property int droRowGap: Theme.spacingSmall
+    readonly property int droRowGap: Theme.paneGap
 
     // Only a switch made while this tab is already on screen animates: one
     // that arrives with the tab - the conversational screen opening a
@@ -170,12 +170,13 @@ Rectangle {
 
         // The code, with the DRO over it on the loaded-program screen; on
         // the files screen, the code alone.
-        Rectangle {
+        Item {
             id: codeColumn
             x: root.codeX
             width: root.codeWidth
             height: parent.height
-            color: Theme.surfaceSunken
+            // no fill: the window's background shows round the code's
+            // rounded frame
 
             ColumnLayout {
                 anchors.fill: parent

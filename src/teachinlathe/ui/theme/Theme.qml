@@ -10,6 +10,11 @@ import QtQuick
  * doing them at once makes a mistake indistinguishable from an intended
  * change. Adjust after the sweep, not during it.
  *
+ * The colours are now theme A, "Steel & White" (2026-11-07): the same light
+ * look with more contrast - stronger outlines, a darker stripe, a deeper
+ * blue accent - since the panel's glossy screen rules out a dark theme. The
+ * use counts beside the colours are from the extraction, not these values.
+ *
  * A note on naming: nothing here may start with "on" followed by a capital
  * letter. QML reads that as signal-handler syntax, so a token called
  * `onSurface` - the obvious name, coming from Material - silently evaluates
@@ -62,6 +67,9 @@ QtObject {
     readonly property int scrollFadeHeight: 40 // scrolling lists, top and bottom
     readonly property int hairline:       1   // separators
     readonly property real disabledOpacity: 0.35
+    //: How long a SafetyButton - one that moves the machine - has to be held
+    //: before it acts, in ms: its fill's time, and what its hint says.
+    readonly property int safetyHoldMs: 2000
 
     // Four steps, from what is actually drawn: 6 (41 uses), 8 (29), 4 (12),
     // 10 (7). The first scale here guessed 2/6/10 and had no token for 8,
@@ -79,6 +87,18 @@ QtObject {
     readonly property int spacing:       12
     readonly property int spacingLarge:  16
     readonly property int margin:        24
+    //: between two panes or cards of a screen: the window's background
+    //: showing between them (the app shell's padding round them is as wide)
+    readonly property int paneGap:        6
+    //: what is laid inside a card (Card) - a list's column titles and rows -
+    //: this far in from its outline, so square corners stay inside its
+    //: rounded ones
+    readonly property int cardInset:      3
+    //: a pane's content - an editor's form, a canvas, the code - this far in
+    //: from the pane's outline
+    readonly property int paneInset:     10
+    //: a quick change of state shown: a switch flipping, a fill emptying
+    readonly property int animationFast: 150
     // between the boxes of an editor screen, and between them and its canvas
     readonly property int innerSpacings: 12
     // inside the Manual Turning DRO's boxes - the machine coordinates', the
@@ -99,42 +119,44 @@ QtObject {
     // ── Surfaces ────────────────────────────────────────────────────────────
 
     readonly property color surface:        "#ffffff"   // 15 uses
-    readonly property color surfaceAlt:     "#f5f7fb"   // 14
-    readonly property color surfaceSunken:  "#f5f5f5"
+    readonly property color surfaceAlt:     "#f3f5f8"   // 14
+    readonly property color surfaceSunken:  "#e8ecf1"
     readonly property color surfaceInverse: "#202225"   // 5 - the dark dialogs
+    //: a shadow under something raised, as a switch's knob
+    readonly property color shadow:         "#2e000000"
 
     // ── Lines ───────────────────────────────────────────────────────────────
 
-    readonly property color outline:        "#cccccc"   // 32 - the commonest
-    readonly property color outlineStrong:  "#bdbdbd"   // 13
-    readonly property color separator:      "#d6dce7"   // 10
+    readonly property color outline:        "#9aa5b3"   // 32 - the commonest
+    readonly property color outlineStrong:  "#7e8b9c"   // 13
+    readonly property color separator:      "#c6cdd7"   // 10
     readonly property color outlineInverse: "#3a3d41"   // 11 - on dark dialogs
-    readonly property color outlineDisabled:"#e0e0e0"
+    readonly property color outlineDisabled:"#dde2e8"
 
     //: The border of a raised dialog and of the buttons inside it. A touch
     //: bluer than outlineStrong, which is what the numpad has always used and
     //: what the other dialogs now match.
-    readonly property color dialogBorder:   "#9aa3b0"
+    readonly property color dialogBorder:   "#7e8b9c"
 
     // ── Text ────────────────────────────────────────────────────────────────
 
-    readonly property color foreground:        "#1e2430"   // 7
+    readonly property color foreground:        "#0f172a"   // 7
     readonly property color foregroundStrong:  "#0f172a"   // 4
-    readonly property color foregroundMuted:   "#4f4f4f"   // 6
-    readonly property color foregroundFaint:   "#808080"   // placeholders
+    readonly property color foregroundMuted:   "#4a5565"   // 6
+    readonly property color foregroundFaint:   "#8a94a3"   // placeholders
     readonly property color foregroundOnAccent:"#ffffff"
     readonly property color foregroundInverse: "#e8eaed"   // on dark dialogs
 
     // ── Accent and interaction states ───────────────────────────────────────
 
-    readonly property color accent:        "#3b82f6"   // 9
-    readonly property color accentStrong:  "#1565c0"   // 6
-    readonly property color accentSoft:    "#e1f0ff"   // 7 - pressed fill
-    readonly property color accentBorder:  "#8ec5ff"   // 9 - pressed border
-    readonly property color selection:     "#dbeafe"   // 10
+    readonly property color accent:        "#1d4ed8"   // 9
+    readonly property color accentStrong:  "#1e40af"   // 6
+    readonly property color accentSoft:    "#d3e2ff"   // 7 - pressed fill
+    readonly property color accentBorder:  "#7fa2ee"   // 9 - pressed border
+    readonly property color selection:     "#d3e2ff"   // 10
     readonly property color lifted:        "#fff3e0"   // a list row being dragged to a new place
-    readonly property color hover:         "#eef3fb"   // 5
-    readonly property color focusBorder:   "#2a7bff"   // NumpadField focus
+    readonly property color hover:         "#e3e9f3"   // 5
+    readonly property color focusBorder:   "#1d4ed8"   // NumpadField focus
 
     // ── Semantic ────────────────────────────────────────────────────────────
 
@@ -145,7 +167,7 @@ QtObject {
     //: blendStroke at 30%, see-through: what stands for a blend on another card
     readonly property color blendTint:  "#4DD97706"
     readonly property color ink:        "#000000"   // a card's number
-    readonly property color cardDivider: "#d0d0d0"  // inside a Define Profile's card
+    readonly property color cardDivider: "#c6cdd7"  // inside a Define Profile's card
     readonly property color danger:     "#c62828"   // 10 - delete, abort
     readonly property color dangerSoft: "#ffebee"   // 4
     readonly property color dangerPressed: "#b71c1c"
@@ -158,7 +180,7 @@ QtObject {
 
     //: A border that marks the selected one of several, in the tool library.
     //: Darker than outlineStrong on purpose - it has to read as chosen.
-    readonly property color outlineEmphasis: "#999999"
+    readonly property color outlineEmphasis: "#5b6878"
 
     //: The on-screen QWERTY keyboard's keys, which sit on a dark overlay and
     //: so do not follow the light surface tokens.
@@ -172,12 +194,46 @@ QtObject {
     // not `success`, which is the confirm green in dialog text - these two
     // were one colour apart and had drifted into doing different jobs.
 
-    readonly property color primary:         "#2d7d46"
-    readonly property color primaryPressed:  "#25673a"
+    readonly property color primary:         "#1e7b3c"
+    readonly property color primaryPressed:  "#186531"
     readonly property color primaryDisabled: "#8ea99a"
-    readonly property color primaryBorder:   "#3fb950"
+    readonly property color primaryBorder:   "#2e9a50"
+
+    // ── Theme A: the window, table rows and headers, the current tab ───────
+    //
+    // Behind the panels, darker than they are, so each panel stands out
+    // from the gaps between them instead of melting into them.
+    readonly property color windowBackground: "#b8c2ce"
+    //: List and table rows alternate surface (white) and this.
+    readonly property color rowStripe:        "#e8ecf1"
+    //: The band of column titles above a table or list, its text and the
+    //: lines between its columns.
+    readonly property color tableHeader:           "#3e4c5e"
+    readonly property color tableHeaderForeground: "#ffffff"
+    readonly property color tableHeaderDivider:    "#5e6c7e"
+    //: The column titles' size, bold, in the app's font: the programs list,
+    //: the operations list and the file list all use it.
+    readonly property int tableHeaderFontSize: fontBody
+    //: The bottom bar's current tab: its fill, its label and the bar along
+    //: its top.
+    readonly property color tabActive:           "#1d4ed8"
+    readonly property color tabActiveForeground: "#ffffff"
+    readonly property color tabActiveEdge:       "#1e40af"
+
+    // ── Predefined positions ────────────────────────────────────────────────
+    //
+    // Each position's colour wherever it is shown on the Manual Turning tab:
+    // its target and name on the Machine Limits canvas, its card (with its
+    // TeachIn), and its Move to button (SafetyButton) - border and fill.
+    readonly property color positionToolChange: "#e65100"   // M6
+    readonly property color positionG28:        "#6a1b9a"
+    readonly property color positionG30:        "#00838f"
+
+    //: An on / off switch's track (ToggleSwitch): on, and off.
+    readonly property color switchOn:  "#34c759"
+    readonly property color switchOff: "#dcdfe4"
 
     //: Muted body text on the programs and dev screens - a slate, where
     //: foregroundMuted is a neutral grey.
-    readonly property color foregroundSubtle: "#475569"
+    readonly property color foregroundSubtle: "#334155"
 }

@@ -2,6 +2,7 @@
 import QtQuick
 import QtQuick.Layouts
 import theme
+import common
 
 PrimitiveCard {
     id: root
@@ -18,8 +19,6 @@ PrimitiveCard {
     readonly property string _secondDescription:
         _secondFieldName === "x_end" ? "Line End on X" : "Line End on Z"
 
-    readonly property color clrTabBorder: "#cbd5e1"
-    readonly property color clrTabText:   "#1f2937"
     readonly property int   szTabHeight:  46
 
     function _normalizedInput() {
@@ -77,85 +76,15 @@ PrimitiveCard {
             Layout.fillWidth: true
             Layout.preferredHeight: root.szTabHeight
 
-            Rectangle {
+            SegmentedTabs {
                 id: inputModeBar
+                readonly property var modes: ["xz", "ax", "az"]
                 x: firstCell.x + firstCell.contentLeft
                 width: secondCell.x + secondCell.contentRight - x
                 height: parent.height
-                radius: Theme.radiusLarge
-                color: "transparent"
-
-                Row {
-                    anchors.fill: parent
-
-                    Repeater {
-                        model: [
-                            { label: "XZ End",        mode: "xz" },
-                            { label: "Angle + X End", mode: "ax" },
-                            { label: "Angle + Z End", mode: "az" }
-                        ]
-                        delegate: Item {
-                            id: tabItem
-                            readonly property bool selected: root._inputMode === modelData.mode
-                            readonly property color tabColor: selected ? Theme.outlineDisabled : Theme.surface
-                            readonly property bool isFirst: index === 0
-                            readonly property bool isLast: index === 2
-                            width: inputModeBar.width / 3
-                            height: inputModeBar.height
-
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: (tabItem.isFirst || tabItem.isLast) ? inputModeBar.radius : 0
-                                color: tabItem.tabColor
-
-                                Rectangle {
-                                    anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-                                    width: inputModeBar.radius
-                                    visible: tabItem.isFirst
-                                    color: parent.color
-                                }
-
-                                Rectangle {
-                                    anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                                    width: inputModeBar.radius
-                                    visible: tabItem.isLast
-                                    color: parent.color
-                                }
-                            }
-
-                            Rectangle {
-                                visible: !tabItem.isLast
-                                anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-                                width: Theme.hairline
-                                color: root.clrTabBorder
-                                z: 1
-                            }
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: modelData.label
-                                color: parent.selected ? Theme.surfaceInverse : root.clrTabText
-                                font.pixelSize: Theme.fontBody
-                                font.bold: parent.selected
-                                z: 2
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: root._setInputMode(modelData.mode)
-                            }
-                        }
-                }
-                }
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: inputModeBar.radius
-                    color: "transparent"
-                    border.color: root.clrTabBorder
-                    border.width: Theme.hairline
-                    z: 3
-                }
+                labels: ["XZ End", "Angle + X End", "Angle + Z End"]
+                currentIndex: modes.indexOf(root._inputMode)
+                onActivated: function(index) { root._setInputMode(modes[index]) }
             }
         }
 

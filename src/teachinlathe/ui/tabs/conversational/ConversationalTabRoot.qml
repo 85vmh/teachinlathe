@@ -97,7 +97,6 @@ Item {
         id: programsScreen
         MainScreen {
             programsModel: root.viewModel.programsModel
-            selectedProgramId: root.viewModel.selectedProgramId
             onAddNewProgramRequested: root.viewModel.addNewProgram()
             onEditProgramRequested: function(arg) { root.viewModel.openProgram(arg) }
             onDeleteProgramRequested: function(index) { root.viewModel.deleteProgram(index) }

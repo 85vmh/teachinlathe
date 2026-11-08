@@ -5,10 +5,13 @@ import theme
 import tabs.conversational
 import common
 
-// Row 3 — Sortable file list with Name / Size / Modified columns. A file
-// swiped left shows Delete (see SwipeRow).
-Item {
+// The file list, a card of its own as the conversational programs list
+// (MainScreen): the column titles and the rows reaching to its outline.
+// Sortable by Name / Size / Modified; a file swiped left shows Delete (see
+// SwipeRow).
+Card {
     id: root
+
     required property var viewModel
     // Swipe to delete. Off where the list only picks a file.
     property bool showActions: true
@@ -24,18 +27,18 @@ Item {
     readonly property int rowRightMargin:  18
 
     // ── Fonts ───────────────────────────────────────────────────────────────
-    readonly property int headerFontSize:  16
+    readonly property int headerFontSize:  Theme.tableHeaderFontSize
     readonly property int itemFontSize:    16
     readonly property int metaFontSize:    16
     readonly property int iconFontSize:    14
 
     // ── Colors ──────────────────────────────────────────────────────────────
     readonly property color sepColor:  Theme.outline
-    readonly property color headerColor: Theme.separator
-    readonly property color headerSepColor: Theme.outline
-    readonly property color headerTextColor: Theme.surfaceInverse
-    readonly property color rowEven:   Theme.surfaceSunken
-    readonly property color rowOdd:    Theme.outlineDisabled
+    readonly property color headerColor: Theme.tableHeader
+    readonly property color headerSepColor: Theme.tableHeaderDivider
+    readonly property color headerTextColor: Theme.tableHeaderForeground
+    readonly property color rowEven:   Theme.surface
+    readonly property color rowOdd:    Theme.rowStripe
     readonly property color rowHover:  Theme.selection
     readonly property color rowSelect: Theme.selection
 
@@ -44,6 +47,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
+        anchors.margins: Theme.cardInset
         spacing: 0
 
         // ── Header ──────────────────────────────────────────────────────────

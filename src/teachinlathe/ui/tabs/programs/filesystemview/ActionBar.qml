@@ -2,15 +2,16 @@ import QtQuick
 import QtQuick.Layouts
 import tabs.programs
 import theme
+import common
 
 // Row 4 — shown on mounted media only: [Copy to USB Stick Programs]
 // (disabled while copying), with a progress bar along the top while it copies.
 // Deleting is per file, a swipe on the list's rows.
-Rectangle {
+Card {
     id: root
     required property var viewModel
 
-    color: Theme.surfaceSunken
+    clip: true
     implicitHeight: 60
 
     // ---- Copy progress bar (top edge, shown while copying) ----

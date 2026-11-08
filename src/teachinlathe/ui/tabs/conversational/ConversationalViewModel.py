@@ -150,10 +150,6 @@ class ConversationalViewModel(QObject):
         """The DXF Profiles folder, for the import screen."""
         return self._dxf_file_system_view_model
 
-    @pyqtProperty(str, notify=programChanged)
-    def selectedProgramId(self):
-        return self.current_program.id if self.current_program is not None else ""
-
     @pyqtProperty("QVariant", notify=programChanged)
     def selectedProgram(self):
         if self.current_program is None:

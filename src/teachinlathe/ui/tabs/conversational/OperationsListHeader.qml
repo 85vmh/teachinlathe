@@ -11,7 +11,7 @@ Rectangle {
     property int colGenW: 80
     property int colTypeW: 200
     property int colOptW: 80
-    property int headerFontSize: 14
+    property int headerFontSize: Theme.tableHeaderFontSize
     // the operations' rows' font, whose "[#NN]    " the title is indented by,
     // so it starts where the operation names do
     property int itemFontSize: 16
@@ -22,10 +22,9 @@ Rectangle {
 
     width: parent ? parent.width : 400
     height: Theme.rowHeight
-    radius: 0
-    color: Theme.hover
-    border.width: 2
-    border.color: Theme.dialogBorder
+    // the card's column titles, as the conversational programs list's
+    color: Theme.tableHeader
+    radius: Theme.radiusSmall
 
     Item {
         anchors.fill: parent
@@ -48,7 +47,7 @@ Rectangle {
                     text: "Program Operations"
                     font.bold: true
                     font.pixelSize: root.headerFontSize
-                    color: Theme.foregroundStrong
+                    color: Theme.tableHeaderForeground
                     elide: Text.ElideRight
                 }
 
@@ -68,13 +67,13 @@ Rectangle {
                     onClicked: root.addOperationRequested()
                 }
             }
-            Divider { dividerColor: Theme.outline }
+            Divider { dividerColor: Theme.tableHeaderDivider }
 
             Label {
                 text: "Generate\nGCode"
                 font.bold: true
                 font.pixelSize: root.headerFontSize
-                color: Theme.foregroundStrong
+                color: Theme.tableHeaderForeground
                 Layout.minimumWidth: root.colGenW
                 Layout.preferredWidth: root.colGenW
                 Layout.maximumWidth: root.colGenW
@@ -84,13 +83,13 @@ Rectangle {
                 maximumLineCount: 2
                 Layout.alignment: Qt.AlignVCenter
             }
-            Divider { dividerColor: Theme.outline }
+            Divider { dividerColor: Theme.tableHeaderDivider }
 
             Label {
                 text: "Optional\nBlock"
                 font.bold: true
                 font.pixelSize: root.headerFontSize
-                color: Theme.foregroundStrong
+                color: Theme.tableHeaderForeground
                 Layout.minimumWidth: root.colOptW
                 Layout.preferredWidth: root.colOptW
                 Layout.maximumWidth: root.colOptW

@@ -5,7 +5,7 @@ import tabs.programs
 import tabs.programs.gcode_viewer.while_running
 import theme
 
-Rectangle {
+Item {
     id: root
 
     enum ViewerMode { ProgramWithoutStack, ProgramWithStack }
@@ -25,9 +25,8 @@ Rectangle {
     // so here there is only the room it takes.
     property real actionBarReveal: 0
     property int actionBarHeight: Theme.barHeight
-    readonly property int actionBarGap: 6
+    readonly property int actionBarGap: Theme.paneGap
 
-    color: "#ffffff"
 
     ColumnLayout {
         anchors.fill: parent

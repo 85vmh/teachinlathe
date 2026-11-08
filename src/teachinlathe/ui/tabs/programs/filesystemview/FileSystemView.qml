@@ -2,9 +2,12 @@ import QtQuick
 import QtQuick.Layouts
 import theme
 
-// Main filesystem browser panel — 4-row layout.
+// The filesystem browser: cards one under another, the window's background
+// between them - the predefined locations and the path in them
+// (PredefinedPaths), the file list (FileListView) and, on mounted media, the
+// copy to the USB stick (ActionBar).
 // Receives a FileSystemViewModel exposed from Python as 'viewModel'.
-Rectangle {
+Item {
     id: root
     required property var viewModel
     property bool showActionBar: true
@@ -15,45 +18,18 @@ Rectangle {
     readonly property bool actionBarShown: showActionBar
                                            && viewModel.isInMountedMedia
 
-    color: Theme.surfaceSunken
-    radius: Theme.radius
-    border.color: Theme.outline
-    border.width: Theme.hairline
-
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 8
-        spacing: 0
+        // as far apart as the cards elsewhere
+        spacing: Theme.spacingSmall
 
-        // Row 1 — Predefined location selector
-        // Layout.preferredHeight is computed here (not in LocationBar) so
-        // ColumnLayout always gets a concrete value on first pass.
-        LocationBar {
+        PredefinedPaths {
+            id: predefinedPaths
             viewModel: root.viewModel
             Layout.fillWidth: true
-            Layout.preferredHeight: 60
+            Layout.preferredHeight: predefinedPaths.implicitHeight
         }
 
-        Rectangle {
-            Layout.fillWidth: true
-            height: Theme.hairline
-            color: Theme.outlineDisabled
-        }
-
-        // Row 2 — FolderUp + Breadcrumb + Filter toggles
-        NavigationBar {
-            viewModel: root.viewModel
-            Layout.fillWidth: true
-            height: 38
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            height: Theme.hairline
-            color: Theme.outlineDisabled
-        }
-
-        // Row 3 — Sortable file list
         FileListView {
             viewModel: root.viewModel
             showActions: root.showActions
@@ -61,19 +37,12 @@ Rectangle {
             Layout.fillHeight: true
         }
 
-        Rectangle {
-            Layout.fillWidth: true
-            height: Theme.hairline
-            color: Theme.outlineDisabled
-            visible: root.actionBarShown
-        }
-
-        // Row 4 — copy to the USB stick, on mounted media
+        // copy to the USB stick, on mounted media
         ActionBar {
             viewModel: root.viewModel
             visible: root.actionBarShown
             Layout.fillWidth: true
-            Layout.preferredHeight: root.actionBarShown ? 60 : 0
+            Layout.preferredHeight: 60
         }
     }
 }

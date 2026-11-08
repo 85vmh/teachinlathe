@@ -5,7 +5,8 @@ import math
 from teachinlathe.ui.tabs.programs.backplot.actors import screen, text
 from teachinlathe.ui.tabs.programs.backplot.actors.base import Actor
 
-# The Machine Limits canvas uses these colors for the three machine targets.
+# The Machine Limits canvas's colours for the three machine targets - Theme.qml's
+# positionToolChange, positionG28, positionG30: change them there and here.
 COLORS = {
     "M6": (0.902, 0.318, 0.000),   # #e65100
     "G28": (0.416, 0.106, 0.604),  # #6a1b9a

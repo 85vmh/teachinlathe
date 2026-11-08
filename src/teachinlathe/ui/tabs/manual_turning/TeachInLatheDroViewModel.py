@@ -119,6 +119,10 @@ class TeachInLatheDroViewModel(QObject):
         self._predefined = predefined_positions()
         self._predefined.changed.connect(self.predefinedPositionsChanged)
         self._predefined.changed.connect(self.limitsChanged)
+        # G28's and G30's positions, kept here: the machine is compared with
+        # them at every DRO update (atG28, atG30)
+        self._predefined.changed.connect(self._keep_move_targets)
+        self._keep_move_targets()
         # the current loaded tool's offsets: set on each axis, or not
         self._tool_set = {"x": False, "z": False}
         self._tool_library.toolsChanged.connect(self._on_tool_state)
@@ -519,6 +523,59 @@ class TeachInLatheDroViewModel(QObject):
     @pyqtSlot()
     def teachG30(self):
         self._teach_position("G30.1", "G30")
+
+    #: how near the machine has to be to G28 or G30, on each axis, to be at it:
+    #: a little over the jitter of an actual position (positions_repository
+    #: reports the actual one when the INI asks)
+    AT_POSITION_TOLERANCE = 0.005
+
+    def _keep_move_targets(self):
+        self._move_targets = {
+            "G28": self._predefined.g28_position() if self._predefined.g28_set else None,
+            "G30": self._predefined.g30_position() if self._predefined.g30_set else None,
+        }
+        self.droChanged.emit()
+
+    def _at(self, name):
+        target = self._move_targets.get(name)
+        if target is None:
+            return False
+        x, z = target
+        return (abs(float(self.currentXMachineValue) - x) <= self.AT_POSITION_TOLERANCE
+                and abs(float(self.currentZMachineValue) - z) <= self.AT_POSITION_TOLERANCE)
+
+    @pyqtProperty(bool, notify=droChanged)
+    def atG28(self):
+        """The machine is at G28 (machine coordinates): moving there would
+        do nothing - its Move to button is off."""
+        return self._at("G28")
+
+    @pyqtProperty(bool, notify=droChanged)
+    def atG30(self):
+        return self._at("G30")
+
+    @pyqtSlot()
+    def moveToG28(self):
+        """Moves to the G28 position: G28 (the Machine Limits view's
+        SafetyButton, held for its time)."""
+        self._move_to("G28")
+
+    @pyqtSlot()
+    def moveToG30(self):
+        self._move_to("G30")
+
+    def _move_to(self, name):
+        if self._is_feeding:
+            self.actionRejected.emit(f"Moving to {name} not allowed when power feeding")
+            return
+        ready, why = command_repository().can_issue_mdi()
+        if not ready:
+            self.actionRejected.emit(why)
+            return
+        if issue_mdi(name):
+            self.noticeShown.emit(f"Moving to {name}")
+        else:
+            self.actionRejected.emit(f"Could not move to {name}")
 
     def _teach_position(self, command, name):
         if self._is_feeding:

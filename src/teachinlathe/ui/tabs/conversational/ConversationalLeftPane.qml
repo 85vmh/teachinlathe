@@ -5,7 +5,7 @@ import theme
 import common
 import TeachInLathe
 
-Rectangle {
+Item {
     id: root
 
     // the program's operations, a row each - OperationListModel: number,
@@ -21,7 +21,7 @@ Rectangle {
     readonly property int colOptW: 80
     readonly property int colDelW: 100    // the swipe buttons, and where the header's G54 sits
     readonly property int rowH: Theme.rowHeight
-    readonly property int opHeaderFontSize: 14
+    readonly property int opHeaderFontSize: Theme.tableHeaderFontSize
 
     property real _savedContentY: 0
     property bool _restoreScrollPending: false
@@ -129,6 +129,17 @@ Rectangle {
 
     onActiveOpIndexChanged: setCurrentOperationIndex(activeOpIndex)
 
+    // A program opened again has the same rows as before: its model sends
+    // nothing (DataclassListModel.setRows), so the list - new with the screen -
+    // takes the operation its editor shows here, scrolled into view.
+    Component.onCompleted: Qt.callLater(function() {
+        if (!opsList)
+            return
+        setCurrentOperationIndex(activeOpIndex)
+        if (opsList.currentIndex >= 0)
+            opsList.positionViewAtIndex(opsList.currentIndex, ListView.Contain)
+    })
+
     // the rows changed - all of them anew, or some in place: the scroll
     // position and the selection as they are to be after
     Connections {
@@ -180,47 +191,40 @@ Rectangle {
     Layout.fillWidth: true
     Layout.preferredWidth: 3
     Layout.fillHeight: true
-    color: Theme.surface
-    radius: Theme.radius
-    border.color: Theme.outline
-    border.width: Theme.hairline
+    // no box of its own: the program header's card and the operations' card,
+    // the window's background between them (as the file browser's cards)
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 1
-        spacing: 6
+        spacing: Theme.spacingSmall
 
-        Rectangle {
+        ProgramHeader {
+            Layout.fillWidth: true
+            Layout.preferredHeight: root.rowH
+            datum: root.programDatum
+            colDelW: root.colDelW
+            selected: opsList.currentIndex < 0
+            onClicked: {
+                opsList.currentIndex = -1
+                root.programHeaderSelected()
+            }
+        }
+
+        // the operations' card, as the conversational programs list: the
+        // column titles and the rows reaching to its outline
+        Card {
             id: operationsBox
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: Theme.radiusSmall
-            color: Theme.surfaceAlt
-            border.width: 0
-            border.color: Theme.outlineDisabled
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 8
+                anchors.margins: Theme.cardInset
                 spacing: 0
-
-                ProgramHeader {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: root.rowH
-                    Layout.bottomMargin: 4
-                    datum: root.programDatum
-                    colDelW: root.colDelW
-                    selected: opsList.currentIndex < 0
-                    onClicked: {
-                        opsList.currentIndex = -1
-                        root.programHeaderSelected()
-                    }
-                }
 
                 OperationsListHeader {
                     Layout.fillWidth: true
                     Layout.preferredHeight: root.rowH
-                    Layout.bottomMargin: 4
                     colOpNumW: root.colOpNumW
                     colGenW: root.colGenW
                     colTypeW: root.colTypeW
@@ -346,7 +350,7 @@ Rectangle {
                     ScrollFades {
                         anchors.fill: parent
                         flickable: opsList
-                        color: Theme.surfaceAlt
+                        color: Theme.surface
                     }
                 }
 

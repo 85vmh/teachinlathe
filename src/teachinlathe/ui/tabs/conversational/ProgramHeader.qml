@@ -17,11 +17,12 @@ Rectangle {
 
     width: parent ? parent.width : 400
     height: Theme.rowHeight
-    radius: 0
+    // a card of its own, over the operations' card
+    radius: Theme.radius
     color: tap.pressed ? Theme.accentSoft
          : selected ? Theme.selection : hover.hovered ? Theme.hover : Theme.surface
     border.width: selected ? 2 : Theme.hairline
-    border.color: selected ? Theme.accent : Theme.outlineStrong
+    border.color: selected ? Theme.accent : Theme.outline
 
     component Part: Label {
         font.pixelSize: root.itemFontSize

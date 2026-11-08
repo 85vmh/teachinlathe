@@ -40,19 +40,22 @@ Item {
 
     // One of the boxes: the card styling around its contents.
     component Box: Rectangle {
+        id: box
         default property alias content: contentRow.data
+        //: its contents in the middle rather than at the left - the tool's,
+        //: with no next tool
+        property bool centerContent: false
         Layout.preferredHeight: root.boxHeight
         Layout.preferredWidth: contentRow.implicitWidth + 2 * root.boxHorizontalPadding
-        color: Theme.hover
-        border.color: Theme.separator
+        color: Theme.surfaceAlt   // as the Manual Turning DRO's boxes
+        border.color: Theme.outline
         border.width: Theme.hairline
         radius: Theme.radius
 
         RowLayout {
             id: contentRow
             anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            anchors.leftMargin: root.boxHorizontalPadding
+            x: box.centerContent ? Math.round((box.width - width) / 2) : root.boxHorizontalPadding
             spacing: Theme.spacingSmall
         }
     }
@@ -60,7 +63,8 @@ Item {
     RowLayout {
         id: boxesRow
         anchors.fill: parent
-        spacing: Theme.spacingSmall
+        // as the DRO is from the S box (ProgramsTabRoot.gap)
+        spacing: Theme.paneGap
 
         // ---- Spindle ------------------------------------------------------
         Box {
@@ -198,6 +202,8 @@ Item {
         // ---- Tool: current and next, with the time until the next tool change.
         Box {
             Layout.preferredWidth: root.toolBoxWidth
+            // Current alone, with no tool after it: in the middle of the box
+            centerContent: !root.viewModel.hasNextTool
 
             ColumnLayout {
                 Layout.preferredWidth: root.toolColumnWidth

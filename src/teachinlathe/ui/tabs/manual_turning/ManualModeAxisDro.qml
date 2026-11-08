@@ -46,7 +46,8 @@ Item {
     //: In from the edge of the box the values are in (TeachInLatheDroRoot
     //: draws the boxes, round both axes' values), and between two boxes.
     readonly property int boxPadding: Theme.droBoxPadding
-    readonly property int boxGap: 10
+    // as wide as the gap to the tools' column
+    readonly property int boxGap: Theme.paneGap
     readonly property int machineLeft: axisLeft + axisWidth + gap + boxPadding
     readonly property int machineWidth: primaryWidth
     //: the work coordinates' values: after the machine's box, when it is shown

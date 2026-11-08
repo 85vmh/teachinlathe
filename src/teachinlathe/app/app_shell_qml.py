@@ -17,6 +17,8 @@ class AppShellBridge(QObject):
     eventsChanged = pyqtSignal()
     statusSummaryChanged = pyqtSignal()
     toastChanged = pyqtSignal()
+    #: how long a toast stays, unless showToastFor says
+    TOAST_MS = 3000
     chromeChanged = pyqtSignal()
 
     def __init__(self, app_state, feature_controllers=None, parent=None):
@@ -35,7 +37,7 @@ class AppShellBridge(QObject):
         self._chrome_bottom_hidden = False
         self._toast_timer = QTimer(self)
         self._toast_timer.setSingleShot(True)
-        self._toast_timer.setInterval(3000)
+        self._toast_timer.setInterval(self.TOAST_MS)
         self._toast_timer.timeout.connect(self._hide_toast)
 
         self._nav_store.currentTabChanged.connect(self._refresh)
@@ -161,7 +163,15 @@ class AppShellBridge(QObject):
         self._toast_text = str(message or "")
         self._toast_visible = bool(self._toast_text)
         self.toastChanged.emit()
-        self._toast_timer.start()
+        # its own time each time: showToastFor's start(ms) changes the interval
+        self._toast_timer.start(self.TOAST_MS)
+
+    @pyqtSlot(str, int)
+    def showToastFor(self, message, duration_ms):
+        """A toast shown ``duration_ms`` instead of the usual 3 s - a short
+        hint, as a SafetyButton's tap."""
+        self.showToast(message)
+        self._toast_timer.start(max(0, int(duration_ms)))
 
     def _hide_toast(self):
         if not self._toast_visible:

@@ -29,7 +29,7 @@ Item {
     readonly property bool chromeBottomHidden: AppShellBridge.chromeBottomHidden
 
     readonly property int barHeight: Theme.barHeight
-    readonly property int contentPadding: 6
+    readonly property int contentPadding: Theme.paneGap
 
     ColumnLayout {
         anchors.fill: parent
@@ -47,7 +47,7 @@ Item {
             id: contentHost
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: Theme.surface
+            color: Theme.windowBackground
 
             Item {
                 id: contentArea

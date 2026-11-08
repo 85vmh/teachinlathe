@@ -25,8 +25,8 @@ Rectangle {
     // the header nearer the rows than the rows are to each other
     readonly property int headerGap: 8
 
-    color: Theme.hover
-    border.color: Theme.separator
+    color: Theme.surfaceAlt   // as the Manual Turning DRO's boxes
+    border.color: Theme.outline
     border.width: Theme.hairline
     radius: Theme.radius
 

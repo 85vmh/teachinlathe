@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import common
 
 Item {
     id: operationEditor
@@ -87,7 +88,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 6
+            spacing: Theme.paneGap
 
             ConversationalLeftPane {
                 id: leftPane
@@ -122,14 +123,10 @@ Item {
                 }
             }
 
-            Rectangle {
+            Card {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 7
                 Layout.fillHeight: true
-                color: Theme.surface
-                radius: Theme.radius
-                border.color: Theme.outline
-                border.width: Theme.hairline
 
                 Flickable {
                     id: detailsFlick

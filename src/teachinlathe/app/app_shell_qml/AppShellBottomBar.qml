@@ -61,7 +61,7 @@ Rectangle {
         y: tab ? row.y + tab.y : 0
         width: tab ? tab.width : 0
         height: tab ? tab.height : 0
-        color: Theme.accentSoft
+        color: Theme.tabActive
 
         // Not on the first placement, nor while the bar comes back from full
         // screen: only a change of tab moves it.
@@ -77,7 +77,7 @@ Rectangle {
             anchors.right: parent.right
             anchors.top: parent.top
             height: 3
-            color: Theme.primary
+            color: Theme.tabActiveEdge
         }
     }
 
@@ -87,6 +87,14 @@ Rectangle {
         anchors.top: parent.top
         height: Theme.hairline
         color: Theme.separator
+    }
+
+    // The line between two tabs, a little shorter than the bar.
+    component TabDivider: Rectangle {
+        width: Theme.hairline
+        height: parent.height - 2 * Theme.spacingLarge
+        anchors.verticalCenter: parent.verticalCenter
+        color: Theme.outline
     }
 
     RowLayout {
@@ -107,7 +115,8 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: modelData.label
-                    color: root.currentTab === modelData.id ? Theme.foreground : Theme.foregroundSubtle
+                    color: root.currentTab === modelData.id ? Theme.tabActiveForeground : Theme.foregroundSubtle
+                    font.bold: root.currentTab === modelData.id
                     font.pixelSize: Theme.fontBody
                 }
 
@@ -115,6 +124,10 @@ Rectangle {
                     anchors.fill: parent
                     onClicked: AppShellBridge.activateTab(modelData.id)
                 }
+
+                // after every tab, the last one too, in the middle of the gap
+                // to the next - the highlight never covers it
+                TabDivider { x: parent.width + row.spacing / 2 }
             }
         }
 
@@ -124,6 +137,9 @@ Rectangle {
             Layout.preferredWidth: 150
             Layout.fillHeight: true
             color: eventsArea.pressed || root.logsExpanded ? Theme.hover : "transparent"
+
+            // Events stands apart from the tabs: its own divider on its left
+            TabDivider { x: -row.spacing / 2 }
 
             Text {
                 anchors.centerIn: parent

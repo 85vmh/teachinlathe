@@ -2,5 +2,5 @@ module tabs.programs.filesystemview
 ActionBar 1.0 ActionBar.qml
 FileListView 1.0 FileListView.qml
 FileSystemView 1.0 FileSystemView.qml
-LocationBar 1.0 LocationBar.qml
 NavigationBar 1.0 NavigationBar.qml
+PredefinedPaths 1.0 PredefinedPaths.qml

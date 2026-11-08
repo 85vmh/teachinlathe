@@ -265,9 +265,10 @@ Item {
     IntValidator { id: intVal; bottom: 1; top: 999 }
 
     // ── Screen background ────────────────────────────────────────────────────────
+    // the window's, round the two panes - as on the program's screen (ChildScreen)
     Rectangle {
         anchors.fill: parent
-        color: Theme.surfaceAlt
+        color: Theme.windowBackground
     }
 
     // ── Full layout ──────────────────────────────────────────────────────────────
@@ -280,15 +281,25 @@ Item {
             anchors.fill: parent
 
             // ── Left panel ────────────────────────────────────────────────────────
-            Rectangle {
+            // the primitives' cards in a box, rounded and outlined as the
+            // program screen's panes, and the add buttons a card of their own
+            // under it - the box ending a card's spacing above it
+            Item {
                 id: leftPanelBg
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                width: parent.width * 0.35
-                color: Theme.surface
+                width: (parent.width - Theme.paneGap) * 0.35
+
+                Card {
+                    id: listBox
+                    width: parent.width
+                    height: addButtonsCard.y - leftPanel.spacing
+                }
 
                 ColumnLayout {
                     id: leftPanel
                     anchors.fill: parent
+                    // the gap between the box and the buttons' card: the
+                    // spacing between two cards
                     spacing: Theme.spacingSmall
 
                     // Profile ID + Type row: a DXF's alone. A Define Profile
@@ -364,10 +375,11 @@ Item {
                     }
 
                     // Scrollable primitive cards
+                    // in the box, as far in from its edges as two cards are apart
                     Item {
                         Layout.fillWidth:  true
                         Layout.fillHeight: true
-                        Layout.leftMargin: 6; Layout.rightMargin: 6
+                        Layout.margins: Theme.spacingSmall
 
                     ScrollView {
                         id: primScroll
@@ -385,7 +397,6 @@ Item {
                         Column {
                             width: primScroll.availableWidth
                             spacing: Theme.spacingSmall
-                            topPadding: 4; bottomPadding: 8
 
                             Repeater {
                                 id: primRepeater
@@ -512,14 +523,10 @@ Item {
 
                     } // Item wrapper for scroll + fades
 
-                    Rectangle {
-                        Layout.fillWidth: true; height: 1
-                        color: Theme.surfaceAlt
-                        Layout.leftMargin: 4; Layout.rightMargin: 4
-                    }
-
-                    // Add primitive buttons
-                    Item {
+                    // Add primitive buttons: a card of their own, as wide as
+                    // the list's box
+                    Card {
+                        id: addButtonsCard
                         Layout.fillWidth: true
                         Layout.preferredHeight: root.addRowHeight
 
@@ -527,7 +534,6 @@ Item {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.verticalCenterOffset: -4
                             anchors.leftMargin: 16
                             anchors.rightMargin: 16
                             spacing: Theme.margin
@@ -605,19 +611,21 @@ Item {
                 }
             }
 
-            // Vertical separator
-            Rectangle {
-                anchors { left: leftPanelBg.right; top: parent.top; bottom: parent.bottom }
-                width: Theme.hairline; color: Theme.separator
+            // ── Right panel: canvas, in its own box, the window's background
+            // between the two ─────────────────────────────────────────────────
+            Card {
+                id: rightPanelBg
+                anchors {
+                    left: leftPanelBg.right; right: parent.right
+                    top: parent.top; bottom: parent.bottom
+                    leftMargin: Theme.paneGap
+                }
             }
 
-            // ── Right panel: canvas ────────────────────────────────────────────────
             ColumnLayout {
                 anchors {
-                    left:   leftPanelBg.right; right:  parent.right
-                    top:    parent.top;         bottom: parent.bottom
-                    leftMargin: 14; rightMargin: 12
-                    topMargin: 10;  bottomMargin: 10
+                    fill: rightPanelBg
+                    margins: Theme.paneInset
                 }
                 spacing: Theme.spacingSmall
 

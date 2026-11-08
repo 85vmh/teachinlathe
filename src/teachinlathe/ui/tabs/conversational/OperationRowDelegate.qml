@@ -61,7 +61,7 @@ SwipeRow {
 
     contentColor: root.lifted ? Theme.lifted
                 : root.isCurrentItem ? Theme.selection
-                : (root.rowIndex % 2 === 0 ? Theme.surfaceSunken : Theme.outlineDisabled)
+                : (root.rowIndex % 2 === 0 ? Theme.surface : Theme.rowStripe)
     contentBorderWidth: root.lifted || root.isCurrentItem ? 2 : 0
     contentBorderColor: root.lifted ? Theme.warning : root.isCurrentItem ? Theme.accent : "transparent"
 

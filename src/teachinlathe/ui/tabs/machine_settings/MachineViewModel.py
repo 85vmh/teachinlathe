@@ -17,7 +17,6 @@ from typing import Optional
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.app.app_identity import MACHINE_NAME
-from teachinlathe.core.command_repository import command_repository
 from teachinlathe.core.machine_repository import machine_repository
 from teachinlathe.core.status_repository import status_repository
 from teachinlathe.core.tools_repository import tools_repository
@@ -29,10 +28,9 @@ class MachineViewModel(QObject):
     stateChanged = pyqtSignal()
 
     def __init__(self, parent: Optional[QObject] = None,
-                 machine=None, status=None, tools=None, commands=None) -> None:
+                 machine=None, status=None, tools=None) -> None:
         super().__init__(parent)
         self._machine = machine_repository() if machine is None else machine
-        self._commands = command_repository() if commands is None else commands
         self._status = status_repository() if status is None else status
         self._tools = tools_repository() if tools is None else tools
 
@@ -97,24 +95,6 @@ class MachineViewModel(QObject):
         and every axis homed.
         """
         return self.estopOk and self.powerOk and self.xHomed and self.zHomed
-
-    # -- the predefined positions -----------------------------------------
-
-    @pyqtSlot()
-    def setG28(self):
-        self._commands.issue_mdi("G28.1")
-
-    @pyqtSlot()
-    def goToG28(self):
-        self._commands.issue_mdi("G28")
-
-    @pyqtSlot()
-    def setG30(self):
-        self._commands.issue_mdi("G30.1")
-
-    @pyqtSlot()
-    def goToG30(self):
-        self._commands.issue_mdi("G30")
 
     # -- the diagnostic tools ---------------------------------------------
 

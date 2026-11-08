@@ -7,15 +7,14 @@ import common
 Item {
     id: main
     objectName: "mainScreen"
+    // the window's background, so the list's frame shows its rounded corners
     Rectangle {
         anchors.fill: parent
-        color: Theme.surface
+        color: Theme.windowBackground
         z: -1
     }
 
     required property var programsModel
-    // The program last opened, outlined in the list.
-    required property string selectedProgramId
     // The program row swiped open, and to which side: 1 Delete, -1 Duplicate
     property int openSwipeIndex: -1
     property int openSwipeSide: 0
@@ -47,24 +46,20 @@ Item {
     ColumnLayout {
         anchors.fill: parent
 
-        Rectangle {
+        Card {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: Theme.surface
-            radius: Theme.radius
-            border.color: Theme.outline
-            border.width: Theme.hairline
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 1
+                anchors.margins: Theme.cardInset
                 spacing: 4
 
                 // HEADER (fixed 40px)
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: Theme.buttonHeight
-                    color: Theme.separator
+                    color: Theme.tableHeader
                     radius: Theme.radiusSmall
 
                     RowLayout {
@@ -77,21 +72,23 @@ Item {
                             Layout.minimumWidth: main.colIndexW
                             Layout.preferredWidth: main.colIndexW
                             Layout.maximumWidth: main.colIndexW
-                            font.pixelSize: main.cellFontPx
+                            font.pixelSize: Theme.tableHeaderFontSize
+                            color: Theme.tableHeaderForeground
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.tableHeaderDivider }
 
                         Label {
                             text: "Name"
                             Layout.minimumWidth: main.colNameW
                             Layout.preferredWidth: main.colNameW
                             Layout.maximumWidth: main.colNameW
-                            font.pixelSize: main.cellFontPx
+                            font.pixelSize: Theme.tableHeaderFontSize
+                            color: Theme.tableHeaderForeground
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
@@ -99,14 +96,15 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.tableHeaderDivider }
 
                         Label {
                             text: "Date Created"
                             Layout.minimumWidth: main.colCreatedW - 24
                             Layout.preferredWidth: main.colCreatedW - 24
                             Layout.maximumWidth: main.colCreatedW - 24
-                            font.pixelSize: main.cellFontPx
+                            font.pixelSize: Theme.tableHeaderFontSize
+                            color: Theme.tableHeaderForeground
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -126,20 +124,22 @@ Item {
                             text: main.createdAscending ? "▲" : "▼"
                             Layout.minimumWidth: 24
                             Layout.maximumWidth: 24
-                            font.pixelSize: main.cellFontPx
+                            font.pixelSize: Theme.tableHeaderFontSize
+                            color: Theme.tableHeaderForeground
                             opacity: main.sortField === "created_date" ? 1.0 : 0.45
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.tableHeaderDivider }
 
                         Label {
                             text: "Last Edited"
                             Layout.minimumWidth: main.colLastEditW - 24
                             Layout.preferredWidth: main.colLastEditW - 24
                             Layout.maximumWidth: main.colLastEditW - 24
-                            font.pixelSize: main.cellFontPx
+                            font.pixelSize: Theme.tableHeaderFontSize
+                            color: Theme.tableHeaderForeground
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -159,18 +159,20 @@ Item {
                             text: main.lastEditAscending ? "▲" : "▼"
                             Layout.minimumWidth: 24
                             Layout.maximumWidth: 24
-                            font.pixelSize: main.cellFontPx
+                            font.pixelSize: Theme.tableHeaderFontSize
+                            color: Theme.tableHeaderForeground
                             opacity: main.sortField === "last_edit" ? 1.0 : 0.45
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
 
-                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outline }
+                        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.tableHeaderDivider }
 
                         Label {
                             text: "Program Operations"
                             Layout.fillWidth: true
-                            font.pixelSize: main.cellFontPx
+                            font.pixelSize: Theme.tableHeaderFontSize
+                            color: Theme.tableHeaderForeground
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -207,9 +209,10 @@ Item {
 
                         contentColor: rowMouseArea.pressed
                                       ? Theme.selection
-                                      : (index % 2 === 0 ? Theme.surfaceSunken : Theme.outlineDisabled)
-                        contentBorderWidth: (selectedProgramId === programId || rowMouseArea.pressed) ? 1 : 0
-                        contentBorderColor: rowMouseArea.pressed ? Theme.accentBorder : (selectedProgramId === programId ? Theme.accentBorder : "transparent")
+                                      : (index % 2 === 0 ? Theme.surface : Theme.rowStripe)
+                        // no row stays selected: only the one pressed shows it
+                        contentBorderWidth: rowMouseArea.pressed ? 1 : 0
+                        contentBorderColor: Theme.accentBorder
 
                         onSwipeOpened: function(side) {
                             main.openSwipeSide = side

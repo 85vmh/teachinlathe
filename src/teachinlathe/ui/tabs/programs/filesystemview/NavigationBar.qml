@@ -3,11 +3,10 @@ import QtQuick.Layouts
 import theme
 
 // Row 2 — FolderUp button + scrollable breadcrumb + filter toggles.
-Rectangle {
+Item {
     id: root
     required property var viewModel
 
-    color: Theme.surfaceSunken
     implicitHeight: 38
 
     RowLayout {

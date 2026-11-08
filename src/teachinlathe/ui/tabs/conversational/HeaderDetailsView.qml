@@ -2,6 +2,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import common
 import common.touchable_input
 import theme
 import "profile_canvas/brokenstock.js" as Broken
@@ -97,33 +98,6 @@ Item {
         root.editor.save(payload)
     }
 
-    // the insert type's dropdown, from the tool editors
-    component Choice: ComboBox {
-        // just wide enough for its text and the arrow: the padding on the
-        // right already holds the arrow
-        Layout.preferredWidth: leftPadding + contentItem.implicitWidth + rightPadding
-        Layout.preferredHeight: Theme.inputHeight
-        font.pixelSize: Theme.fontTitle
-        contentItem: Text {
-            leftPadding: 8
-            rightPadding: 8
-            text: parent.displayText
-            font: parent.font
-            color: Theme.foregroundStrong
-            horizontalAlignment: Text.AlignLeft
-            verticalAlignment: Text.AlignVCenter
-            elide: Text.ElideRight
-        }
-        delegate: Component {
-            ItemDelegate {
-                width: parent ? parent.width : 0
-                height: Theme.inputHeight
-                text: modelData
-                font.pixelSize: Theme.fontTitle
-            }
-        }
-    }
-
     ColumnLayout {
         id: contentColumn
         anchors.fill: parent
@@ -177,7 +151,7 @@ Item {
                         font.pixelSize: root.fieldFontSize
                     }
                     // G54..G59, saved as the work offset's P number, 1..6
-                    Choice {
+                    Dropdown {
                         model: ["G54", "G55", "G56", "G57", "G58", "G59"]
                         currentIndex: (root.datum >= 1 && root.datum <= 6) ? root.datum - 1 : 0
                         onActivated: function(index) { root.datum = index + 1; root.emitSave() }

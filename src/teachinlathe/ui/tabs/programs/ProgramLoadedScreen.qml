@@ -73,13 +73,14 @@ Item {
     onViewModelChanged: root.refreshToolChangeFromHal()
     onProgramFileChanged: root.withPlot(function(plot) { plot.setProgramFile(root.programFile) })
 
-    Rectangle {
+    // no fill: the window's background round the boxes, as on the other screens
+    Item {
         anchors.fill: parent
-        color: Theme.surface
 
         ColumnLayout {
             anchors.fill: parent
-            spacing: Theme.spacingSmall
+            // as the DRO is over the code (ProgramsTabRoot.droRowGap)
+            spacing: Theme.paneGap
 
             // The spindle, the feed and the tool, between the top bar and
             // the backplot.
@@ -92,118 +93,125 @@ Item {
                 simulation: root.simulation
             }
 
-            Item {
+            // the backplot in a box, as the Define Profile screen's canvas
+            // (ProfileEditorScreen): rounded and outlined, the plot Theme.paneInset in
+            Card {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                // QQuickFramebufferObject cannot safely be destroyed and
-                // recreated while the application runs. Keep one renderer
-                // per immutable source and show only the active one.
-                BackplotView {
-                    id: machineBackplot
+                Item {
                     anchors.fill: parent
-                    visible: !root.simulation
-                    clearSwipeDistance: root.clearSwipeDistance
-                    run: root.viewModel.run
-                    Component.onCompleted: plot.setProgramFile(root.viewModel.previewFile)
-                }
+                    anchors.margins: Theme.paneInset
 
-                BackplotView {
-                    id: simulationBackplot
-                    anchors.fill: parent
-                    visible: root.simulation
-                    clearSwipeDistance: root.clearSwipeDistance
-                    run: root.simulationViewModel.run
-                    Component.onCompleted: plot.setProgramFile(root.simulationViewModel.programFile)
-                }
+                    // QQuickFramebufferObject cannot safely be destroyed and
+                    // recreated while the application runs. Keep one renderer
+                    // per immutable source and show only the active one.
+                    BackplotView {
+                        id: machineBackplot
+                        anchors.fill: parent
+                        visible: !root.simulation
+                        clearSwipeDistance: root.clearSwipeDistance
+                        run: root.viewModel.run
+                        Component.onCompleted: plot.setProgramFile(root.viewModel.previewFile)
+                    }
 
-                Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: Theme.spacingLarge
-                    visible: root.simulation && root.run.state === "waiting"
-                    width: waitText.implicitWidth + 2 * Theme.spacingLarge
-                    height: waitText.implicitHeight + 2 * Theme.spacing
-                    radius: Theme.radius
-                    color: "#fff3e0"
-                    border.color: Theme.warning
-                    border.width: Theme.hairline
+                    BackplotView {
+                        id: simulationBackplot
+                        anchors.fill: parent
+                        visible: root.simulation
+                        clearSwipeDistance: root.clearSwipeDistance
+                        run: root.simulationViewModel.run
+                        Component.onCompleted: plot.setProgramFile(root.simulationViewModel.programFile)
+                    }
+
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.top
+                        anchors.topMargin: Theme.spacingLarge
+                        visible: root.simulation && root.run.state === "waiting"
+                        width: waitText.implicitWidth + 2 * Theme.spacingLarge
+                        height: waitText.implicitHeight + 2 * Theme.spacing
+                        radius: Theme.radius
+                        color: "#fff3e0"
+                        border.color: Theme.warning
+                        border.width: Theme.hairline
+
+                        Text {
+                            id: waitText
+                            anchors.centerIn: parent
+                            text: root.run.waitingFor + ": press Cycle Start to go on"
+                            color: Theme.foreground
+                            font.pixelSize: Theme.fontBody
+                        }
+                    }
 
                     Text {
-                        id: waitText
                         anchors.centerIn: parent
-                        text: root.run.waitingFor + ": press Cycle Start to go on"
-                        color: Theme.foreground
+                        visible: root.simulation && root.simulationViewModel
+                                 && root.simulationViewModel.loading
+                        text: "Reading the program as the machine would run it…"
+                        color: Theme.foregroundMuted
                         font.pixelSize: Theme.fontBody
                     }
-                }
 
-                Text {
-                    anchors.centerIn: parent
-                    visible: root.simulation && root.simulationViewModel
-                             && root.simulationViewModel.loading
-                    text: "Reading the program as the machine would run it…"
-                    color: Theme.foregroundMuted
-                    font.pixelSize: Theme.fontBody
-                }
-
-                Column {
-                    anchors.top: parent.top
-                    anchors.right: parent.right
-                    anchors.topMargin: Theme.zoomInOutFitMirrorButtonMarginTop
-                                       + Theme.zoomInOutFitMirrorButtonSize + Theme.spacing
-                    anchors.rightMargin: Theme.spacingLarge + 32
-                    spacing: 2
-                    visible: root.simulation && root.simulationViewModel
-                             && root.simulationViewModel.ready
-
-                    Text {
+                    Column {
+                        anchors.top: parent.top
                         anchors.right: parent.right
-                        text: root.simulationViewModel ? root.simulationViewModel.operation : ""
-                        color: Theme.foreground
-                        font.pixelSize: Theme.fontBody
-                        font.bold: true
+                        anchors.topMargin: Theme.zoomInOutFitMirrorButtonMarginTop
+                                           + Theme.zoomInOutFitMirrorButtonSize + Theme.spacing
+                        anchors.rightMargin: Theme.spacingLarge + 32
+                        spacing: 2
+                        visible: root.simulation && root.simulationViewModel
+                                 && root.simulationViewModel.ready
+
+                        Text {
+                            anchors.right: parent.right
+                            text: root.simulationViewModel ? root.simulationViewModel.operation : ""
+                            color: Theme.foreground
+                            font.pixelSize: Theme.fontBody
+                            font.bold: true
+                        }
+
+                        Text {
+                            anchors.right: parent.right
+                            visible: root.simulationViewModel
+                                     && root.simulationViewModel.collisions.length > 0
+                            text: root.simulationViewModel
+                                  && root.simulationViewModel.collisions.length === 1
+                                  ? "1 rapid through the material"
+                                  : (root.simulationViewModel
+                                     ? root.simulationViewModel.collisions.length : 0)
+                                    + " rapids through the material"
+                            color: Theme.danger
+                            font.pixelSize: Theme.fontSmall
+                            font.bold: true
+                        }
                     }
 
-                    Text {
-                        anchors.right: parent.right
-                        visible: root.simulationViewModel
-                                 && root.simulationViewModel.collisions.length > 0
-                        text: root.simulationViewModel
-                              && root.simulationViewModel.collisions.length === 1
-                              ? "1 rapid through the material"
-                              : (root.simulationViewModel
-                                 ? root.simulationViewModel.collisions.length : 0)
-                                + " rapids through the material"
-                        color: Theme.danger
-                        font.pixelSize: Theme.fontSmall
-                        font.bold: true
-                    }
-                }
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.bottom: parent.bottom
+                        anchors.margins: Theme.spacingLarge
+                        visible: root.simulation && root.simulationViewModel
+                                 && root.simulationViewModel.error !== ""
+                        width: Math.min(errorText.implicitWidth + 2 * Theme.spacing,
+                                        parent.width - 2 * Theme.spacingLarge)
+                        height: errorText.implicitHeight + 2 * Theme.spacingSmall
+                        radius: Theme.radius
+                        color: Theme.dangerSoft
+                        border.color: Theme.danger
+                        border.width: Theme.hairline
 
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.bottom: parent.bottom
-                    anchors.margins: Theme.spacingLarge
-                    visible: root.simulation && root.simulationViewModel
-                             && root.simulationViewModel.error !== ""
-                    width: Math.min(errorText.implicitWidth + 2 * Theme.spacing,
-                                    parent.width - 2 * Theme.spacingLarge)
-                    height: errorText.implicitHeight + 2 * Theme.spacingSmall
-                    radius: Theme.radius
-                    color: Theme.dangerSoft
-                    border.color: Theme.danger
-                    border.width: Theme.hairline
-
-                    Text {
-                        id: errorText
-                        x: Theme.spacing
-                        y: Theme.spacingSmall
-                        width: parent.width - 2 * Theme.spacing
-                        text: root.simulationViewModel ? root.simulationViewModel.error : ""
-                        color: Theme.foreground
-                        font.pixelSize: Theme.fontSmall
-                        wrapMode: Text.Wrap
+                        Text {
+                            id: errorText
+                            x: Theme.spacing
+                            y: Theme.spacingSmall
+                            width: parent.width - 2 * Theme.spacing
+                            text: root.simulationViewModel ? root.simulationViewModel.error : ""
+                            color: Theme.foreground
+                            font.pixelSize: Theme.fontSmall
+                            wrapMode: Text.Wrap
+                        }
                     }
                 }
             }

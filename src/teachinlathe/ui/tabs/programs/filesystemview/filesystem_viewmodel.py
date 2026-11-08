@@ -222,6 +222,17 @@ class FileSystemViewModel(QObject):
         return loc is not None and loc.location_type == LocationType.MOUNTED_MEDIA
 
     @pyqtProperty(bool, notify=navigationChanged)
+    def isInHome(self) -> bool:
+        """Home is browsed folder by folder, with the path and the Folders /
+        file-type filters; every other location is the root of a folder of
+        files, shown as they are."""
+        return self._browses_folders()
+
+    def _browses_folders(self) -> bool:
+        loc = self._current_location()
+        return loc is not None and loc.location_type == LocationType.HOME
+
+    @pyqtProperty(bool, notify=navigationChanged)
     def isInGeneratedPrograms(self) -> bool:
         loc = self._current_location()
         return loc is not None and loc.location_type == LocationType.GENERATED
@@ -607,6 +618,11 @@ class FileSystemViewModel(QObject):
 
     def _scan(self, abs_dir: str) -> list:
         raw: list[FileSystemEntry] = []
+        # outside Home: the files of the location's root, of the type asked
+        # for, whatever the filters were left at in Home
+        browses_folders = self._browses_folders()
+        show_folders = self._show_folders if browses_folders else False
+        matching_only = self._ngc_only if browses_folders else True
         try:
             names = os.listdir(abs_dir)
         except OSError:
@@ -621,7 +637,7 @@ class FileSystemViewModel(QObject):
                 continue
             rel = os.path.join(self._current_path, name) if self._current_path else name
             if os.path.isdir(full):
-                if not self._show_folders:
+                if not show_folders:
                     continue
                 raw.append(FileSystemEntry(
                     name=name,
@@ -634,7 +650,7 @@ class FileSystemViewModel(QObject):
                     modified_timestamp=st.st_mtime,
                 ))
             elif os.path.isfile(full):
-                if self._ngc_only and not name.lower().endswith(self._file_extensions):
+                if matching_only and not name.lower().endswith(self._file_extensions):
                     continue
                 raw.append(FileSystemEntry(
                     name=name,
