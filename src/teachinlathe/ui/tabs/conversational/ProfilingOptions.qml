@@ -15,45 +15,21 @@ TitledCard {
     font.pixelSize: Theme.fontBody
 
     /* --- Public API --- */
-    property var  profilingOptions: null
-    property string strategy: "rough"   // "rough" | "finish"
-    property real radial: 0.0
-    property real axial: 0.0
-    property int finish_passes: 1
-    property int spring_passes: 0
+    // the operation's profiling_options, as its editor has them: all it shows
+    property var options: ({})
+    readonly property var _o: options || {}
+    readonly property string strategy: _o.strategy !== undefined ? String(_o.strategy) : "rough"   // "rough" | "finish"
+    readonly property real radial: _o.radial !== undefined ? Number(_o.radial) : 0.0
+    readonly property real axial: _o.axial !== undefined ? Number(_o.axial) : 0.0
+    readonly property int finish_passes: _o.finish_passes !== undefined ? Number(_o.finish_passes) : 1
+    readonly property int spring_passes: _o.finish_spring_passes !== undefined ? Number(_o.finish_spring_passes) : 0
 
-    signal saveRequested(var payload)
-
+    // a change to the profiling_options: only the fields in it
+    signal edited(var changes)
     signal openNumPadRequested(var field)
     signal addFinishRequested()
 
     property bool readOnly: false
-    property bool _loading: false
-
-    function applyData(data) {
-        _loading = true
-        profilingOptions = data || {}
-
-        strategy = (profilingOptions.strategy !== undefined) ? String(profilingOptions.strategy) : "rough"
-        radial = (profilingOptions.radial !== undefined) ? Number(profilingOptions.radial) : 0.0
-        axial = (profilingOptions.axial !== undefined) ? Number(profilingOptions.axial) : 0.0
-        finish_passes = (profilingOptions.finish_passes !== undefined) ? Number(profilingOptions.finish_passes) : 1
-        spring_passes = (profilingOptions.finish_spring_passes !== undefined) ? Number(profilingOptions.finish_spring_passes) : 0
-        _loading = false
-    }
-
-    function emitSave() {
-        if (_loading) return
-        root.saveRequested({
-            profiling_options: {
-                strategy: strategy,
-                radial: Number(radial),
-                axial: Number(axial),
-                finish_passes: Number(finish_passes),
-                finish_spring_passes: Number(spring_passes)
-            }
-        })
-    }
 
     DoubleValidator {
         id: dblVal; notation: DoubleValidator.StandardNotation
@@ -68,28 +44,17 @@ TitledCard {
             Layout.fillWidth: true
             spacing: Theme.spacingLarge
 
-            ButtonGroup {
-                id: modeGroup
-            }
-            RadioButton {
+            ModelRadioButton {
                 text: "Roughing"
                 font.pixelSize: Theme.fontSmall
                 checked: root.strategy === "rough"
-                ButtonGroup.group: modeGroup
-                onToggled: if (checked) {
-                    root.strategy = "rough";
-                    root.emitSave()
-                }
+                onChosen: root.edited({ strategy: "rough" })
             }
-            RadioButton {
+            ModelRadioButton {
                 text: "Finishing"
                 font.pixelSize: Theme.fontSmall
                 checked: root.strategy === "finish"
-                ButtonGroup.group: modeGroup
-                onToggled: if (checked) {
-                    root.strategy = "finish";
-                    root.emitSave()
-                }
+                onChosen: root.edited({ strategy: "finish" })
             }
             Item {
                 Layout.fillWidth: true
@@ -149,7 +114,7 @@ TitledCard {
                             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
                             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                            onValueCommitted: function(value) { root.radial = value; root.emitSave() }
+                            onValueCommitted: function(value) { root.edited({ radial: Number(value) }) }
                         }
                         Label {
                             text: "(mm)"
@@ -171,7 +136,7 @@ TitledCard {
                             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
                             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                            onValueCommitted: function(value) { root.axial = value; root.emitSave() }
+                            onValueCommitted: function(value) { root.edited({ axial: Number(value) }) }
                         }
                         Label {
                             text: "(mm)"
@@ -210,10 +175,7 @@ TitledCard {
                             }
                             hAlign: Text.AlignRight
                             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                            onValueCommitted: function(value) {
-                                root.finish_passes = Math.max(1, Math.round(value))
-                                root.emitSave()
-                            }
+                            onValueCommitted: function(value) { root.edited({ finish_passes: Math.max(1, Math.round(value)) }) }
                         }
 
                         Label {
@@ -231,10 +193,7 @@ TitledCard {
                             }
                             hAlign: Text.AlignRight
                             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                            onValueCommitted: function(value) {
-                                root.spring_passes = Math.max(0, Math.round(value))
-                                root.emitSave()
-                            }
+                            onValueCommitted: function(value) { root.edited({ finish_spring_passes: Math.max(0, Math.round(value)) }) }
                         }
                     }
                 }

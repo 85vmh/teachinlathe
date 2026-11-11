@@ -1,128 +1,77 @@
 // ProfileContourVisualDetailsView.qml — Profile Contour with a profile viewer,
-// laid out as Profile Roughing's. Saves every change through
-// updateProfileContour.
+// laid out as Profile Roughing's. It keeps nothing of its own: all it shows
+// is its editor's operation, and every change is the editor's edit, which
+// the operation then shows.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.conversational.profile_canvas
 import theme
 import "define_radial_profile" as Radial
+import common
 
 Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property var _pp: op.profiling_parameters || ({})
+    readonly property var _cp: op.cutting_parameters || ({})
+    readonly property var _st: op.stock_to_leave || ({})
 
     // the last profile defined above this operation
-    property var    primitives:  []
-    property string profileType: "od"
-    property var    workpiece:   ({})
-    // the tool it cuts with, as its Tool Library card
-    // shows it: editor.toolCard, a ToolCard; null with none
-    property var    toolCard:    null
+    readonly property var _profileOp: editor.lastProfile || ({})
+    readonly property var primitives: _profileOp.profile_primitives || []
+    readonly property string profileType: _profileOp.profile_type !== undefined ? String(_profileOp.profile_type) : "od"
+    // the stock broken off right after the profile, as the Program Header
+    // draws its stock
+    readonly property var workpiece: {
+        var stock = JSON.parse(JSON.stringify(_profileOp.workpiece || {}))
+        stock.break_after_profile = true
+        return stock
+    }
+    // the tool it cuts with, as its Tool Library card shows it: editor.toolCard,
+    // a ToolCard
+    readonly property var toolCard: editor.toolCard
 
-    // the values the boxes on the canvas show and edit
-    property real   xStart: 0.0
-    property real   zStart: 0.0
-    property bool   stockEnabled: false
-    property real   stockRadial: 0.0
-    property real   stockAxial: 0.0
-    property real   retract: 0.0
-    property string finishDirection: "towards_z_minus"
+    // what the boxes on the canvas show; X Start the editor gives a value
+    // from the profile when it has none
+    readonly property real xStart: Number(_pp.x_start || 0)
+    readonly property real zStart: Number(_pp.z_start || 0)
+    readonly property bool stockEnabled: !!op.stock_to_leave_enabled
+    readonly property real stockRadial: Number(_st.radial || 0)
+    readonly property real stockAxial: Number(_st.axial || 0)
+    readonly property real retract: Number(_cp.retract || 0)
+    readonly property string finishDirection: op.profile_contour_strategy && op.profile_contour_strategy.finishing_direction
+                                              ? op.profile_contour_strategy.finishing_direction : "towards_z_minus"
     readonly property bool isIdProfile: String(profileType).toLowerCase() === "id"
 
-    // what the contour will cut with the values above
-    readonly property var contourPreview: (opIndex >= 0 && primitives.length > 0 && editor)
-                                          ? editor.preview(_draftOp())
-                                          : null
+    // what the contour cuts
+    readonly property var contourPreview: primitives.length > 0 ? editor.preview : null
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
 
-    Geometry { id: geom }
+    function editProfiling(changes) { editor.edit({ profiling_parameters: changes }) }
+    function editStock(changes) { editor.edit({ stock_to_leave: changes }) }
 
-    function _maxProfileDiameter() {
-        var b = geom.computeBounds(geom.resolvePrimitives(primitives))
-        return b ? b.fXMax : 0
-    }
-
-    // opData with the values edited in the boxes
-    function _draftOp() {
-        var op = JSON.parse(JSON.stringify(opData || {}))
-        op.profiling_parameters = op.profiling_parameters || {}
-        op.profiling_parameters.x_start = xStart
-        op.profiling_parameters.z_start = zStart
-        op.stock_to_leave_enabled = stockEnabled
-        op.stock_to_leave = { radial: stockRadial, axial: stockAxial }
-        op.cutting_parameters = op.cutting_parameters || {}
-        op.cutting_parameters.retract = retract
-        op.profile_contour_strategy = {
-            profiling_type: profileType,
-            finishing_direction: finishDirection
-        }
-        return op
-    }
-
-    // the whole op with every edited value, sent as one save; opData keeps it,
-    // so the next edit builds on this one
-    function save(op) {
-        if (opIndex < 0 || !opData) return
-        opData = op || _draftOp()
-        root.editor.save(opData)
-    }
-
-    function applyData(index, data) {
-        opIndex = index
-        opData  = data || {}
-
-        var profileOp = editor ? (editor.lastProfile || {}) : {}
-        primitives  = JSON.parse(JSON.stringify(profileOp.profile_primitives || []))
-        profileType = profileOp.profile_type !== undefined ? String(profileOp.profile_type) : "od"
-        // the stock broken off right after the profile, as the Program
-        // Header draws its stock - set before it is handed on
-        var stock = JSON.parse(JSON.stringify(profileOp.workpiece || {}))
-        stock.break_after_profile = true
-        workpiece   = stock
-        toolCard    = editor ? editor.toolCard : null
-
-        // X Start defaults to the profile's largest diameter plus the retract
-        var pp = opData.profiling_parameters || {}
-        var cp = opData.cutting_parameters || {}
-        var st = opData.stock_to_leave || {}
-        var strategy = opData.profile_contour_strategy || {}
-        var savedX = pp.x_start !== undefined ? Number(pp.x_start) : 0
-        retract = cp.retract !== undefined ? Number(cp.retract) : 0
-        finishDirection = strategy.finishing_direction || "towards_z_minus"
-        xStart  = savedX !== 0 ? savedX : _maxProfileDiameter() + retract
-        zStart  = pp.z_start !== undefined ? Number(pp.z_start) : 0
-        stockEnabled = !!opData.stock_to_leave_enabled
-        stockRadial = st.radial !== undefined ? Number(st.radial) : 0
-        stockAxial  = st.axial !== undefined ? Number(st.axial) : 0
-
-        header.applyData(opData)
-        profileCanvas.resetView()
-    }
+    // another operation: the drawing fitted to it
+    onEditorChanged: profileCanvas.resetView()
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
         spacing: Theme.innerSpacings
 
-        // each edit goes into the whole op with the canvas boxes' values;
         // Profile Contour has no M1, so that width is left empty
         OperationHeader {
             id: header
+            editor: root.editor
             hasM1: false
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) {
-                var op = root._draftOp()
-                op.speeds_and_feeds = speeds
-                root.save(op)
-            }
         }
 
         ProfileCanvas {
@@ -174,8 +123,8 @@ Item {
                 y: profileCanvas.firstBoxY
                 direction: root.finishDirection
                 onDirectionEdited: function(value) {
-                    root.finishDirection = value
-                    root.save()
+                    root.editor.edit({ profile_contour_strategy: { profiling_type: root.profileType,
+                                                                  finishing_direction: value } })
                 }
             }
 
@@ -189,7 +138,7 @@ Item {
                 docColor: profileCanvas.feedColor
                 retractColor: profileCanvas.rapidColor
                 retract: root.retract
-                onRetractEdited: function(value) { root.retract = value; root.save() }
+                onRetractEdited: function(value) { root.editor.edit({ cutting_parameters: { retract: value } }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -203,14 +152,13 @@ Item {
                 xValue: root.xStart
                 zValue: root.zStart
                 onFieldEdited: function(axis, value) {
-                    if (axis === "x") root.xStart = value; else root.zStart = value
-                    root.save()
+                    root.editProfiling(axis === "x" ? { x_start: value } : { z_start: value })
                 }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
             // turns the stock to leave on and off, in its colour
-            CheckBox {
+            ModelCheckBox {
                 id: stockCheck
                 visible: root.primitives.length > 0
                 x: profileCanvas.width - width - profileCanvas.boxGap
@@ -219,7 +167,7 @@ Item {
                 font.pixelSize: Theme.fontBody
                 font.bold: true
                 checked: root.stockEnabled
-                onToggled: { root.stockEnabled = checked; root.save() }
+                onToggledTo: function(on) { root.editor.edit({ stock_to_leave_enabled: on }) }
                 contentItem: Text {
                     text: stockCheck.text
                     font: stockCheck.font
@@ -239,8 +187,8 @@ Item {
                 labelColor: profileCanvas.stockToLeaveColor
                 radial: root.stockRadial
                 axial: root.stockAxial
-                onRadialEdited: function(value) { root.stockRadial = value; root.save() }
-                onAxialEdited: function(value) { root.stockAxial = value; root.save() }
+                onRadialEdited: function(value) { root.editStock({ radial: value }) }
+                onAxialEdited: function(value) { root.editStock({ axial: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 

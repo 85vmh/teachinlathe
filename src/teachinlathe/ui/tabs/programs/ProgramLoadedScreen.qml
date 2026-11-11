@@ -28,7 +28,9 @@ Item {
     // How far three fingers have to travel together, in px, for the swipe
     // that clears the plot.
     readonly property int clearSwipeDistance: 80
+    // view state: the toast shown
     property bool toolChangedToastVisible: false
+    // view state: the toast shown
     property string toolChangedToastMessage: ""
 
     function withPlot(callback) {

@@ -10,38 +10,18 @@ Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int    opIndex:     -1
-    property var    opData:      null
-    property int    profileId:   0
-    property string profileType: "od"
-    property bool   _loading:    false
-    property var    primitives:  []
-    property var    workpiece:   ({})
+    // The view model of the operation this shows (OperationEditorViewModel.py):
+    // the one place what the view shows comes from
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property int    profileId: op.profile_id !== undefined ? Math.round(Number(op.profile_id)) : 0
+    readonly property string profileType: op.profile_type !== undefined ? String(op.profile_type) : "od"
+    readonly property var    primitives: op.profile_primitives || []
+    readonly property var    workpiece: op.workpiece || ({})
     signal openNumPadRequested(var field)
 
-    function applyData(index, data) {
-        _loading    = true
-        opIndex     = index
-        opData      = data || {}
-        profileId   = opData.profile_id   !== undefined ? Math.round(Number(opData.profile_id)) : 0
-        profileType = opData.profile_type !== undefined ? String(opData.profile_type) : "od"
-        primitives  = JSON.parse(JSON.stringify(opData.profile_primitives || []))
-        workpiece   = JSON.parse(JSON.stringify(opData.workpiece || {}))
-        _loading    = false
-        profileCanvas.resetView()
-    }
-
-    function mergeIntoOp(payload) {
-        var out = JSON.parse(JSON.stringify(opData || {}))
-        for (var k in payload) {
-            if (k === "index") continue
-            if (payload.hasOwnProperty(k)) out[k] = payload[k]
-        }
-        opData = out
-        return out
-    }
+    // another operation: the drawing fitted to it
+    onEditorChanged: profileCanvas.resetView()
 
     // ── Main layout ──────────────────────────────────────────────────────────────
     ColumnLayout {

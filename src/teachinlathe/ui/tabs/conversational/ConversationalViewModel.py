@@ -72,9 +72,9 @@ class ConversationalViewModel(QObject):
     gcodeGenerationFinished = pyqtSignal()
     #: not generated: what is wrong with the program's tools, a line each
     gcodeRefused = pyqtSignal(str)
-    #: The header's Import DXF: the import screen imports the drawing it shows.
-    importDxfRequested = pyqtSignal()
-    dxfImportFailed = pyqtSignal(str)
+    #: The DXF import screen's drawing, its preview or why it failed changed
+    #: (dxfSelectedPath, dxfPreview, dxfError).
+    dxfChanged = pyqtSignal()
     # A program's G-code was written, at this path: it is shown in Programs.
     gcodeGenerated = pyqtSignal(str)
 
@@ -87,6 +87,9 @@ class ConversationalViewModel(QObject):
         self._full_screen = False
         self._editor_title = ""
         self._dxf_selected_path = ""
+        # what the drawing chosen gives the profile: {ok, error, profileType, primitives}
+        self._dxf_preview = None
+        self._dxf_error = ""
         self._editor = None
         # The editor before this one, kept until the next: the screen it was
         # on may still hold it while it moves to the new one.
@@ -128,7 +131,7 @@ class ConversationalViewModel(QObject):
             mounted_media_exclusive=True,
             show_recursive_folder_file_counts=True,
         )
-        self._dxf_file_system_view_model.selectionChanged.connect(self.headerStateChanged)
+        self._dxf_file_system_view_model.selectionChanged.connect(self._on_dxf_selection)
 
     # ── what the screens bind to ────────────────────────────────────────────
 
@@ -145,10 +148,50 @@ class ConversationalViewModel(QObject):
         # Conversational never persists last_value (only the manual tab does).
         return self._numpad_view_model
 
+    @pyqtProperty("QVariant", constant=True)
+    def blendDefaults(self):
+        """What a blend starts with, by its type (profile_editing.BLEND_DEFAULTS)."""
+        from teachinlathe.conversational.model.profile_editing import BLEND_DEFAULTS
+        return BLEND_DEFAULTS
+
     @pyqtProperty(QObject, constant=True)
     def dxfFileSystemViewModel(self):
         """The DXF Profiles folder, for the import screen."""
         return self._dxf_file_system_view_model
+
+    @pyqtProperty(str, notify=dxfChanged)
+    def dxfSelectedPath(self):
+        """The drawing chosen on the import screen, or ""."""
+        return self._dxf_selected_path
+
+    @pyqtProperty("QVariant", notify=dxfChanged)
+    def dxfPreview(self):
+        """The profile the chosen drawing gives - {ok, error, profileType,
+        primitives} - or None with none chosen."""
+        return self._dxf_preview
+
+    @pyqtProperty(str, notify=dxfChanged)
+    def dxfError(self):
+        """Why the chosen drawing could not be read or imported, or ""."""
+        if self._dxf_error:
+            return self._dxf_error
+        if self._dxf_preview is not None and not self._dxf_preview.get("ok"):
+            return str(self._dxf_preview.get("error") or "Could not preview DXF.")
+        return ""
+
+    def _on_dxf_selection(self):
+        if self._top == DXF_IMPORT:
+            self._choose_dxf(self._dxf_file_system_view_model.selectedAbsolutePath)
+
+    def _choose_dxf(self, path):
+        """The drawing ``path`` chosen: previewed for the open profile."""
+        self._dxf_selected_path = str(path or "")
+        self._dxf_error = ""
+        self._dxf_preview = None
+        if self._dxf_selected_path and self._editor is not None and hasattr(self._editor, "previewDxf"):
+            self._dxf_preview = to_py(self._editor.previewDxf(self._dxf_selected_path))
+        self.dxfChanged.emit()
+        self.headerStateChanged.emit()
 
     @pyqtProperty("QVariant", notify=programChanged)
     def selectedProgram(self):
@@ -160,6 +203,18 @@ class ConversationalViewModel(QObject):
     def operationsModel(self):
         """The open program's operations, a row each (OperationListModel)."""
         return self._operations_model
+
+    @property
+    def current_op_index(self):
+        """The operation selected in the open program: -1 the header."""
+        return self._current_op_index
+
+    @current_op_index.setter
+    def current_op_index(self, index):
+        index = -1 if index is None else int(index)
+        if index != getattr(self, "_current_op_index", None):
+            self._current_op_index = index
+            self.activeOpIndexChanged.emit()
 
     @pyqtProperty(int, notify=activeOpIndexChanged)
     def activeOpIndex(self):
@@ -192,8 +247,14 @@ class ConversationalViewModel(QObject):
     def _set_screens(self, screens):
         self._screens = list(screens)
         self.screensChanged.emit()
-        if self._top != DXF_IMPORT:
+        if self._top != DXF_IMPORT and (self._dxf_selected_path or self._dxf_preview is not None or self._dxf_error):
             self._dxf_selected_path = ""
+            self._dxf_preview = None
+            self._dxf_error = ""
+            self.dxfChanged.emit()
+        # what the drawing chosen gives the profile: {ok, error, profileType, primitives}
+        self._dxf_preview = None
+        self._dxf_error = ""
         full_screen = self._top in EDITOR_SCREENS
         if full_screen != self._full_screen and self._shell is not None:
             if full_screen:
@@ -262,16 +323,12 @@ class ConversationalViewModel(QObject):
         elif action_id == "done":
             self._done()
         elif action_id == "import_dxf":
-            self.importDxfRequested.emit()
+            if self._dxf_selected_path and self._editor is not None:
+                self._editor.importDxf(self._dxf_selected_path)
         elif action_id == "create_new":
             self.addNewProgram()
         elif action_id == "build_gcode":
             self.generateGcode()
-
-    @pyqtSlot(str)
-    def setDxfSelectedPath(self, path):
-        self._dxf_selected_path = str(path or "")
-        self.headerStateChanged.emit()
 
     # ── the program list ────────────────────────────────────────────────────
 
@@ -336,6 +393,8 @@ class ConversationalViewModel(QObject):
     def _open_program(self, program, row_index):
         self.current_program = program
         self.current_program_index = row_index
+        # complete in memory - written with the next change
+        self.use_case.complete_operations(program)
         self.current_op_index = self.use_case.last_operation_index(program)
         self._set_facing_mirror(True)
         LOG.info("opening %s, %d operations", program.header.name, len(program.operations))
@@ -434,6 +493,8 @@ class ConversationalViewModel(QObject):
         editor = editor_for(self, self.current_program, index, operation, self) if operation else None
         if self._retired_editor is not None:
             self._retired_editor.deleteLater()
+        if self._editor is not None and hasattr(self._editor, "stop_planned_preview"):
+            self._editor.stop_planned_preview()
         self._retired_editor, self._editor = self._editor, editor
         self.editorChanged.emit()
 
@@ -727,7 +788,8 @@ class ConversationalViewModel(QObject):
 
     @staticmethod
     def preview(build, op_data):
-        """A cut preview from an editor's draft, or an empty one with the error."""
+        """A cut preview of ``op_data`` - an operation's dict - or an empty one
+        with the error."""
         try:
             return build(to_py(op_data) or {})
         except Exception as e:
@@ -766,6 +828,9 @@ class ConversationalViewModel(QObject):
 
     def _open_dxf_import(self, op_index):
         self._open_editor(op_index, DXF_IMPORT)
+        # the drawing it was last imported from, if any
+        operation = self._editor.operation if self._editor is not None else {}
+        self._choose_dxf((operation or {}).get("dxfFilePath") or "")
 
     def import_dxf_profile(self, op_index, dxf_file_path):
         """The drawing chosen on the import screen: read into the profile,
@@ -777,7 +842,8 @@ class ConversationalViewModel(QObject):
                 return
         except Exception as e:
             LOG.error("DXF import failed: %s", e)
-            self.dxfImportFailed.emit(str(e))
+            self._dxf_error = str(e)
+            self.dxfChanged.emit()
             return
         self.current_op_index = op_index
         self._save_current_program()

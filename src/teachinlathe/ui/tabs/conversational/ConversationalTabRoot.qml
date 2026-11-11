@@ -19,7 +19,9 @@ Item {
     readonly property var viewModel: ConversationalViewModel
 
     // The names of the screens on the stack, bottom to top, as last synced.
+    // view state: the StackView's screens, kept in step with the view model's
     property var _names: []
+    // view state: the field a keyboard is opening for
     property var _pendingKeyboardField: null
 
     function openNumpad(field) {
@@ -137,9 +139,6 @@ Item {
             editor: root.viewModel.editor
             onBackRequested: root.viewModel.back()
             onOpenNumPadRequested: function(field) { root.openNumpad(field) }
-            Component.onCompleted: Qt.callLater(function() {
-                profileEditor.applyData(profileEditor.editor.opIndex, profileEditor.editor.operation)
-            })
         }
     }
 
@@ -150,9 +149,6 @@ Item {
             editor: root.viewModel.editor
             onBackRequested: root.viewModel.back()
             onOpenNumPadRequested: function(field) { root.openNumpad(field) }
-            Component.onCompleted: Qt.callLater(function() {
-                radialProfileEditor.applyData(radialProfileEditor.editor.opIndex, radialProfileEditor.editor.operation)
-            })
         }
     }
 
@@ -160,19 +156,9 @@ Item {
         id: dxfImportScreen
         ImportDxfProfile.ImportDxfProfileScreen {
             id: dxfImport
-            editor: root.viewModel.editor
+            viewModel: root.viewModel
             fileSystemViewModel: root.viewModel.dxfFileSystemViewModel
             onBackRequested: root.viewModel.back()
-            onSelectedPathChanged: root.viewModel.setDxfSelectedPath(selectedPath)
-            Component.onCompleted: Qt.callLater(function() {
-                dxfImport.applyData(dxfImport.editor.opIndex, dxfImport.editor.operation)
-            })
-
-            Connections {
-                target: root.viewModel
-                function onImportDxfRequested() { dxfImport.importSelectedDxf() }
-                function onDxfImportFailed(message) { dxfImport.setError(message) }
-            }
         }
     }
 

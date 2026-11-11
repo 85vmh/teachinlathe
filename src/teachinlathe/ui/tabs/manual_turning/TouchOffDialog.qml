@@ -30,6 +30,7 @@ NumpadPopup {
         var toolNo = toolsViewModel.currentLoadedToolNo
         return toolNo > 0 ? what + " using T" + toolNo : what
     }
+    // view state: the field the open dialog is for
     property string axis: "x"
 
     // as wide as the keypad's digit keys: 3 columns of 100 px, 24 px apart

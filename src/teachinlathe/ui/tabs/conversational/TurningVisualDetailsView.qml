@@ -8,84 +8,45 @@ import "define_radial_profile" as Radial
 Item {
     id: root
     anchors.fill: parent
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
-    property var workpiece: ({})
-    property var toolCard: null
-    property real xStart: 0
-    property real zStart: 0
-    property real xEnd: 0
-    property real zEnd: 0
-    property real ap: 0.5
-    property string passType: "axial"
-    property real clearance: 1
-    property real stockRadial: 0
-    property real stockAxial: 0
-    property var startBlend: ({ type: "none", chamfer_width: 0, fillet_radius: 0 })
-    property var shoulderBlend: ({ type: "none", chamfer_width: 0, fillet_radius: 0 })
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property var _gp: op.geometry_parameters || ({})
+    readonly property var _cp: op.cutting_parameters || ({})
+    readonly property var _st: op.stock_to_leave || ({})
+    readonly property var _noBlend: ({ type: "none", chamfer_width: 0, fillet_radius: 0 })
 
-    property var turningPreview: null
-    readonly property var turningProfile: (opIndex >= 0 && editor) ? editor.profile(_draftOp()) : ({})
-    readonly property string previewKey: (opIndex >= 0 && editor) ? JSON.stringify(_draftOp()) : ""
-    onPreviewKeyChanged: previewTimer.restart()
-    Timer {
-        id: previewTimer
-        interval: 150
-        onTriggered: {
-            if (root.previewKey === "") root.turningPreview = null
-            else root.editor.requestPreview(JSON.parse(root.previewKey))
-        }
-    }
-    Connections {
-        target: root.editor
-        function onPreviewReady(preview) { root.turningPreview = preview }
-    }
+    readonly property var workpiece: editor.workpiece || ({})
+    readonly property var toolCard: editor.toolCard
+    readonly property real xStart: Number(_gp.x_start || 0)
+    readonly property real zStart: Number(_gp.z_start || 0)
+    readonly property real xEnd: Number(_gp.x_end || 0)
+    readonly property real zEnd: Number(_gp.z_end || 0)
+    readonly property real ap: Number(_cp.ap === undefined ? 0.5 : _cp.ap)
+    readonly property string passType: op.profile_roughing_strategy && op.profile_roughing_strategy.pass_type
+                                       ? String(op.profile_roughing_strategy.pass_type) : "axial"
+    readonly property real clearance: Number(_cp.tool_clearance === undefined ? 1 : _cp.tool_clearance)
+    readonly property real stockRadial: Number(_st.radial || 0)
+    readonly property real stockAxial: Number(_st.axial || 0)
+    readonly property var startBlend: _gp.start_blend || _noBlend
+    readonly property var shoulderBlend: _gp.shoulder_blend || _noBlend
+
+    // what turning cuts, as the planning worker works it out
+    readonly property var turningPreview: editor.plannedPreview
+    readonly property var turningProfile: editor.inlineProfile
     signal openNumPadRequested(var field)
 
-    function _draftOp() {
-        var op = JSON.parse(JSON.stringify(opData || {}))
-        op.geometry_parameters = {
-            x_start: xStart, z_start: zStart, x_end: xEnd, z_end: zEnd,
-            start_blend: startBlend, shoulder_blend: shoulderBlend
-        }
-        op.cutting_parameters = { ap: ap, tool_clearance: clearance }
-        op.profile_roughing_strategy = { profiling_type: "od", pass_type: passType }
-        op.stock_to_leave = { radial: stockRadial, axial: stockAxial }
-        return op
-    }
-    function save(op) {
-        if (!editor || opIndex < 0 || !opData) return
-        opData = op || _draftOp()
-        editor.save(opData)
-    }
+    function editGeometry(changes) { editor.edit({ geometry_parameters: changes }) }
+    function editCutting(changes) { editor.edit({ cutting_parameters: changes }) }
+    function editStock(changes) { editor.edit({ stock_to_leave: changes }) }
     function setBlend(target, type, chamfer, fillet) {
         var blend = { type: type, chamfer_width: chamfer, fillet_radius: fillet }
-        if (target === "start") startBlend = blend
-        else shoulderBlend = blend
-        save()
+        editGeometry(target === "start" ? { start_blend: blend } : { shoulder_blend: blend })
     }
-    function applyData(index, data) {
-        opIndex = index
-        opData = data || {}
-        workpiece = editor ? (editor.workpiece || {}) : {}
-        toolCard = editor ? editor.toolCard : null
-        var gp = opData.geometry_parameters || {}
-        var cp = opData.cutting_parameters || {}
-        xStart = Number(gp.x_start || 0); zStart = Number(gp.z_start || 0)
-        xEnd = Number(gp.x_end || 0); zEnd = Number(gp.z_end || 0)
-        ap = Number(cp.ap === undefined ? 0.5 : cp.ap)
-        var strategy = opData.profile_roughing_strategy || {}
-        passType = strategy.pass_type ? String(strategy.pass_type) : "axial"
-        clearance = Number(cp.tool_clearance === undefined ? 1 : cp.tool_clearance)
-        var st = opData.stock_to_leave || {}
-        stockRadial = Number(st.radial || 0)
-        stockAxial = Number(st.axial || 0)
-        startBlend = gp.start_blend || ({ type: "none", chamfer_width: 0, fillet_radius: 0 })
-        shoulderBlend = gp.shoulder_blend || ({ type: "none", chamfer_width: 0, fillet_radius: 0 })
-        header.applyData(opData)
-        profileCanvas.resetView()
-    }
+
+    // another operation: the drawing fitted to it
+    onEditorChanged: profileCanvas.resetView()
 
     ColumnLayout {
         anchors.fill: parent
@@ -94,13 +55,8 @@ Item {
 
         OperationHeader {
             id: header
+            editor: root.editor
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) {
-                var op = root._draftOp(); op.speeds_and_feeds = speeds; root.save(op)
-            }
-            onM1Edited: function(m1) {
-                var op = root._draftOp(); op.m1_parameters = m1; root.save(op)
-            }
         }
 
         RowLayout {
@@ -226,7 +182,7 @@ Item {
                             Layout.alignment: Qt.AlignRight
                             profilingType: "od"
                             passType: root.passType
-                            onPassTypeEdited: function(value) { root.passType = value; root.save() }
+                            onPassTypeEdited: function(value) { root.editor.edit({ profile_roughing_strategy: { profiling_type: "od", pass_type: value } }) }
                         }
 
                         DimensionBox {
@@ -237,7 +193,7 @@ Item {
                             settingName: "turning.tool_clearance"
                             value: root.clearance
                             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-                            onValueEdited: function(value) { root.clearance = value; root.save() }
+                            onValueEdited: function(value) { root.editCutting({ tool_clearance: value }) }
                         }
                         TurningPointBox {
                             id: p1Box
@@ -246,8 +202,7 @@ Item {
                             xValue: root.xStart; zValue: root.zStart
                             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                             onFieldEdited: function(axis, value) {
-                                if (axis === "x") root.xStart = value; else root.zStart = value
-                                root.save()
+                                root.editGeometry(axis === "x" ? { x_start: value } : { z_start: value })
                             }
                         }
                         TurningPointBox {
@@ -257,8 +212,7 @@ Item {
                             xValue: root.xEnd; zValue: root.zEnd
                             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                             onFieldEdited: function(axis, value) {
-                                if (axis === "x") root.xEnd = value; else root.zEnd = value
-                                root.save()
+                                root.editGeometry(axis === "x" ? { x_end: value } : { z_end: value })
                             }
                         }
                         DimensionBox {
@@ -269,7 +223,7 @@ Item {
                             settingName: "turning.ap"
                             value: root.ap
                             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-                            onValueEdited: function(value) { root.ap = value; root.save() }
+                            onValueEdited: function(value) { root.editCutting({ ap: value }) }
                         }
                         CanvasBox {
                             id: startBlendBox
@@ -308,10 +262,10 @@ Item {
                             radial: root.stockRadial
                             axial: root.stockAxial
                             addFinishingPass: true
-                            finishingOperationExists: !!root.editor && !!root.editor.hasFinishingOperation
+                            finishingOperationExists: root.editor.hasFinishingOperation
                             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-                            onRadialEdited: function(value) { root.stockRadial = value; root.save() }
-                            onAxialEdited: function(value) { root.stockAxial = value; root.save() }
+                            onRadialEdited: function(value) { root.editStock({ radial: value }) }
+                            onAxialEdited: function(value) { root.editStock({ axial: value }) }
                             onAddFinishingOperationRequested: root.editor.addTurningFinish()
                         }
                     }

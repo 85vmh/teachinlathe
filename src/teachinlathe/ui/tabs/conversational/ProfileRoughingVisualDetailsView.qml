@@ -1,5 +1,6 @@
 // ProfileRoughingVisualDetailsView.qml — Profile Roughing with a profile viewer.
-// Saves every change through updateProfileRoughing.
+// It keeps nothing of its own: all it shows is its editor's operation, and
+// every change is the editor's edit, which the operation then shows.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -11,150 +12,69 @@ Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property var _pp: op.profiling_parameters || ({})
+    readonly property var _cp: op.cutting_parameters || ({})
+    readonly property var _st: op.stock_to_leave || ({})
 
     // the last profile defined above this operation
-    property var    primitives:  []
-    property string profileType: "od"
-    property var    workpiece:   ({})
-    // the tool it cuts with, as its Tool Library card
-    // shows it: editor.toolCard, a ToolCard; null with none
-    property var    toolCard:    null
+    readonly property var _profileOp: editor.lastProfile || ({})
+    readonly property var primitives: _profileOp.profile_primitives || []
+    readonly property string profileType: _profileOp.profile_type !== undefined ? String(_profileOp.profile_type) : "od"
+    // the stock broken off right after the profile, as the Program Header
+    // draws its stock
+    readonly property var workpiece: {
+        var stock = JSON.parse(JSON.stringify(_profileOp.workpiece || {}))
+        stock.break_after_profile = true
+        return stock
+    }
+    // the tool it cuts with, as its Tool Library card shows it: editor.toolCard,
+    // a ToolCard
+    readonly property var toolCard: editor.toolCard
 
-    // the values the boxes on the canvas show and edit
-    property real   xStart: 0.0
-    property real   zStart: 0.0
-    property real   stockRadial: 0.0
-    property real   stockAxial: 0.0
-    property real   doc: 0.0
-    property real   retract: 0.0
-    property string passType: "axial"
+    // what the boxes on the canvas show; X Start the editor gives a value
+    // from the profile when it has none
+    readonly property real xStart: Number(_pp.x_start || 0)
+    readonly property real zStart: Number(_pp.z_start || 0)
+    readonly property real stockRadial: Number(_st.radial || 0)
+    readonly property real stockAxial: Number(_st.axial || 0)
+    readonly property real doc: Number(_cp.doc || 0)
+    readonly property real retract: Number(_cp.retract || 0)
+    readonly property string passType: op.profile_roughing_strategy && op.profile_roughing_strategy.pass_type
+                                       ? String(op.profile_roughing_strategy.pass_type) : "axial"
     readonly property bool isIdProfile: String(profileType).toLowerCase() === "id"
 
-    // what roughing will cut with the values above
     // Rest material: it cuts what the roughings above it leave, keeping to
     // their stock to leave and start position - neither is set here.
-    readonly property bool restMaterial: !!(opData && opData.rest_material)
+    readonly property bool restMaterial: !!op.rest_material
 
-    // Asked for a moment after the values settle, not on each one: opening
-    // the operation sets them one after another.
-    property var roughingPreview: null
-    readonly property string _previewKey: (opIndex >= 0 && primitives.length > 0 && editor)
-                                          ? JSON.stringify(_draftOp()) : ""
-    on_PreviewKeyChanged: previewTimer.restart()
-    Timer {
-        id: previewTimer
-        interval: 150
-        onTriggered: {
-            if (root._previewKey === "")
-                root.roughingPreview = null
-            else
-                root.editor.requestPreview(JSON.parse(root._previewKey))
-        }
-    }
-    // worked out in the planning worker, off the GUI thread: the screen goes
-    // on - an opening program's slide too - and the drawing follows
-    Connections {
-        target: root.editor
-        function onPreviewReady(preview) { root.roughingPreview = preview }
-    }
+    // what roughing cuts, worked out in the planning worker, off the GUI
+    // thread: the screen goes on - an opening program's slide too - and the
+    // drawing follows
+    readonly property var roughingPreview: primitives.length > 0 ? editor.plannedPreview : null
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
 
-    Geometry { id: geom }
+    function editProfiling(changes) { editor.edit({ profiling_parameters: changes }) }
+    function editCutting(changes) { editor.edit({ cutting_parameters: changes }) }
+    function editStock(changes) { editor.edit({ stock_to_leave: changes }) }
 
-    function _maxProfileDiameter() {
-        var b = geom.computeBounds(geom.resolvePrimitives(primitives))
-        return b ? b.fXMax : 0
-    }
-
-    // Where the profile ends: its last primitive's X
-    function _lastProfileDiameter() {
-        var resolved = geom.resolvePrimitives(primitives)
-        if (resolved.length === 0) return 0
-        var last = resolved[resolved.length - 1]
-        return Number(last.type === "startPoint" ? last.x_start : last.x_end) || 0
-    }
-
-    // opData with the values edited in the boxes
-    function _draftOp() {
-        var op = JSON.parse(JSON.stringify(opData || {}))
-        op.profiling_parameters = op.profiling_parameters || {}
-        op.profiling_parameters.x_start = xStart
-        op.profiling_parameters.z_start = zStart
-        op.stock_to_leave = { radial: stockRadial, axial: stockAxial }
-        op.cutting_parameters = op.cutting_parameters || {}
-        op.cutting_parameters.doc = doc
-        op.cutting_parameters.retract = retract
-        op.profile_roughing_strategy = { profiling_type: profileType, pass_type: passType }
-        return op
-    }
-
-    // the whole op with every edited value, sent as one save; opData keeps it,
-    // so the next edit builds on this one
-    function save(op) {
-        if (opIndex < 0 || !opData) return
-        opData = op || _draftOp()
-        root.editor.save(opData)
-    }
-
-    function applyData(index, data) {
-        opIndex = index
-        opData  = data || {}
-
-        var profileOp = editor ? (editor.lastProfile || {}) : {}
-        primitives  = JSON.parse(JSON.stringify(profileOp.profile_primitives || []))
-        profileType = profileOp.profile_type !== undefined ? String(profileOp.profile_type) : "od"
-        // the stock broken off right after the profile, as the Program
-        // Header draws its stock - set before it is handed on
-        var stock = JSON.parse(JSON.stringify(profileOp.workpiece || {}))
-        stock.break_after_profile = true
-        workpiece   = stock
-        toolCard    = editor ? editor.toolCard : null
-
-        // X Start defaults, OD, to the profile's largest diameter plus the
-        // retract; ID, to the diameter it ends on
-        var pp = opData.profiling_parameters || {}
-        var cp = opData.cutting_parameters || {}
-        var st = opData.stock_to_leave || {}
-        var savedX = pp.x_start !== undefined ? Number(pp.x_start) : 0
-        retract = cp.retract !== undefined ? Number(cp.retract) : 0
-        doc     = cp.doc !== undefined ? Number(cp.doc) : 0
-        xStart  = savedX !== 0 ? savedX
-                : (String(profileType).toLowerCase() === "id" ? _lastProfileDiameter() : _maxProfileDiameter() + retract)
-        zStart  = pp.z_start !== undefined ? Number(pp.z_start) : 0
-        stockRadial = st.radial !== undefined ? Number(st.radial) : 0
-        stockAxial  = st.axial !== undefined ? Number(st.axial) : 0
-        var strategy = opData.profile_roughing_strategy || {}
-        passType = strategy.pass_type ? String(strategy.pass_type) : "axial"
-
-        header.applyData(opData)
-        profileCanvas.resetView()
-    }
+    // another operation: the drawing fitted to it
+    onEditorChanged: profileCanvas.resetView()
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
         spacing: Theme.innerSpacings
 
-        // each edit goes into the whole op with the canvas boxes' values
         OperationHeader {
             id: header
+            editor: root.editor
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) {
-                var op = root._draftOp()
-                op.speeds_and_feeds = speeds
-                root.save(op)
-            }
-            onM1Edited: function(m1) {
-                var op = root._draftOp()
-                op.m1_parameters = m1
-                root.save(op)
-            }
         }
 
         ProfileCanvas {
@@ -236,7 +156,6 @@ Item {
                 id: note
                 readonly property var preview: root.roughingPreview
                 readonly property bool offersRest: !!preview && !preview.error && !!preview.restOffered
-                    && !!root.editor
                 readonly property string message: !preview ? ""
                     : preview.error ? preview.error
                     : (preview.warnings || []).join("\n")
@@ -318,7 +237,7 @@ Item {
                         Layout.alignment: Qt.AlignRight
                         profilingType: root.profileType
                         passType: root.passType
-                        onPassTypeEdited: function(value) { root.passType = value; root.save() }
+                        onPassTypeEdited: function(value) { root.editor.edit({ profile_roughing_strategy: { profiling_type: root.profileType, pass_type: value } }) }
                     }
                     DimensionBox {
                         id: clearanceBox
@@ -328,7 +247,7 @@ Item {
                         dimensionColor: profileCanvas.rapidColor
                         settingName: "profile_roughing.tool_clearance"
                         value: root.retract
-                        onValueEdited: function(value) { root.retract = value; root.save() }
+                        onValueEdited: function(value) { root.editCutting({ retract: value }) }
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                     }
                     TurningPointBox {
@@ -340,8 +259,7 @@ Item {
                         xValue: root.xStart
                         zValue: root.zStart
                         onFieldEdited: function(axis, value) {
-                            if (axis === "x") root.xStart = value; else root.zStart = value
-                            root.save()
+                            root.editProfiling(axis === "x" ? { x_start: value } : { z_start: value })
                         }
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                     }
@@ -353,7 +271,7 @@ Item {
                         dimensionColor: profileCanvas.feedColor
                         settingName: "profile_roughing.ap"
                         value: root.doc
-                        onValueEdited: function(value) { root.doc = value; root.save() }
+                        onValueEdited: function(value) { root.editCutting({ doc: value }) }
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                     }
                     StockToLeaveBox {
@@ -363,8 +281,8 @@ Item {
                         labelColor: profileCanvas.stockToLeaveColor
                         radial: root.stockRadial
                         axial: root.stockAxial
-                        onRadialEdited: function(value) { root.stockRadial = value; root.save() }
-                        onAxialEdited: function(value) { root.stockAxial = value; root.save() }
+                        onRadialEdited: function(value) { root.editStock({ radial: value }) }
+                        onAxialEdited: function(value) { root.editStock({ axial: value }) }
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                     }
                 }

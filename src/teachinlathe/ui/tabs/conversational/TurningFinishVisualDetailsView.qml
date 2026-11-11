@@ -4,67 +4,55 @@ import QtQuick.Layouts
 import tabs.conversational.profile_canvas
 import theme
 import "define_radial_profile" as Radial
+import common
 
 Item {
     id: root
     anchors.fill: parent
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
-    property var workpiece: ({})
-    property var toolCard: null
-    property var primitives: []
-    property string profileType: "od"
-    property real p1X: 0
-    property real p1Z: 0
-    property string direction: "towards_z_minus"
-    property bool addUndercut: false
-    property real undercutRadius: 0.4
-    property real undercutDepth: 0.4
-    property real undercutLength: 2.5
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property var _undercut: op.undercut_parameters || ({})
 
-    readonly property var previewData: (opIndex >= 0 && editor) ? editor.preview(_draftOp()) : null
-    signal openNumPadRequested(var field)
+    readonly property var workpiece: editor.workpiece || ({})
+    readonly property var toolCard: editor.toolCard
+    readonly property real p1X: Number(op.p1_x || 0)
+    readonly property real p1Z: Number(op.p1_z || 0)
+    readonly property string direction: op.finishing_direction || "towards_z_minus"
+    readonly property bool addUndercut: !!op.add_undercut
+    readonly property real undercutRadius: Number(_undercut.radius === undefined ? 0.4 : _undercut.radius)
+    readonly property real undercutDepth: Number(_undercut.depth === undefined ? 0.4 : _undercut.depth)
+    readonly property real undercutLength: Number(_undercut.length === undefined ? 2.5 : _undercut.length)
 
-    function _draftOp() {
-        var op = JSON.parse(JSON.stringify(opData || {}))
-        op.p1_x = p1X; op.p1_z = p1Z
-        op.finishing_direction = direction
-        op.add_undercut = addUndercut
-        op.undercut_parameters = { radius: undercutRadius, depth: undercutDepth, length: undercutLength }
-        return op
-    }
-    function _refreshProfile() {
-        var profile = JSON.parse(JSON.stringify(editor ? (editor.parentProfile || {}) : ({})))
-        var nextPrimitives = profile.profile_primitives || []
-        profileType = profile.profile_type || "od"
-        if (addUndercut && nextPrimitives.length > 1) {
-            nextPrimitives[1].blend = {
+    // the profile of the turning it finishes, with the undercut when it has one
+    readonly property var _parentProfile: editor.parentProfile || ({})
+    readonly property string profileType: _parentProfile.profile_type || "od"
+    readonly property var primitives: {
+        var next = JSON.parse(JSON.stringify(_parentProfile.profile_primitives || []))
+        if (addUndercut && next.length > 1) {
+            next[1].blend = {
                 type: "undercut_din509", chamfer_width: 0, fillet_radius: 0,
                 undercut_radius: undercutRadius, undercut_depth: undercutDepth,
                 undercut_length: undercutLength
             }
         }
-        // Assign after editing the primitive so ProfileCanvas sees the new
-        // path and rebuilds the mirrored render segments, including DIN509.
-        primitives = nextPrimitives
+        return next
     }
-    function save() { if (editor) editor.save(_draftOp()) }
-    function applyData(index, data) {
-        opIndex = index; opData = data || {}
-        workpiece = editor ? (editor.workpiece || {}) : ({})
-        toolCard = editor ? editor.toolCard : null
-        p1X = Number(opData.p1_x || 0); p1Z = Number(opData.p1_z || 0)
-        direction = opData.finishing_direction || "towards_z_minus"
-        addUndercut = !!opData.add_undercut
-        var undercut = opData.undercut_parameters || ({})
-        undercutRadius = Number(undercut.radius === undefined ? 0.4 : undercut.radius)
-        undercutDepth = Number(undercut.depth === undefined ? 0.4 : undercut.depth)
-        undercutLength = Number(undercut.length === undefined ? 2.5 : undercut.length)
-        _refreshProfile()
-        header.applyData(opData)
-        profileCanvas.resetView()
+
+    readonly property var previewData: editor.preview
+    signal openNumPadRequested(var field)
+
+    // a change to the undercut: the whole undercut_parameters, as the
+    // operation takes them
+    function editUndercut(field, value) {
+        var u = { radius: undercutRadius, depth: undercutDepth, length: undercutLength }
+        u[field] = value
+        editor.edit({ undercut_parameters: u })
     }
+
+    // another operation: the drawing fitted to it
+    onEditorChanged: profileCanvas.resetView()
 
     ColumnLayout {
         anchors.fill: parent
@@ -73,9 +61,8 @@ Item {
 
         OperationHeader {
             id: header
+            editor: root.editor
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) { var op = root._draftOp(); op.speeds_and_feeds = speeds; root.editor.save(op) }
-            onM1Edited: function(m1) { var op = root._draftOp(); op.m1_parameters = m1; root.editor.save(op) }
         }
 
         ProfileCanvas {
@@ -165,7 +152,7 @@ Item {
                         id: directionBox
                         Layout.alignment: Qt.AlignRight
                         direction: root.direction
-                        onDirectionEdited: function(value) { root.direction = value; root.save() }
+                        onDirectionEdited: function(value) { root.editor.edit({ finishing_direction: value }) }
                     }
                     TurningPointBox {
                         id: p1Box
@@ -174,18 +161,17 @@ Item {
                         xValue: root.p1X; zValue: root.p1Z
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                         onFieldEdited: function(axis, value) {
-                            if (axis === "x") root.p1X = value; else root.p1Z = value
-                            root.save()
+                            root.editor.edit(axis === "x" ? { p1_x: value } : { p1_z: value })
                         }
                     }
-                    CheckBox {
+                    ModelCheckBox {
                         id: undercutCheck
-                        visible: !!root.editor && root.editor.undercutAvailable
+                        visible: root.editor.undercutAvailable
                         Layout.alignment: Qt.AlignRight
                         text: "Add DIN509 Undercut"
                         checked: root.addUndercut
                         font.pixelSize: Theme.fontBody
-                        onToggled: { root.addUndercut = checked; root._refreshProfile(); root.save() }
+                        onToggledTo: function(on) { root.editor.edit({ add_undercut: on }) }
                     }
                     TurningUndercutBox {
                         id: undercutBox
@@ -193,13 +179,7 @@ Item {
                         Layout.alignment: Qt.AlignRight
                         radius: root.undercutRadius; depth: root.undercutDepth; length: root.undercutLength
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-                        onFieldEdited: function(field, value) {
-                            if (field === "radius") root.undercutRadius = value
-                            else if (field === "depth") root.undercutDepth = value
-                            else root.undercutLength = value
-                            root._refreshProfile()
-                            root.save()
-                        }
+                        onFieldEdited: function(field, value) { root.editUndercut(field, value) }
                     }
                 }
             }

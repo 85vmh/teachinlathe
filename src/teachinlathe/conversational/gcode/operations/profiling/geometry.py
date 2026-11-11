@@ -612,3 +612,35 @@ def arc_x_at_z(sx, sz, ex, ez, cx, cz, anticlockwise, target_z) -> List[float]:
         if _angle_on_arc(angle, start_angle, end_angle, anticlockwise):
             results.append(x_r_candidate * 2)
     return results
+
+
+def path_x_max(path) -> Optional[float]:
+    """The largest X (a diameter) ``path`` reaches - an arc's bulge too -
+    or None for an empty one."""
+    xs = []
+    prev = None
+    for element in path:
+        if isinstance(element, StartPoint):
+            prev = (element.x, element.z)
+            xs.append(element.x)
+            continue
+        xs.append(element.end_x)
+        if isinstance(element, ToolpathArc) and prev is not None:
+            sx_r, cx_r = prev[0] / 2, element.center_x / 2
+            radius = math.hypot(sx_r - cx_r, prev[1] - element.center_z)
+            start_angle = math.atan2(prev[1] - element.center_z, sx_r - cx_r)
+            end_angle = math.atan2(element.end_z - element.center_z, element.end_x / 2 - cx_r)
+            # the arc's point furthest out along X, if it is on the arc
+            if _angle_on_arc(0.0, start_angle, end_angle, element.anticlockwise):
+                xs.append((cx_r + radius) * 2)
+        prev = (element.end_x, element.end_z)
+    return max(xs) if xs else None
+
+
+def path_last_x(path) -> Optional[float]:
+    """The X (a diameter) ``path`` ends on, or None for an empty one."""
+    if not path:
+        return None
+    last = path[-1]
+    return last.x if isinstance(last, StartPoint) else last.end_x
+

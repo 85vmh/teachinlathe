@@ -35,6 +35,7 @@ Rectangle {
     // scrolls to (CuttingToolsPane).
     readonly property int flashDuration: 100
     readonly property int flashes: 2
+    // view state: the flash animation
     property bool _flashOn: false
 
     // flashed, to show which box something tapped elsewhere is for
@@ -80,6 +81,7 @@ Rectangle {
     // On, off, on, off: each tick turns the flash the other way.
     Timer {
         id: flashTimer
+        // view state: the flash animation
         property int ticks: 0
         interval: root.flashDuration
         repeat: true

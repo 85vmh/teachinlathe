@@ -21,6 +21,7 @@ Popup {
     property int    operationsCount:  0
     property int    insertAboveIndex: 0
     property int    insertBelowIndex: 0
+    // view state: the choice in the open popup, until confirmed
     property string selectedType:     ""
     property int    buttonsPerRow:    4
     readonly property int buttonWidth: 180

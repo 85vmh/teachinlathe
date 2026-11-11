@@ -289,6 +289,7 @@ Item {
 
         property bool longPressTriggered: false
         //: How far the hold has gone toward the long press, 0 to 1.
+        // view state: how far a hold has got
         property real holdProgress: 0
 
         // While held, a blue line runs round the symbol's ring from 12

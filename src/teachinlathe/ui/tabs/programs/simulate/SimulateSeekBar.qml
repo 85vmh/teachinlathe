@@ -233,6 +233,7 @@ Item {
     MouseArea {
         anchors.fill: parent
         enabled: root.seekable && root.duration > 0
+        // view state: the seek bar dragged
         property bool dragged: false
         onPressed: function(mouse) { dragged = false }
         onPositionChanged: function(mouse) {

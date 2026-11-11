@@ -9,8 +9,9 @@ import "profile_canvas/brokenstock.js" as Broken
 
 Item {
     id: root
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
+    // The view model of the program's header (HeaderEditorViewModel): the one
+    // place what the view shows comes from, and every edit goes to
+    required property var editor
     anchors.fill: parent
     property int fieldFontSize: 16
     readonly property int labelWidth: 150
@@ -30,73 +31,28 @@ Item {
         return isFinite(number) ? number : 0
     }
 
-    // --- Input model ---
-    // Expect either applyProgram(programDict) or applyData(_, programDict)
-    property var programData: null          // { id, header: { name, last_edit, datum, units, workpiece{...} } }
+    // the program, as its editor has it: { header: { name, datum, workpiece{...}, ... }, ... }
+    readonly property var _header: (editor.operation && editor.operation.header) || ({})
+    readonly property var _wp: _header.workpiece || ({})
 
-    // --- Header fields (editable) ---
-    property string programName:  (programData && programData.header && programData.header.name) ? programData.header.name : ""
-    property int    datum:        (programData && programData.header && programData.header.datum !== undefined) ? datumNumber(programData.header.datum) : 0
+    readonly property string programName: _header.name ? _header.name : ""
+    readonly property int    datum: _header.datum !== undefined ? datumNumber(_header.datum) : 0
     // One of "do_nothing" | "g28" | "g30" — mirrors AfterLastOperation in data_types.py
-    property string afterLastOperation: (programData && programData.header && programData.header.after_last_operation) ? programData.header.after_last_operation : "do_nothing"
+    readonly property string afterLastOperation: _header.after_last_operation ? _header.after_last_operation : "do_nothing"
 
     // Workpiece
-    property string material:     (programData && programData.header && programData.header.workpiece && programData.header.workpiece.material) ? programData.header.workpiece.material : ""
-    property real   extDia:       (programData && programData.header && programData.header.workpiece && programData.header.workpiece.external_diameter !== undefined) ? programData.header.workpiece.external_diameter : 0.0
-    property real   intDia:       (programData && programData.header && programData.header.workpiece && programData.header.workpiece.internal_diameter !== undefined) ? programData.header.workpiece.internal_diameter : 0.0
-    property real   stickout:     (programData && programData.header && programData.header.workpiece && programData.header.workpiece.stickout_length !== undefined) ? programData.header.workpiece.stickout_length : 0.0
-    property real   stockLength:  (programData && programData.header && programData.header.workpiece && programData.header.workpiece.stock_length !== undefined) ? programData.header.workpiece.stock_length : 0.0
+    readonly property string material: _wp.material ? _wp.material : ""
+    readonly property real   extDia: _wp.external_diameter !== undefined ? Number(_wp.external_diameter) : 0.0
+    readonly property real   intDia: _wp.internal_diameter !== undefined ? Number(_wp.internal_diameter) : 0.0
+    readonly property real   stickout: _wp.stickout_length !== undefined ? Number(_wp.stickout_length) : 0.0
+    readonly property real   stockLength: _wp.stock_length !== undefined ? Number(_wp.stock_length) : 0.0
 
-    // --- Bridge signals (same pattern as other detail views) ---
     signal openNumPadRequested(var field)
     signal openKeyboardRequested(var field)
 
-    // Populate from Program object
-    function applyProgram(program) {
-        programData = program || {}
-        programName = (programData.header && programData.header.name) ? programData.header.name : ""
-        datum       = (programData.header && programData.header.datum !== undefined) ? datumNumber(programData.header.datum) : 0
-        afterLastOperation = (programData.header && programData.header.after_last_operation) ? programData.header.after_last_operation : "do_nothing"
-
-        if (programData.header && programData.header.workpiece) {
-            var wp = programData.header.workpiece
-            material = (wp.material !== undefined) ? wp.material : ""
-            extDia   = (wp.external_diameter !== undefined) ? wp.external_diameter : 0.0
-            intDia   = (wp.internal_diameter !== undefined) ? wp.internal_diameter : 0.0
-            stickout = (wp.stickout_length  !== undefined) ? wp.stickout_length  : 0.0
-            stockLength = (wp.stock_length !== undefined) ? wp.stock_length : 0.0
-        } else {
-            material = ""
-            extDia = intDia = stickout = 0.0
-            stockLength = 0.0
-        }
-    }
-
-    // Keep compatibility with ChildScreen.receiveDetailsData if you ever pass the full program
-    function applyData(index, data) {
-        applyProgram(data)
-    }
-
-    function emitSave() {
-        var payload = {
-            type: "header",
-            header: {
-                name: programName,
-                // last_edit is set server-side; omit or leave as previous
-                datum: datum,
-                units: "mm",
-                after_last_operation: afterLastOperation,
-                workpiece: {
-                    material: material,
-                    external_diameter: extDia,
-                    internal_diameter: intDia,
-                    stickout_length:  stickout,
-                    stock_length: stockLength
-                }
-            }
-        }
-        root.editor.save(payload)
-    }
+    // a change to the header: only the fields in ``changes``
+    function editHeader(changes) { editor.edit({ header: changes }) }
+    function editWorkpiece(changes) { editHeader({ workpiece: changes }) }
 
     ColumnLayout {
         id: contentColumn
@@ -132,10 +88,7 @@ Item {
                         titleText: "Program name"
                         text: root.programName
                         onOpenRequested: function(field) { root.openKeyboardRequested(field) }
-                        onValueCommitted: function(value) {
-                            root.programName = value
-                            root.emitSave()
-                        }
+                        onValueCommitted: function(value) { root.editHeader({ name: value }) }
                     }
 
                     Rectangle {
@@ -152,8 +105,8 @@ Item {
                     // G54..G59, saved as the work offset's P number, 1..6
                     Dropdown {
                         model: ["G54", "G55", "G56", "G57", "G58", "G59"]
-                        currentIndex: (root.datum >= 1 && root.datum <= 6) ? root.datum - 1 : 0
-                        onActivated: function(index) { root.datum = index + 1; root.emitSave() }
+                        selectedIndex: (root.datum >= 1 && root.datum <= 6) ? root.datum - 1 : 0
+                        onPicked: function(index) { root.editHeader({ datum: index + 1 }) }
                     }
                 }
             }
@@ -167,8 +120,6 @@ Item {
                 Layout.preferredWidth: 0
                 Layout.preferredHeight: programDetails.implicitHeight
                 font.pixelSize: root.fieldFontSize
-
-                ButtonGroup { id: afterLastGroup }
 
                 // the buttons as wide as their texts, the space left shared
                 // out equally between them: first at the left, last at the right
@@ -187,15 +138,11 @@ Item {
                             spacing: 0
                             Layout.fillWidth: index > 0
                             Item { visible: index > 0; Layout.fillWidth: true }
-                            RadioButton {
+                            ModelRadioButton {
                                 text: modelData.label
                                 font.pixelSize: Theme.fontBody
-                                ButtonGroup.group: afterLastGroup
                                 checked: root.afterLastOperation === modelData.value
-                                onToggled: if (checked && root.afterLastOperation !== modelData.value) {
-                                    root.afterLastOperation = modelData.value
-                                    root.emitSave()
-                                }
+                                onChosen: root.editHeader({ after_last_operation: modelData.value })
                             }
                         }
                     }
@@ -305,9 +252,7 @@ Item {
                 value: root.stockLength
                 // the stickout cannot be longer: it comes down with it
                 onValueEdited: function(value) {
-                    root.stockLength = value
-                    root.stickout = Math.min(root.stickout, value)
-                    root.emitSave()
+                    root.editWorkpiece({ stock_length: value, stickout_length: Math.min(root.stickout, value) })
                 }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
@@ -320,7 +265,7 @@ Item {
                 dimensionColor: workpieceCanvas.externalColor
                 settingName: "smart_numpad.workpiece-external-dia"
                 value: root.extDia
-                onValueEdited: function(value) { root.extDia = value; root.emitSave() }
+                onValueEdited: function(value) { root.editWorkpiece({ external_diameter: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -332,7 +277,7 @@ Item {
                 dimensionColor: workpieceCanvas.internalColor
                 settingName: "smart_numpad.workpiece-internal-dia"
                 value: root.intDia
-                onValueEdited: function(value) { root.intDia = value; root.emitSave() }
+                onValueEdited: function(value) { root.editWorkpiece({ internal_diameter: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -345,10 +290,7 @@ Item {
                 settingName: "smart_numpad.workpiece-stickout"
                 value: root.stickout
                 // no longer than the stock
-                onValueEdited: function(value) {
-                    root.stickout = Math.min(value, root.stockLength)
-                    root.emitSave()
-                }
+                onValueEdited: function(value) { root.editWorkpiece({ stickout_length: Math.min(value, root.stockLength) }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 

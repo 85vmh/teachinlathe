@@ -10,52 +10,23 @@ Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property var _det: op.position_details || ({})
     signal teachXRequested(int index)
     signal teachZRequested(int index)
     signal openNumPadRequested(var field)
 
-    property bool _loading: false
+    readonly property real xPos: _det.x_pos !== undefined ? Number(_det.x_pos) : 0.0
+    readonly property real zPos: _det.z_pos !== undefined ? Number(_det.z_pos) : 0.0
+    readonly property string moveSeq: _det.move_sequence || "xz"
+    readonly property bool stopSpindleBeforePositioning: !!_det.stop_spindle_before_positioning
+    readonly property bool includeM0: !!_det.include_m0
 
-    property real xPos: 0.0
-    property real zPos: 0.0
-    property string moveSeq: "xz"
-    property bool stopSpindleBeforePositioning: false
-    property bool includeM0: false
-
-    function applyData(index, data) {
-        _loading = true
-        opIndex = index
-        opData = data || {}
-
-        var det = (opData.position_details || {})
-        xPos = (det.x_pos !== undefined) ? det.x_pos : 0.0
-        zPos = (det.z_pos !== undefined) ? det.z_pos : 0.0
-        moveSeq = det.move_sequence || "xz"
-        stopSpindleBeforePositioning = !!det.stop_spindle_before_positioning
-        includeM0 = !!det.include_m0
-        _loading = false
-    }
-
-    function emitSave() {
-        if (_loading) return
-        root.editor.save({
-            order: (opData && opData.order !== undefined) ? opData.order : 0,
-            type: "positionAt",
-            generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
-            is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-            position_details: {
-                x_pos: xPos,
-                z_pos: zPos,
-                move_sequence: moveSeq,
-                stop_spindle_before_positioning: stopSpindleBeforePositioning,
-                include_m0: includeM0
-            }
-        })
-    }
+    // a change to the position_details: only the fields in ``changes``
+    function editDetails(changes) { editor.edit({ position_details: changes }) }
 
     DoubleValidator {
         id: dblVal
@@ -84,14 +55,11 @@ Item {
                 Layout.alignment: Qt.AlignTop
                 spacing: Theme.margin
 
-                CheckBox {
+                ModelCheckBox {
                     text: "Stop spindle before positioning"
                     checked: root.stopSpindleBeforePositioning
                     font.pixelSize: Theme.fontBody
-                    onToggled: {
-                        root.stopSpindleBeforePositioning = checked
-                        root.emitSave()
-                    }
+                    onToggledTo: function(on) { root.editDetails({ stop_spindle_before_positioning: on }) }
                 }
 
                 TitledCard {
@@ -125,7 +93,7 @@ Item {
                                 return (v == null) ? "" : Number(v).toFixed(3)
                             }
                             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                            onValueCommitted: function(value) { root.xPos = value; root.emitSave() }
+                            onValueCommitted: function(value) { root.editDetails({ x_pos: Number(value) }) }
                         }
                         TeachInButton {
                             onClicked: tf_xPos.commit(PositionsBridge.teachInX() * 2)
@@ -146,7 +114,7 @@ Item {
                                 return (v == null) ? "" : Number(v).toFixed(3)
                             }
                             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                            onValueCommitted: function(value) { root.zPos = value; root.emitSave() }
+                            onValueCommitted: function(value) { root.editDetails({ z_pos: Number(value) }) }
                         }
                         TeachInButton {
                             onClicked: tf_zPos.commit(PositionsBridge.teachInZ())
@@ -158,14 +126,11 @@ Item {
                     }
                 }
 
-                CheckBox {
+                ModelCheckBox {
                     text: "Pause program after positioning"
                     checked: root.includeM0
                     font.pixelSize: Theme.fontBody
-                    onToggled: {
-                        root.includeM0 = checked
-                        root.emitSave()
-                    }
+                    onToggledTo: function(on) { root.editDetails({ include_m0: on }) }
                 }
             }
 
@@ -181,36 +146,20 @@ Item {
                     anchors.margins: 10
                     spacing: 10
 
-                    ButtonGroup {
-                        id: moveGroup
-                    }
-
-                    RadioButton {
+                    ModelRadioButton {
                         text: "X then Z"
                         checked: root.moveSeq === "xz"
-                        ButtonGroup.group: moveGroup
-                        onToggled: if (checked) {
-                            root.moveSeq = "xz"
-                            root.emitSave()
-                        }
+                        onChosen: root.editDetails({ move_sequence: "xz" })
                     }
-                    RadioButton {
+                    ModelRadioButton {
                         text: "Z then X"
                         checked: root.moveSeq === "zx"
-                        ButtonGroup.group: moveGroup
-                        onToggled: if (checked) {
-                            root.moveSeq = "zx"
-                            root.emitSave()
-                        }
+                        onChosen: root.editDetails({ move_sequence: "zx" })
                     }
-                    RadioButton {
+                    ModelRadioButton {
                         text: "Simultaneous"
                         checked: root.moveSeq === "both"
-                        ButtonGroup.group: moveGroup
-                        onToggled: if (checked) {
-                            root.moveSeq = "both"
-                            root.emitSave()
-                        }
+                        onChosen: root.editDetails({ move_sequence: "both" })
                     }
 
                     Item {

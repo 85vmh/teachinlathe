@@ -1,12 +1,31 @@
-// G76CuttingParams.qml
+// G76CuttingParams.qml — G76 Threading's passes: what ``operation`` - the
+// operation as its editor has it - says, and the edits to it (``edited``)
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import common.touchable_input
 import theme
+import common
 
 ColumnLayout {
-    property var detailsRoot: null
+    id: root
+    property var operation: ({})
+    readonly property var _op: operation || {}
+    readonly property real initialDoc: Number(_op.initial_doc || 0)
+    readonly property real retract: Number(_op.retract || 0)
+    readonly property real compoundAngle: Number(_op.compound_angle || 0)
+    readonly property real depthDegression: _op.depth_degression !== undefined ? Number(_op.depth_degression) : 1.0
+    readonly property int taperType: Math.round(Number(_op.taper_type || 0))
+    readonly property int springPasses: Math.round(Number(_op.spring_passes || 0))
+    readonly property var depthOptions: (function() {
+        var a = [];
+        for (var v = 1.0; v <= 2.0001; v += 0.1) a.push(v.toFixed(1));
+        return a;
+    })()
+
+    // a change to the operation: only the fields in it
+    signal edited(var changes)
+    signal openNumPadRequested(var field)
 
     spacing: Theme.spacingLarge
 
@@ -20,16 +39,11 @@ ColumnLayout {
             Layout.preferredWidth: 110
             settingName: "threading.first_pass_depth"
             validatorObject: dblVal
-            value: detailsRoot ? detailsRoot.initialDoc : 0.0
+            value: root.initialDoc
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: function(field) { if (detailsRoot) detailsRoot.openNumPadRequested(field) }
-            onValueCommitted: function(value) {
-                if (detailsRoot) {
-                    detailsRoot.initialDoc = value
-                    detailsRoot.emitSave()
-                }
-            }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.edited({ initial_doc: value }) }
         }
         Label { text: "(mm/radius)"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter }
     }
@@ -41,16 +55,11 @@ ColumnLayout {
             Layout.preferredWidth: 110
             settingName: "threading.x_retract"
             validatorObject: dblVal
-            value: detailsRoot ? detailsRoot.retract : 0.0
+            value: root.retract
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: function(field) { if (detailsRoot) detailsRoot.openNumPadRequested(field) }
-            onValueCommitted: function(value) {
-                if (detailsRoot) {
-                    detailsRoot.retract = value
-                    detailsRoot.emitSave()
-                }
-            }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.edited({ retract: value }) }
         }
         Label { text: "(mm)"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter }
     }
@@ -62,16 +71,11 @@ ColumnLayout {
             Layout.preferredWidth: 110
             settingName: "threading.compound_angle"
             validatorObject: dblVal
-            value: detailsRoot ? detailsRoot.compoundAngle : 0.0
+            value: root.compoundAngle
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
-            onOpenRequested: function(field) { if (detailsRoot) detailsRoot.openNumPadRequested(field) }
-            onValueCommitted: function(value) {
-                if (detailsRoot) {
-                    detailsRoot.compoundAngle = value
-                    detailsRoot.emitSave()
-                }
-            }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.edited({ compound_angle: value }) }
         }
         Label { text: "(deg)"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter }
     }
@@ -79,12 +83,12 @@ ColumnLayout {
     RowLayout {
         spacing: Theme.spacingLarge
         Label { text: "Degression"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
-        ComboBox {
+        ModelComboBox {
             Layout.preferredWidth: 110
             Layout.preferredHeight: Theme.inputHeight
             font.pixelSize: Theme.fontTitle
-            model: detailsRoot ? detailsRoot.depthOptions : []
-            currentIndex: detailsRoot ? Math.max(0, detailsRoot.depthOptions.indexOf(Number(detailsRoot.depthDegression).toFixed(1))) : 0
+            model: root.depthOptions
+            selectedIndex: Math.max(0, root.depthOptions.indexOf(Number(root.depthDegression).toFixed(1)))
             contentItem: Text {
                 leftPadding: 8
                 rightPadding: 8
@@ -101,12 +105,7 @@ ColumnLayout {
                 text: modelData
                 font.pixelSize: Theme.fontTitle
             }
-            onActivated: function(index) {
-                if (detailsRoot) {
-                    detailsRoot.depthDegression = Number(detailsRoot.depthOptions[index])
-                    detailsRoot.emitSave()
-                }
-            }
+            onPicked: function(index) { root.edited({ depth_degression: Number(root.depthOptions[index]) }) }
         }
         Item { Layout.fillWidth: true }
     }
@@ -114,12 +113,12 @@ ColumnLayout {
     RowLayout {
         spacing: Theme.spacingLarge
         Label { text: "Thread Taper"; font.pixelSize: Theme.fontBody; Layout.alignment: Qt.AlignVCenter; Layout.minimumWidth: 120 }
-        ComboBox {
+        ModelComboBox {
             Layout.preferredWidth: 165
             Layout.preferredHeight: Theme.inputHeight
             font.pixelSize: Theme.fontTitle
             model: ["None", "On entry", "On exit", "Both"]
-            currentIndex: detailsRoot ? Math.max(0, Math.min(3, detailsRoot.taperType)) : 0
+            selectedIndex: Math.max(0, Math.min(3, root.taperType))
             contentItem: Text {
                 leftPadding: 8
                 rightPadding: 8
@@ -136,12 +135,7 @@ ColumnLayout {
                 text: modelData
                 font.pixelSize: Theme.fontTitle
             }
-            onActivated: function(index) {
-                if (detailsRoot) {
-                    detailsRoot.taperType = index
-                    detailsRoot.emitSave()
-                }
-            }
+            onPicked: function(index) { root.edited({ taper_type: index }) }
         }
         Item { Layout.fillWidth: true }
     }
@@ -153,16 +147,11 @@ ColumnLayout {
             Layout.preferredWidth: 110
             settingName: "threading.spring_passes"
             validatorObject: intValNonNeg
-            value: detailsRoot ? detailsRoot.springPasses : 0
+            value: root.springPasses
             formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
             hAlign: Text.AlignRight
-            onOpenRequested: function(field) { if (detailsRoot) detailsRoot.openNumPadRequested(field) }
-            onValueCommitted: function(value) {
-                if (detailsRoot) {
-                    detailsRoot.springPasses = Math.round(value)
-                    detailsRoot.emitSave()
-                }
-            }
+            onOpenRequested: function(field) { root.openNumPadRequested(field) }
+            onValueCommitted: function(value) { root.edited({ spring_passes: Math.round(value) }) }
         }
         Item { Layout.fillWidth: true }
     }

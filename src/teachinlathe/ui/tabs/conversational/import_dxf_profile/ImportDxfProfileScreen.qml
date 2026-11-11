@@ -9,65 +9,22 @@ Item {
     id: root
     objectName: "importDxfProfileScreen"
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the tab (ConversationalViewModel): the drawing chosen,
+    // what it gives the profile and why it failed - all the screen shows. The
+    // header's Import DXF imports it there.
+    required property var viewModel
     // The DXF Profiles folder (ConversationalViewModel.dxfFileSystemViewModel).
     required property var fileSystemViewModel
-    property string selectedPath: ""
-    property string errorMessage: ""
-    property var previewPrimitives: []
-    property string profileType: "od"
+    readonly property string selectedPath: viewModel.dxfSelectedPath
+    readonly property string errorMessage: viewModel.dxfError
+    readonly property var _preview: viewModel.dxfPreview
+    readonly property var previewPrimitives: _preview && _preview.ok ? (_preview.primitives || []) : []
+    readonly property string profileType: _preview && _preview.ok && _preview.profileType ? _preview.profileType : "od"
 
     signal backRequested()
-    signal headerRefreshRequested()
 
-    function applyData(index, data) {
-        opIndex = index
-        opData = data || {}
-        selectedPath = opData.dxfFilePath || ""
-        profileType = opData.profile_type !== undefined ? String(opData.profile_type) : "od"
-        errorMessage = ""
-        previewPrimitives = []
-        if (selectedPath.length > 0)
-            loadPreview(selectedPath)
-        headerRefreshRequested()
-    }
-
-    function setError(message) {
-        errorMessage = String(message || "")
-    }
-
-    function importSelectedDxf() {
-        if (selectedPath.length > 0)
-            root.editor.importDxf(root.selectedPath)
-    }
-
-    function loadPreview(path) {
-        previewPrimitives = []
-        errorMessage = ""
-        if (!path || path.length === 0)
-            return
-        var result = root.editor.previewDxf(path)
-        if (result && result.ok) {
-            previewPrimitives = result.primitives || []
-            profileType = result.profileType || profileType
-            previewCanvas.resetView()
-        } else {
-            errorMessage = result && result.error ? String(result.error) : "Could not preview DXF."
-        }
-    }
-
-    Connections {
-        target: root.fileSystemViewModel
-        function onSelectionChanged() {
-            var path = root.fileSystemViewModel.selectedAbsolutePath
-            root.selectedPath = path || ""
-            root.loadPreview(root.selectedPath)
-            root.headerRefreshRequested()
-        }
-    }
+    // another drawing: its preview fitted
+    onPreviewPrimitivesChanged: previewCanvas.resetView()
 
     Rectangle {
         anchors.fill: parent

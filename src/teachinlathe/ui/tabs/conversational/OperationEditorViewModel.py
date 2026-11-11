@@ -3,20 +3,26 @@
 One per operation type that has an editor, made by ConversationalViewModel
 for the operation selected in the program (``editor_for``). It holds what the
 editor shows - the operation, as ``operation`` - and what the editor asks:
-the program's stock, the tool in by then, a preview of the cut. ``save``
-sends an edit to the tab, which applies it and saves the program.
+the program's stock, the tool in by then, a preview of the cut. ``edit``
+sends a change to the tab, which applies it and saves the program.
 
-An editor is made for one operation at one place in the program. Selecting
-another operation, or coming back to this one, makes a new one.
+An editor is made for one operation of the program. Selecting another
+operation, or coming back to this one, makes a new one.
+
+The operation in the program - what its JSON file holds - is the editor's one
+source of truth: ``operation`` is read from it again each time the program
+changes, and ``edit`` applies a change to it, which the tab saves. A view
+shows only what ``operation`` says and keeps nothing of its own.
 """
 
 import dataclasses
 from enum import Enum
 
-from PyQt6.QtCore import QObject, pyqtEnum, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QTimer, pyqtEnum, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.conversational.logic.program_tools import Scope as ProgramToolScope
 from teachinlathe.conversational.logic.program_tools import ToolStatus
+from teachinlathe.conversational.model import profile_editing
 from teachinlathe.conversational.model.data_types import InspectPosition, PredefinedPosition, ThreadForm
 
 # Thread depth over pitch, per side, for a 60° thread.
@@ -110,9 +116,16 @@ class PauseToInspect(QObject):
         return cls._with_position(payload, lambda value: cls._INSPECT[int(value)])
 
 
+#: ``preview`` not made since the operation last changed.
+_NOT_MADE = object()
+
+
 class OperationEditorViewModel(QObject):
     #: The operation type its edits are applied as (ConversationalUseCase._updaters).
     update_type = ""
+
+    #: The operation in the program changed: ``operation`` (and ``opIndex``) say what it is now.
+    operationChanged = pyqtSignal()
 
     def __init__(self, tab, program, index, operation, parent=None):
         super().__init__(parent)
@@ -121,19 +134,52 @@ class OperationEditorViewModel(QObject):
         self._program = program
         self._index = index
         self._operation = operation
+        # the operation itself, which stays this editor's wherever it moves to
+        self._op = self._use_case.operation(program, index) if index >= 0 else None
+        self._preview = _NOT_MADE
+        tab.programChanged.connect(self._follow_program)
+
+    def _current_index(self):
+        """Where the operation is in the program now; -1 for the header, None
+        once it is gone."""
+        if self._op is None:
+            return self._index
+        return next((i for i, op in enumerate(self._program.operations) if op is self._op), None)
+
+    def _follow_program(self):
+        """The program changed: the operation read again from it."""
+        index = self._current_index()
+        if index is None:
+            return
+        operation = self._use_case.details_payload(self._program, index)
+        if not operation:
+            return
+        self._index, self._operation = index, operation
+        self._preview = _NOT_MADE
+        self.operationChanged.emit()
 
     @pyqtProperty(str, constant=True)
     def operationType(self):
         return str(self._operation.get("type", "")) if self._index >= 0 else "header"
 
-    @pyqtProperty(int, constant=True)
+    @pyqtProperty(int, notify=operationChanged)
     def opIndex(self):
         return self._index
 
-    @pyqtProperty("QVariant", constant=True)
+    @pyqtProperty("QVariant", notify=operationChanged)
     def operation(self):
-        """The operation as the editor shows it."""
+        """The operation, as the program has it now: all a view shows of it."""
         return PauseToInspect.for_qml(self._operation)
+
+    @pyqtSlot("QVariant")
+    def edit(self, patch):
+        """Change the operation by ``patch``: only the fields it names, in the
+        operation's own shape (``{"drilling_parameters": {"z_end": -15}}``).
+        The program is saved, and ``operation`` follows."""
+        index = self._current_index()
+        if index is None or index < 0:
+            return
+        self._tab.update_operation(self.update_type, index, PauseToInspect.from_qml(to_py(patch)))
 
     @pyqtProperty(QObject, constant=True)
     def touchedOffTools(self):
@@ -141,26 +187,31 @@ class OperationEditorViewModel(QObject):
         can change to, for the tool pickers."""
         return self._tab.touched_off_tools
 
-    @pyqtSlot("QVariant")
-    def save(self, payload):
-        """The whole operation, with the editor's changes: applied and saved."""
-        self._tab.update_operation(self.update_type, self._index, PauseToInspect.from_qml(to_py(payload)))
+    @pyqtProperty("QVariant", notify=operationChanged)
+    def preview(self):
+        """What the operation cuts, as its canvas draws it (``_make_preview``),
+        made once each time it changes; None for one with no preview."""
+        if self._preview is _NOT_MADE:
+            self._preview = self._make_preview()
+        return self._preview
 
-    def _preview(self, build, op_data):
-        """Preview a QML draft, retaining its operation type if the draft
-        omitted it while copying the edited fields."""
-        payload = to_py(op_data)
-        if not isinstance(payload, dict):
-            payload = {}
-        if not payload.get("type"):
-            payload = {**self._operation, **payload}
-        return self._tab.preview(build, payload)
+    def _make_preview(self):
+        return None
+
+    def _preview_of(self, build):
+        """The preview ``build`` makes of the operation, or an empty one with
+        the error (the tab's preview)."""
+        return self._tab.preview(build, dict(self._operation))
 
 
 class HeaderEditorViewModel(OperationEditorViewModel):
+    """The program's header: ``operation`` is the program, as its dict."""
+
     @pyqtSlot("QVariant")
-    def save(self, payload):
-        self._tab.update_header(payload)
+    def edit(self, patch):
+        """Change the header by ``patch``: only the fields it names, in the
+        header's own shape (``{"header": {"workpiece": {"stock_length": 80}}}``)."""
+        self._tab.update_header(to_py(patch))
 
 
 class ToolCard(QObject):
@@ -268,15 +319,71 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
     """An operation drawn on the stock with the tool that cuts it, which the
     editor can change."""
 
+    #: What it shows from the program changed: the operation, or what is around it.
+    toolOperationChanged = pyqtSignal()
     #: The holders whose tool the operation can cut with may have changed:
     #: the Tool Library did, or the operation (an OD profile become ID).
     suitableToolNosChanged = pyqtSignal()
 
     def __init__(self, tab, program, index, operation, parent=None):
         super().__init__(tab, program, index, operation, parent)
+        self.operationChanged.connect(self.toolOperationChanged)
+        # the operation changed - say from OD to ID - and with it what can cut it
+        self.operationChanged.connect(self.suitableToolNosChanged)
         self._tool_card = None
         from teachinlathe.core.tool_library_repository import tool_library_repository
         tool_library_repository().toolsChanged.connect(self.suitableToolNosChanged)
+        if self.planned_preview:
+            self._start_planned_preview()
+
+    # ── a preview the planning worker works out ─────────────────────────────
+    #: Set by the editors whose preview takes the planning worker (Turning,
+    #: Profile Roughing): ``plannedPreview`` is then asked for as the editor is
+    #: made and each time the operation changes, and follows the answer.
+    planned_preview = False
+
+    #: A preview asked of the tab (request_roughing_preview), once worked out.
+    previewReady = pyqtSignal("QVariant")
+    plannedPreviewChanged = pyqtSignal()
+
+    #: How long the operation stays unchanged before its preview is asked for:
+    #: a quick run of edits - or an operation only passed over in the list -
+    #: asks once, or not at all.
+    PLANNED_PREVIEW_DELAY_MS = 150
+
+    def _start_planned_preview(self):
+        #: what the last request went in with: an answer for an older one is
+        #: not passed on
+        self.wanted_preview = None
+        self._planned_preview = None
+        self.previewReady.connect(self._take_planned_preview)
+        # the editor's own: gone with it, so an editor left asks nothing
+        self._preview_timer = QTimer(self)
+        self._preview_timer.setSingleShot(True)
+        self._preview_timer.setInterval(self.PLANNED_PREVIEW_DELAY_MS)
+        self._preview_timer.timeout.connect(self._ask_planned_preview)
+        self.operationChanged.connect(self._preview_timer.start)
+        self._preview_timer.start()
+
+    def stop_planned_preview(self):
+        """No preview asked for any more: the editor is no longer shown."""
+        if self.planned_preview:
+            self._preview_timer.stop()
+
+    def _ask_planned_preview(self):
+        index = self._current_index()
+        if index is not None and index >= 0:
+            self._tab.request_roughing_preview(self, index, self._operation)
+
+    def _take_planned_preview(self, preview):
+        self._planned_preview = preview
+        self.plannedPreviewChanged.emit()
+
+    @pyqtProperty("QVariant", notify=plannedPreviewChanged)
+    def plannedPreview(self):
+        """What the operation cuts, as the planning worker worked it out:
+        None until the first answer."""
+        return self._planned_preview if self.planned_preview else None
 
     @pyqtProperty("QVariantList", notify=suitableToolNosChanged)
     def suitableToolNos(self):
@@ -284,17 +391,12 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
         ones its tool picker shows."""
         return self._use_case.suitable_tool_nos(self._program, self._index)
 
-    @pyqtSlot("QVariant")
-    def save(self, payload):
-        super().save(payload)
-        self.suitableToolNosChanged.emit()
-
-    @pyqtProperty("QVariant", constant=True)
+    @pyqtProperty("QVariant", notify=toolOperationChanged)
     def workpiece(self):
         """The program header's stock, as its dict, or {}."""
         return self._use_case.workpiece(self._program)
 
-    @pyqtProperty(str, constant=True)
+    @pyqtProperty(str, notify=toolOperationChanged)
     def toolChangePositionText(self):
         """Where M6 takes the tool, for the tool picker to show: "Default
         Position [X: 75.000 Z: 200.000]" - the INI's - or "Custom Position
@@ -347,10 +449,9 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
 class FacingEditorViewModel(ToolOperationEditorViewModel):
     update_type = "facing"
 
-    @pyqtSlot("QVariant", result="QVariant")
-    def preview(self, op_data):
-        """What facing would cut with ``op_data``."""
-        return self._preview(lambda op: qml_preview(self._use_case.facing_preview(op)), op_data)
+    def _make_preview(self):
+        """What facing cuts."""
+        return self._preview_of(lambda op: qml_preview(self._use_case.facing_preview(op)))
 
     # Shared by every Facing of the program: kept by the tab.
     def _get_canvas_mirror(self):
@@ -364,14 +465,16 @@ class FacingEditorViewModel(ToolOperationEditorViewModel):
 
 class TurningEditorViewModel(ToolOperationEditorViewModel):
     update_type = "turning"
+    planned_preview = True
 
-    previewReady = pyqtSignal("QVariant")
+    #: What it shows from the program changed: the operation, or what is around it.
+    turningChanged = pyqtSignal()
 
     def __init__(self, tab, program, index, operation, parent=None):
         super().__init__(tab, program, index, operation, parent)
-        self.wanted_preview = None
+        self.operationChanged.connect(self.turningChanged)
 
-    @pyqtProperty(bool, constant=True)
+    @pyqtProperty(bool, notify=turningChanged)
     def hasFinishingOperation(self):
         parent_order = int(self._operation.get("order", 0))
         return any(getattr(op, "type", "") == "turningFinish"
@@ -382,24 +485,14 @@ class TurningEditorViewModel(ToolOperationEditorViewModel):
     def addTurningFinish(self):
         self._tab.add_turning_finish(self._index)
 
-    @pyqtSlot("QVariant")
-    def requestPreview(self, op_data):
-        self._tab.request_roughing_preview(self, self._index, op_data)
-
-    @pyqtSlot("QVariant", result="QVariant")
-    def profile(self, op_data):
-        """The inline OD profile in the draft, for the canvas and stock cutout."""
+    @pyqtProperty("QVariant", notify=turningChanged)
+    def inlineProfile(self):
+        """The OD profile the turning cuts, for the canvas and the stock cut out."""
         from teachinlathe.conversational.gcode.operations.profiling.operation_input import inline_turning_profile
         from teachinlathe.conversational.model.data_types import Operation
-        payload = to_py(op_data)
-        if not isinstance(payload, dict):
-            payload = {}
-        if payload.get("type") != "turning":
-            payload = {**self._operation, **payload}
-        if payload.get("type") != "turning":
+        if self._operation.get("type") != "turning":
             return {}
-        operation = Operation.from_dict(payload)
-        profile = inline_turning_profile(operation)
+        profile = inline_turning_profile(Operation.from_dict(dict(self._operation)))
         return {
             "profile_type": profile.profile_type.value,
             "profile_primitives": [primitive.to_dict() for primitive in profile.profile_primitives],
@@ -408,6 +501,13 @@ class TurningEditorViewModel(ToolOperationEditorViewModel):
 
 class TurningFinishEditorViewModel(ToolOperationEditorViewModel):
     update_type = "turningFinish"
+
+    #: What it shows from the program changed: the operation, or what is around it.
+    turningFinishChanged = pyqtSignal()
+
+    def __init__(self, tab, program, index, operation, parent=None):
+        super().__init__(tab, program, index, operation, parent)
+        self.operationChanged.connect(self.turningFinishChanged)
 
     def _parent_turning(self):
         from teachinlathe.conversational.model.data_types import Turning
@@ -418,7 +518,7 @@ class TurningFinishEditorViewModel(ToolOperationEditorViewModel):
         return parent or next((op for op in reversed(operations[:self._index])
                                if isinstance(op, Turning)), None)
 
-    @pyqtProperty("QVariant", constant=True)
+    @pyqtProperty("QVariant", notify=turningFinishChanged)
     def parentProfile(self):
         """The embedded OD profile this finish operation follows, for its canvas."""
         parent = self._parent_turning()
@@ -431,7 +531,7 @@ class TurningFinishEditorViewModel(ToolOperationEditorViewModel):
             "profile_primitives": [primitive.to_dict() for primitive in profile.profile_primitives],
         }
 
-    @pyqtProperty("QVariant", constant=True)
+    @pyqtProperty("QVariant", notify=turningFinishChanged)
     def workpiece(self):
         workpiece = self._use_case.workpiece(self._program)
         parent = self._parent_turning()
@@ -450,23 +550,28 @@ class TurningFinishEditorViewModel(ToolOperationEditorViewModel):
             workpiece.pop("break_after_setback", None)
         return workpiece
 
-    @pyqtProperty(bool, constant=True)
+    @pyqtProperty(bool, notify=turningFinishChanged)
     def undercutAvailable(self):
         from teachinlathe.conversational.model.data_types import BlendType
         parent = self._parent_turning()
         return bool(parent and parent.geometryParameters.shoulderBlend.blend_type is BlendType.NONE)
 
-    @pyqtSlot("QVariant", result="QVariant")
-    def preview(self, op_data):
-        return self._preview(
-            lambda op: qml_preview(self._use_case.profile_contour_preview(self._program, self._index, op)),
-            op_data)
+    def _make_preview(self):
+        return self._preview_of(
+            lambda op: qml_preview(self._use_case.profile_contour_preview(self._program, self._index, op)))
 
 
 class ProfileFollowingEditorViewModel(ToolOperationEditorViewModel):
     """Profile Roughing and Profile Contour: they cut the last profile above."""
 
-    @pyqtProperty("QVariant", constant=True)
+    #: What it shows from the program changed: the operation, or what is around it.
+    profileFollowingChanged = pyqtSignal()
+
+    def __init__(self, tab, program, index, operation, parent=None):
+        super().__init__(tab, program, index, operation, parent)
+        self.operationChanged.connect(self.profileFollowingChanged)
+
+    @pyqtProperty("QVariant", notify=profileFollowingChanged)
     def lastProfile(self):
         """The last Define Profile above, as its details payload, or {}."""
         return self._use_case.last_profile_before(self._program, self._index)
@@ -474,22 +579,9 @@ class ProfileFollowingEditorViewModel(ToolOperationEditorViewModel):
 
 class ProfileRoughingEditorViewModel(ProfileFollowingEditorViewModel):
     update_type = "profileRoughing"
-
-    #: A preview asked for with requestPreview, once worked out.
-    previewReady = pyqtSignal("QVariant")
-
-    def __init__(self, tab, program, index, operation, parent=None):
-        super().__init__(tab, program, index, operation, parent)
-        #: what the last request went in with: an answer for an older one is
-        #: not passed on
-        self.wanted_preview = None
-
-    @pyqtSlot("QVariant")
-    def requestPreview(self, op_data):
-        """What roughing would cut with ``op_data``, to ``previewReady``: the
-        plan takes up to a second, so it is worked out in the planning worker
-        and the screen goes on meanwhile."""
-        self._tab.request_roughing_preview(self, self._index, op_data)
+    # the plan takes up to a second: worked out in the planning worker, and
+    # the screen goes on meanwhile
+    planned_preview = True
 
     @pyqtSlot()
     def addRestRoughing(self):
@@ -501,10 +593,9 @@ class ProfileRoughingEditorViewModel(ProfileFollowingEditorViewModel):
 class ProfileContourEditorViewModel(ProfileFollowingEditorViewModel):
     update_type = "profileContour"
 
-    @pyqtSlot("QVariant", result="QVariant")
-    def preview(self, op_data):
-        return self._preview(
-            lambda op: qml_preview(self._use_case.profile_contour_preview(self._program, self._index, op)), op_data)
+    def _make_preview(self):
+        return self._preview_of(
+            lambda op: qml_preview(self._use_case.profile_contour_preview(self._program, self._index, op)))
 
 
 class DrillingEditorViewModel(ToolOperationEditorViewModel):
@@ -519,10 +610,9 @@ class DrillingEditorViewModel(ToolOperationEditorViewModel):
         self._drill = (DrillingToolView(tool, self)
                        if isinstance(tool, DrillingTool) and tool.diameter > 0 else None)
 
-    @pyqtSlot("QVariant", result="QVariant")
-    def preview(self, op_data):
-        """What drilling would cut with ``op_data``: a feed each peck."""
-        return self._preview(lambda op: qml_preview(self._use_case.drilling_preview(op)), op_data)
+    def _make_preview(self):
+        """What drilling cuts: a feed each peck."""
+        return self._preview_of(lambda op: qml_preview(self._use_case.drilling_preview(op)))
 
     @pyqtProperty(QObject, constant=True)
     def drill(self):
@@ -555,10 +645,9 @@ class TappingEditorViewModel(ToolOperationEditorViewModel):
 class PartingEditorViewModel(ToolOperationEditorViewModel):
     update_type = "parting"
 
-    @pyqtSlot("QVariant", result="QVariant")
-    def preview(self, op_data):
-        """What parting would cut with ``op_data``: its edge break and feeds."""
-        return self._preview(lambda op: qml_preview(self._use_case.parting_preview(op)), op_data)
+    def _make_preview(self):
+        """What parting cuts: its edge break and feeds."""
+        return self._preview_of(lambda op: qml_preview(self._use_case.parting_preview(op)))
 
 
 def thread_angle(form):
@@ -603,24 +692,68 @@ def calculate_thread_diameter(location, pitch, major_diameter, minor_diameter):
     }
 
 
+def calculated_diameter_patch(operation, pitch=None):
+    """The edit that sets a thread's calculated diameter from the one taught
+    in - Minor Ø from Major Ø for an OD thread, Major Ø from Minor Ø for an
+    ID one - with ``pitch``, or the thread's own: {} while the one taught in
+    or the pitch is not set yet."""
+    pitch = float(operation.get("pitch") or 0) if pitch is None else float(pitch)
+    location = "ID" if operation.get("location") == "ID" else "OD"
+    major = float(operation.get("major_diameter") or 0)
+    minor = float(operation.get("minor_diameter") or 0)
+    taught = minor if location == "ID" else major
+    if pitch <= 0 or taught <= 0:
+        return {}
+    result = calculate_thread_diameter(location, pitch, major, minor)
+    if not result.get("valid"):
+        return {}
+    key = "major_diameter" if location == "ID" else "minor_diameter"
+    return {key: result["calculatedDiameter"]}
+
+
+def edit_pitch(editor, pitch):
+    """A threading editor's pitch, and the calculated diameter with it."""
+    editor.edit({"pitch": pitch, **calculated_diameter_patch(editor._operation, pitch)})
+
+
+def calculate_diameter(editor):
+    """A threading editor's calculated diameter, from the one taught in and
+    the pitch."""
+    patch = calculated_diameter_patch(editor._operation)
+    if patch:
+        editor.edit(patch)
+
+
 class ThreadingEditorViewModel(OperationEditorViewModel):
     update_type = "threading"
 
-    @pyqtSlot(str, "QVariant", "QVariant", "QVariant", result="QVariantMap")
-    def calculateThreadDiameter(self, location, pitch, major_diameter, minor_diameter):
-        return calculate_thread_diameter(location, pitch, major_diameter, minor_diameter)
+    @pyqtSlot(float)
+    def editPitch(self, pitch):
+        """The pitch, and the calculated diameter with it."""
+        edit_pitch(self, pitch)
+
+    @pyqtSlot()
+    def calculateDiameter(self):
+        """The calculated diameter, from the one taught in and the pitch."""
+        calculate_diameter(self)
 
 
 class G33ThreadingEditorViewModel(ToolOperationEditorViewModel):
     update_type = "g33Threading"
 
+    @pyqtSlot(float)
+    def editPitch(self, pitch):
+        """The pitch, and the calculated diameter with it."""
+        edit_pitch(self, pitch)
+
+    @pyqtSlot()
+    def calculateDiameter(self):
+        """The calculated diameter, from the one taught in and the pitch."""
+        calculate_diameter(self)
+
     @pyqtSlot(str, result=float)
     def threadAngle(self, form):
         return thread_angle(form)
-
-    @pyqtSlot(str, "QVariant", "QVariant", "QVariant", result="QVariantMap")
-    def calculateThreadDiameter(self, location, pitch, major_diameter, minor_diameter):
-        return calculate_thread_diameter(location, pitch, major_diameter, minor_diameter)
 
 
 class PositionAtEditorViewModel(OperationEditorViewModel):
@@ -651,11 +784,10 @@ class GrooveEditorViewModel(ToolOperationEditorViewModel):
         none - as its details payload, or {}."""
         return self._use_case.radial_profile_before(self._program, self._index, profile_id)
 
-    @pyqtSlot("QVariant", result="QVariant")
-    def preview(self, op_data):
-        """What it would cut with ``op_data``."""
-        return self._preview(
-            lambda op: qml_preview(self._use_case.groove_preview(self._program, self._index, op)), op_data)
+    def _make_preview(self):
+        """What it cuts."""
+        return self._preview_of(
+            lambda op: qml_preview(self._use_case.groove_preview(self._program, self._index, op)))
 
 
 class GrooveRoughingEditorViewModel(GrooveEditorViewModel):
@@ -675,13 +807,59 @@ class DefineProfileEditorViewModel(OperationEditorViewModel):
     details pane, the full screen editor, and the DXF import screen."""
     update_type = "defineProfile"
 
-    @pyqtProperty("QVariant", constant=True)
+    #: What it shows from the program changed: the operation, or what is around it.
+    defineProfileChanged = pyqtSignal()
+
+    def __init__(self, tab, program, index, operation, parent=None):
+        super().__init__(tab, program, index, operation, parent)
+        self.operationChanged.connect(self.defineProfileChanged)
+
+    @pyqtProperty("QVariant", notify=defineProfileChanged)
     def workpiece(self):
         return self._use_case.workpiece(self._program)
 
     @pyqtSlot()
     def openEditor(self):
         self._tab.open_profile_editor(self._index)
+
+    # ── what the profile editor does to the primitives (profile_editing) ────
+
+    def _primitives(self):
+        return list(self._operation.get("profile_primitives") or [])
+
+    def _edit_primitives(self, primitives):
+        self.edit({"profile_primitives": primitives})
+
+    @pyqtSlot(int, "QVariant")
+    def updatePrimitive(self, index, primitive):
+        """The primitive at ``index`` as its card edited it."""
+        self._edit_primitives(profile_editing.with_primitive(self._primitives(), index, to_py(primitive)))
+
+    @pyqtSlot(int, str)
+    def addBlend(self, index, blend_type):
+        """A ``blend_type`` blend at the end of the primitive at ``index``."""
+        self._edit_primitives(profile_editing.with_blend(self._primitives(), index, blend_type))
+
+    @pyqtSlot(int, str, result=int)
+    def insertPrimitive(self, index, kind):
+        """A new ``kind`` primitive at ``index``, starting where the one
+        before it ends: where it went."""
+        primitives, at = profile_editing.with_new_primitive(
+            self._primitives(), index, kind, str(self._operation.get("profile_type") or "od"))
+        self._edit_primitives(primitives)
+        return at
+
+    @pyqtSlot(int, result=int)
+    def deletePrimitive(self, index):
+        """The primitive at ``index`` gone: the one to select after, -1 for none."""
+        primitives, selected = profile_editing.without_primitive(self._primitives(), index)
+        self._edit_primitives(primitives)
+        return selected
+
+    @pyqtSlot("QVariant")
+    def setPrimitives(self, primitives):
+        """All the primitives, as the canvas changed them (a run's diameter)."""
+        self._edit_primitives(profile_editing.renumbered(to_py(primitives) or []))
 
     @pyqtSlot(str, result="QVariant")
     def previewDxf(self, dxf_file_path):
@@ -699,6 +877,33 @@ class DefineRadialProfileEditorViewModel(OperationEditorViewModel):
     @pyqtSlot()
     def openEditor(self):
         self._tab.open_radial_profile_editor(self._index)
+
+    # ── what the radial profile editor does to the primitives ───────────────
+
+    def _primitives(self):
+        return list(self._operation.get("profile_primitives") or [])
+
+    def _edit_primitives(self, primitives):
+        self.edit({"profile_primitives": primitives})
+
+    @pyqtSlot(int, "QVariant")
+    def updatePrimitive(self, index, primitive):
+        """The primitive at ``index`` as its card edited it."""
+        self._edit_primitives(profile_editing.with_radial_primitive(self._primitives(), index, to_py(primitive)))
+
+    @pyqtSlot(str, result=int)
+    def addPrimitive(self, kind):
+        """A new ``kind`` primitive ("groove", "repeat") last: where it went."""
+        primitives, at = profile_editing.with_new_radial_primitive(self._primitives(), kind)
+        self._edit_primitives(primitives)
+        return at
+
+    @pyqtSlot(int, result=int)
+    def deletePrimitive(self, index):
+        """The primitive at ``index`` gone: the one to select after, -1 for none."""
+        primitives, selected = profile_editing.without_radial_primitive(self._primitives(), index)
+        self._edit_primitives(primitives)
+        return selected
 
 
 # The editor for each operation type.

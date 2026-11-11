@@ -36,6 +36,7 @@ from teachinlathe.conversational.model.data_types import (
     ProfileContour,
     ProfileRoughing,
     Profiling,
+    ProfilingType,
     Program,
     Tapping,
     Threading,
@@ -177,8 +178,87 @@ class ConversationalUseCase:
         program.filename = json_path
         return program
 
+    # ── what an operation is to have that it was made without ──────────────
+
+    def complete_operations(self, program: Program) -> bool:
+        """Gives each operation what it is to have and does not: a default it
+        was made without, a value kept in step with its tool (``_completion``).
+        True when one changed. A program is complete whenever it is saved or
+        its G-code is built, and once it is opened."""
+        changed = False
+        for index, op in enumerate(program.operations):
+            op_type = next((key for key, cls in operation_types.items() if type(op) is cls), None)
+            if op_type not in self._updaters:
+                continue
+            try:
+                patch = self._completion(program, index, op)
+            except Exception as e:
+                log.error("completing operation %d failed: %s", index + 1, e)
+                continue
+            if patch:
+                self.update_operation(program, op_type, index, patch)
+                changed = True
+        return changed
+
+    def _completion(self, program: Program, index: int, op) -> dict:
+        """What the operation at ``index`` is to have that it does not, as a
+        patch (update_operation), {} for nothing:
+
+        - an operation that cuts turns the spindle only the way its tool does;
+        - a Tapping has its tap's pitch;
+        - a Parting with no X Start parts the stock: from its outside to its
+          bore, slowing to Fz2 a blade's width before the end;
+        - a Profile Roughing or Contour with no X Start starts where the profile
+          above has it start (profile_x_start_default)."""
+        from teachinlathe.conversational.model.data_types import TurnableOperation
+        from teachinlathe.tooling.model.data_types import BladeTool, TappingTool
+
+        patch = {}
+        if not isinstance(op, TurnableOperation):
+            return patch
+        tool = self.tool_of(program, index)
+        speeds = getattr(op, "speedsAndFeeds", None)
+        if tool is not None and speeds is not None and speeds.direction != tool.spindle_direction:
+            patch["speeds_and_feeds"] = {"direction": tool.spindle_direction.name}
+        if isinstance(op, Tapping) and isinstance(tool, TappingTool) and tool.diameter > 0 and tool.pitch > 0:
+            if float(op.tappingParameters.pitch or 0) != float(tool.pitch):
+                patch["tapping_parameters"] = {"pitch": float(tool.pitch)}
+        if isinstance(op, Parting) and not float(op.partingParameters.xStart or 0) > 0:
+            stock = program.header.workpiece
+            outside = float(stock.external_diameter or 0) if stock is not None else 0.0
+            if outside > 0:
+                blade = self._tool_as_chosen(program, index)
+                blade_width = float(blade.blade_width) if isinstance(blade, BladeTool) else 3.0
+                x_end = max(0.0, float(stock.internal_diameter or 0))
+                patch["parting_parameters"] = {"x_start": outside, "x_end": x_end,
+                                               "second_feed_x_pos": x_end + blade_width}
+        if isinstance(op, (ProfileRoughing, ProfileContour)) and float(op.profilingParameters.xStart or 0) == 0:
+            x_start = self.profile_x_start_default(program, index)
+            if x_start:
+                patch["profiling_parameters"] = {"x_start": x_start}
+        return patch
+
+    def _tool_as_chosen(self, program: Program, index: int):
+        """The cutting tool the operation at ``index`` cuts with: the Tool
+        Library's while it is as chosen, else the one it was chosen as; None
+        with none."""
+        from teachinlathe.tooling.model.data_types import CuttingTool
+
+        tool = self.tool_of(program, index)
+        if tool is not None:
+            return tool
+        entry = self.tool_entry(program, index)
+        if entry is None:
+            return None
+        try:
+            return CuttingTool.from_json(entry.snapshot.get("cutting_tool") or {})
+        except Exception:
+            return None
+
     def save(self, program: Program) -> str:
-        """Writes the program, stamped with when it was last edited"""
+        """Writes the program, completed (complete_operations) and stamped
+        with when it was last edited"""
+        self.complete_operations(program)
         program_tools.prune(program)
         now = datetime.now().strftime(TIMESTAMP_FORMAT)
         if not program.header.created_date:
@@ -226,6 +306,7 @@ class ConversationalUseCase:
         ToolsNotReady, as generate_gcode does."""
         from teachinlathe.tooling.model.tool_snapshot import ToolSnapshot
 
+        self.complete_operations(program)
         self.check_tools(program)
         gcode_dir, json_path = self.export_program(program)
         return program, gcode_dir, json_path, ToolSnapshot.of(self._tool_library())
@@ -599,6 +680,27 @@ class ConversationalUseCase:
         worker as it is."""
         from teachinlathe.conversational.gcode.operations.profiling.operation_input import profile_cut
         return profile_cut(program, op_index, Operation.from_dict(op_data), self._tool_library())
+
+    def profile_x_start_default(self, program, op_index: int) -> Optional[float]:
+        """Where the Profile Roughing or Contour at ``op_index`` starts in X
+        when it has no X Start of its own: the profile's largest diameter plus
+        the retract - a roughing of an ID profile, the diameter the profile
+        ends on. None without a profile."""
+        from teachinlathe.conversational.gcode.operations.profiling.geometry import path_last_x, path_x_max
+        from teachinlathe.conversational.gcode.operations.profiling.operation_input import (
+            profile_cut, resolve_profile,
+        )
+        op = self.operation(program, op_index)
+        if not isinstance(op, (ProfileRoughing, ProfileContour)):
+            return None
+        cut = profile_cut(program, op_index, op, self._tool_library())
+        path = resolve_profile(cut)
+        if not path:
+            return None
+        if isinstance(op, ProfileRoughing) and cut.profile.profile_type == ProfilingType.ID:
+            return path_last_x(path)
+        x_max = path_x_max(path)
+        return None if x_max is None else x_max + float(op.cuttingParameters.retract)
 
     def roughing_preview_job(self, program, op_index: int, cut):
         """What the planning worker's ``profile_roughing_preview`` takes for

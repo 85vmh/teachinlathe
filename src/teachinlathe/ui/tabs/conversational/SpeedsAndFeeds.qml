@@ -1,8 +1,9 @@
 // SpeedsAndFeeds.qml — speed mode, speed and feeds in one row: CSS/RPM |
 // the speed for the mode | the feeds. The spindle direction is the tool's
 // (onlyClockwise): shown as the M3 / M4 icon before the speed, not picked.
-// Edits an operation's speeds_and_feeds: each edit reports the whole of it,
-// its feeds as the feeds column holds them.
+// Shows an operation's speeds_and_feeds (``speeds``) and keeps nothing of its
+// own: each edit reports the whole of it, with the change, its feeds as the
+// feeds column holds them, and is shown once ``speeds`` has it.
 //
 // What the feeds column holds is ``feedKind``'s:
 //   Standard   Feed rate (Fz)
@@ -15,6 +16,7 @@ import common.touchable_input
 import tabs.tool_library
 import theme
 import common
+import "speeds.js" as Speeds
 
 TitledCard {
     id: root
@@ -30,9 +32,8 @@ TitledCard {
     // false for operations without a feed rate: the field disabled and empty
     property bool feedEnabled: true
     // the only spindle direction the tool allows - a drill's or a tap's:
-    // true M3, false M4, null either. The other button is disabled, and an
-    // op set the other way is turned round to it when its data comes in
-    // (applyData), and saved; set it before then
+    // true M3, false M4, null either: the one shown, and the one an edit
+    // reports (the editor turns an operation set the other way round to it)
     property var onlyClockwise: null
 
     signal speedsAndFeedsEdited(var speedsAndFeeds)   // a whole speeds_and_feeds
@@ -40,55 +41,29 @@ TitledCard {
     signal startsEdited(int value)         // Threading's
     signal openNumPadRequested(var field)
 
-    property string spindleMode: "rpm"   // "rpm" | "css"
-    property int    rpm_value: 0
-    property int    css_value: 0
-    property int    css_max_rpm: 0
-    property string direction: "M4"      // "M3" forward, "M4" reverse
-    // Standard's Fz, Parting's Fz1; Parting's Fz2
-    property real   feed_rate: 0.0
-    property real   feed_rate_2: 0.0
-    // Threading's pitch and starts: set them from the operation's data
+    // the operation's speeds_and_feeds, as its editor has it
+    property var    speeds: ({})
+    // Threading's pitch and starts, as its editor has them
     property real   pitch: 0.0
     property int    starts: 1
 
-    function applyData(speedsAndFeeds) {
-        var sp = speedsAndFeeds || {}
-        direction = sp.direction === "M3" ? "M3" : "M4"
-        var hasRPM = (sp.rpm_value !== undefined && sp.rpm_value !== null)
-        var hasCSS = (sp.css_value !== undefined && sp.css_max_speed !== undefined)
-        spindleMode = rpmOnly ? "rpm"
-                    : (sp.mode === "css" || sp.mode === "rpm") ? sp.mode : (hasRPM ? "rpm" : "css")
-        rpm_value = hasRPM ? +sp.rpm_value : 0
-        css_value = hasCSS ? +sp.css_value : 0
-        css_max_rpm = hasCSS ? +sp.css_max_speed : 0
-        feed_rate = (sp.feed_rate !== undefined && sp.feed_rate !== null) ? +sp.feed_rate : 0
-        feed_rate_2 = (sp.feed_rate_2 !== undefined && sp.feed_rate_2 !== null) ? +sp.feed_rate_2 : 0
-        _keepToAllowedDirection()
-    }
+    readonly property var _read: Speeds.read(speeds, rpmOnly, onlyClockwise)
+    readonly property string spindleMode: _read.mode
+    readonly property int    rpm_value: _read.rpm_value
+    readonly property int    css_value: _read.css_value
+    readonly property int    css_max_rpm: _read.css_max_speed
+    // "M3" forward, "M4" reverse: the tool's, when it allows only one
+    readonly property string direction: _read.direction
+    // Standard's Fz, Parting's Fz1; Parting's Fz2
+    readonly property real   feed_rate: _read.feed_rate
+    readonly property real   feed_rate_2: _read.feed_rate_2
 
-    function _keepToAllowedDirection() {
-        if (onlyClockwise !== true && onlyClockwise !== false) return
-        if ((direction === "M3") === onlyClockwise) return
-        direction = onlyClockwise ? "M3" : "M4"
-        emitSpeedsAndFeeds()
-    }
-
-    // the whole speeds_and_feeds: the feeds the feeds column holds - none
-    // for Threading, which goes by the pitch
-    function emitSpeedsAndFeeds() {
-        var speeds = {direction: direction, mode: spindleMode}
-        if (spindleMode === "rpm") {
-            speeds.rpm_value = rpm_value
-        } else {
-            speeds.css_value = css_value
-            speeds.css_max_speed = css_max_rpm
-        }
-        if (feedEnabled && feedKind !== SpeedsAndFeeds.FeedKind.Threading)
-            speeds.feed_rate = feed_rate
-        if (feedEnabled && feedKind === SpeedsAndFeeds.FeedKind.Parting)
-            speeds.feed_rate_2 = feed_rate_2
-        root.speedsAndFeedsEdited(speeds)
+    // the whole speeds_and_feeds with ``changes`` made - the feeds the feeds
+    // column holds, none for Threading, which goes by the pitch - reported
+    function _edit(changes) {
+        root.speedsAndFeedsEdited(Speeds.edited(_read, changes,
+            feedEnabled && feedKind !== SpeedsAndFeeds.FeedKind.Threading,
+            feedEnabled && feedKind === SpeedsAndFeeds.FeedKind.Parting))
     }
 
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
@@ -123,10 +98,9 @@ TitledCard {
             Layout.alignment: Qt.AlignVCenter
             spacing: speedRowHeight + speedGrid.rowSpacing - cssRadio.implicitHeight
 
-            ButtonGroup { id: modeGroup }
             // no side padding: the separators' gaps alone set them apart,
             // as they do the M3/M4 buttons
-            RadioButton {
+            ModelRadioButton {
                 id: cssRadio
                 leftPadding: 0
                 rightPadding: 0
@@ -134,17 +108,15 @@ TitledCard {
                 enabled: !root.rpmOnly
                 font.pixelSize: Theme.fontBody
                 checked: root.spindleMode === "css"
-                ButtonGroup.group: modeGroup
-                onToggled: if (checked) { root.spindleMode = "css"; root.emitSpeedsAndFeeds() }
+                onChosen: root._edit({mode: "css"})
             }
-            RadioButton {
+            ModelRadioButton {
                 leftPadding: 0
                 rightPadding: 0
                 text: "<b>(G97)</b> RPM"
                 font.pixelSize: Theme.fontBody
                 checked: root.spindleMode === "rpm"
-                ButtonGroup.group: modeGroup
-                onToggled: if (checked) { root.spindleMode = "rpm"; root.emitSpeedsAndFeeds() }
+                onChosen: root._edit({mode: "rpm"})
             }
         }
 
@@ -181,7 +153,7 @@ TitledCard {
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.css_value = value; root.emitSpeedsAndFeeds() }
+                onValueCommitted: function(value) { root._edit({css_value: Math.round(value)}) }
             }
             Label {
                 Layout.row: 0; Layout.column: 2
@@ -223,7 +195,7 @@ TitledCard {
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.css_max_rpm = value; root.emitSpeedsAndFeeds() }
+                onValueCommitted: function(value) { root._edit({css_max_speed: Math.round(value)}) }
             }
             NumpadField {
                 Layout.row: 1; Layout.column: 1
@@ -234,7 +206,7 @@ TitledCard {
                 validatorObject: IntValidator {}
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.rpm_value = value; root.emitSpeedsAndFeeds() }
+                onValueCommitted: function(value) { root._edit({rpm_value: Math.round(value)}) }
             }
             Label {
                 Layout.row: 1; Layout.column: 2
@@ -276,7 +248,7 @@ TitledCard {
                 formatter: function (v) { return (v == null || !root.feedEnabled) ? "" : String(Number(Number(v).toFixed(3))) }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.feed_rate = value; root.emitSpeedsAndFeeds() }
+                onValueCommitted: function(value) { root._edit({feed_rate: Number(value)}) }
             }
             NumpadField {
                 visible: parent.threading
@@ -287,7 +259,7 @@ TitledCard {
                 formatter: function (v) { return (v == null) ? "" : String(Number(Number(v).toFixed(3))) }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.pitch = value; root.pitchEdited(value) }
+                onValueCommitted: function(value) { root.pitchEdited(Number(value)) }
             }
             Label {
                 text: parent.threading ? "(mm)" : "(mm/rev)"
@@ -311,7 +283,7 @@ TitledCard {
                 formatter: function (v) { return (v == null || !root.feedEnabled) ? "" : String(Number(Number(v).toFixed(3))) }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.feed_rate_2 = value; root.emitSpeedsAndFeeds() }
+                onValueCommitted: function(value) { root._edit({feed_rate_2: Number(value)}) }
             }
             NumpadField {
                 visible: parent.threading
@@ -322,7 +294,7 @@ TitledCard {
                 formatter: function (v) { return (v == null) ? "" : String(Math.round(Number(v))) }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.starts = Math.max(1, Math.round(value)); root.startsEdited(root.starts) }
+                onValueCommitted: function(value) { root.startsEdited(Math.max(1, Math.round(value))) }
             }
             Label {
                 visible: parent.parting || parent.threading

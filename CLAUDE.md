@@ -115,10 +115,15 @@ operation_types = {"facing": Facing, "drilling": Drilling, ...}
 Data flow for edits:
 1. Selecting an operation makes its editor view model (`ConversationalViewModel.editor`, one class per
    operation type in `OperationEditorViewModel.py`); `ChildScreen` loads the matching `*DetailsView.qml`
-   and hands it the editor (`editor` property, then `applyData(editor.opIndex, editor.operation)`)
-2. User fills in the form → the editor calls `editor.save(payload)`
-3. `ConversationalUseCase` patches the in-memory `current_program` dataclass (`_updaters`)
-4. `_save_current_program()` has the use case write it to JSON; the screens follow the view model's properties
+   with it (`setSource(view, {editor})`, its `required property var editor`), or hands it to the view
+   already there for that type
+2. The view shows `editor.operation` - the operation's dict, read again from the program each time it
+   changes (`operationChanged`) - and nothing else
+3. The user changes a value → the view calls `editor.edit(patch)` with only the fields changed, in the
+   operation's own shape (`{"drilling_parameters": {"z_end": -15}}`)
+4. `ConversationalUseCase` patches the in-memory `current_program` dataclass (`_updaters`, partial-safe),
+   `_save_current_program()` writes it to JSON and emits `programChanged`; every editor reads its operation
+   again and the view follows through its bindings
 5. `ProgramListModel` (a `QAbstractListModel`) refreshes the QML ListView
 
 ### QML ↔ Python Bridge
@@ -128,10 +133,46 @@ Data flow for edits:
 `StackView` in step with it - the Tool Library pattern; see `~/Work/prompts/Tab architecture.md`.
 
 - **Python → QML:** view model properties the screens are bound to (`required property` on `MainScreen` and
-  `ChildScreen`), and signals (`detailsReady`, `gcodeGenerationStarted`, `dxfImportFailed`, ...)
+  `ChildScreen`), and signals (`gcodeGenerationStarted`, ...)
 - **QML → Python:** the screens' signals, connected to view model slots in `ConversationalTabRoot.qml`;
-  an operation's editor calls its own view model (`editor.save`, `editor.preview`, `editor.useTool`, ...)
+  an operation's editor calls its own view model (`editor.edit`, `editor.preview`, `editor.useTool`, ...)
 - Python holds no QML item: no `findChild`, `objectName` or `invokeMethod`
+
+### Views hold no state
+
+**A QML view keeps no state of its own. Everything it shows comes from its view model, and every change goes
+to the view model**, which applies it, saves it (an operation: to the program's JSON) and notifies the view.
+The view model's source of truth is the domain object - for an operation editor, the operation in the program
+(`OperationEditorViewModel._op`, found again by identity wherever it moves). Two Drilling operations once showed
+each other's depth and feed: the view, reused between them, kept copies (`applyData` into its own properties,
+an `opData` it edited) and its fields had cut their bindings. These rules keep that from coming back;
+`tests/test_views_hold_no_state.py` checks every QML file under `src/teachinlathe/ui` for them:
+
+1. **No copies.** No `applyData`, no `opData`, no property filled from the model in JavaScript. A view binds:
+   `readonly property real zEnd: Number(op.drilling_parameters.z_end || 0)`, `value: root.zEnd`.
+2. **Changes go to the view model, as patches.** `onValueEdited: editor.edit({ drilling_parameters: { z_end: v } })` -
+   only the fields changed, never the whole operation built from what the view holds. The view never sets the
+   value itself; it shows the change once the model has it.
+3. **A file never sets its own properties from JavaScript** (`root.x = ...`), nor any `value`, `text`, `checked`
+   or `currentIndex` - that cuts the binding (except `x = Qt.binding(...)`). Presentational components take
+   inputs (`property var speeds`) bound by their user and report edits as signals (`speedsAndFeedsEdited`).
+4. **Controls that set their own state on a tap are not used.** Use common's `ModelCheckBox` (`toggledTo`),
+   `ModelRadioButton` (`chosen`, no `ButtonGroup`), `ModelComboBox` / `Dropdown` (`selectedIndex`, `picked`).
+   `NumpadField` and `KeyboardField` never set their own `value`/`text`: they report `valueCommitted` and show
+   the bound value.
+5. **Logic belongs in the domain or the view model**, not in the view - and showing an operation never changes
+   it. What an operation is to have that it was made without - Parting's start from the stock, a profile
+   roughing's X Start, the spindle direction and a tap's pitch kept to the tool - is the use case's
+   `complete_operations`, run as a program is opened (in memory), saved and built. Editing a profile's primitives
+   is `conversational/model/profile_editing.py` (numbering, one blend per corner, a new primitive where the one
+   before ends), behind the editor's `updatePrimitive` / `insertPrimitive` / `deletePrimitive` / `addBlend`.
+   Derived values are the view model's (`editor.preview`, `editor.inlineProfile`, `editor.editPitch`,
+   `editor.calculateDiameter`, `editor.plannedPreview`). A view model property that depends on the program has
+   `notify` on a signal of its own class (PyQt wants it there), emitted with `operationChanged`.
+6. **What a view may keep is marked**, on the comment above its declaration: `// view state: <what>` for what is
+   only the view's - a pan or zoom, a swipe or drag, an animation, the text being typed in an open numpad, a choice
+   in an open dialog until it is confirmed, the selection on a canvas, a layout cache; `// mirrors the model: <why>`
+   for a model value pushed into an item where a binding cannot be used (the G-code text). Never data the model has.
 
 ### HAL Component
 
@@ -147,7 +188,9 @@ Data flow for edits:
 
 ### Auto-Save Pattern
 
-Every `*DetailsView.qml` calls `editor.save(payload)` with the whole operation when the user changes a value. The use case patches the relevant fields on the in-memory dataclass, then `_save_current_program()` writes it. This is the established pattern for all new operation types.
+Every `*DetailsView.qml` calls `editor.edit(patch)` with the fields the user changed. The use case patches them on
+the in-memory dataclass, then `_save_current_program()` writes it, and the view shows the new value through its
+bindings (see "Views hold no state"). This is the established pattern for all new operation types.
 
 ### Adding a New Operation Type
 
@@ -155,4 +198,6 @@ Every `*DetailsView.qml` calls `editor.save(payload)` with the whole operation w
 2. Register it in `operation_types` dict
 3. Create `<Op>DetailsView.qml` and any `<Op>Parameters.qml` reusable components in `ui/tabs/conversational/`, and its generator in `conversational/gcode/operations/`
 4. Add its editor view model to `OperationEditorViewModel.py` (and `EDITORS`), its view to `editorViews` in
-   `ChildScreen.qml`, and its edit to `ConversationalUseCase._updaters`; the view saves with `editor.save(payload)`
+   `ChildScreen.qml`, and its edit to `ConversationalUseCase._updaters` (it must take partial patches); the view
+   has `required property var editor`, binds to `editor.operation` and changes it with `editor.edit(patch)` -
+   the rules in "Views hold no state", which `tests/test_views_hold_no_state.py` checks

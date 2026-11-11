@@ -21,27 +21,13 @@ GrooveDetailsView {
     ]
 
     // the values the boxes on the canvas show and edit
-    property string strategy: defaults.strategy
-    property real   retract: defaults.retract
+    readonly property var _fp: op.finishing_parameters || ({})
+    profileId: profileIdIn(_fp, defaults.profileId)
 
-    draftOp: function() {
-        var op = copyOf(opData)
-        op.finishing_parameters = { profile_id: profileId, strategy: strategy }
-        op.cutting_parameters = op.cutting_parameters || {}
-        op.cutting_parameters.retract = retract
-        return op
-    }
+    // what the boxes on the canvas show
+    readonly property string strategy: _fp.strategy !== undefined ? String(_fp.strategy) : defaults.strategy
+    readonly property real   retract: numberIn(op.cutting_parameters, "retract", defaults.retract)
 
-    readData: function(data) {
-        var fp = data.finishing_parameters || {}
-        profileId = profileIdIn(fp, defaults.profileId)
-        strategy  = fp.strategy !== undefined ? String(fp.strategy) : defaults.strategy
-        retract   = numberIn(data.cutting_parameters, "retract", defaults.retract)
-    }
-
-    // where the blade starts: over the groove's middle, the clearance out
-    // from the start diameter - the pulley's outside with the stock the
-    // roughing left on it - as the G-code goes there (retract is the clearance)
     canvas.startPosition: groovePreview && groovePreview.start ? groovePreview.start : null
     canvas.clearance: retract
     canvas.boxWidth: Math.max(groovingBox.implicitWidth, clearanceBox.implicitWidth)
@@ -54,7 +40,7 @@ GrooveDetailsView {
         strategies: root.strategies
         showOffsets: false
         strategy: root.strategy
-        onStrategyEdited: function(value) { root.strategy = value; root.save() }
+        onStrategyEdited: function(value) { root.editor.edit({ finishing_parameters: { profile_id: root.profileId, strategy: value } }) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
     }
 
@@ -68,7 +54,7 @@ GrooveDetailsView {
         dimensionColor: root.canvas.clearanceColor
         settingName: "groove_finishing.clearance"
         value: root.retract
-        onValueEdited: function(value) { root.retract = Math.abs(value); root.save() }
+        onValueEdited: function(value) { root.editCutting({ retract: Math.abs(value) }) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
     }
 }

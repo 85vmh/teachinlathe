@@ -1,13 +1,10 @@
-// BlendDefaults.qml — what a blend starts with, by its type. The G-code's defaults
-// for a saved blend that lacks a value are conversational/model/data_types.py's
-// ProfileBlend: an undercut's there have to stay these.
+// BlendDefaults.qml — what a blend starts with, by its type: the domain's
+// (conversational/model/profile_editing.py BLEND_DEFAULTS), for what the
+// cards and the canvas show of a blend saved without a value.
 pragma Singleton
 import QtQuick
+import TeachInLathe
 
 QtObject {
-    readonly property var values: ({
-        chamfer:         { chamfer_width: 1.0 },
-        fillet:          { fillet_radius: 1.0 },
-        undercut_din509: { undercut_radius: 0.4, undercut_depth: 0.4, undercut_length: 2.5 }
-    })
+    readonly property var values: ConversationalViewModel.blendDefaults
 }

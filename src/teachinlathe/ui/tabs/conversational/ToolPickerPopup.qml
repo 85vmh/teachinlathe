@@ -37,10 +37,12 @@ Popup {
     // how many operations cut with the operation's tool from it down, it
     // included
     property int toolUsers: 0
+    // view state: the choice in the open picker, until Use
     property int selectedToolNo: 0
     // where the machine goes to change the tool, a ToolCard.ChangePosition:
     // the operation's tool's now, picked again in the popup
     property int currentToolchangePosition: ToolCard.G28
+    // view state: the choice in the open picker, until Use
     property int toolchangePosition: ToolCard.G28
     //: Where M6 takes the tool, as the editor says it: "Default Position
     //: [X: .. Z: ..]" or "Custom Position [...]"

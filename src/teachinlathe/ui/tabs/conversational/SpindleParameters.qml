@@ -1,4 +1,7 @@
-// SpindleParameters.qml (two-column: direction buttons, radio-mode switch; top-aligned)
+// SpindleParameters.qml — the spindle's direction, mode and speed, in two
+// columns: G76 Threading's. It shows ``speeds`` - the operation's
+// speeds_and_feeds - and keeps nothing of its own: an edit reports the
+// whole speeds_and_feeds, with the change.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -6,6 +9,7 @@ import common.touchable_input
 import tabs.tool_library
 import theme
 import common
+import "speeds.js" as Speeds
 
 TitledCard {
     id: root
@@ -15,57 +19,24 @@ TitledCard {
     Layout.minimumWidth: 420
     Layout.preferredWidth: 560
 
-    // ---- bridge to parent
-    property int  opIndex: -1
-    property var  opData: null
+    // the operation's speeds_and_feeds, as its editor has them
+    property var  speeds: ({})
     property bool rpmOnly: false
 
-    signal saveRequested(var updated)
-
+    // the whole speeds_and_feeds, with the change made
+    signal speedsEdited(var speeds)
     signal openNumPadRequested(var field)
 
-    // ---- local state
-    property string spindleMode: "rpm"   // "rpm" | "css"
-    property int    rpm_value: 0
-    property real   css_value: 0.0
-    property int    css_max_rpm: 0
-    property string directionCache: "M4" // "M3" forward, "M4" reverse
+    readonly property var _read: Speeds.read(speeds, rpmOnly, null)
+    readonly property string spindleMode: _read.mode
+    readonly property int    rpm_value: _read.rpm_value
+    readonly property real   css_value: _read.css_value
+    readonly property int    css_max_rpm: _read.css_max_speed
+    // "M3" forward, "M4" reverse
+    readonly property string direction: _read.direction
 
-    function applyData(index, data) {
-        opIndex = index
-        opData = data || {}
-
-        var sp = (opData.speeds_and_feeds || {})
-        directionCache = sp.direction === "M3" ? "M3" : "M4"
-
-        var hasRPM = (sp.rpm_value !== undefined && sp.rpm_value !== null)
-        var hasCSS = (sp.css_value !== undefined && sp.css_max_speed !== undefined)
-
-        spindleMode = rpmOnly ? "rpm" : ((sp.mode === "css" || sp.mode === "rpm") ? sp.mode : (hasRPM ? "rpm" : "css"))
-        rpm_value = hasRPM ? +sp.rpm_value : 0
-        css_value = hasCSS ? +sp.css_value : 0
-        css_max_rpm = hasCSS ? +sp.css_max_speed : 0
-    }
-
-    function emitSave() {
-        if (!opData) return
-
-        var spindle = {direction: directionCache, mode: (rpmOnly ? "rpm" : spindleMode)}
-        if (rpmOnly || spindleMode === "rpm") {
-            spindle.rpm_value = rpm_value
-        } else {
-            spindle.css_value = css_value
-            spindle.css_max_speed = css_max_rpm
-        }
-
-        var payload = {
-            order: (opData && opData.order !== undefined) ? opData.order : 0,
-            type: (opData && opData.type) ? opData.type : "",
-            generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
-            is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-            speeds_and_feeds: spindle
-        }
-        root.saveRequested({index: opIndex, payload: payload})
+    function _edit(changes) {
+        root.speedsEdited(Speeds.edited(_read, changes, false, false))
     }
 
     // ---------- layout ----------
@@ -83,11 +54,8 @@ TitledCard {
 
             // M3 then M4, as the cutting-tool editors pick a tool's.
             SpindleDirectionPicker {
-                clockwise: root.directionCache === "M3"
-                onPicked: function(clockwise) {
-                    root.directionCache = clockwise ? "M3" : "M4"
-                    root.emitSave()
-                }
+                clockwise: root.direction === "M3"
+                onPicked: function(clockwise) { root._edit({ direction: clockwise ? "M3" : "M4" }) }
             }
         }
 
@@ -111,28 +79,17 @@ TitledCard {
                 spacing: Theme.spacingLarge
                 visible: !root.rpmOnly
 
-                ButtonGroup {
-                    id: modeGroup
-                }
-                RadioButton {
+                ModelRadioButton {
                     text: "RPM Mode"
                     font.pixelSize: Theme.fontSmall
                     checked: root.spindleMode === "rpm"
-                    ButtonGroup.group: modeGroup
-                    onToggled: if (checked) {
-                        root.spindleMode = "rpm";
-                        root.emitSave()
-                    }
+                    onChosen: root._edit({ mode: "rpm" })
                 }
-                RadioButton {
+                ModelRadioButton {
                     text: "CSS Mode"
                     font.pixelSize: Theme.fontSmall
                     checked: root.spindleMode === "css"
-                    ButtonGroup.group: modeGroup
-                    onToggled: if (checked) {
-                        root.spindleMode = "css";
-                        root.emitSave()
-                    }
+                    onChosen: root._edit({ mode: "css" })
                 }
                 Item {
                     Layout.fillWidth: true
@@ -189,7 +146,7 @@ TitledCard {
                                 }
                                 hAlign: Text.AlignRight
                                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                                onValueCommitted: function(value) { root.rpm_value = value; root.emitSave() }
+                                onValueCommitted: function(value) { root._edit({ rpm_value: Math.round(value) }) }
                             }
                             Label {
                                 text: "(rpm)"
@@ -231,7 +188,7 @@ TitledCard {
                                 }
                                 hAlign: Text.AlignRight
                                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                                onValueCommitted: function(value) { root.css_value = value; root.emitSave() }
+                                onValueCommitted: function(value) { root._edit({ css_value: Number(value) }) }
                             }
                             Label {
                                 text: "(m/min)"
@@ -253,7 +210,7 @@ TitledCard {
                                 }
                                 hAlign: Text.AlignRight
                                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                                onValueCommitted: function(value) { root.css_max_rpm = value; root.emitSave() }
+                                onValueCommitted: function(value) { root._edit({ css_max_speed: Math.round(value) }) }
                             }
                             Label {
                                 text: "(rpm)"

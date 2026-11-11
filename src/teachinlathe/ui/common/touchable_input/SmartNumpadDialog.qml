@@ -26,11 +26,17 @@ NumpadPopup {
     property var viewModel: NumpadDialogViewModel
 
     // ── State for the currently edited field (targetField: NumpadPopup) ─
+    // view state: the field the open numpad is for
     property string settingName: ""
+    // view state: the open numpad's title
     property string titleText: "Enter value"
+    // view state: what the open numpad offers
     property var    options: []
+    // view state: what the open numpad offers
     property bool   hasOptions: false
+    // view state: what the open numpad offers
     property string valueType: ""
+    // view state: what the open numpad offers
     property string mode: "numpad"          // "select" | "numpad"
     // the select mode's buttons
     readonly property int optionHeight: 60

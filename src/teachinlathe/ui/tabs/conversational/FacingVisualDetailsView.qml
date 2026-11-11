@@ -1,111 +1,71 @@
 // FacingVisualDetailsView.qml — Facing on the profile canvas, laid out as
 // Profile Roughing's: no profile, so the passes are drawn over the header's
-// stock, from the start position to the end position. Saves every change
-// through updateFacing.
+// stock, from the start position to the end position. It keeps nothing of
+// its own: all it shows is its editor's operation, and every change is the
+// editor's edit, which the operation then shows.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.conversational.profile_canvas
 import theme
 import "define_radial_profile" as Radial
+import common
 
 Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property var _gp: op.geometry_parameters || ({})
+    readonly property var _cp: op.cutting_parameters || ({})
 
     // the program header's stock
-    property var    workpiece: ({})
-    // the tool it cuts with, as its Tool Library card
-    // shows it: editor.toolCard, a ToolCard; null with none
-    property var    toolCard: null
+    readonly property var workpiece: editor.workpiece || ({})
+    // the tool it cuts with, as its Tool Library card shows it: editor.toolCard,
+    // a ToolCard
+    readonly property var toolCard: editor.toolCard
 
-    // the values the boxes on the canvas show and edit
-    property real   xStart: 0.0
-    property real   zStart: 0.0
-    property real   xEnd: 0.0
-    property real   zEnd: 0.0
-    property real   doc: 0.0
-    property real   toolClearance: 0.0
-    property bool   zEndBecomesNewZ0: false
+    // what the boxes on the canvas show
+    readonly property real xStart: Number(_gp.x_start || 0)
+    readonly property real zStart: Number(_gp.z_start || 0)
+    readonly property real xEnd: Number(_gp.x_end || 0)
+    readonly property real zEnd: Number(_gp.z_end || 0)
+    readonly property real doc: Number(_cp.doc || 0)
+    readonly property real toolClearance: Number(_cp.retract || 0)
+    readonly property bool zEndBecomesNewZ0: !!op.z_end_becomes_new_z0
     readonly property real stockDiameter: Number(workpiece && workpiece.external_diameter) > 0
                                           ? Number(workpiece.external_diameter) : Math.abs(xStart)
-    // the canvas mirrored or not: on unless the editor says otherwise; the
-    // mirror button changes it, and the editor keeps it for the next Facing
-    property bool   canvasMirror: true
-    onCanvasMirrorChanged: profileCanvas.mirrorAcrossCenterline = canvasMirror
 
-    // what facing will cut with the values above
-    readonly property var facingPreview: (opIndex >= 0 && editor)
-                                         ? editor.preview(_draftOp())
-                                         : null
+    // what facing cuts
+    readonly property var facingPreview: editor.preview
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
 
-    // opData with the values edited in the boxes
-    function _draftOp() {
-        var op = JSON.parse(JSON.stringify(opData || {}))
-        op.geometry_parameters = { x_start: xStart, z_start: zStart, x_end: xEnd, z_end: zEnd }
-        op.cutting_parameters = op.cutting_parameters || {}
-        op.cutting_parameters.doc = doc
-        op.cutting_parameters.retract = toolClearance
-        op.z_end_becomes_new_z0 = zEndBecomesNewZ0
-        return op
-    }
+    function editGeometry(changes) { editor.edit({ geometry_parameters: changes }) }
+    function editCutting(changes) { editor.edit({ cutting_parameters: changes }) }
 
-    // the whole op with every edited value, sent as one save; opData keeps it,
-    // so the next edit builds on this one
-    function save(op) {
-        if (opIndex < 0 || !opData) return
-        opData = op || _draftOp()
-        root.editor.save(opData)
-    }
-
-    function applyData(index, data) {
-        opIndex = index
-        opData  = data || {}
-
-        workpiece = editor ? (editor.workpiece || {}) : {}
-        toolCard = editor ? editor.toolCard : null
-
-        var gp = opData.geometry_parameters || {}
-        var cp = opData.cutting_parameters || {}
-        xStart  = gp.x_start !== undefined ? Number(gp.x_start) : 0
-        zStart  = gp.z_start !== undefined ? Number(gp.z_start) : 0
-        xEnd    = gp.x_end   !== undefined ? Number(gp.x_end)   : 0
-        zEnd    = gp.z_end   !== undefined ? Number(gp.z_end)   : 0
-        doc     = cp.doc     !== undefined ? Number(cp.doc)     : 0
-        toolClearance = cp.retract !== undefined ? Number(cp.retract) : 0
-        zEndBecomesNewZ0 = !!opData.z_end_becomes_new_z0
-
-        header.applyData(opData)
+    // another operation: the drawing fitted to it, mirrored as the editor
+    // keeps it for every Facing
+    function _showEditor() {
+        profileCanvas.mirrorAcrossCenterline = editor.canvasMirror
         profileCanvas.resetView()
     }
+    onEditorChanged: _showEditor()
+    Component.onCompleted: _showEditor()
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
         spacing: Theme.innerSpacings
 
-        // each edit goes into the whole op with the canvas boxes' values
         OperationHeader {
             id: header
+            editor: root.editor
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) {
-                var op = root._draftOp()
-                op.speeds_and_feeds = speeds
-                root.save(op)
-            }
-            onM1Edited: function(m1) {
-                var op = root._draftOp()
-                op.m1_parameters = m1
-                root.save(op)
-            }
         }
 
         ProfileCanvas {
@@ -176,11 +136,8 @@ Item {
                 border.color: Theme.outline; border.width: Theme.hairline
             }
 
-            // the mirror button changes it here; the view passes it on
-            Connections {
-                target: profileCanvas
-                function onMirrorAcrossCenterlineChanged() { root.canvasMirror = profileCanvas.mirrorAcrossCenterline }
-            }
+            // the mirror button changes it here; the editor keeps it for the next Facing
+            onMirrorAcrossCenterlineChanged: root.editor.canvasMirror = mirrorAcrossCenterline
 
             // The boxes stack down the right edge, each as wide as it needs;
             // the drawing is fitted into what the widest leaves free.
@@ -234,7 +191,7 @@ Item {
                 docColor: profileCanvas.feedColor
                 retractColor: profileCanvas.rapidColor
                 retract: root.toolClearance
-                onRetractEdited: function(value) { root.toolClearance = value; root.save() }
+                onRetractEdited: function(value) { root.editCutting({ retract: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -247,8 +204,7 @@ Item {
                 xValue: root.xStart
                 zValue: root.zStart
                 onFieldEdited: function(axis, value) {
-                    if (axis === "x") root.xStart = value; else root.zStart = value
-                    root.save()
+                    root.editGeometry(axis === "x" ? { x_start: value } : { z_start: value })
                 }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
@@ -261,7 +217,7 @@ Item {
                 docColor: profileCanvas.feedColor
                 retractColor: profileCanvas.rapidColor
                 doc: root.doc
-                onDocEdited: function(value) { root.doc = value; root.save() }
+                onDocEdited: function(value) { root.editCutting({ doc: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -275,13 +231,12 @@ Item {
                 xValue: root.xEnd
                 zValue: root.zEnd
                 onFieldEdited: function(axis, value) {
-                    if (axis === "x") root.xEnd = value; else root.zEnd = value
-                    root.save()
+                    root.editGeometry(axis === "x" ? { x_end: value } : { z_end: value })
                 }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
-            CheckBox {
+            ModelCheckBox {
                 id: z0Check
                 x: profileCanvas.width - width - profileCanvas.tickBand
                 y: endBox.y + endBox.height + Theme.spacingSmall
@@ -289,7 +244,7 @@ Item {
                 font.pixelSize: Theme.fontBody
                 font.bold: false
                 checked: root.zEndBecomesNewZ0
-                onToggled: { root.zEndBecomesNewZ0 = checked; root.save() }
+                onToggledTo: function(on) { root.editor.edit({ z_end_becomes_new_z0: on }) }
                 contentItem: Text {
                     text: "Set P<sub>2</sub><span style=\"font-size: "
                           + Math.round(Theme.fontBody * 0.78) + "px\">Z</span> as the new Z0"

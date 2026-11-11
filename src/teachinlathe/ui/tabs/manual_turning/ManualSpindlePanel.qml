@@ -37,7 +37,9 @@ Rectangle {
     readonly property color onColor: Theme.success
     readonly property color offColor: Theme.danger
     readonly property int offShownMs: 2000
+    // view state: the lever just let go, shown for a moment
     property bool justStopped: false
+    // view state: the lever just let go, shown for a moment
     property int _lastLever: 0
     onLeverChanged: {
         justStopped = lever === 0 && _lastLever !== 0
@@ -53,6 +55,7 @@ Rectangle {
     readonly property color warningColor: Theme.warning
     readonly property color warningBaseColor: Theme.foreground
     readonly property int warningPulseDurationMs: 200
+    // view state: the warning's blink
     property color warningTitleColor: warningBaseColor
     signal openNumPadRequested(Item field)
 

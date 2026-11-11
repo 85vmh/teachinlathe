@@ -7,44 +7,13 @@ Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
-
-    function applyData(index, data) {
-        opIndex = index
-        opData = data || {}
-
-        header.applyData(opData)
-        cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
-        geometryPanel.applyData(opIndex, (opData.geometry_parameters || {}), opData)
-    }
-
-    // Sub-objects merge one level deep, so a part sent alone updates its
-    // fields and keeps the rest.
-    function mergeIntoOp(payload) {
-        var out = JSON.parse(JSON.stringify(opData || {}))
-        for (var k in payload) {
-            if (k === "index" || !payload.hasOwnProperty(k)) continue
-            var v = payload[k]
-            var cur = out[k]
-            if (v && typeof v === "object" && !Array.isArray(v)
-                    && cur && typeof cur === "object" && !Array.isArray(cur))
-                out[k] = Object.assign({}, cur, v)
-            else
-                out[k] = v
-        }
-        opData = out
-        return out
-    }
-
-    function save(payload) {
-        root.editor.save(root.mergeIntoOp(payload))
-    }
 
     ColumnLayout {
         anchors.left: parent.left
@@ -56,10 +25,9 @@ Item {
         // Knurling has no feed rate: the header's is left disabled
         OperationHeader {
             id: header
+            editor: root.editor
             feedEnabled: false
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) { root.save({speeds_and_feeds: speeds}) }
-            onM1Edited: function(m1) { root.save({m1_parameters: m1}) }
         }
 
         RowLayout {
@@ -73,9 +41,10 @@ Item {
                 Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-                onTeachXRequested: root.teachXRequested(opIndex)
-                onTeachZRequested: root.teachZRequested(opIndex)
-                onSaveRequested: function(p) { root.save(p) }
+                geometry: root.op.geometry_parameters || ({})
+                onTeachXRequested: root.teachXRequested(root.editor.opIndex)
+                onTeachZRequested: root.teachZRequested(root.editor.opIndex)
+                onEdited: function(changes) { root.editor.edit({ geometry_parameters: changes }) }
             }
 
             KnurlingCuttingParameters {
@@ -84,7 +53,8 @@ Item {
                 Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-                onSaveRequested: function(p) { root.save(p.payload || p) }
+                cutting: root.op.cutting_parameters || ({})
+                onEdited: function(changes) { root.editor.edit({ cutting_parameters: changes }) }
             }
         }
     }

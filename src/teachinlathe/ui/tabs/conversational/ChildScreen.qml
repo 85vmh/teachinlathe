@@ -55,27 +55,17 @@ Item {
         "tapping": "TappingVisualDetailsView.qml"
     })
 
-    // A new editor: the pane for its kind - kept when it is the same kind,
-    // so the pane keeps its scroll - then the editor's operation in it.
+    // A new editor: the pane for its kind, made with it - or, the same kind,
+    // kept, so the pane keeps its scroll, and handed it. A pane shows only
+    // what its editor says.
     function showEditor() {
         var view = editor ? (editorViews[editor.operationType] || "") : ""
-        if (view === "" || !String(detailsLoader.source).endsWith("/" + view))
-            detailsLoader.source = view
-        var shown = editor
-        Qt.callLater(function () {
-            // gone by now when the screen was closed straight after - opening
-            // a program from the Programs tab replaces this one at once
-            if (!detailsLoader)
-                return
-            var item = detailsLoader.item
-            if (!item || !shown || shown !== operationEditor.editor)
-                return
-            item.editor = shown
-            if (shown.canvasMirror !== undefined && item.canvasMirror !== undefined)
-                item.canvasMirror = shown.canvasMirror
-            if (item.applyData)
-                item.applyData(shown.opIndex, shown.operation)
-        })
+        if (view === "")
+            detailsLoader.source = ""
+        else if (!String(detailsLoader.source).endsWith("/" + view))
+            detailsLoader.setSource(Qt.resolvedUrl(view), { editor: editor })
+        else if (detailsLoader.item)
+            detailsLoader.item.editor = editor
     }
 
     onEditorChanged: showEditor()
@@ -163,12 +153,6 @@ Item {
                     target: detailsLoader.item
                     ignoreUnknownSignals: true
                     enabled: !!target
-
-                    // only Facing's view has it; its editor keeps it for the next Facing
-                    function onCanvasMirrorChanged() {
-                        if (operationEditor.editor && operationEditor.editor.canvasMirror !== undefined)
-                            operationEditor.editor.canvasMirror = target.canvasMirror
-                    }
 
                     function onOpenNumPadRequested(field) {
                         operationEditor.openNumPadRequested(field)

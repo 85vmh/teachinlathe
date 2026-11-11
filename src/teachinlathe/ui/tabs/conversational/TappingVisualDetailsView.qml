@@ -4,8 +4,9 @@
 // starts and every peck comes back to. Its pitch is the tap's, not edited
 // here. Its values in boxes down the right edge; Z Start, Z End and the
 // clearance's Z each drawn as a line across the centre line; each peck as a
-// line across the tap's diameter, one of them dimensioned. Saves every
-// change through updateTapping.
+// line across the tap's diameter, one of them dimensioned. It keeps nothing
+// of its own: all it shows is its editor's operation, and every change is
+// the editor's edit, which the operation then shows.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -17,26 +18,27 @@ Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to;
+    // it keeps the tap's pitch in the operation
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property var _tp: op.tapping_parameters || ({})
 
-    // the program header's stock, and the tool in when this taps
-    property var    workpiece: ({})
+    // the program header's stock
+    readonly property var workpiece: editor.workpiece || ({})
     // the tap it cuts with: editor.tap (a TappingToolView), null with none
-    property var    tap: null
-    // the same tool as its Tool Library card shows it: editor.toolCard,
-    // a ToolCard; null with none
-    property var    toolCard: null
+    readonly property var tap: editor.tap
+    // the same tool as its Tool Library card shows it: editor.toolCard, a ToolCard
+    readonly property var toolCard: editor.toolCard
 
-    // the values the boxes on the canvas show and edit
-    property real   zStart: 0.0
-    property real   zEnd: 0.0
-    property real   toolClearance: 0.0
-    property real   peckDepth: 0.0
+    // what the boxes on the canvas show
+    readonly property real zStart: Number(_tp.z_start || 0)
+    readonly property real zEnd: Number(_tp.z_end || 0)
+    readonly property real toolClearance: Math.abs(Number(_tp.tool_clearance || 0))
+    readonly property real peckDepth: Number(_tp.peck_depth || 0)
     // where the tap starts and every peck comes back to
-    readonly property real retractZ: zStart + Math.abs(toolClearance)
+    readonly property real retractZ: zStart + toolClearance
 
     // the boxes' and their targets' colours
     readonly property color zStartColor:   "#1565c0"
@@ -45,44 +47,10 @@ Item {
     readonly property color peckColor:     profileCanvas.feedColor
     signal openNumPadRequested(var field)
 
-    // opData with the values edited in the boxes
-    function _draftOp() {
-        var op = JSON.parse(JSON.stringify(opData || {}))
-        op.tapping_parameters = op.tapping_parameters || {}
-        op.tapping_parameters.z_start = zStart
-        op.tapping_parameters.z_end = zEnd
-        op.tapping_parameters.tool_clearance = Math.abs(toolClearance)
-        op.tapping_parameters.peck_depth = peckDepth
-        // the tap's pitch, kept with the op
-        if (tap) op.tapping_parameters.pitch = Number(tap.pitch)
-        return op
-    }
+    function editTapping(changes) { editor.edit({ tapping_parameters: changes }) }
 
-    // the whole op with every edited value, sent as one save; opData keeps it,
-    // so the next edit builds on this one
-
-    function save(op) {
-        if (opIndex < 0 || !opData) return
-        opData = op || _draftOp()
-        root.editor.save(opData)
-    }
-
-    function applyData(index, data) {
-        opIndex = index
-        opData  = data || {}
-        workpiece = editor ? (editor.workpiece || {}) : {}
-        tap       = editor ? editor.tap : null
-        toolCard  = editor ? editor.toolCard : null
-
-        var dp = opData.tapping_parameters || {}
-        zStart    = dp.z_start    !== undefined ? Number(dp.z_start)    : 0
-        zEnd      = dp.z_end      !== undefined ? Number(dp.z_end)      : 0
-        toolClearance = dp.tool_clearance !== undefined ? Math.abs(Number(dp.tool_clearance)) : 0
-        peckDepth = dp.peck_depth !== undefined ? Number(dp.peck_depth) : 0
-
-        header.applyData(opData)
-        profileCanvas.resetView()
-    }
+    // another operation: the drawing fitted to it
+    onEditorChanged: profileCanvas.resetView()
 
     ColumnLayout {
         anchors.fill: parent
@@ -93,6 +61,7 @@ Item {
         // header's feed rate is left disabled
         OperationHeader {
             id: header
+            editor: root.editor
             rpmOnly: true
             // Pause to Inspect may also stay where the tool is
             allowStayInPlace: true
@@ -100,16 +69,6 @@ Item {
             onlyClockwise: root.tap ? root.tap.clockwise : null
             feedEnabled: false
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) {
-                var op = root._draftOp()
-                op.speeds_and_feeds = speeds
-                root.save(op)
-            }
-            onM1Edited: function(m1) {
-                var op = root._draftOp()
-                op.m1_parameters = m1
-                root.save(op)
-            }
         }
 
         ProfileCanvas {
@@ -250,7 +209,7 @@ Item {
                 point: 1
                 settingName: "tapping.z_start"
                 value: root.zStart
-                onValueEdited: function(value) { root.zStart = value; root.save() }
+                onValueEdited: function(value) { root.editTapping({ z_start: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -265,7 +224,7 @@ Item {
                 point: 2
                 settingName: "tapping.z_end"
                 value: root.zEnd
-                onValueEdited: function(value) { root.zEnd = value; root.save() }
+                onValueEdited: function(value) { root.editTapping({ z_end: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -279,7 +238,7 @@ Item {
                 dimensionColor: root.clearanceColor
                 settingName: "tapping.tool_clearance"
                 value: root.toolClearance
-                onValueEdited: function(value) { root.toolClearance = Math.abs(value); root.save() }
+                onValueEdited: function(value) { root.editTapping({ tool_clearance: Math.abs(value) }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -291,7 +250,7 @@ Item {
                 dimensionColor: root.peckColor
                 settingName: "tapping.peck_depth"
                 value: root.peckDepth
-                onValueEdited: function(value) { root.peckDepth = value; root.save() }
+                onValueEdited: function(value) { root.editTapping({ peck_depth: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 

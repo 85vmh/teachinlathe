@@ -32,14 +32,18 @@ Item {
     property real actionRadius: 0
     // How far the content slides to show a button whole
     readonly property int revealWidth: actionWidth + actionGap
+    // view state: the swipe
     property real swipeOffset: 0          // > 0 shows Delete, < 0 Duplicate
     // Another SwipeRow this one's drags move in its place - one inside it,
     // say - or null for itself
     property var swipeTarget: null
 
     // A drag in progress: where it started, and the side it keeps to
+    // view state: the swipe
     property bool _dragging: false
+    // view state: the swipe
     property real _dragStart: 0
+    // view state: the swipe
     property int _dragSide: 0
 
     signal deleteRequested()
@@ -190,6 +194,7 @@ Item {
         enabled: root.swipeEnabled
         yAxis.enabled: false
         // the row moved, kept for the whole drag
+        // view state: the swipe
         property var moving: null
         onActiveChanged: {
             if (active) {

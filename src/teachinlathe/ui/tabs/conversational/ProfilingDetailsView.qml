@@ -3,53 +3,20 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import common.touchable_input
 import theme
+import common
 
 Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
 
     signal openNumPadRequested(var field)
-
     signal teachXRequested(int index)
-
     signal teachZRequested(int index)
-
-    function applyData(index, data) {
-        opIndex = index
-        opData = data || {}
-
-        header.applyData(opData)
-        cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
-        profilingParamsPanel.applyData(opIndex, (opData.profiling_parameters || {}), opData)
-        profilingOptionsPanel.applyData(opData.profiling_options || {})
-    }
-
-    // Sub-objects merge one level deep, so a part sent alone (the header's
-    // feed rate, say) updates its fields and keeps the rest.
-    function mergeIntoOp(payload) {
-        var out = JSON.parse(JSON.stringify(opData || {}))
-        for (var k in payload) {
-            if (k === "index" || !payload.hasOwnProperty(k)) continue
-            var v = payload[k]
-            var cur = out[k]
-            if (v && typeof v === "object" && !Array.isArray(v)
-                    && cur && typeof cur === "object" && !Array.isArray(cur))
-                out[k] = Object.assign({}, cur, v)
-            else
-                out[k] = v
-        }
-        opData = out
-        return out
-    }
-
-    function save(payload) {
-        root.editor.save(root.mergeIntoOp(payload))
-    }
 
     IntValidator    { id: intVal }
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
@@ -63,9 +30,9 @@ Item {
         // G7x has no M1: the header leaves that width empty
         OperationHeader {
             id: header
+            editor: root.editor
             hasM1: false
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) { root.save({speeds_and_feeds: speeds}) }
         }
 
         // Row 1: Profiling parameters | Profiling options (top-aligned)
@@ -81,8 +48,9 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
+                parameters: root.op.profiling_parameters || ({})
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-                onSaveRequested: function (p) { root.save(p.payload || p) }
+                onEdited: function(changes) { root.editor.edit({ profiling_parameters: changes }) }
             }
 
             ProfilingOptions {
@@ -90,8 +58,9 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 4
                 Layout.alignment: Qt.AlignTop
+                options: root.op.profiling_options || ({})
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-                onSaveRequested: function (p) { root.save(p.payload || p) }
+                onEdited: function(changes) { root.editor.edit({ profiling_options: changes }) }
                 onAddFinishRequested: root.editor.addFinish()
             }
         }
@@ -109,8 +78,9 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 6
                 Layout.alignment: Qt.AlignTop
+                cutting: root.op.cutting_parameters || ({})
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-                onSaveRequested: function (p) { root.save(p.payload || p) }
+                onEdited: function(changes) { root.editor.edit({ cutting_parameters: changes }) }
             }
 
             Item {

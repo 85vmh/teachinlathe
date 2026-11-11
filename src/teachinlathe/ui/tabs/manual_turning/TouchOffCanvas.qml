@@ -62,6 +62,7 @@ Rectangle {
     // left corner, "0" its middle, "1" its right corner - a parting or
     // grooving blade's in Z (its left corner, toward Z-, the default), a
     // trepanning blade's corner in X (its X- one the default); resetPlace()
+    // view state: the choice in the open dialog, until committed
     property string bladePlace: "-1"
 
     // ── The tool ─────────────────────────────────────────────────────────

@@ -1,8 +1,9 @@
 // OperationHeader.qml — the row at the top of an operation's details: Speeds
 // and Feeds as wide as it needs, then Pause to Inspect in the width left.
 // Operations without an M1 (hasM1: false) leave that width empty.
-// Speeds and Feeds edits the operation's speeds_and_feeds - its feeds too -
-// reported out whole.
+// It shows its editor's operation and keeps nothing of its own: an edit -
+// the whole speeds_and_feeds (its feeds too), m1_parameters, a thread's pitch
+// or starts - goes to the editor, and is shown once the operation has it.
 import QtQuick
 import QtQuick.Layouts
 import theme
@@ -22,37 +23,23 @@ RowLayout {
     // either. Unless set, the tool's the op's details carry
     // (_tool_spindle_direction, 3 or 4, from the tool it cuts with)
     property var onlyClockwise: null
-    property var _toolClockwise: null
+    // the operation's editor (OperationEditorViewModel.py): all the header
+    // shows, and where its edits go
+    required property var editor
+    readonly property var _op: editor.operation || {}
+    // the way the operation's tool turns: 3 (M3), 4 (M4), 0 with none
+    readonly property var _toolClockwise: _op._tool_spindle_direction === 3 ? true
+                                        : _op._tool_spindle_direction === 4 ? false : null
     // what Speeds and Feeds' feeds column holds: SpeedsAndFeeds.FeedKind -
     // Standard (Fz), Parting (Fz1 and Fz2), Threading (Pitch and Starts)
     property int feedKind: SpeedsAndFeeds.FeedKind.Standard
-    // Threading's pitch and starts: set from the operation's data, kept as
-    // edited. Speeds and Feeds edits its own, so they are pushed to it
-    // rather than bound - an edit there would cut the binding
-    property real pitch: 0.0
-    property int starts: 1
-    onPitchChanged: speedsAndFeeds.pitch = pitch
-    onStartsChanged: speedsAndFeeds.starts = starts
     property bool hasM1: true
     // Pause to Inspect's third choice, stay where the tool is
     property bool allowStayInPlace: false
     // the width each Pause to Inspect button gets
     readonly property real pauseOptionWidth: m1Panel.optionWidth
 
-    signal speedsAndFeedsEdited(var speedsAndFeeds)   // a whole speeds_and_feeds
-    signal pitchEdited(real value)
-    signal startsEdited(int value)
-    signal m1Edited(var m1)              // a whole m1_parameters
     signal openNumPadRequested(var field)
-
-    function applyData(op) {
-        op = op || {}
-        var d = op._tool_spindle_direction
-        _toolClockwise = d === 3 ? true : d === 4 ? false : null
-        speedsAndFeeds.applyData(op.speeds_and_feeds)
-        if (hasM1)
-            m1Panel.applyData(op.m1_parameters || {})
-    }
 
     SpeedsAndFeeds {
         id: speedsAndFeeds
@@ -63,11 +50,13 @@ RowLayout {
                        ? root.onlyClockwise : root._toolClockwise
         // as wide as its contents need
         Layout.minimumWidth: implicitWidth
-        onSpeedsAndFeedsEdited: function(speeds) { root.speedsAndFeedsEdited(speeds) }
-        // the header holds what was edited: an operation set to the value it
-        // had before the edit is then still a change, and is shown
-        onPitchEdited: function(value) { root.pitch = value; root.pitchEdited(value) }
-        onStartsEdited: function(value) { root.starts = value; root.startsEdited(value) }
+        speeds: root._op.speeds_and_feeds || ({})
+        // Threading's: the calculated diameter follows the pitch (editPitch)
+        pitch: Number(root._op.pitch || 0)
+        starts: root._op.starts !== undefined ? Math.max(1, Math.round(Number(root._op.starts))) : 1
+        onSpeedsAndFeedsEdited: function(speeds) { root.editor.edit({ speeds_and_feeds: speeds }) }
+        onPitchEdited: function(value) { root.editor.editPitch(value) }
+        onStartsEdited: function(value) { root.editor.edit({ starts: value }) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
     }
 
@@ -80,7 +69,8 @@ RowLayout {
         Layout.minimumWidth: 0
         Layout.preferredWidth: 0
         Layout.preferredHeight: speedsAndFeeds.implicitHeight
-        onSaveRequested: function(payload) { root.m1Edited(payload.m1_parameters) }
+        m1: root._op.m1_parameters || ({})
+        onM1Edited: function(m1) { root.editor.edit({ m1_parameters: m1 }) }
     }
 
     Item {

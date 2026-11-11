@@ -11,15 +11,23 @@ import theme
 Popup {
     id: root
 
+    // view state: the field the open keyboard types into
     property var targetField: null
+    // view state: the open field's title
     property string titleText: "Enter text"
+    // view state: what is being typed, until committed
     property string buffer: ""
     //: The most characters the field takes: its maximumLength (a TextField's
     //: default, 32767, leaves it unlimited in practice).
+    // view state: the open field's limit
     property int maxLength: 32767
+    // view state: the keyboard's shift handling
     property bool shiftOn: true
+    // view state: the keyboard's shift handling
     property bool shiftLocked: false
+    // view state: the keyboard's layout shown
     property bool symbolMode: false
+    // view state: the keyboard's shift handling
     property bool shiftClickPending: false
 
     property int keyWidth: 100

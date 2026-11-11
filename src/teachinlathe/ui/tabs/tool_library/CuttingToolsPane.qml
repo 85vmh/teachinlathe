@@ -24,6 +24,7 @@ ToolLibraryPane {
     //: Off while a holder waits for a tool, when a tap mounts it.
     property bool swipeEnabled: true
     //: The card swiped open to its Delete, or null.
+    // view state: the row swiped open
     property var openSwipeRow: null
 
     //: How far the cards are set in from their category's header.
@@ -32,12 +33,14 @@ ToolLibraryPane {
     readonly property int summaryCardHeight: Theme.inputHeight
     readonly property var mountedToolIds: model ? model.mountedToolIds : []
     //: The tool flashed after revealTool() scrolled to it, 0 when none is.
+    // view state: the row flashed after a change
     property int highlightedToolId: 0
     //: How long each flash is on, and off between them, in ms.
     readonly property int highlightDuration: 100
     //: How many times it flashes.
     readonly property int highlightFlashes: 2
     // The tool to flash once the scroll to it has finished.
+    // view state: the row flashed after a change
     property int _pendingHighlightId: 0
 
     // Scroll to a tool's card - unfolding its category if it is folded -
@@ -91,6 +94,7 @@ ToolLibraryPane {
     // On, off, on, off: each tick turns the highlight the other way.
     Timer {
         id: highlightTimer
+        // view state: the flash animation
         property int ticks: 0
         interval: root.highlightDuration
         repeat: true

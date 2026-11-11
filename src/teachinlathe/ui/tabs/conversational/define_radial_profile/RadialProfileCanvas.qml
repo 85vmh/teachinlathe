@@ -48,11 +48,14 @@ Item {
     // {key, section, from, to, anchor} - key "start", "p1Blend",
     // "rightFlank", "bottom", "leftFlank" or "p4Blend"; a flank's from and to
     // its points, a top blend's anchor the middle of it ({z, x: diameter})
+    // view state: a cache of the groove outline of ``primitives``, rebuilt on each change
     property var _outline: ({ points: [], primitives: [], roles: [] })
     readonly property var _profilePrimitives: _outline.primitives
     readonly property var _roles: _outline.roles
     // what is selected on the canvas: a primitive, or the blend one carries
+    // view state: the selection on the canvas
     property int _selectedPrim: -1
+    // view state: the selection on the canvas
     property int _selectedBlend: -1
 
     // the first groove's ``section`` with ``values`` set in it, to be saved

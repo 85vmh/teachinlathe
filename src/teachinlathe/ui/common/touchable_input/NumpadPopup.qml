@@ -11,6 +11,7 @@ import theme
 Popup {
     id: root
 
+    // view state: the field the open numpad types into
     property var targetField: null
     // the item the computer's keyboard types into, given the focus when the
     // dialog opens - if it is shown then

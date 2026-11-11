@@ -16,38 +16,20 @@ GrooveDetailsView {
         retract: 1.0, peckDepth: 3.0, dwellTime: 0.5
     })
 
-    // the values the boxes on the canvas show and edit
-    property string strategy: defaults.strategy
-    property real   initialOffset: defaults.initialOffset
-    property real   afterwardsOffset: defaults.afterwardsOffset
-    property real   retract: defaults.retract
-    property real   peckDepth: defaults.peckDepth
-    property real   dwellTime: defaults.dwellTime
+    readonly property var _rp: op.roughing_parameters || ({})
+    readonly property var _cp: op.cutting_parameters || ({})
+    profileId: profileIdIn(_rp, defaults.profileId)
 
-    draftOp: function() {
-        var op = copyOf(opData)
-        op.roughing_parameters = {
-            profile_id: profileId, strategy: strategy,
-            initial_offset: initialOffset, afterwards_offset: afterwardsOffset
-        }
-        op.cutting_parameters = op.cutting_parameters || {}
-        op.cutting_parameters.peck_depth = peckDepth
-        op.cutting_parameters.retract = retract
-        op.cutting_parameters.dwell_time = dwellTime
-        return withStock(op)
-    }
+    // what the boxes on the canvas show
+    readonly property string strategy: _rp.strategy !== undefined ? String(_rp.strategy) : defaults.strategy
+    readonly property real initialOffset: numberIn(_rp, "initial_offset", defaults.initialOffset)
+    readonly property real afterwardsOffset: numberIn(_rp, "afterwards_offset", defaults.afterwardsOffset)
+    readonly property real retract: numberIn(_cp, "retract", defaults.retract)
+    readonly property real peckDepth: numberIn(_cp, "peck_depth", defaults.peckDepth)
+    readonly property real dwellTime: numberIn(_cp, "dwell_time", defaults.dwellTime)
 
-    readData: function(data) {
-        var rp = data.roughing_parameters || {}
-        var cp = data.cutting_parameters || {}
-        profileId        = profileIdIn(rp, defaults.profileId)
-        strategy         = rp.strategy !== undefined ? String(rp.strategy) : defaults.strategy
-        initialOffset    = numberIn(rp, "initial_offset", defaults.initialOffset)
-        afterwardsOffset = numberIn(rp, "afterwards_offset", defaults.afterwardsOffset)
-        retract          = numberIn(cp, "retract", defaults.retract)
-        peckDepth        = numberIn(cp, "peck_depth", defaults.peckDepth)
-        dwellTime        = numberIn(cp, "dwell_time", defaults.dwellTime)
-        readStock(data)
+    function editRoughing(changes) {
+        editor.edit({ roughing_parameters: Object.assign({ profile_id: profileId }, changes) })
     }
 
     // the plunges, in the order the G-code makes them; the groove's middle
@@ -111,9 +93,9 @@ GrooveDetailsView {
         strategy: root.strategy
         initialOffset: root.initialOffset
         afterwardsOffset: root.afterwardsOffset
-        onStrategyEdited: function(value) { root.strategy = value; root.save() }
-        onInitialOffsetEdited: function(value) { root.initialOffset = value; root.save() }
-        onAfterwardsOffsetEdited: function(value) { root.afterwardsOffset = value; root.save() }
+        onStrategyEdited: function(value) { root.editRoughing({ strategy: value }) }
+        onInitialOffsetEdited: function(value) { root.editRoughing({ initial_offset: value }) }
+        onAfterwardsOffsetEdited: function(value) { root.editRoughing({ afterwards_offset: value }) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
     }
 
@@ -124,8 +106,8 @@ GrooveDetailsView {
         labelColor: root.canvas.stockToLeaveColor
         radial: root.stockRadial
         axial: root.stockAxial
-        onRadialEdited: function(value) { root.stockRadial = value; root.save() }
-        onAxialEdited: function(value) { root.stockAxial = value; root.save() }
+        onRadialEdited: function(value) { root.editStock({ radial: value }) }
+        onAxialEdited: function(value) { root.editStock({ axial: value }) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
     }
 
@@ -139,7 +121,7 @@ GrooveDetailsView {
         dimensionColor: root.canvas.clearanceColor
         settingName: "groove_roughing.clearance"
         value: root.retract
-        onValueEdited: function(value) { root.retract = Math.abs(value); root.save() }
+        onValueEdited: function(value) { root.editCutting({ retract: Math.abs(value) }) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
     }
 
@@ -151,8 +133,8 @@ GrooveDetailsView {
         peckSettingName: "groove_roughing.peck_depth"
         peckDepth: root.peckDepth
         dwellTime: root.dwellTime
-        onPeckDepthEdited: function(value) { root.peckDepth = value; root.save() }
-        onDwellTimeEdited: function(value) { root.dwellTime = value; root.save() }
+        onPeckDepthEdited: function(value) { root.editCutting({ peck_depth: value }) }
+        onDwellTimeEdited: function(value) { root.editCutting({ dwell_time: value }) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
     }
 }

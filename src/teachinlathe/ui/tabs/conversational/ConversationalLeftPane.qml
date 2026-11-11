@@ -23,17 +23,25 @@ Item {
     readonly property int rowH: Theme.rowHeight
     readonly property int opHeaderFontSize: Theme.tableHeaderFontSize
 
+    // view state: the scroll kept over a change of rows
     property real _savedContentY: 0
+    // view state: the scroll kept over a change of rows
     property bool _restoreScrollPending: false
+    // view state: the scroll kept over a change of rows
     property bool _scrollToLastPending: false
+    // view state: the row swiped open
     property int openSwipeIndex: -1       // the operation row swiped open...
+    // view state: the row swiped open
     property int openSwipeSide: 0         // ...and to which side: 1 Delete, -1 Duplicate
 
     // Long press reorder: the row lifted, and how far it has been dragged
+    // view state: a reorder drag
     property int dragFrom: -1
+    // view state: a reorder drag
     property real dragDy: 0
     readonly property int dragTo: dragFrom < 0 ? -1
         : Math.max(0, Math.min(opsList.count - 1, dragFrom + Math.round(dragDy / rowH)))
+    // view state: a reorder drag
     property bool _dragAnimate: true
 
     signal programHeaderSelected()
@@ -47,12 +55,12 @@ Item {
     signal duplicateOperationRequested(int index)
     signal moveOperationRequested(int fromIndex, int toIndex)
 
+    // The operation selected is the view model's (activeOpIndex): a tap on a
+    // row only asks for it (operationSelected), and the rows show what
+    // activeOpIndex then says. The ListView's own current index is not used:
+    // it resets itself whenever its model changes.
     function selectedOperationIndex() {
-        return opsList.currentIndex
-    }
-
-    function setCurrentOperationIndex(index) {
-        opsList.currentIndex = index >= 0 && index < opsList.count ? index : -1
+        return activeOpIndex
     }
 
     function saveScrollPosition() {
@@ -70,15 +78,11 @@ Item {
             if (_scrollToLastPending) {
                 _restoreScrollPending = false
                 _scrollToLastPending = false
-                setCurrentOperationIndex(activeOpIndex)
                 scrollToLastItem()
             } else if (_restoreScrollPending) {
                 var maxY = Math.max(0, opsList.contentHeight - opsList.height)
                 opsList.contentY = Math.max(0, Math.min(targetY, maxY))
                 _restoreScrollPending = false
-                setCurrentOperationIndex(activeOpIndex)
-            } else {
-                setCurrentOperationIndex(activeOpIndex)
             }
         })
     }
@@ -127,17 +131,14 @@ Item {
         })
     }
 
-    onActiveOpIndexChanged: setCurrentOperationIndex(activeOpIndex)
-
     // A program opened again has the same rows as before: its model sends
     // nothing (DataclassListModel.setRows), so the list - new with the screen -
     // takes the operation its editor shows here, scrolled into view.
     Component.onCompleted: Qt.callLater(function() {
         if (!opsList)
             return
-        setCurrentOperationIndex(activeOpIndex)
-        if (opsList.currentIndex >= 0)
-            opsList.positionViewAtIndex(opsList.currentIndex, ListView.Contain)
+        if (activeOpIndex >= 0 && activeOpIndex < opsList.count)
+            opsList.positionViewAtIndex(activeOpIndex, ListView.Contain)
     })
 
     // the rows changed - all of them anew, or some in place: the scroll
@@ -172,7 +173,7 @@ Item {
         onLoaded: {
             if (item) {
                 item.operationsCount = opsList.count
-                var current = opsList.currentIndex
+                var current = root.activeOpIndex
                 item.insertAboveIndex = current >= 0 ? current : 0
                 item.insertBelowIndex = current >= 0 ? current + 1 : -1
                 if (item.open) item.open()
@@ -203,11 +204,8 @@ Item {
             Layout.preferredHeight: root.rowH
             datum: root.programDatum
             colDelW: root.colDelW
-            selected: opsList.currentIndex < 0
-            onClicked: {
-                opsList.currentIndex = -1
-                root.programHeaderSelected()
-            }
+            selected: root.activeOpIndex < 0
+            onClicked: root.programHeaderSelected()
         }
 
         // the operations' card, as the conversational programs list: the
@@ -242,15 +240,9 @@ Item {
                         anchors.fill: parent
                         clip: true
                         model: root.operationsModel
-                        currentIndex: -1
                         interactive: root.dragFrom < 0
 
                         onMovementStarted: root.openSwipeIndex = -1
-
-                        onCurrentIndexChanged: {
-                            if (currentIndex >= 0)
-                                root.operationSelected(currentIndex)
-                        }
 
                         delegate: Item {
                             id: cell
@@ -292,7 +284,7 @@ Item {
                                 generateGcode: model.generateGcode
                                 optionalBlock: model.optionalBlock
                                 stockProblem: model.stockProblem
-                                selected: opsList.currentIndex === index
+                                selected: root.activeOpIndex === index
                                 colOpNumW: root.colOpNumW
                                 colGenW: root.colGenW
                                 colTypeW: root.colTypeW
@@ -340,9 +332,7 @@ Item {
                                     if (root.openSwipeIndex === operationIndex)
                                         root.openSwipeIndex = -1
                                 }
-                                onRowTapped: function(i) {
-                                    opsList.currentIndex = i
-                                }
+                                onRowTapped: function(i) { root.operationSelected(i) }
                             }
                         }
                     }

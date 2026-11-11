@@ -102,12 +102,17 @@ Rectangle {
 
     // The view: px per mm, and the canvas point of machine Z0 X0. Fitted to
     // the width until the operator moves it.
+    // view state: the view's zoom
     property real viewScale: 1
+    // view state: the view's pan
     property real originX: 0
+    // view state: the view's pan
     property real originY: 0
+    // view state: the view zoomed or panned by hand
     property bool userMoved: false
 
     // the position whose X and Z the bubble shows: "M6", "G28", "G30" or none
+    // view state: the bubble shown
     property string bubbleName: ""
     readonly property var bubblePosition: {
         var list = map && map.positions ? map.positions : []
@@ -527,6 +532,7 @@ Rectangle {
     // ── panning and zooming: under the cards, over the canvas ─────────────
     PinchArea {
         anchors.fill: parent
+        // view state: a pinch
         property real lastScale: 1
         onPinchStarted: lastScale = 1
         onPinchUpdated: function(pinch) {
@@ -538,7 +544,9 @@ Rectangle {
 
         MouseArea {
             anchors.fill: parent
+            // view state: a pan
             property real lastX: 0
+            // view state: a pan
             property real lastY: 0
             onPressed: function(mouse) {
                 lastX = mouse.x; lastY = mouse.y

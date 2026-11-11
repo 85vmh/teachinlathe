@@ -14,46 +14,19 @@ TitledCard {
     Layout.preferredWidth: 560
     font.pixelSize: Theme.fontBody
 
-    property int opIndex: -1
-    property var opData: null
-    property var geometryData: ({})
+    // the operation's geometry_parameters, as its editor has them: all it shows
+    property var geometry: ({})
+    readonly property var _g: geometry || {}
 
-    signal saveRequested(var payload)
+    // a change to the geometry_parameters: only the fields in it
+    signal edited(var changes)
     signal openNumPadRequested(var field)
     signal teachXRequested(int index)
     signal teachZRequested(int index)
 
-    property real x_start: 0.0
-    property real z_start: 0.0
-    property real z_end: 0.0
-    property bool _loading: false
-
-    function applyData(index, geometryParams, fullOp) {
-        _loading = true
-        opIndex = index
-        opData = fullOp || {}
-        geometryData = geometryParams || {}
-
-        x_start = parseFloat(geometryData.x_start !== undefined ? geometryData.x_start : 0.0)
-        z_start = parseFloat(geometryData.z_start !== undefined ? geometryData.z_start : 0.0)
-        z_end = parseFloat(geometryData.z_end !== undefined ? geometryData.z_end : 0.0)
-        _loading = false
-    }
-
-    function emitSave() {
-        if (_loading) return
-        root.saveRequested({
-            order: (opData && opData.order !== undefined) ? opData.order : 0,
-            type: (opData && opData.type) ? opData.type : "",
-            generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
-            is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-            geometry_parameters: {
-                z_start: z_start,
-                z_end: z_end,
-                x_start: x_start
-            }
-        })
-    }
+    readonly property real x_start: _g.x_start !== undefined ? Number(_g.x_start) : 0.0
+    readonly property real z_start: _g.z_start !== undefined ? Number(_g.z_start) : 0.0
+    readonly property real z_end: _g.z_end !== undefined ? Number(_g.z_end) : 0.0
 
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
 
@@ -73,7 +46,7 @@ TitledCard {
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: function(value) { root.x_start = value; root.emitSave() }
+            onValueCommitted: function(value) { root.edited({ x_start: Number(value) }) }
         }
         TeachInButton { onClicked: tf_x_start.commit(PositionsBridge.teachInX() * 2) }
 
@@ -87,7 +60,7 @@ TitledCard {
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: function(value) { root.z_start = value; root.emitSave() }
+            onValueCommitted: function(value) { root.edited({ z_start: Number(value) }) }
         }
         TeachInButton { onClicked: tf_z_start.commit(PositionsBridge.teachInZ()) }
 
@@ -101,7 +74,7 @@ TitledCard {
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: function(value) { root.z_end = value; root.emitSave() }
+            onValueCommitted: function(value) { root.edited({ z_end: Number(value) }) }
         }
         TeachInButton { onClicked: tf_z_end.commit(PositionsBridge.teachInZ()) }
     }

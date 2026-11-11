@@ -249,20 +249,31 @@ Canvas {
     }
 
     // ── Private state ──────────────────────────────────────────────────────────
+    // view state: the view's zoom
     property real _scale:   5.0
+    // view state: the view's pan
     property real _originX: 0     // canvas px → world Z = 0
+    // view state: the view's pan
     property real _originY: 0     // canvas px → world X = 0
-    property var  _renderSegs: [] // cached render segments in world coords
-    property var  _resolvedPrimitives: [] // one per card
-    property var  _drawnPrimitives: []    // what is drawn: the grooves expanded, each with its ``source`` card
+    // what is drawn of ``primitives``, derived from them: resolved, one per
+    // card; the grooves expanded, each with its ``source`` card; the render
+    // segments in world coords
+    readonly property var _resolvedPrimitives: geom.resolvePrimitives(primitives)
+    readonly property var _drawnPrimitives: _hasGroove()
+            ? geom.resolvePrimitives(ConversationalViewModel.expandedProfile(primitives))
+            : _resolvedPrimitives
+    readonly property var _renderSegs: geom.buildRenderSegments(_drawnPrimitives, root.profileType)
+    // view state: the view zoomed or panned by hand
     property bool _manualView: false  // when true, primitive/size changes don't reset fit
     // false until fitToScreen has placed the drawing: until then only the
     // background is painted, or the first frame of a screen would show it at
     // the starting scale and origin - the profile in a corner, the arrows to
     // the boxes running across the whole canvas
+    // view state: the fit of the drawing
     property bool _fitted: false
     // a fit asked for and not yet made: the next paint makes it first, so no
     // frame is drawn at a view the data has already moved on from
+    // view state: the fit of the drawing
     property bool _fitPending: false
 
     // Fit once the changes that came together are all in - and in any case
@@ -283,11 +294,10 @@ Canvas {
 
     // ── Recompute + repaint on any relevant change ─────────────────────────────
     onPrimitivesChanged: {
-        _rebuildRenderCache()
         if (!_manualView) _scheduleFit()
         else              requestPaint()
     }
-    onProfileTypeChanged: { _rebuildRenderCache(); requestPaint() }
+    onProfileTypeChanged: requestPaint()
     onWorkpieceChanged: {
         if (!_manualView) _scheduleFit()
         else              requestPaint()
@@ -460,6 +470,7 @@ Canvas {
     // elsewhere the view is drawn whole as it moves. Everything placed over
     // the canvas follows the view, from _originX/_originY/_scale.
     property bool simplifyWhileMoving: false
+    // view state: a zoom or pan under way
     property bool _viewMoving: false
 
     function _beginViewMove() {
@@ -523,14 +534,6 @@ Canvas {
         var brokenAfter = (workpiece.break_after_profile && _renderSegs && _renderSegs.length > 0)
                           || (workpiece.break_after_z !== undefined && workpiece.break_after_z !== null)
         return mirrorAcrossCenterline || !brokenAfter
-    }
-
-    function _rebuildRenderCache() {
-        _resolvedPrimitives = geom.resolvePrimitives(primitives)
-        _drawnPrimitives = _hasGroove()
-                ? geom.resolvePrimitives(ConversationalViewModel.expandedProfile(primitives))
-                : _resolvedPrimitives
-        _renderSegs = geom.buildRenderSegments(_drawnPrimitives, root.profileType)
     }
 
     function _hasGroove() {
@@ -870,8 +873,11 @@ Canvas {
         anchors.fill: parent
         enabled: root.interactive
 
+        // view state: a pinch
         property real _scaleAtStart:  1
+        // view state: a pinch
         property real _worldZAtStart: 0
+        // view state: a pinch
         property real _worldXAtStart: 0
 
         onPinchStarted: function(pinch) {
@@ -898,10 +904,15 @@ Canvas {
         MouseArea {
             anchors.fill: parent
 
+            // view state: a pan
             property bool  _wasDrag:    false
+            // view state: a pan
             property real  _dragStartX: 0
+            // view state: a pan
             property real  _dragStartY: 0
+            // view state: a pan
             property real  _originXAtDragStart: 0
+            // view state: a pan
             property real  _originYAtDragStart: 0
 
             readonly property real _DEAD_ZONE: 4   // px
@@ -1022,7 +1033,10 @@ Canvas {
                 notation: DoubleValidator.StandardNotation
             }
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
-            property var editing: null   // the tag being edited, fixed at the tap
+            // view state: the tag being edited, fixed at the tap
+            property var editing: null
+            value: editing ? editing.value : null
+            description: editing ? editing.description : ""
             onValueCommitted: function(value) {
                 var tag = editing
                 if (!tag) return
@@ -1040,8 +1054,6 @@ Canvas {
             enabled: root.tagEditable
             onClicked: {
                 tagField.editing = root._tag
-                tagField.description = root._tag.description
-                tagField.value = root._tag.value
                 tagField.numpadActive = true
                 root.openNumPadRequested(tagField)
             }

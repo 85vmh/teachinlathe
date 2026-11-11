@@ -14,22 +14,25 @@ Item {
     objectName: "profileEditorScreen"
 
     // ── Public API ──────────────────────────────────────────────────────────────
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int    opIndex:             -1
-    property var    opData:              null
-    readonly property bool isDxfProfile: !!opData && opData.type === "importDxfProfile"
-    property int    profileId:           0
-    property string profileType:         "od"
-    property bool   _loading:            false
-    property var    primitives:          []
-    property var    workpiece:           ({})
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place the profile shown comes from, and every edit goes to. The
+    // screen keeps nothing of the profile: an edit is a new list of
+    // primitives, sent to the editor, which the profile then shows.
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property bool isDxfProfile: op.type === "importDxfProfile"
+    readonly property int    profileId: op.profile_id !== undefined ? Math.round(Number(op.profile_id)) : 0
+    readonly property string profileType: op.profile_type !== undefined ? String(op.profile_type) : "od"
+    readonly property var    primitives: op.profile_primitives || []
+    readonly property var    workpiece: op.workpiece || ({})
+    // view state: which primitive or blend is selected, on the cards and the canvas
     property int    selectedPrimIndex:   -1
+    // view state: see selectedPrimIndex
     property int    selectedBlendIndex:  -1
-    // The selected primitive shown on the canvas by its end point alone, as
-    // when chosen on its card; picked on the canvas, its whole stretch.
+    // view state: the selected primitive shown on the canvas by its end point
+    // alone, as when chosen on its card; picked on the canvas, its whole stretch.
     property bool   selectedEndOnly:     true
-    // The card swiped open on its Delete (a SwipeRow), or null
+    // view state: the card swiped open on its Delete (a SwipeRow), or null
     property var    openSwipeRow:        null
     // What each primitive's end corner can have, and how its blend's icon turns
     readonly property var _corners: cornerGeometry.cornersOf(root.primitives, root.profileType)
@@ -43,42 +46,18 @@ Item {
     signal openNumPadRequested(var field)
 
     // ── Data functions ──────────────────────────────────────────────────────────
-    function applyData(index, data) {
-        _loading  = true
-        opIndex   = index
-        opData    = data || {}
-        profileId   = opData.profile_id   !== undefined ? Math.round(Number(opData.profile_id)) : 0
-        profileType = opData.profile_type !== undefined ? String(opData.profile_type) : "od"
-        primitives  = JSON.parse(JSON.stringify(opData.profile_primitives || []))
-        workpiece   = JSON.parse(JSON.stringify(opData.workpiece || {}))
-        selectedPrimIndex  = -1
+    // another operation: the drawing fitted to it, nothing selected
+    onEditorChanged: {
+        selectedPrimIndex = -1
         selectedBlendIndex = -1
-        _loading  = false
         profileCanvas.resetView()
     }
 
-    function emitSave() {
-        if (_loading) return
-        var merged = JSON.parse(JSON.stringify(opData || {}))
-        merged.profile_id         = root.profileId
-        merged.profile_type       = root.profileType
-        merged.profile_primitives = root.primitives
-        opData = merged
-        root.editor.save(merged)
-    }
-
-    function _renumber(arr) {
-        for (var i = 0; i < arr.length; i++)
-            arr[i].primitive_id = i + 1
-        return arr
-    }
-
+    // What is done to the primitives is the editor's (profile_editing.py): a
+    // card's edit, a blend, a new primitive where the one before ends, one
+    // deleted. The screen only keeps the selection on them.
     function primUpdated(idx, newData) {
-        var arr = JSON.parse(JSON.stringify(root.primitives))
-        arr[idx] = newData
-        _keepOneCornerBlend(arr, idx)
-        root.primitives = _renumber(arr)
-        root.emitSave()
+        root.editor.updatePrimitive(idx, newData)
     }
 
     function _selectPrimitive(idx, endOnly) {
@@ -94,133 +73,29 @@ Item {
         blendPopup.open()
     }
 
-    function _addBlend(idx, blendType) {
-        var d = JSON.parse(JSON.stringify(root.primitives[idx]))
-        d.blend = Object.assign({ type: blendType }, BlendDefaults.values[blendType])
-        root.primUpdated(idx, d)
-    }
-
-    function _hasBlend(blend) { return !!blend && !!blend.type && blend.type !== "none" }
-
-    // A corner before a groove has two cards that can give it a blend: the
-    // primitive ending there and the groove starting there. The one just
-    // edited (``idx``) takes it from the other.
-    function _keepOneCornerBlend(arr, idx) {
-        var item = arr[idx]
-        var before = idx > 0 ? arr[idx - 1] : null
-        var after = idx + 1 < arr.length ? arr[idx + 1] : null
-        if (item.type === "grooveTo" && before && _hasBlend(item.right_flank.start_blend)) {
-            if (before.type === "grooveTo") before.left_flank.start_blend = { type: "none" }
-            else if (before.type !== "startPoint") before.blend = { type: "none" }
-        }
-        var endBlend = item.type === "grooveTo" ? item.left_flank.start_blend : item.blend
-        if (item.type !== "startPoint" && after && after.type === "grooveTo" && _hasBlend(endBlend))
-            after.right_flank.start_blend = { type: "none" }
+    // the selection moved to ``idx`` and scrolled to it, once its card is in place
+    function _selectAndShow(idx, scrollBottom) {
+        _selectPrimitive(idx, true)
+        if (idx < 0) return
+        Qt.callLater(function() {
+            Qt.callLater(function() { root._scrollTo(idx, scrollBottom) })
+        })
     }
 
     function primDeleted(idx) {
         if (idx <= 0) return
-        var arr = JSON.parse(JSON.stringify(root.primitives))
-        arr.splice(idx, 1)
-        root.primitives = _renumber(arr)
-        var newLen = root.primitives.length
-        var nextIdx = (newLen === 0) ? -1 : Math.min(idx, newLen - 1)
-        _selectPrimitive(nextIdx, true)
-        root.emitSave()
-        if (nextIdx >= 0) {
-            Qt.callLater(function() {
-                Qt.callLater(function() {
-                    root._scrollTo(nextIdx, idx >= newLen)
-                })
-            })
-        }
-    }
-
-    function _refEndCoords(refIdx) {
-        if (refIdx < 0 || refIdx >= root.primitives.length) return { x: 0, z: 0 }
-        var currentX = 0
-        var currentZ = 0
-        for (var i = 0; i <= refIdx; i++) {
-            var item = root.primitives[i]
-            if (!item) continue
-            if (item.type === "startPoint") {
-                currentX = item.x_start !== undefined ? Number(item.x_start) : 0
-                currentZ = item.z_start !== undefined ? Number(item.z_start) : 0
-            } else if (item.type === "lineTo") {
-                var mode = String(item.input !== undefined ? item.input : "xz").toLowerCase()
-                if (mode !== "xz" && mode !== "ax" && mode !== "az") mode = "xz"
-                var endX = item.x_end !== undefined ? Number(item.x_end) : 0
-                var endZ = item.z_end !== undefined ? Number(item.z_end) : 0
-                if (mode === "az") {
-                    var azTan = Math.tan((Number(item.angle || 0) * Math.PI) / 180.0)
-                    currentX = currentX + 2.0 * (endZ - currentZ) * azTan
-                    currentZ = endZ
-                } else if (mode === "ax") {
-                    var axTan = Math.tan((Number(item.angle || 0) * Math.PI) / 180.0)
-                    var radialDelta = (endX - currentX) / 2.0
-                    currentZ = Math.abs(axTan) < 1e-12 ? currentZ : currentZ + radialDelta / axTan
-                    currentX = endX
-                } else {
-                    currentX = endX
-                    currentZ = endZ
-                }
-            } else if (item.type === "arcTo") {
-                currentX = item.x_end !== undefined ? Number(item.x_end) : 0
-                currentZ = item.z_end !== undefined ? Number(item.z_end) : 0
-            } else if (item.type === "grooveTo") {
-                currentX = Number(item.left_flank.x_start)
-                currentZ = Number(item.left_flank.z_start)
-            }
-        }
-        return { x: currentX, z: currentZ }
-    }
-
-    function primInserted(insertIdx, primType, refX, refZ) {
-        var arr = JSON.parse(JSON.stringify(root.primitives))
-        var rx = (refX !== undefined) ? refX : 0
-        var rz = (refZ !== undefined) ? refZ : 0
-        var newPrim
-        if (primType === "lineTo") {
-            newPrim = { type: "lineTo", primitive_id: 0, input: "xz", angle: 0,
-                        x_end: rx, z_end: rz, blend: { type: "none" } }
-        } else if (primType === "grooveTo") {
-            // 3 wide and 2 deep on the radius, into the part from where the profile is
-            var bottomX = root.profileType === "id" ? rx + 4 : Math.max(0, rx - 4)
-            newPrim = { type: "grooveTo", primitive_id: 0,
-                        right_flank: { x_start: 0, z_start: 0, angle: 0, start_blend: { type: "none" } },
-                        bottom: { x_end_right: bottomX, x_end_left: bottomX,
-                                  blend_right: { type: "none" }, blend_left: { type: "none" } },
-                        left_flank: { x_start: rx, z_start: rz - 3, angle: 0, start_blend: { type: "none" } } }
-        } else {
-            newPrim = { type: "arcTo", primitive_id: 0, direction: "cw", arc_radius: 10,
-                        x_end: rx, z_end: rz, x_center: 0, z_center: 0, blend: { type: "none" } }
-        }
-        var actualIdx = (insertIdx < 0 || insertIdx >= arr.length)
-                        ? arr.length
-                        : Math.max(1, insertIdx)
-        arr.splice(actualIdx, 0, newPrim)
-        root.primitives = _renumber(arr)
-        _selectPrimitive(actualIdx, true)
-        root.emitSave()
-        Qt.callLater(function() {
-            Qt.callLater(function() {
-                root._scrollTo(actualIdx, true)
-            })
-        })
+        var wasLast = idx >= root.primitives.length - 1
+        _selectAndShow(root.editor.deletePrimitive(idx), wasLast)
     }
 
     function addPrimitiveAbove(primType) {
         if (root.selectedPrimIndex <= 0) return
-        var ref = root._refEndCoords(root.selectedPrimIndex - 1)
-        root.primInserted(root.selectedPrimIndex, primType, ref.x, ref.z)
+        _selectAndShow(root.editor.insertPrimitive(root.selectedPrimIndex, primType), true)
     }
 
     function addPrimitiveBelow(primType) {
-        var idx = root.selectedPrimIndex < 0
-                ? root.primitives.length
-                : root.selectedPrimIndex + 1
-        var ref = root._refEndCoords(root.selectedPrimIndex)
-        root.primInserted(idx, primType, ref.x, ref.z)
+        var idx = root.selectedPrimIndex < 0 ? root.primitives.length : root.selectedPrimIndex + 1
+        _selectAndShow(root.editor.insertPrimitive(idx, primType), true)
     }
 
     onSelectedPrimIndexChanged:  Qt.callLater(_scrollToSelected)
@@ -327,7 +202,7 @@ Item {
                                 formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
                                 hAlign: Text.AlignHCenter
                                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                                onValueCommitted: function(value) { root.profileId = Math.round(value); root.emitSave() }
+                                onValueCommitted: function(value) { root.editor.edit({ profile_id: Math.round(value) }) }
                             }
                         }
 
@@ -348,20 +223,17 @@ Item {
                                 font.pointSize: 11; font.family: "Noto Sans"
                                 color: Theme.foreground
                             }
-                            ButtonGroup { id: profileTypeGroup }
-                            RadioButton {
+                            ModelRadioButton {
                                 text: "OD"
                                 font.pointSize: 11; font.family: "Noto Sans"
                                 checked: root.profileType === "od"
-                                ButtonGroup.group: profileTypeGroup
-                                onToggled: if (checked) { root.profileType = "od"; root.emitSave() }
+                                onChosen: root.editor.edit({ profile_type: "od" })
                             }
-                            RadioButton {
+                            ModelRadioButton {
                                 text: "ID"
                                 font.pointSize: 11; font.family: "Noto Sans"
                                 checked: root.profileType === "id"
-                                ButtonGroup.group: profileTypeGroup
-                                onToggled: if (checked) { root.profileType = "id"; root.emitSave() }
+                                onChosen: root.editor.edit({ profile_type: "id" })
                             }
                         }
                     }
@@ -477,11 +349,9 @@ Item {
                                         onSwipeClosed: if (root.openSwipeRow === blendSwipe) root.openSwipeRow = null
                                         onDeleteRequested: {
                                             root.openSwipeRow = null
-                                            var d = JSON.parse(JSON.stringify(root.primitives[mi]))
-                                            d.blend = { type: "none" }
                                             if (root.selectedBlendIndex === mi)
                                                 root.selectedBlendIndex = -1
-                                            root.primUpdated(mi, d)
+                                            root.editor.addBlend(mi, "none")
                                         }
 
                                     Loader {
@@ -657,9 +527,7 @@ Item {
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                         onDiameterEdited: function(idx, diameter) {
                             var arr = profileCanvas.primitivesWithDiameter(idx, diameter)
-                            if (!arr) return
-                            root.primitives = root._renumber(arr)
-                            root.emitSave()
+                            if (arr) root.editor.setPrimitives(arr)
                         }
                         onBlendEdited: function(idx, field, value) {
                             var d = JSON.parse(JSON.stringify(root.primitives[idx]))
@@ -697,7 +565,7 @@ Item {
     BlendTypePopup {
         id: blendPopup
         property int primIdx: -1
-        onBlendChosen: function(blendType) { root._addBlend(primIdx, blendType) }
+        onBlendChosen: function(blendType) { root.editor.addBlend(primIdx, blendType) }
     }
 
     Component { id: startPointComp; StartPointCard {} }

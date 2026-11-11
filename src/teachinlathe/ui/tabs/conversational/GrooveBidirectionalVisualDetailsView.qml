@@ -14,27 +14,14 @@ GrooveDetailsView {
     readonly property var defaults: ({ profileId: 1, retract: 1.0, doc: 1.0, dwellTime: 0.0 })
 
     // the values the boxes on the canvas show and edit
-    property real retract: defaults.retract
-    property real doc: defaults.doc
-    property real dwellTime: defaults.dwellTime
+    readonly property var _cp: op.cutting_parameters || ({})
+    profileId: profileIdIn(op.grooving_parameters, defaults.profileId)
 
-    draftOp: function() {
-        var op = copyOf(opData)
-        op.grooving_parameters = { profile_id: profileId }
-        op.cutting_parameters = { doc: doc, retract: retract, dwell_time: dwellTime }
-        return withStock(op)
-    }
+    // what the boxes on the canvas show
+    readonly property real retract: numberIn(_cp, "retract", defaults.retract)
+    readonly property real doc: numberIn(_cp, "doc", defaults.doc)
+    readonly property real dwellTime: numberIn(_cp, "dwell_time", defaults.dwellTime)
 
-    readData: function(data) {
-        var cp = data.cutting_parameters || {}
-        profileId = profileIdIn(data.grooving_parameters, defaults.profileId)
-        retract   = numberIn(cp, "retract", defaults.retract)
-        doc       = numberIn(cp, "doc", defaults.doc)
-        dwellTime = numberIn(cp, "dwell_time", defaults.dwellTime)
-        readStock(data)
-    }
-
-    // where the tool starts, as the G-code goes there
     canvas.startPosition: groovePreview && groovePreview.start ? groovePreview.start : null
     canvas.clearance: retract
     canvas.boxWidth: Math.max(stockBox.implicitWidth, clearanceBox.implicitWidth, docBox.implicitWidth)
@@ -51,8 +38,8 @@ GrooveDetailsView {
         labelColor: root.canvas.stockToLeaveColor
         radial: root.stockRadial
         axial: root.stockAxial
-        onRadialEdited: function(value) { root.stockRadial = value; root.save() }
-        onAxialEdited: function(value) { root.stockAxial = value; root.save() }
+        onRadialEdited: function(value) { root.editStock({ radial: value }) }
+        onAxialEdited: function(value) { root.editStock({ axial: value }) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
     }
 
@@ -66,7 +53,7 @@ GrooveDetailsView {
         dimensionColor: root.canvas.clearanceColor
         settingName: "groove_bidirectional.clearance"
         value: root.retract
-        onValueEdited: function(value) { root.retract = Math.abs(value); root.save() }
+        onValueEdited: function(value) { root.editCutting({ retract: Math.abs(value) }) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
     }
 
@@ -79,8 +66,8 @@ GrooveDetailsView {
         peckSettingName: "groove_bidirectional.doc"
         peckDepth: root.doc
         dwellTime: root.dwellTime
-        onPeckDepthEdited: function(value) { root.doc = value; root.save() }
-        onDwellTimeEdited: function(value) { root.dwellTime = value; root.save() }
+        onPeckDepthEdited: function(value) { root.editCutting({ doc: value }) }
+        onDwellTimeEdited: function(value) { root.editCutting({ dwell_time: value }) }
         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
     }
 }

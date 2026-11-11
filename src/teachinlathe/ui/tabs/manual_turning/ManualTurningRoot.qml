@@ -240,7 +240,9 @@ Item {
                         Rectangle {
                             id: joystickFeedFrame
                             readonly property bool angleFeedActive: root.viewModel.turning.angleFeedActive
+                            // view state: the frame's blink
                             property color frameBorderColor: root.cardBorderColor
+                            // view state: the frame's blink
                             property real glowOpacity: 0
                             readonly property int glowDurationMs: 200
                             readonly property int glowBorderWidth: 10

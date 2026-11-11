@@ -8,22 +8,16 @@ Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
-    property int profileId: 0
-    property var primitives: []
-    property var workpiece: ({})
+    // The view model of the operation this shows (OperationEditorViewModel.py):
+    // the one place what the view shows comes from
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property int profileId: op.profile_id !== undefined ? Math.round(Number(op.profile_id)) : 0
+    readonly property var primitives: op.profile_primitives || []
+    readonly property var workpiece: op.workpiece || ({})
 
-    function applyData(index, data) {
-        opIndex = index
-        opData = data || {}
-        profileId = opData.profile_id !== undefined ? Math.round(Number(opData.profile_id)) : 0
-        primitives = JSON.parse(JSON.stringify(opData.profile_primitives || []))
-        workpiece = JSON.parse(JSON.stringify(opData.workpiece || {}))
-        canvas.resetView()
-    }
+    // another operation: the drawing fitted to it
+    onEditorChanged: canvas.resetView()
 
     ColumnLayout {
         anchors.fill: parent

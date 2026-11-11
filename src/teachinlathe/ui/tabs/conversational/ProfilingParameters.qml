@@ -15,51 +15,19 @@ TitledCard {
     Layout.preferredWidth: 560
     font.pixelSize: Theme.fontBody
 
-    // bridge
-    property int  opIndex: -1
-    property var  opData: null
-    property var  profilingParameters: ({})
+    // the operation's profiling_parameters, as its editor has them: all it shows
+    property var parameters: ({})
+    readonly property var _p: parameters || {}
 
-    signal saveRequested(var payload)
-
+    // a change to the profiling_parameters: only the fields in it
+    signal edited(var changes)
     signal openNumPadRequested(var field)
-
     signal teachXRequested(int index)
-
     signal teachZRequested(int index)
 
-    // state
-    property int profile_id: 0
-    property real x_start: 0.0
-    property real z_start: 0.0
-    property bool _loading: false
-
-    function applyData(index, parameters, fullOp) {
-        _loading = true
-        opIndex = index
-        opData = fullOp || {}
-        profilingParameters = parameters || {}
-        profile_id = parseInt(profilingParameters.profile_id !== undefined ? profilingParameters.profile_id : 0)
-        x_start = parseFloat(profilingParameters.x_start !== undefined ? profilingParameters.x_start : 0.0)
-        z_start = parseFloat(profilingParameters.z_start !== undefined ? profilingParameters.z_start : 0.0)
-        _loading = false
-    }
-
-    function emitSave() {
-        if (_loading) return
-        var payload = {
-            order: (opData && opData.order !== undefined) ? opData.order : 0,
-            type: (opData && opData.type) ? opData.type : "",
-            generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
-            is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-            profiling_parameters: {
-                profile_id: profile_id,
-                x_start: x_start,
-                z_start: z_start
-            }
-        }
-        root.saveRequested(payload)
-    }
+    readonly property int profile_id: _p.profile_id !== undefined ? parseInt(_p.profile_id) : 0
+    readonly property real x_start: _p.x_start !== undefined ? Number(_p.x_start) : 0.0
+    readonly property real z_start: _p.z_start !== undefined ? Number(_p.z_start) : 0.0
 
     DoubleValidator {
         id: dblVal; notation: DoubleValidator.StandardNotation
@@ -92,7 +60,7 @@ TitledCard {
                     }
                     hAlign: Text.AlignRight
                     onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                    onValueCommitted: function(value) { root.profile_id = value; root.emitSave() }
+                    onValueCommitted: function(value) { root.edited({ profile_id: Math.round(value) }) }
                 }
         }
 
@@ -128,7 +96,7 @@ TitledCard {
                 }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.x_start = value; root.emitSave() }
+                onValueCommitted: function(value) { root.edited({ x_start: Number(value) }) }
             }
             TeachInButton {
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
@@ -153,7 +121,7 @@ TitledCard {
                 }
                 hAlign: Text.AlignRight
                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                onValueCommitted: function(value) { root.z_start = value; root.emitSave() }
+                onValueCommitted: function(value) { root.edited({ z_start: Number(value) }) }
             }
             TeachInButton {
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft

@@ -15,39 +15,28 @@ TitledCard {
     font.pixelSize: Theme.fontBody
 
     /* --- Public API --- */
-    property var    m1Data: null
-    property bool   include_m1: true
+    // the operation's m1_parameters, as its editor has it: all it shows
+    property var    m1: ({})
+    readonly property bool include_m1: m1 && m1.include_m1 !== undefined ? !!m1.include_m1 : true
     // where it stops, a PauseToInspect.Position
-    property int    inspect_position: PauseToInspect.G28
+    readonly property int inspect_position: m1 && m1.inspect_position !== undefined
+                                            ? m1.inspect_position : PauseToInspect.G28
     // offer a third place to stop: where the tool is (IN_PLACE) - Drilling's
     // and Tapping's
     property bool   allowStayInPlace: false
 
-    signal saveRequested(var payload)
+    // the whole m1_parameters, with the change made; the panel itself keeps
+    // nothing, and shows the change once ``m1`` has it
+    signal m1Edited(var m1)
 
     property bool readOnly: false
 
     // how wide each Retract button's half of the row is, for rows elsewhere
     // that space their buttons the same
     readonly property real optionWidth: rbG28.width
-    property bool _loading: false
 
-    function applyData(data) {
-        _loading = true
-        m1Data = data || {}
-        include_m1       = (m1Data.include_m1       !== undefined) ? !!m1Data.include_m1       : true
-        inspect_position = (m1Data.inspect_position !== undefined) ? m1Data.inspect_position   : PauseToInspect.G28
-        _loading = false
-    }
-
-    function emitSave() {
-        if (_loading) return
-        root.saveRequested({
-            m1_parameters: {
-                include_m1:       !!include_m1,
-                inspect_position: inspect_position
-            }
-        })
+    function _edit(includeM1, inspectPosition) {
+        root.m1Edited({ include_m1: !!includeM1, inspect_position: inspectPosition })
     }
 
     ColumnLayout {
@@ -57,12 +46,12 @@ TitledCard {
         // --- master toggle ---
         RowLayout {
             Layout.fillWidth: true
-            CheckBox {
+            ModelCheckBox {
                 id: includeBox
                 text: "Allow inspection after each pass"
                 checked: root.include_m1
                 enabled: !root.readOnly
-                onToggled: { root.include_m1 = checked; root.emitSave() }
+                onToggledTo: function(on) { root._edit(on, root.inspect_position) }
             }
             Item { Layout.fillWidth: true }
         }
@@ -79,10 +68,10 @@ TitledCard {
         RowLayout {
             Layout.fillWidth: true
             spacing: 16
-            enabled: includeBox.checked && !root.readOnly
-            opacity: includeBox.checked ? 1.0 : 0.5
+            enabled: root.include_m1 && !root.readOnly
+            opacity: root.include_m1 ? 1.0 : 0.5
 
-            RadioButton {
+            ModelRadioButton {
                 id: rbInPlace
                 visible: root.allowStayInPlace
                 Layout.fillWidth: true
@@ -90,27 +79,27 @@ TitledCard {
                 text: "Stay there"
                 font.pixelSize: Theme.fontBody
                 checked: root.inspect_position === PauseToInspect.InPlace
-                onToggled: if (checked) { root.inspect_position = PauseToInspect.InPlace; root.emitSave() }
+                onChosen: root._edit(root.include_m1, PauseToInspect.InPlace)
             }
 
-            RadioButton {
+            ModelRadioButton {
                 id: rbG28
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 text: "Move to <b>G28</b>"
                 font.pixelSize: Theme.fontBody
                 checked: root.inspect_position === PauseToInspect.G28
-                onToggled: if (checked) { root.inspect_position = PauseToInspect.G28; root.emitSave() }
+                onChosen: root._edit(root.include_m1, PauseToInspect.G28)
             }
 
-            RadioButton {
+            ModelRadioButton {
                 id: rbG30
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 text: "Move to <b>G30</b>"
                 font.pixelSize: Theme.fontBody
                 checked: root.inspect_position === PauseToInspect.G30
-                onToggled: if (checked) { root.inspect_position = PauseToInspect.G30; root.emitSave() }
+                onChosen: root._edit(root.include_m1, PauseToInspect.G30)
             }
         }
 

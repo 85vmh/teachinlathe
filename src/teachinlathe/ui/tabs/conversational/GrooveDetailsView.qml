@@ -2,12 +2,14 @@
 // (Groove Roughing, BiDirectional Grooving, Groove Finishing): the operation's
 // header - speeds and feeds, and the inspection stop - over the groove's canvas
 // (GrooveCanvas), the radial profile it cuts drawn on the header's stock with
-// what the operation would cut, and the saving of the whole op on every edit.
+// what the operation cuts. It keeps nothing of its own: all it shows is its
+// editor's operation, and every change is the editor's edit, which the
+// operation then shows.
 //
-// A view sets ``draftOp`` - the op with the values in its boxes - and
-// ``readData`` - those values read from the op - and lays its boxes and marks
-// over the canvas (its children go onto it), setting what the canvas draws of
-// it through ``canvas`` (startPosition, clearance, boxWidth, extraMarkers).
+// A view binds ``profileId`` - the Define Radial Profile its operation names -
+// and its values to ``op``, and lays its boxes and marks over the canvas (its
+// children go onto it), setting what the canvas draws of it through
+// ``canvas`` (startPosition, clearance, boxWidth, extraMarkers).
 import QtQuick
 import QtQuick.Layouts
 import theme
@@ -16,46 +18,38 @@ Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
 
-    // the radial profile it cuts, and the header's stock
-    property var    primitives:  []
-    property string profileType: "od"
-    property var    workpiece:   ({})
-    // the tool it cuts with: editor.toolCard, a ToolCard; null with none
-    property var    toolCard:    null
+    // the header's stock, and the tool it cuts with: editor.toolCard, a ToolCard
+    readonly property var workpiece: editor.workpiece || ({})
+    readonly property var toolCard: editor.toolCard
 
-    // the Define Radial Profile it cuts, as readData reads it
-    property int  profileId: 1
-    // the stock to leave its Stock to Leave box edits; 0 for a view with none
-    property real stockRadial: 0.0
-    property real stockAxial: 0.0
+    // the Define Radial Profile it cuts: bound by the view to its operation's
+    property int profileId: 1
+    // the radial profile it cuts
+    readonly property var _profileOp: editor.radialProfile(profileId) || ({})
+    readonly property var primitives: _profileOp.profile_primitives || []
+    readonly property string profileType: _profileOp.profile_type !== undefined ? String(_profileOp.profile_type) : "od"
+
+    // the stock to leave its Stock to Leave box edits - none while it is off
+    readonly property bool _stockOn: !!op.stock_to_leave_enabled
+    readonly property real stockRadial: _stockOn ? numberIn(op.stock_to_leave, "radial", 0) : 0
+    readonly property real stockAxial: _stockOn ? numberIn(op.stock_to_leave, "axial", 0) : 0
     // whether its header has the inspection stop
     property bool hasM1: true
-
-    // opData with the values edited in the view's boxes
-    property var draftOp: function() { return copyOf(opData) }
-    // the view's values read from ``data``, an op's dict
-    property var readData: function(data) {}
 
     readonly property alias canvas: profileCanvas
     // the view's boxes and marks, laid over the canvas
     default property alias canvasContent: profileCanvas.data
 
     readonly property bool hasGroove: profileCanvas.hasGroove
-    // what it will cut with the values in its boxes, as its view model's
-    // preview has it
-    readonly property var groovePreview: (opIndex >= 0 && hasGroove && editor) ? editor.preview(draftOp()) : null
+    // what it cuts, as its view model's preview has it
+    readonly property var groovePreview: hasGroove ? editor.preview : null
 
     signal openNumPadRequested(var field)
-
-    // ``data`` copied, for a draft of it to be changed
-    function copyOf(data) {
-        return JSON.parse(JSON.stringify(data || {}))
-    }
 
     // ``values[key]`` as a number, ``fallback`` when it has none
     function numberIn(values, key, fallback) {
@@ -68,65 +62,28 @@ Item {
         return id > 0 ? Math.round(id) : fallback
     }
 
-    // ``op`` with the stock to leave in the boxes - on when there is any
-    function withStock(op) {
-        op.stock_to_leave = { radial: stockRadial, axial: stockAxial }
-        op.stock_to_leave_enabled = stockRadial > 0 || stockAxial > 0
-        return op
+    // a change to the stock to leave: on when there is any
+    function editStock(changes) {
+        var radial = changes.radial !== undefined ? changes.radial : stockRadial
+        var axial = changes.axial !== undefined ? changes.axial : stockAxial
+        editor.edit({ stock_to_leave: { radial: radial, axial: axial },
+                      stock_to_leave_enabled: radial > 0 || axial > 0 })
     }
+    function editCutting(changes) { editor.edit({ cutting_parameters: changes }) }
 
-    // the stock to leave of ``data`` into the boxes - none when it is off
-    function readStock(data) {
-        var on = !!data.stock_to_leave_enabled
-        stockRadial = on ? numberIn(data.stock_to_leave, "radial", 0) : 0
-        stockAxial  = on ? numberIn(data.stock_to_leave, "axial", 0) : 0
-    }
-
-    function _loadProfile() {
-        var profileOp = editor ? (editor.radialProfile(profileId) || {}) : {}
-        primitives  = copyOf(profileOp.profile_primitives || [])
-        profileType = profileOp.profile_type !== undefined ? String(profileOp.profile_type) : "od"
-    }
-
-    // the whole op with every edited value, sent as one save; opData keeps it,
-    // so the next edit builds on this one
-    function save(op) {
-        if (opIndex < 0 || !opData) return
-        opData = op || draftOp()
-        root.editor.save(opData)
-    }
-
-    function applyData(index, data) {
-        opIndex = index
-        opData  = data || {}
-        workpiece = editor ? (editor.workpiece || {}) : {}
-        toolCard  = editor ? editor.toolCard : null
-        readData(opData)
-        _loadProfile()
-        header.applyData(opData)
-        profileCanvas.resetView()
-    }
+    // another operation: the drawing fitted to it
+    onEditorChanged: profileCanvas.resetView()
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
         spacing: Theme.innerSpacings
 
-        // each edit goes into the whole op with the canvas boxes' values
         OperationHeader {
             id: header
+            editor: root.editor
             hasM1: root.hasM1
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) {
-                var op = root.draftOp()
-                op.speeds_and_feeds = speeds
-                root.save(op)
-            }
-            onM1Edited: function(m1) {
-                var op = root.draftOp()
-                op.m1_parameters = m1
-                root.save(op)
-            }
         }
 
         GrooveCanvas {

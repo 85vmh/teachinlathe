@@ -13,6 +13,7 @@ Rectangle {
     readonly property color warningColor: Theme.warning
     readonly property color warningBaseColor: Theme.foreground
     readonly property int warningPulseDurationMs: 200
+    // view state: the warning's blink
     property color warningTitleColor: warningBaseColor
     signal openNumPadRequested(Item field)
 

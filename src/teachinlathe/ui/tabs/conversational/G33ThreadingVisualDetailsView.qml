@@ -10,7 +10,9 @@
 // Start, Clearance off the diameter it is taught in on. The values in cards
 // down the right edge, in a list that scrolls, as Turning has them: OD / ID,
 // Clearance, Z Start / Z End, Major Ø and Minor Ø, and the passes (DOC,
-// Infeed Angle, Spring Passes).
+// Infeed Angle, Spring Passes). It keeps nothing of its own: all it shows is
+// its editor's operation, and every change is the editor's edit, which the
+// operation then shows.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -23,31 +25,31 @@ Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
 
     // the program header's stock
-    property var    workpiece: ({})
-    // the tool it cuts with, as its Tool Library card
-    // shows it: editor.toolCard, a ToolCard; null with none
-    property var    toolCard: null
+    readonly property var workpiece: editor.workpiece || ({})
+    // the tool it cuts with, as its Tool Library card shows it: editor.toolCard,
+    // a ToolCard
+    readonly property var toolCard: editor.toolCard
 
-    // the values the boxes on the canvas show and edit
+    // what the boxes on the canvas show
     // "OD" | "ID": an ID thread is taught in on its Minor Ø, its Major Ø
     // calculated
-    property string location: "OD"
-    property real   pitch: 0.0
-    property int    starts: 1
-    property real   majorDiameter: 0.0
-    property real   minorDiameter: 0.0
-    property real   zStart: 0.0
-    property real   zEnd: 0.0
-    property real   retract: 0.0
-    property real   initialDoc: 0.0
-    property real   compoundAngle: 0.0
-    property int    springPasses: 0
+    readonly property string location: op.location === "ID" ? "ID" : "OD"
+    readonly property real   pitch: Number(op.pitch || 0)
+    readonly property int    starts: op.starts !== undefined ? Math.max(1, Math.round(Number(op.starts))) : 1
+    readonly property real   majorDiameter: Number(op.major_diameter || 0)
+    readonly property real   minorDiameter: Number(op.minor_diameter || 0)
+    readonly property real   zStart: Number(op.z_start || 0)
+    readonly property real   zEnd: Number(op.z_end || 0)
+    readonly property real   retract: Number(op.retract || 0)
+    readonly property real   initialDoc: Number(op.initial_doc || 0)
+    readonly property real   compoundAngle: Number(op.compound_angle || 0)
+    readonly property int    springPasses: Math.round(Number(op.spring_passes || 0))
 
     // the boxes' and their marks' colours
     readonly property color zStartColor:  "#1565c0"
@@ -60,21 +62,8 @@ Item {
 
     // the thread's form - metric for now (ThreadForm, data_types.py) - and
     // the included angle of its flanks
-    property string threadForm: "metric"
-    readonly property real threadAngle: editor ? editor.threadAngle(threadForm) : 60
-
-    // The diameter calculated from the one taught in and the pitch: Minor Ø
-    // from Major Ø for an OD thread, Major Ø from Minor Ø for an ID one. Set,
-    // not saved; nothing while the one taught in is not set yet.
-    function _recalculateDiameter() {
-        if (!root.editor || !(pitch > 0)) return
-        var taught = location === "ID" ? minorDiameter : majorDiameter
-        if (!(taught > 0)) return
-        var r = root.editor.calculateThreadDiameter(location, pitch, majorDiameter, minorDiameter)
-        if (!r || !r.valid) return
-        if (location === "ID") majorDiameter = Number(r.calculatedDiameter)
-        else minorDiameter = Number(r.calculatedDiameter)
-    }
+    readonly property string threadForm: "metric"
+    readonly property real threadAngle: editor.threadAngle(threadForm)
 
     // An ID thread is drawn in a tube: its bore Minor Ø - the hole before the
     // thread is cut - its wall this many times the thread's depth on each
@@ -116,54 +105,8 @@ Item {
     readonly property real startX: internal ? minorDiameter - retract : majorDiameter + retract
     signal openNumPadRequested(var field)
 
-    // opData with the values edited in the boxes
-    function _draftOp() {
-        var op = JSON.parse(JSON.stringify(opData || {}))
-        op.pitch = pitch
-        op.starts = starts
-        op.major_diameter = majorDiameter
-        op.minor_diameter = minorDiameter
-        op.z_start = zStart
-        op.z_end = zEnd
-        op.retract = retract
-        op.initial_doc = initialDoc
-        op.location = location
-        op.compound_angle = compoundAngle
-        op.spring_passes = springPasses
-        return op
-    }
-
-    // the whole op with every edited value, sent as one save; opData keeps it,
-    // so the next edit builds on this one
-    function save(op) {
-        if (opIndex < 0 || !opData) return
-        opData = op || _draftOp()
-        root.editor.save(opData)
-    }
-
-    function applyData(index, data) {
-        opIndex = index
-        opData  = data || {}
-        workpiece = editor ? (editor.workpiece || {}) : {}
-        toolCard  = editor ? editor.toolCard : null
-
-        location      = opData.location === "ID" ? "ID" : "OD"
-        pitch         = opData.pitch          !== undefined ? Number(opData.pitch) : 0
-        starts        = opData.starts         !== undefined ? Math.max(1, Math.round(Number(opData.starts))) : 1
-        majorDiameter = opData.major_diameter !== undefined ? Number(opData.major_diameter) : 0
-        minorDiameter = opData.minor_diameter !== undefined ? Number(opData.minor_diameter) : 0
-        zStart        = opData.z_start        !== undefined ? Number(opData.z_start) : 0
-        zEnd          = opData.z_end          !== undefined ? Number(opData.z_end) : 0
-        retract       = opData.retract        !== undefined ? Number(opData.retract) : 0
-        initialDoc    = opData.initial_doc    !== undefined ? Number(opData.initial_doc) : 0
-        compoundAngle = opData.compound_angle !== undefined ? Number(opData.compound_angle) : 0
-        springPasses  = opData.spring_passes  !== undefined ? Math.round(Number(opData.spring_passes)) : 0
-
-        header.pitch = pitch
-        header.starts = starts
-        header.applyData(opData)
-        profileCanvas.resetView()
-    }
+    // another operation: the drawing fitted to it
+    onEditorChanged: profileCanvas.resetView()
 
     ColumnLayout {
         anchors.fill: parent
@@ -173,26 +116,10 @@ Item {
         // RPM only; its feeds are the pitch and the starts
         OperationHeader {
             id: header
+            editor: root.editor
             rpmOnly: true
             feedKind: SpeedsAndFeeds.FeedKind.Threading
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) {
-                var op = root._draftOp()
-                op.speeds_and_feeds = speeds
-                root.save(op)
-            }
-            // the calculated diameter follows the pitch
-            onPitchEdited: function(value) {
-                root.pitch = value
-                root._recalculateDiameter()
-                root.save()
-            }
-            onStartsEdited: function(value) { root.starts = value; root.save() }
-            onM1Edited: function(m1) {
-                var op = root._draftOp()
-                op.m1_parameters = m1
-                root.save(op)
-            }
         }
 
         ProfileCanvas {
@@ -330,7 +257,7 @@ Item {
                         id: locationBox
                         Layout.alignment: Qt.AlignRight
                         location: root.location
-                        onLocationEdited: function(value) { root.location = value; root.save() }
+                        onLocationEdited: function(value) { root.editor.edit({ location: value }) }
                     }
 
                     DimensionBox {
@@ -340,7 +267,7 @@ Item {
                         dimensionColor: profileCanvas.rapidColor
                         settingName: "threading.retract"
                         value: root.retract
-                        onValueEdited: function(value) { root.retract = Math.abs(value); root.save() }
+                        onValueEdited: function(value) { root.editor.edit({ retract: Math.abs(value) }) }
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                     }
 
@@ -354,8 +281,8 @@ Item {
                         endSettingName: "threading.z_end"
                         zStart: root.zStart
                         zEnd: root.zEnd
-                        onZStartEdited: function(value) { root.zStart = value; root.save() }
-                        onZEndEdited: function(value) { root.zEnd = value; root.save() }
+                        onZStartEdited: function(value) { root.editor.edit({ z_start: value }) }
+                        onZEndEdited: function(value) { root.editor.edit({ z_end: value }) }
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                     }
 
@@ -370,9 +297,9 @@ Item {
                         location: root.location
                         majorDiameter: root.majorDiameter
                         minorDiameter: root.minorDiameter
-                        onMajorEdited: function(value) { root.majorDiameter = value; root.save() }
-                        onMinorEdited: function(value) { root.minorDiameter = value; root.save() }
-                        onCalculateRequested: { root._recalculateDiameter(); root.save() }
+                        onMajorEdited: function(value) { root.editor.edit({ major_diameter: value }) }
+                        onMinorEdited: function(value) { root.editor.edit({ minor_diameter: value }) }
+                        onCalculateRequested: root.editor.calculateDiameter()
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                     }
 
@@ -386,9 +313,9 @@ Item {
                         springPasses: root.springPasses
                         finalRadialDepth: Math.abs(root.majorDiameter - root.minorDiameter) / 2
                         starts: root.starts
-                        onInitialDocEdited: function(value) { root.initialDoc = value; root.save() }
-                        onInfeedAngleEdited: function(value) { root.compoundAngle = value; root.save() }
-                        onSpringPassesEdited: function(value) { root.springPasses = value; root.save() }
+                        onInitialDocEdited: function(value) { root.editor.edit({ initial_doc: value }) }
+                        onInfeedAngleEdited: function(value) { root.editor.edit({ compound_angle: value }) }
+                        onSpringPassesEdited: function(value) { root.editor.edit({ spring_passes: value }) }
                         onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                     }
                 }

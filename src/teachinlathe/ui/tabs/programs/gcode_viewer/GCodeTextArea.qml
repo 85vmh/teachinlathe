@@ -13,9 +13,13 @@ Rectangle {
     property bool centerOnHighlight: false
     property int linesBelowHighlight: 0
     property string emptyText: ""
+    // view state: the scroll
     property bool userDetachedFromHighlight: false
+    // view state: the scroll
     property bool recenterButtonVisible: false
+    // view state: the scroll
     property bool _programmaticScroll: false
+    // view state: the scroll
     property bool _userScrollActive: false
     readonly property real _centerTolerance: 2
     // Scrolled by hand, the line in the middle becomes the highlighted one
@@ -51,6 +55,7 @@ Rectangle {
     // thread is where that lands, and the DRO, the backplot and the rest of
     // the UI are all behind it - so everything stutters together, worsening as
     // the program advances.
+    // view state: a cache of where each line of ``content`` starts, rebuilt on each change
     property var _lineOffsets: [0]
 
     function _rebuildLineOffsets() {
@@ -197,6 +202,9 @@ Rectangle {
         root._rebuildLineOffsets()
         if (editor.text !== content) {
             userDetachedFromHighlight = false
+            // mirrors the model: the text shown is ``content``, put in the
+            // editor each time it changes (a binding would lose the
+            // highlighter's document and the scroll)
             editor.text = content
             // a new program - one just generated, too - is read from its
             // start, not from where the last one was scrolled to; with a
@@ -223,6 +231,7 @@ Rectangle {
             viewModel.attachHighlighter(editor.textDocument)
         }
         if (editor.text !== content) {
+            // mirrors the model: see onContentChanged
             editor.text = content
         }
         Qt.callLater(syncHighlight)

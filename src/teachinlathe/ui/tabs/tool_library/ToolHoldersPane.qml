@@ -41,6 +41,7 @@ ToolLibraryPane {
     //: Off while a holder waits for a tool.
     property bool swipeEnabled: true
     //: The holder card or tool box swiped open to its Delete, or null.
+    // view state: the row swiped open
     property var openSwipeRow: null
 
     //: As a cutting tool's card: its thumbnail, the space round what is on

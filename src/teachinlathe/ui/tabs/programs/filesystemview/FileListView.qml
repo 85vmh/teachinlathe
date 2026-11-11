@@ -43,6 +43,7 @@ Card {
     readonly property color rowSelect: Theme.selection
 
     // The file row swiped open to its Delete
+    // view state: the row swiped open
     property int openSwipeIndex: -1
 
     ColumnLayout {

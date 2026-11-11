@@ -13,45 +13,17 @@ TitledCard {
     Layout.preferredWidth: 520
     font.pixelSize: Theme.fontBody
 
-    property int opIndex: -1
-    property var opData: null
-    property var cuttingData: ({})
+    // the operation's cutting_parameters, as its editor has them: all it shows
+    property var cutting: ({})
+    readonly property var _c: cutting || {}
 
-    signal saveRequested(var payload)
+    // a change to the cutting_parameters: only the fields in it
+    signal edited(var changes)
     signal openNumPadRequested(var field)
 
-    property real doc: 0.0
-    property real retract: 0.0
-    property int grooves_count: 1
-    property bool _loading: false
-
-    function applyData(index, cuttingParams, fullOp) {
-        _loading = true
-        opIndex = index
-        opData = fullOp || {}
-        cuttingData = cuttingParams || {}
-
-        doc = parseFloat(cuttingData.doc !== undefined ? cuttingData.doc : 0.0)
-        retract = parseFloat(cuttingData.retract !== undefined ? cuttingData.retract : 0.0)
-        grooves_count = Math.max(1, Math.round(cuttingData.grooves_count !== undefined ? Number(cuttingData.grooves_count) : 1))
-        _loading = false
-    }
-
-    function emitSave() {
-        if (_loading) return
-        var payload = {
-            order: (opData && opData.order !== undefined) ? opData.order : 0,
-            type: (opData && opData.type) ? opData.type : "",
-            generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
-            is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-            cutting_parameters: {
-                doc: doc,
-                retract: retract,
-                grooves_count: grooves_count
-            }
-        }
-        root.saveRequested({ index: opIndex, payload: payload })
-    }
+    readonly property real doc: _c.doc !== undefined ? Number(_c.doc) : 0.0
+    readonly property real retract: _c.retract !== undefined ? Number(_c.retract) : 0.0
+    readonly property int grooves_count: Math.max(1, Math.round(_c.grooves_count !== undefined ? Number(_c.grooves_count) : 1))
 
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
     IntValidator { id: groovesVal; bottom: 1; top: 9999 }
@@ -71,7 +43,7 @@ TitledCard {
             formatter: function(v) { return (v == null) ? "" : String(Math.max(1, Math.round(Number(v)))) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: function(value) { root.grooves_count = Math.max(1, Math.round(value)); root.emitSave() }
+            onValueCommitted: function(value) { root.edited({ grooves_count: Math.max(1, Math.round(value)) }) }
         }
         Item {}
 
@@ -84,7 +56,7 @@ TitledCard {
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: function(value) { root.doc = value; root.emitSave() }
+            onValueCommitted: function(value) { root.edited({ doc: Number(value) }) }
         }
         Label { text: "(mm/radius)"; font.pixelSize: Theme.fontBody }
 
@@ -97,7 +69,7 @@ TitledCard {
             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: function(value) { root.retract = value; root.emitSave() }
+            onValueCommitted: function(value) { root.edited({ retract: Number(value) }) }
         }
         Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
     }

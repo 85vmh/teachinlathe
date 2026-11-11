@@ -43,6 +43,7 @@ Rectangle {
     // The strip slides to the loaded program or its simulation. Only the run
     // source changes once it arrives.
     readonly property bool stripShown: programShown || simulateShown
+    // view state: the slide between screens
     property bool toSimulate: simulateShown
     onSimulateShownChanged: if (simulateShown) toSimulate = true
     onProgramShownChanged: if (programShown) toSimulate = false
@@ -67,9 +68,11 @@ Rectangle {
     readonly property real rightWidth: Math.max(0, width - rightX)
 
     // 0: files + code + the part on screen; 1: code + backplot.
+    // view state: the slide between screens
     property real offset: stripShown ? 1 : 0
     // How far the screen the strip went to is in, 0..1. On the way to it, it
     // comes in after the slide; on the way back it goes first.
+    // view state: the slide between screens
     property real reveal: stripShown ? 1 : 0
     // How far the bar under the code reaches across under the backplot, 0..1:
     // all the way while a program runs, with Cycle Abort and Feed Hold at its
@@ -90,6 +93,7 @@ Rectangle {
     // that arrives with the tab - the conversational screen opening a
     // generated program, say - lands in place. Becoming visible arms the
     // animation only once the tab has been up for a moment.
+    // view state: the slide between screens
     property bool _animate: false
     onVisibleChanged: {
         _animate = false

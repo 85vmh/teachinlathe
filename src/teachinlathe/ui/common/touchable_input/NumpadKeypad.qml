@@ -17,8 +17,10 @@ import common
 ColumnLayout {
     id: root
 
+    // view state: what is being typed, until committed
     property string buffer: ""
     // the value it was started on, as yet untouched: a key replaces it
+    // view state: the typed text selected, to be replaced
     property bool   bufferSelected: false
     // "int": no decimal point
     property string valueType: ""

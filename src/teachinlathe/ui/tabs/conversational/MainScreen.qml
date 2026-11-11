@@ -307,10 +307,13 @@ Item {
 
                                 property string operationsText: programOperations
                                 readonly property bool hasOperations: operationsText !== "No operations yet, tap to change that"
+                                // view state: the badges that fit the cell's width, laid out again when it or the text changes
                                 property var displayOperations: []
+                                // view state: the badges that fit the cell's width, laid out again when it or the text changes
                                 property bool showOverflowBadge: false
 
                                 function badgeWidthFor(text) {
+                                    // view state: the text measured
                                     badgeMetrics.text = text
                                     return Math.min(width - 24, Math.ceil(badgeMetrics.width) + 20)
                                 }

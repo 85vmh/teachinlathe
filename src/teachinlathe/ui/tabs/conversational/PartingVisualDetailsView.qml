@@ -7,7 +7,9 @@
 // across the centre line on the blade's right, the clearance dimensioned
 // above X Start - each with an arrow to its box down the right edge. A new
 // Parting starts at the stock's outside, ends at its bore, and slows to Fz2
-// a blade's width before the end. Saves through updateParting.
+// a blade's width before the end (its editor sets them). It keeps nothing of
+// its own: all it shows is its editor's operation, and every change is the
+// editor's edit, which the operation then shows.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -19,24 +21,36 @@ Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property var _pp: op.parting_parameters || ({})
 
     // the program header's stock, and the tool in when this parts, as its
-    // Tool Library card shows it: editor.toolCard, a ToolCard; null with none
-    property var    workpiece: ({})
-    property var    toolCard: null
+    // Tool Library card shows it: editor.toolCard, a ToolCard
+    readonly property var workpiece: editor.workpiece || ({})
+    readonly property var toolCard: editor.toolCard
 
-    // the values the boxes on the canvas show and edit
-    property real   xStart: 0.0
-    property real   xEnd: 0.0
-    property real   zPos: 0.0
-    property real   xFz2: 0.0          // where the second feed rate takes over
-    property real   xClearance: 1.0
+    // what the boxes on the canvas show
+    readonly property real xStart: Number(_pp.x_start || 0)
+    readonly property real xEnd: Number(_pp.x_end || 0)
+    readonly property real zPos: Number(_pp.z_pos || 0)
+    // where the second feed rate takes over
+    readonly property real xFz2: Number(_pp.second_feed_x_pos || 0)
+    readonly property real xClearance: _pp.x_clearance !== undefined ? Number(_pp.x_clearance) : 1
     // none, a chamfer or a fillet on the part's edge, as the op keeps it
-    property var    edgeBreak: ({ blend_type: "none", chamfer_width: 0, fillet_radius: 0 })
+    readonly property var edgeBreak: {
+        var eb = op.edge_break || {}
+        return { blend_type: eb.blend_type !== undefined ? String(eb.blend_type) : "none",
+                 chamfer_width: eb.chamfer_width !== undefined ? Number(eb.chamfer_width) : 0,
+                 fillet_radius: eb.fillet_radius !== undefined ? Number(eb.fillet_radius) : 0 }
+    }
+
+    function editParting(changes) { editor.edit({ parting_parameters: changes }) }
+
+    // another operation: the drawing fitted to it
+    onEditorChanged: profileCanvas.resetView()
 
     // the boxes' and their marks' colours
     readonly property color zPosColor:      "#00838f"
@@ -73,13 +87,11 @@ Item {
     readonly property real bladeZ: zDrawn - bladeWidth / 2
     signal openNumPadRequested(var field)
 
-    // opData with the values edited in the boxes
-    // what parting will cut with the values above, as its G-code moves - drawn
-    // where the canvas draws the blade: along Z by zShift, as the stock is
-    // broken to fit
+    // what parting cuts, as its G-code moves - drawn where the canvas draws
+    // the blade: along Z by zShift, as the stock is broken to fit
     readonly property var partingPreview: {
-        if (opIndex < 0 || !editor) return null
-        var preview = editor.preview(_draftOp())
+        // a copy: the lines are moved
+        var preview = JSON.parse(JSON.stringify(editor.preview))
         function shifted(lines) {
             return (lines || []).map(function(l) {
                 var m = JSON.parse(JSON.stringify(l))
@@ -93,57 +105,6 @@ Item {
         return preview
     }
 
-    function _draftOp() {
-        var op = JSON.parse(JSON.stringify(opData || {}))
-        op.parting_parameters = op.parting_parameters || {}
-        var pp = op.parting_parameters
-        pp.x_start = xStart
-        pp.x_end = xEnd
-        pp.z_pos = zPos
-        pp.second_feed_x_pos = xFz2
-        pp.x_clearance = xClearance
-        op.edge_break = JSON.parse(JSON.stringify(edgeBreak))
-        return op
-    }
-
-    // the whole op with every edited value, sent as one save; opData keeps it,
-    // so the next edit builds on this one
-    function save(op) {
-        if (opIndex < 0 || !opData) return
-        opData = op || _draftOp()
-        root.editor.save(opData)
-    }
-
-    function applyData(index, data) {
-        opIndex = index
-        opData  = data || {}
-        workpiece = editor ? (editor.workpiece || {}) : {}
-        toolCard  = editor ? editor.toolCard : null
-
-        var pp = opData.parting_parameters || {}
-        xStart = pp.x_start !== undefined ? Number(pp.x_start) : 0
-        xEnd   = pp.x_end   !== undefined ? Number(pp.x_end)   : 0
-        zPos   = pp.z_pos   !== undefined ? Number(pp.z_pos)   : 0
-        xFz2   = pp.second_feed_x_pos !== undefined ? Number(pp.second_feed_x_pos) : 0
-        xClearance = pp.x_clearance !== undefined ? Number(pp.x_clearance) : 1
-        var eb = opData.edge_break || {}
-        edgeBreak = { blend_type: eb.blend_type !== undefined ? String(eb.blend_type) : "none",
-                      chamfer_width: eb.chamfer_width !== undefined ? Number(eb.chamfer_width) : 0,
-                      fillet_radius: eb.fillet_radius !== undefined ? Number(eb.fillet_radius) : 0 }
-
-        header.applyData(opData)
-
-        // a new one - X Start never set - from the stock: start at its
-        // outside, end at its bore, Fz2 from a blade's width before the end
-        if (!(xStart > 0) && Number(workpiece.external_diameter) > 0) {
-            xStart = Number(workpiece.external_diameter)
-            xEnd = Math.max(0, Number(workpiece.internal_diameter) || 0)
-            xFz2 = xEnd + bladeWidth
-            save()
-        }
-        profileCanvas.resetView()
-    }
-
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
@@ -152,14 +113,10 @@ Item {
         // Parting has no M1; both its feed rates are the header's, Fz1 and Fz2
         OperationHeader {
             id: header
+            editor: root.editor
             hasM1: false
             feedKind: SpeedsAndFeeds.FeedKind.Parting
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) {
-                var op = root._draftOp()
-                op.speeds_and_feeds = speeds
-                root.save(op)
-            }
         }
 
         ProfileCanvas {
@@ -329,7 +286,7 @@ Item {
                 label: "Z Position"
                 settingName: "parting.z_pos"
                 value: root.zPos
-                onValueEdited: function(value) { root.zPos = value; root.save() }
+                onValueEdited: function(value) { root.editParting({ z_pos: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -344,7 +301,7 @@ Item {
                 label: "Start \u00d8"
                 settingName: "parting.x_start"
                 value: root.xStart
-                onValueEdited: function(value) { root.xStart = value; root.save() }
+                onValueEdited: function(value) { root.editParting({ x_start: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -360,7 +317,7 @@ Item {
                 label: "Fz2 \u00d8"
                 settingName: "parting.second_feed_x_pos"
                 value: root.xFz2
-                onValueEdited: function(value) { root.xFz2 = value; root.save() }
+                onValueEdited: function(value) { root.editParting({ second_feed_x_pos: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -375,7 +332,7 @@ Item {
                 label: "End \u00d8"
                 settingName: "parting.x_end"
                 value: root.xEnd
-                onValueEdited: function(value) { root.xEnd = value; root.save() }
+                onValueEdited: function(value) { root.editParting({ x_end: value }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -388,7 +345,7 @@ Item {
                 blendType: root.edgeBreak.blend_type
                 chamferWidth: root.edgeBreak.chamfer_width
                 filletRadius: root.edgeBreak.fillet_radius
-                onEdited: function(edgeBreak) { root.edgeBreak = edgeBreak; root.save() }
+                onEdited: function(edgeBreak) { root.editor.edit({ edge_break: edgeBreak }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 
@@ -401,7 +358,7 @@ Item {
                 dimensionColor: root.clearanceColor
                 settingName: "parting.x_clearance"
                 value: root.xClearance
-                onValueEdited: function(value) { root.xClearance = Math.abs(value); root.save() }
+                onValueEdited: function(value) { root.editParting({ x_clearance: Math.abs(value) }) }
                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
             }
 

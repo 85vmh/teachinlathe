@@ -1,4 +1,7 @@
-// ThreadingDetailsView.qml
+// ThreadingDetailsView.qml — G76 Threading: its spindle, thread, Z limits,
+// location, diameters and passes in cards. It keeps nothing of its own: all
+// it shows is its editor's operation, and every change is the editor's edit,
+// which the operation then shows.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -11,13 +14,20 @@ Item {
     id: root
     anchors.fill: parent
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
-    readonly property bool isG33Threading: opData && opData.type === "g33Threading"
-    readonly property string defaultThreadType: isG33Threading ? "g33" : "metric"
-    readonly property string cuttingParamsSource: isG33Threading ? "G33CuttingParams.qml" : "G76CuttingParams.qml"
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place what the view shows comes from, and every edit goes to
+    required property var editor
+    readonly property var op: editor.operation
+
+    readonly property string location: op.location !== undefined ? String(op.location) : "OD"
+    readonly property real   pitch: Number(op.pitch || 0)
+    readonly property int    starts: op.starts !== undefined ? Math.round(Number(op.starts)) : 1
+    readonly property real   majorDiameter: Number(op.major_diameter || 0)
+    readonly property real   minorDiameter: Number(op.minor_diameter || 0)
+    readonly property real   zStart: Number(op.z_start || 0)
+    readonly property real   zEnd: Number(op.z_end || 0)
+    readonly property real   initialDoc: Number(op.initial_doc || 0)
+
     readonly property real finalRadialDepth: Math.abs(root.majorDiameter - root.minorDiameter) / 2.0
     readonly property int roughingPassCount: (root.initialDoc > 0 && root.finalRadialDepth > 0)
                                              ? Math.ceil(Math.pow(root.finalRadialDepth / root.initialDoc, 2))
@@ -31,101 +41,6 @@ Item {
     signal teachXRequested(int index)
     signal teachZRequested(int index)
 
-    // local state
-    property string location:     "OD"
-    property real   pitch:        0.0
-    property int    starts:       1
-    property real   majorDiameter: 0.0
-    property real   minorDiameter: 0.0
-    property real   zStart:       0.0
-    property real   zEnd:         0.0
-    property real   initialDoc:   0.0
-    property real   retract:      0.0
-    property int    springPasses: 0
-    property real   depthDegression: 1.0
-    property int    taperType: 0
-    property real   compoundAngle: 0.0
-    property bool   _loading:     false
-    property var    depthOptions: (function() {
-        var a = [];
-        for (var v = 1.0; v <= 2.0001; v += 0.1) a.push(v.toFixed(1));
-        return a;
-    })()
-
-    function applyData(index, data) {
-        _loading = true
-        opIndex = index
-        opData  = data || {}
-
-        spindlePanel.rpmOnly = true
-        spindlePanel.applyData(opIndex, opData)
-
-        location      = (opData.location       !== undefined) ? String(opData.location)                : "OD"
-        pitch         = (opData.pitch          !== undefined) ? Number(opData.pitch)                   : 0.0
-        starts        = (opData.starts         !== undefined) ? Math.round(Number(opData.starts))      : 1
-        majorDiameter = (opData.major_diameter !== undefined) ? Number(opData.major_diameter)          : 0.0
-        minorDiameter = (opData.minor_diameter !== undefined) ? Number(opData.minor_diameter)          : 0.0
-        zStart        = (opData.z_start        !== undefined) ? Number(opData.z_start)                 : 0.0
-        zEnd          = (opData.z_end          !== undefined) ? Number(opData.z_end)                   : 0.0
-        initialDoc    = (opData.initial_doc    !== undefined) ? Number(opData.initial_doc)             : 0.0
-        retract       = (opData.retract        !== undefined) ? Number(opData.retract)                 : 0.0
-        springPasses  = (opData.spring_passes  !== undefined) ? Math.round(Number(opData.spring_passes)) : 0
-        depthDegression = (opData.depth_degression !== undefined) ? Number(opData.depth_degression)    : 1.0
-        taperType       = (opData.taper_type      !== undefined) ? Math.round(Number(opData.taper_type)) : 0
-        compoundAngle   = (opData.compound_angle  !== undefined) ? Number(opData.compound_angle)         : 0.0
-        // G33's speeds, pitch and starts, and its pause, in the header
-        header.pitch  = pitch
-        header.starts = starts
-        header.applyData(opData)
-        _loading = false
-    }
-
-    function mergeIntoOp(payload) {
-        var out = JSON.parse(JSON.stringify(opData || {}))
-        for (var k in payload) {
-            if (k === "index") continue
-            if (payload.hasOwnProperty(k)) out[k] = payload[k]
-        }
-        opData = out
-        return out
-    }
-
-    function emitSave() {
-        if (_loading) return
-        var merged = root.mergeIntoOp({
-            location:       root.location,
-            thread_type:    (opData && opData.thread_type) ? opData.thread_type : root.defaultThreadType,
-            pitch:          root.pitch,
-            starts:         root.starts,
-            major_diameter: root.majorDiameter,
-            minor_diameter: root.minorDiameter,
-            z_start:        root.zStart,
-            z_end:          root.zEnd,
-            initial_doc:    root.initialDoc,
-            retract:        root.retract,
-            spring_passes:  root.springPasses,
-            taper_type:       root.taperType,
-            compound_angle:   root.compoundAngle
-        })
-        if (!root.isG33Threading)
-            merged.depth_degression = root.depthDegression
-        root.editor.save(merged)
-    }
-
-    function calculateThreadDiameter() {
-        if (!root.editor)
-            return
-        var result = root.editor.calculateThreadDiameter(
-            root.location,
-            root.pitch,
-            root.majorDiameter,
-            root.minorDiameter
-        )
-        if (!result || !result.valid)
-            return
-        tf_calcDiam.commit(result.calculatedDiameter)
-    }
-
     function formatThreadLength() {
         var length = Math.abs(root.zStart - root.zEnd)
         if (Math.abs(length - Math.round(length)) < 0.0005)
@@ -137,30 +52,10 @@ Item {
     IntValidator    { id: intVal; bottom: 1; top: 99 }
     IntValidator    { id: intValNonNeg; bottom: 0; top: 99 }
 
-    // the header's spindle, M1 or pitch and starts, saved straight away
-    function _saveFromHeader(part) {
-        root.editor.save(root.mergeIntoOp(part))
-    }
-
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
         spacing: Theme.margin
-
-        // G33: Speeds and Feeds - RPM only, with Pitch and Starts for its
-        // feeds - and Pause to Inspect beside it, as the other operations
-        // have them
-        OperationHeader {
-            id: header
-            visible: root.isG33Threading
-            rpmOnly: true
-            feedKind: SpeedsAndFeeds.FeedKind.Threading
-            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            onSpeedsAndFeedsEdited: function(speeds) { root._saveFromHeader({ speeds_and_feeds: speeds }) }
-            onPitchEdited: function(value) { root.pitch = value; root.emitSave() }
-            onStartsEdited: function(value) { root.starts = value; root.emitSave() }
-            onM1Edited: function(m1) { root._saveFromHeader({ m1_parameters: m1 }) }
-        }
 
         RowLayout {
             id: detailsLayout
@@ -174,25 +69,20 @@ Item {
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                spacing: root.isG33Threading ? Theme.margin : 40
+                spacing: 40
 
-                // G76's; G33's are in the header
                 SpindleParameters {
                     id: spindlePanel
-                    visible: !root.isG33Threading
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
+                    rpmOnly: true
+                    speeds: root.op.speeds_and_feeds || ({})
                     onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-                    onSaveRequested: function (p) {
-                        var merged = root.mergeIntoOp(p.payload || p)
-                        root.editor.save(merged)
-                    }
+                    onSpeedsEdited: function(speeds) { root.editor.edit({ speeds_and_feeds: speeds }) }
                 }
 
-                // G76's pitch and starts; G33's are in the header
                 TitledCard {
                     id: threadParametersBox
-                    visible: !root.isG33Threading
                     title: "Thread Parameters"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
@@ -212,7 +102,7 @@ Item {
                             formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                             hAlign: Text.AlignRight
                             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                            onValueCommitted: function(value) { root.pitch = value; root.emitSave() }
+                            onValueCommitted: function(value) { root.editor.editPitch(Number(value)) }
                         }
                         Label { text: "(mm)"; font.pixelSize: Theme.fontSmall; Layout.alignment: Qt.AlignVCenter }
 
@@ -225,7 +115,7 @@ Item {
                             formatter: function(v) { return (v == null) ? "1" : String(Math.max(1, Math.round(Number(v)))) }
                             hAlign: Text.AlignRight
                             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                            onValueCommitted: function(value) { root.starts = Math.max(1, Math.round(value)); root.emitSave() }
+                            onValueCommitted: function(value) { root.editor.edit({ starts: Math.max(1, Math.round(value)) }) }
                         }
                         Item {}
                     }
@@ -258,7 +148,7 @@ Item {
                                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                                 hAlign: Text.AlignRight
                                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                                onValueCommitted: function(value) { root.zStart = value; root.emitSave() }
+                                onValueCommitted: function(value) { root.editor.edit({ z_start: Number(value) }) }
                             }
                             TeachInButton { onClicked: tf_zStart.commit(PositionsBridge.teachInZ()) }
 
@@ -272,7 +162,7 @@ Item {
                                 formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
                                 hAlign: Text.AlignRight
                                 onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                                onValueCommitted: function(value) { root.zEnd = value; root.emitSave() }
+                                onValueCommitted: function(value) { root.editor.edit({ z_end: Number(value) }) }
                             }
                             TeachInButton { onClicked: tf_zEnd.commit(PositionsBridge.teachInZ()) }
                         }
@@ -329,12 +219,10 @@ Item {
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignTop
-                spacing: root.isG33Threading ? Theme.margin : 40
+                spacing: 40
 
-                // G33's under Z Limits, so the columns come out even
                 TitledCard {
                     id: threadLocationBox
-                    parent: root.isG33Threading ? leftColumn : rightColumn
                     title: "Thread Location"
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
@@ -342,20 +230,17 @@ Item {
 
                     ColumnLayout {
                         spacing: Theme.spacingSmall
-                        ButtonGroup { id: locGroup }
-                        RadioButton {
+                        ModelRadioButton {
                             text: "External (OD)"
                             font.pixelSize: Theme.fontSmall
                             checked: root.location === "OD"
-                            ButtonGroup.group: locGroup
-                            onToggled: if (checked) { root.location = "OD"; root.emitSave() }
+                            onChosen: root.editor.edit({ location: "OD" })
                         }
-                        RadioButton {
+                        ModelRadioButton {
                             text: "Internal (ID)"
                             font.pixelSize: Theme.fontSmall
                             checked: root.location === "ID"
-                            ButtonGroup.group: locGroup
-                            onToggled: if (checked) { root.location = "ID"; root.emitSave() }
+                            onChosen: root.editor.edit({ location: "ID" })
                         }
                     }
                 }
@@ -389,9 +274,8 @@ Item {
                             hAlign: Text.AlignRight
                             onOpenRequested: function(field) { root.openNumPadRequested(field) }
                             onValueCommitted: function(value) {
-                                if (root.location === "OD") root.majorDiameter = value
-                                else root.minorDiameter = value
-                                root.emitSave()
+                                root.editor.edit(root.location === "OD" ? { major_diameter: Number(value) }
+                                                                         : { minor_diameter: Number(value) })
                             }
                         }
                         TeachInButton { onClicked: tf_teachDiam.commit(PositionsBridge.teachInX() * 2) }
@@ -413,14 +297,13 @@ Item {
                             hAlign: Text.AlignRight
                             onOpenRequested: function(field) { root.openNumPadRequested(field) }
                             onValueCommitted: function(value) {
-                                if (root.location === "OD") root.minorDiameter = value
-                                else root.majorDiameter = value
-                                root.emitSave()
+                                root.editor.edit(root.location === "OD" ? { minor_diameter: Number(value) }
+                                                                         : { major_diameter: Number(value) })
                             }
                         }
                         Button {
                             text: "Calculate"
-                            onClicked: root.calculateThreadDiameter()
+                            onClicked: root.editor.calculateDiameter()
                         }
                     }
                 }
@@ -432,11 +315,10 @@ Item {
                     Layout.alignment: Qt.AlignTop
                     font.pixelSize: Theme.fontBody
 
-                    contentItem: Loader {
-                        id: cuttingParamsLoader
-                        Layout.preferredHeight: item ? item.implicitHeight : 0
-                        source: root.cuttingParamsSource
-                        onLoaded: item.detailsRoot = root
+                    contentItem: G76CuttingParams {
+                        operation: root.op
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                        onEdited: function(changes) { root.editor.edit(changes) }
                     }
                 }
             }

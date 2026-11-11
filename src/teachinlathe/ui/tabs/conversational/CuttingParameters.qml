@@ -1,4 +1,4 @@
-// CuttingParameters.qml (fixed: nested payload + full op context + loading guard)
+// CuttingParameters.qml — an operation's depth of cut and retract
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -14,46 +14,17 @@ TitledCard {
     Layout.preferredWidth: 520
     font.pixelSize: Theme.fontBody
 
-    // bridge
-    property int  opIndex: -1
-    property var  opData: null              // FULL OP (nu doar cutting)
-    property var  cuttingData: ({})         // doar sub-structura cutting_parameters
+    // the operation's cutting_parameters, as its editor has them: all it shows
+    // (the feed rate is the operation header's)
+    property var cutting: ({})
+    readonly property var _c: cutting || {}
 
-    signal saveRequested(var payload)
+    // a change to the cutting_parameters: only the fields in it
+    signal edited(var changes)
     signal openNumPadRequested(var field)
 
-    // state
-    property real doc: 0.0
-    property real retract: 0.0
-    property bool _loading: false
-
-    // cuttingPanel.applyData(opIndex, (opData.cutting_parameters || {}), opData)
-    function applyData(index, cuttingParams, fullOp) {
-        _loading = true
-        opIndex = index
-        opData  = fullOp || {}
-        cuttingData = cuttingParams || {}
-
-        doc       = parseFloat(cuttingData.doc       !== undefined ? cuttingData.doc       : 0.0)
-        retract   = parseFloat(cuttingData.retract   !== undefined ? cuttingData.retract   : 0.0)
-        _loading = false
-    }
-
-    function emitSave() {
-        if (_loading) return
-        var payload = {
-            order: (opData && opData.order !== undefined) ? opData.order : 0,
-            type:  (opData && opData.type)  ? opData.type  : "",
-            generate_gcode: (opData && opData.generate_gcode !== undefined) ? opData.generate_gcode : true,
-            is_optional_block: (opData && opData.is_optional_block !== undefined) ? opData.is_optional_block : false,
-            // the feed rate is the operation header's
-            cutting_parameters: {
-                doc:       doc,
-                retract:   retract
-            }
-        }
-        root.saveRequested({ index: opIndex, payload: payload })
-    }
+    readonly property real doc: _c.doc !== undefined ? Number(_c.doc) : 0.0
+    readonly property real retract: _c.retract !== undefined ? Number(_c.retract) : 0.0
 
     DoubleValidator { id: dblVal; notation: DoubleValidator.StandardNotation }
 
@@ -79,7 +50,7 @@ TitledCard {
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: function(value) { root.doc = value; root.emitSave() }
+            onValueCommitted: function(value) { root.edited({ doc: Number(value) }) }
         }
         Label {
             text: "(mm/radius)"
@@ -102,7 +73,7 @@ TitledCard {
             formatter: function (v) { return (v == null) ? "" : Number(v).toFixed(3) }
             hAlign: Text.AlignRight
             onOpenRequested: function(field) { root.openNumPadRequested(field) }
-            onValueCommitted: function(value) { root.retract = value; root.emitSave() }
+            onValueCommitted: function(value) { root.edited({ retract: Number(value) }) }
         }
         Label {
             text: "(mm)"

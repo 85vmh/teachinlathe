@@ -4,22 +4,25 @@ import QtQuick.Layouts
 import tabs.conversational
 import common.touchable_input
 import theme
+import common
 
 Item {
     id: root
     objectName: "radialProfileEditorScreen"
 
-    // The view model of the operation this edits (OperationEditorViewModel.py).
-    property var editor: null
-    property int opIndex: -1
-    property var opData: null
-    property int profileId: 0
-    property string profileType: "od"
-    property var primitives: []
-    property var workpiece: ({})
+    // The view model of the operation this edits (OperationEditorViewModel.py):
+    // the one place the profile shown comes from, and every edit goes to. The
+    // screen keeps nothing of the profile: an edit is a new list of
+    // primitives, sent to the editor, which the profile then shows.
+    required property var editor
+    readonly property var op: editor.operation
+    readonly property int profileId: op.profile_id !== undefined ? Math.round(Number(op.profile_id)) : 0
+    readonly property string profileType: op.profile_type !== undefined ? String(op.profile_type) : "od"
+    readonly property var primitives: op.profile_primitives || []
+    readonly property var workpiece: op.workpiece || ({})
+    // view state: the card selected
     property int selectedIndex: -1
-    property bool _loading: false
-    // The card swiped open on its Delete (a SwipeRow), or null
+    // view state: the card swiped open on its Delete (a SwipeRow), or null
     property var openSwipeRow: null
 
     // The first groove, whose points the canvas names: its index, or -1
@@ -33,18 +36,13 @@ Item {
     signal backRequested()
     signal openNumPadRequested(var field)
 
-    function applyData(index, data) {
-        _loading = true
-        opIndex = index
-        opData = data || {}
-        profileId = opData.profile_id !== undefined ? Math.round(Number(opData.profile_id)) : 0
-        profileType = opData.profile_type !== undefined ? String(opData.profile_type) : "od"
-        primitives = JSON.parse(JSON.stringify(opData.profile_primitives || []))
-        workpiece = JSON.parse(JSON.stringify(opData.workpiece || {}))
+    // another operation: the drawing fitted to it, its first card selected
+    function _showEditor() {
         selectedIndex = primitives.length > 0 ? 0 : -1
-        _loading = false
         profileCanvas.resetView()
     }
+    onEditorChanged: _showEditor()
+    Component.onCompleted: _showEditor()
 
     // the groove's card's box of point ``point`` (1..4) flashed: its tag on
     // the canvas tapped
@@ -54,103 +52,19 @@ Item {
             row.card.flashPoint(point)
     }
 
-    function emitSave() {
-        if (_loading) return
-        var merged = JSON.parse(JSON.stringify(opData || {}))
-        merged.profile_id = root.profileId
-        merged.profile_type = root.profileType
-        merged.profile_primitives = root._renumber(root.primitives)
-        opData = merged
-        root.editor.save(merged)
-    }
-
-    function _renumber(arr) {
-        var out = JSON.parse(JSON.stringify(arr || []))
-        var ordered = []
-        for (var i = 0; i < out.length; i++)
-            ordered.push(_orderPrimitive(out[i], i + 1))
-        return ordered
-    }
-
-    function _orderPrimitive(primitive, primitiveId) {
-        var p = primitive || {}
-        var ordered = {
-            primitive_id: primitiveId,
-            type: p.type || "groove"
-        }
-        if (ordered.type === "groove") {
-            ordered.right_flank = p.right_flank || {}
-            ordered.bottom = p.bottom || {}
-            ordered.left_flank = p.left_flank || {}
-        }
-        for (var key in p) {
-            if (ordered[key] === undefined)
-                ordered[key] = p[key]
-        }
-        return ordered
-    }
-
+    // What is done to the primitives is the editor's (profile_editing.py): a
+    // card's edit, a new groove or repeat, one deleted. The screen only keeps
+    // the selection on them.
     function primUpdated(idx, data) {
-        var arr = JSON.parse(JSON.stringify(root.primitives || []))
-        arr[idx] = data
-        root.primitives = root._renumber(arr)
-        root.emitSave()
+        root.editor.updatePrimitive(idx, data)
     }
 
     function primDeleted(idx) {
-        var arr = JSON.parse(JSON.stringify(root.primitives || []))
-        if (idx < 0 || idx >= arr.length) return
-        arr.splice(idx, 1)
-        root.primitives = root._renumber(arr)
-        root.selectedIndex = root.primitives.length > 0 ? Math.min(idx, root.primitives.length - 1) : -1
-        root.emitSave()
-    }
-
-    function _emptyBlend() {
-        return { type: "none", chamfer_width: 0.0, fillet_radius: 0.0 }
-    }
-
-    function _newGroove() {
-        return {
-            primitive_id: 0,
-            type: "groove",
-            right_flank: {
-                x_start: 30.0,
-                z_start: 0.0,
-                angle: 0.0,
-                start_blend: _emptyBlend()
-            },
-            bottom: {
-                x_end_right: 20.0,
-                x_end_left: 20.0,
-                blend_right: _emptyBlend(),
-                blend_left: _emptyBlend()
-            },
-            left_flank: {
-                x_start: 30.0,
-                z_start: -5.0,
-                angle: 0.0,
-                start_blend: _emptyBlend()
-            }
-        }
-    }
-
-    function _newRepeat() {
-        return {
-            primitive_id: 0,
-            type: "repeat",
-            repeat_primitive_id: 1,
-            repeat_count: 1,
-            z_offset: -5.0
-        }
+        root.selectedIndex = root.editor.deletePrimitive(idx)
     }
 
     function addPrimitive(type) {
-        var arr = JSON.parse(JSON.stringify(root.primitives || []))
-        arr.push(type === "repeat" ? _newRepeat() : _newGroove())
-        root.primitives = root._renumber(arr)
-        root.selectedIndex = root.primitives.length - 1
-        root.emitSave()
+        root.selectedIndex = root.editor.addPrimitive(type)
     }
 
     IntValidator { id: intVal; bottom: 1; top: 999 }
@@ -194,7 +108,7 @@ Item {
                         formatter: function(v) { return v == null ? "" : String(Math.round(Number(v))) }
                         hAlign: Text.AlignHCenter
                         onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                        onValueCommitted: function(value) { root.profileId = Math.round(value); root.emitSave() }
+                        onValueCommitted: function(value) { root.editor.edit({ profile_id: Math.round(value) }) }
                     }
 
                     Rectangle {
@@ -208,22 +122,18 @@ Item {
                         font.pixelSize: Theme.fontBody
                     }
 
-                    ButtonGroup { id: profileTypeGroup }
-
-                    RadioButton {
+                    ModelRadioButton {
                         text: "OD"
                         font.pixelSize: Theme.fontSmall
                         checked: root.profileType === "od"
-                        ButtonGroup.group: profileTypeGroup
-                        onToggled: if (checked) { root.profileType = "od"; root.emitSave() }
+                        onChosen: root.editor.edit({ profile_type: "od" })
                     }
 
-                    RadioButton {
+                    ModelRadioButton {
                         text: "ID"
                         font.pixelSize: Theme.fontSmall
                         checked: root.profileType === "id"
-                        ButtonGroup.group: profileTypeGroup
-                        onToggled: if (checked) { root.profileType = "id"; root.emitSave() }
+                        onChosen: root.editor.edit({ profile_type: "id" })
                     }
 
                     Item { Layout.fillWidth: true }

@@ -31,9 +31,11 @@ Rectangle {
     signal triggered()
 
     //: 0 at rest, 1 when held its whole time
+    // view state: how far the hold has got
     property real progress: 0
     readonly property bool pressed: area.pressed
     // already triggered by this press: no second time, no hint on release
+    // view state: the hold fired its action, until released
     property bool _fired: false
 
     implicitWidth: label.implicitWidth + 2 * Theme.spacingLarge
