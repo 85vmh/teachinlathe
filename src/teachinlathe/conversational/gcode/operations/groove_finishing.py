@@ -21,9 +21,11 @@ from .groove_common import (
     corner_comment,
     drawn_groove,
     emit_contour_section,
+    enter,
     groove_path,
     operation_error,
     outward_sign,
+    over_x,
     path_bounds,
     reverse_path,
     safe_x_for_contour,
@@ -93,7 +95,7 @@ def _emit_continuous_sections(gcode, safe_x, sections, corners, profile_type):
 
 
 def _append_finishing_contour(gcode, safe_x, obstacle, path, center_z, clearance, profile_type,
-                              strategy, half_width, control):
+                              strategy, half_width, control, over):
     """The contour the strategy goes along, the blade on the part
     (``obstacle``): the Z+ side cut with its right corner, the Z- side with
     its left. Toward the centre, each side takes the blade's middle half its
@@ -108,6 +110,11 @@ def _append_finishing_contour(gcode, safe_x, obstacle, path, center_z, clearance
     z_minus_from_center = z_minus_to_center[::-1]
     contour_safe_x = safe_x_for_contour([z_plus_to_center, z_minus_to_center], safe_x, clearance,
                                          profile_type)
+    # in from wherever the blade is, over where it starts: the Z+ side but
+    # Towards Right, which starts from Z-
+    first = z_minus_to_center if strategy is GrooveFinishingStrategy.TOWARDS_RIGHT else z_plus_to_center
+    if len(first) > 1:
+        enter(gcode, contour_safe_x, first[0][0], profile_type, max(over, contour_safe_x))
 
     if strategy is GrooveFinishingStrategy.TOWARDS_LEFT:
         gcode.code("(---Groove Finishing Contour Towards Left---)")
@@ -162,7 +169,8 @@ def groove_finishing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
         f"(---Groove Finishing: {strategy.value.replace('_', ' ').title()} P{op.radial_profile_id}--)"
     )
     _append_finishing_contour(gcode, safe_x, blade_obstacle(tool, path, profile_type, 0.0, 0.0), path,
-                              center_z, clearance, profile_type, strategy, half_width, control)
+                              center_z, clearance, profile_type, strategy, half_width, control,
+                              over_x(cut, safe_x, clearance, profile_type))
 
 
 def generate_groove_finishing_gcode(cut: GrooveCut):

@@ -22,12 +22,16 @@ from .groove_common import (
     contour_edge,
     drawn_groove,
     emit_contour_section,
+    enter,
+    front_z,
     groove_path,
     on_diameter,
     operation_error,
     outside_x,
     outward_sign,
+    over_x,
     path_bounds,
+    pause_to_inspect,
     reverse_path,
     safe_x_for_contour,
     split_path_at_z,
@@ -236,7 +240,7 @@ def _cut_path(path, profile_type, radial, axial):
 
 
 def _append_contour(gcode, safe_x, obstacle, path, center_z, clearance, profile_type,
-                    left_radius, right_radius, half_width, control):
+                    left_radius, right_radius, half_width, control, enter_at=None):
     """The finish contour: the blade on the part with its stock (``obstacle``)
     from the Z+ rim, its right corner cutting, to the groove's middle - its
     middle past it by the rest of its end - then from the Z- rim, its left
@@ -246,6 +250,9 @@ def _append_contour(gcode, safe_x, obstacle, path, center_z, clearance, profile_
     z_plus = to_middle(edge, center_z - max(half_width - right_radius, 0.0) + z_control)
     z_minus = to_middle(edge[::-1], center_z + max(half_width - left_radius, 0.0) + z_control)
     contour_safe_x = safe_x_for_contour([z_plus, z_minus], safe_x, clearance, profile_type)
+    if enter_at is not None and z_plus:
+        # nothing plunged before it: in from wherever the blade is
+        enter_at(contour_safe_x, z_plus[0][0])
 
     gcode.begin_contour()
     gcode.code("(---Groove Roughing Contour Z+ to Center---)")
@@ -316,6 +323,21 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
     z_control = control * half_width
     left_radius, right_radius = blade_radii(tool)
 
+    # in from wherever the blade is, before its first plunge; out to pause
+    # after each plunge (Pause to Inspect)
+    over = over_x(cut, safe_x, clearance, profile_type)
+    front = front_z(cut, clearance)
+    entered = []
+
+    def _enter(x, z):
+        if not entered:
+            enter(gcode, x, z, profile_type, over)
+            entered.append(True)
+
+    def _pause():
+        if op.m1Parameters.include_m1:
+            pause_to_inspect(gcode, op.m1Parameters, safe_x, profile_type, over, front)
+
     gcode.code(
         f"(---Groove Roughing: Start Center P{op.radial_profile_id}---)"
     )
@@ -326,6 +348,7 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
         first_target_x = _plunge_x(inside, first_z + z_control, start_x, profile_type)
         second_target_x = _plunge_x(inside, second_z + z_control, start_x, profile_type)
         if _plunges_into(first_target_x) and _plunges_into(second_target_x):
+            _enter(safe_x, first_z + z_control)
             _append_center_pair_roughing(
                 gcode,
                 first_z + z_control,
@@ -338,15 +361,19 @@ def groove_roughing_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
                 dwell_time,
             )
             start_index = 2
+            _pause()
 
     for z_pos in positions[start_index:]:
         target_x = _plunge_x(inside, z_pos + z_control, start_x, profile_type)
         if not _plunges_into(target_x):
             continue
+        _enter(safe_x, z_pos + z_control)
         _append_peck(gcode, z_pos + z_control, safe_x, target_x, peck_depth, clearance, dwell_time)
+        _pause()
 
     _append_contour(gcode, safe_x, obstacle, path, center_z, clearance, profile_type,
-                    left_radius, right_radius, half_width, control)
+                    left_radius, right_radius, half_width, control,
+                    enter_at=None if entered else _enter)
 
 
 def generate_groove_roughing_gcode(cut: GrooveCut):

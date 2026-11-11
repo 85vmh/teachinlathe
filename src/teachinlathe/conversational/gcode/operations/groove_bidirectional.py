@@ -33,10 +33,14 @@ from .groove_common import (
     begin_gcode,
     blade_start_x,
     drawn_groove,
+    enter,
     groove_path,
+    on_diameter,
     operation_error,
+    over_x,
     part_with_stock,
     path_bounds,
+    pause_to_inspect,
     start_diameter_of,
     stock_to_leave,
 )
@@ -190,10 +194,13 @@ def groove_bidirectional_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
         gcode.error(f"{TITLE} -- {error}")
         return
     dwell_time = op.cuttingParameters.dwellTime
+    clearance = abs(op.cuttingParameters.retract)
+    m1 = op.m1Parameters
+    # OD only: in from above all the material, and out there to pause
+    over = over_x(cut, plan.safe_x, clearance, ProfilingType.OD)
 
     gcode.code(f"(---{TITLE} P{op.radial_profile_id}---)")
-    gcode.rapid(x=plan.safe_x)
-    gcode.rapid(z=plan.entry[0])
+    enter(gcode, plan.safe_x, plan.entry[0], ProfilingType.OD, over)
     gcode.start_pass()
     gcode.feed(x=2.0 * plan.entry[1])
     for n, leg in enumerate(plan.legs):
@@ -203,6 +210,15 @@ def groove_bidirectional_toolpath(cut: GrooveCut, gcode: GcodeEmitter):
             segment.write(gcode)
         if leg.plunge and dwell_time > 0:
             gcode.dwell(dwell_time)
+        # a pass along Z done, another to come: Pause to Inspect out of the
+        # groove, then back to where it left off - in the air to the
+        # clearance over it, at the feed the rest
+        if m1.include_m1 and not leg.plunge and n < len(plan.legs) - 1:
+            x, z = gcode.x, gcode.z
+            pause_to_inspect(gcode, m1, plan.safe_x, ProfilingType.OD, over, None)
+            enter(gcode, plan.safe_x, z, ProfilingType.OD, over)
+            gcode.rapid(x=x + on_diameter(clearance))
+            gcode.feed(x=x)
     gcode.rapid(x=plan.safe_x)
 
 

@@ -146,6 +146,10 @@ class GcodeEmitter:
         #: where the control point is: X a diameter; None until a move says
         self.x: Optional[float] = None
         self.z: Optional[float] = None
+        #: the machine is at its tool change position - out of the way of
+        #: the part, where it is not known in the work's coordinates - after
+        #: a tool change, until it moves
+        self.at_tool_change = False
         #: the pass the feeds belong to, from 0; -1 before the first
         self.pass_no = -1
         #: the moves are the finish contour's (begin_contour)
@@ -181,6 +185,7 @@ class GcodeEmitter:
                                    contour=self.in_contour,
                                    arc=ArcCenter(self.z + k, self.x / 2 + i, clockwise)))
         self.x, self.z = new_x, new_z
+        self.at_tool_change = False
 
     def thread(self, z: float, pitch: float, angle: Optional[float] = None):
         """A feed along Z synchronized with the spindle (G33): ``pitch`` mm a
@@ -194,6 +199,7 @@ class GcodeEmitter:
             self.moves.append(Move(self.z, self.x / 2, new_z, self.x / 2, True, pass_no=self.pass_no,
                                    synced=True))
         self.z = new_z
+        self.at_tool_change = False
 
     def rigid_tap(self, z: float, pitch: float):
         """Rigid tapping (G33.1): in along Z to ``z`` with the spindle,
@@ -231,6 +237,7 @@ class GcodeEmitter:
             self.moves.append(Move(self.z, self.x / 2, new_z, new_x / 2, feed,
                                    pass_no=self.pass_no if feed else -1, contour=self.in_contour))
         self.x, self.z = new_x, new_z
+        self.at_tool_change = False
 
     # ── what is not a move ──────────────────────────────────────────────────
 
@@ -318,10 +325,12 @@ class GcodeEmitter:
         line = f"M6 T{int(tool_holder_id)}"
         self.lines.append(f"{line} {comment(title)}" if title else line)
         self.forget_position()
+        self.at_tool_change = True
 
     def forget_position(self):
         """Where the machine is is not known: the next move writes X and Z."""
         self.x = self.z = None
+        self.at_tool_change = False
 
     def set_z_zero(self):
         """The work offset was set so that here is Z0 (G10 L20 ... Z0). In a

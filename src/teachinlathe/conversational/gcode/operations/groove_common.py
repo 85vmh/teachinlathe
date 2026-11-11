@@ -89,6 +89,64 @@ def blade_start_x(start_x, profile_type, clearance):
     return start_x + outward_sign(profile_type) * on_diameter(clearance)
 
 
+# ── in and out of the groove through air ───────────────────────────────────
+# A groove is behind the part's face, and between the face and it the part may
+# be bigger than the groove's mouth: the blade goes along Z only where nothing
+# is in its way. M1 is remapped (subroutines/m1_remap.ngc) to go to G28 / G30
+# and back in straight lines: a pause is made only where both are in the air.
+
+def over_x(cut: GrooveCut, safe_x, clearance, profile_type):
+    """Where an OD blade goes along Z on its way in and pauses: the clearance
+    out from all the material ``cut`` finds - never in from ``safe_x``. For
+    ID, ``safe_x``: inside the bore."""
+    if profile_type is ProfilingType.ID:
+        return safe_x
+    material = cut.stock.material if cut.stock is not None else None
+    if material is None or material.is_empty:
+        return safe_x
+    return max(safe_x, 2.0 * material.bounds[3] + on_diameter(clearance))
+
+
+def front_z(cut: GrooveCut, clearance):
+    """In front of the part: the clearance past the material's Z+ end (Z0
+    with none known), where an ID blade comes out of the bore to pause."""
+    material = cut.stock.material if cut.stock is not None else None
+    face = material.bounds[2] if material is not None and not material.is_empty else 0.0
+    return face + abs(clearance)
+
+
+def enter(gcode: GcodeEmitter, safe_x, z, profile_type, over):
+    """From wherever the blade is to ``safe_x`` over ``z``, through air.
+
+    An OD blade along Z first, then in to ``safe_x``: from the tool change
+    position, or from where it is when that is out at ``over`` (over_x) or
+    farther; from anywhere else - lower, or not known - out to ``over`` first,
+    outward being always clear. An ID blade in to ``safe_x`` first, in front
+    of the bore, then along it."""
+    if profile_type is ProfilingType.ID:
+        gcode.rapid(x=safe_x)
+        gcode.rapid(z=z)
+        return
+    clear = gcode.at_tool_change or (gcode.x is not None and gcode.x >= over - SAME_MM)
+    if not clear:
+        gcode.rapid(x=over)
+    gcode.rapid(z=z)
+    gcode.rapid(x=safe_x)
+
+
+def pause_to_inspect(gcode: GcodeEmitter, m1_params, safe_x, profile_type, over, front):
+    """M1, where the blade can go to G28 / G30 and come back in a straight
+    line (m1_remap.ngc): out of the groove to ``safe_x``, then an OD blade out
+    to ``over``, an ID one out of the bore to ``front``. The next move in
+    takes it back from there."""
+    gcode.rapid(x=safe_x)
+    if profile_type is ProfilingType.ID:
+        gcode.rapid(z=front)
+    else:
+        gcode.rapid(x=over)
+    gcode.inspect_stop(m1_params)
+
+
 def groove_profile_path(radial_profile):
     """The profile of the first groove of ``radial_profile`` (a Define
     Radial Profile, or None), as the G-code goes along it - from its Z+ end
