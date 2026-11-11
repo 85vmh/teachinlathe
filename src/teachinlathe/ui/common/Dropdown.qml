@@ -6,7 +6,8 @@ import theme
 // right already holds the arrow), at the input height, its text and its list's
 // items at the title size: the program header's Datum and the Manual Turning
 // DRO's work offset ("Tool Coordinates in").
-ComboBox {
+// It shows what its model says: selectedIndex bound, picked reported (ModelComboBox).
+ModelComboBox {
     id: control
 
     implicitWidth: leftPadding + contentItem.implicitWidth + rightPadding

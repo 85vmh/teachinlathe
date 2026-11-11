@@ -9,12 +9,14 @@ Rectangle {
     color: Theme.surfaceSunken
 
     required property var viewModel
-    property int joystickState: viewModel.joystickState
-    property bool rapidMode: viewModel.joystickRapid
-    property bool allowsTouchInteraction: viewModel.allowsJoystickTouch
-    property bool angleFeedActive: viewModel.angleFeedActive
+    readonly property int joystickState: viewModel.joystickState
+    readonly property bool rapidMode: viewModel.joystickRapid
+    readonly property bool allowsTouchInteraction: viewModel.allowsJoystickTouch
+    readonly property bool angleFeedActive: viewModel.angleFeedActive
+    // view state: the joystick's drawn rotation, animated toward rotationTarget
     property real currentRotation: 0
-    property real rotationTarget: angleFeedActive ? 45 : 0
+    readonly property real rotationTarget: angleFeedActive ? 45 : 0
+    // view state: the rotation animation running
     property bool rotationActive: false
 
     readonly property real canvasWidth: 250
@@ -39,31 +41,8 @@ Rectangle {
 
     onAngleFeedClicked: root.viewModel.toggleAngleFeedFromJoystick()
 
-    function setJoystickState(state) {
-        if (root.viewModel)
-            return
-        root.joystickState = state
-        root.allowsTouchInteraction = state === 0
-    }
-
-    function setRapid(enabled) {
-        if (root.viewModel)
-            return
-        root.rapidMode = enabled
-    }
-
-    function setTouchEnabled(enabled) {
-        if (root.viewModel)
-            return
-        root.allowsTouchInteraction = enabled
-    }
-
     function resetAngle() {
-        if (root.viewModel) {
-            root.viewModel.resetAngleFeed()
-        } else {
-            root.angleFeedActive = false
-        }
+        root.viewModel.resetAngleFeed()
     }
 
     function isRotated() {

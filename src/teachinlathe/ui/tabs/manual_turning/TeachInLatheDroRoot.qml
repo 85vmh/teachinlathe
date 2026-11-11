@@ -27,6 +27,7 @@ Item {
 
         property string settingName: "manual.z-set-datum"
         property string description: "Set Z datum value"
+        // view state: the last value typed, to start the numpad from
         property var value: 0.0
 
         function commit(v) {
@@ -45,6 +46,7 @@ Item {
     // distance to Z0 in Z.
     component TouchOffField: QtObject {
         property string axis
+        // view state: the last value typed, to start the numpad from
         property var value: 0.0
         // a blade's Z: which of its points - "-1", "0", "1" - the touch-off
         // dialog sets before commit; empty for every other tool and axis
@@ -251,16 +253,11 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             model: root.viewModel.workOffsets
             // as in use - G59.1 and past, not offered, are shown as they are
-            currentIndex: model.indexOf(root.viewModel.workOffsetName)
+            // the one in use, until the machine says it changed
+            selectedIndex: model.indexOf(root.viewModel.workOffsetName)
             displayText: root.viewModel.workOffsetName
             enabled: root.viewModel.workOffsetSelectable
-            onActivated: function(index) {
-                root.viewModel.selectWorkOffset(textAt(index))
-                // back to the one in use, until the machine says it changed
-                currentIndex = Qt.binding(function() {
-                    return workOffsetCombo.model.indexOf(root.viewModel.workOffsetName)
-                })
-            }
+            onPicked: function(index) { root.viewModel.selectWorkOffset(textAt(index)) }
         }
     }
 

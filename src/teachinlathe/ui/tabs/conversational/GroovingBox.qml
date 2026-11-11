@@ -7,6 +7,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import common.touchable_input
 import theme
+import common
 
 CanvasBox {
     id: root
@@ -37,7 +38,7 @@ CanvasBox {
         rowSpacing: 20
 
         Label { text: "Strategy"; color: root.accent; font.pixelSize: Theme.fontBody }
-        ComboBox {
+        ModelComboBox {
             id: strategyCombo
             Layout.columnSpan: 2
             Layout.fillWidth: true
@@ -47,12 +48,12 @@ CanvasBox {
             implicitContentWidthPolicy: ComboBox.WidestText
             model: root.strategies
             textRole: "label"
-            currentIndex: {
+            selectedIndex: {
                 for (var i = 0; i < root.strategies.length; i++)
                     if (root.strategies[i].value === root.strategy) return i
                 return 0
             }
-            onActivated: function(index) { root.strategyEdited(root.strategies[index].value) }
+            onPicked: function(index) { root.strategyEdited(root.strategies[index].value) }
             delegate: ItemDelegate {
                 width: strategyCombo.width
                 height: Theme.inputHeight

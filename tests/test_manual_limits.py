@@ -350,7 +350,7 @@ Item {
         onCommitted: function(v) { parent.modelValue = v }
     }
     function field(item) {
-        if (item.valueFollowsModel !== undefined) return item
+        if (item.seedNumpadFromValue !== undefined) return item
         for (var i = 0; i < item.children.length; ++i) {
             var found = field(item.children[i])
             if (found) return found

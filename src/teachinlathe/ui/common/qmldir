@@ -2,6 +2,9 @@ module common
 Card 1.0 Card.qml
 Dropdown 1.0 Dropdown.qml
 singleton Images 1.0 Images.qml
+ModelCheckBox 1.0 ModelCheckBox.qml
+ModelComboBox 1.0 ModelComboBox.qml
+ModelRadioButton 1.0 ModelRadioButton.qml
 OperationIconTextButton 1.0 OperationIconTextButton.qml
 RapidOverrideSelector 1.0 RapidOverrideSelector.qml
 SafetyButton 1.0 SafetyButton.qml

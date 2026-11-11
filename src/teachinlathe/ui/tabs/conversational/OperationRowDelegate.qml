@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import common
 
 // An operation in the program's list: swipes to Delete or Duplicate (see
 // SwipeRow), and lifts on a long press to be dragged to a new place.
@@ -29,6 +30,7 @@ SwipeRow {
     property int itemFontSize: 16
 
     // Being dragged to a new place, after a long press
+    // view state: a reorder drag
     property bool lifted: false
 
     // Bound to the row, never set: the list hands a row another
@@ -71,7 +73,9 @@ SwipeRow {
         id: reorderArea
         anchors.fill: parent
         pressAndHoldInterval: 500
+        // view state: a reorder drag
         property bool lifted: false
+        // view state: a reorder drag
         property real startSceneY: 0
 
         function finish() {
@@ -143,16 +147,11 @@ SwipeRow {
             Layout.preferredWidth: colGenW
             Layout.maximumWidth: colGenW
             Layout.fillHeight: true
-            CheckBox {
+            ModelCheckBox {
                 id: genChk
                 anchors.centerIn: parent
                 checked: root.gcodeEnabled
-                onToggled: {
-                    root.generateToggled(rowIndex, checked)
-                    // a click breaks the binding; the save above has already
-                    // put the new value in the operation
-                    checked = Qt.binding(function() { return root.gcodeEnabled })
-                }
+                onToggledTo: function(on) { root.generateToggled(rowIndex, on) }
             }
         }
         Divider { }
@@ -165,13 +164,10 @@ SwipeRow {
             Layout.preferredWidth: colOptW
             Layout.maximumWidth: colOptW
             Layout.fillHeight: true
-            CheckBox {
+            ModelCheckBox {
                 anchors.centerIn: parent
                 checked: root.optionalBlock
-                onToggled: {
-                    root.optionalToggled(rowIndex, checked)
-                    checked = Qt.binding(function() { return root.optionalBlock })
-                }
+                onToggledTo: function(on) { root.optionalToggled(rowIndex, on) }
             }
         }
     }

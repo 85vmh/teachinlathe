@@ -61,12 +61,4 @@ RowLayout {
         font.pixelSize: Theme.fontBody
         verticalAlignment: Text.AlignVCenter
     }
-
-    function setDisplayValue(v) {
-        root.value = v
-        if (root.editable) {
-            input.value = v
-            input.text = input.formatter(v)
-        }
-    }
 }

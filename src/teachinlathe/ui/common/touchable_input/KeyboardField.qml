@@ -9,11 +9,11 @@ TextField {
     property string titleText: ""
     property int hAlign: Text.AlignLeft
     property int fontPixelSize: 20
-    property bool commitUpdatesText: true
 
     signal openRequested(Item field)
     signal valueCommitted(string value)
 
+    // view state: the keyboard open on this field
     property bool keyboardActive: false
 
     readOnly: true
@@ -85,11 +85,10 @@ TextField {
         onPressedChanged: if (pressed) Qt.inputMethod.hide()
     }
 
+    // reports the value; the field never sets its own ``text`` - bound by its
+    // user to the model, it shows what the model then says
     function commit(value) {
-        var v = String(value)
-        if (root.commitUpdatesText && root.text !== v)
-            root.text = v
-        root.valueCommitted(v)
+        root.valueCommitted(String(value))
         return true
     }
 

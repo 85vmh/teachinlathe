@@ -167,7 +167,6 @@ Item {
                             placeholderText: "Optional"
                             maximumLength: root.editor ? root.editor.commentMaxLength : 200
                             text: root.editor ? root.editor.comment : ""
-                            commitUpdatesText: false
                             onOpenRequested: function(field) { keyboard.openFor(field, titleText) }
                             onValueCommitted: function(value) { root.editor.setComment(value) }
                         }

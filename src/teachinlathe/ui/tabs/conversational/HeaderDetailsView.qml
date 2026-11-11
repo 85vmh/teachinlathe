@@ -131,7 +131,6 @@ Item {
                         font.pixelSize: root.inputFontSize
                         titleText: "Program name"
                         text: root.programName
-                        commitUpdatesText: false
                         onOpenRequested: function(field) { root.openKeyboardRequested(field) }
                         onValueCommitted: function(value) {
                             root.programName = value

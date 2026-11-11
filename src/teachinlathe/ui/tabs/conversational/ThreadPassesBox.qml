@@ -6,6 +6,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import common.touchable_input
 import theme
+import common
 
 CanvasBox {
     id: root
@@ -65,7 +66,7 @@ CanvasBox {
         }
 
         Label { text: "Infeed Angle"; font.pixelSize: Theme.fontBody }
-        ComboBox {
+        ModelComboBox {
             id: angleCombo
             Layout.preferredWidth: 100
             Layout.preferredHeight: Theme.inputHeight
@@ -73,8 +74,8 @@ CanvasBox {
             model: root.infeedAngles
             displayText: currentIndex < 0 ? "" : root.infeedAngles[currentIndex] + "°"
             // none shown for an angle not offered (an older operation's)
-            currentIndex: root.infeedAngles.indexOf(Number(root.infeedAngle))
-            onActivated: function(index) { root.infeedAngleEdited(root.infeedAngles[index]) }
+            selectedIndex: root.infeedAngles.indexOf(Number(root.infeedAngle))
+            onPicked: function(index) { root.infeedAngleEdited(root.infeedAngles[index]) }
             delegate: ItemDelegate {
                 width: angleCombo.width
                 height: Theme.inputHeight

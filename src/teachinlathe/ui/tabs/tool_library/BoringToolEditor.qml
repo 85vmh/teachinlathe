@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import theme
 import common.touchable_input
+import common
 
 // Add or edit a boring bar - for now a copy of TurningToolEditor.qml, over
 // the same view model; the bar's body is kept as it was. The form is on the
@@ -38,7 +39,7 @@ Item {
         }
     }
 
-    component Choice: ComboBox {
+    component Choice: ModelComboBox {
         Layout.preferredWidth: root.fieldWidth
         Layout.preferredHeight: Theme.inputHeight
         font.pixelSize: Theme.fontTitle
@@ -116,24 +117,24 @@ Item {
                         label: "Type"
                         Choice {
                             model: root.editor ? root.editor.families : []
-                            currentIndex: root.editor ? root.editor.familyIndex : -1
-                            onActivated: function(index) { root.editor.setFamily(index) }
+                            selectedIndex: root.editor ? root.editor.familyIndex : -1
+                            onPicked: function(index) { root.editor.setFamily(index) }
                         }
                     }
                     FormRow {
                         label: "Size"
                         Choice {
                             model: root.editor ? root.editor.sizeCodes : []
-                            currentIndex: root.editor ? root.editor.sizeIndex : -1
-                            onActivated: function(index) { root.editor.setSize(index) }
+                            selectedIndex: root.editor ? root.editor.sizeIndex : -1
+                            onPicked: function(index) { root.editor.setSize(index) }
                         }
                     }
                     FormRow {
                         label: "Nose radius"
                         Choice {
                             model: root.editor ? root.editor.noseRadiusCodes : []
-                            currentIndex: root.editor ? root.editor.noseRadiusIndex : -1
-                            onActivated: function(index) { root.editor.setNoseRadius(index) }
+                            selectedIndex: root.editor ? root.editor.noseRadiusIndex : -1
+                            onPicked: function(index) { root.editor.setNoseRadius(index) }
                         }
                     }
 
@@ -194,7 +195,6 @@ Item {
                             placeholderText: "Optional"
                             maximumLength: root.editor ? root.editor.commentMaxLength : 200
                             text: root.editor ? root.editor.comment : ""
-                            commitUpdatesText: false
                             onOpenRequested: function(field) { keyboard.openFor(field, titleText) }
                             onValueCommitted: function(value) { root.editor.setComment(value) }
                         }

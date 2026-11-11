@@ -19,7 +19,6 @@ FieldCell {
         settingName: root.settingName
         validatorObject: DoubleValidator { notation: DoubleValidator.StandardNotation }
         seedNumpadFromValue: true
-        valueFollowsModel: true
         value: root.value
         formatter: function(v) { return (v == null) ? "" : Number(v).toFixed(3) }
         hAlign: Text.AlignRight

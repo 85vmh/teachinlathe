@@ -7,11 +7,12 @@ Item {
     id: root
 
     property string label: "Override"
+    // the override in use: bound by its user to the model, never set here - a
+    // tap reports ``selected``, and the bar shows what the model then says
     property int value: 100
     property var steps: [25, 50, 75, 100]
     // When > 0, shows the effective speed next to the label (e.g. "Rapid Override (6000 mm/min)")
     property real maxSpeed: 0
-    property bool updateValueOnClick: true
     property bool fillAvailableWidth: false
 
     signal selected(int newValue)
@@ -124,12 +125,7 @@ Item {
                             id: segmentArea
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (root.updateValueOnClick) {
-                                    root.value = modelData
-                                }
-                                root.selected(modelData)
-                            }
+                            onClicked: root.selected(modelData)
                         }
                     }
                 }

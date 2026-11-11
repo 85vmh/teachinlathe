@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import theme
 import common.touchable_input
+import common
 
 // Add or edit a drill: the form on the left, the drill as it sits on the
 // right. There is no orientation to pick - a drill is always at 7, on the
@@ -36,7 +37,7 @@ Item {
         }
     }
 
-    component Choice: ComboBox {
+    component Choice: ModelComboBox {
         Layout.preferredWidth: root.fieldWidth
         Layout.preferredHeight: Theme.inputHeight
         font.pixelSize: Theme.fontTitle
@@ -146,8 +147,8 @@ Item {
                         label: "Tip angle"
                         Choice {
                             model: root.editor ? root.editor.tipAngleTexts : []
-                            currentIndex: root.editor ? root.editor.tipAngleIndex : -1
-                            onActivated: function(index) { root.editor.setTipAngle(index) }
+                            selectedIndex: root.editor ? root.editor.tipAngleIndex : -1
+                            onPicked: function(index) { root.editor.setTipAngle(index) }
                         }
                     }
                     FormRow {
@@ -179,7 +180,6 @@ Item {
                             placeholderText: "Optional"
                             maximumLength: root.editor ? root.editor.commentMaxLength : 200
                             text: root.editor ? root.editor.comment : ""
-                            commitUpdatesText: false
                             onOpenRequested: function(field) { keyboard.openFor(field, titleText) }
                             onValueCommitted: function(value) { root.editor.setComment(value) }
                         }

@@ -97,7 +97,6 @@ Rectangle {
                 // value here would cut it off, and TeachIn would no longer
                 // show over a typed value
                 value: root.value
-                valueFollowsModel: true
                 settingName: root.settingName
                 description: root.description
                 hAlign: Text.AlignRight

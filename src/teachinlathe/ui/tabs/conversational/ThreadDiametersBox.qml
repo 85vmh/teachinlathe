@@ -29,8 +29,7 @@ CanvasBox {
 
     DoubleValidator { id: dblVal; bottom: 0; notation: DoubleValidator.StandardNotation }
 
-    // a field's commit sets its value, which ends its binding: bound again
-    // after each, so it follows Calculate, the pitch and OD / ID
+    // what each field shows: the one taught in, and the one calculated
     function _taughtValue() { return root.internal ? root.minorDiameter : root.majorDiameter }
     function _calculatedValue() { return root.internal ? root.majorDiameter : root.minorDiameter }
 
@@ -58,7 +57,6 @@ CanvasBox {
             onValueCommitted: function(value) {
                 if (root.internal) root.minorEdited(Number(value))
                 else root.majorEdited(Number(value))
-                taughtField.value = Qt.binding(root._taughtValue)
             }
         }
         TeachInButton {
@@ -84,7 +82,6 @@ CanvasBox {
             onValueCommitted: function(value) {
                 if (root.internal) root.majorEdited(Number(value))
                 else root.minorEdited(Number(value))
-                calculatedField.value = Qt.binding(root._calculatedValue)
             }
         }
         // Calculate: the TeachIn button's size, a calculator on it

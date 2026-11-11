@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import common
 
 CanvasBox {
     id: root
@@ -16,14 +17,11 @@ CanvasBox {
 
     signal passTypeEdited(string value)
 
-    ButtonGroup { id: passGroup }
-
-    component PassButton: RadioButton {
+    component PassButton: ModelRadioButton {
         property string value
         font.pixelSize: Theme.fontBody
         checked: root.passType === value
-        ButtonGroup.group: passGroup
-        onToggled: if (checked) root.passTypeEdited(value)
+        onChosen: root.passTypeEdited(value)
     }
 
     // the straight passes; beside them, for an ID profile only, the 45° ones,

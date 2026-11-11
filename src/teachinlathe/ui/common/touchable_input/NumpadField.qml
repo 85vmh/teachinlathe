@@ -11,6 +11,9 @@ TextField {
     // Optional dialog title override. If set, the SmartNumpad dialog uses this
     // instead of the description coming from numpad_settings.json.
     property string description: ""
+    // what the field shows: bound to the model, never set by the field
+    // itself - a commit reports the value (valueCommitted), the model takes
+    // it, and the field shows what the model then says
     property var    value: null
     property var    metadata: ({})
     property var    formatter: function(v) {
@@ -21,9 +24,6 @@ TextField {
     }
     property var    validatorObject: null
     property bool   seedNumpadFromValue: false
-    // ``value`` is bound to a model that valueCommitted updates: a commit leaves
-    // the binding in place, and the field shows what the model then says
-    property bool   valueFollowsModel: false
 
     // control vizual reutilizabil
     property int    hAlign: Text.AlignRight     // aliniere text
@@ -34,6 +34,7 @@ TextField {
     signal valueCommitted(var value)
 
     // Guard
+    // view state: the numpad open on this field
     property bool numpadActive: false
 
     // Comportament
@@ -88,15 +89,9 @@ TextField {
         }
     }
 
-    // Sync text <-> value
-    Component.onCompleted: {
-        var t = formatter(value)
-        if (text !== t) text = t
-    }
-    onValueChanged: {
-        var t = formatter(value)
-        if (text !== t) text = t
-    }
+    // what it shows: the model's value, as the formatter has it - a binding,
+    // so it follows the value and anything the formatter reads
+    text: formatter(value)
     onActiveFocusChanged: if (activeFocus) Qt.inputMethod.hide()
 
     // Background
@@ -130,19 +125,9 @@ TextField {
             var st = validatorObject.validate(s, pos)
             if (st !== Validator.Acceptable && st !== 2) return false
         }
-        if (valueFollowsModel) {
-            valueCommitted(v)
-            var shown = formatter(value)
-            if (text !== shown) text = shown
-            return true
-        }
-        if (value !== v) {
-            value = v
-        } else {
-            var t = formatter(value)
-            if (text !== t) text = t
-        }
-        valueCommitted(value)
+        // never ``value = v`` nor ``text = ...``: that would cut the field
+        // off from its model
+        valueCommitted(v)
         return true
     }
 
@@ -152,7 +137,6 @@ TextField {
     }
 
     function setTextAndParse(s) {
-        text = s
         var v = parser(s)
         if (v !== null) commit(v)
     }

@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import theme
+import common
 
 CanvasBox {
     id: root
@@ -14,14 +15,11 @@ CanvasBox {
 
     signal locationEdited(string value)
 
-    ButtonGroup { id: locationGroup }
-
-    component LocationButton: RadioButton {
+    component LocationButton: ModelRadioButton {
         property string value
         font.pixelSize: Theme.fontBody
         checked: root.location === value
-        ButtonGroup.group: locationGroup
-        onToggled: if (checked) root.locationEdited(value)
+        onChosen: root.locationEdited(value)
     }
 
     RowLayout {

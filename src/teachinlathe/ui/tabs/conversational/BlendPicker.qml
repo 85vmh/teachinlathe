@@ -26,7 +26,6 @@ RowLayout {
     property string noneText: "\u2190 Add Blend"
     property color  noneTextColor: Theme.foreground
     property bool   noneTextBold: false
-    property alias  valueFollowsModel: valueField.valueFollowsModel
     // the drop-down's column, laid out as a label: the drop-down at its
     // right, by what it sets - so a box can line the size up with its other
     // fields, and its other labels with the drop-down
@@ -38,10 +37,6 @@ RowLayout {
     signal openNumPadRequested(var field)
 
     spacing: Theme.spacing
-
-    // the field shows the new kind's value - or nothing - even when the
-    // number itself is the same
-    onBlendTypeChanged: valueField.text = valueField.formatter(valueField.value)
 
     readonly property var kinds: [
         { type: "none",    text: "None",    icon: "" },
@@ -72,15 +67,15 @@ RowLayout {
 
     // as narrow as its icon and the arrow; the list it opens as wide as
     // the names need
-    ComboBox {
+    ModelComboBox {
         id: kindCombo
         Layout.preferredWidth: root.comboWidth
         Layout.leftMargin: root.leadWidth - root.comboWidth
         Layout.preferredHeight: valueField.height
         model: root.kinds
         textRole: "text"
-        currentIndex: root._index(root.blendType)
-        onActivated: function(index) { root._emit(root.kinds[index].type) }
+        selectedIndex: root._index(root.blendType)
+        onPicked: function(index) { root._emit(root.kinds[index].type) }
 
         contentItem: Item {
             Image {

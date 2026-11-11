@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import theme
 import common.touchable_input
+import common
 
 // Add or edit a threading tool, laid out as TurningToolEditor is: the form
 // on the left, the orientation in the middle, the insert as it will sit in
@@ -32,7 +33,7 @@ Item {
         }
     }
 
-    component Choice: ComboBox {
+    component Choice: ModelComboBox {
         Layout.preferredWidth: root.fieldWidth
         Layout.preferredHeight: Theme.inputHeight
         font.pixelSize: Theme.fontTitle
@@ -90,24 +91,24 @@ Item {
                         label: "Type"
                         Choice {
                             model: root.editor ? root.editor.handTexts : []
-                            currentIndex: root.editor ? root.editor.handIndex : -1
-                            onActivated: function(index) { root.editor.setHand(index) }
+                            selectedIndex: root.editor ? root.editor.handIndex : -1
+                            onPicked: function(index) { root.editor.setHand(index) }
                         }
                     }
                     FormRow {
                         label: "Size"
                         Choice {
                             model: root.editor ? root.editor.sizeCodes : []
-                            currentIndex: root.editor ? root.editor.sizeIndex : -1
-                            onActivated: function(index) { root.editor.setSize(index) }
+                            selectedIndex: root.editor ? root.editor.sizeIndex : -1
+                            onPicked: function(index) { root.editor.setSize(index) }
                         }
                     }
                     FormRow {
                         label: "Pitch"
                         Choice {
                             model: root.editor ? root.editor.pitchTexts : []
-                            currentIndex: root.editor ? root.editor.pitchIndex : -1
-                            onActivated: function(index) { root.editor.setPitch(index) }
+                            selectedIndex: root.editor ? root.editor.pitchIndex : -1
+                            onPicked: function(index) { root.editor.setPitch(index) }
                         }
                     }
                     Text {
@@ -137,7 +138,6 @@ Item {
                             placeholderText: "Optional"
                             maximumLength: root.editor ? root.editor.commentMaxLength : 200
                             text: root.editor ? root.editor.comment : ""
-                            commitUpdatesText: false
                             onOpenRequested: function(field) { keyboard.openFor(field, titleText) }
                             onValueCommitted: function(value) { root.editor.setComment(value) }
                         }

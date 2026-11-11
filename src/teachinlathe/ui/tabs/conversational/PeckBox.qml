@@ -7,6 +7,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import common.touchable_input
 import theme
+import common
 
 CanvasBox {
     id: root
@@ -49,7 +50,7 @@ CanvasBox {
         Label { text: "(mm)"; font.pixelSize: Theme.fontBody }
 
         Label { text: "Dwell Time"; color: root.color; font.pixelSize: Theme.fontBody }
-        ComboBox {
+        ModelComboBox {
             id: dwellCombo
             // as big as the Peck Depth field
             Layout.preferredWidth: peckField.width
@@ -58,14 +59,14 @@ CanvasBox {
             model: root.dwellTimes
             displayText: Number(root.dwellTime).toFixed(1)
             // the time the op has, or the nearest offered
-            currentIndex: {
+            selectedIndex: {
                 var best = 0
                 for (var i = 1; i < root.dwellTimes.length; i++)
                     if (Math.abs(root.dwellTimes[i] - root.dwellTime) < Math.abs(root.dwellTimes[best] - root.dwellTime))
                         best = i
                 return best
             }
-            onActivated: function(index) { root.dwellTimeEdited(Number(root.dwellTimes[index])) }
+            onPicked: function(index) { root.dwellTimeEdited(Number(root.dwellTimes[index])) }
             contentItem: Text {
                 text: dwellCombo.displayText
                 font: dwellCombo.font

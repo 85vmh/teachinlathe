@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import theme
 import TeachInLathe
+import common
 
 // The Machine Settings tab. Replaces the .ui's settingsTab.
 Rectangle {
@@ -32,15 +33,15 @@ Rectangle {
                 Layout.fillWidth: true
 
                 content: ColumnLayout {
-                    CheckBox {
+                    ModelCheckBox {
                         text: "Hide pointer"
                         checked: TouchFeedback.hidePointer
-                        onToggled: TouchFeedback.hidePointer = checked
+                        onToggledTo: function(on) { TouchFeedback.hidePointer = on }
                     }
-                    CheckBox {
+                    ModelCheckBox {
                         text: "Show touches"
                         checked: TouchFeedback.showTouches
-                        onToggled: TouchFeedback.showTouches = checked
+                        onToggledTo: function(on) { TouchFeedback.showTouches = on }
                     }
                 }
             }
