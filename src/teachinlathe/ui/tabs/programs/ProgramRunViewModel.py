@@ -29,6 +29,12 @@ class ProgramRunViewModel(QObject):
         """What the backplot draws this run from (backplot.plot_source)."""
         return self._plot_source()
 
+    def excursion(self):
+        """The trip to M6, G28 or G30 the run is on (excursions.ExcursionMoment),
+        None on none: the backplot shows the tool offsets and the target
+        while it is away, and zooms back in as it returns."""
+        return self._source.moment.excursion
+
     # ── the run ──────────────────────────────────────────────────────────
 
     @pyqtProperty(str, notify=changed)

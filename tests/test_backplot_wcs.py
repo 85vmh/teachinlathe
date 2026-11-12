@@ -38,6 +38,7 @@ def host(monkeypatch):
         logger=SimpleNamespace(npts=0), source=SimpleNamespace(poll=lambda: None),
         fingerprint=None, update=lambda: None,
         _show_thread_plan=lambda: False, invalidate_static=lambda: None,
+        _follow_excursion=lambda: None,
     )
 
     def reload(filename, *, sync_task):

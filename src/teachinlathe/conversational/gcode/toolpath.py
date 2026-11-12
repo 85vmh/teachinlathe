@@ -332,15 +332,18 @@ class GcodeEmitter:
         self.x = self.z = None
         self.at_tool_change = False
 
-    def set_z_zero(self):
-        """The work offset was set so that here is Z0 (G10 L20 ... Z0). In a
-        "/" block it may not be: where Z0 is is not known after it."""
-        if self.z is not None and self.z_origin is not None and not self.prefix:
-            self.z_origin += self.z
+    def set_z_zero(self, at: Optional[float] = None):
+        """The work offset was set so that Z ``at`` - of the coordinates
+        before it; None, here - is Z0 (G10 L20 ... Z<here - at>). In a "/"
+        block it may not be: where Z0 is is not known after it."""
+        if at is None:
+            at = self.z
+        if at is not None and self.z_origin is not None and not self.prefix:
+            self.z_origin += at
         else:
             self.z_origin = None
-        if self.z is not None:
-            self.z = 0.0
+        if self.z is not None and at is not None:
+            self.z -= at
 
     def preview(self) -> OperationPreview:
         """What has been written, as the editor draws it."""

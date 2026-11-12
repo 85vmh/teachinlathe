@@ -33,6 +33,8 @@ from PyQt6.QtQml import qmlRegisterType
 from PyQt6.QtQuick import QQuickFramebufferObject
 
 from teachinlathe.ui.tabs.programs.backplot import actors, blade_middle, plot_source, tool_source, workpiece
+from teachinlathe.ui.tabs.programs.backplot import ortho_view
+from teachinlathe.ui.tabs.programs.backplot.excursion_view import ExcursionView
 from teachinlathe.ui.tabs.programs.backplot.actors.units import INTERNAL_PER_MM
 from teachinlathe.ui.tabs.programs.backplot.touch_gestures import ThreeFingerSwipe
 from teachinlathe.ui.tabs.programs.backplot.actors import base as actor_base
@@ -82,12 +84,6 @@ PREVIEW_POLL_INTERVAL_MS = int(
 PERF_LOGGING = bool(os.environ.get("TEACHINLATHE_PERF"))
 PERF_REPORT_INTERVAL_MS = 5000
 
-#: The exponent in GlNavBase.get_projection_matrix's ortho half-width,
-#: ``distance ** 0.55555``.
-_ORTHO_EXPONENT = 0.55555
-#: The same bounds glnav's zoomin/zoomout keep the distance within.
-_PINCH_MIN_DISTANCE = 0.1
-_PINCH_MAX_DISTANCE = 6000.0
 
 # Mirrors gremlin_widget.py: qt5_graphics reaches for Qt through qtpy, which
 # picks PyQt5 unless told otherwise, and two bindings in one process do not
@@ -454,8 +450,12 @@ class LatheBackplotCanon(_HostBase):
         self._pending_default_view = False
         self._last_preview_tool_signature = None
         self._last_preview_wcs_signature = None
-        self.show_tool_change_offsets = bool(
+        # the tool offsets (the TLO button): shown when the operator has them
+        # on, or while the run is away at M6, G28 or G30 (_follow_excursion)
+        self._tool_change_offsets_wanted = bool(
             getattr(self._item, "_show_tool_change_offsets", False))
+        self.show_tool_change_offsets = self._tool_change_offsets_wanted
+        self._excursion_view = ExcursionView()
         from teachinlathe.core.predefined_positions_repository import predefined_positions
         self._predefined_positions = predefined_positions()
         self.preset_positions = self._read_preset_positions()
@@ -605,11 +605,69 @@ class LatheBackplotCanon(_HostBase):
         self.update()
 
     def set_tool_change_offsets_visible(self, visible):
+        """The operator's TLO: turned off while a trip away shows them, off
+        for the rest of that trip."""
         visible = bool(visible)
-        if visible == self.show_tool_change_offsets:
+        if not visible:
+            self._excursion_view.dismiss_offsets()
+        self._tool_change_offsets_wanted = visible
+        self._refresh_tool_change_offsets()
+
+    def _refresh_tool_change_offsets(self):
+        shown = self._tool_change_offsets_wanted or self._excursion_view.show_offsets
+        if shown == self.show_tool_change_offsets:
             return
-        self.show_tool_change_offsets = visible
+        self.show_tool_change_offsets = shown
         self.update()
+        notify = getattr(self._item, "toolChangeOffsetsChanged", None)
+        if notify is not None:
+            notify.emit()
+
+    # ── a trip away to M6, G28 or G30 ────────────────────────────────────────
+
+    def _follow_excursion(self):
+        """The run's trip away, if it is on one: the tool offsets shown, and
+        the view zoomed out to the target and back in as it returns
+        (excursion_view)."""
+        run = getattr(self._item, "_run", None)
+        try:
+            moment = run.excursion() if run is not None else None
+        except Exception as exc:
+            LOG.debug("backplot: no excursion: %s", exc)
+            moment = None
+        if self.perspective:
+            moment = None
+        view = self._excursion_view.update(
+            moment, (self.distance, self.modelview),
+            lambda: self._view_taking_in(moment.target), time.monotonic())
+        if view is not None:
+            self.distance, self.modelview = view
+            self.invalidate_static()
+            self.current_view = 'y'
+            self.update()
+        self._refresh_tool_change_offsets()
+
+    def _view_taking_in(self, target):
+        """The view now, zoomed out to take in ``target``'s position (M6,
+        G28, G30) and the tool's tip there, as well as the tool now."""
+        try:
+            machine = self.to_internal_units(self.stat.actual_position)[:3]
+            offset = self.to_internal_units(self.stat.tool_offset)[:3]
+        except (AttributeError, IndexError, TypeError):
+            return None
+        points = [(machine[0], 0.0, machine[2]),
+                  (machine[0] - offset[0], 0.0, machine[2] - offset[2])]
+        for name, x, z in self.preset_positions:
+            if name == target:
+                at = self.to_internal_units((x, 0.0, z))
+                points.append((at[0], 0.0, at[2]))
+                points.append((at[0] - offset[0], 0.0, at[2] - offset[2]))
+        return ortho_view.fit((self.distance, self.modelview), points,
+                              getattr(self, "_vp_width", 1), getattr(self, "_vp_height", 1))
+
+    def view_touched(self):
+        """The operator zoomed, panned or fitted the view."""
+        self._excursion_view.touched()
 
     # ── the host contract GlCanonDraw still expects ─────────────────────────
 
@@ -1243,6 +1301,7 @@ class LatheBackplotCanon(_HostBase):
 
         stat = self.stat
         self.source.poll()
+        self._follow_excursion()
         machine_file = os.path.abspath(stat.file) if stat.file else ''
         call_level = int(getattr(stat, 'call_level', 0) or 0)
         task_mode = stat.task_mode
@@ -1266,18 +1325,20 @@ class LatheBackplotCanon(_HostBase):
             self._pending_default_view = True
             return True
 
-        tool_changed = (task_mode != linuxcnc.MODE_AUTO
-                        and tool_signature != self._last_preview_tool_signature)
         # A redraw cannot move geometry already parsed in machine coordinates.
         # Wait until MDI has finished; also refresh in AUTO when it is idle,
-        # but never re-parse on WCS changes made by a running/paused program:
-        # its geometry has them already - a Facing's new Z0 moves what comes
-        # after it - so they are taken as read, and the program is not read
-        # again from the new origin once it ends, as if it had not moved it.
+        # but never re-parse on what a running/paused program changes itself -
+        # its WCS (a Facing's new Z0 moves what comes after it) and its tool
+        # (its M6s): its geometry has them already, so they are taken as read.
+        # Otherwise, once it ended and the machine left AUTO, the program was
+        # read again from the tool and the origin it ended with - the whole
+        # toolpath moved off the trail and the material it had cut.
         wcs = self._wcs_signature(stat)
-        if (task_mode == linuxcnc.MODE_AUTO and stat.interp_state != linuxcnc.INTERP_IDLE
-                and wcs != self._last_preview_wcs_signature):
+        if task_mode == linuxcnc.MODE_AUTO and stat.interp_state != linuxcnc.INTERP_IDLE:
             self._last_preview_wcs_signature = wcs
+            self._last_preview_tool_signature = tool_signature
+        tool_changed = (task_mode != linuxcnc.MODE_AUTO
+                        and tool_signature != self._last_preview_tool_signature)
         wcs_changed = (stat.interp_state == linuxcnc.INTERP_IDLE
                        and wcs != self._last_preview_wcs_signature)
         if self._current_file and (tool_changed or wcs_changed):
@@ -1451,9 +1512,9 @@ class LatheBackplotCanon(_HostBase):
     # glnav's own drag-zoom scales around the middle of the window and its pan
     # adds a boost when zoomed in, so neither keeps the drawing under the
     # fingers. This works the ortho projection out directly instead:
-    # GlNavBase.get_projection_matrix spans 2 * distance ** 0.55555 eye units
-    # across the width, centred on the window, so one pixel is the same size
-    # both ways and a point's eye coordinates follow from its pixel.
+    # GlNavBase.get_projection_matrix spans 2 * ortho_view.half_width(distance)
+    # eye units across the width, centred on the window, so one pixel is the
+    # same size both ways and a point's eye coordinates follow from its pixel.
 
     def begin_pinch(self, x, y, width, height):
         """Remember the view a pinch starts from; *x*, *y* is the centroid."""
@@ -1468,9 +1529,7 @@ class LatheBackplotCanon(_HostBase):
             return
         distance0, modelview0, eye0 = start
 
-        half_span = abs(distance0) ** _ORTHO_EXPONENT / max(scale, 1e-6)
-        distance = min(_PINCH_MAX_DISTANCE,
-                       max(_PINCH_MIN_DISTANCE, half_span ** (1.0 / _ORTHO_EXPONENT)))
+        distance = ortho_view.distance_for(ortho_view.half_width(distance0) / max(scale, 1e-6))
 
         eye = self._pixel_to_eye(x, y, width, height, distance)
         self.distance = distance
@@ -1489,7 +1548,7 @@ class LatheBackplotCanon(_HostBase):
         """Eye-space x, y of item pixel *x*, *y* in the ortho view."""
         width = max(1.0, float(width))
         height = max(1.0, float(height))
-        units_per_pixel = 2.0 * abs(distance) ** _ORTHO_EXPONENT / width
+        units_per_pixel = 2.0 * ortho_view.half_width(distance) / width
         return ((x - width / 2.0) * units_per_pixel,
                 (height / 2.0 - y) * units_per_pixel)
 
@@ -1731,18 +1790,21 @@ class LatheBackplotItem(QQuickFramebufferObject):
     def zoomIn(self):
         canon = self.canon()
         if canon is not None:
+            canon.view_touched()
             canon.zoom_in()
 
     @pyqtSlot()
     def zoomOut(self):
         canon = self.canon()
         if canon is not None:
+            canon.view_touched()
             canon.zoom_out()
 
     @pyqtSlot()
     def fitToWindow(self):
         canon = self.canon()
         if canon is not None:
+            canon.view_touched()
             canon.set_lathe_view()
 
     mirrorChanged = pyqtSignal()
@@ -1770,15 +1832,14 @@ class LatheBackplotItem(QQuickFramebufferObject):
 
     def _set_tool_change_offsets(self, visible):
         visible = bool(visible)
-        if visible == self._show_tool_change_offsets:
-            return
         self._show_tool_change_offsets = visible
         canon = self.canon()
         if canon is not None:
             canon.set_tool_change_offsets_visible(visible)
         self.toolChangeOffsetsChanged.emit()
 
-    #: Show the G53 machine position and tool-offset dimensions.
+    #: Show the G53 machine position and tool-offset dimensions - on while
+    #: the run is away at M6, G28 or G30 too, till it starts back.
     showToolChangeOffsets = pyqtProperty(
         bool, _get_tool_change_offsets, _set_tool_change_offsets,
         notify=toolChangeOffsetsChanged)
@@ -1842,6 +1903,7 @@ class LatheBackplotItem(QQuickFramebufferObject):
         canon = self.canon()
         if canon is None:
             return
+        canon.view_touched()
         canon.translateOrRotate(int(x), int(y))
         self.update()
 
@@ -1850,6 +1912,7 @@ class LatheBackplotItem(QQuickFramebufferObject):
         canon = self.canon()
         if canon is None:
             return
+        canon.view_touched()
         canon.continueZoom(int(y))
         self.update()
 
@@ -1858,6 +1921,7 @@ class LatheBackplotItem(QQuickFramebufferObject):
         canon = self.canon()
         if canon is None:
             return
+        canon.view_touched()
         canon.begin_pinch(x, y, self.width(), self.height())
 
     @pyqtSlot(float, float, float)
@@ -1885,6 +1949,7 @@ class LatheBackplotItem(QQuickFramebufferObject):
         canon = self.canon()
         if canon is None or not angle_delta:
             return
+        canon.view_touched()
         gathered = getattr(self, '_wheel_gathered', 0.0)
         if gathered * angle_delta < 0:      # turned the other way: start again
             gathered = 0.0

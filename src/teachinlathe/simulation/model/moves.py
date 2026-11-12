@@ -84,7 +84,10 @@ class Move:
     round ``center``, counter-clockwise (G3) with Z to the right and X up
     when ``ccw``. ``where``: the line it is written on. ``ends_at``: when it
     ends, None when the program is not timed. ``sync``: how it turns with
-    the spindle while synced with it on position, None otherwise."""
+    the spindle while synced with it on position, None otherwise.
+    ``target``: the machine's own position it goes to - "M6" the tool change
+    position, "G28" or "G30" the one stored for it - "" for a point of the
+    program."""
     kind: MoveKind
     start: At
     end: At
@@ -95,6 +98,7 @@ class Move:
     ccw: bool = False
     ends_at: Optional[float] = None
     sync: Optional[SpindleSync] = None
+    target: str = ""
 
 
 class StopKind(Enum):

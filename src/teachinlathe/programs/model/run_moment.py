@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, Tuple
 
+from teachinlathe.programs.model.excursions import ExcursionMoment
 from teachinlathe.programs.model.tool_changes import NextTool
 
 
@@ -40,8 +41,9 @@ class RunMoment:
     """Where the run is: the tool's tip in the work offset in use (``x`` a
     diameter, ``z``, mm) and what is left of the move under way, that work
     offset (1 for G54 ... 9 for G59.3), the program's line, the current
-    loaded tool and the next one, the feed and the spindle, and the time
-    from cycle start (None, not known)."""
+    loaded tool and the next one, the feed and the spindle, the time from
+    cycle start (None, not known), and the trip to M6, G28 or G30 it is on
+    (None, on none)."""
     x: float = 0.0
     z: float = 0.0
     x_to_go: float = 0.0
@@ -52,6 +54,7 @@ class RunMoment:
     next_tool: Optional[NextTool] = None
     motion: MotionReadout = field(default_factory=MotionReadout)
     time: Optional[float] = None
+    excursion: Optional[ExcursionMoment] = None
 
 
 @dataclass(frozen=True)

@@ -5,27 +5,18 @@ import tabs.programs.gcode_viewer
 import tabs.programs
 import theme
 
-Rectangle {
+// The calling frames, one card each, and the running file's under them. No
+// fill of its own: the window's background shows between the cards, and they
+// reach from edge to edge of the pane - as the code's single frame does with
+// no stack, and the DRO over it - Theme.paneGap apart, as the DRO is from them.
+Item {
     id: root
     required property var viewModel
     // Space under the last frame. The pane sets it so the frame ends as far
     // above the action bar as the backplot does.
     property real bottomPadding: 10
-    readonly property real padding: 10
     // The running file is never squeezed below this; past it, the stack scrolls.
     readonly property real minimumCodeHeight: 260
-    color: Theme.surface
-
-    function startFrameAt(index) {
-        return frameRepeater.itemAt(index)
-    }
-
-    function endFrameAt(index) {
-        if (index + 1 < frameRepeater.count) {
-            return frameRepeater.itemAt(index + 1)
-        }
-        return activeFrame.visible ? activeFrame : null
-    }
 
     Flickable {
         anchors.fill: parent
@@ -42,13 +33,10 @@ Rectangle {
 
             Column {
                 id: contentColumn
-                x: root.padding
-                y: root.padding
-                width: root.width - 2 * root.padding
-                spacing: 10
+                width: root.width
+                spacing: Theme.paneGap
 
                 Repeater {
-                    id: frameRepeater
                     model: viewModel.executionFrames
 
                     delegate: ProgramCallFrameCard {
@@ -62,7 +50,6 @@ Rectangle {
 
                 // Runs down to the bottom of the view, below the calling frames.
                 ProgramContentFrame {
-                    id: activeFrame
                     width: contentColumn.width
                     height: Math.max(implicitHeight + root.minimumCodeHeight,
                                      root.height - contentColumn.y - y - root.bottomPadding)

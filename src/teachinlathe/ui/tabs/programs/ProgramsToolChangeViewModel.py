@@ -19,9 +19,8 @@ class ProgramsToolChangeViewModel(QObject):
         super().__init__(parent)
         self._requested = False
         self._tool_no = 0
-        self._confirm_ui_pressed = False
+        # the machine's Cycle Start and Cycle Stop: what answers a tool change
         self._confirm_button_pressed = False
-        self._cancel_ui_pressed = False
         self._cancel_button_pressed = False
         self._response_output = False
         # The tool the request is for - the request's number goes back to 0
@@ -70,26 +69,6 @@ class ProgramsToolChangeViewModel(QObject):
         self.stateChanged.emit()
 
     @pyqtSlot()
-    def confirmPressed(self):
-        self._confirm_ui_pressed = True
-        self._refresh_outputs()
-
-    @pyqtSlot()
-    def confirmReleased(self):
-        self._confirm_ui_pressed = False
-        self._refresh_outputs()
-
-    @pyqtSlot()
-    def cancelPressed(self):
-        self._cancel_ui_pressed = True
-        self._refresh_outputs()
-
-    @pyqtSlot()
-    def cancelReleased(self):
-        self._cancel_ui_pressed = False
-        self._refresh_outputs()
-
-    @pyqtSlot()
     def refreshFromHal(self):
         requested = self._read_bool_pin(TeachInLatheComponent.PinToolChangeRequest, self._requested)
         tool_no = self._read_int_pin(TeachInLatheComponent.PinToolChangeToolNo, self._tool_no)
@@ -99,9 +78,7 @@ class ProgramsToolChangeViewModel(QObject):
             self._tool_no = tool_no
             self._refresh_tool_view()
         if not requested:
-            self._confirm_ui_pressed = False
             self._confirm_button_pressed = False
-            self._cancel_ui_pressed = False
             self._cancel_button_pressed = False
         self._refresh_outputs(emit=False)
         if changed:
@@ -141,9 +118,7 @@ class ProgramsToolChangeViewModel(QObject):
             # reads, while program_state, in real time, does not miss it.
             tool = self._requested_tool
             QTimer.singleShot(300, lambda: self._announce_if_loaded(tool))
-            self._confirm_ui_pressed = False
             self._confirm_button_pressed = False
-            self._cancel_ui_pressed = False
             self._cancel_button_pressed = False
         self._refresh_outputs()
 
@@ -172,8 +147,8 @@ class ProgramsToolChangeViewModel(QObject):
         self._refresh_outputs()
 
     def _refresh_outputs(self, emit=True):
-        response_output = self._requested and (self._confirm_ui_pressed or self._confirm_button_pressed)
-        canceled_output = self._requested and (self._cancel_ui_pressed or self._cancel_button_pressed)
+        response_output = self._requested and self._confirm_button_pressed
+        canceled_output = self._requested and self._cancel_button_pressed
         response_pulsed = response_output and not self._response_output
 
         self._set_pin(

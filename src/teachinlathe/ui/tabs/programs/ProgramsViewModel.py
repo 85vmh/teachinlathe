@@ -89,6 +89,8 @@ class ProgramsViewModel(QObject):
         self._navigation_store = navigation_store
         self._preview_file = ''
         self._pending_fit_path = ''
+        # the program the plot was last fitted to as it reached the machine
+        self._fitted_machine_path = ''
         ini = ini_repository() if ini is None else ini
         locations = program_locations(ini)
         self._bridge = FileSystemBridge(self)
@@ -483,13 +485,6 @@ class ProgramsViewModel(QObject):
             return
         self._actions.triggerStop()
 
-    @pyqtSlot()
-    def closeCompletedProgram(self):
-        """The Program Completed dialog's Cycle Abort: close the screen, as
-        the machine's abort button does once the program has completed."""
-        if self._program_completed:
-            self._close_completed_program_screen()
-
     def _on_cycle_start_pressed(self):
         # The machine's Cycle Start: program_state starts the program again
         # itself (halui.program.run). A run of our own as well reached task
@@ -666,17 +661,22 @@ class ProgramsViewModel(QObject):
     def _on_machine_file_changed(self, path):
         """Fit the view when a new program reaches the machine - and only then.
 
-        The interpreter's file also changes as it steps into subroutines, and
-        re-fitting on those would move the plot under the operator mid-run.
+        The interpreter's file also changes as it steps into subroutines - an
+        M6's or an M1's remap - and back out of them to the program: neither
+        is a new program, and re-fitting on them moved the plot under the
+        operator mid-run, the view they had set lost at every tool change.
         """
         machine_path = os.path.abspath(path) if path else ''
         if not machine_path:
+            return
+        if self._actions.isActive or machine_path == self._fitted_machine_path:
             return
         program = self.currentFilePath or ''
         if program and machine_path != os.path.abspath(program):
             return
         if self._pending_fit_path and machine_path != self._pending_fit_path:
             return
+        self._fitted_machine_path = machine_path
         QTimer.singleShot(150, self.gremlinFitRequested.emit)
         self._pending_fit_path = ''
 

@@ -16,6 +16,7 @@ import math
 from dataclasses import dataclass
 from typing import NamedTuple, Optional, Tuple
 
+from teachinlathe.programs.model.excursions import Excursions
 from teachinlathe.simulation.model.moves import Move, ProgramMoves, ToolChange, Where
 
 #: How far, mm, the tool may be off a move and still be on it: what decides,
@@ -100,10 +101,12 @@ class NextTool:
 @dataclass(frozen=True)
 class ToolChangePlan:
     """A program's moves, as Segments, and its tool changes, in order;
-    how long it runs (``duration``, seconds; None, not timed)."""
+    how long it runs (``duration``, seconds; None, not timed); its trips
+    away to M6, G28 and G30 (``excursions``), by the same moves."""
     segments: Tuple[Segment, ...]
     changes: Tuple[Change, ...]
     duration: Optional[float] = None
+    excursions: Excursions = Excursions()
 
     @classmethod
     def of(cls, moves: ProgramMoves) -> "ToolChangePlan":
@@ -122,7 +125,7 @@ class ToolChangePlan:
                 ended_at = step.ends_at if step.ends_at is not None else ended_at
             elif getattr(step, "ends_at", None) is not None:
                 ended_at = step.ends_at
-        return cls(tuple(segments), tuple(changes), moves.duration)
+        return cls(tuple(segments), tuple(changes), moves.duration, Excursions.of(moves.steps))
 
     def next_tool(self, current_tool: int, after: int = -1) -> Optional[int]:
         """The first tool other than ``current_tool`` put in after move

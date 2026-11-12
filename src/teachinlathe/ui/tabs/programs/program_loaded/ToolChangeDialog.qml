@@ -1,174 +1,51 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import theme
 import "../../tool_library/ToolTitles.js" as ToolTitles
 
-// A Popup in the window's overlay, not an Item in the screen.
-//
-// As an Item it could only dim as far as its parent reached - the Programs
-// screen, inside the tab, inside the app shell's content area - so the top and
-// bottom bars stayed lit while a tool change was waiting. The confirmation
-// dialogs (ConfirmDialog.qml) were already Popups in Overlay.overlay, which is
-// why those dim the whole screen; this now matches them.
-//
-// It was also pushed off to one side, over the G-code pane. That was to keep
-// clear of the backplot, which used to be a QOpenGLWidget composited over the
-// whole window and would have covered any dialog under it. The backplot is a
-// scene-graph item now and obeys stacking like everything else, so the dialog
-// can sit in the middle.
-Popup {
+// The tool the program asks for, while the machine waits for it. Modal: till
+// the change is answered, with the machine's Cycle Start or Cycle Abort,
+// nothing else on the screen takes a touch - and what is behind is dimmed to
+// say so.
+ProgramPromptDialog {
     id: root
 
-    parent: Overlay.overlay
-    anchors.centerIn: parent
-    modal: true
-    // A tool change is answered at the machine, with CycleStart or CycleAbort.
-    // Nothing on screen dismisses it - a stray tap must not.
-    closePolicy: Popup.NoAutoClose
+    required property var viewModel
     // The common run screen also shows simulations; machine tool-change
     // requests must not put this dialog over a simulated run.
     property bool enabledForMode: true
+    // the colours ToolTitles gives a title's parts, light enough for the dark
+    // background (the theme's are for a light one)
+    readonly property var titleColors: ({ accentStrong: "#60a5fa", foregroundStrong: Theme.surface,
+                                          success: root.startColor })
+
     visible: enabledForMode && viewModel.requested
-    padding: 0
+    modal: true
+    dim: true
 
-    required property var viewModel
-    readonly property color textColor: Theme.foreground
-    readonly property color confirmColor: Theme.success
-    readonly property color cancelColor: Theme.danger
-
-    contentWidth: 620
-    contentHeight: card.implicitHeight + 48
-
-    function escapeHtml(value) {
-        return String(value === undefined || value === null ? "" : value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;")
+    ProgramPromptDialog.Line {
+        text: "Tool Change"
+        font.pixelSize: Theme.fontTitle
+        font.bold: true
     }
 
-    // The scrim is the Popup's own, so no dimming rectangle here.
-    background: Rectangle {
-        radius: Theme.radiusXLarge
-        color: Theme.surface
-        border.color: Theme.separator
-        border.width: Theme.hairline
+    ProgramPromptDialog.Line {
+        // The tool as the Manual Turning list names it, its comment after.
+        readonly property string toolTitle: !root.viewModel || !root.viewModel.toolView ? ""
+            : ToolTitles.listTitle(root.viewModel.toolView, root.titleColors)
+              + (root.viewModel.toolComment === "" ? ""
+                 : " (" + root.escapeHtml(root.viewModel.toolComment) + ")")
+        text: "Please load <b>" + root.escapeHtml(root.viewModel.toolNoText) + "</b>"
+            + (toolTitle.length > 0 ? " [" + toolTitle + "]" : "")
     }
 
-    contentItem: Item {
-        implicitWidth: root.contentWidth
-        implicitHeight: card.implicitHeight + 48
+    Item { Layout.preferredHeight: Theme.spacingLarge }
 
-        ColumnLayout {
-            id: card
-            anchors {
-                left: parent.left
-                right: parent.right
-                top: parent.top
-                margins: 24
-            }
-            spacing: 18
+    ProgramPromptDialog.Line {
+        text: root.press("Cycle Start", root.startColor, "to confirm the tool change")
+    }
 
-            Text {
-                Layout.fillWidth: true
-                text: "Tool Change"
-                font.pixelSize: Theme.fontTitle
-                font.bold: true
-                color: root.textColor
-                horizontalAlignment: Text.AlignHCenter
-            }
-
-            Text {
-                Layout.fillWidth: true
-                textFormat: Text.RichText
-                // The tool as the Manual Turning list names it, its comment after.
-                readonly property string toolTitle: !root.viewModel || !root.viewModel.toolView ? ""
-                    : ToolTitles.listTitle(root.viewModel.toolView, Theme)
-                      + (root.viewModel.toolComment === "" ? ""
-                         : " (" + root.escapeHtml(root.viewModel.toolComment) + ")")
-                text: "Please load <b>" + root.escapeHtml(root.viewModel.toolNoText) + "</b>"
-                    + (toolTitle.length > 0 ? " [" + toolTitle + "]" : "")
-                font.pixelSize: Theme.fontLarge
-                color: root.textColor
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-            }
-
-            Item { Layout.preferredHeight: 16 }
-
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: 0
-
-                Text {
-                    text: "Press "
-                    font.pixelSize: Theme.fontLarge
-                    color: root.textColor
-                }
-
-                Text {
-                    id: cycleStartText
-                    text: "CycleStart"
-                    font.pixelSize: Theme.fontLarge
-                    font.bold: true
-                    color: root.confirmColor
-                    opacity: cycleStartMouse.pressed ? 0.65 : 1.0
-
-                    MouseArea {
-                        id: cycleStartMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onPressed: root.viewModel.confirmPressed()
-                        onReleased: root.viewModel.confirmReleased()
-                        onCanceled: root.viewModel.confirmReleased()
-                    }
-                }
-
-                Text {
-                    text: " to confirm the tool change"
-                    font.pixelSize: Theme.fontLarge
-                    color: root.textColor
-                }
-            }
-
-            RowLayout {
-                Layout.alignment: Qt.AlignHCenter
-                spacing: 0
-
-                Text {
-                    text: "Press "
-                    font.pixelSize: Theme.fontLarge
-                    color: root.textColor
-                }
-
-                Text {
-                    id: cycleAbortText
-                    text: "CycleAbort"
-                    font.pixelSize: Theme.fontLarge
-                    font.bold: true
-                    color: root.cancelColor
-                    opacity: cycleAbortMouse.pressed ? 0.65 : 1.0
-
-                    MouseArea {
-                        id: cycleAbortMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onPressed: root.viewModel.cancelPressed()
-                        onReleased: root.viewModel.cancelReleased()
-                        onCanceled: root.viewModel.cancelReleased()
-                    }
-                }
-
-                Text {
-                    text: " to stop the program."
-                    font.pixelSize: Theme.fontLarge
-                    color: root.textColor
-                }
-            }
-        }
+    ProgramPromptDialog.Line {
+        text: root.press("Cycle Abort", root.abortColor, "to stop the program.")
     }
 }

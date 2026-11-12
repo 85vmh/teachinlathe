@@ -121,6 +121,37 @@ def read_moves(ngc_path: str, ini: IniRepository, optional_stop: bool = False,
                         canon.start_work_offset)
 
 
+#: A G28 or G30 word - not G28.1 or G30.1, which store the position.
+_HOME_WORD = re.compile(r"G0*(28|30)(?![.\d])")
+#: What is not code on a line: a (comment), or all after a ;.
+_COMMENT = re.compile(r"\([^)]*\)|;.*")
+
+
+def home_word(line: str) -> str:
+    """"G28" or "G30" when the G-code ``line`` has that word, else ""."""
+    code = _COMMENT.sub("", line).upper().replace(" ", "").replace("\t", "")
+    match = _HOME_WORD.search(code)
+    return "G" + match.group(1) if match else ""
+
+
+class _SourceLines:
+    """The lines of the G-code files a parse goes through, each read once."""
+
+    def __init__(self):
+        self._files = {}
+
+    def text(self, filename: str, line: int) -> str:
+        lines = self._files.get(filename)
+        if lines is None:
+            try:
+                with open(filename, encoding="utf-8", errors="replace") as handle:
+                    lines = handle.read().splitlines()
+            except OSError:
+                lines = []
+            self._files[filename] = lines
+        return lines[line - 1] if 0 < line <= len(lines) else ""
+
+
 def _metric(ini: IniRepository) -> bool:
     return (ini.find("TRAJ", "LINEAR_UNITS") or "mm").strip().lower() in ("mm", "metric")
 
@@ -197,6 +228,9 @@ class _Canon:
         # offset: the last OriginShift's
         self._origin = At(0.0, 0.0)
         self._g5x_index = self._shown_index = self.start_work_offset = 1
+        # the G-code files read, by line, and the line being run's G28/G30
+        self._lines = _SourceLines()
+        self._home = ""
 
     # ── what the interpreter asks ────────────────────────────────────────
 
@@ -271,6 +305,8 @@ class _Canon:
     def source_line(self, filename, line, call_level):
         program_line = line if call_level == 0 else self._where.program_line
         self._where = Where(filename, line, call_level, program_line)
+        # the moves a G28 or G30 makes are rapids, to the position stored for it
+        self._home = home_word(self._lines.text(filename, line))
 
     def set_plane(self, plane):
         self._plane = plane
@@ -368,7 +404,7 @@ class _Canon:
     # ── the moves ────────────────────────────────────────────────────────
 
     def straight_traverse(self, x, y, z, *rest):
-        self._move(MoveKind.RAPID, self._work(x, z))
+        self._move(MoveKind.RAPID, self._work(x, z), target=self._home)
 
     def straight_feed(self, x, y, z, *rest):
         self._move(MoveKind.FEED, self._work(x, z))
@@ -398,11 +434,12 @@ class _Canon:
         self._timed.append(len(self.steps))
         self.steps.append(Dwell(seconds, self._where))
 
-    def _move(self, kind: MoveKind, end: At, center: Optional[At] = None, ccw: bool = False):
+    def _move(self, kind: MoveKind, end: At, center: Optional[At] = None, ccw: bool = False,
+              target: str = ""):
         if self._at is not None:
             self._timed.append(len(self.steps))
             self.steps.append(Move(kind, self._at, end, self._tool, self._spindle, self._where, center, ccw,
-                                   sync=self._synced(kind, self._at, end)))
+                                   sync=self._synced(kind, self._at, end), target=target))
         else:
             self._timed.append(None)
             if self.start is None:
@@ -427,7 +464,7 @@ class _Canon:
 
     def tool_change_move(self, x, y, z, *rest):
         # to the tool change position, as task makes it at an M6
-        self._move(MoveKind.TOOL_CHANGE, self._work(x, z))
+        self._move(MoveKind.TOOL_CHANGE, self._work(x, z), target="M6")
 
     def change_tool(self, tool):
         self._tool = tool

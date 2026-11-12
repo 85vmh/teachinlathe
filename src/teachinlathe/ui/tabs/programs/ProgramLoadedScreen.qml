@@ -25,13 +25,26 @@ Item {
     // How far the bar under the code has reached across under the backplot, 0..1.
     property real runBarReveal: 0
     property int runBarHeight: Theme.barHeight
+    // The code pane beside it (ProgramsTabRoot): the tool change dialog and
+    // the messages are over it (ProgramPromptDialog), to keep the backplot clear.
+    property Item codeArea: null
+    // Where the middle of the tool change dialog and the messages goes, in the
+    // code pane: 30% of the window's height up from its bottom. Read again
+    // as the window or the pane changes size.
+    readonly property real lowCentreY: {
+        var area = root.codeArea
+        var height = root.Window.height
+        if (!area || !(height > 0) || !(area.height > 0))
+            return area ? area.height / 2 : 0
+        return height * 0.7 - area.mapToItem(null, 0, 0).y
+    }
     // How far three fingers have to travel together, in px, for the swipe
     // that clears the plot.
     readonly property int clearSwipeDistance: 80
     // view state: the toast shown
     property bool toolChangedToastVisible: false
-    // view state: the toast shown
-    property string toolChangedToastMessage: ""
+    // view state: the toast shown - the tool it says is loaded
+    property int toolChangedToastTool: 0
 
     function withPlot(callback) {
         var view = root.simulation ? simulationBackplot : machineBackplot
@@ -43,29 +56,14 @@ Item {
         return root.viewModel.toolChange
     }
 
-    function escapeHtml(value) {
-        return String(value === undefined || value === null ? "" : value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;")
-    }
-
     function refreshToolChangeFromHal() {
         var toolChange = root.toolChangeViewModel()
         if (toolChange)
             toolChange.refreshFromHal()
     }
 
-    function toolChangedMessage(toolNo) {
-        var displayToolNo = toolNo > 0 ? toolNo : "?"
-        return "<div align=\"center\"><b>Tool " + displayToolNo + " loaded</b><br/><br/>"
-            + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to resume the motion</div>"
-    }
-
     function showToolChangedToast(toolNo) {
-        root.toolChangedToastMessage = root.toolChangedMessage(toolNo)
+        root.toolChangedToastTool = toolNo
         root.toolChangedToastVisible = true
         toolChangedToastTimer.restart()
     }
@@ -244,9 +242,10 @@ Item {
         function onGremlinFitRequested() { root.withPlot(function(plot) { plot.fitToWindow() }) }
     }
 
-    // No geometry here any more: it is a Popup in the window's overlay, so it
-    // centres on the screen and dims all of it.
+    // Over the code, not the backplot: what the machine does stays in sight.
     ToolChangeDialog {
+        area: root.codeArea
+        centreY: root.lowCentreY
         viewModel: root.viewModel.toolChange
         enabledForMode: !root.simulation
         onVisibleChanged: if (visible && !root.simulation) machineBackplot.plot.refresh()
@@ -274,64 +273,54 @@ Item {
         onTriggered: if (!(root.pauseResume && root.pauseResume.active)) root.toolChangedToastVisible = false
     }
 
-    Rectangle {
+    // Tool loaded: a passing message, not modal - Cycle Start, at the machine,
+    // goes on - the backplot showing a little through it.
+    ProgramPromptDialog {
         id: toolChangedToast
-        // Over the whole window, in its middle - wherever the strip has slid
-        // this screen to: a position worked out from this screen's own went
-        // stale as it moved. The overlay is the screen's: this item's own
-        // Overlay.overlay is null - it is in no window until it has a parent -
-        // and the toast was then never drawn.
-        parent: root.Overlay.overlay
-        anchors.centerIn: parent
-        visible: !root.simulation && root.toolChangedToastVisible && root.shown
+        area: root.codeArea
+        centreY: root.lowCentreY
+        fill: "#cc303030"
+        modal: false
+        dim: false
         z: 1200
-        width: Math.min(parent ? parent.width - 32 : root.width,
-                        toolChangedToastText.implicitWidth + 100)
-        height: toolChangedToastText.implicitHeight + 50
-        radius: Theme.radiusLarge
-        color: "#cc303030"
+        visible: !root.simulation && root.toolChangedToastVisible && root.shown
 
-        Text {
-            id: toolChangedToastText
-            anchors.centerIn: parent
-            width: parent.width - 32
-            text: root.toolChangedToastMessage
-            textFormat: Text.RichText
-            color: Theme.surface
-            font.pixelSize: Theme.fontLarge
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            wrapMode: Text.WordWrap
+        ProgramPromptDialog.Line {
+            text: "<b>Tool " + (root.toolChangedToastTool > 0 ? root.toolChangedToastTool : "?") + " loaded</b>"
+        }
+
+        ProgramPromptDialog.Line {
+            text: toolChangedToast.press("Cycle Start", toolChangedToast.startColor, "to resume the motion")
         }
     }
 
-    Rectangle {
-        id: programCompletedToast
-        // in the middle of the window, as the tool-changed toast
-        parent: root.Overlay.overlay
-        anchors.centerIn: parent
-        visible: !root.simulation && root.shown && (root.viewModel.programCompletedVisible)
+    // Program Completed: modal - till it is answered, with the machine's
+    // Cycle Start or Cycle Abort, nothing on the screen takes a touch, and
+    // what is behind is dimmed to say so.
+    ProgramPromptDialog {
+        id: programCompletedDialog
+        area: root.codeArea
+        centreY: root.lowCentreY
+        modal: true
+        dim: true
         z: 1300
-        width: Math.min(parent ? parent.width - 32 : root.width,
-                        programCompletedToastText.implicitWidth + 100)
-        height: programCompletedToastText.implicitHeight + 50
-        radius: Theme.radiusLarge
-        color: "#ff303030"
+        visible: !root.simulation && root.shown && root.viewModel.programCompletedVisible
 
-        Text {
-            id: programCompletedToastText
-            anchors.centerIn: parent
-            width: parent.width - 32
-            textFormat: Text.RichText
-            text: "<div align=\"center\"><b>Program Completed</b><br/>"
-                + "[" + root.escapeHtml(root.viewModel.programCompletedName) + "]<br/><br/><br/><br/>"
-                + "Press <font color=\"#22c55e\"><b>Cycle Start</b></font> to run again the same program.<br/><br/>"
-                + "Press <font color=\"#ef4444\"><b>Cycle Abort</b></font> to close this screen.</div>"
-            color: Theme.surface
-            font.pixelSize: Theme.fontLarge
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            wrapMode: Text.WordWrap
+        ProgramPromptDialog.Line {
+            text: "<b>Program Completed</b><br/>["
+                + programCompletedDialog.escapeHtml(root.viewModel.programCompletedName) + "]"
+        }
+
+        Item { Layout.preferredHeight: Theme.spacingLarge }
+
+        ProgramPromptDialog.Line {
+            text: programCompletedDialog.press("Cycle Start", programCompletedDialog.startColor,
+                                               "to run again the same program.")
+        }
+
+        ProgramPromptDialog.Line {
+            text: programCompletedDialog.press("Cycle Abort", programCompletedDialog.abortColor,
+                                               "to close this screen.")
         }
     }
 }

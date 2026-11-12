@@ -102,6 +102,13 @@ class ToolChangesUseCase(QObject):
             return None
         return self._plan.time_at(self._index, self._point)
 
+    def excursion(self):
+        """The trip to M6, G28 or G30 the running program is on
+        (excursions.ExcursionMoment); None while it is not running, or on none."""
+        if not self._running or self._plan is None:
+            return None
+        return self._plan.excursions.at(self._index, self._point)
+
     def duration(self) -> Optional[float]:
         """How long the program loaded runs; None, not read yet or not timed."""
         return self._plan.duration if self._plan is not None else None

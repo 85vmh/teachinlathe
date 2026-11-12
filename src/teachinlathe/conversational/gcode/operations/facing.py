@@ -10,6 +10,7 @@ from typing import Optional
 from teachinlathe.conversational.model.data_types import Facing, Program
 
 from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
+from ..config import fmt
 from ..toolpath import GcodeEmitter, OperationPreview
 
 
@@ -65,9 +66,11 @@ def facing_toolpath(op: Facing, path: GcodeEmitter, program: Optional[Program] =
     path.blank()
 
     if op.zEndBecomesNewZ0:
+        # Z0 on the face just cut, the tool clear of it: G10 L20 says where the
+        # tool is now in the new coordinates - its height over Z End
         datum = int(program.header.datum) if program is not None else 1
-        path.code(f"G10 L20 P{datum} Z0 (Set new datum)")
-        path.set_z_zero()
+        path.code(f"G10 L20 P{datum} Z{fmt(z_start + clearance - z_end)} (Set new datum: Z0 on the face)")
+        path.set_z_zero(at=z_end)
 
 
 def generate_facing_gcode(op: Facing):

@@ -20,6 +20,7 @@ from typing import Optional
 from PyQt6.QtCore import QElapsedTimer, QTimer, pyqtSignal
 
 from teachinlathe.programs.logic.run.run_source import ProgramRunSource
+from teachinlathe.programs.model.excursions import Excursions
 from teachinlathe.programs.model.run_moment import MotionReadout, RunMark, RunMoment, RunState
 from teachinlathe.programs.model.tool_changes import NextTool
 from teachinlathe.simulation.logic.program_run import MarkKind
@@ -60,6 +61,9 @@ class SimulatedRunSource(ProgramRunSource):
         self._waiting_for = ""
         self._speed = SPEEDS[0]
         self._played = None             # the run's own moment (program_run.Moment), for the plot
+        # the run's trips to M6, G28, G30, and for each step the last move started by it
+        self._excursions = Excursions()
+        self._move_of_step = ()
         self._moment: Optional[RunMoment] = None
         self._clock = QElapsedTimer()
         self._timer = QTimer(self)
@@ -259,6 +263,8 @@ class SimulatedRunSource(ProgramRunSource):
         # the same program again, Optional Stop changed: where it was, kept by its line
         line = self._program_line() if self._run is not None else None
         self._run = run
+        self._excursions = Excursions.of(run.program.steps)
+        self._move_of_step = _moves_of_steps(run.program.steps)
         self._set_loading(False)
         self._set_error(run.program.error and f"The interpreter stopped: {run.program.error}")
         self._time = self._time_of_line(line) if line is not None else 0.0
@@ -340,7 +346,14 @@ class SimulatedRunSource(ProgramRunSource):
         return RunMoment(x=DIAMETER * (at.r - origin.r), z=at.z - origin.z, x_to_go=x_to_go, z_to_go=z_to_go,
                          work_offset=moment.work_offset, program_line=self._program_line(), tool=moment.tool,
                          next_tool=self._next_tool(moment.tool), motion=self._motion(step, at.r - origin.r),
-                         time=self._time)
+                         time=self._time, excursion=self._excursion(moment))
+
+    def _excursion(self, moment):
+        """The trip to M6, G28 or G30 the run is on, while it runs."""
+        if self._state in (RunState.IDLE, RunState.FINISHED) or not self._move_of_step:
+            return None
+        move = self._move_of_step[min(moment.step, len(self._move_of_step) - 1)]
+        return self._excursions.at(move, (moment.at.z, moment.at.r))
 
     def _step(self):
         steps = self._run.program.steps if self._run is not None else ()
@@ -392,3 +405,14 @@ class SimulatedRunSource(ProgramRunSource):
         if error != self._error:
             self._error = error
             self.errorChanged.emit()
+
+
+def _moves_of_steps(steps):
+    """For each step, the index among the moves of the last move started by
+    it: its own, for a move; -1 before any."""
+    out, move = [], -1
+    for step in steps:
+        if isinstance(step, Move):
+            move += 1
+        out.append(move)
+    return tuple(out)

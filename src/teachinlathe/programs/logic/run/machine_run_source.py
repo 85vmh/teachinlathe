@@ -81,7 +81,8 @@ class MachineRunSource(ProgramRunSource):
                          x_to_go=x.distanceToGo * DIAMETER, z_to_go=z.distanceToGo,
                          work_offset=self._positions.work_offset(), program_line=_program_line(snapshot),
                          tool=tool, next_tool=self._tool_changes.next_tool(tool),
-                         motion=self._motion(snapshot), time=self._tool_changes.time())
+                         motion=self._motion(snapshot), time=self._tool_changes.time(),
+                         excursion=self._tool_changes.excursion())
 
     def _motion(self, snapshot) -> MotionReadout:
         motion_type = int(snapshot.motion_type or 0)

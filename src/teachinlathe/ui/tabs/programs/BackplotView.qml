@@ -136,12 +136,13 @@ Rectangle {
                 id: toolChangeOffsetsButton
                 implicitWidth: Theme.zoomInOutFitMirrorButtonSize
                 implicitHeight: Theme.zoomInOutFitMirrorButtonSize
-                checkable: true
+                // shows the plot's: on too while the run is away at M6, G28
+                // or G30 - not checkable, so a tap leaves the binding be
                 checked: backplot.showToolChangeOffsets
                 text: "TLO"
                 focusPolicy: Qt.NoFocus
                 hoverEnabled: true
-                onClicked: backplot.showToolChangeOffsets = checked
+                onClicked: backplot.showToolChangeOffsets = !backplot.showToolChangeOffsets
                 ToolTip.visible: hovered
                 ToolTip.text: "Show G53 position and tool offsets"
                 contentItem: Text {

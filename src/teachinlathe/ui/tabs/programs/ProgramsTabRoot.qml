@@ -204,6 +204,7 @@ Rectangle {
                 }
 
                 GCodeViewerPane {
+                    id: codePane
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     viewModel: root.viewModel
@@ -245,6 +246,7 @@ Rectangle {
             shown: root.programShown
             runBarReveal: root.runBar
             runBarHeight: root.barHeight
+            codeArea: codePane
             z: 1
         }
 
