@@ -308,6 +308,14 @@ class TappingTool(CuttingTool):
         return f"M{_fmt(self.diameter)}x{_fmt(self.pitch)}"
 
 
+def x_offset_on_centre(tool: Optional[CuttingTool]) -> bool:
+    """Whether the tool cuts on the spindle's centre line - a drill, a reamer,
+    a tap. Its X offset is then the distance from the holder to the centre of
+    rotation: the holder's, not the tool's, so another such tool in the same
+    holder, or a change to its diameter or geometry, leaves it as it is."""
+    return isinstance(tool, (DrillingTool, ReamingTool, TappingTool))
+
+
 # ── What a tool is for ──────────────────────────────────────────────────────
 
 
@@ -386,19 +394,22 @@ class ToolHolder:
     x_offset: float = 0.0
     z_offset: float = 0.0
 
-    def mount(self, cutting_tool_id: Optional[int]) -> None:
+    def mount(self, cutting_tool_id: Optional[int], keep_x: bool = False) -> None:
         """Clamp another cutting tool in (None empties the holder). Offsets
         taken with the previous tool no longer apply: the tool table gets
-        zeros for them."""
+        zeros for them - all but X when `keep_x`, a tool on the centre line
+        taking the place of another (see `x_offset_on_centre`)."""
         self.cutting_tool_id = cutting_tool_id
-        self.x_offset = 0.0
+        if not keep_x:
+            self.x_offset = 0.0
         self.z_offset = 0.0
-        self.invalidate_offsets()
+        self.invalidate_offsets(keep_x)
 
-    def invalidate_offsets(self) -> None:
-        """The tool's tip moved: it has to be touched off again. The values
-        stay in the tool table until it is."""
-        self.x_touched = False
+    def invalidate_offsets(self, keep_x: bool = False) -> None:
+        """The tool's tip moved: it has to be touched off again - in Z only
+        when `keep_x`. The values stay in the tool table until it is."""
+        if not keep_x:
+            self.x_touched = False
         self.z_touched = False
         self.z_offset_place = None
 
