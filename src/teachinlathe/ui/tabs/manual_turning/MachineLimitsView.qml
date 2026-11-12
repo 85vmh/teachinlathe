@@ -548,6 +548,13 @@ Rectangle {
             property real lastX: 0
             // view state: a pan
             property real lastY: 0
+            // view state: a double tap, fitted as it lifts where it went
+            // down - not when a pinch takes the fingers over first (a
+            // finger put down twice, as a touchscreen can report one,
+            // reads as a double tap)
+            property bool fitOnRelease: false
+            // view state: where the double tap went down
+            property point tapAt: Qt.point(0, 0)
             onPressed: function(mouse) {
                 lastX = mouse.x; lastY = mouse.y
                 root.bubbleName = ""
@@ -559,9 +566,21 @@ Rectangle {
                 root.userMoved = true
                 canvas.requestPaint()
             }
-            onDoubleClicked: root.fitToWidth()
+            onDoubleClicked: function(mouse) {
+                fitOnRelease = true
+                tapAt = Qt.point(mouse.x, mouse.y)
+            }
+            onReleased: function(mouse) {
+                if (fitOnRelease && Math.abs(mouse.x - tapAt.x) <= Qt.styleHints.startDragDistance
+                        && Math.abs(mouse.y - tapAt.y) <= Qt.styleHints.startDragDistance)
+                    root.fitToWidth()
+                fitOnRelease = false
+            }
+            onCanceled: fitOnRelease = false
             onWheel: function(wheel) {
-                root.zoomAt(wheel.angleDelta.y > 0 ? 1.15 : 1 / 1.15, wheel.x, wheel.y)
+                // 15% a notch (120), in proportion for a touchpad's small deltas
+                if (wheel.angleDelta.y)
+                    root.zoomAt(Math.pow(1.15, wheel.angleDelta.y / 120), wheel.x, wheel.y)
             }
         }
     }

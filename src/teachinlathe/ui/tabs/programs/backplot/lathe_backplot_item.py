@@ -1878,13 +1878,29 @@ class LatheBackplotItem(QQuickFramebufferObject):
 
     @pyqtSlot(float)
     def wheelZoom(self, angle_delta):
+        """One zoom step per wheel notch - 120 of ``angle_delta``, gathered
+        across events. A touchpad scrolls in small deltas, and libinput sends a
+        few of them as two fingers land, before it knows they pinch: a step
+        each was a jump at the start of every pinch."""
         canon = self.canon()
-        if canon is None:
+        if canon is None or not angle_delta:
             return
-        if angle_delta < 0:
-            canon.zoom_out()
-        else:
-            canon.zoom_in()
+        gathered = getattr(self, '_wheel_gathered', 0.0)
+        if gathered * angle_delta < 0:      # turned the other way: start again
+            gathered = 0.0
+        gathered += angle_delta
+        while abs(gathered) >= _WHEEL_NOTCH:
+            if gathered < 0:
+                canon.zoom_out()
+                gathered += _WHEEL_NOTCH
+            else:
+                canon.zoom_in()
+                gathered -= _WHEEL_NOTCH
+        self._wheel_gathered = gathered
+
+
+#: A mouse wheel's notch, in QWheelEvent.angleDelta units (eighths of a degree).
+_WHEEL_NOTCH = 120.0
 
 
 def register_qml_types():

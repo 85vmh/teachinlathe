@@ -914,6 +914,10 @@ Canvas {
             property real  _originXAtDragStart: 0
             // view state: a pan
             property real  _originYAtDragStart: 0
+            // view state: a double tap, fitted as it lifts - not when a pinch
+            // takes the fingers over first (a finger put down twice, as a
+            // touchscreen can report one, reads as a double tap)
+            property bool  _fitOnRelease: false
 
             readonly property real _DEAD_ZONE: 4   // px
 
@@ -940,8 +944,15 @@ Canvas {
                 }
             }
 
-            onReleased: if (_wasDrag) root._endViewMove()
-            onCanceled: root._endViewMove()
+            onReleased: {
+                if (_wasDrag) root._endViewMove()
+                else if (_fitOnRelease) root.fitToScreen()
+                _fitOnRelease = false
+            }
+            onCanceled: {
+                _fitOnRelease = false
+                root._endViewMove()
+            }
 
             onClicked: function(mouse) {
                 if (_wasDrag || !root.selectable) return
@@ -970,13 +981,15 @@ Canvas {
                 else root.primitiveSelected(hit.prim)
             }
 
-            onDoubleClicked: function(mouse) {
-                root.fitToScreen()
-            }
+            onDoubleClicked: _fitOnRelease = true
 
             onWheel: function(wheel) {
+                // 15% a notch (120), in proportion for less: a touchpad scrolls
+                // in small deltas, and sends a few as two fingers land, before
+                // the pinch is known - a full step each was a jump at its start
                 var ZOOM_FACTOR = 1.15
-                var factor = (wheel.angleDelta.y > 0) ? ZOOM_FACTOR : (1.0 / ZOOM_FACTOR)
+                if (!wheel.angleDelta.y) return
+                var factor = Math.pow(ZOOM_FACTOR, wheel.angleDelta.y / 120)
 
                 // world coord under cursor — compute before changing scale
                 var worldZ = (wheel.x - root._originX) / root._scale

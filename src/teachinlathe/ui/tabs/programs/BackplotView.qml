@@ -57,6 +57,13 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                // view state: a double tap, fitted as it lifts where it went
+                // down - not when a pinch takes the fingers over first (a
+                // finger put down twice, as a touchscreen can report one,
+                // reads as a double tap)
+                property bool fitOnRelease: false
+                // view state: where the double tap went down
+                property point tapAt: Qt.point(0, 0)
                 onPressed: function (mouse) {
                     backplot.pressed(mouse.x, mouse.y)
                 }
@@ -66,7 +73,17 @@ Rectangle {
                     else if (mouse.buttons & Qt.LeftButton)
                         backplot.panned(mouse.x, mouse.y)
                 }
-                onDoubleClicked: backplot.fitToWindow()
+                onDoubleClicked: function (mouse) {
+                    fitOnRelease = true
+                    tapAt = Qt.point(mouse.x, mouse.y)
+                }
+                onReleased: function (mouse) {
+                    if (fitOnRelease && Math.abs(mouse.x - tapAt.x) <= Qt.styleHints.startDragDistance
+                            && Math.abs(mouse.y - tapAt.y) <= Qt.styleHints.startDragDistance)
+                        backplot.fitToWindow()
+                    fitOnRelease = false
+                }
+                onCanceled: fitOnRelease = false
                 onWheel: function (wheel) {
                     backplot.wheelZoom(wheel.angleDelta.y)
                 }
