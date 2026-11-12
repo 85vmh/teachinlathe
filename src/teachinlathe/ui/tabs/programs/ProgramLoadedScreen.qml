@@ -278,8 +278,10 @@ Item {
         id: toolChangedToast
         // Over the whole window, in its middle - wherever the strip has slid
         // this screen to: a position worked out from this screen's own went
-        // stale as it moved.
-        parent: Overlay.overlay
+        // stale as it moved. The overlay is the screen's: this item's own
+        // Overlay.overlay is null - it is in no window until it has a parent -
+        // and the toast was then never drawn.
+        parent: root.Overlay.overlay
         anchors.centerIn: parent
         visible: !root.simulation && root.toolChangedToastVisible && root.shown
         z: 1200
@@ -306,7 +308,7 @@ Item {
     Rectangle {
         id: programCompletedToast
         // in the middle of the window, as the tool-changed toast
-        parent: Overlay.overlay
+        parent: root.Overlay.overlay
         anchors.centerIn: parent
         visible: !root.simulation && root.shown && (root.viewModel.programCompletedVisible)
         z: 1300

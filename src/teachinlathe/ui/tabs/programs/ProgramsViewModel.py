@@ -491,8 +491,11 @@ class ProgramsViewModel(QObject):
             self._close_completed_program_screen()
 
     def _on_cycle_start_pressed(self):
+        # The machine's Cycle Start: program_state starts the program again
+        # itself (halui.program.run). A run of our own as well reached task
+        # while the interpreter was already reading, and was refused.
         if self._program_completed:
-            self._run_completed_program_again()
+            self._show_completed_program_running()
 
     def _set_program_loaded(self, loaded):
         self._machine.set_program_loaded(loaded)
@@ -506,10 +509,14 @@ class ProgramsViewModel(QObject):
         self._set_program_completed_state(completed)
 
     def _run_completed_program_again(self):
+        """Cycle Start on the screen: nothing else starts the program."""
+        self._show_completed_program_running()
+        self._actions.triggerStart()
+
+    def _show_completed_program_running(self):
         self._set_program_completed_state(False)
         self._set_screen_index(Screen.ProgramRunning)
         self.ensureProgramLoadedRequested.emit()
-        self._actions.triggerStart()
 
     def _close_completed_program_screen(self):
         self._set_program_completed_state(False)
