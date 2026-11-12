@@ -6,6 +6,7 @@
 // blades and tools held neutral, and why there is nothing to draw. The view
 // lays its own boxes down the right edge over it, boxWidth the widest of them.
 import QtQuick
+import TeachInLathe
 import QtQuick.Controls
 import tabs.conversational.define_radial_profile
 import theme
@@ -39,7 +40,7 @@ RadialProfileCanvas {
     // mm, the blade's width - before one is chosen, as wide as a usual one,
     // for the marks drawn beside it
     readonly property real defaultBladeWidth: 3
-    readonly property real bladeWidth: toolCard && toolCard.card === "blade" && toolCard.view
+    readonly property real bladeWidth: toolCard && toolCard.view && toolCard.view.card === CardKind.Blade
                                        ? Number(toolCard.view.bladeWidth) : defaultBladeWidth
     // how far either side of the blade the clearance's lines reach, mm
     readonly property real xLinePast: 2
@@ -82,7 +83,6 @@ RadialProfileCanvas {
         id: canvasTool
         visible: !!root.startPosition
         inset: root.tickBand
-        card: root.toolCard && root.toolCard.card ? root.toolCard.card : ""
         view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
         pxPerMm: root.pxPerMm
         tipX: root.startPosition ? root.px(root.startPosition.z) : 0

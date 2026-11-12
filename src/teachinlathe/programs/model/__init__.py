@@ -1,3 +1,2 @@
-from .program_runtime import ProgramExecutionFrame, ProgramRuntimeSnapshot, ProgramRuntimeStore
-from .program_stack import ProgramCallStackResolver, ProgramCallStackView, ProgramStackFrameView
-from .programs_action_source import ProgramButtonState, ProgramsActionSource
+# No re-exports: the planning worker imports tool_changes and thread_plans from
+# here, and must not get programs_action_source, which starts a QTimer at import.

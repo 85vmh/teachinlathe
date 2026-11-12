@@ -102,7 +102,7 @@ Rectangle {
                 width: parent.width
                 elide: Text.ElideRight
                 textFormat: Text.StyledText
-                text: ToolTitles.richTitle("turning", root.view, Theme)
+                text: ToolTitles.richTitle(root.view, Theme)
                 color: Theme.foreground
                 font.pixelSize: Theme.fontLarge
                 font.bold: true

@@ -140,6 +140,8 @@ class AppWindow(QObject):
         # Types only for their enums (ToolCard.Moved, PauseToInspect.G30, ...): the editors make ToolCards.
         from teachinlathe.ui.tabs.conversational.OperationEditorViewModel import PauseToInspect, ToolCard
         qmlRegisterUncreatableType(ToolCard, QML_MODULE, 1, 0, "an operation's editor makes it", "ToolCard")
+        from teachinlathe.ui.tabs.tool_library.card_kind import CardKind
+        qmlRegisterUncreatableType(CardKind, QML_MODULE, 1, 0, "a tool view's card is one", "CardKind")
         qmlRegisterUncreatableType(PauseToInspect, QML_MODULE, 1, 0, "M1Parameters.qml uses its enum",
                                    "PauseToInspect")
 

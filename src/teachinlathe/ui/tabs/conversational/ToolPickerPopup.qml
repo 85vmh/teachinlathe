@@ -123,7 +123,6 @@ Popup {
                 anchors.leftMargin: index % 2 === 1 ? Theme.spacingSmall / 2 : 0
                 toolNo: model.toolNo
                 toolId: model.toolId
-                toolCard: model.toolCard
                 toolView: model.toolView
                 toolComment: model.toolComment
                 xOffset: model.xOffset

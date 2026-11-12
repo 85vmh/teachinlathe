@@ -64,7 +64,6 @@ Rectangle {
             width: ListView.view.width
             toolNo: model.toolNo
             toolId: model.toolId
-            toolCard: model.toolCard
             toolView: model.toolView
             toolComment: model.toolComment
             xOffset: model.xOffset

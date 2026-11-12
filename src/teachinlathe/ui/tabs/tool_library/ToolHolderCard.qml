@@ -1,4 +1,5 @@
 import QtQuick
+import TeachInLathe
 import theme
 import "ToolTitles.js" as ToolTitles
 
@@ -19,8 +20,7 @@ Rectangle {
 
     property int toolNo: 0
     property int toolId: 0              // the mounted cutting tool's, 0 when empty
-    property string toolCard: ""        // which thumbnail, title and figures draw it
-    property var toolView: null
+    property var toolView: null         // its card says which thumbnail, title and figures draw it
     property string toolComment: ""
     property string xOffset: ""         // as shown, or empty until touched off
     property string zOffset: ""
@@ -80,7 +80,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         width: root.thumbnailSize
         height: root.thumbnailSize
-        sourceComponent: root.hasTool ? root.thumbnails[root.toolCard] || null : null
+        sourceComponent: root.hasTool ? root.thumbnails[root.toolView.card] || null : null
         onLoaded: item.view = Qt.binding(function() { return root.toolView })
     }
 
@@ -114,7 +114,7 @@ Rectangle {
             elide: Text.ElideRight
             textFormat: Text.StyledText
             text: !root.hasTool ? ""
-                  : "<b>" + ToolTitles.listTitle(root.toolCard, root.toolView, Theme) + "</b>"
+                  : "<b>" + ToolTitles.listTitle(root.toolView, Theme) + "</b>"
                     + (root.toolComment === "" ? ""
                        : " <font color='" + Theme.foregroundSubtle + "'>("
                          + root.toolComment + ")</font>")
@@ -125,7 +125,7 @@ Rectangle {
         Column {
             spacing: 4
             Repeater {
-                model: root.hasTool ? ToolTitles.figures(root.toolCard, root.toolView, Theme) : []
+                model: root.hasTool ? ToolTitles.figures(root.toolView, Theme) : []
                 delegate: Row {
                     spacing: Theme.spacingSmall
                     Text {
@@ -185,13 +185,13 @@ Rectangle {
     Component { id: reamerThumbnail; ReamerThumbnail { size: root.thumbnailSize; padding: 10 } }
     Component { id: tapThumbnail; TapThumbnail { size: root.thumbnailSize; padding: 10 } }
 
-    // The thumbnail for each `toolCard` value.
+    // The thumbnail for each card (CardKind) a view can have.
     readonly property var thumbnails: ({
-        "turning": insertThumbnail,
-        "threading": threadingThumbnail,
-        "blade": bladeThumbnail,
-        "drilling": drillThumbnail,
-        "reaming": reamerThumbnail,
-        "tapping": tapThumbnail
+        [CardKind.Turning]: insertThumbnail,
+        [CardKind.Threading]: threadingThumbnail,
+        [CardKind.Blade]: bladeThumbnail,
+        [CardKind.Drilling]: drillThumbnail,
+        [CardKind.Reaming]: reamerThumbnail,
+        [CardKind.Tapping]: tapThumbnail
     })
 }

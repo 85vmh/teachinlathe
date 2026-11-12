@@ -6,7 +6,7 @@ from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.core.tool_library_repository import tool_library_repository
-from teachinlathe.ui.tabs.tool_library.tool_library_models import card_and_view
+from teachinlathe.ui.tabs.tool_library.tool_library_models import view_of
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +28,6 @@ class ProgramsToolChangeViewModel(QObject):
         # as the change completes - and whether its toast has been asked for.
         self._requested_tool = 0
         self._announced = False
-        self._tool_card = ""
         self._tool_view = None
         self._component = TeachInLatheComponent()
         self._tool_library = tool_library_repository()
@@ -50,12 +49,7 @@ class ProgramsToolChangeViewModel(QObject):
         return f"T{self._tool_no}" if self._tool_no > 0 else "T?"
 
     # The tool mounted in the holder asked for, as the Manual Turning list
-    # names it (ToolTitles.listTitle): its card kind ("turning", ...) and its
-    # view; "" and None for an empty holder.
-    @pyqtProperty(str, notify=stateChanged)
-    def toolCard(self):
-        return self._tool_card
-
+    # names it (ToolTitles.listTitle): its view, None for an empty holder.
     @pyqtProperty(QObject, notify=stateChanged)
     def toolView(self):
         return self._tool_view
@@ -67,7 +61,7 @@ class ProgramsToolChangeViewModel(QObject):
 
     def _refresh_tool_view(self):
         old = self._tool_view
-        self._tool_card, self._tool_view = card_and_view(self._tool_library.tool_in(self._tool_no), self)
+        self._tool_view = view_of(self._tool_library.tool_in(self._tool_no), self)
         if old is not None:
             old.deleteLater()
 

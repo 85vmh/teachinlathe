@@ -1,4 +1,5 @@
 import QtQuick
+import TeachInLathe
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 import theme
@@ -186,7 +187,8 @@ ToolLibraryPane {
             spacing: 4
 
             // Read here: inside the Repeater below, `model` is its own.
-            readonly property string card: model.card
+            // a CardKind: how its tools are drawn
+            readonly property int card: model.card
             readonly property var tools: model.tools
             readonly property real cardsY: cards.y
 
@@ -270,8 +272,8 @@ ToolLibraryPane {
                 width: parent.width - root.toolIndent
                 spacing: root.cardSpacing
 
-                readonly property int perRow: category.card === "turning"
-                                              || category.card === "summary" ? 2 : 3
+                readonly property int perRow: category.card === CardKind.Turning
+                                              || category.card === CardKind.Summary ? 2 : 3
                 readonly property real cardWidth: (width - (perRow - 1) * spacing) / perRow
 
                 Repeater {
@@ -300,7 +302,7 @@ ToolLibraryPane {
                             id: card
                             width: parent.width
                             // A full card is as tall as its content says.
-                            height: item ? (category.card === "summary" ? root.summaryCardHeight
+                            height: item ? (category.card === CardKind.Summary ? root.summaryCardHeight
                                                                         : item.implicitHeight) : 0
                             sourceComponent: root.cards[category.card]
                             onLoaded: {
@@ -373,14 +375,14 @@ ToolLibraryPane {
         CuttingToolSummaryCard {}
     }
 
-    // The card for each of the model's `card` values.
+    // The card for each of the model's `card` values (CardKind).
     readonly property var cards: ({
-        "turning": turningCard,
-        "threading": threadingCard,
-        "blade": bladeCard,
-        "drilling": drillingCard,
-        "reaming": reamingCard,
-        "tapping": tappingCard,
-        "summary": summaryCard
+        [CardKind.Turning]: turningCard,
+        [CardKind.Threading]: threadingCard,
+        [CardKind.Blade]: bladeCard,
+        [CardKind.Drilling]: drillingCard,
+        [CardKind.Reaming]: reamingCard,
+        [CardKind.Tapping]: tappingCard,
+        [CardKind.Summary]: summaryCard
     })
 }

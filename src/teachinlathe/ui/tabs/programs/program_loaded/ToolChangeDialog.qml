@@ -85,7 +85,7 @@ Popup {
                 textFormat: Text.RichText
                 // The tool as the Manual Turning list names it, its comment after.
                 readonly property string toolTitle: !root.viewModel || !root.viewModel.toolView ? ""
-                    : ToolTitles.listTitle(root.viewModel.toolCard, root.viewModel.toolView, Theme)
+                    : ToolTitles.listTitle(root.viewModel.toolView, Theme)
                       + (root.viewModel.toolComment === "" ? ""
                          : " (" + root.escapeHtml(root.viewModel.toolComment) + ")")
                 text: "Please load <b>" + root.escapeHtml(root.viewModel.toolNoText) + "</b>"

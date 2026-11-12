@@ -26,6 +26,7 @@ from teachinlathe.ui.tabs.programs.backplot.actors.tool_outlines import blade_le
 from teachinlathe.tooling.model import insert_catalog
 from teachinlathe.tooling.model.data_types import BladeTool, SpindleDirection
 from teachinlathe.ui.tabs.programs.backplot.actors import palette
+from teachinlathe.ui.tabs.tool_library.card_kind import CardKind
 from teachinlathe.ui.tabs.tool_library.tool_title_parts import title_parts
 
 #: How the drawing is placed for each orientation: degrees turned
@@ -36,6 +37,9 @@ _PLACEMENT = {6: (0.0, False), 5: (-90.0, False), 8: (0.0, True), 7: (90.0, Fals
 
 
 class BladeToolView(QObject):
+    #: the card that draws it
+    CARD = CardKind.Kind.Blade
+
     changed = pyqtSignal()
 
     def __init__(self, tool: BladeTool, parent=None):
@@ -46,6 +50,11 @@ class BladeToolView(QObject):
     def titleParts(self):
         """Its card's and its list's titles, in parts (tool_title_parts)."""
         return title_parts(self._tool)
+
+    @pyqtProperty(int, constant=True)
+    def card(self):
+        """The card that draws it, a CardKind."""
+        return self.CARD.value
 
     @pyqtProperty(str, constant=True)
     def toolType(self):

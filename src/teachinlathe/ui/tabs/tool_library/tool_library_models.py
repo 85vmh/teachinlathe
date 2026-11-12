@@ -17,6 +17,7 @@ from teachinlathe.tooling.model.data_types import CuttingToolType, ToolHolder
 from teachinlathe.ui.common.dataclass_list_model import DataclassListModel  # noqa: F401
 from teachinlathe.core.tool_library_repository import ToolLibraryRepository
 from teachinlathe.ui.tabs.tool_library.BladeToolView import BladeToolView
+from teachinlathe.ui.tabs.tool_library.card_kind import CardKind
 from teachinlathe.ui.tabs.tool_library.DrillingToolView import DrillingToolView
 from teachinlathe.ui.tabs.tool_library.ReamingToolView import ReamingToolView
 from teachinlathe.ui.tabs.tool_library.TappingToolView import TappingToolView
@@ -32,7 +33,6 @@ class HolderRow:
     holderId: int
     ready: bool          # a tool, touched off: the holder can be used
     toolId: int          # the mounted cutting tool's id, 0 when empty
-    toolCard: str        # which thumbnail and title draw it - CategoryRow.card's values
     toolComment: str     # the operator's note on the tool, or empty
     toolView: Any        # the view the thumbnail reads, or None
     xOffset: str         # as shown: "123.123", or empty until touched off
@@ -40,13 +40,12 @@ class HolderRow:
     isCurrentLoadedTool: bool      # the current loaded tool's holder, which cannot be deleted
 
 
-def card_and_view(tool, parent=None) -> tuple:
-    """(card kind, view) for a tool as the Tool Library's cards draw it -
-    a TurningToolView for a turning tool, say - ("", None) for none."""
+def view_of(tool, parent=None) -> Optional[QObject]:
+    """A tool's view, as the Tool Library's cards draw it - a TurningToolView
+    for a turning tool, say; its ``card`` says which card - None for none."""
     if tool is None:
-        return "", None
-    card, view_class = _CARDS.get(tool.tool_type, ("summary", CuttingToolSummary))
-    return card, view_class(tool, parent)
+        return None
+    return _view_class(tool.tool_type)(tool, parent)
 
 
 class MountedToolViews:
@@ -65,16 +64,15 @@ class MountedToolViews:
     def begin(self) -> None:
         self._next = {}
 
-    def view_for(self, tool) -> tuple:
-        """(card kind, view) for a tool, ("", None) for none."""
+    def view_for(self, tool) -> Optional[QObject]:
+        """A tool's view, None for none."""
         if tool is None:
-            return "", None
-        card, view_class = _CARDS.get(tool.tool_type, ("summary", CuttingToolSummary))
+            return None
         view = self._views.get(tool.cutting_tool_id)
         if view is None or view._tool is not tool:
-            view = view_class(tool, self._parent)
+            view = _view_class(tool.tool_type)(tool, self._parent)
         self._next[tool.cutting_tool_id] = view
-        return card, view
+        return view
 
     def end(self) -> None:
         """Let go of the views no longer shown - once the rows that held
@@ -100,12 +98,11 @@ class ToolHolderListModel(DataclassListModel):
         self._views.begin()
         for holder in self._repository.holders:
             tool = self._repository.find_tool(holder.cutting_tool_id)
-            card, view = self._views.view_for(tool)
+            view = self._views.view_for(tool)
             rows.append(HolderRow(
                 holderId=holder.tool_holder_id,
                 ready=holder.is_ready,
                 toolId=tool.cutting_tool_id if tool else 0,
-                toolCard=card,
                 toolComment=tool.comment if tool else "",
                 toolView=view,
                 xOffset=offset_text(holder, "x"),
@@ -131,9 +128,17 @@ class CuttingToolSummary(QObject):
     """A cutting tool of a kind that has no card of its own yet: its id and
     a line of text."""
 
+    #: the card that draws it
+    CARD = CardKind.Kind.Summary
+
     def __init__(self, tool, parent=None):
         super().__init__(parent)
         self._tool = tool
+
+    @pyqtProperty(int, constant=True)
+    def card(self):
+        """The card that draws it, a CardKind."""
+        return self.CARD.value
 
     @pyqtProperty(int, constant=True)
     def cuttingToolId(self):
@@ -155,26 +160,27 @@ class CategoryRow:
     label: str           # the heading
     count: int
     expanded: bool
-    card: str            # how the tools are drawn: "turning" (TurningToolViews),
-                         # "threading" (ThreadingToolViews), "blade"
-                         # (BladeToolViews), "drilling" (DrillingToolViews),
-                         # "reaming" (ReamingToolViews), "tapping" (TappingToolViews) or "summary"
-                         # (CuttingToolSummary, a line of text)
+    card: int            # how the tools are drawn, a CardKind: their views' card
     tools: list          # the views, one per tool, in file order
 
 
-#: The categories drawn as full cards, and the view each card reads. A
-#: boring bar is a turning tool with a body: the same insert, angles and
-#: card. The rest are CuttingToolSummary lines.
-_CARDS = {
-    CuttingToolType.TURNING: ("turning", TurningToolView),
-    CuttingToolType.BORING: ("turning", TurningToolView),
-    CuttingToolType.THREADING: ("threading", ThreadingToolView),
-    CuttingToolType.BLADE: ("blade", BladeToolView),
-    CuttingToolType.DRILLING: ("drilling", DrillingToolView),
-    CuttingToolType.REAMING: ("reaming", ReamingToolView),
-    CuttingToolType.TAPPING: ("tapping", TappingToolView),
+#: The categories drawn as full cards, and the view each card reads - the
+#: view says which card (its CARD). A boring bar is a turning tool with a
+#: body: the same insert, angles and card. The rest are CuttingToolSummary
+#: lines.
+_VIEWS = {
+    CuttingToolType.TURNING: TurningToolView,
+    CuttingToolType.BORING: TurningToolView,
+    CuttingToolType.THREADING: ThreadingToolView,
+    CuttingToolType.BLADE: BladeToolView,
+    CuttingToolType.DRILLING: DrillingToolView,
+    CuttingToolType.REAMING: ReamingToolView,
+    CuttingToolType.TAPPING: TappingToolView,
 }
+
+
+def _view_class(tool_type: CuttingToolType):
+    return _VIEWS.get(tool_type, CuttingToolSummary)
 
 
 class CuttingToolCategoriesModel(DataclassListModel):
@@ -246,7 +252,7 @@ class CuttingToolCategoriesModel(DataclassListModel):
         views = []
         for tool_type in CuttingToolType:
             tools = self._repository.tools_of(tool_type)
-            card, view_class = _CARDS.get(tool_type, ("summary", CuttingToolSummary))
+            view_class = _view_class(tool_type)
             old = old_rows.get(tool_type.value)
             if old is not None and len(old.tools) == len(tools) \
                     and all(view._tool is tool for view, tool in zip(old.tools, tools)):
@@ -256,7 +262,7 @@ class CuttingToolCategoriesModel(DataclassListModel):
             views.extend(tool_views)
             rows.append(CategoryRow(
                 toolType=tool_type.value, label=tool_type.label, count=len(tools),
-                expanded=self.isExpanded(tool_type), card=card,
+                expanded=self.isExpanded(tool_type), card=view_class.CARD.value,
                 tools=tool_views))
         kept = {id(view) for view in views}
         old_views, self._views = self._views, views

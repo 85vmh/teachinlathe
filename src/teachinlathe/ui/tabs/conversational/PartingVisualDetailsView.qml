@@ -11,6 +11,7 @@
 // its own: all it shows is its editor's operation, and every change is the
 // editor's edit, which the operation then shows.
 import QtQuick
+import TeachInLathe
 import QtQuick.Controls
 import QtQuick.Layouts
 import tabs.conversational.profile_canvas
@@ -61,7 +62,7 @@ Item {
     readonly property color edgeBreakColor: "#ad1457"
 
     // the blade in, if it is one
-    readonly property bool hasBlade: !!(toolCard && toolCard.card === "blade" && toolCard.view)
+    readonly property bool hasBlade: !!(toolCard && toolCard.view && toolCard.view.card === CardKind.Blade)
     readonly property real bladeWidth: hasBlade ? Number(toolCard.view.bladeWidth) : 3
     // where the blade starts: the clearance is a radius, X a diameter
     readonly property real startX: xStart + 2 * Math.abs(xClearance)
@@ -243,7 +244,6 @@ Item {
             CanvasTool {
                 id: canvasTool
                 inset: profileCanvas.tickBand
-                card: root.toolCard && root.toolCard.card ? root.toolCard.card : ""
                 view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
                 pxPerMm: profileCanvas._scale
                 tipX: profileCanvas._cx(root.bladeZ)

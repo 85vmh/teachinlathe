@@ -18,6 +18,7 @@ from PyQt6.QtGui import QColor
 from teachinlathe.tooling.model import insert_catalog
 from teachinlathe.tooling.model.data_types import DrillingTool, SpindleDirection, TwistDirection
 from teachinlathe.ui.tabs.programs.backplot.actors import palette
+from teachinlathe.ui.tabs.tool_library.card_kind import CardKind
 from teachinlathe.ui.tabs.tool_library.tool_title_parts import title_parts
 
 #: Where a drill always sits: on the axis, pointing -Z.
@@ -25,6 +26,9 @@ DRILL_ORIENTATION = 7
 
 
 class DrillingToolView(QObject):
+    #: the card that draws it
+    CARD = CardKind.Kind.Drilling
+
     changed = pyqtSignal()
 
     def __init__(self, tool: DrillingTool, parent=None):
@@ -35,6 +39,11 @@ class DrillingToolView(QObject):
     def titleParts(self):
         """Its card's and its list's titles, in parts (tool_title_parts)."""
         return title_parts(self._tool)
+
+    @pyqtProperty(int, constant=True)
+    def card(self):
+        """The card that draws it, a CardKind."""
+        return self.CARD.value
 
     @pyqtProperty(str, constant=True)
     def toolType(self):

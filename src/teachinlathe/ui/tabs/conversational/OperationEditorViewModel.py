@@ -217,10 +217,10 @@ class HeaderEditorViewModel(OperationEditorViewModel):
 class ToolCard(QObject):
     """An operation's tool as its editor shows it: the holder ``toolNo`` (0
     with none chosen), the cutting tool as the Tool Library's card draws it -
-    ``card`` its kind ("turning", ..., as ToolTitles.js has them), ``view`` its
-    view (a TurningToolView, ...) - where the tool change to it goes, and
-    whether the Tool Library still has it as it was chosen (``status``): but
-    when Ok, ``card`` and ``view`` are the tool as it was chosen.
+    ``view``, a TurningToolView, ..., whose ``card`` says which card - where
+    the tool change to it goes, and whether the Tool Library still has it as
+    it was chosen (``status``): but when Ok, ``view`` is the tool as it was
+    chosen.
     ``suggestedToolNo``: the holder the tool picker starts on - where the tool
     is now - 0 for none; ``users``: how many operations cut with this tool
     from this one down, it included.
@@ -258,11 +258,10 @@ class ToolCard(QObject):
     _SCOPES = {Scope.ThisOperation: ProgramToolScope.THIS, Scope.ThisAndBelow: ProgramToolScope.BELOW,
                Scope.AllOperations: ProgramToolScope.ALL}
 
-    def __init__(self, tool_no=0, card="", view=None, toolchange_position=PredefinedPosition.G28,
+    def __init__(self, tool_no=0, view=None, toolchange_position=PredefinedPosition.G28,
                  status=ToolStatus.NONE, suggested_tool_no=0, users=0, parent=None):
         super().__init__(parent)
         self._tool_no = tool_no
-        self._card = card
         self._view = view
         self._position = self._POSITIONS[toolchange_position]
         self._status = self._STATUS[status]
@@ -287,10 +286,6 @@ class ToolCard(QObject):
     @pyqtProperty(int, constant=True)
     def toolNo(self):
         return self._tool_no
-
-    @pyqtProperty(str, constant=True)
-    def card(self):
-        return self._card
 
     @pyqtProperty(QObject, constant=True)
     def view(self):
@@ -417,7 +412,7 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
     def _make_tool_card(self):
         from teachinlathe.tooling.model.data_types import CuttingTool
         from teachinlathe.ui.tabs.programs.backplot import tool_source
-        from teachinlathe.ui.tabs.tool_library.tool_library_models import card_and_view
+        from teachinlathe.ui.tabs.tool_library.tool_library_models import view_of
         entry = self._use_case.tool_entry(self._program, self._index)
         if entry is None:
             return ToolCard(parent=self)
@@ -430,8 +425,8 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
             except Exception:
                 tool = None
         # The view lives as long as this editor: QML holds only a reference.
-        card, view = card_and_view(tool, self)
-        return ToolCard(tool_no=int(entry.tool_holder_id), card=card, view=view,
+        view = view_of(tool, self)
+        return ToolCard(tool_no=int(entry.tool_holder_id), view=view,
                         toolchange_position=entry.toolchange_position, status=result.status,
                         # not one it cannot cut with
                         suggested_tool_no=0 if result.status is ToolStatus.UNFIT else int(result.tool_holder_id),

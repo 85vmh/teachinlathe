@@ -97,7 +97,6 @@ Item {
             CanvasTool {
                 id: canvasTool
                 inset: profileCanvas.tickBand
-                card: root.toolCard && root.toolCard.card ? root.toolCard.card : ""
                 view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
                 pxPerMm: profileCanvas._scale
                 tipX: profileCanvas._cx(root.p1Z)

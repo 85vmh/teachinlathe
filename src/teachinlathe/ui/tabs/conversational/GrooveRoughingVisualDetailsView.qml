@@ -78,7 +78,6 @@ GrooveDetailsView {
         visible: !!root.canvas.startPosition && root.plunges.length > 1
         outlineOnly: true
         inset: root.canvas.tickBand
-        card: root.canvas.startTool.card
         view: root.canvas.startTool.view
         pxPerMm: root.canvas.pxPerMm
         tipX: root.plunges.length > 1 ? root.canvas.px(root.plunges[1]) : 0

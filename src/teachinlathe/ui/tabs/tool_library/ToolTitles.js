@@ -1,4 +1,5 @@
 .pragma library
+.import TeachInLathe as App
 
 // A cutting tool's titles, coloured part by part. The words are the
 // domain's (tooling/model/tool_titles.py), which the tool's view hands over
@@ -7,7 +8,7 @@
 // radius green; a threading insert's pitch green; a blade's width, a drill's
 // or a reamer's diameter and a tap's thread in the tool's own colour.
 //
-// `card` is the cutting-tool models' card kind, `view` the tool's view and
+// `view` is the tool's view - its `card`, a CardKind, says what it is - and
 // `theme` the Theme singleton. Rich text, for a Text with StyledText.
 
 function font(color, text) {
@@ -44,7 +45,7 @@ function painted(parts, view, theme) {
 
 // A cutting tool's name as its card heads it: "CCMT 060204", "16ER 1.5",
 // "3 mm", "Ø6.8 mm", "M10x1.5".
-function richTitle(card, view, theme) {
+function richTitle(view, theme) {
     return view ? painted(view.titleParts.card, view, theme) : ""
 }
 
@@ -52,22 +53,23 @@ function richTitle(card, view, theme) {
 // "Boring Tool", "Parting Blade" (orientation 6), "Grooving Blade" (8),
 // "Trepanning Blade" (5 and 7), "OD Threading", "ID Threading",
 // "Drill Tool", "Reamer Tool", "Tap". Plain text.
-function kindTitle(card, view) {
+function kindTitle(view) {
     if (!view)
         return ""
-    switch (card) {
-    case "turning":
+    var Card = App.CardKind
+    switch (view.card) {
+    case Card.Turning:
         return view.toolType === "boring" ? "Boring Tool" : "Turning Tool"
-    case "threading":
+    case Card.Threading:
         return view.hand === "IR" ? "ID Threading" : "OD Threading"
-    case "blade":
+    case Card.Blade:
         return { 6: "Parting Blade", 8: "Grooving Blade", 5: "Trepanning Blade",
                  7: "Trepanning Blade" }[view.orientation] || "Blade"
-    case "drilling":
+    case Card.Drilling:
         return "Drill Tool"
-    case "reaming":
+    case Card.Reaming:
         return "Reamer Tool"
-    case "tapping":
+    case Card.Tapping:
         return "Tap"
     }
     return ""
@@ -77,7 +79,7 @@ function kindTitle(card, view) {
 // well as its size - "Turning CCMT 060204", "3mm Grooving/Parting Blade",
 // "ER16 OD Threading", "RH Tap M10x1.5mm", "118° RH Drill Ø6.8mm",
 // "6.8mm Reamer". Coloured as richTitle colours the card's.
-function listTitle(card, view, theme) {
+function listTitle(view, theme) {
     return view ? painted(view.titleParts.list, view, theme) : ""
 }
 
@@ -85,29 +87,30 @@ function listTitle(card, view, theme) {
 // [{ label, value, color }]. An insert's tip and radius, a threading
 // insert's type and pitch, a blade's corner radii, a drill's tip and twist,
 // a tap's pitch and hand; none for a reamer.
-function figures(card, view, theme) {
+function figures(view, theme) {
     if (!view)
         return []
     function deg(v) { return Number(Number(v).toFixed(2)) + "°" }
     function len(v) { return Number(Number(v).toFixed(3)) + " mm" }
     function radius(v) { return "R" + Number(Number(v).toFixed(3)) }
-    switch (card) {
-    case "turning":
+    var Card = App.CardKind
+    switch (view.card) {
+    case Card.Turning:
         if (view.isRound)
             return [{ label: "Round insert", value: "", color: theme.accentStrong },
                     { label: "Ø", value: len(view.ic), color: theme.success }]
         return [{ label: "Tip:", value: deg(view.cornerAngle), color: theme.accentStrong },
                 { label: "Radius:", value: len(view.noseRadiusMm), color: theme.success }]
-    case "threading":
+    case Card.Threading:
         return [{ label: "Type:", value: view.kind, color: theme.accentStrong },
                 { label: "Pitch:", value: len(view.pitch), color: theme.success }]
-    case "blade":
+    case Card.Blade:
         return [{ label: "Left:", value: radius(view.leftRadius), color: theme.success },
                 { label: "Right:", value: radius(view.rightRadius), color: theme.success }]
-    case "drilling":
+    case Card.Drilling:
         return [{ label: "Tip:", value: Number(view.tipAngle.toFixed(1)) + "°", color: theme.accentStrong },
                 { label: "Twist:", value: view.rightHand ? "RH" : "LH", color: theme.foreground }]
-    case "tapping":
+    case Card.Tapping:
         return [{ label: "Pitch:", value: String(Number(view.pitch.toFixed(3))), color: theme.success },
                 { label: "Thread:", value: view.rightHand ? "RH" : "LH", color: theme.foreground }]
     }

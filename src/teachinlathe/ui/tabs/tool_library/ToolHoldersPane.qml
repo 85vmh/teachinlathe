@@ -1,4 +1,5 @@
 import QtQuick
+import TeachInLathe
 import QtQuick.Controls
 import theme
 import common
@@ -233,7 +234,7 @@ ToolLibraryPane {
                                     width: root.thumbnailSize
                                     height: root.thumbnailSize
                                     readonly property var toolView: model.toolView
-                                    sourceComponent: toolBox.hasTool ? root.thumbnails[model.toolCard] || null : null
+                                    sourceComponent: toolBox.hasTool ? root.thumbnails[toolView.card] || null : null
                                     onLoaded: item.view = Qt.binding(function() { return toolView })
                                 }
 
@@ -269,7 +270,7 @@ ToolLibraryPane {
                                         width: parent.width
                                         elide: Text.ElideMiddle
                                         text: !toolBox.hasTool ? ""
-                                              : ToolTitles.kindTitle(model.toolCard, model.toolView)
+                                              : ToolTitles.kindTitle(model.toolView)
                                                 + " #" + model.toolId
                                         color: Theme.foreground
                                         font.pixelSize: Theme.fontBody
@@ -281,7 +282,7 @@ ToolLibraryPane {
                                         elide: Text.ElideMiddle
                                         textFormat: Text.StyledText
                                         text: !toolBox.hasTool ? ""
-                                              : ToolTitles.richTitle(model.toolCard, model.toolView, Theme)
+                                              : ToolTitles.richTitle(model.toolView, Theme)
                                         color: Theme.foreground
                                         font.pixelSize: Theme.fontBody
                                     }
@@ -375,14 +376,14 @@ ToolLibraryPane {
     Component { id: reamerThumbnail; ReamerThumbnail { size: root.thumbnailSize; padding: 10; framed: false } }
     Component { id: tapThumbnail; TapThumbnail { size: root.thumbnailSize; padding: 10; framed: false } }
 
-    // The thumbnail for each of the holder model's `toolCard` values; a
-    // "summary" tool has none.
+    // The thumbnail for each card (CardKind) a tool's view can have; a
+    // Summary tool has none.
     readonly property var thumbnails: ({
-        "turning": insertThumbnail,
-        "threading": threadingThumbnail,
-        "blade": bladeThumbnail,
-        "drilling": drillThumbnail,
-        "reaming": reamerThumbnail,
-        "tapping": tapThumbnail
+        [CardKind.Turning]: insertThumbnail,
+        [CardKind.Threading]: threadingThumbnail,
+        [CardKind.Blade]: bladeThumbnail,
+        [CardKind.Drilling]: drillThumbnail,
+        [CardKind.Reaming]: reamerThumbnail,
+        [CardKind.Tapping]: tapThumbnail
     })
 }

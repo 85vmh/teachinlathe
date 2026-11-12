@@ -12,6 +12,7 @@
 // screen, so the drawing goes on as it is. Laid over the whole canvas,
 // clipped ``inset`` px in from its edges - inside the ticks.
 import QtQuick
+import TeachInLathe
 import theme
 import tabs.tool_library.shapes
 import "../tool_library/shapes/blade.js" as BladeShape
@@ -19,8 +20,9 @@ import "../tool_library/shapes/blade.js" as BladeShape
 Item {
     id: root
 
-    property string card: ""          // "turning", "blade" or "threading", as the Tool Library's cards
-    property var  view: null          // TurningToolView, BladeToolView or ThreadingToolView
+    // TurningToolView, BladeToolView or ThreadingToolView - its card says
+    // which it is drawn as; another tool's view draws nothing
+    property var  view: null
     property real pxPerMm: 1
     property real tipX: 0
     property real tipY: 0
@@ -28,9 +30,9 @@ Item {
     // only its outline, the inside clear: where it goes next, over the tool
     property bool outlineOnly: false
 
-    readonly property bool isInsert: card === "turning" && !!view
-    readonly property bool isBlade: card === "blade" && !!view
-    readonly property bool isThreading: card === "threading" && !!view
+    readonly property bool isInsert: !!view && view.card === CardKind.Turning
+    readonly property bool isBlade: !!view && view.card === CardKind.Blade
+    readonly property bool isThreading: !!view && view.card === CardKind.Threading
     // whether it draws anything
     readonly property bool drawn: isInsert || isBlade || (isThreading && threadingInsert.specValid)
 

@@ -17,6 +17,7 @@ from PyQt6.QtGui import QColor
 from teachinlathe.tooling.model import insert_catalog
 from teachinlathe.tooling.model.data_types import ReamingTool, SpindleDirection
 from teachinlathe.ui.tabs.programs.backplot.actors import palette
+from teachinlathe.ui.tabs.tool_library.card_kind import CardKind
 from teachinlathe.ui.tabs.tool_library.tool_title_parts import title_parts
 
 #: Where a reamer always sits: on the axis, pointing -Z.
@@ -28,6 +29,9 @@ REAMER_HELIX_ANGLE = 10.0
 
 
 class ReamingToolView(QObject):
+    #: the card that draws it
+    CARD = CardKind.Kind.Reaming
+
     changed = pyqtSignal()
 
     def __init__(self, tool: ReamingTool, parent=None):
@@ -38,6 +42,11 @@ class ReamingToolView(QObject):
     def titleParts(self):
         """Its card's and its list's titles, in parts (tool_title_parts)."""
         return title_parts(self._tool)
+
+    @pyqtProperty(int, constant=True)
+    def card(self):
+        """The card that draws it, a CardKind."""
+        return self.CARD.value
 
     @pyqtProperty(str, constant=True)
     def toolType(self):

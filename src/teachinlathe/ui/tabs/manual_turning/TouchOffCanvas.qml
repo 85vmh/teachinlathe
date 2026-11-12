@@ -51,13 +51,10 @@ Rectangle {
     // "x" or "z": the axis touched off
     property string axis: "x"
     // the current loaded tool, the Tool Library's view of it (a
-    // TurningToolView, ...; ManualToolsViewModel) - its type and the card
-    // drawing it from it, so the three cannot disagree while it changes
+    // TurningToolView, ...; ManualToolsViewModel) - its type read from it,
+    // and CanvasTool drawn by its card, so they cannot disagree as it changes
     property var    toolView: null
     readonly property string toolType: toolView && toolView.toolType ? toolView.toolType : ""
-    // CanvasTool's card: an insert's, a threading insert's, a blade's
-    readonly property string toolCard: toolType === "turning" || toolType === "boring" ? "turning"
-                                     : toolType === "threading" || toolType === "blade" ? toolType : ""
     // a blade's point the arrow measures to, chosen on the canvas: "-1" its
     // left corner, "0" its middle, "1" its right corner - a parting or
     // grooving blade's in Z (its left corner, toward Z-, the default), a
@@ -397,7 +394,6 @@ Rectangle {
     CanvasTool {
         id: tool
         visible: root.showsTool && !root.isAxial
-        card: root.showsTool && !root.isAxial ? root.toolCard : ""
         view: root.showsTool && !root.isAxial ? root.toolView : null
         pxPerMm: root.toolPxPerMm
         tipX: root.cx(0) + root.tipOffset

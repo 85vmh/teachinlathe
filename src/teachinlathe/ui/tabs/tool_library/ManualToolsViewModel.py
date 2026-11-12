@@ -20,7 +20,7 @@ from teachinlathe.core.tool_library_repository import ToolLibraryRepository, too
 from teachinlathe.tooling.model.data_types import ToolHolder
 from teachinlathe.ui.common.images import image_url
 from teachinlathe.ui.tabs.tool_library.tool_library_models import (
-    DataclassListModel, MountedToolViews, card_and_view, offset_text,
+    DataclassListModel, MountedToolViews, offset_text, view_of,
 )
 
 log = logging.getLogger(__name__)
@@ -34,8 +34,7 @@ _RECENT_ICON = image_url("recent.svg")
 class ManualToolRow:
     toolNo: int          # the holder's id: LinuxCNC's T number
     toolId: int          # the mounted cutting tool's id, 0 when empty
-    toolCard: str        # which thumbnail, title and figures draw it
-    toolView: Any        # the view they read, or None
+    toolView: Any        # the view its thumbnail, title and figures read (its card says which), or None
     toolComment: str
     xOffset: str         # as shown, or empty until touched off
     zOffset: str
@@ -56,11 +55,10 @@ def fill_tool_rows(repository: ToolLibraryRepository, model: ManualToolListModel
     views.begin()
     for holder in holders:
         tool = repository.find_tool(holder.cutting_tool_id)
-        card, view = views.view_for(tool)
+        view = views.view_for(tool)
         rows.append(ManualToolRow(
             toolNo=holder.tool_holder_id,
             toolId=tool.cutting_tool_id if tool else 0,
-            toolCard=card,
             toolView=view,
             toolComment=tool.comment if tool else "",
             xOffset=offset_text(holder, "x"),
@@ -217,7 +215,7 @@ class ManualToolsViewModel(QObject):
             return
         old = self._current_tool_view
         self._current_tool = tool
-        self._current_tool_view = card_and_view(tool, self)[1]
+        self._current_tool_view = view_of(tool, self)
         self.currentLoadedToolViewChanged.emit()
         if old is not None:
             old.deleteLater()
