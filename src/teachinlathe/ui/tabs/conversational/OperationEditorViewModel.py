@@ -146,6 +146,15 @@ class OperationEditorViewModel(QObject):
             return self._index
         return next((i for i, op in enumerate(self._program.operations) if op is self._op), None)
 
+    def shows(self, program, index):
+        """Whether this is the editor of the header (-1) or the operation at
+        ``index`` of ``program``."""
+        if program is not self._program:
+            return False
+        if index < 0:
+            return self._op is None
+        return self._op is not None and self._op is self._use_case.operation(program, index)
+
     def _follow_program(self):
         """The program changed: the operation read again from it."""
         index = self._current_index()

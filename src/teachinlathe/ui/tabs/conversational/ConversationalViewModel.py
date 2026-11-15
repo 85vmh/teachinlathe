@@ -211,10 +211,25 @@ class ConversationalViewModel(QObject):
 
     @current_op_index.setter
     def current_op_index(self, index):
+        self._select(index)
+
+    def _select(self, index, fresh=False):
+        """Selects the header (-1) or an operation, and the right pane follows:
+        the editor is always the selected operation's. The selection and the
+        editor change only together, here - an operation added or deleted once
+        moved the selection in the list while the editor stayed on the
+        operation it had. ``fresh``: a new editor even for the same operation."""
         index = -1 if index is None else int(index)
         if index != getattr(self, "_current_op_index", None):
             self._current_op_index = index
             self.activeOpIndexChanged.emit()
+        if fresh or not self._editor_shows_selection():
+            self._set_editor(index if self.current_program is not None else None)
+
+    def _editor_shows_selection(self):
+        if self._editor is None:
+            return self.current_program is None
+        return self._editor.shows(self.current_program, self._current_op_index)
 
     @pyqtProperty(int, notify=activeOpIndexChanged)
     def activeOpIndex(self):
@@ -419,7 +434,6 @@ class ConversationalViewModel(QObject):
             self.current_program = None
             self.current_program_index = None
             self.current_op_index = -1
-            self._set_editor(None)
         elif self.current_program_index is not None and row_index < self.current_program_index:
             self.current_program_index -= 1
 
@@ -483,8 +497,7 @@ class ConversationalViewModel(QObject):
         # with every save, selects the header and back: not a selection.
         if self._top in EDITOR_SCREENS:
             return
-        self.current_op_index = index
-        self._set_editor(index)
+        self._select(index, fresh=True)
 
     def _set_editor(self, index):
         operation = None
@@ -619,12 +632,10 @@ class ConversationalViewModel(QObject):
         prog = self.current_program
         if not prog:
             return
-        selected = (prog.operations[self.current_op_index]
-                    if 0 <= self.current_op_index < len(prog.operations) else None)
+        selected = self.use_case.operation(prog, self.current_op_index)
         if not self.use_case.move_operation(prog, from_index, to_index):
             return
-        self.current_op_index = next((i for i, op in enumerate(prog.operations)
-                                      if op is selected), -1)
+        self._reselect(selected)
         self._save_current_program()
 
     @pyqtSlot(int)
@@ -643,16 +654,20 @@ class ConversationalViewModel(QObject):
         prog = self.current_program
         if not prog:
             return
-        selected = (prog.operations[self.current_op_index]
-                    if 0 <= self.current_op_index < len(prog.operations) else None)
+        selected = self.use_case.operation(prog, self.current_op_index)
         try:
             self.use_case.duplicate_operation(prog, index)
         except IndexError as e:
             LOG.error("duplicate operation failed: %s", e)
             return
-        self.current_op_index = next((i for i, op in enumerate(prog.operations)
-                                      if op is selected), -1)
+        self._reselect(selected)
         self._save_current_program()
+
+    def _reselect(self, selected):
+        """The selection on ``selected`` (an operation, None the header)
+        wherever the list has moved it; its editor stays the one it has."""
+        ops = self.current_program.operations
+        self.current_op_index = next((i for i, op in enumerate(ops) if op is selected), -1)
 
     # ── what the operation editors ask of the tab ───────────────────────────
 
@@ -701,10 +716,9 @@ class ConversationalViewModel(QObject):
         except Exception as e:
             LOG.error("add rest roughing failed: %s", e)
             return
+        # opened on the new roughing, where its tool is chosen
         self.current_op_index = new_index
         self._save_current_program()
-        # opened on the new roughing, where its tool is chosen
-        QTimer.singleShot(0, lambda: self.showDetails(new_index))
 
     def add_profiling_finish(self, index):
         prog = self.current_program
@@ -728,7 +742,6 @@ class ConversationalViewModel(QObject):
             return
         self.current_op_index = new_index
         self._save_current_program()
-        QTimer.singleShot(0, lambda: self.showDetails(new_index))
 
     def request_roughing_preview(self, editor, op_index, op_data):
         """The preview of the Profile Roughing at ``op_index`` with the
@@ -799,9 +812,8 @@ class ConversationalViewModel(QObject):
     # ── the profile editors ─────────────────────────────────────────────────
 
     def _open_editor(self, op_index, screen, title=""):
-        self.current_op_index = int(op_index)
         # The operation as it is now, for the screen about to show it.
-        self._set_editor(self.current_op_index)
+        self._select(op_index, fresh=True)
         self._editor_title = title
         self._push(screen)
 
