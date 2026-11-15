@@ -143,7 +143,6 @@ Item {
                 Layout.preferredHeight: root.droHeight
                 Layout.maximumHeight: root.droHeight
                 onToastRequested: function(message) { AppShellBridge.showToast(message) }
-                onOpenNumPadRequested: function(field) { root.openNumpad(field) }
                 onTouchOffRequested: function(field) { touchOffDialog.openFor(field) }
             }
 

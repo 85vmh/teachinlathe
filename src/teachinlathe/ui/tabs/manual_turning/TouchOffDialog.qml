@@ -5,7 +5,8 @@
 // value is and with which tool (titleText).
 //
 // Open it with openFor(field): ``field`` a TouchOffField
-// (TeachInLatheDroRoot) - its ``axis``, its ``value`` the last one typed.
+// (TeachInLatheDroRoot) - its ``axis``, its ``value`` the last one typed,
+// ``datum`` for the Z datum (the Set Datum button) instead of the tool's offset.
 // Input hands the value to field.commit(value); for a blade's Z with
 // field.place set to the point chosen on the canvas.
 import QtQuick
@@ -21,10 +22,12 @@ NumpadPopup {
     // loaded tool, drawn
     required property var toolsViewModel
 
-    // what the value is - a diameter, the distance to Z0, an axial tool's
-    // distance to the centre line - and the current loaded tool's T number
+    // what the value is - a diameter, the distance to Z0 or to the Z datum,
+    // an axial tool's distance to the centre line - and the current loaded
+    // tool's T number
     readonly property string titleText: {
-        var what = axis === "z" ? "Distance to Z0"
+        var what = datum ? "Distance to Z Datum"
+                 : axis === "z" ? "Distance to Z0"
                  : canvas.isAxial ? "Distance to the center line"
                  : "Measured \u00d8"
         var toolNo = toolsViewModel.currentLoadedToolNo
@@ -32,6 +35,8 @@ NumpadPopup {
     }
     // view state: the field the open dialog is for
     property string axis: "x"
+    // view state: the open dialog sets the Z datum, not the tool's offset
+    property bool datum: false
 
     // as wide as the keypad's digit keys: 3 columns of 100 px, 24 px apart
     // (NumpadKeypad's keyWidth, buttonSpacing)
@@ -48,6 +53,7 @@ NumpadPopup {
     function openFor(field) {
         root.targetField = field
         root.axis = field && field.axis ? field.axis : "x"
+        root.datum = !!(field && field.datum)
         keypad.resetTo(field ? field.value : null)
         canvas.resetPlace()
         root.open()

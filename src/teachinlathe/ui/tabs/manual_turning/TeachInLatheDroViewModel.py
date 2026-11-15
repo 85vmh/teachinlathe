@@ -419,31 +419,15 @@ class TeachInLatheDroViewModel(QObject):
 
     @pyqtSlot()
     def zSetDatumClicked(self):
-        self._set_z_datum(0.0)
-
-    @pyqtSlot()
-    def zSetDatumLongPressed(self):
+        """The datum's value asked for, in the touch-off dialog."""
         if not self._can_set_datum():
             return
         self.setDatumValueInputRequested.emit()
 
-    @pyqtSlot("QVariant")
-    def zSetDatumValueSelected(self, value):
-        self._set_z_datum(value)
-
-    def _can_run_primary_click(self):
-        if self._is_feeding:
-            self.actionRejected.emit("Changing tool offsets not allowed when power feeding")
-            return False
-        return True
-
-    def _can_set_datum(self):
-        if self._is_feeding:
-            self.actionRejected.emit("SetDatum not allowed when power feeding")
-            return False
-        return True
-
-    def _set_z_datum(self, value):
+    @pyqtSlot("QVariant", str)
+    def zSetDatumValueSelected(self, value, place=""):
+        """The datum set where the current loaded tool is, at ``value``. A
+        blade's ``place`` as touchOff's: used if it has no Z offset yet."""
         if not self._can_set_datum():
             return
         try:
@@ -457,9 +441,21 @@ class TeachInLatheDroViewModel(QObject):
             if not self._tool_library.current_loaded_tool:
                 self.actionRejected.emit("No tool loaded to set the datum with")
                 return
-            self._tool_library.touch_off("z", datum_value)
+            self.touchOff("z", datum_value, place)
             return
         issue_mdi(f"G10 L20 P{self._current_g5x_index()} Z{datum_value:.3f}")
+
+    def _can_run_primary_click(self):
+        if self._is_feeding:
+            self.actionRejected.emit("Changing tool offsets not allowed when power feeding")
+            return False
+        return True
+
+    def _can_set_datum(self):
+        if self._is_feeding:
+            self.actionRejected.emit("SetDatum not allowed when power feeding")
+            return False
+        return True
 
     def onJoystickFeedingChanged(self, value):
         self._is_feeding = bool(value)

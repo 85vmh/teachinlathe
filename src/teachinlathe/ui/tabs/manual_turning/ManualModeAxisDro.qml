@@ -33,7 +33,6 @@ Item {
     signal zeroClicked()
     signal absRelClicked()
     signal setDatumClicked()
-    signal setDatumLongPressed()
 
     width: 1090
     height: 82
@@ -267,14 +266,14 @@ Item {
         icon.width: Math.round(root.buttonSize * 0.54)
         icon.height: Math.round(root.buttonSize * 0.54)
         icon.color: "transparent"       // the SVG's own colour, not the style's tint
-        // Outlined and rounded as the title bar's recent toggle is. Pressed
-        // is the MouseArea's: it takes the taps, for the long press.
+        // Outlined and rounded as the title bar's recent toggle is.
         background: Rectangle {
             radius: Theme.radius
-            color: datumPressArea.pressed ? Theme.accentSoft : Theme.surface
+            color: parent.pressed ? Theme.accentSoft : Theme.surface
             border.width: Theme.hairline
-            border.color: datumPressArea.pressed ? Theme.accentBorder : Theme.outlineStrong
+            border.color: parent.pressed ? Theme.accentBorder : Theme.outlineStrong
         }
+        onClicked: root.setDatumClicked()
 
         Text {
             anchors.top: parent.top
@@ -285,84 +284,6 @@ Item {
             color: Theme.foregroundSubtle
             font.pixelSize: Theme.fontBody
             font.bold: true
-        }
-
-        property bool longPressTriggered: false
-        //: How far the hold has gone toward the long press, 0 to 1.
-        // view state: how far a hold has got
-        property real holdProgress: 0
-
-        // While held, a blue line runs round the symbol's ring from 12
-        // o'clock, clockwise; it closes as the long press fires.
-        NumberAnimation {
-            id: holdAnimation
-            target: datumButton
-            property: "holdProgress"
-            from: 0
-            to: 1
-            duration: datumPressArea.pressAndHoldInterval
-        }
-
-        function endHold() {
-            holdAnimation.stop()
-            holdProgress = 0
-        }
-
-        Canvas {
-            id: holdRing
-            anchors.centerIn: parent
-            width: datumButton.icon.width
-            height: datumButton.icon.height
-            visible: datumButton.holdProgress > 0
-            z: 1
-            onVisibleChanged: requestPaint()
-            Connections {
-                target: datumButton
-                function onHoldProgressChanged() { holdRing.requestPaint() }
-            }
-            onPaint: {
-                var ctx = getContext("2d")
-                ctx.reset()
-                if (datumButton.holdProgress <= 0)
-                    return
-                // On the symbol's ring: radius 18.5 of set_datum.svg's 48.
-                var r = width * 18.5 / 48
-                var start = -Math.PI / 2
-                ctx.strokeStyle = Theme.accent
-                ctx.lineWidth = 2
-                ctx.lineCap = "round"
-                ctx.beginPath()
-                ctx.arc(width / 2, height / 2, r, start,
-                        start + 2 * Math.PI * datumButton.holdProgress, false)
-                ctx.stroke()
-            }
-        }
-
-        MouseArea {
-            id: datumPressArea
-            anchors.fill: parent
-            enabled: datumButton.enabled
-            pressAndHoldInterval: 1000
-
-            onPressed: {
-                datumButton.longPressTriggered = false
-                holdAnimation.restart()
-            }
-            onPressAndHold: {
-                datumButton.longPressTriggered = true
-                datumButton.endHold()
-                root.setDatumLongPressed()
-            }
-            onReleased: {
-                datumButton.endHold()
-                if (!datumButton.longPressTriggered && containsMouse) {
-                    root.setDatumClicked()
-                }
-            }
-            onCanceled: {
-                datumButton.longPressTriggered = false
-                datumButton.endHold()
-            }
         }
     }
 }

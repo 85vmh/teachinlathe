@@ -17,35 +17,18 @@ Item {
     //: The preset positions tapped: the limits panel turns over, to the
     //: machine limits' drawing and back (ManualTurningRoot).
     signal presetPositionsClicked()
-    signal openNumPadRequested(var field)
-    //: A touch-off's value asked for: the touch-off dialog (TouchOffDialog),
-    //: for a TouchOffField.
+    //: A touch-off's or the Z datum's value asked for: the touch-off dialog
+    //: (TouchOffDialog), for a TouchOffField.
     signal touchOffRequested(var field)
 
-    QtObject {
-        id: zDatumField
-
-        property string settingName: "manual.z-set-datum"
-        property string description: "Set Z datum value"
-        // view state: the last value typed, to start the numpad from
-        property var value: 0.0
-
-        function commit(v) {
-            value = v
-            if (root.viewModel) {
-                root.viewModel.zSetDatumValueSelected(v)
-            }
-            return true
-        }
-
-        function defocus() {
-        }
-    }
-
     // The value measured with the current tool: a diameter in X, the
-    // distance to Z0 in Z.
+    // distance to Z0 in Z - or, the Set Datum button's, the distance to the
+    // Z datum it sets.
     component TouchOffField: QtObject {
         property string axis
+        //: the work offset's Z datum set with the value (zSetDatumValueSelected),
+        //: not the tool's offset
+        property bool datum: false
         // view state: the last value typed, to start the numpad from
         property var value: 0.0
         // a blade's Z: which of its points - "-1", "0", "1" - the touch-off
@@ -54,13 +37,11 @@ Item {
 
         function commit(v) {
             value = v
-            if (root.viewModel) {
+            if (datum)
+                root.viewModel.zSetDatumValueSelected(v, place)
+            else
                 root.viewModel.touchOff(axis, v, place)
-            }
             return true
-        }
-
-        function defocus() {
         }
     }
 
@@ -72,6 +53,12 @@ Item {
     TouchOffField {
         id: zTouchOffField
         axis: "z"
+    }
+
+    TouchOffField {
+        id: zDatumField
+        axis: "z"
+        datum: true
     }
 
     // The two boxes the axes' values are in, round both rows: the machine
@@ -307,7 +294,6 @@ Item {
         setDatumVisible: true
         datumLabel: root.viewModel.workOffsetName
         onSetDatumClicked: root.viewModel.zSetDatumClicked()
-        onSetDatumLongPressed: root.viewModel.zSetDatumLongPressed()
     }
 
     Connections {
@@ -319,7 +305,7 @@ Item {
             root.toastRequested(message)
         }
         function onSetDatumValueInputRequested() {
-            root.openNumPadRequested(zDatumField)
+            root.touchOffRequested(zDatumField)
         }
         function onTouchOffValueInputRequested(axis) {
             root.touchOffRequested(axis === "x" ? xTouchOffField : zTouchOffField)
