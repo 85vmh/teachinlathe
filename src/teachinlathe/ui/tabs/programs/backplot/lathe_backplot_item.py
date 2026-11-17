@@ -1107,7 +1107,9 @@ class LatheBackplotCanon(_HostBase):
         self._current_file = None
         self.set_font(False)
         glcanon.GlCanonDraw.realize(self)
-        self._report_line_weights()
+        # the line weights, in the log - with the glyph report, TEACHINLATHE_TEXT
+        if text.GLYPH_DEBUG:
+            self._report_line_weights()
 
     @staticmethod
     def _wcs_signature(stat):

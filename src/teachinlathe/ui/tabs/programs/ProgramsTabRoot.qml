@@ -82,8 +82,9 @@ Rectangle {
         enabled: root._animate
         NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
     }
-    // The bar's height, and the gap above it - the code pane leaves that room.
-    readonly property int barHeight: simulationMode && running ? 114 : Theme.barHeight
+    // The bar's height while a program runs - the machine's or a simulation's -
+    // and the gap above it: the code pane leaves that room.
+    readonly property int barHeight: running ? 114 : Theme.barHeight
     readonly property int barGap: Theme.paneGap
     // The DRO's height, and the gap between it and the code.
     readonly property int droRowHeight: dro.implicitHeight

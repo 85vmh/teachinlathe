@@ -5,8 +5,16 @@ o<m1_remap> sub
 (The spindle is stopped, the program stops at the built-in M1; after cycle start the)
 (spindle starts again as it was, the tool goes back where it was and the program stops)
 (once more, M0, so the operator sees it there before going on.)
+(Tool correction: while the program waits at the M1, TeachInLathe may arm a correction of the)
+(current loaded tool - motion.digital-in-02 on, motion.analog-in-00 the X correction as a)
+(diameter, motion.analog-in-01 the Z correction, mm. Both are ADDED to the tool's offsets with)
+(G10 L1 and applied with G43 once Cycle Start is pressed; the return move takes it. dx -0.04)
+(takes 0.02 off the X offset, a radius: the tool cuts 0.04 smaller on the diameter; dz -0.02)
+(makes it cut 0.02 further toward Z-. motion.digital-out-03 is on while the program waits at)
+(the M1 - the app offers the correction then - and motion.digital-out-02 says it was applied.)
 
     #<where> = 0
+    #<max_correction> = 1.0 (mm, the largest tool correction: MAX_CORRECTION in programs/model/tool_correction.py)
     o<p> if [EXISTS[#<p>]]
         #<where> = #<p>
     o<p> endif
@@ -26,13 +34,38 @@ o<m1_remap> sub
     #<x_return>     = #<_x> (a radius, in G7 too)
     #<z_return>     = #<_z>
 
+    M65 P2 (motion.digital-out-02 off: no correction applied at this stop yet)
+    M65 P3 (motion.digital-out-03 off: left on by an abort at an earlier M1)
     M5 (stop the spindle)
     o<go> if [#<where> EQ 1]
         G28
     o<go> elseif [#<where> EQ 2]
         G30
     o<go> endif
+    M64 P3 (motion.digital-out-03 on: waiting at the M1, the app may arm a tool correction; after the move above)
     M1 (built-in M1 inside its own remap: inspect, cycle start to go on)
+
+    (Tool correction: the operator chose it on the M1 screen before Cycle Start)
+    #5399 = 0 (M66's default is #5399 as it was - 1 from the Optional Stop above: a preview takes no correction)
+    M66 P2 L0 (motion.digital-in-02: a correction to apply - and the sync after Cycle Start)
+    o<correct> if [#5399 EQ 1]
+        o<ccomp> if [#<_ccomp> NE 400]
+            (abort, M1: no tool correction with cutter radius compensation on - G41/G42)
+        o<ccomp> endif
+        M66 E0 L0 (motion.analog-in-00: X correction, as a diameter, mm)
+        #<dx> = #5399
+        M66 E1 L0 (motion.analog-in-01: Z correction, mm)
+        #<dz> = #5399
+        o<range> if [[ABS[#<dx>] GT #<max_correction>] OR [ABS[#<dz>] GT #<max_correction>]]
+            (abort, M1: tool correction out of range)
+        o<range> endif
+        G8 (X word as a radius: in G7 the interpreter would halve it)
+        G10 L1 P#5400 X[#5401 + #<dx> / 2] Z[#5403 + #<dz>]
+        G43 (the corrected offset; no motion - the return move below takes it)
+        M64 P2 (motion.digital-out-02 on: correction applied, the app may clear its pins)
+        (DEBUG, M1: T%d#5400 corrected by X%.3f#<dx> Z%.3f#<dz>)
+    o<correct> endif
+    M65 P3 (motion.digital-out-03 off: the correction pins were read)
 
     o<start> if [#<spindle_on>]
         o<dir> if [#<spindle_cw>]

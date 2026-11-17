@@ -35,8 +35,10 @@ from teachinlathe.programs.logic.final_profile_use_case import FinalProfileUseCa
 from teachinlathe.programs.logic.tool_changes_use_case import ToolChangesUseCase
 from teachinlathe.programs.logic.run import MachineRunSource
 from teachinlathe.programs.logic.programs_use_case import ProgramsUseCase
+from teachinlathe.programs.logic.tool_correction_use_case import ToolCorrectionUseCase
 from teachinlathe.simulation.logic.material import FAR_SIDE, TOOL_SIDE
 from teachinlathe.ui.tabs.programs.ProgramsToolChangeViewModel import ProgramsToolChangeViewModel
+from teachinlathe.ui.tabs.programs.ToolCorrectionViewModel import ToolCorrectionViewModel
 
 Screen = ProgramsScreen
 
@@ -179,9 +181,10 @@ class ProgramsViewModel(QObject):
         # the machine running the program loaded, as every run is shown: the
         # DRO, the spindle / feed / tool boxes, the backplot
         from teachinlathe.ui.tabs.programs.backplot.plot_source import MachineSource
-        self._run = ProgramRunViewModel(
-            MachineRunSource(self._runtime_store, self._actions, self._tool_changes, self),
-            lambda: MachineSource(self._thread_plans), self)
+        machine_run = MachineRunSource(self._runtime_store, self._actions, self._tool_changes, self)
+        self._run = ProgramRunViewModel(machine_run, lambda: MachineSource(self._thread_plans), self)
+        # the current loaded tool corrected at an M1 - on the machine only
+        self._tool_correction = ToolCorrectionViewModel(ToolCorrectionUseCase(machine_run, parent=self), self)
 
         self.programLoadRequested.connect(self._prepare_preview_for_load)
         self.enterRunFullScreenRequested.connect(self._shell.enterProgramRunFullScreen)
@@ -225,6 +228,11 @@ class ProgramsViewModel(QObject):
     def run(self):
         """The machine running the program loaded (ProgramRunViewModel)."""
         return self._run
+
+    @pyqtProperty(QObject, constant=True)
+    def toolCorrection(self):
+        """The current loaded tool corrected at an M1 (ToolCorrectionViewModel)."""
+        return self._tool_correction
 
     @pyqtProperty(QObject, constant=True)
     def simulate(self):

@@ -165,21 +165,22 @@ def atlas(font="tick"):
     except Exception as exc:  # pragma: no cover - Pango/GL at runtime
         return _disable(description, "could not build the atlas for", exc)
     _ATLASES[description] = built
-    _report(description, built)
+    if GLYPH_DEBUG:
+        _report(description, built)
     return built
 
 
 def _report(description, built):
-    """What this machine's font stack actually produced, once per atlas."""
+    """What this machine's font stack actually produced, once per atlas -
+    only with TEACHINLATHE_TEXT set."""
     glyph = built.glyphs.get(ord("0"), {})
     LOG.info("backplot text: %r at a pixel ratio of %.2f -> %s, digit "
              "%gx%g advance %g, line %d descent %d",
              description, device_pixel_ratio(), _resolved(description),
              glyph.get("w", 0), glyph.get("h", 0), glyph.get("advance", 0),
              built.line_space, built.descent)
-    if GLYPH_DEBUG:
-        for line in _glyph_art(description, "0"):
-            LOG.info("backplot text:   %s", line)
+    for line in _glyph_art(description, "0"):
+        LOG.info("backplot text:   %s", line)
 
 
 def _resolved(description):

@@ -4,3 +4,4 @@ ProgramBottomActionBar 1.0 ProgramBottomActionBar.qml
 ProgramPromptDialog 1.0 ProgramPromptDialog.qml
 RunActionButton 1.0 RunActionButton.qml
 ToolChangeDialog 1.0 ToolChangeDialog.qml
+ToolCorrectionPanel 1.0 ToolCorrectionPanel.qml

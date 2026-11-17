@@ -39,6 +39,11 @@ class MachineRunSource(ProgramRunSource):
         from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
         component = TeachInLatheComponent() if component is None else component
         component.comp.addListener(TeachInLatheComponent.PinSpindleActualRpm, self._on_actual_rpm)
+        # Waiting at an M1: the remap turns motion.digital-out-03 on there
+        # (m1_remap.ngc). Only an edge while a program runs counts - an abort
+        # at the M1 leaves the pin on, and the next M1 turns it off first.
+        self._at_m1 = False
+        component.comp.addListener(TeachInLatheComponent.PinInspectAtStop, self._on_at_stop)
 
         runtime_store.snapshotChanged.connect(lambda _snapshot: self._changed())
         actions.stateChanged.connect(self._changed)
@@ -50,7 +55,14 @@ class MachineRunSource(ProgramRunSource):
     def state(self):
         if not self._actions.isActive:
             return RunState.IDLE
-        return RunState.HELD if self._runtime_store.snapshot.paused else RunState.RUNNING
+        if not self._runtime_store.snapshot.paused:
+            return RunState.RUNNING
+        # An M0 and a Feed Hold look the same to LinuxCNC's status: held
+        return RunState.WAITING if self._at_m1 else RunState.HELD
+
+    @property
+    def waiting_for(self):
+        return "M1" if self.state is RunState.WAITING else ""
 
     @property
     def moment(self):
@@ -63,7 +75,10 @@ class MachineRunSource(ProgramRunSource):
         return self._tool_changes.duration()
 
     def cycle_start(self):
-        self._actions.triggerCycleStart()
+        if self.state is RunState.WAITING:
+            self._actions.triggerPauseResume()
+        else:
+            self._actions.triggerCycleStart()
 
     def feed_hold(self):
         self._actions.triggerPauseResume()
@@ -104,8 +119,16 @@ class MachineRunSource(ProgramRunSource):
     # ── what changes it ──────────────────────────────────────────────────
 
     def _changed(self):
+        if self._at_m1 and not self._actions.isActive:
+            self._at_m1 = False
         self._moment = None
         self.changed.emit()
+
+    def _on_at_stop(self, value):
+        at_m1 = bool(value) and self._actions.isActive
+        if at_m1 != self._at_m1:
+            self._at_m1 = at_m1
+            self._changed()
 
     def _on_tool_changes(self):
         self._changed()

@@ -50,6 +50,22 @@ class TeachInLatheComponent:
     PinToolChangePositionX = 'tool-change.position.x'
     PinToolChangePositionZ = 'tool-change.position.z'
     PinToolChangePositionEnable = 'tool-change.position.enable'
+    # A correction of the current loaded tool, armed while the program waits
+    # at an M1 (subroutines/m1_remap.ngc) and written by the remap with G10 L1
+    # after Cycle Start. The machine's HAL (the postgui file) nets them:
+    #   net tl-corr-x        TeachInLathe.inspect.correction-x     => motion.analog-in-00
+    #   net tl-corr-z        TeachInLathe.inspect.correction-z     => motion.analog-in-01
+    #   net tl-corr-apply    TeachInLathe.inspect.correction-apply => motion.digital-in-02
+    #   net tl-corr-applied  motion.digital-out-02 => TeachInLathe.inspect.correction-applied
+    #   net tl-inspect-stop  motion.digital-out-03 => TeachInLathe.inspect.at-stop
+    # motmod needs num_aio >= 2 and num_dio >= 4 (its defaults are 4 and 4);
+    # motion.digital-in-00 (Optional Stop) and -01 (spindle at speed) are
+    # netted in custom.hal.
+    PinInspectCorrectionX = 'inspect.correction-x'          # diameter, mm
+    PinInspectCorrectionZ = 'inspect.correction-z'          # mm
+    PinInspectCorrectionApply = 'inspect.correction-apply'  # a correction to apply at this stop
+    PinInspectCorrectionApplied = 'inspect.correction-applied'  # the remap applied it
+    PinInspectAtStop = 'inspect.at-stop'                    # the program waits at the M1
 
     # def __new__(cls, *args, **kwargs):
     #     if not cls._instance:
@@ -118,6 +134,14 @@ class TeachInLatheComponent:
         self.comp.addPin(self.PinToolChangePositionX, 'float', 'io')
         self.comp.addPin(self.PinToolChangePositionZ, 'float', 'io')
         self.comp.addPin(self.PinToolChangePositionEnable, 'bit', 'io')
+        self.comp.addPin(self.PinInspectCorrectionX, 'float', 'out')
+        self.comp.addPin(self.PinInspectCorrectionZ, 'float', 'out')
+        self.comp.addPin(self.PinInspectCorrectionApply, 'bit', 'out')
+        self.comp.addPin(self.PinInspectCorrectionApplied, 'bit', 'in')
+        self.comp.addPin(self.PinInspectAtStop, 'bit', 'in')
         self.comp.ready()
         self.comp.getPin(self.PinToolChangeResponse).value = False
         self.comp.getPin(self.PinToolChangeCanceled).value = False
+        self.comp.getPin(self.PinInspectCorrectionX).value = 0.0
+        self.comp.getPin(self.PinInspectCorrectionZ).value = 0.0
+        self.comp.getPin(self.PinInspectCorrectionApply).value = False
