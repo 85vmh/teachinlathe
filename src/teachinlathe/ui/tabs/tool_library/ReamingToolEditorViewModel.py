@@ -18,7 +18,9 @@ DEFAULT_DIAMETER = 10.0
 
 
 def new_reaming_tool(cutting_tool_id: int) -> ReamingTool:
-    return ReamingTool(cutting_tool_id=cutting_tool_id, diameter=DEFAULT_DIAMETER)
+    # A reamer cuts right-hand, as a right-hand drill does: with M3.
+    return ReamingTool(cutting_tool_id=cutting_tool_id, diameter=DEFAULT_DIAMETER,
+                       spindle_direction=SpindleDirection.M3)
 
 
 class ReamingToolEditorViewModel(ReamingToolView):

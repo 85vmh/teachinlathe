@@ -5,13 +5,15 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
+from typing import Optional
 
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.tooling.model.data_types import (
-    BladeTool, BoringTool, CuttingToolType, DrillingTool, ReamingTool, TappingTool,
-    ThreadingTool, TurningTool,
+    BladeTool, BoringTool, CuttingToolType, DrillingTool, ReamingTool, SpindleDirection,
+    TappingTool, ThreadingTool, TurningTool, x_offset_on_center,
 )
+from teachinlathe.core.ini_repository import ini_repository
 from teachinlathe.core.tool_library_repository import ToolLibraryRepository, tool_library_repository
 from teachinlathe.ui.tabs.tool_library.tool_library_models import (
     CuttingToolCategoriesModel, ToolHolderListModel,
@@ -73,9 +75,13 @@ class ToolsTabViewModel(QObject):
     #: A message for the app's toast.
     toastRequested = pyqtSignal(str)
 
-    def __init__(self, shell=None, parent=None, repository: ToolLibraryRepository = None):
+    def __init__(self, shell=None, parent=None, repository: ToolLibraryRepository = None,
+                 back_tool_lathe: Optional[bool] = None):
         super().__init__(parent)
         self._repository = tool_library_repository() if repository is None else repository
+        # [DISPLAY] BACK_TOOL_LATHE: the spindle direction a new tool starts with.
+        self._back_tool_lathe = (ini_repository().back_tool_lathe
+                                 if back_tool_lathe is None else back_tool_lathe)
         repository = self._repository
         if shell is not None:
             self.toastRequested.connect(shell.showToast)
@@ -186,6 +192,10 @@ class ToolsTabViewModel(QObject):
             return
         _tool_class, new_tool, editor_class = editable
         tool = new_tool(self._repository.next_cutting_tool_id())
+        # A tool on the center line (drill, reamer, tap) turns the way it cuts,
+        # whichever side the toolpost is on; any other starts as the toolpost asks.
+        if not x_offset_on_center(tool):
+            tool.spindle_direction = SpindleDirection.default_for(self._back_tool_lathe)
         self._open_editor(editor_class(tool, is_new=True, parent=self))
 
     @pyqtSlot(int)

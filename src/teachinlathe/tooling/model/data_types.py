@@ -81,6 +81,13 @@ class SpindleDirection(IntEnum):
     M3 = 3
     M4 = 4
 
+    @staticmethod
+    def default_for(back_tool_lathe: bool) -> "SpindleDirection":
+        """The direction a new tool off the center line starts with: M3 on a
+        front toolpost, M4 on a back one. A drill, a reamer or a tap turns
+        the way it cuts, whichever side the toolpost is on."""
+        return SpindleDirection.M4 if back_tool_lathe else SpindleDirection.M3
+
 
 # ── Generic JSON codec ──────────────────────────────────────────────────────
 
@@ -308,11 +315,12 @@ class TappingTool(CuttingTool):
         return f"M{_fmt(self.diameter)}x{_fmt(self.pitch)}"
 
 
-def x_offset_on_centre(tool: Optional[CuttingTool]) -> bool:
-    """Whether the tool cuts on the spindle's centre line - a drill, a reamer,
-    a tap. Its X offset is then the distance from the holder to the centre of
+def x_offset_on_center(tool: Optional[CuttingTool]) -> bool:
+    """Whether the tool cuts on the spindle's center line - a drill, a reamer,
+    a tap. Its X offset is then the distance from the holder to the center of
     rotation: the holder's, not the tool's, so another such tool in the same
-    holder, or a change to its diameter or geometry, leaves it as it is."""
+    holder, or a change to its diameter or geometry, leaves it as it is (see
+    `ToolHolder.center_x_offset`)."""
     return isinstance(tool, (DrillingTool, ReamingTool, TappingTool))
 
 
@@ -379,8 +387,9 @@ class ToolHolder:
     `z_touched` say the axis was touched off with the cutting tool it holds
     now. Mounting another tool, or changing the one mounted in a way that
     moves its tip, clears them, and the holder cannot be used until both are
-    set again. `z_offset_place` is only meaningful for blades, which can be
-    touched off on either corner or in the middle. `last_loaded` is when it
+    set again - but X for a tool on the center line, which takes the holder's
+    `center_x_offset` when it has one. `z_offset_place` is only meaningful
+    for blades, which can be touched off on either corner or in the middle. `last_loaded` is when it
     last went into the spindle, a Unix time, for the recently used list.
     """
 
@@ -390,20 +399,41 @@ class ToolHolder:
     x_touched: bool = False
     z_touched: bool = False
     z_offset_place: Optional[ZOffsetPlace] = None
+    #: The X offset a tool on the center line was touched off with: the
+    #: holder's distance to the center of rotation, whatever drill, reamer or
+    #: tap is in it. Saved with the holder, so it outlasts the tool: kept while
+    #: the holder is empty, the X of the next such tool mounted, and forgotten
+    #: only when a tool off the center line is. None when there is none.
+    center_x_offset: Optional[float] = None
     last_loaded: Optional[float] = None
     x_offset: float = 0.0
     z_offset: float = 0.0
 
-    def mount(self, cutting_tool_id: Optional[int], keep_x: bool = False) -> None:
-        """Clamp another cutting tool in (None empties the holder). Offsets
-        taken with the previous tool no longer apply: the tool table gets
-        zeros for them - all but X when `keep_x`, a tool on the centre line
-        taking the place of another (see `x_offset_on_centre`)."""
+    def mount(self, cutting_tool_id: Optional[int], on_center: bool = False) -> None:
+        """Clamp another cutting tool in (None empties the holder), `on_center`
+        when it is a tool on the center line (see `x_offset_on_center`).
+        Offsets taken with the previous tool no longer apply, and the tool
+        table gets zeros for them - but such a tool takes `center_x_offset`
+        as its X, touched off already. One off the center line forgets it;
+        emptying the holder keeps it."""
         self.cutting_tool_id = cutting_tool_id
-        if not keep_x:
-            self.x_offset = 0.0
+        if cutting_tool_id is not None and not on_center:
+            self.center_x_offset = None
+        takes_center_x = on_center and self.center_x_offset is not None
+        self.x_offset = self.center_x_offset if takes_center_x else 0.0
         self.z_offset = 0.0
-        self.invalidate_offsets(keep_x)
+        self.invalidate_offsets()
+        self.x_touched = takes_center_x
+
+    def remember_center_x(self, on_center: bool) -> bool:
+        """Keep the X offset as the holder's `center_x_offset`, when the tool
+        in it - `on_center`, on the center line - is touched off in X.
+        Whether it changed."""
+        if not (self.has_tool and on_center and self.x_touched) \
+                or self.center_x_offset == self.x_offset:
+            return False
+        self.center_x_offset = self.x_offset
+        return True
 
     def invalidate_offsets(self, keep_x: bool = False) -> None:
         """The tool's tip moved: it has to be touched off again - in Z only

@@ -25,6 +25,49 @@ NC_FILES_FALLBACK = "~/linuxcnc/nc_files"
 CONVERSATIONAL_GCODE_SUBFOLDER = "Conversational Gcode"
 CONVERSATIONAL_JSON_SUBFOLDER = "Conversational Json"
 
+# ── The INI's sections and keys this application reads ─────────────────────
+# Each section's name, then its keys, in the order the sections come in a
+# LinuxCNC INI.
+
+# [DISPLAY]
+DISPLAY = "DISPLAY"
+PROGRAM_PREFIX = "PROGRAM_PREFIX"
+BACK_TOOL_LATHE = "BACK_TOOL_LATHE"
+POSITION_FEEDBACK = "POSITION_FEEDBACK"
+DEFAULT_LINEAR_VELOCITY = "DEFAULT_LINEAR_VELOCITY"
+MAX_LINEAR_VELOCITY = "MAX_LINEAR_VELOCITY"
+
+# [RS274NGC]
+RS274NGC = "RS274NGC"
+SUBROUTINE_PATH = "SUBROUTINE_PATH"
+
+# [HAL]
+HAL = "HAL"
+POSTGUI_HALFILE = "POSTGUI_HALFILE"
+POSTGUI_HALCMD = "POSTGUI_HALCMD"
+
+# [TRAJ]
+TRAJ = "TRAJ"
+COORDINATES = "COORDINATES"
+LINEAR_UNITS = "LINEAR_UNITS"
+NO_FORCE_HOMING = "NO_FORCE_HOMING"
+
+# [EMCIO]
+EMCIO = "EMCIO"
+TOOL_TABLE = "TOOL_TABLE"
+#: What LinuxCNC reads when TOOL_TABLE is not set, next to the INI.
+DEFAULT_TOOL_TABLE = "tool.tbl"
+
+# [AXIS_<letter>], e.g. [AXIS_X]
+AXIS_SECTION = "AXIS_{}"
+AXIS_UNITS = "UNITS"
+MIN_LIMIT = "MIN_LIMIT"
+MAX_LIMIT = "MAX_LIMIT"
+
+# [JOINT_<n>], e.g. [JOINT_0]
+JOINT_SECTION = "JOINT_{}"
+JOINT_HOME = "HOME"
+
 #: Axis letters in the order LinuxCNC reports positions in.
 AXIS_LETTERS = "xyzabcuvw"
 
@@ -107,7 +150,7 @@ class IniRepository:
         matching what the LinuxCNC front-ends do, so the returned path always
         exists.
         """
-        path = _normalize(self.find("DISPLAY", "PROGRAM_PREFIX"), self._config_dir)
+        path = _normalize(self.find(DISPLAY, PROGRAM_PREFIX), self._config_dir)
         if path and os.path.exists(path):
             return path
         if path:
@@ -136,7 +179,7 @@ class IniRepository:
     @property
     def tool_table_file(self) -> str:
         """``[EMCIO] TOOL_TABLE`` as an absolute path to the .tbl file."""
-        return self.file_path("EMCIO", "TOOL_TABLE", default="tool.tbl")
+        return self.file_path(EMCIO, TOOL_TABLE, default=DEFAULT_TOOL_TABLE)
 
     @property
     def subroutine_search_dirs(self) -> list[str]:
@@ -146,7 +189,7 @@ class IniRepository:
         ``[RS274NGC] SUBROUTINE_PATH``.
         """
         dirs = [self.program_prefix]
-        paths = self.find("RS274NGC", "SUBROUTINE_PATH")
+        paths = self.find(RS274NGC, SUBROUTINE_PATH)
         if not paths:
             log.info("no [RS274NGC] SUBROUTINE_PATH in the INI file")
             return dirs
@@ -158,17 +201,17 @@ class IniRepository:
     def postgui_halfiles(self) -> list[str]:
         """Every ``[HAL] POSTGUI_HALFILE``, as absolute paths, in file order."""
         return [_normalize(p, self._config_dir)
-                for p in self.find_all("HAL", "POSTGUI_HALFILE")]
+                for p in self.find_all(HAL, POSTGUI_HALFILE)]
 
     @property
     def postgui_halcmds(self) -> list[str]:
         """Every ``[HAL] POSTGUI_HALCMD``, as written, in file order."""
-        return self.find_all("HAL", "POSTGUI_HALCMD")
+        return self.find_all(HAL, POSTGUI_HALCMD)
 
     @property
     def coordinates(self) -> str:
         """``[TRAJ] COORDINATES`` as a lowercase letter string, e.g. ``"xz"``."""
-        raw = self.find("TRAJ", "COORDINATES") or ""
+        raw = self.find(TRAJ, COORDINATES) or ""
         raw = raw.replace(" ", "").lower()
         if not raw:
             log.warning("no [TRAJ] COORDINATES in the INI file, assuming 'xyz'")
@@ -196,13 +239,21 @@ class IniRepository:
     @property
     def is_metric(self) -> bool:
         """Whether the machine's native linear unit is the millimetre."""
-        units = self.find("TRAJ", "LINEAR_UNITS") or self.find("AXIS_X", "UNITS")
+        units = self.find(TRAJ, LINEAR_UNITS) or self.find(AXIS_SECTION.format("X"), AXIS_UNITS)
         return (units or "").strip().lower() in ("mm", "metric")
+
+    @property
+    def back_tool_lathe(self) -> bool:
+        """``[DISPLAY] BACK_TOOL_LATHE``: whether the toolpost is behind the
+        spindle center line. Absent or ``0`` means a front toolpost, as
+        LinuxCNC's own front-ends read it."""
+        value = (self.find(DISPLAY, BACK_TOOL_LATHE) or "").strip().lower()
+        return value in ("1", "true", "yes", "on")
 
     @property
     def no_force_homing(self) -> bool:
         """``[TRAJ] NO_FORCE_HOMING``: whether MDI/AUTO are allowed unhomed."""
-        return (self.find("TRAJ", "NO_FORCE_HOMING") or "").strip() == "1"
+        return (self.find(TRAJ, NO_FORCE_HOMING) or "").strip() == "1"
 
     @property
     def position_feedback_is_actual(self) -> bool:
@@ -211,7 +262,7 @@ class IniRepository:
         ``[DISPLAY] POSITION_FEEDBACK``: absent or ``0`` or ``ACTUAL`` means
         actual, anything else (``COMMANDED``) means commanded.
         """
-        feedback = (self.find("DISPLAY", "POSITION_FEEDBACK") or "").strip()
+        feedback = (self.find(DISPLAY, POSITION_FEEDBACK) or "").strip()
         return feedback == "" or feedback == "0" or feedback.lower() == "actual"
 
     @property
@@ -220,12 +271,12 @@ class IniRepository:
 
         The INI states it per second; every front-end shows it per minute.
         """
-        return self._float("DISPLAY", "DEFAULT_LINEAR_VELOCITY", 3.0) * 60.0
+        return self._float(DISPLAY, DEFAULT_LINEAR_VELOCITY, 3.0) * 60.0
 
     @property
     def max_jog_velocity(self) -> float:
         """``[DISPLAY] MAX_LINEAR_VELOCITY``, in units per minute."""
-        return self._float("DISPLAY", "MAX_LINEAR_VELOCITY", 10.0) * 60.0
+        return self._float(DISPLAY, MAX_LINEAR_VELOCITY, 10.0) * 60.0
 
     def _float(self, section: str, option: str, default: float) -> float:
         raw = self.find(section, option)
@@ -236,9 +287,9 @@ class IniRepository:
 
     def axis_limits(self, axis: str) -> Optional[AxisLimits]:
         """Soft limits of *axis* (a letter), or None when the INI omits them."""
-        section = "AXIS_{}".format(axis.upper())
-        low = self.find(section, "MIN_LIMIT")
-        high = self.find(section, "MAX_LIMIT")
+        section = AXIS_SECTION.format(axis.upper())
+        low = self.find(section, MIN_LIMIT)
+        high = self.find(section, MAX_LIMIT)
         if low is None or high is None:
             log.error("[%s] is missing MIN_LIMIT or MAX_LIMIT", section)
             return None
@@ -256,7 +307,7 @@ class IniRepository:
         letter = axis.lower()
         if letter not in self.coordinates:
             return 0.0
-        return self._float("JOINT_{}".format(self.coordinates.index(letter)), "HOME", 0.0)
+        return self._float(JOINT_SECTION.format(self.coordinates.index(letter)), JOINT_HOME, 0.0)
 
 
 _INSTANCE: Optional[IniRepository] = None

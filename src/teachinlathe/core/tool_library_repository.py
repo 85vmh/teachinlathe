@@ -45,7 +45,7 @@ from teachinlathe.tooling.model import insert_catalog
 from teachinlathe.tooling.model.data_types import (
     BladeTool, CuttingTool, CuttingToolType, DrillingTool, ReamingTool,
     TappingTool, ThreadingTool, ToolHolder, TurningTool, ZOffsetPlace,
-    x_offset_on_centre,
+    x_offset_on_center,
 )
 
 from .command_repository import command_repository
@@ -96,11 +96,13 @@ class ToolLibraryRepository(QObject):
         self._restore_in_flight = False
         self._touch_off: Optional[dict] = None
 
-        # Both files as this code writes them from the start - a holders file
-        # from before the offsets moved out of it, too - and the tool table
-        # following the holders, the offsets as it has them.
-        self._write_holders()
+        # Both files as this code writes them from the start - the tool table
+        # following the holders, the offsets as it has them, and a holders
+        # file from before the offsets moved out of it, or from before it
+        # remembered the center line X, too.
         self._write_tool_table()
+        self._remember_center_x()
+        self._write_holders()
         tool_table.changed.connect(self._on_tool_table_changed)
 
         self._status.tool_in_spindle.notify(self._on_current_loaded_tool)
@@ -149,9 +151,10 @@ class ToolLibraryRepository(QObject):
 
     def mount(self, tool_holder_id: int, cutting_tool_id: Optional[int]) -> None:
         """Clamp a cutting tool in a holder; its offsets go back to zero -
-        but X, when a tool on the centre line (a drill, a reamer, a tap) takes
-        the place of another: X is then the holder's distance to the centre
-        of rotation, which another tool does not change.
+        but X, for a tool on the center line (a drill, a reamer, a tap) in a
+        holder that remembers one (`ToolHolder.center_x_offset`): X is then the
+        holder's distance to the center of rotation, which another tool does
+        not change. That X is written to the tool table.
 
         A cutting tool is in one holder at a time, so one that was in another
         holder moves: that holder is left empty.
@@ -163,10 +166,8 @@ class ToolLibraryRepository(QObject):
             previous = self.holder_of(cutting_tool_id)
             if previous is not None and previous is not holder:
                 previous.mount(None)
-        keep_x = (x_offset_on_centre(self.find_tool(holder.cutting_tool_id))
-                  and x_offset_on_centre(self.find_tool(cutting_tool_id)))
-        holder.mount(cutting_tool_id, keep_x)
-        self._save_holders(zeroed={tool_holder_id: ("z",) if keep_x else ("x", "z")})
+        holder.mount(cutting_tool_id, x_offset_on_center(self.find_tool(cutting_tool_id)))
+        self._save_holders(mounted=(tool_holder_id,))
 
     def add_holder(self) -> ToolHolder:
         """A new, empty holder, numbered after the last: T<n+1>."""
@@ -195,14 +196,14 @@ class ToolLibraryRepository(QObject):
         Offsets were taken with the tool as it was. Any change to it other
         than the spindle direction or the comment - insert, nose radius,
         orientation, angles - moves the tip, so the holder it is clamped in
-        has to be touched off again: in Z only for a tool on the centre line,
-        whose X is the holder's distance to the centre whatever its diameter.
+        has to be touched off again: in Z only for a tool on the center line,
+        whose X is the holder's distance to the center whatever its diameter.
         """
         for index, existing in enumerate(self.cutting_tools):
             if existing.cutting_tool_id == tool.cutting_tool_id:
                 self.cutting_tools[index] = tool
                 if _geometry_changed(existing, tool):
-                    keep_x = x_offset_on_centre(existing) and x_offset_on_centre(tool)
+                    keep_x = x_offset_on_center(existing) and x_offset_on_center(tool)
                     self._invalidate_offsets(tool.cutting_tool_id, keep_x)
                 break
         else:
@@ -279,6 +280,7 @@ class ToolLibraryRepository(QObject):
             return
         self._read_offsets()
         setattr(holder, f"{touch_off['axis']}_touched", True)
+        self._remember_center_x()
         if touch_off["axis"] == "z":
             # a new Z offset: taken with the point given (a blade's), or none
             holder.z_offset_place = touch_off["place"]
@@ -346,32 +348,26 @@ class ToolLibraryRepository(QObject):
             raise KeyError(f"no tool holder {tool_holder_id}")
         return holder
 
-    def _save_holders(self, zeroed: Optional[Dict[int, Tuple[str, ...]]] = None) -> None:
+    def _save_holders(self, mounted: Tuple[int, ...] = ()) -> None:
         self._write_holders()
-        self._write_tool_table(zeroed)
+        self._write_tool_table(mounted)
         self.toolsChanged.emit()
 
     def _write_holders(self) -> None:
         self._extras.write_holders(self.holders, self._remembered_tool)
 
-    def _write_tool_table(self, zeroed: Optional[Dict[int, Tuple[str, ...]]] = None) -> None:
+    def _write_tool_table(self, mounted: Tuple[int, ...] = ()) -> None:
         """The only write to the tool table: a line per holder with a tool,
-        the offsets as the file has them now - zero in the axes `zeroed`
-        names for a holder given another tool."""
-        zeroed = zeroed or {}
+        the offsets as the file has them now - but for a holder `mounted`
+        another tool, the ones `ToolHolder.mount` left it with."""
         offsets = self._tool_table_offsets()
         entries = []
         for holder in self.holders:
             tool = self.find_tool(holder.cutting_tool_id)
             if tool is None:
                 continue
-            x, z = offsets.get(holder.tool_holder_id, (0.0, 0.0))
-            axes = zeroed.get(holder.tool_holder_id, ())
-            if "x" in axes:
-                x = 0.0
-            if "z" in axes:
-                z = 0.0
-            holder.x_offset, holder.z_offset = x, z
+            if holder.tool_holder_id not in mounted:
+                holder.x_offset, holder.z_offset = offsets.get(holder.tool_holder_id, (0.0, 0.0))
             entries.append(tbl_entry(holder, tool))
         self._tool_table.write(entries)
 
@@ -389,8 +385,21 @@ class ToolLibraryRepository(QObject):
                 changed = True
         return changed
 
+    def _remember_center_x(self) -> bool:
+        """Every holder with a tool on the center line, touched off in X,
+        keeps that X as its `center_x_offset` - from a touch-off, or from a
+        correction written to the tool table while a program runs. Whether
+        any changed."""
+        changed = False
+        for holder in self.holders:
+            on_center = x_offset_on_center(self.find_tool(holder.cutting_tool_id))
+            changed = holder.remember_center_x(on_center) or changed
+        return changed
+
     def _on_tool_table_changed(self) -> None:
         if self._read_offsets():
+            if self._remember_center_x():
+                self._write_holders()
             self.toolsChanged.emit()
 
 
