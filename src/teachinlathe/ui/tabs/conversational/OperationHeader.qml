@@ -11,7 +11,8 @@ import theme
 RowLayout {
     id: root
     Layout.fillWidth: true
-    spacing: Theme.innerSpacings
+    // as the gap under it, down to the canvas's box
+    spacing: Theme.spacingSmall
 
     // Plain properties handed down, not aliases: an alias into a child is
     // compiled as the index of the property it points at, and stays at that

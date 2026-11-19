@@ -71,97 +71,87 @@ Item {
     onEditorChanged: showEditor()
     Component.onCompleted: showEditor()
 
-    ColumnLayout {
+    RowLayout {
         anchors.fill: parent
-        spacing: Theme.spacingSmall
+        spacing: Theme.paneGap
 
-        RowLayout {
+        ConversationalLeftPane {
+            id: leftPane
+            operationsModel: operationEditor.operationsModel
+            programDatum: (operationEditor.selectedProgram && operationEditor.selectedProgram.datum) || 1
+            activeOpIndex: operationEditor.activeOpIndex
+
+            onProgramHeaderSelected: operationEditor.detailsRequested(-1)
+            onOperationSelected: function(index) {
+                operationEditor.detailsRequested(index)
+            }
+            onOperationTypeChosen: function(type, insertIndex) {
+                operationEditor.addOperationTypeChosen(type, insertIndex)
+            }
+            onDefineProfileChosen: function(profileType, insertIndex) {
+                operationEditor.addDefineProfileChosen(profileType, insertIndex)
+            }
+            onGenerateToggled: function(index, checked) {
+                operationEditor.toggleGenerateGcode(index, checked)
+            }
+            onOptionalToggled: function(index, checked) {
+                operationEditor.toggleOptionalBlock(index, checked)
+            }
+            onDeleteOperationRequested: function(index) {
+                operationEditor.deleteOperationRequested(index)
+            }
+            onDuplicateOperationRequested: function(index) {
+                operationEditor.duplicateOperationRequested(index)
+            }
+            onMoveOperationRequested: function(fromIndex, toIndex) {
+                operationEditor.moveOperationRequested(fromIndex, toIndex)
+            }
+        }
+
+        // no box of its own: the details' cards - Speeds and Feeds, Pause to
+        // Inspect, the canvas - on the window's background, as the left pane's
+        Flickable {
+            id: detailsFlick
             Layout.fillWidth: true
+            Layout.preferredWidth: 7
             Layout.fillHeight: true
-            spacing: Theme.paneGap
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            contentWidth: width
+            contentHeight: detailsContent.height
+            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
-            ConversationalLeftPane {
-                id: leftPane
-                operationsModel: operationEditor.operationsModel
-                programDatum: (operationEditor.selectedProgram && operationEditor.selectedProgram.datum) || 1
-                activeOpIndex: operationEditor.activeOpIndex
+            Item {
+                id: detailsContent
+                width: detailsFlick.width
+                height: Math.max(
+                    detailsFlick.height,
+                    detailsLoader.item && detailsLoader.item.implicitHeight > 0
+                        ? detailsLoader.item.implicitHeight
+                        : detailsLoader.implicitHeight
+                )
 
-                onProgramHeaderSelected: operationEditor.detailsRequested(-1)
-                onOperationSelected: function(index) {
-                    operationEditor.detailsRequested(index)
-                }
-                onOperationTypeChosen: function(type, insertIndex) {
-                    operationEditor.addOperationTypeChosen(type, insertIndex)
-                }
-                onDefineProfileChosen: function(profileType, insertIndex) {
-                    operationEditor.addDefineProfileChosen(profileType, insertIndex)
-                }
-                onGenerateToggled: function(index, checked) {
-                    operationEditor.toggleGenerateGcode(index, checked)
-                }
-                onOptionalToggled: function(index, checked) {
-                    operationEditor.toggleOptionalBlock(index, checked)
-                }
-                onDeleteOperationRequested: function(index) {
-                    operationEditor.deleteOperationRequested(index)
-                }
-                onDuplicateOperationRequested: function(index) {
-                    operationEditor.duplicateOperationRequested(index)
-                }
-                onMoveOperationRequested: function(fromIndex, toIndex) {
-                    operationEditor.moveOperationRequested(fromIndex, toIndex)
+                Loader {
+                    id: detailsLoader
+                    width: parent.width
+                    height: parent.height
+                    asynchronous: false
+                    onSourceChanged: detailsFlick.contentY = 0
                 }
             }
+        }
 
-            Card {
-                Layout.fillWidth: true
-                Layout.preferredWidth: 7
-                Layout.fillHeight: true
+        Connections {
+            target: detailsLoader.item
+            ignoreUnknownSignals: true
+            enabled: !!target
 
-                Flickable {
-                    id: detailsFlick
-                    anchors.fill: parent
-                    anchors.margins: 1
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    contentWidth: width
-                    contentHeight: detailsContent.height
-                    ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+            function onOpenNumPadRequested(field) {
+                operationEditor.openNumPadRequested(field)
+            }
 
-                    Item {
-                        id: detailsContent
-                        width: detailsFlick.width
-                        height: Math.max(
-                            detailsFlick.height,
-                            detailsLoader.item && detailsLoader.item.implicitHeight > 0
-                                ? detailsLoader.item.implicitHeight
-                                : detailsLoader.implicitHeight
-                        )
-
-                        Loader {
-                            id: detailsLoader
-                            width: parent.width
-                            height: parent.height
-                            asynchronous: false
-                            onSourceChanged: detailsFlick.contentY = 0
-                        }
-                    }
-                }
-
-                Connections {
-                    id: detailsCon
-                    target: detailsLoader.item
-                    ignoreUnknownSignals: true
-                    enabled: !!target
-
-                    function onOpenNumPadRequested(field) {
-                        operationEditor.openNumPadRequested(field)
-                    }
-
-                    function onOpenKeyboardRequested(field) {
-                        operationEditor.openKeyboardRequested(field)
-                    }
-                }
+            function onOpenKeyboardRequested(field) {
+                operationEditor.openKeyboardRequested(field)
             }
         }
     }

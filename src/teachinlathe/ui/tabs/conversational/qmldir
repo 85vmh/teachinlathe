@@ -3,6 +3,7 @@ AddOperationPopup 1.0 AddOperationPopup.qml
 BlendPicker 1.0 BlendPicker.qml
 BuildGcodeProgressDialog 1.0 BuildGcodeProgressDialog.qml
 CanvasBox 1.0 CanvasBox.qml
+CanvasCard 1.0 CanvasCard.qml
 CanvasTool 1.0 CanvasTool.qml
 CanvasViewButtons 1.0 CanvasViewButtons.qml
 CardNumber 1.0 CardNumber.qml

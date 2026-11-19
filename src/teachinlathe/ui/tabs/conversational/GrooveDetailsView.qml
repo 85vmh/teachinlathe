@@ -76,8 +76,9 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: Theme.innerSpacings
+        // no margins: the header's cards on the window's background, then the
+        // canvas's box; between them, the gap the left pane has between its cards
+        spacing: Theme.spacingSmall
 
         OperationHeader {
             id: header
@@ -86,19 +87,23 @@ Item {
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
         }
 
-        GrooveCanvas {
-            id: profileCanvas
+        CanvasCard {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            editor: root.editor
-            toolCard: root.toolCard
-            profileId: root.profileId
-            primitives: root.primitives
-            profileType: root.profileType
-            workpiece: root.workpiece
-            preview: root.groovePreview
-            startDiameter: root.groovePreview && root.groovePreview.startDiameter != null
-                           ? root.groovePreview.startDiameter : 0
+
+            GrooveCanvas {
+                id: profileCanvas
+                anchors.fill: parent
+                editor: root.editor
+                toolCard: root.toolCard
+                profileId: root.profileId
+                primitives: root.primitives
+                profileType: root.profileType
+                workpiece: root.workpiece
+                preview: root.groovePreview
+                startDiameter: root.groovePreview && root.groovePreview.startDiameter != null
+                               ? root.groovePreview.startDiameter : 0
+            }
         }
     }
 }

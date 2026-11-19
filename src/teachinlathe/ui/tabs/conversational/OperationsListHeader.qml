@@ -12,13 +12,8 @@ Rectangle {
     property int colTypeW: 200
     property int colOptW: 80
     property int headerFontSize: Theme.tableHeaderFontSize
-    // the operations' rows' font, whose "[#NN]    " the title is indented by,
-    // so it starts where the operation names do
-    property int itemFontSize: 16
 
     signal addOperationRequested()
-
-    TextMetrics { id: orderPrefix; font.pixelSize: root.itemFontSize; text: "[#00]    " }
 
     width: parent ? parent.width : 400
     height: Theme.rowHeight
@@ -40,7 +35,8 @@ Rectangle {
 
                 Label {
                     anchors.left: parent.left
-                    anchors.leftMargin: 10 + orderPrefix.advanceWidth
+                    // the rows' margin: the title starts where their "[#NN]" does
+                    anchors.leftMargin: 10
                     anchors.right: addButton.left
                     anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
@@ -63,6 +59,8 @@ Rectangle {
                     buttonHeight: Theme.buttonHeight
                     iconSize: 28
                     fontPixelSize: 15
+                    // 1.3 times as wide as it needs
+                    widthScale: 1.3
                     fontBold: true
                     onClicked: root.addOperationRequested()
                 }

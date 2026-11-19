@@ -19,7 +19,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.margins: 10
+        // no margins: the cards on the window's background, the pane's edges theirs
         spacing: 40
 
         // Knurling has no feed rate: the header's is left disabled

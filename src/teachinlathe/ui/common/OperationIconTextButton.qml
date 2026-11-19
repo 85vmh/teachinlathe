@@ -23,8 +23,13 @@ Rectangle {
     readonly property int hp: 8
     readonly property int vp: 6
 
+    // the width its contents need times this: wider, they stay in its middle
+    property real widthScale: 1
+    readonly property int _contentWidth: Math.max(90, Math.ceil(contentRow.implicitWidth) + hp * 2)
+    readonly property real _extraPadding: (implicitWidth - _contentWidth) / 2
+
     implicitHeight: buttonHeight
-    implicitWidth: Math.max(90, Math.ceil(contentRow.implicitWidth) + hp * 2)
+    implicitWidth: Math.round(_contentWidth * widthScale)
     Layout.preferredWidth: implicitWidth
     Layout.preferredHeight: implicitHeight
 
@@ -37,8 +42,8 @@ Rectangle {
     RowLayout {
         id: contentRow
         anchors.fill: parent
-        anchors.leftMargin: root.hp
-        anchors.rightMargin: root.hp
+        anchors.leftMargin: root.hp + root._extraPadding
+        anchors.rightMargin: root.hp + root._extraPadding
         anchors.topMargin: root.vp
         anchors.bottomMargin: root.vp
         spacing: 6

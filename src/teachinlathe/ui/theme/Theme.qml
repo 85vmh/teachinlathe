@@ -99,8 +99,9 @@ QtObject {
     readonly property int paneInset:     10
     //: a quick change of state shown: a switch flipping, a fill emptying
     readonly property int animationFast: 150
-    // between the boxes of an editor screen, and between them and its canvas
-    readonly property int innerSpacings: 12
+    //: inside the box a conversational operation's canvas is drawn in
+    //: (CanvasCard): the canvas this far in from its outline
+    readonly property int canvasBoxPadding: 6
     // inside the Manual Turning DRO's boxes - the machine coordinates', the
     // work coordinates' - all round their values and buttons
     readonly property int droBoxPadding: 8

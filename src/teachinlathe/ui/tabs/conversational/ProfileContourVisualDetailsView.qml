@@ -62,8 +62,9 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: Theme.innerSpacings
+        // no margins: the header's cards on the window's background, then the
+        // canvas's box; between them, the gap the left pane has between its cards
+        spacing: Theme.spacingSmall
 
         // Pause to Inspect: after each pass
         OperationHeader {
@@ -72,163 +73,167 @@ Item {
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
         }
 
-        ProfileCanvas {
-            id: profileCanvas
-            showTransitions: false
-            // no axes: the origin alone marks Z0
-            showAxes: false
-            showZeroLine: true
+        CanvasCard {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            // pinch and the buttons zoom, a drag pans, a double tap fits
-            selectable: false
-            // the backplot's step (glnav's zoomin / zoomout)
-            zoomStep: 1.1
-            // the profile in the stock's outline colour and weight
-            profileLineColor: "#6b7280"
-            profileLineWidth: 1.5
-            fitDiameterMargin: 10
-            primitives:  root.primitives
-            profileType: root.profileType
-            workpiece:   root.workpiece
-            startPosition: root.primitives.length > 0 ? { x: root.xStart, z: root.zStart } : null
-            // the passes, the last thick with arrows the way it cuts; the
-            // initial stock, and its arrow, when there is one
-            roughingPreview: root.contourPreview
-            startPositionArrowRect: null
-            stockToLeaveArrowRect:  root.hasStock ? stockBox.rect : null
 
-            Rectangle {
+            ProfileCanvas {
+                id: profileCanvas
+                showTransitions: false
+                // no axes: the origin alone marks Z0
+                showAxes: false
+                showZeroLine: true
                 anchors.fill: parent
-                color: "transparent"
-                border.color: Theme.outline; border.width: Theme.hairline
-            }
+                // pinch and the buttons zoom, a drag pans, a double tap fits
+                selectable: false
+                // the backplot's step (glnav's zoomin / zoomout)
+                zoomStep: 1.1
+                // the profile in the stock's outline colour and weight
+                profileLineColor: "#6b7280"
+                profileLineWidth: 1.5
+                fitDiameterMargin: 10
+                primitives:  root.primitives
+                profileType: root.profileType
+                workpiece:   root.workpiece
+                startPosition: root.primitives.length > 0 ? { x: root.xStart, z: root.zStart } : null
+                // the passes, the last thick with arrows the way it cuts; the
+                // initial stock, and its arrow, when there is one
+                roughingPreview: root.contourPreview
+                startPositionArrowRect: null
+                stockToLeaveArrowRect:  root.hasStock ? stockBox.rect : null
 
-            // The cards stack down the right edge, as on Profile Roughing.
-            readonly property real boxWidth: Math.max(stockBox.implicitWidth, passesBox.implicitWidth,
-                finishDirectionBox.implicitWidth, p1Box.implicitWidth)
-            readonly property real boxGap: profileCanvas.tickBand
-            readonly property real firstBoxY: profileCanvas.tickBand
-            fitInsetRight: root.primitives.length > 0 ? boxWidth + profileCanvas.tickBand : 0
-
-            // the tool - a turning tool's insert or a blade - its control
-            // point on the start position, turned as its orientation has it,
-            // inside the ticks; in the fit too - under the cards, declared
-            // before them
-            fitExtraPositions: {
-                if (!canvasTool.drawn) return []
-                var pts = canvasTool.outlineFromTip, out = []
-                for (var i = 0; i < pts.length; i++)
-                    out.push({ x: root.xStart + 2 * pts[i].y, z: root.zStart + pts[i].x })
-                return out
-            }
-            onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
-            CanvasTool {
-                id: canvasTool
-                inset: profileCanvas.tickBand
-                view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
-                pxPerMm: profileCanvas._scale
-                tipX: profileCanvas._cx(root.zStart)
-                tipY: profileCanvas._cy(root.xStart)
-            }
-
-            // the stock on the part before the first pass: the Profile
-            // Roughing's above it on its profile leaves, or the operator's
-            StockToLeaveBox {
-                id: stockBox
-                visible: root.primitives.length > 0
-                title: root.editor.stockInherited ? "Inherited stock to leave" : "Initial stock to leave"
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.firstBoxY
-                labelColor: profileCanvas.stockToLeaveColor
-                radial: root.stockRadial
-                axial: root.stockAxial
-                onRadialEdited: function(value) { root.editStock({ radial: value }) }
-                onAxialEdited: function(value) { root.editStock({ axial: value }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            // the passes that stock is taken off in
-            PassesCountBox {
-                id: passesBox
-                visible: root.primitives.length > 0
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: stockBox.y + stockBox.height + Theme.spacingSmall
-                passes: root.passesCount
-                onPassesEdited: function(value) { root.editor.edit({ passes_count: value }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
-
-            TurningFinishDirectionBox {
-                id: finishDirectionBox
-                visible: root.primitives.length > 0
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: passesBox.y + passesBox.height + Theme.spacingSmall
-                direction: root.finishDirection
-                onDirectionEdited: function(value) {
-                    root.editor.edit({ profile_contour_strategy: { profiling_type: root.profileType,
-                                                                  finishing_direction: value } })
+                Rectangle {
+                    anchors.fill: parent
+                    color: "transparent"
+                    border.color: Theme.outline; border.width: Theme.hairline
                 }
-            }
 
-            TurningPointBox {
-                id: p1Box
-                visible: root.primitives.length > 0
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: finishDirectionBox.y + finishDirectionBox.height + Theme.spacingSmall
-                point: 1
-                settingPrefix: "profile_contour"
-                xValue: root.xStart
-                zValue: root.zStart
-                onFieldEdited: function(axis, value) {
-                    root.editProfiling(axis === "x" ? { x_start: value } : { z_start: value })
+                // The cards stack down the right edge, as on Profile Roughing.
+                readonly property real boxWidth: Math.max(stockBox.implicitWidth, passesBox.implicitWidth,
+                    finishDirectionBox.implicitWidth, p1Box.implicitWidth)
+                readonly property real boxGap: profileCanvas.tickBand
+                readonly property real firstBoxY: profileCanvas.tickBand
+                fitInsetRight: root.primitives.length > 0 ? boxWidth + profileCanvas.tickBand : 0
+
+                // the tool - a turning tool's insert or a blade - its control
+                // point on the start position, turned as its orientation has it,
+                // inside the ticks; in the fit too - under the cards, declared
+                // before them
+                fitExtraPositions: {
+                    if (!canvasTool.drawn) return []
+                    var pts = canvasTool.outlineFromTip, out = []
+                    for (var i = 0; i < pts.length; i++)
+                        out.push({ x: root.xStart + 2 * pts[i].y, z: root.zStart + pts[i].x })
+                    return out
                 }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
+                CanvasTool {
+                    id: canvasTool
+                    inset: profileCanvas.tickBand
+                    view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
+                    pxPerMm: profileCanvas._scale
+                    tipX: profileCanvas._cx(root.zStart)
+                    tipY: profileCanvas._cy(root.xStart)
+                }
 
-            readonly property real p1TagOffset: 56
-            readonly property real p1TagX: root.isIdProfile
-                ? _cx(root.zStart) + p1TagOffset
-                : _cx(root.zStart) - p1TagOffset - p1Tag.width
-            readonly property real p1TagY: _cy(root.xStart) + p1TagOffset
-            markers: root.primitives.length > 0 ? [
-                { leader: true, x: root.xStart, z: root.zStart, color: "#1565c0",
-                  toZ: root.zStart, dx: root.isIdProfile ? p1TagOffset : -p1TagOffset, slope: 1 }
-            ] : []
-            Radial.GroovePointTag {
-                id: p1Tag
-                visible: root.primitives.length > 0
-                point: 1
-                axes: "XZ"
-                x: profileCanvas.p1TagX
-                y: profileCanvas.p1TagY - height / 2
-            }
+                // the stock on the part before the first pass: the Profile
+                // Roughing's above it on its profile leaves, or the operator's
+                StockToLeaveBox {
+                    id: stockBox
+                    visible: root.primitives.length > 0
+                    title: root.editor.stockInherited ? "Inherited stock to leave" : "Initial stock to leave"
+                    x: profileCanvas.width - width - profileCanvas.boxGap
+                    y: profileCanvas.firstBoxY
+                    labelColor: profileCanvas.stockToLeaveColor
+                    radial: root.stockRadial
+                    axial: root.stockAxial
+                    onRadialEdited: function(value) { root.editStock({ radial: value }) }
+                    onAxialEdited: function(value) { root.editStock({ axial: value }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
 
-            // the tool it cuts with, at the top, in the middle; tapped, to
-            // pick it - a turning tool for an OD profile, a boring bar for
-            // an ID one
-            OperationToolBox {
-                editor: root.editor
-                pickerWidth: root.width
-                x: (profileCanvas.width - width) / 2
-                // lined up with the view buttons, as tall as they are
-                y: viewButtons.y
-                rowHeight: viewButtons.height
-            }
+                // the passes that stock is taken off in
+                PassesCountBox {
+                    id: passesBox
+                    visible: root.primitives.length > 0
+                    x: profileCanvas.width - width - profileCanvas.boxGap
+                    y: stockBox.y + stockBox.height + Theme.spacingSmall
+                    passes: root.passesCount
+                    onPassesEdited: function(value) { root.editor.edit({ passes_count: value }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
 
-            // zoom, fit to screen and mirror - top-left, as on every profile canvas
-            CanvasViewButtons {
-                id: viewButtons
-                canvas: profileCanvas
-                visible: root.primitives.length > 0
-            }
+                TurningFinishDirectionBox {
+                    id: finishDirectionBox
+                    visible: root.primitives.length > 0
+                    x: profileCanvas.width - width - profileCanvas.boxGap
+                    y: passesBox.y + passesBox.height + Theme.spacingSmall
+                    direction: root.finishDirection
+                    onDirectionEdited: function(value) {
+                        root.editor.edit({ profile_contour_strategy: { profiling_type: root.profileType,
+                                                                      finishing_direction: value } })
+                    }
+                }
 
-            Label {
-                anchors.centerIn: parent
-                visible: root.primitives.length === 0
-                text: "No profile defined above this operation"
-                color: Theme.foregroundMuted
-                font.pixelSize: Theme.fontBody
+                TurningPointBox {
+                    id: p1Box
+                    visible: root.primitives.length > 0
+                    x: profileCanvas.width - width - profileCanvas.boxGap
+                    y: finishDirectionBox.y + finishDirectionBox.height + Theme.spacingSmall
+                    point: 1
+                    settingPrefix: "profile_contour"
+                    xValue: root.xStart
+                    zValue: root.zStart
+                    onFieldEdited: function(axis, value) {
+                        root.editProfiling(axis === "x" ? { x_start: value } : { z_start: value })
+                    }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
+
+                readonly property real p1TagOffset: 56
+                readonly property real p1TagX: root.isIdProfile
+                    ? _cx(root.zStart) + p1TagOffset
+                    : _cx(root.zStart) - p1TagOffset - p1Tag.width
+                readonly property real p1TagY: _cy(root.xStart) + p1TagOffset
+                markers: root.primitives.length > 0 ? [
+                    { leader: true, x: root.xStart, z: root.zStart, color: "#1565c0",
+                      toZ: root.zStart, dx: root.isIdProfile ? p1TagOffset : -p1TagOffset, slope: 1 }
+                ] : []
+                Radial.GroovePointTag {
+                    id: p1Tag
+                    visible: root.primitives.length > 0
+                    point: 1
+                    axes: "XZ"
+                    x: profileCanvas.p1TagX
+                    y: profileCanvas.p1TagY - height / 2
+                }
+
+                // the tool it cuts with, at the top, in the middle; tapped, to
+                // pick it - a turning tool for an OD profile, a boring bar for
+                // an ID one
+                OperationToolBox {
+                    editor: root.editor
+                    pickerWidth: root.width
+                    x: (profileCanvas.width - width) / 2
+                    // lined up with the view buttons, as tall as they are
+                    y: viewButtons.y
+                    rowHeight: viewButtons.height
+                }
+
+                // zoom, fit to screen and mirror - top-left, as on every profile canvas
+                CanvasViewButtons {
+                    id: viewButtons
+                    canvas: profileCanvas
+                    visible: root.primitives.length > 0
+                }
+
+                Label {
+                    anchors.centerIn: parent
+                    visible: root.primitives.length === 0
+                    text: "No profile defined above this operation"
+                    color: Theme.foregroundMuted
+                    font.pixelSize: Theme.fontBody
+                }
             }
         }
     }

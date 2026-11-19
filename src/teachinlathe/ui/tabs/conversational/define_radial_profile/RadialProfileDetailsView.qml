@@ -19,43 +19,47 @@ Item {
     // another operation: the drawing fitted to it
     onEditorChanged: canvas.resetView()
 
-    ColumnLayout {
+    // the title and the canvas in the canvas's box
+    CanvasCard {
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 10
 
-        Label {
-            text: "Define Radial Profile" + (root.profileId ? " P" + root.profileId : "")
-            font.pixelSize: Theme.fontLarge
-            font.bold: true
-        }
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 10
 
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-
-            RadialProfileCanvas {
-                id: canvas
-                anchors.fill: parent
-                primitives: root.primitives
-                workpiece: root.workpiece
+            Label {
+                text: "Define Radial Profile" + (root.profileId ? " P" + root.profileId : "")
+                font.pixelSize: Theme.fontLarge
+                font.bold: true
             }
 
-            EditProfileButton {
-                text: "Edit Radial Profile  P" + root.profileId
-                onClicked: root.editor.openEditor()
-            }
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
 
-            // zoom, fit to screen and mirror - top-left, as on every profile canvas
-            CanvasViewButtons {
-                canvas: canvas
-            }
+                RadialProfileCanvas {
+                    id: canvas
+                    anchors.fill: parent
+                    primitives: root.primitives
+                    workpiece: root.workpiece
+                }
 
-            Rectangle {
-                anchors.fill: parent
-                color: "transparent"
-                border.color: Theme.outline
-                border.width: Theme.hairline
+                EditProfileButton {
+                    text: "Edit Radial Profile  P" + root.profileId
+                    onClicked: root.editor.openEditor()
+                }
+
+                // zoom, fit to screen and mirror - top-left, as on every profile canvas
+                CanvasViewButtons {
+                    canvas: canvas
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: "transparent"
+                    border.color: Theme.outline
+                    border.width: Theme.hairline
+                }
             }
         }
     }

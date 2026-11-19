@@ -57,14 +57,16 @@ Item {
     ColumnLayout {
         id: contentColumn
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: Theme.innerSpacings
+        // no margins: the header's cards on the window's background, then the
+        // canvas's box; between them, the gap the left pane has between its cards
+        spacing: Theme.spacingSmall
 
         // Program Details, then On Program Finished as tall
         RowLayout {
             id: topRow
             Layout.fillWidth: true
-            spacing: Theme.innerSpacings
+            // as the gap under it, down to the canvas's box
+            spacing: Theme.spacingSmall
 
             TitledCard {
                 id: programDetails
@@ -153,152 +155,156 @@ Item {
         // The workpiece, hatched, with its dimensions: the diameters right of
         // the face, the lengths below it, each pointing to the box with its
         // value down the right edge.
-        ProfileCanvas {
-            id: workpieceCanvas
-            showTransitions: false
-            // a dot at both ends of each arrow to a box
-            arrowStartDots: true
+        CanvasCard {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            // pinch and the buttons zoom, a drag pans, a double tap fits
-            selectable: false
-            // the backplot's step (glnav's zoomin / zoomout)
-            zoomStep: 1.1
-            primitives: []
-            // The stock drawn from its face, its far end always broken off
-            // (brokenstock.js). Up to twice its diameter it is drawn whole;
-            // longer, its middle is left out too, so it is drawn twice its
-            // diameter long: the piece at the face and the far piece, a gap
-            // between. stock_length here is how much is drawn; the boxes keep
-            // the true values.
-            readonly property bool breakMiddle: root.extDia > 0 && root.stockLength > 2 * root.extDia
-            // the gap: as far as the two breaks reach into it, and a clearance
-            readonly property real gap: (Broken.reach(1.0) + 0.06) * root.extDia
-            // each piece's length, and where the drawing ends
-            readonly property real pieceLength: (2 * root.extDia - gap) / 2
-            readonly property real drawnLength: breakMiddle ? 2 * root.extDia : root.stockLength
-            // in drawn Z: where the piece at the face is broken off, where the
-            // far piece starts; a real Z on the far piece is drawn at real + shift
-            readonly property var middle: breakMiddle
-                ? { near: -pieceLength, far: -(pieceLength + gap), shift: root.stockLength - 2 * root.extDia }
-                : null
-            // a real Z, where it is drawn: on the far piece moved by the shift,
-            // in the stretch left out at the gap's middle
-            function drawnZ(z) {
-                if (!middle || z >= middle.near) return z
-                if (z <= -root.stockLength + pieceLength) return z + middle.shift
-                return (middle.near + middle.far) / 2
-            }
-            workpiece: ({ external_diameter: root.extDia, internal_diameter: root.intDia,
-                          stickout_length: root.stickout, stock_length: drawnLength,
-                          break_far_end: true,
-                          break_middle: middle ? { near: middle.near, far: middle.far } : null })
-            axisBreak: middle
 
-            readonly property color externalColor: "#1565c0"
-            readonly property color internalColor: "#6a1b9a"
-            readonly property color stickoutColor: "#00838f"
-            readonly property color stockLengthColor: "#ad1457"
-
-            // px from the part: the inner dimension first, the outer beyond it
-            readonly property real nearOffset: 24
-            readonly property real farOffset: 48
-            fitPadding: farOffset + 16
-            // Internal Ø inside the stock, across the bore 3/4 of the way from
-            // its Z- end, its leader from the lower half; the stock length
-            // above the part, the stickout below it
-            dimensions: {
-                var dims = [
-                    // to the drawn ends: the stock to the break, the stickout to
-                    // where it ends - at the break if it reaches past it
-                    { axis: "z", from: 0, to: -drawnLength, x: -root.extDia, offset: -nearOffset,
-                      color: stockLengthColor, arrowToRect: stockLengthBox.rect },
-                    { axis: "x", from: -root.extDia, to: root.extDia, z: 0, offset: nearOffset,
-                      color: externalColor, arrowToRect: externalBox.rect },
-                    { axis: "z", from: 0, to: drawnZ(-root.stickout), x: root.extDia, offset: nearOffset,
-                      color: stickoutColor, arrowToRect: stickoutBox.rect }
-                ]
-                if (root.intDia > 0)
-                    dims.push({ axis: "x", from: root.intDia, to: -root.intDia, z: -(breakMiddle ? pieceLength : drawnLength) / 4, offset: 0,
-                                color: internalColor, arrowToRect: internalBox.rect })
-                return dims
-            }
-
-            Rectangle {
+            ProfileCanvas {
+                id: workpieceCanvas
+                showTransitions: false
+                // a dot at both ends of each arrow to a box
+                arrowStartDots: true
                 anchors.fill: parent
-                color: "transparent"
-                border.color: Theme.outline; border.width: Theme.hairline
-            }
-
-            // The boxes stack down the right edge, each as wide as it needs;
-            // the drawing is fitted into what the widest leaves free.
-            readonly property real boxWidth: Math.max(externalBox.implicitWidth, internalBox.implicitWidth,
-                                                      stickoutBox.implicitWidth, stockLengthBox.implicitWidth)
-            readonly property real boxGap: Theme.spacingLarge
-            fitInsetRight: boxWidth + boxGap
-
-            // top to bottom: stock length, the two diameters, stickout - each
-            // near its dimension - the first at the top, the last at the
-            // bottom, the space between them shared out equally
-            readonly property real boxSpacing: (height - 2 * boxGap - stockLengthBox.height - externalBox.height
-                                                - internalBox.height - stickoutBox.height) / 3
-            DimensionBox {
-                id: stockLengthBox
-                x: workpieceCanvas.width - width - workpieceCanvas.boxGap
-                y: workpieceCanvas.boxGap
-                label: "Stock length"
-                dimensionColor: workpieceCanvas.stockLengthColor
-                settingName: "smart_numpad.workpiece-stock-length"
-                value: root.stockLength
-                // the stickout cannot be longer: it comes down with it
-                onValueEdited: function(value) {
-                    root.editWorkpiece({ stock_length: value, stickout_length: Math.min(root.stickout, value) })
+                // pinch and the buttons zoom, a drag pans, a double tap fits
+                selectable: false
+                // the backplot's step (glnav's zoomin / zoomout)
+                zoomStep: 1.1
+                primitives: []
+                // The stock drawn from its face, its far end always broken off
+                // (brokenstock.js). Up to twice its diameter it is drawn whole;
+                // longer, its middle is left out too, so it is drawn twice its
+                // diameter long: the piece at the face and the far piece, a gap
+                // between. stock_length here is how much is drawn; the boxes keep
+                // the true values.
+                readonly property bool breakMiddle: root.extDia > 0 && root.stockLength > 2 * root.extDia
+                // the gap: as far as the two breaks reach into it, and a clearance
+                readonly property real gap: (Broken.reach(1.0) + 0.06) * root.extDia
+                // each piece's length, and where the drawing ends
+                readonly property real pieceLength: (2 * root.extDia - gap) / 2
+                readonly property real drawnLength: breakMiddle ? 2 * root.extDia : root.stockLength
+                // in drawn Z: where the piece at the face is broken off, where the
+                // far piece starts; a real Z on the far piece is drawn at real + shift
+                readonly property var middle: breakMiddle
+                    ? { near: -pieceLength, far: -(pieceLength + gap), shift: root.stockLength - 2 * root.extDia }
+                    : null
+                // a real Z, where it is drawn: on the far piece moved by the shift,
+                // in the stretch left out at the gap's middle
+                function drawnZ(z) {
+                    if (!middle || z >= middle.near) return z
+                    if (z <= -root.stockLength + pieceLength) return z + middle.shift
+                    return (middle.near + middle.far) / 2
                 }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                workpiece: ({ external_diameter: root.extDia, internal_diameter: root.intDia,
+                              stickout_length: root.stickout, stock_length: drawnLength,
+                              break_far_end: true,
+                              break_middle: middle ? { near: middle.near, far: middle.far } : null })
+                axisBreak: middle
 
-            DimensionBox {
-                id: externalBox
-                x: workpieceCanvas.width - width - workpieceCanvas.boxGap
-                y: stockLengthBox.y + stockLengthBox.height + workpieceCanvas.boxSpacing
-                label: "External Ø"
-                dimensionColor: workpieceCanvas.externalColor
-                settingName: "smart_numpad.workpiece-external-dia"
-                value: root.extDia
-                onValueEdited: function(value) { root.editWorkpiece({ external_diameter: value }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                readonly property color externalColor: "#1565c0"
+                readonly property color internalColor: "#6a1b9a"
+                readonly property color stickoutColor: "#00838f"
+                readonly property color stockLengthColor: "#ad1457"
 
-            DimensionBox {
-                id: internalBox
-                x: workpieceCanvas.width - width - workpieceCanvas.boxGap
-                y: externalBox.y + externalBox.height + workpieceCanvas.boxSpacing
-                label: "Internal Ø"
-                dimensionColor: workpieceCanvas.internalColor
-                settingName: "smart_numpad.workpiece-internal-dia"
-                value: root.intDia
-                onValueEdited: function(value) { root.editWorkpiece({ internal_diameter: value }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                // px from the part: the inner dimension first, the outer beyond it
+                readonly property real nearOffset: 24
+                readonly property real farOffset: 48
+                fitPadding: farOffset + 16
+                // Internal Ø inside the stock, across the bore 3/4 of the way from
+                // its Z- end, its leader from the lower half; the stock length
+                // above the part, the stickout below it
+                dimensions: {
+                    var dims = [
+                        // to the drawn ends: the stock to the break, the stickout to
+                        // where it ends - at the break if it reaches past it
+                        { axis: "z", from: 0, to: -drawnLength, x: -root.extDia, offset: -nearOffset,
+                          color: stockLengthColor, arrowToRect: stockLengthBox.rect },
+                        { axis: "x", from: -root.extDia, to: root.extDia, z: 0, offset: nearOffset,
+                          color: externalColor, arrowToRect: externalBox.rect },
+                        { axis: "z", from: 0, to: drawnZ(-root.stickout), x: root.extDia, offset: nearOffset,
+                          color: stickoutColor, arrowToRect: stickoutBox.rect }
+                    ]
+                    if (root.intDia > 0)
+                        dims.push({ axis: "x", from: root.intDia, to: -root.intDia, z: -(breakMiddle ? pieceLength : drawnLength) / 4, offset: 0,
+                                    color: internalColor, arrowToRect: internalBox.rect })
+                    return dims
+                }
 
-            DimensionBox {
-                id: stickoutBox
-                x: workpieceCanvas.width - width - workpieceCanvas.boxGap
-                y: internalBox.y + internalBox.height + workpieceCanvas.boxSpacing
-                label: "Stickout"
-                dimensionColor: workpieceCanvas.stickoutColor
-                settingName: "smart_numpad.workpiece-stickout"
-                value: root.stickout
-                // no longer than the stock
-                onValueEdited: function(value) { root.editWorkpiece({ stickout_length: Math.min(value, root.stockLength) }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                Rectangle {
+                    anchors.fill: parent
+                    color: "transparent"
+                    border.color: Theme.outline; border.width: Theme.hairline
+                }
 
-            // zoom, fit to screen - top-left, as on every profile canvas
-            CanvasViewButtons {
-                canvas: workpieceCanvas
-                // only the workpiece here: nothing to mirror
-                showMirror: false
+                // The boxes stack down the right edge, each as wide as it needs;
+                // the drawing is fitted into what the widest leaves free.
+                readonly property real boxWidth: Math.max(externalBox.implicitWidth, internalBox.implicitWidth,
+                                                          stickoutBox.implicitWidth, stockLengthBox.implicitWidth)
+                readonly property real boxGap: Theme.spacingLarge
+                fitInsetRight: boxWidth + boxGap
+
+                // top to bottom: stock length, the two diameters, stickout - each
+                // near its dimension - the first at the top, the last at the
+                // bottom, the space between them shared out equally
+                readonly property real boxSpacing: (height - 2 * boxGap - stockLengthBox.height - externalBox.height
+                                                    - internalBox.height - stickoutBox.height) / 3
+                DimensionBox {
+                    id: stockLengthBox
+                    x: workpieceCanvas.width - width - workpieceCanvas.boxGap
+                    y: workpieceCanvas.boxGap
+                    label: "Stock length"
+                    dimensionColor: workpieceCanvas.stockLengthColor
+                    settingName: "smart_numpad.workpiece-stock-length"
+                    value: root.stockLength
+                    // the stickout cannot be longer: it comes down with it
+                    onValueEdited: function(value) {
+                        root.editWorkpiece({ stock_length: value, stickout_length: Math.min(root.stickout, value) })
+                    }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
+
+                DimensionBox {
+                    id: externalBox
+                    x: workpieceCanvas.width - width - workpieceCanvas.boxGap
+                    y: stockLengthBox.y + stockLengthBox.height + workpieceCanvas.boxSpacing
+                    label: "External Ø"
+                    dimensionColor: workpieceCanvas.externalColor
+                    settingName: "smart_numpad.workpiece-external-dia"
+                    value: root.extDia
+                    onValueEdited: function(value) { root.editWorkpiece({ external_diameter: value }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
+
+                DimensionBox {
+                    id: internalBox
+                    x: workpieceCanvas.width - width - workpieceCanvas.boxGap
+                    y: externalBox.y + externalBox.height + workpieceCanvas.boxSpacing
+                    label: "Internal Ø"
+                    dimensionColor: workpieceCanvas.internalColor
+                    settingName: "smart_numpad.workpiece-internal-dia"
+                    value: root.intDia
+                    onValueEdited: function(value) { root.editWorkpiece({ internal_diameter: value }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
+
+                DimensionBox {
+                    id: stickoutBox
+                    x: workpieceCanvas.width - width - workpieceCanvas.boxGap
+                    y: internalBox.y + internalBox.height + workpieceCanvas.boxSpacing
+                    label: "Stickout"
+                    dimensionColor: workpieceCanvas.stickoutColor
+                    settingName: "smart_numpad.workpiece-stickout"
+                    value: root.stickout
+                    // no longer than the stock
+                    onValueEdited: function(value) { root.editWorkpiece({ stickout_length: Math.min(value, root.stockLength) }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
+
+                // zoom, fit to screen - top-left, as on every profile canvas
+                CanvasViewButtons {
+                    canvas: workpieceCanvas
+                    // only the workpiece here: nothing to mirror
+                    showMirror: false
+                }
             }
         }
     }

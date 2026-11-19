@@ -54,7 +54,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 12
+        // no margins: the cards on the window's background, the pane's edges theirs
         spacing: Theme.margin
 
         RowLayout {

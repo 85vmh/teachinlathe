@@ -108,8 +108,9 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: Theme.innerSpacings
+        // no margins: the header's cards on the window's background, then the
+        // canvas's box; between them, the gap the left pane has between its cards
+        spacing: Theme.spacingSmall
 
         // Parting has no M1; both its feed rates are the header's, Fz1 and Fz2
         OperationHeader {
@@ -120,263 +121,267 @@ Item {
             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
         }
 
-        ProfileCanvas {
-            id: profileCanvas
-            showTransitions: false
-            // no axes: the origin alone marks Z0
-            showAxes: false
+        CanvasCard {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            // pinch and the buttons zoom, a drag pans, a double tap fits
-            selectable: false
-            // the backplot's step (glnav's zoomin / zoomout)
-            zoomStep: 1.1
-            // the blade and the stock whole, both halves
-            mirrorAcrossCenterline: true
-            // a dot at both ends of each arrow to a box
-            arrowStartDots: true
-            primitives: []
-            // the G-code's moves
-            roughingPreview: root.partingPreview
-            // the header's stock, as big as Start Ø, broken off after where it
-            // is parted - and its middle left out when that is far down it
-            workpiece: {
-                var w = JSON.parse(JSON.stringify(root.workpiece || {}))
-                if (root.stockDiameter > 0) w.external_diameter = root.stockDiameter
-                w.break_after_z = root.zDrawn
-                w.break_middle = root.middleBreak
-                if (root.middleBreak) w.break_after_setback = root.breakSetback
-                return w
-            }
-            axisBreak: root.middleBreak
 
-            // where the dashed lines of the blade's path end: below, past
-            // where it starts; above, past the stock's outside - or, with
-            // the mirror off, at End Ø
-            readonly property real zLineBottom: Math.max(root.startX, 10) * 1.15
-            readonly property real zLineTop: mirrorAcrossCenterline ? -(root.stockDiameter + 4) : root.xEnd
-            // how far either side of the blade's middle the X lines reach,
-            // mm: xLinePast past each dashed line of its path
-            readonly property real xLinePast: 2
-            readonly property real xLineHalf: root.bladeWidth / 2 + xLinePast
-            markers: [
-                // Z Position: across the centre line, past the blade's start
-                // the blade's path: a dashed line either side of it - Z
-                // Position on its right - from past where it starts, below,
-                // to just past the stock's outside, above; with the mirror
-                // off, to End Ø. The arrow to the Z Position box from the
-                // right one, 2/3 of the radius above the centre line - with
-                // the mirror off, from its top
-                { line: true, z: root.zDrawn, bottom: zLineBottom, top: zLineTop, dash: [6, 3],
-                  arrowAt: profileCanvas.mirrorAcrossCenterline ? -root.stockDiameter * 2 / 3 : zLineTop,
-                  color: root.zPosColor, arrowToRect: zPosBox.rect },
-                { line: true, z: root.zDrawn - root.bladeWidth, bottom: zLineBottom, top: zLineTop,
-                  dash: [6, 3], color: root.zPosColor },
-                // where the blade starts: X Start + the clearance - past the
-                // blade on the right twice as far as on the left, the
-                // clearance dimensioned in the middle of that stretch
-                { hline: true, x: root.startX, z: root.bladeZ, half: xLineHalf,
-                  halfRight: root.bladeWidth / 2 + 2 * xLinePast,
-                  color: root.clearanceColor },
-                // Start Ø at the blade - dimensioned in front of the stock
-                // (startDimension); with the mirror off, its arrow from here
-                { hline: true, x: root.xStart, z: root.bladeZ, half: xLineHalf,
-                  color: root.xStartColor,
-                  arrowToRect: profileCanvas.mirrorAcrossCenterline ? null : xStartBox.rect },
-                // Fz2 Ø at the blade, and its mirror - dimensioned in front of
-                // the stock (fz2Dimension); with the mirror off, the lower one
-                // alone, its arrow from here
-                { hline: true, x: root.xFz2, z: root.bladeZ, half: xLineHalf,
-                  color: root.xFz2Color,
-                  arrowToRect: profileCanvas.mirrorAcrossCenterline ? null : xFz2Box.rect },
-                { hline: true, x: -root.xFz2, z: root.bladeZ, half: xLineHalf, color: root.xFz2Color,
-                  visible: profileCanvas.mirrorAcrossCenterline },
-                { hline: true, x: root.xEnd, z: root.bladeZ, half: xLineHalf,
-                  color: root.xEndColor },
-                // the edge break on the part's corner, at Start Ø on Z
-                // Position's side, and its mirror; what it takes off in red
-                { blend: root.edgeBreak.blend_type, x: root.xStart, z: root.zDrawn,
-                  size: root.edgeBreak.blend_type === "fillet" ? root.edgeBreak.fillet_radius
-                                                                : root.edgeBreak.chamfer_width,
-                  mirror: profileCanvas.mirrorAcrossCenterline,
-                  color: root.edgeBreakColor, fill: "#e53935" }
-            ]
-            // the clearance, between the X Start line and the blade's start
-            // line, its arrows outside them pointing in; its leader from the
-            // bottom end of the lower arrow to the X Clearance box
-            dimensions: (root.xClearance > 0
-                         ? [{ axis: "x", from: root.xStart, to: root.startX,
-                              z: root.bladeZ + root.bladeWidth / 2 + xLinePast, offset: 0,
-                              color: root.clearanceColor,
-                              arrowToRect: clearanceBox.rect, arrowsOutside: true,
-                              leaderFromOutsideEnd: "to" }]
-                         : []).concat(startDimension ? [startDimension] : [])
-                                 .concat(fz2Dimension ? [fz2Dimension] : [])
-            // Start Ø - the stock's - first in front of the stock, from -Ø to
-            // +Ø, at the middle of its extension lines out from the face; its
-            // leader from a dot above the centre line to the Start Ø box.
-            // Mirrored only
-            readonly property var startDimension: mirrorAcrossCenterline && root.xStart > 0
-                ? { axis: "x", from: -root.xStart, to: root.xStart, z: 0, offset: 24,
-                    extensionsCentred: true,
-                    color: root.xStartColor, arrowToRect: xStartBox.rect, leaderAt: 0.25 }
-                : null
-            // Fz2 Ø in front of the stock, past Start Ø, at the middle of its
-            // extension lines out from the face, its arrows outside them
-            // pointing in; its leader from the top end of the upper arrow to
-            // the Fz2 Ø box. Mirrored only
-            readonly property var fz2Dimension: mirrorAcrossCenterline && root.xFz2 > 0
-                ? { axis: "x", from: -root.xFz2, to: root.xFz2, z: 0, offset: 48,
-                    extensionsCentred: true,
-                    color: root.xFz2Color,
-                    arrowToRect: xFz2Box.rect, arrowsOutside: true, leaderFromOutsideEnd: "from" }
-                : null
-
-            // the blade where it starts, inside the ticks; in the fit too
-            fitExtraPositions: {
-                if (!canvasTool.drawn) return []
-                var pts = canvasTool.outlineFromTip, out = []
-                for (var i = 0; i < pts.length; i++)
-                    out.push({ x: root.startX + 2 * pts[i].y, z: root.bladeZ + pts[i].x })
-                return out
-            }
-            onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
-            CanvasTool {
-                id: canvasTool
-                inset: profileCanvas.tickBand
-                view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
-                pxPerMm: profileCanvas._scale
-                tipX: profileCanvas._cx(root.bladeZ)
-                tipY: profileCanvas._cy(root.startX)
-            }
-
-            Rectangle {
+            ProfileCanvas {
+                id: profileCanvas
+                showTransitions: false
+                // no axes: the origin alone marks Z0
+                showAxes: false
                 anchors.fill: parent
-                color: "transparent"
-                border.color: Theme.outline; border.width: Theme.hairline
-            }
+                // pinch and the buttons zoom, a drag pans, a double tap fits
+                selectable: false
+                // the backplot's step (glnav's zoomin / zoomout)
+                zoomStep: 1.1
+                // the blade and the stock whole, both halves
+                mirrorAcrossCenterline: true
+                // a dot at both ends of each arrow to a box
+                arrowStartDots: true
+                primitives: []
+                // the G-code's moves
+                roughingPreview: root.partingPreview
+                // the header's stock, as big as Start Ø, broken off after where it
+                // is parted - and its middle left out when that is far down it
+                workpiece: {
+                    var w = JSON.parse(JSON.stringify(root.workpiece || {}))
+                    if (root.stockDiameter > 0) w.external_diameter = root.stockDiameter
+                    w.break_after_z = root.zDrawn
+                    w.break_middle = root.middleBreak
+                    if (root.middleBreak) w.break_after_setback = root.breakSetback
+                    return w
+                }
+                axisBreak: root.middleBreak
 
-            // The boxes stack down the right edge, each as wide as it needs;
-            // the drawing is fitted into what the widest leaves free.
-            readonly property real boxWidth: Math.max(zPosBox.implicitWidth, xStartBox.implicitWidth,
-                                                      xFz2Box.implicitWidth, xEndBox.implicitWidth,
-                                                      edgeBreakBox.implicitWidth, clearanceBox.implicitWidth)
-            readonly property real boxGap: Theme.spacingLarge
-            fitInsetRight: boxWidth + boxGap
+                // where the dashed lines of the blade's path end: below, past
+                // where it starts; above, past the stock's outside - or, with
+                // the mirror off, at End Ø
+                readonly property real zLineBottom: Math.max(root.startX, 10) * 1.15
+                readonly property real zLineTop: mirrorAcrossCenterline ? -(root.stockDiameter + 4) : root.xEnd
+                // how far either side of the blade's middle the X lines reach,
+                // mm: xLinePast past each dashed line of its path
+                readonly property real xLinePast: 2
+                readonly property real xLineHalf: root.bladeWidth / 2 + xLinePast
+                markers: [
+                    // Z Position: across the centre line, past the blade's start
+                    // the blade's path: a dashed line either side of it - Z
+                    // Position on its right - from past where it starts, below,
+                    // to just past the stock's outside, above; with the mirror
+                    // off, to End Ø. The arrow to the Z Position box from the
+                    // right one, 2/3 of the radius above the centre line - with
+                    // the mirror off, from its top
+                    { line: true, z: root.zDrawn, bottom: zLineBottom, top: zLineTop, dash: [6, 3],
+                      arrowAt: profileCanvas.mirrorAcrossCenterline ? -root.stockDiameter * 2 / 3 : zLineTop,
+                      color: root.zPosColor, arrowToRect: zPosBox.rect },
+                    { line: true, z: root.zDrawn - root.bladeWidth, bottom: zLineBottom, top: zLineTop,
+                      dash: [6, 3], color: root.zPosColor },
+                    // where the blade starts: X Start + the clearance - past the
+                    // blade on the right twice as far as on the left, the
+                    // clearance dimensioned in the middle of that stretch
+                    { hline: true, x: root.startX, z: root.bladeZ, half: xLineHalf,
+                      halfRight: root.bladeWidth / 2 + 2 * xLinePast,
+                      color: root.clearanceColor },
+                    // Start Ø at the blade - dimensioned in front of the stock
+                    // (startDimension); with the mirror off, its arrow from here
+                    { hline: true, x: root.xStart, z: root.bladeZ, half: xLineHalf,
+                      color: root.xStartColor,
+                      arrowToRect: profileCanvas.mirrorAcrossCenterline ? null : xStartBox.rect },
+                    // Fz2 Ø at the blade, and its mirror - dimensioned in front of
+                    // the stock (fz2Dimension); with the mirror off, the lower one
+                    // alone, its arrow from here
+                    { hline: true, x: root.xFz2, z: root.bladeZ, half: xLineHalf,
+                      color: root.xFz2Color,
+                      arrowToRect: profileCanvas.mirrorAcrossCenterline ? null : xFz2Box.rect },
+                    { hline: true, x: -root.xFz2, z: root.bladeZ, half: xLineHalf, color: root.xFz2Color,
+                      visible: profileCanvas.mirrorAcrossCenterline },
+                    { hline: true, x: root.xEnd, z: root.bladeZ, half: xLineHalf,
+                      color: root.xEndColor },
+                    // the edge break on the part's corner, at Start Ø on Z
+                    // Position's side, and its mirror; what it takes off in red
+                    { blend: root.edgeBreak.blend_type, x: root.xStart, z: root.zDrawn,
+                      size: root.edgeBreak.blend_type === "fillet" ? root.edgeBreak.fillet_radius
+                                                                    : root.edgeBreak.chamfer_width,
+                      mirror: profileCanvas.mirrorAcrossCenterline,
+                      color: root.edgeBreakColor, fill: "#e53935" }
+                ]
+                // the clearance, between the X Start line and the blade's start
+                // line, its arrows outside them pointing in; its leader from the
+                // bottom end of the lower arrow to the X Clearance box
+                dimensions: (root.xClearance > 0
+                             ? [{ axis: "x", from: root.xStart, to: root.startX,
+                                  z: root.bladeZ + root.bladeWidth / 2 + xLinePast, offset: 0,
+                                  color: root.clearanceColor,
+                                  arrowToRect: clearanceBox.rect, arrowsOutside: true,
+                                  leaderFromOutsideEnd: "to" }]
+                             : []).concat(startDimension ? [startDimension] : [])
+                                     .concat(fz2Dimension ? [fz2Dimension] : [])
+                // Start Ø - the stock's - first in front of the stock, from -Ø to
+                // +Ø, at the middle of its extension lines out from the face; its
+                // leader from a dot above the centre line to the Start Ø box.
+                // Mirrored only
+                readonly property var startDimension: mirrorAcrossCenterline && root.xStart > 0
+                    ? { axis: "x", from: -root.xStart, to: root.xStart, z: 0, offset: 24,
+                        extensionsCentred: true,
+                        color: root.xStartColor, arrowToRect: xStartBox.rect, leaderAt: 0.25 }
+                    : null
+                // Fz2 Ø in front of the stock, past Start Ø, at the middle of its
+                // extension lines out from the face, its arrows outside them
+                // pointing in; its leader from the top end of the upper arrow to
+                // the Fz2 Ø box. Mirrored only
+                readonly property var fz2Dimension: mirrorAcrossCenterline && root.xFz2 > 0
+                    ? { axis: "x", from: -root.xFz2, to: root.xFz2, z: 0, offset: 48,
+                        extensionsCentred: true,
+                        color: root.xFz2Color,
+                        arrowToRect: xFz2Box.rect, arrowsOutside: true, leaderFromOutsideEnd: "from" }
+                    : null
 
-            // top to bottom: Z Position at the top, then Start, End and Fz2
-            // together, a gap apart; Clearance at the bottom.
-            // The position boxes as wide as each other
-            readonly property real positionBoxWidth: Math.max(zPosBox.implicitWidth, xStartBox.implicitWidth,
-                                                              xFz2Box.implicitWidth, xEndBox.implicitWidth)
-            // their labels as wide as the widest, so the fields line up
-            readonly property real positionLabelWidth: Math.max(zPosBox.labelImplicitWidth,
-                                                                xStartBox.labelImplicitWidth,
-                                                                xFz2Box.labelImplicitWidth,
-                                                                xEndBox.labelImplicitWidth)
-            readonly property real xGroupY: zPosBox.y + zPosBox.height + boxGap
+                // the blade where it starts, inside the ticks; in the fit too
+                fitExtraPositions: {
+                    if (!canvasTool.drawn) return []
+                    var pts = canvasTool.outlineFromTip, out = []
+                    for (var i = 0; i < pts.length; i++)
+                        out.push({ x: root.startX + 2 * pts[i].y, z: root.bladeZ + pts[i].x })
+                    return out
+                }
+                onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
+                CanvasTool {
+                    id: canvasTool
+                    inset: profileCanvas.tickBand
+                    view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
+                    pxPerMm: profileCanvas._scale
+                    tipX: profileCanvas._cx(root.bladeZ)
+                    tipY: profileCanvas._cy(root.startX)
+                }
 
-            ZPositionBox {
-                id: zPosBox
-                width: profileCanvas.positionBoxWidth
-                labelWidth: profileCanvas.positionLabelWidth
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.boxGap
-                accent: root.zPosColor
-                label: "Z Position"
-                settingName: "parting.z_pos"
-                value: root.zPos
-                onValueEdited: function(value) { root.editParting({ z_pos: value }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                Rectangle {
+                    anchors.fill: parent
+                    color: "transparent"
+                    border.color: Theme.outline; border.width: Theme.hairline
+                }
 
-            ZPositionBox {
-                id: xStartBox
-                width: profileCanvas.positionBoxWidth
-                labelWidth: profileCanvas.positionLabelWidth
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.xGroupY
-                axis: "x"
-                accent: root.xStartColor
-                label: "Start \u00d8"
-                settingName: "parting.x_start"
-                value: root.xStart
-                onValueEdited: function(value) { root.editParting({ x_start: value }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                // The boxes stack down the right edge, each as wide as it needs;
+                // the drawing is fitted into what the widest leaves free.
+                readonly property real boxWidth: Math.max(zPosBox.implicitWidth, xStartBox.implicitWidth,
+                                                          xFz2Box.implicitWidth, xEndBox.implicitWidth,
+                                                          edgeBreakBox.implicitWidth, clearanceBox.implicitWidth)
+                readonly property real boxGap: Theme.spacingLarge
+                fitInsetRight: boxWidth + boxGap
 
-            // where the second feed rate takes over
-            ZPositionBox {
-                id: xFz2Box
-                width: profileCanvas.positionBoxWidth
-                labelWidth: profileCanvas.positionLabelWidth
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: xEndBox.y + xEndBox.height + profileCanvas.boxGap
-                axis: "x"
-                accent: root.xFz2Color
-                label: "Fz2 \u00d8"
-                settingName: "parting.second_feed_x_pos"
-                value: root.xFz2
-                onValueEdited: function(value) { root.editParting({ second_feed_x_pos: value }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                // top to bottom: Z Position at the top, then Start, End and Fz2
+                // together, a gap apart; Clearance at the bottom.
+                // The position boxes as wide as each other
+                readonly property real positionBoxWidth: Math.max(zPosBox.implicitWidth, xStartBox.implicitWidth,
+                                                                  xFz2Box.implicitWidth, xEndBox.implicitWidth)
+                // their labels as wide as the widest, so the fields line up
+                readonly property real positionLabelWidth: Math.max(zPosBox.labelImplicitWidth,
+                                                                    xStartBox.labelImplicitWidth,
+                                                                    xFz2Box.labelImplicitWidth,
+                                                                    xEndBox.labelImplicitWidth)
+                readonly property real xGroupY: zPosBox.y + zPosBox.height + boxGap
 
-            ZPositionBox {
-                id: xEndBox
-                width: profileCanvas.positionBoxWidth
-                labelWidth: profileCanvas.positionLabelWidth
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: xStartBox.y + xStartBox.height + profileCanvas.boxGap
-                axis: "x"
-                accent: root.xEndColor
-                label: "End \u00d8"
-                settingName: "parting.x_end"
-                value: root.xEnd
-                onValueEdited: function(value) { root.editParting({ x_end: value }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                ZPositionBox {
+                    id: zPosBox
+                    width: profileCanvas.positionBoxWidth
+                    labelWidth: profileCanvas.positionLabelWidth
+                    x: profileCanvas.width - width - profileCanvas.boxGap
+                    y: profileCanvas.boxGap
+                    accent: root.zPosColor
+                    label: "Z Position"
+                    settingName: "parting.z_pos"
+                    value: root.zPos
+                    onValueEdited: function(value) { root.editParting({ z_pos: value }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
 
-            // the edge break, at the bottom
-            EdgeBreakBox {
-                id: edgeBreakBox
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: profileCanvas.height - height - profileCanvas.boxGap
-                color: root.edgeBreakColor
-                blendType: root.edgeBreak.blend_type
-                chamferWidth: root.edgeBreak.chamfer_width
-                filletRadius: root.edgeBreak.fillet_radius
-                onEdited: function(edgeBreak) { root.editor.edit({ edge_break: edgeBreak }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                ZPositionBox {
+                    id: xStartBox
+                    width: profileCanvas.positionBoxWidth
+                    labelWidth: profileCanvas.positionLabelWidth
+                    x: profileCanvas.width - width - profileCanvas.boxGap
+                    y: profileCanvas.xGroupY
+                    axis: "x"
+                    accent: root.xStartColor
+                    label: "Start \u00d8"
+                    settingName: "parting.x_start"
+                    value: root.xStart
+                    onValueEdited: function(value) { root.editParting({ x_start: value }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
 
-            // just above the edge break
-            DimensionBox {
-                id: clearanceBox
-                x: profileCanvas.width - width - profileCanvas.boxGap
-                y: edgeBreakBox.y - height - profileCanvas.boxGap
-                label: "Clearance"
-                dimensionColor: root.clearanceColor
-                settingName: "parting.x_clearance"
-                value: root.xClearance
-                onValueEdited: function(value) { root.editParting({ x_clearance: Math.abs(value) }) }
-                onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
-            }
+                // where the second feed rate takes over
+                ZPositionBox {
+                    id: xFz2Box
+                    width: profileCanvas.positionBoxWidth
+                    labelWidth: profileCanvas.positionLabelWidth
+                    x: profileCanvas.width - width - profileCanvas.boxGap
+                    y: xEndBox.y + xEndBox.height + profileCanvas.boxGap
+                    axis: "x"
+                    accent: root.xFz2Color
+                    label: "Fz2 \u00d8"
+                    settingName: "parting.second_feed_x_pos"
+                    value: root.xFz2
+                    onValueEdited: function(value) { root.editParting({ second_feed_x_pos: value }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
 
-            // the tool it parts with, at the top, in the middle; tapped, to
-            // pick it - only a parting blade
-            OperationToolBox {
-                editor: root.editor
-                pickerWidth: root.width
-                x: (profileCanvas.width - width) / 2
-                // lined up with the view buttons, as tall as they are
-                y: viewButtons.y
-                rowHeight: viewButtons.height
-            }
+                ZPositionBox {
+                    id: xEndBox
+                    width: profileCanvas.positionBoxWidth
+                    labelWidth: profileCanvas.positionLabelWidth
+                    x: profileCanvas.width - width - profileCanvas.boxGap
+                    y: xStartBox.y + xStartBox.height + profileCanvas.boxGap
+                    axis: "x"
+                    accent: root.xEndColor
+                    label: "End \u00d8"
+                    settingName: "parting.x_end"
+                    value: root.xEnd
+                    onValueEdited: function(value) { root.editParting({ x_end: value }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
 
-            // zoom, fit to screen and mirror - top-left, as on every profile canvas
-            CanvasViewButtons {
-                id: viewButtons
-                canvas: profileCanvas
+                // the edge break, at the bottom
+                EdgeBreakBox {
+                    id: edgeBreakBox
+                    x: profileCanvas.width - width - profileCanvas.boxGap
+                    y: profileCanvas.height - height - profileCanvas.boxGap
+                    color: root.edgeBreakColor
+                    blendType: root.edgeBreak.blend_type
+                    chamferWidth: root.edgeBreak.chamfer_width
+                    filletRadius: root.edgeBreak.fillet_radius
+                    onEdited: function(edgeBreak) { root.editor.edit({ edge_break: edgeBreak }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
+
+                // just above the edge break
+                DimensionBox {
+                    id: clearanceBox
+                    x: profileCanvas.width - width - profileCanvas.boxGap
+                    y: edgeBreakBox.y - height - profileCanvas.boxGap
+                    label: "Clearance"
+                    dimensionColor: root.clearanceColor
+                    settingName: "parting.x_clearance"
+                    value: root.xClearance
+                    onValueEdited: function(value) { root.editParting({ x_clearance: Math.abs(value) }) }
+                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                }
+
+                // the tool it parts with, at the top, in the middle; tapped, to
+                // pick it - only a parting blade
+                OperationToolBox {
+                    editor: root.editor
+                    pickerWidth: root.width
+                    x: (profileCanvas.width - width) / 2
+                    // lined up with the view buttons, as tall as they are
+                    y: viewButtons.y
+                    rowHeight: viewButtons.height
+                }
+
+                // zoom, fit to screen and mirror - top-left, as on every profile canvas
+                CanvasViewButtons {
+                    id: viewButtons
+                    canvas: profileCanvas
+                }
             }
         }
     }
