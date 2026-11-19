@@ -63,11 +63,13 @@ def parse_profile_roughing_config(cut: ProfileCut) -> ProfileRoughingConfig:
     )
 
 
-def profile_roughing_toolpath(cut: ProfileCut, path: GcodeEmitter):
+def profile_roughing_toolpath(cut: ProfileCut, path: GcodeEmitter, return_to_start: bool = False):
     """The G-code of a Profile Roughing onto ``path``: the moves of its
     tool-aware plan (plan_profile_roughing) as the machine makes them -
     compensated for the insert's nose, every one checked against the part
-    and what is left of the stock. The profile canvas draws the same plan."""
+    and what is left of the stock. The profile canvas draws the same plan.
+    ``return_to_start``: then back to its start point (write_home) - nothing
+    follows it."""
     op = cut.op
     config = parse_profile_roughing_config(cut)
 
@@ -82,7 +84,8 @@ def profile_roughing_toolpath(cut: ProfileCut, path: GcodeEmitter):
         return
 
     write_plan(path, plan, (config.stock_x, config.stock_z), op.m1Parameters,
-               title=f"(---Profiling Type: {_pass_type_label(config.pass_type)}---)")
+               title=f"(---Profiling Type: {_pass_type_label(config.pass_type)}---)",
+               return_to_start=return_to_start)
 
 
 def generate_profile_roughing_gcode(cut: ProfileCut):
@@ -109,6 +112,7 @@ def _planned_config(cut: ProfileCut) -> ProfileRoughingConfig:
         source_config = parse_profile_roughing_config(dataclasses.replace(cut, op=cut.source))
         config = dataclasses.replace(
             config, x_start=source_config.x_start, z_start=source_config.z_start,
+            start_point=source_config.start_point,
             stock_x=source_config.stock_x, stock_z=source_config.stock_z)
     return config
 
@@ -123,7 +127,7 @@ def roughing_plan_key(cut: ProfileCut) -> str:
     rest = bool(getattr(cut.op, "restMaterial", False))
     return plan_key(
         setup=[config.x_start, config.z_start, config.doc, config.retract, config.stock_x, config.stock_z,
-               config.profiling_type.value, config.pass_type.value, _diagonal_angle()],
+               config.profiling_type.value, config.pass_type.value, _diagonal_angle(), config.start_point],
         **profile_and_tool_key(cut),
         stock=cut.stock.key() if cut.stock is not None else None,
         rest=[cut.source is not None, cut.last_nose_radius] if rest else None,
@@ -169,7 +173,7 @@ def _plan(cut: ProfileCut):
         x_start=config.x_start, z_start=config.z_start, doc=config.doc,
         retract=config.retract, stock_x=config.stock_x, stock_z=config.stock_z,
         profiling_type=config.profiling_type, pass_type=config.pass_type,
-        diagonal_angle=_diagonal_angle())
+        diagonal_angle=_diagonal_angle(), start_point=config.start_point)
     tool = resolve_tool_shape(cut)
     if rest and tool is None:
         plan = plan_leftover(setup, path, cut.last_nose_radius, air_before=air)

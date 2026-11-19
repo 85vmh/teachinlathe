@@ -14,7 +14,7 @@ from __future__ import annotations
 import dataclasses
 import logging
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 from teachinlathe.conversational.model.data_types import (
     BlendType, DefineProfile, DefineRadialProfile, GrooveBidirectional, GrooveFinishing, GrooveRoughing, LineTo,
@@ -24,6 +24,7 @@ from teachinlathe.conversational.model.data_types import (
 )
 from teachinlathe.tooling.model.data_types import CuttingTool, MountedTool
 
+from ...config import retract_of
 from .geometry import StartPoint, build_path
 from .profile_grooves import expanded_primitives
 
@@ -183,6 +184,23 @@ def profiling_type(cut: ProfileCut, strategy_type: ProfilingType) -> ProfilingTy
     return cut.profile.profile_type if cut.profile is not None else ProfilingType(strategy_type)
 
 
+def turning_start_point(op: Turning) -> Tuple[float, float]:
+    """Where a Turning places the tool before it starts and after it is done,
+    (X, a diameter, Z): P1 with the tool clearance out on both axes - on the
+    radius along X."""
+    geometry = op.geometryParameters
+    return roughing_start_point(geometry.xStart, geometry.zStart, op.cuttingParameters.toolClearance, False)
+
+
+def roughing_start_point(x_start: float, z_start: float, clearance: float, is_id: bool) -> Tuple[float, float]:
+    """Where a Profile Roughing places the tool before it starts and after it
+    is done, (X, a diameter, Z): P1 - X Start, Z Start - with the tool
+    clearance out on both axes, on the radius along X: toward the axis for ID."""
+    clearance = abs(float(clearance))
+    x = float(x_start) - 2 * clearance if is_id else float(x_start) + 2 * clearance
+    return x, float(z_start) + clearance
+
+
 def common_config(cut: ProfileCut, strategy_type: ProfilingType) -> dict:
     """The fields both operations' configs have, but the stock to leave:
     where they start, how deep and how far back, the feed, which side, and
@@ -197,16 +215,20 @@ def common_config(cut: ProfileCut, strategy_type: ProfilingType) -> dict:
         )
     if isinstance(op, Turning):
         geometry, cutting = op.geometryParameters, op.cuttingParameters
+        # the material from P1X, the passes from P1Z plus the tool clearance;
+        # the tool placed - before and after - at P1 plus the tool clearance
+        start_point = turning_start_point(op)
         return dict(
-            x_start=float(geometry.xStart) + 2 * float(cutting.toolClearance),
-            z_start=float(geometry.zStart) + float(cutting.toolClearance),
+            x_start=float(geometry.xStart),
+            z_start=start_point[1],
+            start_point=start_point,
             doc=float(cutting.ap),
-            retract=float(cutting.ap) / 2,
+            retract=retract_of("turning", cutting.ap),
             feed_rate=op.speedsAndFeeds.feed,
             profiling_type=ProfilingType.OD,
             optional_prefix="/" if op.is_optional_block else "",
         )
-    return dict(
+    config = dict(
         x_start=float(op.profilingParameters.xStart),
         z_start=float(op.profilingParameters.zStart),
         doc=float(op.cuttingParameters.doc),
@@ -215,6 +237,18 @@ def common_config(cut: ProfileCut, strategy_type: ProfilingType) -> dict:
         profiling_type=profiling_type(cut, strategy_type),
         optional_prefix="/" if op.is_optional_block else "",
     )
+    if isinstance(op, ProfileRoughing):
+        # the material and the passes from P1; the tool placed - before and
+        # after - at P1 plus the tool clearance (the operation's ``retract``)
+        # on both axes; off each cut by its part of Ap (config.RETRACT_OF_AP).
+        # Not the passes from P1Z plus the clearance, as Turning's: the 45°
+        # passes are laid from P1, a sliver of a pass at the face otherwise
+        config.update(
+            start_point=roughing_start_point(config["x_start"], config["z_start"], config["retract"],
+                                             config["profiling_type"] == ProfilingType.ID),
+            retract=retract_of("profileRoughing", config["doc"]),
+        )
+    return config
 
 
 def profile_and_tool_key(cut: ProfileCut) -> dict:

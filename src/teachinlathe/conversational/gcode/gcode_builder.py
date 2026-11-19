@@ -224,6 +224,9 @@ def program_toolpath(program: Program, tools, program_name: str = "") -> GcodeEm
     path.blank()
 
     operations = program.operations
+    # the operations nothing follows with the same tool: they go back to
+    # their start point when they are done (a Profile Roughing / Contour, Turning)
+    tool_done = _tool_done_after(program)
     # the current loaded tool so far; 0 before the first tool change
     loaded_tool = 0
     for index, op in enumerate(operations, 1):
@@ -249,7 +252,7 @@ def program_toolpath(program: Program, tools, program_name: str = "") -> GcodeEm
             loaded_tool = tool.tool_holder_id
 
         with path.operation(index - 1, bool(op.is_optional_block), loaded_tool):
-            _write_operation(path, op, program, index - 1, tools)
+            _write_operation(path, op, program, index - 1, tools, last=index - 1 in tool_done)
         path.stock.add(path.operations[-1])
         path.blank()
     path.blank()
@@ -263,53 +266,74 @@ def program_toolpath(program: Program, tools, program_name: str = "") -> GcodeEm
     return path
 
 
-def _write_operation(path, op, program, op_index, tools):
+#: Operations that move nothing: what follows them is what follows the one before.
+_MOVES_NOTHING = (DefineProfile, DefineRadialProfile)          # ImportDxfProfile is a DefineProfile
+
+
+def _tool_done_after(program):
+    """The indexes of the operations nothing follows with the same tool: the
+    last one that moves, and each one the next that moves cuts with another
+    tool after - a Position At, with no tool of its own, moves with this one."""
+    moving = [(i, op) for i, op in enumerate(program.operations)
+              if bool(op.generate_gcode) and not isinstance(op, _MOVES_NOTHING)]
+    done = {moving[-1][0]} if moving else set()
+    for (i, op), (_j, following) in zip(moving, moving[1:]):
+        if program_tools.needs_tool(following) and _holder_of(program, following) != _holder_of(program, op):
+            done.add(i)
+    return done
+
+
+def _write_operation(path, op, program, op_index, tools, last=False):
     """Operation ``op``, at ``op_index`` of ``program``, onto ``path``, by
-    the writer of its class (_WRITERS); its tools looked up in ``tools``."""
+    the writer of its class (_WRITERS); its tools looked up in ``tools``.
+    ``last``: nothing follows it with the same tool."""
     writer = _WRITERS.get(type(op))
     if writer is None:
         path.foreign([_format_comment(f"TODO: no G-code for {type(op).__name__}")])
         return
-    writer(path, op, program, op_index, tools)
+    writer(path, op, program, op_index, tools, return_to_start=last)
 
 
 # ── how each operation is written onto the program's emitter ───────────────
-# Every writer is (path, op, program, op_index, tools). An operation whose generator
-# is on the emitter writes its moves onto it; the others give their lines,
-# which the emitter takes as they are (GcodeEmitter.foreign).
+# Every writer is (path, op, program, op_index, tools, return_to_start):
+# return_to_start, nothing follows it with the same tool - for those that go
+# back to their start point then (a Profile Roughing / Contour, Turning). An
+# operation whose generator is on the emitter writes its moves onto it; the
+# others give their lines, which the emitter takes as they are
+# (GcodeEmitter.foreign).
 
 def _on_emitter(toolpath):
     """For a generator on the emitter: toolpath(op, path, program)."""
-    return lambda path, op, program, op_index, tools: toolpath(op, path, program)
+    return lambda path, op, program, op_index, tools, return_to_start=False: toolpath(op, path, program)
 
 
 def _lines(generator):
     """For a generator of lines from the operation alone."""
-    return lambda path, op, program, op_index, tools: path.foreign(generator(op))
+    return lambda path, op, program, op_index, tools, return_to_start=False: path.foreign(generator(op))
 
 
 def _cut_on_emitter(toolpath):
     """For a Profile Roughing's or Contour's generator on the emitter, from
     what it is cut against in the program (a ProfileCut): toolpath(cut, path)."""
     from .operations.profiling.operation_input import profile_cut
-    return lambda path, op, program, op_index, tools: toolpath(
-        profile_cut(program, op_index, op, tools, path.stock.before(path.z_origin)), path)
+    return lambda path, op, program, op_index, tools, return_to_start=False: toolpath(
+        profile_cut(program, op_index, op, tools, path.stock.before(path.z_origin)), path, return_to_start)
 
 
 def _groove_on_emitter(toolpath):
     """For a Groove Roughing's or Finishing's generator on the emitter, from
     what it is cut against in the program (a GrooveCut): toolpath(cut, path)."""
     from .operations.profiling.operation_input import groove_cut
-    return lambda path, op, program, op_index, tools: toolpath(
+    return lambda path, op, program, op_index, tools, return_to_start=False: toolpath(
         groove_cut(program, op_index, op, tools, path.stock.before(path.z_origin)), path)
 
 
-def _write_tapping(path, op, program, op_index, tools):
+def _write_tapping(path, op, program, op_index, tools, return_to_start=False):
     # the tap's pitch, from the tool
     tapping_toolpath(op, path, _resolve_tap_pitch(program, op, tools))
 
 
-def _write_define_profile(path, op, program, op_index, tools):
+def _write_define_profile(path, op, program, op_index, tools, return_to_start=False):
     # a profile G70/G71 cuts is a subroutine of the program; any other is
     # drawn by the operations that cut it
     if _define_profile_needs_subroutine(int(op.profile_id or 0), program.operations):
@@ -318,7 +342,7 @@ def _write_define_profile(path, op, program, op_index, tools):
         path.code("; The profile is stored in the .json file.")
 
 
-def _write_radial_profile(path, op, program, op_index, tools):
+def _write_radial_profile(path, op, program, op_index, tools, return_to_start=False):
     path.code("; The profile is stored in the .json file.")
 
 

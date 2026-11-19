@@ -42,7 +42,7 @@ class DiagonalPasses:
         z_min, r_min = self._z_min(), self._r_min()
         r_limit = min(r for _z, r in self.profile) + self.setup.stock_x
         span = max(self.r_start - r_min, self.z_start - z_min)
-        position = self._start_at((self.z_start + ret, self.r_safe))
+        position = self._start_at(self.start_point)
         toward_x_start = self.setup.pass_type == PassType.DIAGONAL_INTERIOR
         off_face, off_start = self._diagonal_off_face, self._diagonal_off_start
 
@@ -118,7 +118,7 @@ class DiagonalPasses:
             return False
         toward_x_start = self.setup.pass_type == PassType.DIAGONAL_INTERIOR
         walk = self._edge_walk(chain, toward_x_start)
-        position = self._start_at((self.z_start + self.retract, self.r_safe))
+        position = self._start_at(self.start_point)
         if toward_x_start:
             return self._walk_toward_x_start(walk, position)
         return self._walk_toward_profile(walk, position)

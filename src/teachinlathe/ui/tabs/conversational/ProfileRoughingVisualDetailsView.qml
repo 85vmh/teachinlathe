@@ -43,6 +43,10 @@ Item {
     readonly property real stockAxial: Number(_st.axial || 0)
     readonly property real doc: Number(_cp.doc || 0)
     readonly property real retract: Number(_cp.retract || 0)
+    // where the tool stands before and after: P1 plus the tool clearance
+    readonly property var _toolStart: editor.toolStart
+    readonly property real toolX: Number(_toolStart.x)
+    readonly property real toolZ: Number(_toolStart.z)
     readonly property string passType: op.profile_roughing_strategy && op.profile_roughing_strategy.pass_type
                                        ? String(op.profile_roughing_strategy.pass_type) : "axial"
     readonly property bool isIdProfile: String(profileType).toLowerCase() === "id"
@@ -134,7 +138,7 @@ Item {
                 if (!canvasTool.drawn) return []
                 var pts = canvasTool.outlineFromTip, out = []
                 for (var i = 0; i < pts.length; i++)
-                    out.push({ x: root.xStart + 2 * pts[i].y, z: root.zStart + pts[i].x })
+                    out.push({ x: root.toolX + 2 * pts[i].y, z: root.toolZ + pts[i].x })
                 return out
             }
             onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
@@ -143,8 +147,8 @@ Item {
                 inset: profileCanvas.tickBand
                 view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
                 pxPerMm: profileCanvas._scale
-                tipX: profileCanvas._cx(root.zStart)
-                tipY: profileCanvas._cy(root.xStart)
+                tipX: profileCanvas._cx(root.toolZ)
+                tipY: profileCanvas._cy(root.toolX)
             }
 
             // What the plan could not do - a tool that cannot reach a pocket,

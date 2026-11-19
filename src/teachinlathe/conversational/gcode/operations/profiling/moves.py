@@ -112,12 +112,24 @@ class Moves:
         return here
 
     def _lift(self, a: Pt) -> Pt:
-        """Straight out to the safe diameter, the way a pass leaves; toward
-        the face first when that is in the way."""
+        """Straight out to the safe diameter, the way a pass leaves; when
+        that is in the way, off by the retract toward the face first, then
+        out - or, failing that, toward the face all the way first. Already
+        out there or further - over a shoulder - it stays where it is."""
+        if a[1] >= self.r_safe:
+            return a
         safe = (a[0], self.r_safe)
         if not self._rapid_clear(a, safe):
             front = (self.z_start + self.retract, a[1])
-            if self._rapid_clear(a, front):
+            off = (min(self._off_face(a)[0], front[0]), a[1])
+            off_safe = (off[0], self.r_safe)
+            # off toward the face is the start of the way to the front: not
+            # clear, neither is that
+            off_clear = off != a and self._rapid_clear(a, off)
+            if off_clear and self._rapid_clear(off, off_safe):
+                self._add(a, off, False)
+                a, safe = off, off_safe
+            elif off_clear and off != front and self._rapid_clear(a, front):
                 self._add(a, front, False)
                 a, safe = front, (front[0], self.r_safe)
             else:

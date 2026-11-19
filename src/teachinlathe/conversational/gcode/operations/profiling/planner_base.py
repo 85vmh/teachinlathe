@@ -9,6 +9,7 @@ from typing import List, Optional, Tuple
 from shapely.affinity import translate
 from shapely.geometry import LineString, MultiPoint, Point, Polygon, box
 from shapely.ops import unary_union
+from shapely.prepared import prep
 from teachinlathe.conversational.model.data_types import PassType, ProfilingType
 
 from .geometry import ROUNDING
@@ -41,6 +42,12 @@ class PlannerBase:
         self.z_start = setup.z_start
         self.r_start = self.sign * setup.x_start / 2.0       # mirrored frame
         self.r_safe = self.r_start + self.retract
+        #: where the tool is placed before it starts and after it is done
+        if setup.start_point is None:
+            self.start_point: Pt = (self.z_start + self.retract, self.r_safe)
+        else:
+            x, z = setup.start_point
+            self.start_point = (z, self.sign * x / 2.0)
 
         points = [self._m(p) for p in path_points(profile_path)]
         if points[0][0] < points[-1][0]:
@@ -61,6 +68,8 @@ class PlannerBase:
         # what touching is allowed and overlapping is not: rounding aside
         self.part_inside = self.part.buffer(-TOLERANCE)
         self.part_allow_inside = self.part_allow.buffer(-TOLERANCE)
+        # what a drawn line is tested against, again and again
+        self._part_allow_inside_prepared = prep(self.part_allow_inside)
 
         known_air = air_before is not None and not air_before.is_empty
         if stock_before is None:
@@ -238,7 +247,7 @@ class PlannerBase:
         if not self.tool.known:
             self.warnings.append("No turning tool chosen: the contour keeps to what "
                                  "any tool reaches, pockets and undercuts bridged")
-        self.position = self._start_at((self.z_start + self.retract, self.r_safe))
+        self.position = self._start_at(self.start_point)
         self._contour(self._contour_chain())
         return self._result()
 
@@ -260,6 +269,14 @@ class PlannerBase:
     def _label(self, p: Pt) -> str:
         return f"X{2 * self.sign * p[1]:.3f} Z{p[0]:.3f}"
 
+    def _at_end_face(self, piece) -> bool:
+        """Whether ``piece`` lies against the end of what is planned, over the
+        profile's last diameter: the bar's face behind the profile - what the
+        passes' leaning edges leave there - not the part's to cut."""
+        r_last = self.profile[-1][1] + self.setup.stock_x
+        return (piece.bounds[0] <= self.z_end_limit + TOLERANCE
+                and piece.bounds[1] >= r_last - TOLERANCE)
+
     def _worth_cutting(self, piece) -> bool:
         """Whether a piece of what is left is left for another tool: not in
         front of the face (facing's), not a sliver nor the corner a nose
@@ -268,10 +285,31 @@ class PlannerBase:
             return False
         if piece.bounds[0] >= self.profile[0][0] - TOLERANCE:
             return False
+        if self._at_end_face(piece):
+            return False
         sliver = max(self.tool.nose_radius if self.tool.known else 0.0, self.sliver_radius)
         return not piece.buffer(-max(MIN_SLIVER, sliver / 2)).is_empty
 
+    def _home(self):
+        """The way back to the start point from where the plan leaves the
+        tool, out along X to its diameter first, then along Z - along Z
+        first, then X, with home_z_first: (moves, why it is blocked - "" when
+        it is not)."""
+        if self.position is None:
+            return [], ""
+        start = self.start_point
+        route = (self._x_then_z(start, self.position)[::-1] if self.setup.home_z_first
+                 else self._x_then_z(self.position, start))
+        legs = [(a, b) for a, b in zip(route, route[1:]) if math.hypot(b[0] - a[0], b[1] - a[1]) >= ROUNDING]
+        for a, b in legs:
+            if not self._rapid_clear(a, b):
+                return [], (f"no clear way back to the start point: "
+                            f"{self._label(a)} to {self._label(b)} goes through material")
+        return [Move(a[0], self.sign * a[1], b[0], self.sign * b[1], False) for a, b in legs], ""
+
     def _result(self) -> RoughingPlan:
+        self._join_drawn()
+        home, home_blocked = self._home()
         remaining = self.remaining
         residual = []
         for piece in getattr(remaining, "geoms", [remaining]):
@@ -287,4 +325,6 @@ class PlannerBase:
             to_remove=_mirror(self.to_remove) if self.is_id else self.to_remove,
             tool=self.tool,
             warnings=self.warnings,
+            home=home,
+            home_blocked=home_blocked,
         )

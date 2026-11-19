@@ -229,6 +229,24 @@ def test_no_line_the_canvas_draws_goes_into_the_stock_to_leave(profile, pass_typ
     assert deep == []
 
 
+@pytest.mark.parametrize("profile,pass_type", [(p, t) for p, t in ALL_CASES if t in ("axial", "radial")])
+def test_what_the_canvas_draws_is_joined_up(profile, pass_type):
+    """Each line drawn from where the one before is drawn to end - a retract
+    from the end of the cut it leaves, as drawn, not from the control point -
+    the contour's stretches aside, which are joined among themselves."""
+    _op, plan, _planner, _s = planned(profile, pass_type)
+
+    before = None
+    for m in plan.moves:
+        z0, r0, z1, r1 = m.drawn or (m.z0, m.r0, m.z1, m.r1)
+        if (m.z0, m.r0) == (m.z1, m.r1):
+            before = (z1, r1)
+            continue
+        if before is not None and not m.contour:
+            assert math.hypot(z0 - before[0], r0 - before[1]) < 0.01, m
+        before = (z1, r1)
+
+
 @pytest.mark.parametrize("profile,pass_type", ALL_CASES)
 def test_the_contour_is_drawn_parallel_to_where_the_machine_moves(profile, pass_type):
     """Each stretch of the contour drawn parallel to its own - a wall the tool
@@ -308,16 +326,21 @@ def test_45_degree_passes_cover_a_groove_the_same_either_way():
 # ── how the tool gets about ─────────────────────────────────────────────────
 
 @pytest.mark.parametrize("profile,pass_type", ID_CASES)
-def test_id_rapids_move_one_axis_at_a_time(profile, pass_type):
+def test_id_rapids_move_one_axis_at_a_time_but_off_a_cut(profile, pass_type):
     """For ID along X first, then along Z, never both at once - but for the
-    way back alongside a 45° pass, a retract off it."""
-    _op, plan, _planner, _s = planned(profile, pass_type)
+    retract off a cut, at 45° as for OD, and the way back alongside a 45°
+    pass."""
+    _op, plan, planner, _s = planned(profile, pass_type)
 
-    slanted = [m for m in plan.moves if not m.feed and _slanted(m)]
-    if pass_type in DIAGONAL:
-        assert all(_at_diagonal_angle(m) for m in slanted)
-    else:
-        assert slanted == []
+    for i, m in enumerate(plan.moves):
+        if m.feed or not _slanted(m):
+            continue
+        if pass_type in DIAGONAL and _at_diagonal_angle(m):
+            continue
+        before = plan.moves[i - 1]
+        assert before.feed and (before.z1, before.r1) == (m.z0, m.r0), m
+        assert abs(m.z1 - m.z0) == pytest.approx(planner.retract)
+        assert abs(m.r1 - m.r0) == pytest.approx(planner.retract)
 
 
 @pytest.mark.parametrize("profile,pass_type", ID_CASES)
@@ -356,13 +379,33 @@ def test_the_last_contour_runs_the_way_the_strategy_has_it(profile, pass_type):
 
 
 @pytest.mark.parametrize("profile,pass_type", [(p, t) for p, t in ALL_CASES if t in ("axial", "radial")])
-def test_axial_and_radial_passes_go_on_along_the_profile_to_the_pass_before(profile, pass_type):
-    """A pass that ends on the profile does not leave the step to the pass
-    before for the contour at the end: it goes on along the profile."""
-    _op, plan, _planner, _s = planned(profile, pass_type)
-    last = max(m.pass_no for m in plan.moves if m.contour)
+def test_axial_and_radial_passes_leave_at_45_degrees_and_go_back_to_the_start(profile, pass_type):
+    """Off a pass at 45° by the retract - away from the cut, for ID as for OD -
+    then back along the pass's axis to the start point's, at the level just
+    cut plus the retract: not up along the profile to the pass before, which
+    is left to the contour - but where the profile is in the way of the 45°."""
+    _op, plan, planner, _s = planned(profile, pass_type)
+    ret = planner.retract
+    axial = pass_type == "axial"
+    # the axis a pass runs along, and the start point's place on it
+    u = 0 if axial else 1
+    u_back = max(planner.start_point[u], planner.z_start if axial else planner.r_start)
 
-    assert any(m.contour and m.pass_no < last for m in plan.moves)
+    passes = 0
+    moves = plan.moves
+    for i, m in enumerate(moves[:-2]):
+        if not m.feed or m.contour or m.pocket or moves[i + 1].feed:
+            continue
+        off, back = moves[i + 1], moves[i + 2]
+        a = _mirrored(planner, off.z0, off.r0)
+        b = _mirrored(planner, off.z1, off.r1)
+        assert (b[0] - a[0], b[1] - a[1]) == (pytest.approx(ret), pytest.approx(ret)), off
+        c = _mirrored(planner, back.z1, back.r1)
+        assert c[u] == pytest.approx(u_back), back
+        assert c[1 - u] == pytest.approx(b[1 - u]), back
+        passes += 1
+
+    assert passes >= 3
 
 
 # ── the G-code and the preview: the plan ────────────────────────────────────

@@ -11,9 +11,10 @@ from ...toolpath import GcodeEmitter, comment
 from .geometry import DEGENERATE, ROUNDING
 
 
-def write_plan(path: GcodeEmitter, plan, stock, m1_params=None, title=None):
+def write_plan(path: GcodeEmitter, plan, stock, m1_params=None, title=None, return_to_start=False):
     """``plan``'s G-code onto ``path``: the tool it was planned for, its
-    warnings, ``title`` (a comment line, as it is) and its moves (emit_moves)."""
+    warnings, ``title`` (a comment line, as it is) and its moves (emit_moves);
+    with ``return_to_start``, then back to its start point (plan.home)."""
     if plan.tool is not None and plan.tool.known:
         path.note(comment(f"Planned for {plan.tool.label}, nose R{fmt(plan.tool.nose_radius)}"))
     for warning in plan.warnings:
@@ -24,6 +25,23 @@ def write_plan(path: GcodeEmitter, plan, stock, m1_params=None, title=None):
         path.note(comment(f"StockToLeave[radial={fmt(stock[0])} "
                           f"axial={fmt(stock[1])}]"))
     emit_moves(path, plan.moves, stock, m1_params)
+    if return_to_start:
+        write_home(path, plan)
+
+
+def write_home(path: GcodeEmitter, plan):
+    """Back to ``plan``'s start point from where it leaves the tool - out
+    along X, then along Z, the spindle still running - or, when that is not
+    clear, a comment that says so and the tool left where it is."""
+    if plan.home_blocked:
+        path.note(comment(plan.home_blocked))
+        return
+    if not plan.home:
+        return
+    path.note(comment("back to the start point"))
+    for move in plan.home:
+        path.rapid(2 * move.r1, move.z1)
+    path.blank()
 
 
 def emit_moves(path: GcodeEmitter, moves, stock, m1_params=None):

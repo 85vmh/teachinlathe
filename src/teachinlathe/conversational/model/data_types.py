@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, ClassVar, Dict, List, Optional, Type
+from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type
 
 from teachinlathe.tooling.model.data_types import SpindleDirection
 
@@ -2382,6 +2382,9 @@ class ProfileRoughingConfig:
     profiling_type: ProfilingType
     pass_type: PassType
     optional_prefix: str
+    #: where the tool is placed before it starts and after it is done, (X,
+    #: a diameter, Z); None: the retract out from X Start and Z Start
+    start_point: Optional[Tuple[float, float]] = None
 
 
 @dataclass(frozen=True)

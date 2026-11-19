@@ -14,7 +14,8 @@ class FinalContour:
     def _contour_approach(self, chain) -> Pt:
         if not chain:
             return (self.z_start + self.retract, self.r_safe)
-        approach = (self.z_start + self.retract, chain[0][1])
+        # in front at the start point's Z - the retract out, with none given
+        approach = (max(self.start_point[0], self.z_start), chain[0][1])
         if approach[0] < chain[0][0]:
             approach = (chain[0][0] + self.retract, chain[0][1])
         return approach
@@ -45,12 +46,18 @@ class FinalContour:
                          approach[1] + drawn[0][0][1] - chain[0][1])
                 cuts = [(approach, chain[0], touch, drawn[0][0])] + segments
             if not self._go_x_then_z(self.position, start):
-                self.warnings.append(f"no contour: no clear way to its {where}")
-                return
+                # what the passes leave on it - the cusps between them, the
+                # wedge at a wall - in the way: over it, and in at the feed
+                over = (start[0], self.r_safe)
+                if start[1] >= self.r_safe or not self._go(self.position, over):
+                    self.warnings.append(f"no contour: no clear way to its {where}")
+                    return
+                self._add(over, start, True, pass_no=self.pass_no, contour=True)
             for a, b, da, db in cuts:
                 self._add_drawn(a, b, da, db)
             self.pass_no += 1
-            self.position = self._lift(end)
+            # going back along Z first, it leaves from where it ends
+            self.position = end if self.setup.home_z_first else self._lift(end)
             return
         # rest material: only the stretches with something left to cut, each
         # gone to and left as a pass is

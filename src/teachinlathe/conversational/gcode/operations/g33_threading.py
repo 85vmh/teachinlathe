@@ -21,7 +21,8 @@ def _x_reference(op: G33Threading) -> float:
 def g33_threading_toolpath(op: G33Threading, path: GcodeEmitter, program=None):
     """``op``'s G-code, and its moves, onto ``path``: each pass of the plan
     (plan_g33_threading_passes), for each start, in from the safe diameter,
-    along Z synchronized with the spindle (G33), and back out."""
+    along Z synchronized with the spindle (G33), and back out - to Z Start
+    for the next, and after the last of a left-hand thread to Z End."""
     x_reference = _x_reference(op)
     final_radial_depth = op.final_radial_depth
     starts = max(1, int(op.starts or 1))
@@ -51,7 +52,10 @@ def g33_threading_toolpath(op: G33Threading, path: GcodeEmitter, program=None):
         path.error(f"G33 Threading -- {exc}")
         return
 
-    for thread_pass in passes:
+    # a left-hand thread (Z Start behind Z End) is left at Z End, in front
+    # of where it starts - not taken back along it to Z Start, in the part
+    left_hand = op.z_start < op.z_end
+    for pass_index, thread_pass in enumerate(passes):
         for start_index in range(starts):
             lead_angle_offset = lead_angle_step * start_index
             pass_comment = f"{thread_pass.type.value.lower()} pass #{thread_pass.index}"
@@ -63,7 +67,10 @@ def g33_threading_toolpath(op: G33Threading, path: GcodeEmitter, program=None):
             path.rapid(x=thread_pass.x)
             path.thread(thread_pass.zEnd, thread_pass.pitch, lead_angle_offset)
             path.rapid(x=safe_x)
-            path.rapid(z=thread_pass.zStart)
+            if left_hand and pass_index == len(passes) - 1 and start_index == starts - 1:
+                path.rapid(z=op.z_end)
+            else:
+                path.rapid(z=thread_pass.zStart)
             if op.m1Parameters.include_m1:
                 path.inspect_stop(op.m1Parameters)
                 path.blank()

@@ -50,7 +50,8 @@ def contour_plan_key(cut: ProfileCut) -> str:
     config = parse_profile_contour_config(cut)
     return plan_key(
         setup=[config.x_start, config.z_start, config.doc, config.retract, config.stock_x, config.stock_z,
-               config.profiling_type.value, _contour_pass_type(cut).value],
+               config.profiling_type.value, _contour_pass_type(cut).value,
+               _home_z_first(cut)],
         **profile_and_tool_key(cut),
     )
 
@@ -64,6 +65,12 @@ def _contour_pass_type(cut: ProfileCut) -> PassType:
     if direction is FinishingDirection.TOWARDS_Z_PLUS:
         return PassType.RADIAL
     return PassType.AXIAL
+
+
+def _home_z_first(cut: ProfileCut) -> bool:
+    """A Turning-Finish toward Z- ends on the shoulder's largest diameter:
+    back to P1 along Z first, then X."""
+    return isinstance(cut.op, TurningFinish) and _contour_pass_type(cut) is PassType.AXIAL
 
 
 def plan_profile_contour(cut: ProfileCut):
@@ -87,15 +94,16 @@ def _plan(cut: ProfileCut):
         x_start=config.x_start, z_start=config.z_start, doc=config.doc,
         retract=config.retract, stock_x=config.stock_x, stock_z=config.stock_z,
         profiling_type=config.profiling_type,
-        pass_type=_contour_pass_type(cut))
+        pass_type=_contour_pass_type(cut), home_z_first=_home_z_first(cut))
     return plan_contour(setup, path, resolve_tool_shape(cut))
 
 
-def profile_contour_toolpath(cut: ProfileCut, path: GcodeEmitter):
+def profile_contour_toolpath(cut: ProfileCut, path: GcodeEmitter, return_to_start: bool = False):
     """The G-code of a Profile Contour onto ``path``: the moves of its plan
     (plan_profile_contour) as the machine makes them - the control point,
     compensated for the nose, the profile's arcs as G2 / G3. The profile
-    canvas draws the same plan."""
+    canvas draws the same plan. ``return_to_start``: then back to its start
+    point (write_home) - nothing follows it."""
     config = parse_profile_contour_config(cut)
 
     path.codes(build_spindle_gcode(cut.op.speedsAndFeeds, ""))
@@ -108,7 +116,10 @@ def profile_contour_toolpath(cut: ProfileCut, path: GcodeEmitter):
         path.error(f"{label} -- {plan.error}")
         return
 
-    write_plan(path, plan, (config.stock_x, config.stock_z))
+    # a Turning-Finish goes back to P1 always: where it ends, on the
+    # shoulder, the nose is on the part
+    write_plan(path, plan, (config.stock_x, config.stock_z),
+               return_to_start=return_to_start or isinstance(cut.op, TurningFinish))
 
 
 def generate_profile_contour_gcode(cut: ProfileCut):

@@ -31,7 +31,8 @@ class Pockets:
         left = _difference(self.remaining, band)
         z_face = self.profile[0][0]
         pockets = [p for p in getattr(left, "geoms", [left])
-                   if p.area >= MIN_AREA and p.bounds[0] < z_face - TOLERANCE]
+                   if p.area >= MIN_AREA and p.bounds[0] < z_face - TOLERANCE
+                   and not self._at_end_face(p)]
         for core in sorted(pockets, key=lambda p: -p.bounds[2]):
             # the pocket: what is left around its deep core, up to its top
             pocket = core.buffer(self.doc).intersection(self.remaining)
@@ -86,7 +87,9 @@ class Pockets:
                     hi = mid
                 else:
                     lo = mid
-            low = hi
+            # what is there is just under where the search ends - within the
+            # sliver a rapid is let through: the retract over it
+            low = min(hi + self.retract, high[1])
         if not (self._feed_clear((z, low), bottom) and self._feed_clear(bottom, end)):
             return
         if across:
@@ -96,6 +99,8 @@ class Pockets:
         self._add(high, (z, low), False)
         self._add((z, low), bottom, True, pass_no=self.pass_no, pocket=True)
         self._add(bottom, end, True, pass_no=self.pass_no, pocket=True)
+        # drawn at the nose's edge toward the next level, as a pass is
+        self._draw_pass(bottom, end, (0.0, -1.0))
         self.pass_no += 1
         # out: just off the cut, as a pass from the face leaves it - the next
         # pass goes on from there; the way it came in when that is in the way

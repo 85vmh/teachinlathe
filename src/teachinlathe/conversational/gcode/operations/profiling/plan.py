@@ -4,7 +4,7 @@ moves, the plan."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from teachinlathe.conversational.model.data_types import PassType, ProfilingType
 
 from ...toolpath import Move
@@ -26,6 +26,12 @@ class RoughingPlan:
     tool: Optional[ToolShape] = None
     warnings: List[str] = field(default_factory=list)
     error: str = ""
+    #: back to the start point from where the plan leaves the tool: out along
+    #: X to the start's diameter, then along Z - written only when nothing
+    #: follows it (the program's last operation, staying there)
+    home: List[Move] = field(default_factory=list)
+    #: why there is no clear way back to the start point, "" when there is
+    home_blocked: str = ""
 
 #: The angle the diagonal passes run at, from the Z axis, in degrees - as the
 #: part has it, on the radius: 45° is as far along Z as across X/2.
@@ -46,6 +52,13 @@ class RoughingSetup:
     pass_type: PassType
     #: the diagonal passes' angle from the Z axis, in degrees
     diagonal_angle: float = DIAGONAL_ANGLE
+    #: where the tool is placed before it starts and after it is done, (X,
+    #: a diameter, Z); None: the retract out from X Start and Z Start
+    start_point: Optional[Tuple[float, float]] = None
+    #: back to the start point along Z first, then X - from the contour's
+    #: end on the largest diameter, nothing in front of it - rather than out
+    #: along X first
+    home_z_first: bool = False
 
     def __post_init__(self):
         low, high = DIAGONAL_ANGLE_RANGE

@@ -502,6 +502,17 @@ class TurningEditorViewModel(ToolOperationEditorViewModel):
             "profile_primitives": [primitive.to_dict() for primitive in profile.profile_primitives],
         }
 
+    @pyqtProperty("QVariant", notify=turningChanged)
+    def toolStart(self):
+        """Where the tool is placed before it starts and after it is done,
+        {x (a diameter), z}: P1 with the tool clearance out on both axes."""
+        from teachinlathe.conversational.gcode.operations.profiling.operation_input import roughing_start_point
+        geometry = self._operation.get("geometry_parameters") or {}
+        cutting = self._operation.get("cutting_parameters") or {}
+        x, z = roughing_start_point(float(geometry.get("x_start") or 0), float(geometry.get("z_start") or 0),
+                                    float(cutting.get("tool_clearance") or 0), False)
+        return {"x": x, "z": z}
+
 
 class TurningFinishEditorViewModel(ToolOperationEditorViewModel):
     update_type = "turningFinish"
@@ -586,6 +597,26 @@ class ProfileRoughingEditorViewModel(ProfileFollowingEditorViewModel):
     # the plan takes up to a second: worked out in the planning worker, and
     # the screen goes on meanwhile
     planned_preview = True
+
+    #: Where the tool starts changed: the operation, or the profile above it.
+    toolStartChanged = pyqtSignal()
+
+    def __init__(self, tab, program, index, operation, parent=None):
+        super().__init__(tab, program, index, operation, parent)
+        self.operationChanged.connect(self.toolStartChanged)
+
+    @pyqtProperty("QVariant", notify=toolStartChanged)
+    def toolStart(self):
+        """Where the tool is placed before it starts and after it is done,
+        {x (a diameter), z}: P1 with the tool clearance out on both axes."""
+        from teachinlathe.conversational.gcode.operations.profiling.operation_input import roughing_start_point
+        params = self._operation.get("profiling_parameters") or {}
+        cutting = self._operation.get("cutting_parameters") or {}
+        kind = (self.lastProfile or {}).get("profile_type") \
+            or (self._operation.get("profile_roughing_strategy") or {}).get("profiling_type", "od")
+        x, z = roughing_start_point(float(params.get("x_start") or 0), float(params.get("z_start") or 0),
+                                    float(cutting.get("retract") or 0), str(kind).lower() == "id")
+        return {"x": x, "z": z}
 
     @pyqtSlot()
     def addRestRoughing(self):

@@ -75,6 +75,15 @@ class Edge:
         # up to the profile's end point - over the top of a shoulder it ends with
         r_last = self.profile[-1][1] + self.setup.stock_x - TOLERANCE
         chain = []
+        # the stretch into the start from the face side, where it crosses the
+        # diameter the profile starts at: a chamfer or a round at the start,
+        # its foot below that diameter - the nose on a slope is lower than
+        # what it touches - is the contour's from there, not bridged
+        before = ring[(start - 1) % len(ring)]
+        r_face = r_first + TOLERANCE
+        if before[1] < r_face <= ring[start][1] and before[0] > ring[start][0] and abs(before[1]) < FAR / 2:
+            t = (r_face - before[1]) / (ring[start][1] - before[1])
+            chain.append((before[0] + t * (ring[start][0] - before[0]), r_face))
         n = len(ring)
         for k in range(n):
             point = ring[(start + k) % n]
@@ -139,14 +148,71 @@ class Edge:
         point, which lies outside the nose wherever the pass ends against a
         slope or an arc."""
         self._add(a, b, True, pass_no=self.pass_no)
+        self._draw_pass(a, b, toward)
+
+    def _draw_pass(self, a: Pt, b: Pt, toward: Optional[Pt] = None):
+        """The last move - a cut from ``a`` to ``b`` - drawn at the edge it
+        leaves, as _add_pass draws a pass."""
         if not self.tool.known or not self.moves:
             return
         if toward is None:
             toward = (-self.diagonal_sin, -self.diagonal_cos)
         centre = self._m(self.tool.centre)
         radius = self.tool.nose_radius
-        dz, dr = centre[0] + radius * toward[0], centre[1] + radius * toward[1]
-        self.moves[-1].drawn = (a[0] + dz, self.sign * (a[1] + dr), b[0] + dz, self.sign * (b[1] + dr))
+        # only across the pass: along it the nose's tip leads, where the
+        # control point is - from where the pass starts on to where the line
+        # meets the profile and its stock (at a wall, the wall), not moved
+        # along itself by the nose's centre
+        across = centre[0] * toward[0] + centre[1] * toward[1] + radius
+        dz, dr = across * toward[0], across * toward[1]
+        da, db = (a[0] + dz, a[1] + dr), (b[0] + dz, b[1] + dr)
+        line = LineString([da, db])
+        if line.length > TOLERANCE and self._part_allow_inside_prepared.intersects(line):
+            free_end = self._free_from_start(line)
+            if free_end is not None:
+                db = free_end
+            else:
+                # in it from the start: the nose's centre's line, along the pass too
+                dz, dr = centre[0] + radius * toward[0], centre[1] + radius * toward[1]
+                da, db = (a[0] + dz, a[1] + dr), (b[0] + dz, b[1] + dr)
+        self.moves[-1].drawn = (da[0], self.sign * da[1], db[0], self.sign * db[1])
+
+    def _free_from_start(self, line: LineString) -> Optional[Pt]:
+        """Where ``line``, from its start, first meets the profile and its
+        stock to leave; None when it starts in them."""
+        free = line.difference(self.part_allow_inside)
+        pieces = [] if free.is_empty else getattr(free, "geoms", [free])
+        first = min(pieces, key=lambda g: line.project(Point(g.coords[0])), default=None)
+        if first is None or line.project(Point(first.coords[0])) >= TOLERANCE:
+            return None
+        return first.coords[-1]
+
+    def _drawn_shift(self, move) -> Tuple[float, float]:
+        """How far ``move``'s end is drawn from where the control point ends
+        it, (z, r) as the machine has them; none when it is drawn where it is."""
+        if move.drawn is None:
+            return 0.0, 0.0
+        return move.drawn[2] - move.z1, move.drawn[3] - move.r1
+
+    def _join_drawn(self):
+        """The rapids drawn on from where the move before them is drawn to
+        end: off a cut drawn where the nose leaves it - not at the control
+        point - the retract drawn from there, moved as the cut is; a rapid
+        along an axis after it moved square to that axis only, so it ends
+        where it goes, and the move after it on from there."""
+        shift = (0.0, 0.0)
+        for move in self.moves:
+            if move.feed or move.drawn is not None:
+                shift = self._drawn_shift(move)
+                continue
+            if shift == (0.0, 0.0) or (move.z0, move.r0) == (move.z1, move.r1):
+                continue
+            start = (move.z0 + shift[0], move.r0 + shift[1])
+            if move.r0 == move.r1:              # along Z: on at its own Z
+                shift = (0.0, shift[1])
+            elif move.z0 == move.z1:            # along X: on at its own X
+                shift = (shift[0], 0.0)
+            move.drawn = (start[0], start[1], move.z1 + shift[0], move.r1 + shift[1])
 
     def _step_up(self, end: Pt, v_before: float, v_of) -> List[Tuple[Pt, Pt, Pt, Pt]]:
         """From ``end``, where a pass meets the profile, along the contour

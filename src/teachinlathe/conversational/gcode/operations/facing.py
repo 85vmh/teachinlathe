@@ -10,7 +10,7 @@ from typing import Optional
 from teachinlathe.conversational.model.data_types import Facing, Program
 
 from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
-from ..config import fmt
+from ..config import fmt, retract_of
 from ..toolpath import GcodeEmitter, OperationPreview
 
 
@@ -26,9 +26,10 @@ def facing_toolpath(op: Facing, path: GcodeEmitter, program: Optional[Program] =
     x_start, z_start, x_end, z_end = geometry.xStart, geometry.zStart, geometry.xEnd, geometry.zEnd
     doc = cutting.doc
     # ``retract`` stores the tool clearance from P1. Between passes, retreat
-    # by half the depth of cut regardless of that clearance.
+    # by its part of the depth of cut (config.RETRACT_OF_AP), whatever that
+    # clearance.
     clearance = abs(cutting.retract)
-    retract = doc / 2.0
+    retract = retract_of("facing", doc)
 
     if doc <= 0:
         path.error("Facing -- no depth of cut")

@@ -34,6 +34,10 @@ Item {
 
     // what turning cuts, as the planning worker works it out
     readonly property var turningPreview: editor.plannedPreview
+    // where the tool stands before and after: P1 plus the tool clearance
+    readonly property var _toolStart: editor.toolStart
+    readonly property real toolX: Number(_toolStart.x)
+    readonly property real toolZ: Number(_toolStart.z)
     readonly property var turningProfile: editor.inlineProfile
     signal openNumPadRequested(var field)
 
@@ -131,8 +135,8 @@ Item {
                     if (!canvasTool.drawn) return []
                     var points = canvasTool.outlineFromTip, result = []
                     for (var i = 0; i < points.length; i++)
-                        result.push({ x: root.xStart + 2 * points[i].y,
-                                      z: root.zStart + points[i].x })
+                        result.push({ x: root.toolX + 2 * points[i].y,
+                                      z: root.toolZ + points[i].x })
                     return result
                 }
                 onFitExtraPositionsChanged: if (!_manualView) _scheduleFit()
@@ -141,8 +145,8 @@ Item {
                     inset: profileCanvas.tickBand
                     view: root.toolCard && root.toolCard.view ? root.toolCard.view : null
                     pxPerMm: profileCanvas._scale
-                    tipX: profileCanvas._cx(root.zStart)
-                    tipY: profileCanvas._cy(root.xStart)
+                    tipX: profileCanvas._cx(root.toolZ)
+                    tipY: profileCanvas._cy(root.toolX)
                 }
 
                 Flickable {
