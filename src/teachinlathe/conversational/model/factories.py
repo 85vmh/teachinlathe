@@ -135,7 +135,7 @@ def make_default_operation(op_type: str, order: int = 1):
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
             speedsAndFeeds=_speeds(feed_rate=0.1), parentOrder=0,
             p1X=0.0, p1Z=0.0,
-            stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
+            initialStockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
             finishingDirection=FinishingDirection.TOWARDS_Z_MINUS,
             addUndercut=False, undercutParameters=TurningUndercutParameters(),
             m1Parameters=m1_default,
@@ -175,11 +175,12 @@ def make_default_operation(op_type: str, order: int = 1):
         return ProfileContour(
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
             speedsAndFeeds=_speeds(feed_rate=0.1),
-            cuttingParameters=CuttingParameters(doc=0.5, retract=1.0),
             profilingParameters=ProfilingParameters(profile_id=1, xStart=0.0, zStart=0.0),
             profileContourStrategy=ProfileContourStrategy(profiling_type=ProfilingType.OD),
-            stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
-            stockToLeaveEnabled=False,
+            initialStockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
+            passesCount=1,
+            m1Parameters=M1Parameters(include_m1=False, inspect_position=InspectPosition.G28),
+            stockInherited=True,
         )
     if op_type == "grooveRoughing":
         return GrooveRoughing(

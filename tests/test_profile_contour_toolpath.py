@@ -3,7 +3,8 @@ with (profile_contour.py on profiling/planner.py): the tool's, compensated
 for its nose, bridged over what it cannot enter, from Z Start to the profile's
 end - and the G-code and the preview that plan. On the profiles the roughing's
 toolpath is checked on (test_profile_roughing_toolpath.py), with and without
-stock to leave."""
+an initial stock: with one, in two passes - the first standing off the profile
+by the roughing's stock to leave, the second on it."""
 
 import dataclasses
 import math
@@ -31,12 +32,14 @@ CASES = [(p, stock) for p in PROFILES for stock in (False, True)]
 
 
 def operation(profile, stock=False, tool=True):
+    """The Profile Contour of ``profile``; with ``stock``, from twice the
+    roughing's stock to leave in two passes - the first leaving that stock."""
     build, kind, cutting_tool, x_start, z_start, doc, retract, radial, axial = PROFILES[profile]
     op = {"_resolved_profile": {"profile_type": kind, "profile_primitives": build()},
           "profiling_parameters": {"x_start": x_start, "z_start": z_start},
-          "cutting_parameters": {"doc": doc, "retract": retract},
-          "stock_to_leave": {"radial": radial, "axial": axial},
-          "stock_to_leave_enabled": stock,
+          "initial_stock_to_leave": {"radial": 2 * radial if stock else 0.0,
+                                     "axial": 2 * axial if stock else 0.0},
+          "passes_count": 2 if stock else 1,
           "profile_contour_strategy": {"profiling_type": kind}}
     if tool:
         op["_resolved_cutting_tool"] = cutting_tool
@@ -47,8 +50,9 @@ _PLANNED = {}
 
 
 def planned(profile, stock=False):
-    """(operation, plan, planner) for a case, planned once - the planner
-    kept for the stock to leave and the contour chain it knows."""
+    """(operation, plan, planner) for a case, planned once: its first pass's
+    plan and planner - the planner kept for the stock to leave and the
+    contour chain it knows."""
     key = (profile, stock)
     if key not in _PLANNED:
         op = operation(profile, stock)
@@ -56,7 +60,7 @@ def planned(profile, stock=False):
         original = _Planner.plan_contour_only
 
         def plan(self):
-            caught["planner"] = self
+            caught.setdefault("planner", self)
             return original(self)
 
         _Planner.plan_contour_only = plan
@@ -65,7 +69,8 @@ def planned(profile, stock=False):
             result = plan_profile_contour(op)
         finally:
             _Planner.plan_contour_only = original
-        _PLANNED[key] = (op, result, caught["planner"])
+        assert not result.error, result.error
+        _PLANNED[key] = (op, result.passes[0].plan, caught["planner"])
     return _PLANNED[key]
 
 
@@ -189,7 +194,10 @@ def test_gcode_makes_the_planned_moves(profile, stock):
     lines = generate_profile_contour_gcode(op)
     # read from where the moves begin: after the comment naming the tool
     feeds, rapids = gcode_moves(lines, start="( Planned for")
-    moves = MultiLineString([[(m.z0, m.r0), (m.z1, m.r1)] for m in plan.moves
+    # every pass's, and the way back to P1 between them
+    passes = plan_profile_contour(op).passes
+    moves = MultiLineString([[(m.z0, m.r0), (m.z1, m.r1)]
+                             for p in passes for m in p.plan.moves + p.plan.home
                              if (m.z0, m.r0) != (m.z1, m.r1)])
 
     assert any(f"Planned for {plan.tool.label}" in line for line in lines)
@@ -219,6 +227,6 @@ def test_preview_draws_the_planned_contour(profile, stock):
     preview = profile_contour_preview(op)
 
     assert preview.error == ""
-    assert len(preview.feeds) == len(_cuts(plan))
+    assert len(preview.feeds) == sum(len(_cuts(p.plan)) for p in plan_profile_contour(op).passes)
     assert preview.offset
     assert preview.rapids == ()

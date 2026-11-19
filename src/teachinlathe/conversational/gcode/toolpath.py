@@ -62,13 +62,16 @@ class OperationPath:
     known here. ``optional``: a "/" block, which may be
     skipped at run time. ``z_origin``: where its Z0 is, along Z in the
     program's first one - a Facing's Z End may have become the next Z0 -
-    None when that is not known."""
+    None when that is not known. ``part_at_most``: what the operation says
+    the part is at most before it, in its own coordinates - a Profile
+    Contour's profile with its initial stock - None when it says nothing."""
     index: int
     tool_holder_id: int
     moves: List[Move] = field(default_factory=list)
     known: bool = True
     optional: bool = False
     z_origin: Optional[float] = 0.0
+    part_at_most: object = None
 
 
 @dataclass(frozen=True)
@@ -79,9 +82,10 @@ class Point:
 
 
 class Arrows(Enum):
-    """The arrows a drawn feed carries: where it ends, or along it."""
+    """The arrows a drawn feed carries: where it ends, along it, or none."""
     END = "end"
     ALONG = "along"
+    NONE = "none"
 
 
 @dataclass(frozen=True)
@@ -137,6 +141,8 @@ class GcodeEmitter:
         #: a program's operations, as each was written (operation())
         self.operations: List[OperationPath] = []
         self._known = True
+        #: what the operation being written says the part is at most (part_at_most)
+        self._part_at_most = None
         #: where the work's Z0 is, along Z in the work offset the program
         #: started in (set_z_zero moves it); None when it is not known
         self.z_origin: Optional[float] = 0.0
@@ -299,15 +305,21 @@ class GcodeEmitter:
         z_origin = self.z_origin
         self.prefix = "/" if block_delete else ""
         self._known = True
+        self._part_at_most = None
         self.in_contour = False
         try:
             yield self
         finally:
             self.operations.append(OperationPath(index, tool_holder_id, self.moves[start:], self._known,
-                                                 block_delete, z_origin))
+                                                 block_delete, z_origin, self._part_at_most))
             self.prefix = ""
             if block_delete:
                 self.forget_position()
+
+    def part_at_most(self, shape):
+        """What the operation being written says the part is at most before
+        it, (z, r) in its own coordinates (OperationPath.part_at_most)."""
+        self._part_at_most = shape
 
     def foreign(self, lines: Iterable[str]):
         """Lines made elsewhere - by a generator not on the emitter, an

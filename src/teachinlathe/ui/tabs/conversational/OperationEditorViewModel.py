@@ -514,6 +514,17 @@ class TurningEditorViewModel(ToolOperationEditorViewModel):
         return {"x": x, "z": z}
 
 
+def _stock_inherited(editor) -> bool:
+    """Whether the initial stock of ``editor``'s Profile Contour or
+    Turning-Finish is inherited: kept to the stock to leave of the operation
+    it follows (ConversationalUseCase.inherited_stock_source), there being
+    one."""
+    if not editor._operation.get("initial_stock_inherited", True):
+        return False
+    index = editor._current_index()
+    return index is not None and editor._use_case.inherited_stock_source(editor._program, index) is not None
+
+
 class TurningFinishEditorViewModel(ToolOperationEditorViewModel):
     update_type = "turningFinish"
 
@@ -525,13 +536,10 @@ class TurningFinishEditorViewModel(ToolOperationEditorViewModel):
         self.operationChanged.connect(self.turningFinishChanged)
 
     def _parent_turning(self):
-        from teachinlathe.conversational.model.data_types import Turning
-        parent_order = int(self._operation.get("parent_order", 0))
-        operations = getattr(self._program, "operations", [])
-        parent = next((op for op in operations
-                       if isinstance(op, Turning) and op.order == parent_order), None)
-        return parent or next((op for op in reversed(operations[:self._index])
-                               if isinstance(op, Turning)), None)
+        """The Turning it finishes, as its G-code has it (finish_parent)."""
+        from teachinlathe.conversational.gcode.operations.profiling.operation_input import finish_parent
+        index = self._current_index()
+        return finish_parent(self._program.operations[:index], self._op) if index is not None else None
 
     @pyqtProperty("QVariant", notify=turningFinishChanged)
     def parentProfile(self):
@@ -564,6 +572,12 @@ class TurningFinishEditorViewModel(ToolOperationEditorViewModel):
             workpiece.pop("break_after_z", None)
             workpiece.pop("break_after_setback", None)
         return workpiece
+
+    @pyqtProperty(bool, notify=turningFinishChanged)
+    def stockInherited(self):
+        """Whether its initial stock is the stock to leave of the Turning it
+        finishes - kept to it until it is edited."""
+        return _stock_inherited(self)
 
     @pyqtProperty(bool, notify=turningFinishChanged)
     def undercutAvailable(self):
@@ -627,6 +641,20 @@ class ProfileRoughingEditorViewModel(ProfileFollowingEditorViewModel):
 
 class ProfileContourEditorViewModel(ProfileFollowingEditorViewModel):
     update_type = "profileContour"
+
+    #: Whether its initial stock is inherited changed: the operation, or the
+    #: operations above it.
+    stockInheritedChanged = pyqtSignal()
+
+    def __init__(self, tab, program, index, operation, parent=None):
+        super().__init__(tab, program, index, operation, parent)
+        self.operationChanged.connect(self.stockInheritedChanged)
+
+    @pyqtProperty(bool, notify=stockInheritedChanged)
+    def stockInherited(self):
+        """Whether its initial stock is the stock to leave of the Profile
+        Roughing above it on its profile - kept to it until it is edited."""
+        return _stock_inherited(self)
 
     def _make_preview(self):
         return self._preview_of(

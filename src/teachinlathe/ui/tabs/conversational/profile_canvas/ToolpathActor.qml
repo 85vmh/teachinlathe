@@ -54,7 +54,7 @@ QtObject {
     // pass, across its cuts and around its arcs. A pass whose feeds say
     // ``arrows``: "along", so on every pass, not only the even ones; "end",
     // one arrowhead on each of its feeds instead, its tip where the feed ends
-    // (a peck, at the depth it goes to).
+    // (a peck, at the depth it goes to); "none", none at all.
     function _paintDirections(ctx) {
         if (!feeds || feeds.length === 0) return
         ctx.save()
@@ -64,7 +64,8 @@ QtObject {
         for (var i = 1; i <= feeds.length; i++) {
             if (i < feeds.length && feeds[i].pass === feeds[first].pass) continue
             var arrows = feeds[first].arrows
-            if (arrows === "end") _paintEndHeads(ctx, feeds.slice(first, i))
+            if (arrows === "none") { /* a pass drawn without arrows */ }
+            else if (arrows === "end") _paintEndHeads(ctx, feeds.slice(first, i))
             else if (arrows === "along" || feeds[first].pass % 2 === 0) _paintPassDirections(ctx, feeds.slice(first, i))
             first = i
         }

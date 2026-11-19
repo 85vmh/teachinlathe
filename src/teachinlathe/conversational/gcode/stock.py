@@ -33,7 +33,7 @@ from shapely.affinity import translate
 from shapely.geometry import Point, Polygon, box
 from shapely.ops import unary_union
 
-from .operations.profiling.shapes import _difference, _on_grid, goes_through, sweeps, turned
+from .operations.profiling.shapes import _difference, _intersection, _on_grid, goes_through, sweeps, turned
 from .operations.profiling.tool_shape import ToolShape, cutting_shape
 from .toolpath import Move, OperationPath, move_points
 
@@ -97,6 +97,11 @@ class StockModel:
             cut = _cut(feeds, tool, path.z_origin)
         else:
             cut = None
+        if path.part_at_most is not None and path.z_origin is not None and not self.material.is_empty:
+            # it says the part is no more than that: the rest is air already
+            limit = translate(path.part_at_most, path.z_origin)
+            self.air = _on_grid(unary_union([self.air, _difference(self.material, limit)]))
+            self.material = _intersection(self.material, limit)
         air_before, material_before = self.air, self.material
         hits = _rapids_into(self.material, path, tool)
         if cut is None:

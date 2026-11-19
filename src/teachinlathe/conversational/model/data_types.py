@@ -1021,16 +1021,36 @@ class Turning(TurnableOperation):
         return "Turning"
 
 
+def passes_count(value) -> int:
+    """A count of passes as an operation keeps it: a whole number, at least
+    one - none, or less, is one."""
+    try:
+        return max(1, int(float(value)))
+    except (TypeError, ValueError):
+        return 1
+
+
 @dataclass
 class TurningFinish(TurnableOperation):
+    """The contour of the Turning it finishes, in ``passesCount`` passes, as
+    Profile Contour's: from the stock it is given (``initialStockToLeave``)
+    down to the profile in equal steps."""
     parentOrder: int
     p1X: float
     p1Z: float
-    stockToLeave: StockToLeave
+    #: what there is on the part beyond the profile before it, radial (X) and
+    #: axial (Z): the stock to leave of the Turning it finishes, or the
+    #: operator's
+    initialStockToLeave: StockToLeave
     finishingDirection: FinishingDirection
     addUndercut: bool
     undercutParameters: TurningUndercutParameters
     m1Parameters: M1Parameters
+    #: the passes it takes that stock off in, at least one
+    passesCount: int = 1
+    #: whether the initial stock is kept to the Turning's stock to leave
+    #: (complete_operations); edited, it is not
+    stockInherited: bool = True
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "TurningFinish":
@@ -1046,11 +1066,13 @@ class TurningFinish(TurnableOperation):
             parentOrder=int(data.get("parent_order", 0) or 0),
             p1X=float(data.get("p1_x", 0.0) or 0.0),
             p1Z=float(data.get("p1_z", 0.0) or 0.0),
-            stockToLeave=StockToLeave.from_dict(data.get("stock_to_leave", {})),
+            initialStockToLeave=StockToLeave.from_dict(data.get("initial_stock_to_leave", {})),
             finishingDirection=direction,
             addUndercut=bool(data.get("add_undercut", False)),
             undercutParameters=TurningUndercutParameters.from_dict(data.get("undercut_parameters", {})),
             m1Parameters=M1Parameters.from_dict(data.get("m1_parameters", {})),
+            passesCount=passes_count(data.get("passes_count", 1)),
+            stockInherited=bool(data.get("initial_stock_inherited", True)),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -1059,7 +1081,9 @@ class TurningFinish(TurnableOperation):
         base.update({
             "parent_order": int(self.parentOrder),
             "p1_x": float(self.p1X), "p1_z": float(self.p1Z),
-            "stock_to_leave": self.stockToLeave.to_dict(),
+            "initial_stock_to_leave": self.initialStockToLeave.to_dict(),
+            "initial_stock_inherited": bool(self.stockInherited),
+            "passes_count": int(self.passesCount),
             "finishing_direction": self.finishingDirection.value,
             "add_undercut": bool(self.addUndercut),
             "undercut_parameters": self.undercutParameters.to_dict(),
@@ -1689,19 +1713,30 @@ class ProfileRoughing(TurnableOperation):
 
 @dataclass
 class ProfileContour(TurnableOperation):
-    cuttingParameters: CuttingParameters
+    """The contour alone, in ``passesCount`` passes: from the stock it is
+    given (``initialStockToLeave``, on X and on Z apart) down to the profile
+    in equal steps, the last one on it - from P1 and back there between
+    them."""
     profilingParameters: ProfilingParameters
     profileContourStrategy: ProfileContourStrategy
-    stockToLeave: StockToLeave
-    stockToLeaveEnabled: bool
+    #: what there is on the part beyond the profile before it, radial (X) and
+    #: axial (Z): the Profile Roughing's above it on its profile leaves, or
+    #: the operator's
+    initialStockToLeave: StockToLeave
+    #: the passes it takes that stock off in, at least one
+    passesCount: int
+    m1Parameters: M1Parameters
+    #: whether the initial stock is kept to what the Profile Roughing above
+    #: it on its profile leaves (complete_operations); edited, it is not
+    stockInherited: bool = True
 
     @classmethod
     def from_dict(cls, data: dict) -> "ProfileContour":
         speeds_and_feeds = TurnableOperation._parse_speeds_and_feeds(data)
-        cutting_parameters = CuttingParameters.from_dict(data.get("cutting_parameters", {}))
         profiling_parameters = ProfilingParameters.from_dict(data.get("profiling_parameters", {}))
         profile_contour_strategy = ProfileContourStrategy.from_dict(data.get("profile_contour_strategy", {}))
-        stock_to_leave = StockToLeave.from_dict(data.get("stock_to_leave", {}))
+        initial_stock = StockToLeave.from_dict(data.get("initial_stock_to_leave", {}))
+        m1_parameters = M1Parameters.from_dict(data.get("m1_parameters", {}))
 
         return cls(
             order=int(data["order"]),
@@ -1709,22 +1744,24 @@ class ProfileContour(TurnableOperation):
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
             speedsAndFeeds=speeds_and_feeds,
-            cuttingParameters=cutting_parameters,
             profilingParameters=profiling_parameters,
             profileContourStrategy=profile_contour_strategy,
-            stockToLeave=stock_to_leave,
-            stockToLeaveEnabled=bool(data.get("stock_to_leave_enabled", False)),
+            initialStockToLeave=initial_stock,
+            passesCount=passes_count(data.get("passes_count", 1)),
+            m1Parameters=m1_parameters,
+            stockInherited=bool(data.get("initial_stock_inherited", True)),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
         self._add_speeds_and_feeds_to(base)
         base.update({
-            "cutting_parameters": self.cuttingParameters.to_dict(),
             "profiling_parameters": self.profilingParameters.to_dict(),
             "profile_contour_strategy": self.profileContourStrategy.to_dict(),
-            "stock_to_leave": self.stockToLeave.to_dict(),
-            "stock_to_leave_enabled": bool(self.stockToLeaveEnabled),
+            "initial_stock_to_leave": self.initialStockToLeave.to_dict(),
+            "initial_stock_inherited": bool(self.stockInherited),
+            "passes_count": int(self.passesCount),
+            "m1_parameters": self.m1Parameters.to_dict(),
         })
         return base
 
@@ -2389,13 +2426,19 @@ class ProfileRoughingConfig:
 
 @dataclass(frozen=True)
 class ProfileContourConfig:
+    """What a Profile Contour or a Turning-Finish is planned and written
+    from (profile_contour.parse_profile_contour_config)."""
+    #: P1, X a diameter
     x_start: float
     z_start: float
-    doc: float
+    #: the start point off P1, on both axes: a Turning-Finish's fixed
+    #: clearance; a Profile Contour starts at P1
     retract: float
     feed_rate: float
+    #: the stock on the part before the first pass, radial and axial
     stock_x: float
     stock_z: float
-    stock_enabled: bool
+    #: the passes that stock is taken off in, the last one on the profile
+    passes: int
     profiling_type: ProfilingType
     optional_prefix: str

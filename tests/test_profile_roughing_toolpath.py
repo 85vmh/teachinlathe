@@ -41,6 +41,12 @@ M4 = SpindleDirection.M4
 DCMT_BORING = BoringTool(cutting_tool_id=5, insert=InsertSpec("dcmt", "11", "04"),
                          solid_body=SolidBody(tip_angle=50, diameter=10, max_radial_undercut=6),
                          orientation=3, front_angle=93, back_angle=32, spindle_direction=M3)
+#: T9 as the machine has it: a Ø5 boring bar with a CCMT 060202, 95° and 5°
+#: back - small enough for the Ø15 at the end of id_steps, where the DCMT
+#: 11's insert reaches across the axis into the far wall.
+CCMT_BORING = BoringTool(cutting_tool_id=4, insert=InsertSpec("ccmt", "06", "02"),
+                         solid_body=SolidBody(tip_angle=50, diameter=5, max_radial_undercut=3),
+                         orientation=3, front_angle=95, back_angle=5, spindle_direction=M3)
 #: A 95° CCMT for OD: back angle 5°.
 CCMT_95 = TurningTool(cutting_tool_id=1, insert=InsertSpec("ccmt", "06", "02"),
                       orientation=2, front_angle=95, back_angle=5, spindle_direction=M4)
@@ -91,7 +97,7 @@ def od_pocket():
 
 #: name: (profile, kind, tool, X Start, Z Start, Ap, retract, stock radial, stock axial)
 PROFILES = {
-    "id_steps": (id_steps, "id", DCMT_BORING, 10.0, 2.0, 1.0, 0.3, 0.2, 0.5),
+    "id_steps": (id_steps, "id", CCMT_BORING, 10.0, 2.0, 1.0, 0.3, 0.2, 0.5),
     "id_groove": (id_groove, "id", DCMT_BORING, 20.0, 2.0, 1.0, 0.5, 0.5, 0.2),
     "od_steps": (od_steps, "od", CCMT_95, 44.0, 1.0, 1.5, 0.5, 0.3, 0.1),
     "od_pocket": (od_pocket, "od", CCMT_95, 34.0, 1.0, 1.0, 0.5, 0.1, 0.05),

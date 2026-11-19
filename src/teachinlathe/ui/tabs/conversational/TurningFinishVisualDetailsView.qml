@@ -19,6 +19,11 @@ Item {
     readonly property var toolCard: editor.toolCard
     readonly property real p1X: Number(op.p1_x || 0)
     readonly property real p1Z: Number(op.p1_z || 0)
+    readonly property var _st: op.initial_stock_to_leave || ({})
+    readonly property real stockRadial: Number(_st.radial || 0)
+    readonly property real stockAxial: Number(_st.axial || 0)
+    readonly property bool hasStock: stockRadial !== 0 || stockAxial !== 0
+    readonly property int passesCount: Number(op.passes_count || 1)
     readonly property string direction: op.finishing_direction || "towards_z_minus"
     readonly property bool addUndercut: !!op.add_undercut
     readonly property real undercutRadius: Number(_undercut.radius === undefined ? 0.4 : _undercut.radius)
@@ -51,6 +56,8 @@ Item {
         editor.edit({ undercut_parameters: u })
     }
 
+    function editStock(changes) { editor.edit({ initial_stock_to_leave: changes }) }
+
     // another operation: the drawing fitted to it
     onEditorChanged: profileCanvas.resetView()
 
@@ -78,11 +85,18 @@ Item {
             workpiece: root.workpiece
             primitives: root.primitives
             profileType: root.profileType
+            // the passes, the last thick with arrows the way it cuts; the
+            // initial stock, and its arrow, when there is one
             roughingPreview: root.previewData ? {
                 profile: root.previewData.profile,
-                offset: [],
+                offset: root.hasStock ? root.previewData.offset : [],
                 feeds: root.previewData.feeds,
                 rapids: root.previewData.rapids
+            } : null
+            // the stock box where it is on the canvas, scrolled with the cards
+            stockToLeaveArrowRect: root.hasStock && stockBox.visible ? {
+                x: fieldsScroll.x + stockBox.x, y: fieldsScroll.y + stockBox.y - fieldsScroll.contentY,
+                width: stockBox.width, height: stockBox.height
             } : null
             fitInsetRight: fieldsScroll.width + tickBand
             fitPadding: 72
@@ -130,7 +144,7 @@ Item {
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-                readonly property var cards: [directionBox, p1Box, undercutCheck, undercutBox]
+                readonly property var cards: [stockBox, passesBox, directionBox, p1Box, undercutCheck, undercutBox]
                 function cardAtContentY(position) {
                     for (var i = 0; i < cards.length; i++) {
                         var card = cards[i]
@@ -147,6 +161,27 @@ Item {
                     id: fields
                     width: fieldsScroll.width
                     spacing: Theme.spacingSmall
+                    // the stock on the part before the first pass: the
+                    // Turning's it finishes leaves, or the operator's
+                    StockToLeaveBox {
+                        id: stockBox
+                        Layout.alignment: Qt.AlignRight
+                        title: root.editor.stockInherited ? "Inherited stock to leave" : "Initial stock to leave"
+                        labelColor: profileCanvas.stockToLeaveColor
+                        radial: root.stockRadial
+                        axial: root.stockAxial
+                        onRadialEdited: function(value) { root.editStock({ radial: value }) }
+                        onAxialEdited: function(value) { root.editStock({ axial: value }) }
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    }
+                    // the passes that stock is taken off in
+                    PassesCountBox {
+                        id: passesBox
+                        Layout.alignment: Qt.AlignRight
+                        passes: root.passesCount
+                        onPassesEdited: function(value) { root.editor.edit({ passes_count: value }) }
+                        onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                    }
                     TurningFinishDirectionBox {
                         id: directionBox
                         Layout.alignment: Qt.AlignRight

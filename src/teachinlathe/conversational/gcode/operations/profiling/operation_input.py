@@ -57,6 +57,17 @@ class ProfileCut:
     last_nose_radius: float = 0.0
 
 
+def finish_parent(above, finish: TurningFinish) -> Optional[Turning]:
+    """The Turning the Turning-Finish ``finish`` finishes, of the operations
+    ``above`` it: the one it was added to (its parentOrder), else the last
+    Turning above it; None when there is none."""
+    parent = next((candidate for candidate in reversed(above)
+                   if isinstance(candidate, Turning) and candidate.order == finish.parentOrder), None)
+    if parent is None:
+        parent = next((candidate for candidate in reversed(above) if isinstance(candidate, Turning)), None)
+    return parent
+
+
 def profile_cut(program: Program, op_index: int, op, tools, stock=None) -> ProfileCut:
     """``op`` - the Profile Roughing or Contour at ``op_index`` of
     ``program``, or a draft of it - with what it is planned against there.
@@ -68,11 +79,7 @@ def profile_cut(program: Program, op_index: int, op, tools, stock=None) -> Profi
     above = program.operations[:max(op_index, 0)]
     profile = inline_turning_profile(op) if isinstance(op, Turning) else None
     if isinstance(op, TurningFinish):
-        parent = next((candidate for candidate in reversed(above)
-                       if isinstance(candidate, Turning) and candidate.order == op.parentOrder), None)
-        if parent is None:
-            parent = next((candidate for candidate in reversed(above)
-                           if isinstance(candidate, Turning)), None)
+        parent = finish_parent(above, op)
         if parent is not None:
             profile = inline_turning_profile(parent)
             shoulder_blend = parent.geometryParameters.shoulderBlend
@@ -202,17 +209,11 @@ def roughing_start_point(x_start: float, z_start: float, clearance: float, is_id
 
 
 def common_config(cut: ProfileCut, strategy_type: ProfilingType) -> dict:
-    """The fields both operations' configs have, but the stock to leave:
-    where they start, how deep and how far back, the feed, which side, and
-    the optional-block prefix - as keyword arguments of the configs."""
+    """The fields a Turning's and a Profile Roughing's configs both have, but
+    the stock to leave: where they start, how deep and how far back, the
+    feed, which side, and the optional-block prefix - as keyword arguments
+    of the configs."""
     op = cut.op
-    if isinstance(op, TurningFinish):
-        return dict(
-            x_start=float(op.p1X), z_start=float(op.p1Z),
-            doc=0.5, retract=0.5, feed_rate=op.speedsAndFeeds.feed,
-            profiling_type=ProfilingType.OD,
-            optional_prefix="/" if op.is_optional_block else "",
-        )
     if isinstance(op, Turning):
         geometry, cutting = op.geometryParameters, op.cuttingParameters
         # the material from P1X, the passes from P1Z plus the tool clearance;

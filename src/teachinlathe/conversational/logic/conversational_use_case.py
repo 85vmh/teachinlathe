@@ -19,6 +19,7 @@ from datetime import datetime
 from typing import Optional
 
 from teachinlathe.conversational.model.data_types import (
+    passes_count,
     AfterLastOperation,
     DefineProfile,
     DefineRadialProfile,
@@ -108,6 +109,11 @@ TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 def _details_payload(obj):
     """What an editor is given of a program or an operation: its dict."""
     return obj.to_dict() if hasattr(obj, "to_dict") else None
+
+
+#: How far out from the stock on the part a Profile Contour's X Start is put
+#: when it has none, on the diameter.
+CONTOUR_START_CLEARANCE = 1.0
 
 
 def _set_if_given(op, payload, key, attr, convert):
@@ -209,7 +215,11 @@ class ConversationalUseCase:
         - a Parting with no X Start parts the stock: from its outside to its
           bore, slowing to Fz2 a blade's width before the end;
         - a Profile Roughing or Contour with no X Start starts where the profile
-          above has it start (profile_x_start_default)."""
+          above has it start (profile_x_start_default);
+        - a Profile Contour or a Turning-Finish that inherits its initial
+          stock has the stock to leave of the operation it follows: the
+          Profile Roughing above it on its profile, the Turning it finishes
+          (inherited_stock_source)."""
         from teachinlathe.conversational.model.data_types import TurnableOperation
         from teachinlathe.tooling.model.data_types import BladeTool, TappingTool
 
@@ -236,7 +246,30 @@ class ConversationalUseCase:
             x_start = self.profile_x_start_default(program, index)
             if x_start:
                 patch["profiling_parameters"] = {"x_start": x_start}
+        if isinstance(op, (ProfileContour, TurningFinish)) and op.stockInherited:
+            roughing = self.inherited_stock_source(program, index)
+            if roughing is not None:
+                inherited = roughing.stockToLeave
+                if (float(op.initialStockToLeave.stockToLeaveX) != float(inherited.stockToLeaveX)
+                        or float(op.initialStockToLeave.stockToLeaveZ) != float(inherited.stockToLeaveZ)):
+                    patch["initial_stock_to_leave"] = inherited.to_dict()
+                    patch["initial_stock_inherited"] = True
         return patch
+
+    def inherited_stock_source(self, program: Program, index: int):
+        """The operation the Profile Contour or Turning-Finish at ``index``
+        inherits its initial stock from - its stock to leave: a contour's, the
+        nearest Profile Roughing above it on its profile; a finish's, the
+        Turning it finishes. None when there is none."""
+        op = self.operation(program, index)
+        if isinstance(op, TurningFinish):
+            from teachinlathe.conversational.gcode.operations.profiling.operation_input import finish_parent
+            return finish_parent(program.operations[:index], op)
+        if not isinstance(op, ProfileContour):
+            return None
+        profile_id = int(op.profilingParameters.profile_id or 0)
+        return next((o for o in reversed(program.operations[:index]) if isinstance(o, ProfileRoughing)
+                     and int(o.profilingParameters.profile_id or 0) == profile_id), None)
 
     def _tool_as_chosen(self, program: Program, index: int):
         """The cutting tool the operation at ``index`` cuts with: the Tool
@@ -685,7 +718,8 @@ class ConversationalUseCase:
         """Where the Profile Roughing or Contour at ``op_index`` starts in X
         when it has no X Start of its own: the profile's largest diameter plus
         the retract - a roughing of an ID profile, the diameter the profile
-        ends on. None without a profile."""
+        ends on; a contour, plus its initial stock and CONTOUR_START_CLEARANCE.
+        None without a profile."""
         from teachinlathe.conversational.gcode.operations.profiling.geometry import path_last_x, path_x_max
         from teachinlathe.conversational.gcode.operations.profiling.operation_input import (
             profile_cut, resolve_profile,
@@ -700,7 +734,17 @@ class ConversationalUseCase:
         if isinstance(op, ProfileRoughing) and cut.profile.profile_type == ProfilingType.ID:
             return path_last_x(path)
         x_max = path_x_max(path)
-        return None if x_max is None else x_max + float(op.cuttingParameters.retract)
+        if x_max is None:
+            return None
+        if isinstance(op, ProfileContour):
+            # out from the stock on it, an OD one: the stock it inherits, when
+            # it does
+            if cut.profile.profile_type == ProfilingType.ID:
+                return x_max + CONTOUR_START_CLEARANCE
+            roughing = self.inherited_stock_source(program, op_index) if op.stockInherited else None
+            stock = roughing.stockToLeave if roughing is not None else op.initialStockToLeave
+            return x_max + 2 * float(stock.stockToLeaveX) + CONTOUR_START_CLEARANCE
+        return x_max + float(op.cuttingParameters.retract)
 
     def roughing_preview_job(self, program, op_index: int, cut):
         """What the planning worker's ``profile_roughing_preview`` takes for
@@ -786,6 +830,7 @@ class ConversationalUseCase:
         _set_if_given(op, p, "p1_x", "p1X", float)
         _set_if_given(op, p, "p1_z", "p1Z", float)
         _set_if_given(op, p, "add_undercut", "addUndercut", bool)
+        ConversationalUseCase._update_initial_stock(op, p)
         undercut = p.get("undercut_parameters")
         if isinstance(undercut, dict):
             from teachinlathe.conversational.model.data_types import TurningUndercutParameters
@@ -819,11 +864,21 @@ class ConversationalUseCase:
     @staticmethod
     def _update_profile_contour(op, p):
         apply_turnable_operation_update(op, p)
-        apply_cutting_update(op.cuttingParameters, p.get("cutting_parameters"))
         apply_profiling_parameters_update(op.profilingParameters, p.get("profiling_parameters"))
         apply_profile_contour_strategy_update(op.profileContourStrategy, p.get("profile_contour_strategy"))
-        apply_stock_to_leave_update(op.stockToLeave, p.get("stock_to_leave"))
-        _set_if_given(op, p, "stock_to_leave_enabled", "stockToLeaveEnabled", bool)
+        ConversationalUseCase._update_initial_stock(op, p)
+        apply_m1_update(op.m1Parameters, p.get("m1_parameters"))
+
+    @staticmethod
+    def _update_initial_stock(op, p):
+        """What a Profile Contour and a Turning-Finish both take: the initial
+        stock - the operator's own once edited, unless the patch says it is
+        inherited still (complete_operations) - and the passes."""
+        if isinstance(p.get("initial_stock_to_leave"), dict):
+            apply_stock_to_leave_update(op.initialStockToLeave, p["initial_stock_to_leave"])
+            op.stockInherited = bool(p.get("initial_stock_inherited", False))
+        _set_if_given(op, p, "initial_stock_inherited", "stockInherited", bool)
+        _set_if_given(op, p, "passes_count", "passesCount", passes_count)
 
     def _follow_profile_type(self, program, op, index):
         """A roughing or contour pass cuts OD or ID as the profile it follows is."""

@@ -41,6 +41,7 @@ OperationRowDelegate 1.0 OperationRowDelegate.qml
 OperationToolBox 1.0 OperationToolBox.qml
 OperationsListHeader 1.0 OperationsListHeader.qml
 PartingVisualDetailsView 1.0 PartingVisualDetailsView.qml
+PassesCountBox 1.0 PassesCountBox.qml
 PeckBox 1.0 PeckBox.qml
 PositionAtDetailsView 1.0 PositionAtDetailsView.qml
 ProfileCanvas 1.0 ProfileCanvas.qml

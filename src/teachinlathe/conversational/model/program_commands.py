@@ -111,7 +111,6 @@ def add_turning_finish(program, index: int):
     finish.parentOrder = parent.order
     finish.p1X = float(parent.geometryParameters.xStart)
     finish.p1Z = float(parent.geometryParameters.zStart)
-    finish.stockToLeave = copy.deepcopy(parent.stockToLeave)
     finish.speedsAndFeeds = copy.deepcopy(parent.speedsAndFeeds)
     finish.toolRef = parent.toolRef
     finish.m1Parameters = copy.deepcopy(parent.m1Parameters)

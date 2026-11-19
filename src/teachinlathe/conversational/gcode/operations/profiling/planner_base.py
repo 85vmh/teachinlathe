@@ -100,6 +100,13 @@ class PlannerBase:
         self.remaining = self.to_remove
         # the insert, as one polygon: every move's sweep is it, moved
         self._envelope_polygon = Polygon(self.envelope)
+        # an ID tool's insert past the axis sweeps the far wall as the part
+        # turns: the part as it is across the axis - mirrored about it -
+        # which the insert itself (not its carried-on edges) must not touch
+        self._far_part = self._insert_polygon = None
+        if self.is_id and self.tool.known:
+            self._insert_polygon = MultiPoint([self._m(p) for p in self.tool.outline]).convex_hull
+            self._far_part = _mirror(self.part_allow_inside)
         self.moves: List[Move] = []
         self.pass_no = 0
         self.warnings: List[str] = []
@@ -133,10 +140,11 @@ class PlannerBase:
         self._remaining = shape
         self._pending = []
 
-    def _sweep(self, a: Pt, b: Pt):
-        """What the insert covers moving from ``a`` to ``b``: its polygon at
-        both ends, and between them - its outline built once, only moved."""
-        p = self._envelope_polygon
+    def _sweep(self, a: Pt, b: Pt, polygon=None):
+        """What the insert covers moving from ``a`` to ``b``: its polygon - its
+        envelope, unless another is given - at both ends, and between them;
+        its outline built once, only moved."""
+        p = self._envelope_polygon if polygon is None else polygon
         return unary_union([translate(p, a[0], a[1]), translate(p, b[0], b[1])]).convex_hull
 
     def _start_at(self, p: Pt) -> Pt:
@@ -163,7 +171,29 @@ class PlannerBase:
         the material still to cut."""
         swept = self._sweep(a, b)
         return (_intersection(swept, self.remaining).area < MIN_AREA
-                and _intersection(swept, self.part_allow_inside).area < MIN_AREA)
+                and _intersection(swept, self.part_allow_inside).area < MIN_AREA
+                and not self._reaches_far_wall(a, b))
+
+    def _reaches_far_wall(self, a: Pt, b: Pt) -> bool:
+        """Whether the insert, from ``a`` to ``b``, reaches across the axis
+        into the part's far wall - an ID tool too big for the bore."""
+        if self._far_part is None:
+            return False
+        return _intersection(self._sweep(a, b, self._insert_polygon), self._far_part).area >= MIN_AREA
+
+    def _too_big_for_the_bore(self) -> Optional[RoughingPlan]:
+        """The plan's error when the insert, along the contour, reaches
+        across the axis into the far wall of the bore - the tool does not fit
+        it - else None."""
+        if self._far_part is None:
+            return None
+        chain = self._contour_chain()
+        hits = [z for a, b in zip(chain, chain[1:]) if self._reaches_far_wall(a, b) for z in (a[0], b[0])]
+        if not hits:
+            return None
+        return RoughingPlan(tool=self.tool, error=(
+            f"{self.tool.label} does not fit the bore from Z{max(hits):.3f} to Z{min(hits):.3f}: "
+            "the insert reaches across the axis into the far wall - choose a smaller boring bar"))
 
     def _feed_clear(self, a: Pt, b: Pt) -> bool:
         """Whether a cut from ``a`` to ``b`` stays off the stock to leave."""
@@ -195,6 +225,11 @@ class PlannerBase:
         runs.sort(key=lambda run: line.project(Point(run[0])))
         return runs
 
+    def _unusable_tool(self) -> Optional[RoughingPlan]:
+        """The plan's error when the tool cannot cut this part: held the
+        wrong way round, or too big for its bore. None when it can."""
+        return self._wrong_way_round() or self._too_big_for_the_bore()
+
     def _wrong_way_round(self) -> Optional[RoughingPlan]:
         """The plan's error when the tool cannot cut this side of the part,
         else None. The insert has to stand on its control point: nothing of it
@@ -208,7 +243,7 @@ class PlannerBase:
         return None
 
     def plan(self) -> RoughingPlan:
-        wrong = self._wrong_way_round()
+        wrong = self._unusable_tool()
         if wrong is not None:
             return wrong
         if not self.tool.known:
@@ -241,7 +276,7 @@ class PlannerBase:
         """The contour alone - Profile Contour: from Z Start along the profile,
         offset by the stock to leave, compensated for the nose, bridged over
         what the tool cannot enter - the rest roughed already."""
-        wrong = self._wrong_way_round()
+        wrong = self._unusable_tool()
         if wrong is not None:
             return wrong
         if not self.tool.known:
