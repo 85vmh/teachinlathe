@@ -13,6 +13,7 @@ from teachinlathe.conversational.model.data_types import (
     Strategy,
     ThreadLocation,
     TurningBlend,
+    clamp_diagonal_angle,
     radial_primitives_from,
 )
 from teachinlathe.tooling.model.data_types import SpindleDirection
@@ -215,6 +216,8 @@ def apply_profile_roughing_strategy_update(strategy, payload):
             strategy.pass_type = _coerce_enum(payload["pass_type"], PassType, lambda v: str(v).lower())
         except Exception:
             pass
+    if "diagonal_angle" in payload and payload["diagonal_angle"] is not None:
+        strategy.diagonal_angle = clamp_diagonal_angle(payload["diagonal_angle"])
     if strategy.profiling_type == ProfilingType.OD and strategy.pass_type not in {PassType.AXIAL, PassType.RADIAL}:
         strategy.pass_type = PassType.AXIAL
 

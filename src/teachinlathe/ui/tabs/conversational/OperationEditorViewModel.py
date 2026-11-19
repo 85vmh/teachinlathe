@@ -23,7 +23,8 @@ from PyQt6.QtCore import QObject, QTimer, pyqtEnum, pyqtProperty, pyqtSignal, py
 from teachinlathe.conversational.logic.program_tools import Scope as ProgramToolScope
 from teachinlathe.conversational.logic.program_tools import ToolStatus
 from teachinlathe.conversational.model import profile_editing
-from teachinlathe.conversational.model.data_types import InspectPosition, PredefinedPosition, ThreadForm
+from teachinlathe.conversational.model.data_types import (
+    DIAGONAL_ANGLE_RANGE, InspectPosition, PredefinedPosition, ThreadForm)
 
 # Thread depth over pitch, per side, for a 60° thread.
 EXTERNAL_THREAD_HEIGHT_FACTOR = 0.61344
@@ -631,6 +632,12 @@ class ProfileRoughingEditorViewModel(ProfileFollowingEditorViewModel):
         x, z = roughing_start_point(float(params.get("x_start") or 0), float(params.get("z_start") or 0),
                                     float(cutting.get("retract") or 0), str(kind).lower() == "id")
         return {"x": x, "z": z}
+
+    @pyqtProperty("QVariantList", constant=True)
+    def diagonalAngleRange(self):
+        """The angles the diagonal passes may run at, [lowest, highest], in
+        degrees from the Z axis."""
+        return list(DIAGONAL_ANGLE_RANGE)
 
     @pyqtSlot()
     def addRestRoughing(self):

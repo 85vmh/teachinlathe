@@ -49,6 +49,8 @@ Item {
     readonly property real toolZ: Number(_toolStart.z)
     readonly property string passType: op.profile_roughing_strategy && op.profile_roughing_strategy.pass_type
                                        ? String(op.profile_roughing_strategy.pass_type) : "axial"
+    // the angled passes' angle, from the Z axis
+    readonly property real diagonalAngle: Number(op.profile_roughing_strategy.diagonal_angle)
     readonly property bool isIdProfile: String(profileType).toLowerCase() === "id"
 
     // Rest material: it cuts what the roughings above it leave, keeping to
@@ -244,7 +246,10 @@ Item {
                             Layout.alignment: Qt.AlignRight
                             profilingType: root.profileType
                             passType: root.passType
+                            diagonalAngle: root.diagonalAngle
+                            diagonalAngleRange: root.editor.diagonalAngleRange
                             onPassTypeEdited: function(value) { root.editor.edit({ profile_roughing_strategy: { profiling_type: root.profileType, pass_type: value } }) }
+                            onDiagonalAngleEdited: function(value) { root.editor.edit({ profile_roughing_strategy: { diagonal_angle: value } }) }
                         }
                         DimensionBox {
                             id: clearanceBox

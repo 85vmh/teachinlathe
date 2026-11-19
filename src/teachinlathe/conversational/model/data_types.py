@@ -1,4 +1,5 @@
 import json
+import math
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Type
@@ -779,10 +780,32 @@ class ProfilingOptions:
         }
 
 
+#: The angle diagonal passes run at by default, from the Z axis, in degrees -
+#: as the part has it, on the radius: 45° is as far along Z as across X/2.
+DIAGONAL_ANGLE = 45.0
+#: The angles a diagonal pass may run at.
+DIAGONAL_ANGLE_RANGE = (30.0, 60.0)
+
+
+def clamp_diagonal_angle(value: Any) -> float:
+    """``value`` as a diagonal passes' angle: within DIAGONAL_ANGLE_RANGE,
+    DIAGONAL_ANGLE when it is not a number."""
+    try:
+        angle = float(value)
+    except (TypeError, ValueError):
+        return DIAGONAL_ANGLE
+    if math.isnan(angle):
+        return DIAGONAL_ANGLE
+    low, high = DIAGONAL_ANGLE_RANGE
+    return min(max(angle, low), high)
+
+
 @dataclass
 class ProfileRoughingStrategy:
     profiling_type: ProfilingType
     pass_type: PassType
+    #: the diagonal passes' angle from the Z axis, in degrees (an ID profile's)
+    diagonal_angle: float = DIAGONAL_ANGLE
 
     _OD_PASS_TYPES = {PassType.AXIAL, PassType.RADIAL}
 
@@ -803,12 +826,14 @@ class ProfileRoughingStrategy:
         if profiling_type == ProfilingType.OD and pass_type not in {PassType.AXIAL, PassType.RADIAL}:
             pass_type = PassType.AXIAL
 
-        return ProfileRoughingStrategy(profiling_type=profiling_type, pass_type=pass_type)
+        return ProfileRoughingStrategy(profiling_type=profiling_type, pass_type=pass_type,
+                                       diagonal_angle=clamp_diagonal_angle(data.get("diagonal_angle", DIAGONAL_ANGLE)))
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "profiling_type": self.profiling_type.value,
             "pass_type": self.pass_type.value,
+            "diagonal_angle": float(self.diagonal_angle),
         }
 
 
@@ -2422,6 +2447,8 @@ class ProfileRoughingConfig:
     #: where the tool is placed before it starts and after it is done, (X,
     #: a diameter, Z); None: the retract out from X Start and Z Start
     start_point: Optional[Tuple[float, float]] = None
+    #: the diagonal passes' angle from the Z axis, in degrees
+    diagonal_angle: float = DIAGONAL_ANGLE
 
 
 @dataclass(frozen=True)

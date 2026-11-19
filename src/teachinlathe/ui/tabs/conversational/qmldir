@@ -1,5 +1,6 @@
 module tabs.conversational
 AddOperationPopup 1.0 AddOperationPopup.qml
+AngleSlider 1.0 AngleSlider.qml
 BlendPicker 1.0 BlendPicker.qml
 BuildGcodeProgressDialog 1.0 BuildGcodeProgressDialog.qml
 CanvasBox 1.0 CanvasBox.qml

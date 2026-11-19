@@ -10,7 +10,8 @@ import dataclasses
 from dataclasses import dataclass
 from typing import Tuple
 
-from teachinlathe.conversational.model.data_types import PassType, ProfileRoughingConfig, ProfilingType, Turning
+from teachinlathe.conversational.model.data_types import (
+    DIAGONAL_ANGLE, PassType, ProfileRoughingConfig, ProfilingType, Turning)
 
 from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 from .profiling.operation_input import (
@@ -29,8 +30,8 @@ from .profiling.plan_cache import PlanCache, plan_key
 from .profiling.plan_gcode import write_plan
 
 
-def _pass_type_label(pass_type: PassType) -> str:
-    angle = f"{_diagonal_angle():g}°"
+def _pass_type_label(pass_type: PassType, diagonal_angle: float) -> str:
+    angle = f"{diagonal_angle:g}°"
     return {
         PassType.AXIAL: "Axial Passes",
         PassType.RADIAL: "Radial Passes",
@@ -39,27 +40,23 @@ def _pass_type_label(pass_type: PassType) -> str:
     }.get(pass_type, str(pass_type.value if hasattr(pass_type, "value") else pass_type))
 
 
-def _diagonal_angle() -> float:
-    """The angle diagonal passes run at: the constant for now (profiling.plan),
-    read when planning, not when this module was loaded."""
-    from .profiling import plan
-    return plan.DIAGONAL_ANGLE
-
-
 def parse_profile_roughing_config(cut: ProfileCut) -> ProfileRoughingConfig:
     if isinstance(cut.op, Turning):
         pass_type = cut.op.passType
         profile_type = ProfilingType.OD
+        diagonal_angle = DIAGONAL_ANGLE
     else:
         strategy = cut.op.profileRoughingStrategy
         pass_type = strategy.pass_type
         profile_type = strategy.profiling_type
+        diagonal_angle = strategy.diagonal_angle
     stock = cut.op.stockToLeave
     return ProfileRoughingConfig(
         **common_config(cut, profile_type),
         stock_x=float(stock.stockToLeaveX),
         stock_z=float(stock.stockToLeaveZ),
         pass_type=pass_type,
+        diagonal_angle=diagonal_angle,
     )
 
 
@@ -84,7 +81,7 @@ def profile_roughing_toolpath(cut: ProfileCut, path: GcodeEmitter, return_to_sta
         return
 
     write_plan(path, plan, (config.stock_x, config.stock_z), op.m1Parameters,
-               title=f"(---Profiling Type: {_pass_type_label(config.pass_type)}---)",
+               title=f"(---Profiling Type: {_pass_type_label(config.pass_type, config.diagonal_angle)}---)",
                return_to_start=return_to_start)
 
 
@@ -127,7 +124,7 @@ def roughing_plan_key(cut: ProfileCut) -> str:
     rest = bool(getattr(cut.op, "restMaterial", False))
     return plan_key(
         setup=[config.x_start, config.z_start, config.doc, config.retract, config.stock_x, config.stock_z,
-               config.profiling_type.value, config.pass_type.value, _diagonal_angle(), config.start_point],
+               config.profiling_type.value, config.pass_type.value, config.diagonal_angle, config.start_point],
         **profile_and_tool_key(cut),
         stock=cut.stock.key() if cut.stock is not None else None,
         rest=[cut.source is not None, cut.last_nose_radius] if rest else None,
@@ -173,7 +170,7 @@ def _plan(cut: ProfileCut):
         x_start=config.x_start, z_start=config.z_start, doc=config.doc,
         retract=config.retract, stock_x=config.stock_x, stock_z=config.stock_z,
         profiling_type=config.profiling_type, pass_type=config.pass_type,
-        diagonal_angle=_diagonal_angle(), start_point=config.start_point)
+        diagonal_angle=config.diagonal_angle, start_point=config.start_point)
     tool = resolve_tool_shape(cut)
     if rest and tool is None:
         plan = plan_leftover(setup, path, cut.last_nose_radius, air_before=air)

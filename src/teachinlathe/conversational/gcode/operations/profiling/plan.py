@@ -5,7 +5,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
-from teachinlathe.conversational.model.data_types import PassType, ProfilingType
+from teachinlathe.conversational.model.data_types import (
+    DIAGONAL_ANGLE, DIAGONAL_ANGLE_RANGE, PassType, ProfilingType)
 
 from ...toolpath import Move
 from .shapes import Pt
@@ -33,11 +34,6 @@ class RoughingPlan:
     #: why there is no clear way back to the start point, "" when there is
     home_blocked: str = ""
 
-#: The angle the diagonal passes run at, from the Z axis, in degrees - as the
-#: part has it, on the radius: 45° is as far along Z as across X/2.
-DIAGONAL_ANGLE = 45.0
-#: The angles a diagonal pass may run at.
-DIAGONAL_ANGLE_RANGE = (30.0, 60.0)
 
 
 @dataclass(frozen=True)
