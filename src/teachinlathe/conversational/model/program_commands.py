@@ -5,7 +5,8 @@ import time
 from datetime import datetime
 
 from teachinlathe.conversational.model.data_types import (
-    DefineProfile, FinishingDirection, PassType, Profiling, ProfilingType, Program, Strategy, Turning, TurningFinish,
+    DefineProfile, FinishingDirection, PassType, ProfileRoughing, Profiling, ProfilingType, Program, Strategy, Turning,
+    TurningFinish,
 )
 from teachinlathe.conversational.model.factories import make_default_operation, make_new_program
 
@@ -121,6 +122,36 @@ def add_turning_finish(program, index: int):
     renumber_operations(program.operations)
     finish.parentOrder = parent.order
     return index + 1
+
+
+def add_profile_contour(program, index: int) -> int:
+    """For what the Profile Roughing at ``index`` leaves: a Profile Contour on
+    its profile, with its tool, from its P1, its initial stock the roughing's
+    stock to leave (inherited, so it follows it), finished toward Z+ after
+    radial passes and toward Z- after any other - after the roughing and the
+    rest roughings following it on the same profile. Returns where it went."""
+    if not (0 <= index < len(program.operations)) or not isinstance(program.operations[index], ProfileRoughing):
+        raise TypeError("Selected operation is not Profile Roughing")
+    ops = program.operations
+    parent = ops[index]
+    profile_id = int(parent.profilingParameters.profile_id or 0)
+    insert_at = index + 1
+    while (insert_at < len(ops) and isinstance(ops[insert_at], ProfileRoughing) and ops[insert_at].restMaterial
+           and int(ops[insert_at].profilingParameters.profile_id or 0) == profile_id):
+        insert_at += 1
+
+    contour = make_default_operation("profileContour")
+    contour.profilingParameters = copy.deepcopy(parent.profilingParameters)
+    contour.toolRef = parent.toolRef
+    contour.profileContourStrategy.profiling_type = parent.profileRoughingStrategy.profiling_type
+    contour.profileContourStrategy.finishing_direction = (
+        FinishingDirection.TOWARDS_Z_PLUS if parent.profileRoughingStrategy.pass_type is PassType.RADIAL
+        else FinishingDirection.TOWARDS_Z_MINUS)
+    contour.initialStockToLeave = copy.deepcopy(parent.stockToLeave)
+    contour.stockInherited = True
+    ops.insert(insert_at, contour)
+    renumber_operations(ops)
+    return insert_at
 
 
 def delete_program_file(program):

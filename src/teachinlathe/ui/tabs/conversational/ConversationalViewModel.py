@@ -720,6 +720,18 @@ class ConversationalViewModel(QObject):
         self.current_op_index = new_index
         self._save_current_program()
 
+    def add_profile_contour(self, index):
+        if self.current_program is None:
+            return
+        try:
+            new_index = self.use_case.add_profile_contour(self.current_program, index)
+        except Exception as e:
+            LOG.error("add profile contour failed: %s", e)
+            return
+        # opened on the new contour (it has the roughing's tool)
+        self.current_op_index = new_index
+        self._save_current_program()
+
     def add_profiling_finish(self, index):
         prog = self.current_program
         if not prog:

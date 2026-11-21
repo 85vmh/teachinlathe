@@ -178,7 +178,7 @@ def make_default_operation(op_type: str, order: int = 1):
             profilingParameters=ProfilingParameters(profile_id=1, xStart=0.0, zStart=0.0),
             profileContourStrategy=ProfileContourStrategy(profiling_type=ProfilingType.OD),
             initialStockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
-            passesCount=1,
+            passesCount=2,
             m1Parameters=M1Parameters(include_m1=False, inspect_position=InspectPosition.G28),
             stockInherited=True,
         )

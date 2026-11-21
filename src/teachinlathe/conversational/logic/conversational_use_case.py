@@ -47,6 +47,7 @@ from teachinlathe.conversational.model.data_types import (
     operation_types,
 )
 from teachinlathe.conversational.model.program_commands import (
+    add_profile_contour,
     add_profiling_finish,
     add_turning_finish,
     create_new_program,
@@ -259,8 +260,9 @@ class ConversationalUseCase:
     def inherited_stock_source(self, program: Program, index: int):
         """The operation the Profile Contour or Turning-Finish at ``index``
         inherits its initial stock from - its stock to leave: a contour's, the
-        nearest Profile Roughing above it on its profile; a finish's, the
-        Turning it finishes. None when there is none."""
+        nearest Profile Roughing above it on its profile that is not on rest
+        material (a rest roughing keeps to its source's stock to leave, not its
+        own); a finish's, the Turning it finishes. None when there is none."""
         op = self.operation(program, index)
         if isinstance(op, TurningFinish):
             from teachinlathe.conversational.gcode.operations.profiling.operation_input import finish_parent
@@ -269,7 +271,23 @@ class ConversationalUseCase:
             return None
         profile_id = int(op.profilingParameters.profile_id or 0)
         return next((o for o in reversed(program.operations[:index]) if isinstance(o, ProfileRoughing)
-                     and int(o.profilingParameters.profile_id or 0) == profile_id), None)
+                     and not o.restMaterial and int(o.profilingParameters.profile_id or 0) == profile_id), None)
+
+    def has_profile_contour(self, program: Program, index: int) -> bool:
+        """Whether what the Profile Roughing at ``index`` leaves already has a
+        Profile Contour after it: one whose stock comes from this roughing - or,
+        for a rest roughing, from the roughing it rests on."""
+        op = self.operation(program, index)
+        if not isinstance(op, ProfileRoughing):
+            return False
+        profile_id = int(op.profilingParameters.profile_id or 0)
+        source = op if not op.restMaterial else next(
+            (o for o in reversed(program.operations[:index]) if isinstance(o, ProfileRoughing)
+             and not o.restMaterial and int(o.profilingParameters.profile_id or 0) == profile_id), None)
+        if source is None:
+            return False
+        return any(isinstance(o, ProfileContour) and self.inherited_stock_source(program, j) is source
+                   for j, o in enumerate(program.operations) if j > index)
 
     def _tool_as_chosen(self, program: Program, index: int):
         """The cutting tool the operation at ``index`` cuts with: the Tool
@@ -428,6 +446,12 @@ class ConversationalUseCase:
         program.operations[rest_index].restMaterial = True
         program.operations[rest_index].toolRef = None
         return rest_index
+
+    def add_profile_contour(self, program: Program, index: int) -> int:
+        """For what the Profile Roughing at ``index`` leaves: a Profile Contour
+        on its profile, from its P1, with its stock to leave (add_profile_contour).
+        Returns where it went."""
+        return add_profile_contour(program, index)
 
     def use_tool(self, program: Program, op_index: int, tool_no: int,
                  toolchange_position: PredefinedPosition = PredefinedPosition.G28,

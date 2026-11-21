@@ -159,8 +159,8 @@ Item {
                     x: profileCanvas.width - width - profileCanvas.boxGap
                     y: stockBox.y + stockBox.height + Theme.spacingSmall
                     passes: root.passesCount
+                    maxPasses: root.editor.maxPassesCount
                     onPassesEdited: function(value) { root.editor.edit({ passes_count: value }) }
-                    onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                 }
 
                 TurningFinishDirectionBox {

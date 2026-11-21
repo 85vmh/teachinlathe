@@ -183,8 +183,8 @@ Item {
                             id: passesBox
                             Layout.alignment: Qt.AlignRight
                             passes: root.passesCount
+                            maxPasses: root.editor.maxPassesCount
                             onPassesEdited: function(value) { root.editor.edit({ passes_count: value }) }
-                            onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                         }
                         TurningFinishDirectionBox {
                             id: directionBox

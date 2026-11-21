@@ -293,9 +293,14 @@ Item {
                             labelColor: profileCanvas.stockToLeaveColor
                             radial: root.stockRadial
                             axial: root.stockAxial
+                            // a contour takes off what is left: with stock on either axis,
+                            // and none taking it off yet
+                            actionText: !root.editor.hasProfileContour && (root.stockRadial > 0 || root.stockAxial > 0)
+                                        ? "Add Profile Contour" : ""
                             onRadialEdited: function(value) { root.editStock({ radial: value }) }
                             onAxialEdited: function(value) { root.editStock({ axial: value }) }
                             onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
+                            onActionClicked: root.editor.addProfileContour()
                         }
                     }
                 }

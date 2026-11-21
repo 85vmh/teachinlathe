@@ -268,12 +268,12 @@ Item {
                                 labelColor: profileCanvas.stockToLeaveColor
                                 radial: root.stockRadial
                                 axial: root.stockAxial
-                                addFinishingPass: true
-                                finishingOperationExists: root.editor.hasFinishingOperation
+                                actionText: !root.editor.hasFinishingOperation && (root.stockRadial > 0 || root.stockAxial > 0)
+                                            ? "Add Finishing Operation" : ""
                                 onOpenNumPadRequested: function(field) { root.openNumPadRequested(field) }
                                 onRadialEdited: function(value) { root.editStock({ radial: value }) }
                                 onAxialEdited: function(value) { root.editStock({ axial: value }) }
-                                onAddFinishingOperationRequested: root.editor.addTurningFinish()
+                                onActionClicked: root.editor.addTurningFinish()
                             }
                         }
                     }

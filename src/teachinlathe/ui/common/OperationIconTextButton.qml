@@ -20,6 +20,9 @@ Rectangle {
 
     signal clicked()
 
+    // whether it has an icon (a url is never === "", its string can be)
+    readonly property bool _hasIcon: iconSource.toString() !== ""
+
     readonly property int hp: 8
     readonly property int vp: 6
 
@@ -53,7 +56,7 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             Layout.preferredWidth: root.iconSize
             Layout.preferredHeight: root.iconSize
-            visible: root.iconSource !== ""
+            visible: root._hasIcon
 
             Image {
                 id: baseImg
@@ -80,7 +83,10 @@ Rectangle {
             text: root.text
             color: root.tint
             Layout.alignment: Qt.AlignVCenter
+            // with no icon, the text in the middle, each of its lines centred
+            Layout.fillWidth: !root._hasIcon
             verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
             font.pixelSize: root.fontPixelSize
             font.bold: root.fontBold
             elide: Text.ElideRight

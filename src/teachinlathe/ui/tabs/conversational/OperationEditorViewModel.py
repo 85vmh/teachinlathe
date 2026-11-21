@@ -24,7 +24,7 @@ from teachinlathe.conversational.logic.program_tools import Scope as ProgramTool
 from teachinlathe.conversational.logic.program_tools import ToolStatus
 from teachinlathe.conversational.model import profile_editing
 from teachinlathe.conversational.model.data_types import (
-    DIAGONAL_ANGLE_RANGE, InspectPosition, PredefinedPosition, ThreadForm)
+    DIAGONAL_ANGLE_RANGE, MAX_PASSES_COUNT, InspectPosition, PredefinedPosition, ThreadForm)
 
 # Thread depth over pitch, per side, for a 60° thread.
 EXTERNAL_THREAD_HEIGHT_FACTOR = 0.61344
@@ -341,6 +341,11 @@ class ToolOperationEditorViewModel(OperationEditorViewModel):
         if self.planned_preview:
             self._start_planned_preview()
 
+    @pyqtProperty(int, constant=True)
+    def maxPassesCount(self):
+        """The most passes a contour or a finish takes its stock off in."""
+        return MAX_PASSES_COUNT
+
     # ── a preview the planning worker works out ─────────────────────────────
     #: Set by the editors whose preview takes the planning worker (Turning,
     #: Profile Roughing): ``plannedPreview`` is then asked for as the editor is
@@ -644,6 +649,17 @@ class ProfileRoughingEditorViewModel(ProfileFollowingEditorViewModel):
         """For what this roughing leaves: a copy of this roughing on rest
         material, with no tool yet - opened."""
         self._tab.add_rest_roughing(self._index)
+
+    @pyqtProperty(bool, notify=toolStartChanged)
+    def hasProfileContour(self):
+        """Whether what this roughing leaves already has a Profile Contour."""
+        return self._index is not None and self._use_case.has_profile_contour(self._program, self._index)
+
+    @pyqtSlot()
+    def addProfileContour(self):
+        """For what this roughing leaves: a Profile Contour on its profile, from
+        its P1, with its stock to leave - opened."""
+        self._tab.add_profile_contour(self._index)
 
 
 class ProfileContourEditorViewModel(ProfileFollowingEditorViewModel):

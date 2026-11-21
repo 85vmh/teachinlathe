@@ -1046,11 +1046,15 @@ class Turning(TurnableOperation):
         return "Turning"
 
 
+#: The most passes a Profile Contour or a Turning-Finish takes its stock off in.
+MAX_PASSES_COUNT = 10
+
+
 def passes_count(value) -> int:
-    """A count of passes as an operation keeps it: a whole number, at least
-    one - none, or less, is one."""
+    """A count of passes as an operation keeps it: a whole number, from one -
+    none, or less, is one - to MAX_PASSES_COUNT."""
     try:
-        return max(1, int(float(value)))
+        return min(max(1, int(float(value))), MAX_PASSES_COUNT)
     except (TypeError, ValueError):
         return 1
 
