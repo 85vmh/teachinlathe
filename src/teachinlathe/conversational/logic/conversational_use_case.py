@@ -16,7 +16,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from teachinlathe.conversational.model.data_types import (
     passes_count,
@@ -487,8 +487,14 @@ class ConversationalUseCase:
         op = self.operation(program, index)
         if op is None or (op_class is not None and not isinstance(op, op_class)):
             return False
+        profile_before = int(op.profilingParameters.profile_id or 0) \
+            if isinstance(op, (ProfileRoughing, ProfileContour)) else None
         update(op, payload)
         if op_type in ("profileRoughing", "profileContour"):
+            if int(op.profilingParameters.profile_id or 0) != profile_before:
+                # another profile: its X Start is worked out again from it
+                # (complete_operations)
+                op.profilingParameters.xStart = 0.0
             self._follow_profile_type(program, op, index)
         return True
 
@@ -632,14 +638,28 @@ class ConversationalUseCase:
                 return op.profile_type
         return None
 
-    def last_profile_before(self, program: Optional[Program], before_index: int) -> dict:
-        """The last DefineProfile above ``before_index``, as its details payload, or {}."""
+    @staticmethod
+    def profiles_before(program: Optional[Program], before_index: int) -> List[DefineProfile]:
+        """The Define Profiles above ``before_index``, in the program's order,
+        the first of each id - the one its G-code subroutine is."""
         if program is None:
+            return []
+        out, seen = [], set()
+        for op in program.operations[:max(before_index, 0)]:
+            if isinstance(op, DefineProfile) and int(op.profile_id) not in seen:
+                seen.add(int(op.profile_id))
+                out.append(op)
+        return out
+
+    def profile_before(self, program: Optional[Program], before_index: int, profile_id: int) -> dict:
+        """The Define Profile ``profile_id`` above ``before_index``, as its
+        details payload, or {}: the profile a Profile Roughing or Contour there
+        cuts."""
+        profile = next((op for op in self.profiles_before(program, before_index)
+                        if int(op.profile_id) == int(profile_id or 0)), None)
+        if profile is None:
             return {}
-        for op in reversed(program.operations[:max(before_index, 0)]):
-            if isinstance(op, DefineProfile):
-                return self.with_workpiece(program, _details_payload(op)) or {}
-        return {}
+        return self.with_workpiece(program, _details_payload(profile)) or {}
 
     def radial_profile_before(self, program: Optional[Program], before_index: int, profile_id: int) -> dict:
         """The Define Radial Profile ``profile_id`` above ``before_index`` -

@@ -5,8 +5,8 @@ import time
 from datetime import datetime
 
 from teachinlathe.conversational.model.data_types import (
-    DefineProfile, FinishingDirection, PassType, ProfileRoughing, Profiling, ProfilingType, Program, Strategy, Turning,
-    TurningFinish,
+    DefineProfile, FinishingDirection, PassType, ProfileContour, ProfileRoughing, Profiling, ProfilingType, Program,
+    Strategy, Turning, TurningFinish,
 )
 from teachinlathe.conversational.model.factories import make_default_operation, make_new_program
 
@@ -42,6 +42,11 @@ def insert_default_operation(program, op_type: str, insert_index: int):
         new_op.profile_id = next_profile_id(program)
     ops = program.operations
     idx = max(0, min(insert_index, len(ops)))
+    if isinstance(new_op, (ProfileRoughing, ProfileContour)):
+        # it cuts the last profile above it, until another is picked
+        above = [op for op in ops[:idx] if isinstance(op, DefineProfile)]
+        if above:
+            new_op.profilingParameters.profile_id = int(above[-1].profile_id)
     ops.insert(idx, new_op)
     renumber_operations(ops)
     return idx

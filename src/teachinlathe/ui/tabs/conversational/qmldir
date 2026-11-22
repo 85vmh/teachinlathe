@@ -47,6 +47,7 @@ PassesCountBox 1.0 PassesCountBox.qml
 PeckBox 1.0 PeckBox.qml
 PositionAtDetailsView 1.0 PositionAtDetailsView.qml
 ProfileCanvas 1.0 ProfileCanvas.qml
+ProfileChoiceBox 1.0 ProfileChoiceBox.qml
 ProfileContourVisualDetailsView 1.0 ProfileContourVisualDetailsView.qml
 ProfileRoughingVisualDetailsView 1.0 ProfileRoughingVisualDetailsView.qml
 ProfilingDetailsView 1.0 ProfilingDetailsView.qml

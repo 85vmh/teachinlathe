@@ -597,7 +597,8 @@ class TurningFinishEditorViewModel(ToolOperationEditorViewModel):
 
 
 class ProfileFollowingEditorViewModel(ToolOperationEditorViewModel):
-    """Profile Roughing and Profile Contour: they cut the last profile above."""
+    """Profile Roughing and Profile Contour: they cut the profile they name
+    (``profiling_parameters.profile_id``), one of the Define Profiles above."""
 
     #: What it shows from the program changed: the operation, or what is around it.
     profileFollowingChanged = pyqtSignal()
@@ -606,10 +607,21 @@ class ProfileFollowingEditorViewModel(ToolOperationEditorViewModel):
         super().__init__(tab, program, index, operation, parent)
         self.operationChanged.connect(self.profileFollowingChanged)
 
+    @property
+    def _profile_id(self) -> int:
+        return int((self._operation.get("profiling_parameters") or {}).get("profile_id") or 0)
+
     @pyqtProperty("QVariant", notify=profileFollowingChanged)
-    def lastProfile(self):
-        """The last Define Profile above, as its details payload, or {}."""
-        return self._use_case.last_profile_before(self._program, self._index)
+    def profile(self):
+        """The Define Profile it cuts, as its details payload, or {} when
+        there is none of its id above."""
+        return self._use_case.profile_before(self._program, self._index, self._profile_id)
+
+    @pyqtProperty("QVariantList", notify=profileFollowingChanged)
+    def profileIds(self):
+        """The ids of the Define Profiles above, in the program's order: the
+        profiles it can cut."""
+        return [int(p.profile_id) for p in self._use_case.profiles_before(self._program, self._index)]
 
 
 class ProfileRoughingEditorViewModel(ProfileFollowingEditorViewModel):
@@ -632,7 +644,7 @@ class ProfileRoughingEditorViewModel(ProfileFollowingEditorViewModel):
         from teachinlathe.conversational.gcode.operations.profiling.operation_input import roughing_start_point
         params = self._operation.get("profiling_parameters") or {}
         cutting = self._operation.get("cutting_parameters") or {}
-        kind = (self.lastProfile or {}).get("profile_type") \
+        kind = (self.profile or {}).get("profile_type") \
             or (self._operation.get("profile_roughing_strategy") or {}).get("profiling_type", "od")
         x, z = roughing_start_point(float(params.get("x_start") or 0), float(params.get("z_start") or 0),
                                     float(cutting.get("retract") or 0), str(kind).lower() == "id")

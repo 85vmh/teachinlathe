@@ -21,8 +21,10 @@ Item {
     readonly property var _pp: op.profiling_parameters || ({})
     readonly property var _st: op.initial_stock_to_leave || ({})
 
-    // the last profile defined above this operation
-    readonly property var _profileOp: editor.lastProfile || ({})
+    // the profile it cuts: the one of its id above it (the box on the left
+    // picks it)
+    readonly property int profileId: Number(_pp.profile_id || 0)
+    readonly property var _profileOp: editor.profile || ({})
     readonly property var primitives: _profileOp.profile_primitives || []
     readonly property string profileType: _profileOp.profile_type !== undefined ? String(_profileOp.profile_type) : "od"
     // the stock broken off right after the profile, as the Program Header
@@ -114,6 +116,7 @@ Item {
                 readonly property real boxGap: profileCanvas.tickBand
                 readonly property real firstBoxY: profileCanvas.tickBand
                 fitInsetRight: root.primitives.length > 0 ? boxWidth + profileCanvas.tickBand : 0
+                fitInsetLeft: profileBox.visible ? profileBox.x + profileBox.width : 0
 
                 // the tool - a turning tool's insert or a blade - its control
                 // point on the start position, turned as its orientation has it,
@@ -208,6 +211,20 @@ Item {
                     y: profileCanvas.p1TagY - height / 2
                 }
 
+                // the profile it cuts, at the left, on the centre line - kept
+                // in the canvas when the line is out of it
+                ProfileChoiceBox {
+                    id: profileBox
+                    visible: root.editor.profileIds.length > 0
+                    x: profileCanvas.tickBand + Theme.spacingSmall
+                    y: Math.max(viewButtons.y + viewButtons.height + Theme.spacingSmall,
+                                Math.min(profileCanvas.height - height - profileCanvas.tickBand,
+                                         profileCanvas._cy(0) - height / 2))
+                    profileIds: root.editor.profileIds
+                    profileId: root.profileId
+                    onProfileIdEdited: function(value) { root.editProfiling({ profile_id: value }) }
+                }
+
                 // the tool it cuts with, at the top, in the middle; tapped, to
                 // pick it - a turning tool for an OD profile, a boring bar for
                 // an ID one
@@ -230,7 +247,8 @@ Item {
                 Label {
                     anchors.centerIn: parent
                     visible: root.primitives.length === 0
-                    text: "No profile defined above this operation"
+                    text: root.editor.profileIds.length > 0 ? "No profile P" + root.profileId + " above this operation"
+                                                            : "No profile defined above this operation"
                     color: Theme.foregroundMuted
                     font.pixelSize: Theme.fontBody
                 }
