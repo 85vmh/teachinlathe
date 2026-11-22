@@ -17,6 +17,8 @@ import os
 from typing import Dict, Optional, Tuple
 
 from PyQt6.QtCore import QObject, pyqtSignal
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 
 log = logging.getLogger(__name__)
 
@@ -77,21 +79,22 @@ class FinalProfileUseCase(QObject):
         self._request = self._planner.submit("final-profile", "final_material", *args)
 
     def _on_finished(self, request_id, ok, result):
-        if request_id != self._request or self._asked is None:
-            return
-        self._request = None
-        path, key = self._asked
-        if ok:
-            result = dict(result, error=result["error"] and f"The interpreter stopped: {result['error']}")
-            if result["material"] is not None and result["material"].is_empty:
-                result["material"] = None
-        else:
-            log.error("final profile of %s failed: %s", path, result)
-            result = {"material": None, "error": str(result)}
-        self._kept[key] = result
-        while len(self._kept) > KEPT:
-            self._kept.pop(next(iter(self._kept)))
-        self.ready.emit(path, result)
+        with timed(operations.PLANNER_RESULT_FINAL_PROFILE):
+            if request_id != self._request or self._asked is None:
+                return
+            self._request = None
+            path, key = self._asked
+            if ok:
+                result = dict(result, error=result["error"] and f"The interpreter stopped: {result['error']}")
+                if result["material"] is not None and result["material"].is_empty:
+                    result["material"] = None
+            else:
+                log.error("final profile of %s failed: %s", path, result)
+                result = {"material": None, "error": str(result)}
+            self._kept[key] = result
+            while len(self._kept) > KEPT:
+                self._kept.pop(next(iter(self._kept)))
+            self.ready.emit(path, result)
 
     def _ini_repository(self):
         if self._ini is None:

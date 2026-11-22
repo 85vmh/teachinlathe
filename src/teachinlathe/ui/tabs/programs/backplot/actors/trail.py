@@ -15,11 +15,15 @@ tap's G33.1 - it is drawn as any other line.
 
 import logging
 
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 from teachinlathe.ui.tabs.programs.backplot import blade_middle, tool_source
-from teachinlathe.ui.tabs.programs.backplot.plot_source.trail import HIDDEN_COLOR
+from teachinlathe.ui.tabs.programs.backplot.plot_source.growing_array import GrowingArray
+from teachinlathe.ui.tabs.programs.backplot.plot_source.trail import COLOR, COLOR2, HIDDEN_COLOR, POS
 
 try:
     import numpy as np
+    from rs274.glcanon_bake import LOGGER_DTYPE
 except ImportError:  # pragma: no cover - depends on the LinuxCNC install
     np = None
 
@@ -34,102 +38,138 @@ except ImportError as exc:  # pragma: no cover - depends on the LinuxCNC install
 
 
 class CentredTrailPart(_BACKPLOT_PART):
-    """Upstream's live trail, its points moved for the blade that made them."""
+    """Upstream's live trail, its points moved for the blade that made them.
+
+    The points drawn - the trail's own, moved and with a thread's passes
+    hidden - are worked out into one array kept from frame to frame: for a
+    trail whose points stay as they were read (``appends_only``, the
+    machine's), only the new ones and the last, which the logger moves on
+    along its line; when a full logger drops its oldest (``dropped``), the
+    array drops as many. A simulated run's are worked out again each frame.
+    Everything from the start again when the trail starts over, or the
+    program's contours, the unit or the thread plan change - and the
+    vertices on the GPU with it, as upstream keeps those it had."""
 
     def __init__(self, host):
         super().__init__()
         self._host = host
-        #: How far along Z each of the trail's points is moved, in its unit,
-        #: worked out once a point is known - the points after it are added
-        #: on - and again from the start when the trail starts over
-        #: (``generation``), or the program, its contours or the unit change.
-        self._shifts = np.zeros(0) if np is not None else None
+        #: what the points were worked out for: (generation, contours, unit, plan)
         self._basis = None
+        #: the trail's ``dropped`` they were worked out at
+        self._dropped = 0
+        #: how many points of ``_out`` were worked out from what made them
+        self._done = 0
+        #: the points as drawn, LOGGER_DTYPE
+        self._out = GrowingArray(LOGGER_DTYPE) if np is not None else None
+        #: whether a point worked out is moved or hidden: drawn from ``_out``
+        self._moved = False
         #: (shift, half) of each blade, as it was when the trail started
         self._blades = {}
         #: the thread plan whose lines are hidden, and its lines as an array
         self._plan_lines = (None, None)
 
     def upload_and_draw(self, ctx):
+        with timed(operations.BACKPLOT_TRAIL_DRAW):
+            self._upload_and_draw(ctx)
+
+    def _upload_and_draw(self, ctx):
         trail = ctx.lp
         raw, npts, is_xyuv = trail.points()
-        made_by = trail.made_by() if np is not None and not is_xyuv else None
-        hidden = self._hidden(trail, npts, is_xyuv, made_by)
-        if hidden is not None:
-            raw = _without(raw, npts, hidden)
-        if made_by is None:
-            self._draw(ctx, trail, raw, npts, is_xyuv, hidden is not None)
-            return
-        corners = getattr(self._host, "blade_corners", None) or {}
-        units = getattr(ctx.stat, "linear_units", 1.0) or 1.0
-        basis = (trail.generation, id(corners), units)
-        if basis != self._basis or npts < len(self._shifts):
-            self._basis, self._shifts, self._blades = basis, np.zeros(0), {}
-        known = min(npts, len(made_by))
-        if known > len(self._shifts):
-            added = blade_middle.trail_shifts(
-                _sliced(made_by, len(self._shifts), known), corners, units, self._blade)
-            self._shifts = np.concatenate([self._shifts, added])
-        shifts = self._shifts[:npts]
-        if len(shifts) < npts:
-            # logged since the last poll, not known yet: where the last known is
-            last = shifts[-1] if len(shifts) else 0.0
-            shifts = np.concatenate([shifts, np.full(npts - len(shifts), last)])
-        if not shifts.any():
-            self._draw(ctx, trail, raw, npts, is_xyuv, hidden is not None)
-            return
-        self._draw(ctx, trail, blade_middle.trail_points(raw, npts, shifts), npts, is_xyuv, True)
-
-    def _draw(self, ctx, trail, raw, npts, is_xyuv, changed):
-        """The trail drawn from ``raw`` - its own points unless ``changed``."""
-        if not changed:
+        if np is None or is_xyuv or npts < 2:
+            self._basis = None
             super().upload_and_draw(ctx)
             return
-        ctx.lp = _MovedLogger(trail, raw, npts, is_xyuv)
+        made_by = trail.made_by()
+        plan = self._thread_plan()
+        corners = getattr(self._host, "blade_corners", None) or {}
+        units = getattr(ctx.stat, "linear_units", 1.0) or 1.0
+        basis = (trail.generation, id(corners), units, id(plan))
+        dropped = int(getattr(trail, "dropped", 0) or 0)
+        again = basis != self._basis
+        if not again and dropped != self._dropped:
+            count = dropped - self._dropped
+            if 0 < count <= self._done:
+                self._out.drop_front(count)
+                self._done -= count
+            else:
+                again = True
+        if not again and npts < self._done:
+            again = True
+        if again:
+            if self._basis is not None:
+                # the vertices kept are of the points as they were drawn
+                self.ring(ctx).invalidate()
+            self._basis, self._done, self._moved, self._blades = basis, 0, False, {}
+            self._out.clear()
+        self._dropped = dropped
+        first = max(0, self._done - 1) if trail.appends_only else 0
+        known = min(npts, len(made_by)) if made_by is not None else 0
+        self._work_out(trail, raw, npts, first, made_by, known, plan, corners, units)
+        self._done = max(first, known)
+        if not self._moved:
+            super().upload_and_draw(ctx)
+            return
+        ctx.lp = _MovedLogger(trail, self._out.view(), npts, is_xyuv)
         try:
             super().upload_and_draw(ctx)
         finally:
             ctx.lp = trail
 
-    def _hidden(self, trail, npts, is_xyuv, made_by):
-        """Which of the trail's points end a thread's pass, not drawn; None
-        for none. A synced point whose line is not known yet - logged since
-        the last poll - is taken to be a pass: a point drawn stays as it was
-        drawn, and the program cuts threads."""
+    def _work_out(self, trail, raw, npts, first, made_by, known, plan, corners, units):
+        """Points ``first`` to ``npts`` of ``_out``: the trail's, moved along
+        Z for the blade that made them - a point logged since the last poll,
+        whose maker is not known yet, as far as the last known one - and a
+        thread's passes fully transparent."""
+        source = np.frombuffer(raw, dtype=LOGGER_DTYPE, count=npts)
+        part = self._out.resize(npts)[first:]
+        part[:] = source[first:]
+        shifts = np.zeros(npts - first)
+        if known > first:
+            shifts[:known - first] = blade_middle.trail_shifts(
+                _sliced(made_by, first, known), corners, units, self._blade)
+            if known < npts:
+                shifts[known - first:] = shifts[known - first - 1]
+        if shifts.any():
+            part[POS][:, 2] += shifts
+            self._moved = True
+        hidden = self._hidden(trail, npts, first, made_by, known, plan)
+        if hidden is not None and hidden.any():
+            part[COLOR][hidden] = HIDDEN_COLOR
+            part[COLOR2][hidden] = HIDDEN_COLOR
+            self._moved = True
+
+    def _thread_plan(self):
         find = getattr(self._host, "thread_plan", None)
-        plan = find() if find is not None else None
-        if np is None or plan is None or is_xyuv or npts < 2:
+        return find() if find is not None else None
+
+    def _hidden(self, trail, npts, first, made_by, known, plan):
+        """Which of points ``first`` to ``npts`` end a thread's pass, not
+        drawn; None for none. A synced point whose line is not known yet -
+        logged since the last poll - is taken to be a pass: a point drawn
+        stays as it was drawn, and the program cuts threads."""
+        if plan is None:
             return None
         try:
             synced = trail.synced(npts)
         except Exception as exc:
             LOG.debug("backplot trail: which lines are synced not known: %s", exc)
             return None
-        if synced is None or made_by is None:
+        if synced is None:
+            return None
+        synced = synced[first:npts]
+        if made_by is None:
             return synced
         if self._plan_lines[0] is not plan:
             self._plan_lines = (plan, np.fromiter(plan.synced_lines, dtype=np.int64))
-        on_plan = np.ones(npts, dtype=bool)
-        known = min(npts, len(made_by.lines))
-        on_plan[:known] = np.isin(made_by.lines[:known], self._plan_lines[1])
-        hidden = synced & on_plan
-        return hidden if hidden.any() else None
+        on_plan = np.ones(npts - first, dtype=bool)
+        if known > first:
+            on_plan[:known - first] = np.isin(made_by.lines[first:known], self._plan_lines[1])
+        return synced & on_plan
 
     def _blade(self, tool):
         if tool not in self._blades:
             self._blades[tool] = blade_middle.blade_offsets(tool_source.describe(tool))
         return self._blades[tool]
-
-
-def _without(raw, npts, hidden):
-    """The trail's points ``raw`` with the lines ending at ``hidden`` ones
-    fully transparent: an array, which is read as the bytes are."""
-    from rs274.glcanon_bake import LOGGER_DTYPE
-
-    points = np.frombuffer(raw, dtype=LOGGER_DTYPE, count=npts).copy()
-    points["c"][hidden] = HIDDEN_COLOR
-    points["c2"][hidden] = HIDDEN_COLOR
-    return points
 
 
 def _sliced(origins, first, last):
@@ -138,8 +178,8 @@ def _sliced(origins, first, last):
 
 
 class _MovedLogger:
-    """The position logger with its points read already, moved
-    (trail_points)."""
+    """The position logger with its points worked out already: moved for the
+    blade, a thread's passes hidden."""
 
     def __init__(self, logger, raw, npts, is_xyuv):
         self._logger = logger

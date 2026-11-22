@@ -24,6 +24,8 @@ from typing import Callable, Dict, Iterator, Optional
 import _hal
 import hal
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 
 log = logging.getLogger(__name__)
 
@@ -130,13 +132,15 @@ class _PinPoller(QObject):
         self._timer.setInterval(int(milliseconds))
 
     def _tick(self) -> None:
-        for pin in self._pins:
-            try:
-                pin.poll()
-            except Exception:
-                # One misbehaving listener must not stop the others from
-                # being told about their pins.
-                log.exception("error polling HAL pin %s", pin.name)
+        # every input pin, and what listens to them, timed as one
+        with timed(operations.HAL_POLL):
+            for pin in self._pins:
+                try:
+                    pin.poll()
+                except Exception:
+                    # One misbehaving listener must not stop the others from
+                    # being told about their pins.
+                    log.exception("error polling HAL pin %s", pin.name)
 
 
 _POLLER: Optional[_PinPoller] = None

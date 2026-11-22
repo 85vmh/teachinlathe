@@ -23,15 +23,20 @@ import logging
 import os
 import shutil
 import tempfile
+import threading
 import time
 
-from PyQt6.QtCore import QObject, QSize, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QCoreApplication, QObject, QSize, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QColor
 from PyQt6.QtOpenGL import (QOpenGLFramebufferObject,
                             QOpenGLFramebufferObjectFormat)
 from PyQt6.QtQml import qmlRegisterType
 from PyQt6.QtQuick import QQuickFramebufferObject
 
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
+from teachinlathe.programs.model import backplot_lifecycle as gauge
+from teachinlathe.programs.model.backplot_lifecycle import Cause
 from teachinlathe.ui.tabs.programs.backplot import actors, blade_middle, plot_source, tool_source, workpiece
 from teachinlathe.ui.tabs.programs.backplot import ortho_view
 from teachinlathe.ui.tabs.programs.backplot.excursion_view import ExcursionView
@@ -70,19 +75,6 @@ _mirror = True
 PREVIEW_POLL_INTERVAL_MS = int(
     os.environ.get("TEACHINLATHE_POLL_MS", 40) or 40)
 
-#: Set TEACHINLATHE_PERF=1 in the environment to have the preview report what
-#: it costs, every few seconds, to the usual log.
-#:
-#: This is here because the preview's share of the frame budget is the thing
-#: most likely to creep: it is the only part of the UI that redraws on the
-#: machine's clock rather than on the operator's. A profiler attached by hand
-#: sees a moment; these counters cover a whole program, which is what shows
-#: whether something grows as the program advances.
-#:
-#: Off by default, and when off it costs one attribute test per poll and per
-#: frame.
-PERF_LOGGING = bool(os.environ.get("TEACHINLATHE_PERF"))
-PERF_REPORT_INTERVAL_MS = 5000
 
 
 # Mirrors gremlin_widget.py: qt5_graphics reaches for Qt through qtpy, which
@@ -189,81 +181,6 @@ else:  # pragma: no cover - keeps the module importable without LinuxCNC
     _HostBase = QObject
 
 
-class _PreviewPerf:
-    """Counters for what the preview costs, reported on a timer.
-
-    Rates are per second over the reporting window, so they can be compared
-    across windows of different lengths, and "share of one core" is the number
-    to watch: it is what the preview takes away from the thread the rest of
-    the UI draws on.
-    """
-
-    def __init__(self, parent):
-        self._timer = QTimer(parent)
-        self._timer.setInterval(PERF_REPORT_INTERVAL_MS)
-        self._timer.timeout.connect(self.report)
-        self._reset(time.perf_counter())
-        self._timer.start()
-
-    def _reset(self, now):
-        self._since = now
-        self.polls = 0
-        self.rebuilds = 0
-        self.rebuild_s = 0.0
-        self.rebuild_worst_s = 0.0
-        self.updates = 0
-        self.renders = 0
-        self.render_s = 0.0
-        self.render_worst_s = 0.0
-        self.reloads = 0
-        self.reload_s = 0.0
-
-    def layer_rebuilt(self, seconds):
-        """One frame that had to draw the static layer again.
-
-        Counted apart from the rest because it is the one frame in the loop
-        that is not cheap, and a mean nine times under the worst frame says
-        nothing about which frames those are.
-        """
-        self.rebuilds += 1
-        self.rebuild_s += seconds
-        self.rebuild_worst_s = max(self.rebuild_worst_s, seconds)
-
-    def render_done(self, seconds):
-        self.renders += 1
-        self.render_s += seconds
-        if seconds > self.render_worst_s:
-            self.render_worst_s = seconds
-
-    def report(self):
-        now = time.perf_counter()
-        elapsed = now - self._since
-        if elapsed <= 0:
-            return
-        mean_ms = 1000.0 * self.render_s / self.renders if self.renders else 0.0
-        LOG.info(
-            "preview: %.1f polls/s, %.1f redraws asked/s, %.1f drawn/s, "
-            "%.2f ms mean, %.2f ms worst, %.1f%% of one core; "
-            "%d reloads (%.0f ms); %d layer rebuilds (%.1f ms mean, "
-            "%.1f ms worst); msaa %s",
-            self.polls / elapsed,
-            self.updates / elapsed,
-            self.renders / elapsed,
-            mean_ms,
-            1000.0 * self.render_worst_s,
-            100.0 * self.render_s / elapsed,
-            self.reloads,
-            1000.0 * self.reload_s,
-            self.rebuilds,
-            1000.0 * self.rebuild_s / self.rebuilds if self.rebuilds else 0.0,
-            1000.0 * self.rebuild_worst_s,
-            # Said out loud, so a run can never be compared against another
-            # without knowing which of the two had it on.
-            ("%dx" % SAMPLES) if SAMPLES else "off",
-        )
-        self._reset(now)
-
-
 class LatheBackplotCanon(_HostBase):
     """The preview state and renderer, with no widget under it.
 
@@ -285,9 +202,6 @@ class LatheBackplotCanon(_HostBase):
         QObject.__init__(self)
         self._item = item
         self.source = source if source is not None else plot_source.MachineSource()
-        # Set for real at the end of this constructor; declared here because
-        # the grafted set-up below can already ask for a redraw.
-        self._perf = None
         # The viewport the renderer last built an FBO for. Answered by
         # winfo_width/winfo_height, which is the whole of GlCanonDraw's
         # remaining interest in its host.
@@ -422,19 +336,89 @@ class LatheBackplotCanon(_HostBase):
         # constant feed. Upstream's addTimer() is not used either: it is fixed
         # at 100 ms, and the interval belongs to this preview, not to the
         # class it was grafted from.
+        #
+        # It runs only while the plot is in sight, and the position logger only
+        # while a program runs as well: the source's lifecycle says when
+        # (programs.model.backplot_lifecycle), through start_poll / stop_poll,
+        # start_logger / stop_logger and reset_trail below.
         self._timer = QTimer(self)
         self._timer.setInterval(PREVIEW_POLL_INTERVAL_MS)
         self._timer.timeout.connect(self.poll)
-        self._timer.start()
 
-        self._perf = _PreviewPerf(self) if PERF_LOGGING else None
+        # for the diagnostics (trail_stats): polls, frames drawn, programs read
+        self.poll_count = self.render_count = self.reload_count = 0
 
+        app = QCoreApplication.instance()
+        if app is not None:
+            app.aboutToQuit.connect(self.shutdown)
+        self.lifecycle = self.source.lifecycle
+        self.lifecycle.set_visible(item.isVisible() and item.window() is not None)
+        self.lifecycle.attach(self)
+
+    # ── what the lifecycle drives ───────────────────────────────────────────
+
+    def start_poll(self):
         # The first look at the machine, from the event loop rather than from
-        # whatever is running now: this constructor is reached through
+        # whatever is running now: the constructor is reached through
         # createRenderer(), inside the render pass. It is also what loads the
         # preview when a program is already on the machine at start-up, since
         # realize() no longer does.
         QTimer.singleShot(0, self.poll)
+        self._timer.start()
+
+    def stop_poll(self):
+        self._timer.stop()
+
+    def start_logger(self):
+        self.source.start_logging(self)
+
+    def stop_logger(self):
+        self.source.stop_logging(self)
+        self.update()
+
+    def reset_trail(self):
+        self.source.reset_trail()
+        self._forget_material()
+        self.invalidate_static()
+        self.update()
+
+    def set_visible(self, visible):
+        self.lifecycle.set_visible(visible)
+
+    def trail_stats(self):
+        """The trail, for the diagnostics: its points, the logger's limit,
+        what it takes, its flushes - and how often the plot polled, drew and
+        read its program again, per second since the last time asked."""
+        from teachinlathe.ui.tabs.programs.backplot.plot_source.trail import (
+            LOGGER_CAPACITY_POINTS, LOGGER_POINT_BYTES)
+
+        trail = self.logger
+        npts = int(trail.npts)
+        out = {gauge.NPTS: float(npts),
+               gauge.POINTS_LIMIT: float(LOGGER_CAPACITY_POINTS),
+               gauge.TRAIL_NATIVE_BYTES: float(npts * LOGGER_POINT_BYTES),
+               gauge.TRAIL_AUX_BYTES: float(getattr(trail, "nbytes", 0)),
+               gauge.FLUSHES: float(getattr(trail, "flushes", 0)),
+               gauge.POINTS_DROPPED: float(getattr(trail, "points_dropped", 0)),
+               gauge.LOGGERS_MADE: float(getattr(trail, "loggers_made", 0)),
+               gauge.LOGGER_THREADS_LEFT: float(getattr(trail, "threads_left_running", 0)),
+               gauge.PREVIEW_RELOADS: float(self.reload_count),
+               gauge.RENDER_ON_UI_THREAD: float(getattr(self, "render_on_ui_thread", False))}
+        now = time.monotonic()
+        before = getattr(self, "_rates_at", None)
+        counts = (self.poll_count, self.render_count, self.reload_count)
+        if before is not None and now > before[0]:
+            dt = now - before[0]
+            out[gauge.POLLS_PER_S] = (counts[0] - before[1][0]) / dt
+            out[gauge.RENDERS_PER_S] = (counts[1] - before[1][1]) / dt
+            out[gauge.RELOADS_PER_S] = (counts[2] - before[1][2]) / dt
+        self._rates_at = (now, counts)
+        return out
+
+    def shutdown(self):
+        """The application is closing: no timer, no logger thread left."""
+        self.lifecycle.detach(Cause.SHUTDOWN)
+        self.source.shutdown()
 
     # ── this lathe's configuration (was GremlinWidget) ──────────────────────
 
@@ -698,10 +682,6 @@ class LatheBackplotCanon(_HostBase):
     def doneCurrent(self):
         pass
 
-    def _count_update(self):
-        if self._perf is not None:
-            self._perf.updates += 1
-
     def update(self, *_args, **_kwargs):
         """Ask for another frame.
 
@@ -709,7 +689,6 @@ class LatheBackplotCanon(_HostBase):
         methods call it expecting QWidget.update(); it schedules a Quick
         repaint instead.
         """
-        self._count_update()
         item = self._item
         if item is not None:
             item.update()
@@ -734,37 +713,41 @@ class LatheBackplotCanon(_HostBase):
         context current, because set_view_y() writes the model-view the same
         frame draws from.
         """
-        if self._pending_default_view:
-            self._pending_default_view = False
-            self.current_view = 'y'
-            self.set_view_y()
-        scissor_enabled = bool(glIsEnabled(GL_SCISSOR_TEST))
-        depth_writes = bool(glGetBooleanv(GL_DEPTH_WRITEMASK))
-        # Qt Quick may leave a dirty-region scissor active. The backplot uses
-        # a persistent framebuffer, so both its clear and every drawing pass
-        # must cover the whole item or old tool-marker pixels can survive.
-        glDisable(GL_SCISSOR_TEST)
-        glDepthMask(GL_TRUE)
-        self._set_multisample_baseline()
-        self._seal_alpha()
-        started = time.perf_counter() if self._perf is not None else 0.0
-        try:
-            # Alpha masked off for the whole frame, so upstream's clear and
-            # every draw in it leave the sealed channel alone.
-            _set_alpha_writes(False)
-            if self.perspective:
-                self.redraw_perspective()
-            else:
-                self.redraw_ortho()
-        except Exception as exc:
-            LOG.error("backplot render failed: %s", exc)
-        finally:
-            _set_alpha_writes(True)
-            glDepthMask(GL_TRUE if depth_writes else GL_FALSE)
-            if scissor_enabled:
-                glEnable(GL_SCISSOR_TEST)
-        if self._perf is not None:
-            self._perf.render_done(time.perf_counter() - started)
+        with timed(operations.BACKPLOT_RENDER):
+            self.render_count = getattr(self, "render_count", 0) + 1
+            # on the UI thread it holds up the event loop; on Qt's render
+            # thread, only the sync before it does - the same for every frame
+            if getattr(self, "render_on_ui_thread", None) is None:
+                self.render_on_ui_thread = threading.current_thread() is threading.main_thread()
+            if self._pending_default_view:
+                self._pending_default_view = False
+                self.current_view = 'y'
+                self.set_view_y()
+            scissor_enabled = bool(glIsEnabled(GL_SCISSOR_TEST))
+            depth_writes = bool(glGetBooleanv(GL_DEPTH_WRITEMASK))
+            # Qt Quick may leave a dirty-region scissor active. The backplot uses
+            # a persistent framebuffer, so both its clear and every drawing pass
+            # must cover the whole item or old tool-marker pixels can survive.
+            glDisable(GL_SCISSOR_TEST)
+            glDepthMask(GL_TRUE)
+            self._set_multisample_baseline()
+            self._seal_alpha()
+            try:
+                # Alpha masked off for the whole frame, so upstream's clear and
+                # every draw in it leave the sealed channel alone.
+                _set_alpha_writes(False)
+                with timed(operations.BACKPLOT_RENDER_REDRAW):
+                    if self.perspective:
+                        self.redraw_perspective()
+                    else:
+                        self.redraw_ortho()
+            except Exception as exc:
+                LOG.error("backplot render failed: %s", exc)
+            finally:
+                _set_alpha_writes(True)
+                glDepthMask(GL_TRUE if depth_writes else GL_FALSE)
+                if scissor_enabled:
+                    glEnable(GL_SCISSOR_TEST)
 
     # ── the two layers ──────────────────────────────────────────────────────
 
@@ -793,13 +776,14 @@ class LatheBackplotCanon(_HostBase):
         """
         import linuxcnc
 
-        s = self.stat
-        s.poll()
-        linuxcnc.gui_rot_offsets(s.g5x_offset[0] + s.g92_offset[0],
-                                 s.g5x_offset[1] + s.g92_offset[1],
-                                 s.g5x_offset[2] + s.g92_offset[2])
+        with timed(operations.BACKPLOT_RENDER_CONTEXT):
+            s = self.stat
+            s.poll()
+            linuxcnc.gui_rot_offsets(s.g5x_offset[0] + s.g92_offset[0],
+                                     s.g5x_offset[1] + s.g92_offset[1],
+                                     s.g5x_offset[2] + s.g92_offset[2])
 
-        ctx = self.frame_context()
+            ctx = self.frame_context()
         scene = self.scene
         try:
             split = scene.index_of(scene.backplot)
@@ -816,15 +800,21 @@ class LatheBackplotCanon(_HostBase):
         # The baseline again: on a cached frame nothing else has set it, and
         # upstream guarantees every part is entered from it.
         scene.apply_baseline()
-        self._draw_parts(ctx, scene.parts[split:])
+        self._draw_parts(ctx, scene.parts[split:], operations.BACKPLOT_RENDER_PART_PREFIX)
 
     @staticmethod
-    def _draw_parts(ctx, parts):
-        """``Scene.draw``'s loop over a slice of it, gates and scopes intact."""
+    def _draw_parts(ctx, parts, timed_as=None):
+        """``Scene.draw``'s loop over a slice of it, gates and scopes intact;
+        each part drawn timed as ``timed_as`` and its class's name."""
         for part, gate in parts:
             if gate(ctx):
-                with part.scope(ctx):
-                    part.draw(ctx)
+                if timed_as is None:
+                    with part.scope(ctx):
+                        part.draw(ctx)
+                    continue
+                with timed(timed_as + type(part).__name__):
+                    with part.scope(ctx):
+                        part.draw(ctx)
 
     def _replay_static(self, ctx, scene, split):
         """Put the static layer on the frame, rebuilding it first if it is
@@ -835,14 +825,14 @@ class LatheBackplotCanon(_HostBase):
         key = self._static_signature(ctx)
         now = time.perf_counter()
         if key != self._static_key or now - self._static_at > STATIC_MAX_AGE_S:
-            started = time.perf_counter() if self._perf is not None else 0.0
-            if not self._render_static(ctx, scene, split, target):
+            with timed(operations.BACKPLOT_RENDER_STATIC_REBUILD):
+                rebuilt = self._render_static(ctx, scene, split, target)
+            if not rebuilt:
                 return False
-            if self._perf is not None:
-                self._perf.layer_rebuilt(time.perf_counter() - started)
             self._static_key = key
             self._static_at = now
-        return self._blit_static(target)
+        with timed(operations.BACKPLOT_RENDER_STATIC_BLIT):
+            return self._blit_static(target)
 
     def _prepare_static(self, ctx):
         """The layer's own framebuffer, made or remade to match the frame.
@@ -888,7 +878,7 @@ class LatheBackplotCanon(_HostBase):
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             _set_alpha_writes(False)
             scene.apply_baseline()
-            self._draw_parts(ctx, scene.parts[:split])
+            self._draw_parts(ctx, scene.parts[:split], operations.BACKPLOT_RENDER_STATIC_PART_PREFIX)
         except Exception as exc:       # pragma: no cover - driver dependent
             LOG.error("backplot: static layer failed: %s", exc)
             self._static_fbo = None
@@ -1160,146 +1150,150 @@ class LatheBackplotCanon(_HostBase):
         False, and it defaults to False so that a future caller has to opt in
         deliberately rather than block the UI by accident.
         """
-        import gcode
-        import linuxcnc
-        from qt5_graphics import DummyProgress, Progress, StatCanon
-        from rs274.program_time import MachineLimits
+        with timed(operations.BACKPLOT_PREVIEW_RELOAD):
+            import gcode
+            import linuxcnc
+            from qt5_graphics import DummyProgress, Progress, StatCanon
+            from rs274.program_time import MachineLimits
 
-        reload_started = time.perf_counter() if self._perf is not None else 0.0
+            self.reload_count = getattr(self, "reload_count", 0) + 1
 
-        if sync_task:
-            linuxcnc.command().task_plan_synch()
+            if sync_task:
+                linuxcnc.command().task_plan_synch()
 
-        # This preview's own status handle, freshly polled - the same one
-        # poll() reads. It used to take the runtime store's snapshot, which
-        # refreshes on a timer of its own and so could be a sixth of a second
-        # out of date at the moment the program is parsed.
-        stat = self.stat
-        try:
-            stat.poll()
-        except Exception:
-            pass
-
-        runtime_file = getattr(stat, 'file', '')
-        if not filename and runtime_file:
-            filename = runtime_file
-        elif not filename and not runtime_file:
-            return
-
-        with open(filename, 'r', encoding='utf-8', errors='replace') as handle:
-            lines = handle.readlines()
-        progress = Progress(2, len(lines))
-        progress.emit_percent = self.emit_percent
-
-        code = []
-        i = 0
-        for i, line in enumerate(lines):
-            line = line.expandtabs().replace("\r", "")
-            code.extend(["%6d: " % (i + 1), "lineno", line, ""])
-            if i % 1000 == 0:
-                del code[:]
-                progress.update(i)
-        progress.nextphase(len(lines))
-
-        td = tempfile.mkdtemp()
-        self._current_file = filename
-        # Read before the parse rather than after it: a program that fails to
-        # parse still has a bar, and the operator is better off seeing the
-        # stock than an empty plot.
-        reset_material = getattr(self.source, "reset_material", None)
-        if reset_material is not None:
-            reset_material()
-        self.stock = workpiece.for_program(filename)
-        # a new preview: its thread's lines are hidden again (poll)
-        self._thread_plan_shown = None
-        self.invalidate_static()
-        canon = None
-        try:
-            self._last_preview_tool_signature = (
-                stat.tool_in_spindle, tuple(stat.tool_offset))
-            self._last_preview_wcs_signature = self._wcs_signature(stat)
-            self.preview_origin = (tuple(stat.g5x_offset), tuple(stat.g92_offset), float(stat.rotation_xy))
-            random = int(self.inifile.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
-            arcdivision = int(self.inifile.find("DISPLAY", "ARCDIVISION") or 64)
-            # StatCanon(..., stat, random, text, linecount, ...)
-            canon = StatCanon(
-                self.colors, self.get_geometry(), self.foam_option,
-                self.lathe_option, stat, random, "", i, progress, arcdivision,
-            )
-            canon.output_notify_message = self.output_notify_message
-            # The machine's limits, so the parse times the program
-            # (canon.run_time()); without them it is left untimed.
-            canon.motion_limits = MachineLimits.from_ini(self.inifile)
-            parameter = self.inifile.find("RS274NGC", "PARAMETER_FILE")
-            temp_parameter = os.path.join(td, os.path.basename(parameter or "linuxcnc.var"))
-            if parameter:
-                shutil.copy(parameter, temp_parameter)
-            self._refresh_preview_wcs(temp_parameter, stat)
-            canon.parameter_file = temp_parameter
-
-            initcodes = self._build_preview_initcodes(stat)
-            initcode = self.inifile.find("RS274NGC", "RS274NGC_STARTUP_CODE") or ""
-            linear_units = stat.linear_units
-            unitcode = "G%d" % (20 + (linear_units == 1))
-            if initcodes:
-                if initcode:
-                    initcodes.insert(0, initcode)
-                initcodes.insert(0, unitcode)
-                result, seq = self.load_preview(filename, canon, initcodes)
-            else:
-                result, seq = self.load_preview(filename, canon, unitcode, initcode)
-            # A (PREVIEW,notify) comment is passed on by next_line, which the
-            # rendered moves do not get: the last one goes out here.
-            canon.show_notification()
-            if result > gcode.MIN_ERROR:
-                self.report_gcode_error(result, seq, filename)
-            # a blade's moves down its middle - a contour along the corner
-            # the program says it is cut with - not along the point it was
-            # touched off on, before anything draws them; the tool in for the
-            # moves before the program changes to one. The trail is drawn
-            # the same way, by the line being cut (actors.trail).
-            self.blade_corners = blade_middle.corner_lines(filename)
-            blade_middle.centre_program(getattr(canon, "program_geometry", None),
-                                        tool_source.describe, INTERNAL_PER_MM,
-                                        int(stat.tool_in_spindle or 0), self.blade_corners)
-            # Uploaded again from the moved points. set_canon marked the
-            # program stale before the parse; a frame drawn since - the render
-            # thread does not wait for this one - took the points as they were
-            # parsed and marked it fresh, and the moved ones would never be
-            # drawn: the lines at the touched-off point, the dwells (read every
-            # frame) at the blade's middle. A simulation lost that race.
-            self.scene.program.invalidate()
-            self.invalidate_static()
-            self.logger.set_depth(
-                self.from_internal_linear_unit(self.get_foam_z()),
-                self.from_internal_linear_unit(self.get_foam_w()),
-            )
-            self.calculate_gcode_properties(canon)
-        except Exception as exc:
-            LOG.error("backplot preview failed: %s", exc)
-            self.gcode_properties = None
-        finally:
-            shutil.rmtree(td, ignore_errors=True)
-            if canon:
-                canon.progress = DummyProgress()
+            # This preview's own status handle, freshly polled - the same one
+            # poll() reads. It used to take the runtime store's snapshot, which
+            # refreshes on a timer of its own and so could be a sixth of a second
+            # out of date at the moment the program is parsed.
+            stat = self.stat
             try:
-                progress.done()
-            except UnboundLocalError:
+                stat.poll()
+            except Exception:
                 pass
-            if self._perf is not None:
-                self._perf.reloads += 1
-                self._perf.reload_s += time.perf_counter() - reload_started
-        self._redraw()
+
+            runtime_file = getattr(stat, 'file', '')
+            if not filename and runtime_file:
+                filename = runtime_file
+            elif not filename and not runtime_file:
+                return
+
+            with open(filename, 'r', encoding='utf-8', errors='replace') as handle:
+                lines = handle.readlines()
+            progress = Progress(2, len(lines))
+            progress.emit_percent = self.emit_percent
+
+            code = []
+            i = 0
+            for i, line in enumerate(lines):
+                line = line.expandtabs().replace("\r", "")
+                code.extend(["%6d: " % (i + 1), "lineno", line, ""])
+                if i % 1000 == 0:
+                    del code[:]
+                    progress.update(i)
+            progress.nextphase(len(lines))
+
+            td = tempfile.mkdtemp()
+            self._current_file = filename
+            # Read before the parse rather than after it: a program that fails to
+            # parse still has a bar, and the operator is better off seeing the
+            # stock than an empty plot.
+            reset_material = getattr(self.source, "reset_material", None)
+            if reset_material is not None:
+                reset_material()
+            self._forget_material()
+            self.stock = workpiece.for_program(filename)
+            # a new preview: its thread's lines are hidden again (poll)
+            self._thread_plan_shown = None
+            self.invalidate_static()
+            canon = None
+            try:
+                self._last_preview_tool_signature = (
+                    stat.tool_in_spindle, tuple(stat.tool_offset))
+                self._last_preview_wcs_signature = self._wcs_signature(stat)
+                self.preview_origin = (tuple(stat.g5x_offset), tuple(stat.g92_offset), float(stat.rotation_xy))
+                random = int(self.inifile.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
+                arcdivision = int(self.inifile.find("DISPLAY", "ARCDIVISION") or 64)
+                # StatCanon(..., stat, random, text, linecount, ...)
+                canon = StatCanon(
+                    self.colors, self.get_geometry(), self.foam_option,
+                    self.lathe_option, stat, random, "", i, progress, arcdivision,
+                )
+                canon.output_notify_message = self.output_notify_message
+                # The machine's limits, so the parse times the program
+                # (canon.run_time()); without them it is left untimed.
+                canon.motion_limits = MachineLimits.from_ini(self.inifile)
+                parameter = self.inifile.find("RS274NGC", "PARAMETER_FILE")
+                temp_parameter = os.path.join(td, os.path.basename(parameter or "linuxcnc.var"))
+                if parameter:
+                    shutil.copy(parameter, temp_parameter)
+                self._refresh_preview_wcs(temp_parameter, stat)
+                canon.parameter_file = temp_parameter
+
+                initcodes = self._build_preview_initcodes(stat)
+                initcode = self.inifile.find("RS274NGC", "RS274NGC_STARTUP_CODE") or ""
+                linear_units = stat.linear_units
+                unitcode = "G%d" % (20 + (linear_units == 1))
+                if initcodes:
+                    if initcode:
+                        initcodes.insert(0, initcode)
+                    initcodes.insert(0, unitcode)
+                    result, seq = self.load_preview(filename, canon, initcodes)
+                else:
+                    result, seq = self.load_preview(filename, canon, unitcode, initcode)
+                # A (PREVIEW,notify) comment is passed on by next_line, which the
+                # rendered moves do not get: the last one goes out here.
+                canon.show_notification()
+                if result > gcode.MIN_ERROR:
+                    self.report_gcode_error(result, seq, filename)
+                # a blade's moves down its middle - a contour along the corner
+                # the program says it is cut with - not along the point it was
+                # touched off on, before anything draws them; the tool in for the
+                # moves before the program changes to one. The trail is drawn
+                # the same way, by the line being cut (actors.trail).
+                self.blade_corners = blade_middle.corner_lines(filename)
+                blade_middle.centre_program(getattr(canon, "program_geometry", None),
+                                            tool_source.describe, INTERNAL_PER_MM,
+                                            int(stat.tool_in_spindle or 0), self.blade_corners)
+                # Uploaded again from the moved points. set_canon marked the
+                # program stale before the parse; a frame drawn since - the render
+                # thread does not wait for this one - took the points as they were
+                # parsed and marked it fresh, and the moved ones would never be
+                # drawn: the lines at the touched-off point, the dwells (read every
+                # frame) at the blade's middle. A simulation lost that race.
+                self.scene.program.invalidate()
+                self.invalidate_static()
+                self.logger.set_depth(
+                    self.from_internal_linear_unit(self.get_foam_z()),
+                    self.from_internal_linear_unit(self.get_foam_w()),
+                )
+                self.calculate_gcode_properties(canon)
+            except Exception as exc:
+                LOG.error("backplot preview failed: %s", exc)
+                self.gcode_properties = None
+            finally:
+                shutil.rmtree(td, ignore_errors=True)
+                if canon:
+                    canon.progress = DummyProgress()
+                try:
+                    progress.done()
+                except UnboundLocalError:
+                    pass
+            self._redraw()
 
     def poll(self):
+        with timed(operations.BACKPLOT_POLL):
+            # called on the class: a test polls a namespace standing in for the plot
+            return LatheBackplotCanon._poll(self)
+
+    def _poll(self):
         import linuxcnc
+
+        self.poll_count = getattr(self, "poll_count", 0) + 1
 
         # Read from this preview's own linuxcnc.stat, not from the runtime
         # store's snapshot: the store refreshes on a timer of its own, so
         # taking the position from it would cap the marker at that rate however
         # often this runs. A status poll is a shared-memory read.
-        if self._perf is not None:
-            self._perf.polls += 1
 
         stat = self.stat
         self.source.poll()
@@ -1433,8 +1427,37 @@ class LatheBackplotCanon(_HostBase):
     # ── view control ────────────────────────────────────────────────────────
 
     def material_left(self, ctx):
-        """The part as it is being cut, from the source, or None."""
-        return self.source.material_left(ctx, self)
+        """The part as it is being cut, from the source, or None - read at
+        most once every STOCK_REFRESH_S.
+
+        The part is in the still layer, which is drawn again whenever it
+        changes: read on every frame while the tool cuts, it changed on nearly
+        every one, and the whole layer - grid, rapids, ticks, the part - was
+        drawn again at each, three frames in five (measured). Between two
+        reads the part read last is given again, uncut - the source cuts it
+        only as it is read - so the layer stays as it is; a frame asked for
+        then is followed by one at the end of the interval, so that the last
+        cut is shown even when nothing else moves after it."""
+        now = time.monotonic()
+        held = getattr(self, "_material_held", None)
+        if held is not None and now - held[0] < STOCK_REFRESH_S:
+            if not getattr(self, "_stock_refresh_pending", False):
+                self._stock_refresh_pending = True
+                QTimer.singleShot(max(1, int((held[0] + STOCK_REFRESH_S - now) * 1000)),
+                                  self._refresh_stock)
+            return held[1]
+        left = self.source.material_left(ctx, self)
+        self._material_held = (now, left)
+        return left
+
+    def _refresh_stock(self):
+        self._stock_refresh_pending = False
+        self.update()
+
+    def _forget_material(self):
+        """The part read again on the next frame: the trail, the program or
+        the bar is other than it was."""
+        self._material_held = None
 
     def set_program_file(self, path):
         """The program to preview, as opposed to whatever the interpreter has
@@ -1494,6 +1517,8 @@ class LatheBackplotCanon(_HostBase):
             self.clear_live_plotter()
         else:
             clear(self)
+        self._forget_material()
+        self.lifecycle.trail_cleared()
         self.invalidate_static()
         self.update()
 
@@ -1640,6 +1665,11 @@ STATIC_LAYER = bool(int(os.environ.get("TEACHINLATHE_LAYERS", 1) or 0))
 #: draw in fifty and turns a silent freeze into a brief staleness.
 STATIC_MAX_AGE_S = 2.0
 
+#: How often, at most, the part being cut is read again - and the still layer
+#: it is in drawn again for it - seconds: five times a second, a lag the eye
+#: does not catch behind a tool marker that moves every frame.
+STOCK_REFRESH_S = 0.2
+
 #: Multisampling for the framebuffer; 0 turns it off.
 #:
 #: Four buys smooth edges on the two curved things drawn - the insert's nose
@@ -1739,6 +1769,14 @@ class LatheBackplotItem(QQuickFramebufferObject):
         self._clear_swipe = ThreeFingerSwipe(self, self.clearPlot, parent=self)
         self._swipe_window = None
         self.windowChanged.connect(self._watch_window)
+        # in sight or not - this item's and every item's above it - and in a
+        # window: the plot polls, and logs a run, only while it is
+        self.visibleChanged.connect(self._tell_visibility)
+        self.windowChanged.connect(lambda _window: self._tell_visibility())
+
+    def _tell_visibility(self):
+        if self._canon is not None:
+            self._canon.set_visible(self.isVisible() and self.window() is not None)
 
     def _watch_window(self, window):
         if window is self._swipe_window:
@@ -1885,9 +1923,10 @@ class LatheBackplotItem(QQuickFramebufferObject):
         loaded: the file name on disk can stay the same while its contents
         change, and the preview is keyed on the name.
         """
+        # the trail and material of the program before went as it was loaded
+        # (the lifecycle's program_loaded)
         canon = self.canon()
         if canon is not None:
-            canon.clear_live_plot()
             canon._current_file = ''
 
     # ── pointer interaction, forwarded from QML ─────────────────────────────

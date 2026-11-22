@@ -1,4 +1,6 @@
 module tabs.machine_settings
+DiagnosticsPage 1.0 DiagnosticsPage.qml
+DiagnosticsPanel 1.0 DiagnosticsPanel.qml
 FixtureCard 1.0 FixtureCard.qml
 GroupPanel 1.0 GroupPanel.qml
 MachineSettingsScreen 1.0 MachineSettingsScreen.qml

@@ -15,10 +15,39 @@ Rectangle {
 
     color: Theme.surfaceAlt
 
+    // the pages, in the order of their tabs
+    readonly property int machinePage: 0
+    readonly property int performancePage: 1
+
+    // view state: the page shown - the machine's settings, or Performance
+    // Diagnostics
+    property int page: machinePage
+
+    SegmentedTabs {
+        id: pages
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.margins: 24
+        width: 420
+        labels: ["Machine", "Performance"]
+        currentIndex: root.page
+        onActivated: function(index) { root.page = index }
+    }
+
+    // made only while it is shown: its charts draw nothing otherwise
+    Loader {
+        anchors.fill: parent
+        anchors.topMargin: pages.height + 36
+        active: root.page === root.performancePage
+        source: "DiagnosticsPage.qml"
+    }
+
     Flickable {
         anchors.fill: parent
+        anchors.topMargin: pages.height + 36
         contentHeight: content.implicitHeight + 48
         clip: true
+        visible: root.page === root.machinePage
 
         ColumnLayout {
             id: content

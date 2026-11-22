@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 
 import linuxcnc
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 
 
 @dataclass(frozen=True)
@@ -72,27 +74,28 @@ class ProgramRuntimeStore(QObject):
         return self._snapshot
 
     def poll(self):
-        try:
-            self._stat.poll()
-        except Exception:
-            return self._snapshot
+        with timed(operations.PROGRAM_RUNTIME_POLL):
+            try:
+                self._stat.poll()
+            except Exception:
+                return self._snapshot
 
-        next_snapshot = self._build_snapshot(self._stat)
-        previous_snapshot = self._snapshot
-        if next_snapshot == previous_snapshot:
+            next_snapshot = self._build_snapshot(self._stat)
+            previous_snapshot = self._snapshot
+            if next_snapshot == previous_snapshot:
+                return next_snapshot
+
+            self._snapshot = next_snapshot
+            if next_snapshot.machine_file != previous_snapshot.machine_file:
+                self.machineFileChanged.emit(next_snapshot.machine_file)
+            if next_snapshot.motion_line != previous_snapshot.motion_line:
+                self.motionLineChanged.emit(next_snapshot.motion_line)
+            if next_snapshot.call_level != previous_snapshot.call_level:
+                self.callLevelChanged.emit(next_snapshot.call_level)
+            if next_snapshot.call_stack != previous_snapshot.call_stack:
+                self.callStackChanged.emit(next_snapshot.call_stack)
+            self.snapshotChanged.emit(next_snapshot)
             return next_snapshot
-
-        self._snapshot = next_snapshot
-        if next_snapshot.machine_file != previous_snapshot.machine_file:
-            self.machineFileChanged.emit(next_snapshot.machine_file)
-        if next_snapshot.motion_line != previous_snapshot.motion_line:
-            self.motionLineChanged.emit(next_snapshot.motion_line)
-        if next_snapshot.call_level != previous_snapshot.call_level:
-            self.callLevelChanged.emit(next_snapshot.call_level)
-        if next_snapshot.call_stack != previous_snapshot.call_stack:
-            self.callStackChanged.emit(next_snapshot.call_stack)
-        self.snapshotChanged.emit(next_snapshot)
-        return next_snapshot
 
     def _build_snapshot(self, stat):
         machine_file_value = getattr(stat, 'file', '') or ''

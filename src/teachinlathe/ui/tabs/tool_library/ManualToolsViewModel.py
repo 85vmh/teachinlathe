@@ -19,6 +19,11 @@ from teachinlathe.core.lathe_hal_component import TeachInLatheComponent
 from teachinlathe.core.tool_library_repository import ToolLibraryRepository, tool_library_repository
 from teachinlathe.tooling.model.data_types import ToolHolder
 from teachinlathe.ui.common.images import image_url
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.operations import (
+    TOOL_CLICK, TOOL_CLICK_TO_QML, TOOL_IN_SPINDLE, TOOL_IN_SPINDLE_TO_MODEL, TOOL_MODEL_NOTIFIED,
+    TOOL_MODEL_TO_QML)
+from teachinlathe.diagnostics.model.spans import PROFILER, timed
 from teachinlathe.ui.tabs.tool_library.tool_library_models import (
     DataclassListModel, MountedToolViews, offset_text, view_of,
 )
@@ -183,6 +188,9 @@ class ManualToolsViewModel(QObject):
     def selectTool(self, tool_no: int) -> None:
         """Load the tool, unless it is in already, empty or the machine is
         feeding."""
+        # timed to the list showing it (diagnostics): the tap, M61 sent, the
+        # status' current loaded tool, this model told, the list refreshed
+        PROFILER.mark(TOOL_CLICK)
         holder = self._repository.find_holder(tool_no)
         if holder is None or not holder.has_tool or self._feeding \
                 or tool_no == self._repository.current_loaded_tool:
@@ -199,15 +207,16 @@ class ManualToolsViewModel(QObject):
     # ── The list ────────────────────────────────────────────────────────────
 
     def refresh(self) -> None:
-        holders = self._shown_holders()
-        fill_tool_rows(self._repository, self._model, self._views, holders, self._feeding)
-        current = self._repository.current_loaded_tool
-        row = next((i for i, h in enumerate(holders) if h.tool_holder_id == current), -1)
-        if row != self._current_loaded_tool_row or len(holders) != self._row_count:
-            self._current_loaded_tool_row = row
-            self._row_count = len(holders)
-            self.currentLoadedToolRowChanged.emit()
-        self._refresh_current_tool()
+        with timed(operations.TOOLS_MANUAL_LIST_REFRESH):
+            holders = self._shown_holders()
+            fill_tool_rows(self._repository, self._model, self._views, holders, self._feeding)
+            current = self._repository.current_loaded_tool
+            row = next((i for i, h in enumerate(holders) if h.tool_holder_id == current), -1)
+            if row != self._current_loaded_tool_row or len(holders) != self._row_count:
+                self._current_loaded_tool_row = row
+                self._row_count = len(holders)
+                self.currentLoadedToolRowChanged.emit()
+            self._refresh_current_tool()
 
     def _refresh_current_tool(self) -> None:
         tool = self._repository.tool_in(self._repository.current_loaded_tool)
@@ -231,8 +240,16 @@ class ManualToolsViewModel(QObject):
     # ── The repository ──────────────────────────────────────────────────────
 
     def _on_current_loaded_tool_changed(self, _tool_no: int) -> None:
+        timing = PROFILER.pending(TOOL_CLICK)
+        if timing:
+            PROFILER.mark(TOOL_MODEL_NOTIFIED)
+            PROFILER.interval(TOOL_IN_SPINDLE_TO_MODEL, TOOL_IN_SPINDLE)
         self.currentLoadedToolChanged.emit()
         self.refresh()
+        if timing:
+            PROFILER.interval(TOOL_MODEL_TO_QML, TOOL_MODEL_NOTIFIED)
+            PROFILER.interval(TOOL_CLICK_TO_QML, TOOL_CLICK)
+            PROFILER.clear_mark(TOOL_CLICK)
 
 
 def _recently_used(holders: List[ToolHolder]) -> List[ToolHolder]:

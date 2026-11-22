@@ -23,6 +23,8 @@ point on the touched-off point, and so lands on the moved line's middle.
 import logging
 import re
 
+from teachinlathe.ui.tabs.programs.backplot.plot_source.trail import POS
+
 LOG = logging.getLogger(__name__)
 
 try:
@@ -128,7 +130,7 @@ def centre_program(geometry, describe, internal_per_mm, tool_in=0, corners=None)
         if not plane.flags.writeable:
             plane = plane.copy()
             planes[p] = plane
-        plane["pos"][:count, 2] = drawn
+        plane[POS][:count, 2] = drawn
 
 
 def _move_dwells(geometry, shift):
@@ -196,14 +198,6 @@ def _corner_of(lines, corners):
     corner = np.zeros(len(lines))
     corner[inside] = table[lines[inside]]
     return corner
-
-
-def trail_points(raw, npts, shifts):
-    """The position logger's points as ``raw`` holds them, each moved along
-    Z by its own of ``shifts`` (in the logger's unit), as bytes."""
-    points = np.frombuffer(raw, dtype=LOGGER_DTYPE, count=npts).copy()
-    points["pos"][:, 2] += shifts[:npts]
-    return points.tobytes()
 
 
 def swept(starts, ends, half):

@@ -42,6 +42,8 @@ from teachinlathe.ui.tabs.conversational.qml_adapter import (
 from teachinlathe.ui.tabs.programs.backplot import tool_source
 from teachinlathe.ui.tabs.programs.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.ui.tabs.tool_library.ManualToolsViewModel import TouchedOffToolsModel
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 
 LOG = logging.getLogger(__name__)
 
@@ -790,26 +792,27 @@ class ConversationalViewModel(QObject):
             self._set_operation_rows()
 
     def _on_plan_finished(self, request_id, ok, result):
-        if request_id == self._gcode_request:
-            self._on_gcode_generated(ok, result)
-            return
-        if request_id == self._problems_request:
-            self._on_stock_problems(ok, result)
-            return
-        key, editor = self._preview_requests.pop(request_id, (None, None))
-        if key is None:
-            return
-        if not ok:
-            LOG.error("preview failed: %s", result)
-            result = dict(EMPTY_PREVIEW, error=str(result))
-        else:
-            result = qml_preview(result)
-            if len(self._previews) >= 16:
-                self._previews.pop(next(iter(self._previews)))
-            self._previews[key] = result
-        # the editor may be gone - another operation selected - or want a newer one
-        if editor is not None and not sip.isdeleted(editor) and editor.wanted_preview == key:
-            editor.previewReady.emit(result)
+        with timed(operations.PLANNER_RESULT_CONVERSATIONAL):
+            if request_id == self._gcode_request:
+                self._on_gcode_generated(ok, result)
+                return
+            if request_id == self._problems_request:
+                self._on_stock_problems(ok, result)
+                return
+            key, editor = self._preview_requests.pop(request_id, (None, None))
+            if key is None:
+                return
+            if not ok:
+                LOG.error("preview failed: %s", result)
+                result = dict(EMPTY_PREVIEW, error=str(result))
+            else:
+                result = qml_preview(result)
+                if len(self._previews) >= 16:
+                    self._previews.pop(next(iter(self._previews)))
+                self._previews[key] = result
+            # the editor may be gone - another operation selected - or want a newer one
+            if editor is not None and not sip.isdeleted(editor) and editor.wanted_preview == key:
+                editor.previewReady.emit(result)
 
     @staticmethod
     def preview(build, op_data):

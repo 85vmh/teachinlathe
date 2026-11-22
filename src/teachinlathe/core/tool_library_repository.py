@@ -41,6 +41,10 @@ from typing import Dict, List, Optional, Tuple
 import linuxcnc
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
+from teachinlathe.diagnostics.model.operations import (
+    TOOL_CLICK, TOOL_CLICK_TO_M61, TOOL_IN_SPINDLE, TOOL_M61_SENT, TOOL_M61_TO_IN_SPINDLE)
+from teachinlathe.diagnostics.model.spans import PROFILER
+
 from teachinlathe.tooling.model import insert_catalog
 from teachinlathe.tooling.model.data_types import (
     BladeTool, CuttingTool, CuttingToolType, DrillingTool, ReamingTool,
@@ -239,7 +243,11 @@ class ToolLibraryRepository(QObject):
         if holder is None or not holder.has_tool:
             log.warning("T%s has no tool to load", tool_holder_id)
             return False
-        return self._commands.issue_mdi(f"M61 Q{tool_holder_id} G43")
+        sent = self._commands.issue_mdi(f"M61 Q{tool_holder_id} G43")
+        if PROFILER.pending(TOOL_CLICK):
+            PROFILER.mark(TOOL_M61_SENT)
+            PROFILER.interval(TOOL_CLICK_TO_M61, TOOL_CLICK)
+        return sent
 
     def touch_off(self, axis: str, value, z_offset_place: Optional[ZOffsetPlace] = None) -> bool:
         """Touch the current loaded tool's holder off in `axis` ("x" or "z"):
@@ -292,6 +300,9 @@ class ToolLibraryRepository(QObject):
         tool_number = int(tool_number or 0)
         if tool_number == self._current:
             return
+        if PROFILER.pending(TOOL_CLICK):
+            PROFILER.mark(TOOL_IN_SPINDLE)
+            PROFILER.interval(TOOL_M61_TO_IN_SPINDLE, TOOL_M61_SENT)
         self._current = tool_number
         holder = self.find_holder(tool_number)
         if holder is not None:

@@ -1,5 +1,8 @@
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
+
 
 class DomainStore(QObject):
     titleChanged = pyqtSignal()
@@ -51,7 +54,9 @@ class NavigationStore(QObject):
     def setCurrentView(self, tab_id, title, header_visible):
         if self._current_tab != tab_id:
             self._current_tab = tab_id
-            self.currentTabChanged.emit()
+            # what the screens do as they follow it, timed (diagnostics)
+            with timed(operations.UI_TAB_SWITCH_PREFIX + str(tab_id)):
+                self.currentTabChanged.emit()
         if self._current_title != title:
             self._current_title = title
             self.currentTitleChanged.emit()

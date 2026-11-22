@@ -18,6 +18,8 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from teachinlathe.core.gcode_moves import MachineState
 from teachinlathe.programs.model.tool_changes import LineKey, NextTool, ToolChangePlan
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 
 log = logging.getLogger(__name__)
 
@@ -138,18 +140,19 @@ class ToolChangesUseCase(QObject):
         self._request = (self._path, self._planner.submit("tool-changes", "tool_changes", *args))
 
     def _on_finished(self, request_id, ok, result):
-        if self._request is None or request_id != self._request[1]:
-            return
-        path, _id = self._request
-        self._request = None
-        if path != self._path:
-            return
-        if not ok:
-            log.error("tool changes of %s failed: %s", path, result)
-            return
-        self._plan = result
-        self._index = 0
-        self.changed.emit()
+        with timed(operations.PLANNER_RESULT_TOOL_CHANGES):
+            if self._request is None or request_id != self._request[1]:
+                return
+            path, _id = self._request
+            self._request = None
+            if path != self._path:
+                return
+            if not ok:
+                log.error("tool changes of %s failed: %s", path, result)
+                return
+            self._plan = result
+            self._index = 0
+            self.changed.emit()
 
     def _ini_repository(self):
         if self._ini is None:

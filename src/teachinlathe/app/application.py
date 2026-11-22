@@ -40,4 +40,24 @@ class Application:
         self.hal: TeachInLatheComponent = TeachInLatheComponent()
         self.tool_library: ToolLibraryRepository = tool_library_repository()
         self.fixtures: LatheFixturesRepository = LatheFixturesRepository()
+        self.diagnostics = self._make_diagnostics()
         log.info("application ready")
+
+    @staticmethod
+    def _make_diagnostics():
+        """The diagnostics service, in the mode the setting - or, for this start,
+        TEACHINLATHE_PROFILING - says; stopped as the application quits."""
+        from PyQt6.QtCore import QCoreApplication
+
+        from teachinlathe.core.settings_repository import SettingSpec, settings_repository
+        from teachinlathe.diagnostics.logic.diagnostics_service import DiagnosticsService
+        from teachinlathe.diagnostics.model.modes import SETTING, ProfilingMode, mode_at_start
+
+        settings = settings_repository()
+        settings.declare(SETTING, SettingSpec(default=ProfilingMode.OFF.value, value_type=str,
+                                              description="Profiling: off, basic or detailed"))
+        service = DiagnosticsService(mode_at_start(settings.get(SETTING)))
+        app = QCoreApplication.instance()
+        if app is not None:
+            app.aboutToQuit.connect(service.shutdown)
+        return service

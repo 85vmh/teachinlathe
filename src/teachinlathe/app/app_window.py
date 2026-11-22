@@ -57,6 +57,7 @@ class AppWindow(QObject):
         # engine's root context as they are built.
         self._createView()
         self._buildViewModels()
+        self._wireDiagnostics()
         self._registerSingletons()
         self._loadScene()
         self._connectScreens()
@@ -101,6 +102,44 @@ class AppWindow(QObject):
         ):
             self.appShellBridge.addFeatureController(tab_id, controller)
 
+    def _wireDiagnostics(self):
+        """The diagnostics (the Application's service) and what they watch
+        here: the Performance panel's view model and its chart type, the
+        machine's backplot, and - in the "detailed" mode - the window's
+        frames."""
+        from teachinlathe.core.ini_repository import ini_repository
+        from teachinlathe.core.settings_repository import settings_repository
+        from teachinlathe.diagnostics.logic.quick_frames import QuickFrameTimer
+        from teachinlathe.diagnostics.model import export
+        from teachinlathe.diagnostics.model.modes import ProfilingMode
+        from teachinlathe.programs.model.backplot_lifecycle import (DIAGNOSTICS_NAME, GAUGE_UNITS,
+                                                                    TRAIL_LIMIT_STATE)
+        from teachinlathe.ui.tabs.machine_settings.DiagnosticsViewModel import DiagnosticsViewModel
+        from teachinlathe.ui.tabs.machine_settings.diagnostics_chart import register_qml_types
+        from teachinlathe.ui.tabs.programs.backplot.plot_source import trail as backplot_trail
+
+        diagnostics = self.application.diagnostics
+        self.diagnosticsViewModel = DiagnosticsViewModel(
+            diagnostics, settings_repository(),
+            os.path.join(ini_repository().config_dir, export.DIRECTORY), self)
+        register_qml_types()
+
+        # what the diagnostics read of the machine's backplot, as each bucket closes
+        backplot = self.programsViewModel.backplot_lifecycle
+        diagnostics.add_gauges(DIAGNOSTICS_NAME, backplot.gauges, GAUGE_UNITS)
+        diagnostics.add_state(DIAGNOSTICS_NAME, backplot.state)
+        diagnostics.add_state(TRAIL_LIMIT_STATE, lambda: {
+            "logger_capacity_points": backplot_trail.LOGGER_CAPACITY_POINTS,
+            "flush_drops_points": backplot_trail.LOGGER_FLUSH_POINTS,
+            "logger_interval_s": backplot_trail.LOGGER_INTERVAL_S,
+            "configurable": False})
+
+        # the window's whole Qt Quick frame, timed - connected in "detailed" only
+        self._quickFrames = QuickFrameTimer(self.view, parent=self)
+        self._quickFrames.set_enabled(diagnostics.mode is ProfilingMode.DETAILED)
+        diagnostics.modeChanged.connect(
+            lambda mode: self._quickFrames.set_enabled(mode == ProfilingMode.DETAILED.value))
+
     def _createView(self):
         register_backplot_type()
 
@@ -131,6 +170,7 @@ class AppWindow(QObject):
             ("ProgramsViewModel", self.programsViewModel),
             ("MachineViewModel", self.machineViewModel),
             ("FixturesViewModel", self.fixturesViewModel),
+            ("DiagnosticsViewModel", self.diagnosticsViewModel),
             # Used by more than one tab: the numpad the Manual and Tool Library
             # screens open, and the machine's position for the Teach buttons.
             ("NumpadDialogViewModel", self.numpadDialogViewModel),

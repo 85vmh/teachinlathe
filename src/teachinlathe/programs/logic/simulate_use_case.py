@@ -18,6 +18,8 @@ from typing import Optional
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from teachinlathe.core.gcode_moves import MachineState
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 
 log = logging.getLogger(__name__)
 
@@ -59,14 +61,15 @@ class SimulateUseCase(QObject):
         self._request = self._planner.submit("simulation", "simulate", *args)
 
     def _on_finished(self, request_id, ok, result):
-        if request_id != self._request:
-            return
-        self._request = None
-        if ok:
-            self.ready.emit(result)
-        else:
-            log.error("simulation failed: %s", result)
-            self.failed.emit(str(result))
+        with timed(operations.PLANNER_RESULT_SIMULATE):
+            if request_id != self._request:
+                return
+            self._request = None
+            if ok:
+                self.ready.emit(result)
+            else:
+                log.error("simulation failed: %s", result)
+                self.failed.emit(str(result))
 
     def _machine(self) -> MachineState:
         """The machine now, as the run starts from it: where it is, its

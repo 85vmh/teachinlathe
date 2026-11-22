@@ -19,6 +19,8 @@ import linuxcnc
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 from .ini_repository import ini_repository
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 
 log = logging.getLogger(__name__)
 
@@ -325,43 +327,44 @@ class StatusRepository(QObject):
     # -- polling ----------------------------------------------------------
 
     def poll(self) -> None:
-        try:
-            self._stat.poll()
-        except Exception:
-            # Reported once, not on every tick: with no machine behind the
-            # status buffer this runs several times a second, and a traceback
-            # each time buries the log and the in-app event list.
-            if not self._poll_failing:
-                self._poll_failing = True
-                # the Events list reports it through staleChanged
-                log.exception("linuxcnc.stat.poll() failed; "
-                              "status is stale until it recovers", extra={"events": False})
-                self.staleChanged.emit(True)
-            return
-
-        if self._poll_failing:
-            self._poll_failing = False
-            log.info("linuxcnc.stat.poll() recovered")
-            self.staleChanged.emit(False)
-
-        # Snapshots, not live views: a listener woken by one channel may ask
-        # for another that does not exist yet, and creating it mid-iteration
-        # would otherwise blow up the whole poll.
-        for name, chan in list(self._channels.items()):
+        with timed(operations.STATUS_POLL):
             try:
-                chan.setValue(self._read(name))
+                self._stat.poll()
             except Exception:
-                log.exception("could not update status channel %s", name)
+                # Reported once, not on every tick: with no machine behind the
+                # status buffer this runs several times a second, and a traceback
+                # each time buries the log and the in-app event list.
+                if not self._poll_failing:
+                    self._poll_failing = True
+                    # the Events list reports it through staleChanged
+                    log.exception("linuxcnc.stat.poll() failed; "
+                                  "status is stale until it recovers", extra={"events": False})
+                    self.staleChanged.emit(True)
+                return
 
-        for field, items in list(self._groups.items()):
-            raw = getattr(self._stat, field, ()) or ()
-            for index, item in enumerate(items):
+            if self._poll_failing:
+                self._poll_failing = False
+                log.info("linuxcnc.stat.poll() recovered")
+                self.staleChanged.emit(False)
+
+            # Snapshots, not live views: a listener woken by one channel may ask
+            # for another that does not exist yet, and creating it mid-iteration
+            # would otherwise blow up the whole poll.
+            for name, chan in list(self._channels.items()):
                 try:
-                    item.update(raw[index])
+                    chan.setValue(self._read(name))
                 except Exception:
-                    log.exception("could not update %s[%d]", field, index)
+                    log.exception("could not update status channel %s", name)
 
-        self.polled.emit()
+            for field, items in list(self._groups.items()):
+                raw = getattr(self._stat, field, ()) or ()
+                for index, item in enumerate(items):
+                    try:
+                        item.update(raw[index])
+                    except Exception:
+                        log.exception("could not update %s[%d]", field, index)
+
+            self.polled.emit()
 
     def _read(self, name: str):
         if name == "all_axes_homed":

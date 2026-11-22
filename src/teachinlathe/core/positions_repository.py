@@ -24,6 +24,8 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from .ini_repository import ini_repository
 from .status_repository import status_repository
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 
 #: Millimetres, as ``stat.program_units`` and ``[TRAJ] LINEAR_UNITS`` spell it.
 UNITS_METRIC = 2
@@ -146,38 +148,39 @@ class Positions(QObject):
     # -- the arithmetic ---------------------------------------------------
 
     def _update(self) -> None:
-        stat = self._stat
-        pos = stat.actual_position if self._report_actual else stat.position
-        dtg = stat.dtg
-        g5x_offset = stat.g5x_offset
-        g92_offset = stat.g92_offset
-        tool_offset = stat.tool_offset
+        with timed(operations.DRO_UPDATE):
+            stat = self._stat
+            pos = stat.actual_position if self._report_actual else stat.position
+            dtg = stat.dtg
+            g5x_offset = stat.g5x_offset
+            g92_offset = stat.g92_offset
+            tool_offset = stat.tool_offset
 
-        rel = [0.0] * 9
-        for anum in self._axis_numbers:
-            rel[anum] = pos[anum] - g5x_offset[anum] - tool_offset[anum]
+            rel = [0.0] * 9
+            for anum in self._axis_numbers:
+                rel[anum] = pos[anum] - g5x_offset[anum] - tool_offset[anum]
 
-        if stat.rotation_xy != 0:
-            angle = math.radians(-stat.rotation_xy)
-            x = rel[0] * math.cos(angle) - rel[1] * math.sin(angle)
-            y = rel[0] * math.sin(angle) + rel[1] * math.cos(angle)
-            rel[0], rel[1] = x, y
+            if stat.rotation_xy != 0:
+                angle = math.radians(-stat.rotation_xy)
+                x = rel[0] * math.cos(angle) - rel[1] * math.sin(angle)
+                y = rel[0] * math.sin(angle) + rel[1] * math.cos(angle)
+                rel[0], rel[1] = x, y
 
-        for anum in self._axis_numbers:
-            rel[anum] -= g92_offset[anum]
+            for anum in self._axis_numbers:
+                rel[anum] -= g92_offset[anum]
 
-        if stat.program_units != self._machine_units:
-            factors = self._conversion_factors()
-            pos = [pos[i] * factors[i] for i in range(9)]
-            rel = [rel[i] * factors[i] for i in range(9)]
-            dtg = [dtg[i] * factors[i] for i in range(9)]
+            if stat.program_units != self._machine_units:
+                factors = self._conversion_factors()
+                pos = [pos[i] * factors[i] for i in range(9)]
+                rel = [rel[i] * factors[i] for i in range(9)]
+                dtg = [dtg[i] * factors[i] for i in range(9)]
 
-        abs_, rel_, dtg_ = tuple(pos), tuple(rel), tuple(dtg)
-        if (abs_, rel_, dtg_) == (self._abs, self._rel, self._dtg):
-            return
+            abs_, rel_, dtg_ = tuple(pos), tuple(rel), tuple(dtg)
+            if (abs_, rel_, dtg_) == (self._abs, self._rel, self._dtg):
+                return
 
-        self._abs, self._rel, self._dtg = abs_, rel_, dtg_
-        self.positionsChanged.emit(rel_)
+            self._abs, self._rel, self._dtg = abs_, rel_, dtg_
+            self.positionsChanged.emit(rel_)
 
     def _conversion_factors(self) -> list:
         """Linear axes convert, rotary axes (ABC) do not."""

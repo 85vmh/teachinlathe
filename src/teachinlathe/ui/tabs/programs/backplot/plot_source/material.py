@@ -16,7 +16,8 @@ from __future__ import annotations
 import logging
 import math
 
-from teachinlathe.ui.tabs.programs.backplot.plot_source.trail import SPINDLE_SYNC_POSITION, TRAVERSE
+from teachinlathe.ui.tabs.programs.backplot.plot_source.trail import (
+    COLOR, POS, SPINDLE_SYNC_POSITION, SYNC_ANGLE, SYNC_MODE, SYNC_PITCH, TRAVERSE)
 
 LOG = logging.getLogger(__name__)
 
@@ -54,6 +55,8 @@ class TrailMaterial:
         self._material = None
         self._basis = None
         self._done = 0
+        # the trail's generation and points dropped as _done was counted
+        self._trail_at = (None, 0)
         self._shapes = {}
         # by point: where the spindle is there, degrees from its index, at
         # the end of a synced line - the next synced one goes on from it
@@ -68,9 +71,10 @@ class TrailMaterial:
 
         basis = (tuple(sorted(stock.items())) if isinstance(stock, dict) else stock, origin)
         npts = trail.npts
-        # the bar again when it or its coordinate frame changed; a full
-        # logger may move its points down, without restoring material removed
-        # by the earlier points.
+        self._follow(trail)
+        # the bar again when it or its coordinate frame changed; a trail
+        # started over (cleared, a new logger) is read from its start, the
+        # material it cut before kept
         if basis != self._basis or self._material is None:
             self._basis, self._done = basis, 0
             shape = stock_shape(stock)
@@ -98,17 +102,33 @@ class TrailMaterial:
             del self._phase[at]
         return self._material
 
+    def _follow(self, trail):
+        """What was read of ``trail`` moved down as far as a full logger
+        dropped its oldest points - they were cut already - or read again from
+        its start when it started over."""
+        generation = getattr(trail, "generation", None)
+        dropped = int(getattr(trail, "dropped", 0) or 0)
+        seen_generation, seen_dropped = self._trail_at
+        self._trail_at = (generation, dropped)
+        if generation != seen_generation:
+            self._done, self._phase = 0, {}
+        elif dropped > seen_dropped:
+            count = dropped - seen_dropped
+            self._done = max(0, self._done - count)
+            self._phase = {at - count: angle for at, angle in self._phase.items() if at >= count}
+
     def _sync(self, at, points, synced, per_mm):
         """How the line from point ``at`` along ``points`` turned with the
         spindle - a SpindleSync - or None when it was not synced with it on
         position. ``synced``: its sync_points record, None when not known."""
         from teachinlathe.simulation.model.moves import SpindleSync
 
-        if synced is None or int(synced["mode"]) != SPINDLE_SYNC_POSITION or not synced["pitch"] > 0:
+        if synced is None or int(synced[SYNC_MODE]) != SPINDLE_SYNC_POSITION or not synced[SYNC_PITCH] > 0:
             self._phase.pop(at + 1, None)
             return None
         before = self._phase.get(at)
-        sync = SpindleSync(float(synced["pitch"]) / per_mm, before if before is not None else float(synced["angle"]))
+        sync = SpindleSync(float(synced[SYNC_PITCH]) / per_mm,
+                               before if before is not None else float(synced[SYNC_ANGLE]))
         self._phase[at + 1] = sync.angle_after(math.dist(*points))
         return sync
 
@@ -119,12 +139,15 @@ class TrailMaterial:
         self.material_left(trail, stat, stock, origin)
         trail.clear()
         self._done = 0
+        self._trail_at = (getattr(trail, "generation", None), int(getattr(trail, "dropped", 0) or 0))
 
     def reset(self):
         """Start a fresh material model for a newly loaded program."""
         self._material = None
         self._basis = None
         self._done = 0
+        self._trail_at = (None, 0)
+        self._phase = {}
 
     def _shape(self, tool):
         """What cuts of tool ``tool``, as the Tool Library has it now: its
@@ -176,12 +199,12 @@ def cutting_segments(trail, stat, origin, first=0):
     if len(points) < 2:
         return np.empty((0, 2)), np.empty((0, 2)), npts, np.empty(0, dtype=np.int64), []
     rapid = np.asarray(colours[TRAVERSE], dtype=np.uint8)
-    cutting = ~np.all(points["c"][1:] == rapid, axis=1)
+    cutting = ~np.all(points[COLOR][1:] == rapid, axis=1)
     # machine units, the work origin taken out, in mm; the XY rotation
     # turns X into Y, which a lathe has none of
     g5x, g92, _rotation = origin
     per_mm = float(getattr(stat, "linear_units", 1.0) or 1.0)
-    pos = points["pos"].astype(float)
+    pos = points[POS].astype(float)
     zr = np.column_stack([(pos[:, 2] - g5x[2] - g92[2]) / per_mm,
                           (pos[:, 0] - g5x[0] - g92[0]) / per_mm])
     index = first + np.flatnonzero(cutting)

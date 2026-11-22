@@ -14,10 +14,18 @@ import os
 from abc import ABC, abstractmethod
 from typing import Optional, Protocol
 
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 from teachinlathe.ui.tabs.programs.backplot.plot_source.material import TrailMaterial
 from teachinlathe.ui.tabs.programs.backplot.plot_source.status import (
     NO_AXES, MachineConfig, PlotFrame, PlotStatus, _axes)
 from teachinlathe.ui.tabs.programs.backplot.plot_source.trail import LoggerTrail, RunTrail, Trail
+
+#: [DISPLAY] GEOMETRY: the axes' letters - X, Y, Z and the parallel U, V, W -
+#: and the sign before a letter that turns the axis the other way.
+GEOMETRY_LINEAR = "XYZ"
+GEOMETRY_PARALLEL = "UVW"
+GEOMETRY_REVERSED = "-"
 
 LOG = logging.getLogger(__name__)
 
@@ -57,10 +65,15 @@ class PlotSource(ABC):
 
     mirror: Optional[bool] = None
 
-    def __init__(self, thread_plans=None):
+    def __init__(self, thread_plans=None, lifecycle=None):
+        from teachinlathe.programs.model.backplot_lifecycle import BackplotLifecycle
+
         self.status = PlotStatus()
         self.trail: Optional[Trail] = None
         self._thread_plans = thread_plans
+        #: when the plot polls, and - a machine's - logs its trail
+        #: (programs.model.backplot_lifecycle); the plot attaches to it
+        self.lifecycle = lifecycle if lifecycle is not None else BackplotLifecycle(records_trail=False)
 
     def thread_plan(self, path: str):
         """The threads of program ``path`` (a programs.model.thread_plans
@@ -74,6 +87,18 @@ class PlotSource(ABC):
     @abstractmethod
     def poll(self) -> None:
         """The status and the trail as they are now."""
+
+    def start_logging(self, host) -> None:
+        """The trail logged from now (a machine's)."""
+
+    def stop_logging(self, host) -> None:
+        """The trail no longer logged; what it has stays."""
+
+    def reset_trail(self) -> None:
+        """The trail, and the material cut from it, gone."""
+
+    def shutdown(self) -> None:
+        """Nothing left running: the application is closing."""
 
     @abstractmethod
     def material_left(self, ctx, host):
@@ -96,28 +121,89 @@ class MachineSource(PlotSource):
     point made with the tool in and on the line of the program run when the
     poll after it was logged - and the material left cut from that trail."""
 
-    def __init__(self, thread_plans=None):
-        super().__init__(thread_plans)
+    def __init__(self, thread_plans=None, lifecycle=None):
+        from teachinlathe.programs.model.backplot_lifecycle import BackplotLifecycle
+
+        super().__init__(thread_plans, lifecycle if lifecycle is not None else BackplotLifecycle())
         self._stat = None
+        self._geometry = ""
         self._material = TrailMaterial()
         # (file, line) of the innermost call -> the file it runs
         self._called_files = {}
 
     def start(self, colors, geometry, foam):
-        import _thread
-
+        """Ready to be polled. The logger is not started here: the lifecycle
+        starts it when a program runs (start_logging)."""
         import linuxcnc
 
         self._stat = machine_status()
-        logger = _position_logger(linuxcnc, colors, geometry, foam)
-        self.trail = LoggerTrail(logger, colors)
-        _thread.start_new_thread(logger.start, (.01,))
+        self._geometry = str(geometry or "")
+        self.trail = LoggerTrail(lambda: _position_logger(linuxcnc, colors, geometry, foam),
+                                 colors, self._tool_tip)
         self._update()
 
     def poll(self):
         if self._poll_machine(self._stat):
             self._update()
-            self.trail.observe(self.status.tool_in_spindle, self._program_line())
+            if self.trail.logging:
+                with timed(operations.BACKPLOT_TRAIL_READ):
+                    self.trail.refresh(self.status.tool_in_spindle, self._program_line())
+
+    def start_logging(self, host):
+        self._poll_machine(self._stat)
+        self._update()
+        self.trail.start_logging()
+
+    def stop_logging(self, host):
+        # the material cut by the points logged so far, before they stop
+        # coming: the trail of a run ended stays, and so does what it cut
+        self.trail.stop_logging()
+        self.trail.refresh(self.status.tool_in_spindle, self._program_line())
+        self._consume_material(host)
+
+    def reset_trail(self):
+        self.trail.reset()
+        self._material.reset()
+
+    def shutdown(self):
+        if self.trail is not None:
+            self.trail.stop_logging()
+
+    def _tool_tip(self):
+        """Where the tool's tip is, (x, y, z, a, b, c) in machine units - as
+        the position logger works out its points: the commanded position less
+        the tool's offset, each linear axis as the geometry names it (a lathe
+        has no rotary one to turn the point by)."""
+        stat = self._stat
+        if stat is None:
+            return None
+        try:
+            pt = [p - o for p, o in zip(tuple(stat.position)[:9], tuple(stat.tool_offset)[:9])]
+        except (AttributeError, TypeError):
+            return None
+        pt += [0.0] * (9 - len(pt))
+        tip, sign = [0.0, 0.0, 0.0], 1.0
+        for letter in self._geometry.upper():
+            if letter == GEOMETRY_REVERSED:
+                sign = -1.0
+                continue
+            axis = GEOMETRY_LINEAR.find(letter)
+            if axis < 0:
+                axis = GEOMETRY_PARALLEL.find(letter)
+                value = pt[6 + axis] if axis >= 0 else None
+            else:
+                value = pt[axis]
+            if value is not None:
+                tip[axis] += sign * value
+            sign = 1.0
+        return (tip[0], tip[1], tip[2], pt[3], -pt[4], pt[5])
+
+    def _consume_material(self, host):
+        if host is None:
+            return
+        status = self.status
+        origin = self._origin(host)
+        self._material.material_left(self.trail, status, getattr(host, "stock", None) or {}, origin)
 
     def _update(self):
         self.status.update(MachineConfig.of(self._stat), PlotFrame.of(self._stat))
@@ -145,18 +231,24 @@ class MachineSource(PlotSource):
 
     def material_left(self, ctx, host):
         status = self.status
-        origin = getattr(host, "preview_origin", None) or (
-            tuple(status.g5x_offset), tuple(status.g92_offset), float(status.rotation_xy))
-        return self._material.material_left(self.trail, status, getattr(host, "stock", None) or {}, origin)
+        origin = self._origin(host)
+        with timed(operations.BACKPLOT_MATERIAL):
+            return self._material.material_left(self.trail, status, getattr(host, "stock", None) or {}, origin)
 
     def clear_live_plot(self, host):
         """Clear the visible machine trail, preserving the material already cut."""
         self.poll()
         status = self.status
-        origin = getattr(host, "preview_origin", None) or (
-            tuple(status.g5x_offset), tuple(status.g92_offset), float(status.rotation_xy))
+        origin = self._origin(host)
         self._material.clear_trace(self.trail, status,
                                   getattr(host, "stock", None) or {}, origin)
+
+    def _origin(self, host):
+        """The frame the material is cut in: the preview's (``host``'s
+        ``preview_origin``) or, with none, the machine's work offsets now."""
+        status = self.status
+        return getattr(host, "preview_origin", None) or (
+            tuple(status.g5x_offset), tuple(status.g92_offset), float(status.rotation_xy))
 
     def reset_material(self):
         """Forget cuts when a different program is loaded into the preview."""
@@ -185,8 +277,8 @@ class SimulationSource(PlotSource):
 
     mirror = True
 
-    def __init__(self, playback: RunPlayback, thread_plans=None):
-        super().__init__(thread_plans)
+    def __init__(self, playback: RunPlayback, thread_plans=None, lifecycle=None):
+        super().__init__(thread_plans, lifecycle)
         self._playback = playback
         self._machine = None
         self._run = self._moment = _UNSEEN

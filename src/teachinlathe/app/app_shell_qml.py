@@ -8,6 +8,8 @@ from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.core.command_repository import command_repository
 from teachinlathe.core.status_repository import status_repository
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 
 
 class AppShellBridge(QObject):
@@ -135,7 +137,9 @@ class AppShellBridge(QObject):
             return
         self._chrome_top_hidden = top
         self._chrome_bottom_hidden = bottom
-        self.chromeChanged.emit()
+        # the window laid out again around what is shown, timed (diagnostics)
+        with timed(operations.UI_FULLSCREEN_ENTER if top or bottom else operations.UI_FULLSCREEN_EXIT):
+            self.chromeChanged.emit()
 
     @pyqtSlot(str)
     def activateTab(self, tab_id):

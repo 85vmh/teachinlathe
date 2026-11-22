@@ -15,6 +15,8 @@ from teachinlathe.tooling.model.data_types import (
 )
 from teachinlathe.core.ini_repository import ini_repository
 from teachinlathe.core.tool_library_repository import ToolLibraryRepository, tool_library_repository
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 from teachinlathe.ui.tabs.tool_library.tool_library_models import (
     CuttingToolCategoriesModel, ToolHolderListModel,
 )
@@ -246,5 +248,6 @@ class ToolsTabViewModel(QObject):
                 self._close_editor()
 
     def refresh(self) -> None:
-        self._holders_model.refresh()
-        self._cutting_tools_model.refresh()
+        with timed(operations.TOOLS_LIBRARY_REFRESH):
+            self._holders_model.refresh()
+            self._cutting_tools_model.refresh()

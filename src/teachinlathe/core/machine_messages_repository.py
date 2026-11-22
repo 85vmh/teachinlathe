@@ -13,6 +13,8 @@ from typing import Optional
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 from teachinlathe.core.linuxcnc_error_data_source import LinuxCncErrorDataSource, MachineMessageSource
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 
 POLL_MS = 100
 
@@ -33,8 +35,9 @@ class MachineMessagesRepository(QObject):
         self._timer.start()
 
     def poll(self) -> None:
-        for message in self._source.drain():
-            self.messageReceived.emit(message)
+        with timed(operations.MACHINE_MESSAGES_POLL):
+            for message in self._source.drain():
+                self.messageReceived.emit(message)
 
 
 _INSTANCE: Optional[MachineMessagesRepository] = None

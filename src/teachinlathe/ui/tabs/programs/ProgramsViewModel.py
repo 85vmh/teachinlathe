@@ -19,11 +19,14 @@ from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 
 from teachinlathe.core.ini_repository import ini_repository
 from teachinlathe.ui.common.images import image_url
+from teachinlathe.diagnostics.model import operations
+from teachinlathe.diagnostics.model.spans import timed
 from teachinlathe.ui.tabs.programs.filesystemview import FileSystemLocation, FileSystemViewModel, LocationType
 from teachinlathe.ui.tabs.programs.filesystemview.FileSystemBridge import FileSystemBridge
 from teachinlathe.ui.tabs.programs.ProgramRunViewModel import ProgramRunViewModel
 from teachinlathe.ui.tabs.programs.simulate.SimulateViewModel import SimulateViewModel
 
+from teachinlathe.programs.model.backplot_lifecycle import BackplotLifecycle
 from teachinlathe.programs.model.program_runtime import ProgramRuntimeStore
 from teachinlathe.programs.model.program_stack import ProgramCallStackResolver
 from teachinlathe.programs.model.programs_action_source import ProgramsActionSource
@@ -182,7 +185,10 @@ class ProgramsViewModel(QObject):
         # DRO, the spindle / feed / tool boxes, the backplot
         from teachinlathe.ui.tabs.programs.backplot.plot_source import MachineSource
         machine_run = MachineRunSource(self._runtime_store, self._actions, self._tool_changes, self)
-        self._run = ProgramRunViewModel(machine_run, lambda: MachineSource(self._thread_plans), self)
+        # when the machine's backplot logs its trail and polls: told here what
+        # the program and its run do, by the plot whether it is in sight
+        self._backplot = BackplotLifecycle()
+        self._run = ProgramRunViewModel(machine_run, lambda: MachineSource(self._thread_plans, self._backplot), self)
         # the current loaded tool corrected at an M1 - on the machine only
         self._tool_correction = ToolCorrectionViewModel(ToolCorrectionUseCase(machine_run, parent=self), self)
 
@@ -211,6 +217,12 @@ class ProgramsViewModel(QObject):
             from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
             self._planner = BackgroundPlanner(self)
         return self._planner
+
+    @property
+    def backplot_lifecycle(self):
+        """When the machine's backplot logs and polls (BackplotLifecycle) -
+        for the diagnostics."""
+        return self._backplot
 
     @pyqtProperty(QObject, constant=True)
     def actions(self):
@@ -414,7 +426,8 @@ class ProgramsViewModel(QObject):
         if self._screen_index == screen:
             return
         self._screen_index = screen
-        self.screenIndexChanged.emit(self._screen_index)
+        with timed(operations.PROGRAMS_SCREEN_CHANGE):
+            self.screenIndexChanged.emit(self._screen_index)
 
     # ── Running full-screen state machine ─────────────────────────────
     def _bind_program_completion_hal(self):
@@ -423,6 +436,7 @@ class ProgramsViewModel(QObject):
         self._machine.programAborted.connect(self._close_completed_program_screen)
 
     def _on_abort_triggered(self):
+        self._backplot.run_aborted()
         self._abort_requested = True
         self._run_started = False
         if self._screen_index == Screen.ProgramRunning:
@@ -443,12 +457,17 @@ class ProgramsViewModel(QObject):
         loaded = self._has_loaded_program_for_run()
         tracking_active = active and loaded and self._run_started
         if tracking_active and not self._was_active:
+            self._backplot.run_started()
             self._abort_requested = False
             self._run_tracker.start()
             self._tool_changes.start_run(self._runtime_store.snapshot)
             self._set_screen_index(Screen.ProgramRunning)
             self.enterRunFullScreenRequested.emit()
         elif self._was_active and not tracking_active:
+            if self._abort_requested:
+                self._backplot.run_aborted()
+            else:
+                self._backplot.run_ended()
             self._run_tracker.stop()
             self._tool_changes.stop_run()
             if self._abort_requested:
@@ -465,6 +484,7 @@ class ProgramsViewModel(QObject):
             self._abort_requested = False
             self._run_started = False
         self._was_active = tracking_active
+        self._backplot.set_paused(tracking_active and self._runtime_store.snapshot.paused)
         self._refresh_execution_view()
 
     def _execution_highlight_visible(self):
@@ -522,6 +542,7 @@ class ProgramsViewModel(QObject):
         self.ensureProgramLoadedRequested.emit()
 
     def _close_completed_program_screen(self):
+        self._backplot.run_aborted()
         self._set_program_completed_state(False)
         self._run_started = False
         self._was_active = False
@@ -645,6 +666,7 @@ class ProgramsViewModel(QObject):
 
     def _prepare_preview_for_load(self, path):
         self._pending_fit_path = os.path.abspath(path) if path else ''
+        self._backplot.program_loaded(self._pending_fit_path)
         # The preview follows this file from now on, not whatever the
         # interpreter happens to have open: while the program runs it dips
         # into subroutines, and a subroutine does not parse on its own.
