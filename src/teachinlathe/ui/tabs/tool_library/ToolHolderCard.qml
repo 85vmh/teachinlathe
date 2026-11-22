@@ -7,14 +7,18 @@ import "ToolTitles.js" as ToolTitles
 // the conversational tool picker (ToolPickerPopup) pick from them:
 //
 //   ┌─────────────────────────────────────────────────────────────────┐
-//   │     ┌─────────┐ Turning CCMT 060202 (comment) │    Offsets      │
-//   │ T1  │thumbnail│ Tip:      80°                 │ X:      123.123 │
-//   │     │         │ Radius:   0.2 mm              │ Z:     Not set  │
-//   │     └─────────┘                               │                 │
+//   │     ┌─────────┐ Turning CCMT 060202 (comment)                   │
+//   │     │         │ ────────────────────────────────────────────────│
+//   │ T1  │thumbnail│ Tip:      80°                 │                 │
+//   │     │         │ Radius:   0.2 mm              │    Offsets      │
+//   │     │         │                               │ X:      123.123 │
+//   │     └─────────┘ (M3)                          │ Z:     Not set  │
 //   └─────────────────────────────────────────────────────────────────┘
 //
-// While either offset is missing the title and the missing value are
-// orange. A disabled card is dimmed and cannot be tapped.
+// The name runs the card's width, over a divider; the figures and the
+// offsets are under it, the offsets at the card's bottom. While either
+// offset is missing the title and the missing value are orange. A
+// disabled card is dimmed and cannot be tapped.
 Rectangle {
     id: root
 
@@ -95,32 +99,50 @@ Rectangle {
                    ? root.toolView.clockwise : null
     }
 
-    // ── The tool: its name, then its figures ────────────────────────────
-    Column {
+    // ── The tool: its name across the card, a divider, its figures ──────
+    // The name, then the comment in brackets, grey: one line, as far as the
+    // card's right edge - the offsets are under the divider; a longer one
+    // loses its middle.
+    Text {
+        id: title
         visible: root.hasTool
         anchors.left: thumbnail.right
-        anchors.right: separator.left
+        anchors.right: parent.right
         anchors.top: parent.top
         anchors.leftMargin: Theme.spacing
         anchors.rightMargin: Theme.spacing
         anchors.topMargin: root.cardPadding
-        spacing: Theme.spacingSmall
+        maximumLineCount: 1
+        elide: Text.ElideMiddle
+        textFormat: Text.StyledText
+        text: !root.hasTool ? ""
+              : "<b>" + ToolTitles.listTitle(root.toolView, Theme) + "</b>"
+                + (root.toolComment === "" ? ""
+                   : " <font color='" + Theme.foregroundSubtle + "'>("
+                     + root.toolComment + ")</font>")
+        color: Theme.foreground
+        font.pixelSize: Theme.fontLarge
+    }
 
-        // The name, then the comment in brackets, grey.
-        Text {
-            width: parent.width
-            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            maximumLineCount: 2
-            elide: Text.ElideRight
-            textFormat: Text.StyledText
-            text: !root.hasTool ? ""
-                  : "<b>" + ToolTitles.listTitle(root.toolView, Theme) + "</b>"
-                    + (root.toolComment === "" ? ""
-                       : " <font color='" + Theme.foregroundSubtle + "'>("
-                         + root.toolComment + ")</font>")
-            color: Theme.foreground
-            font.pixelSize: Theme.fontLarge
-        }
+    Rectangle {
+        id: divider
+        visible: root.hasTool
+        anchors.left: title.left
+        anchors.right: title.right
+        anchors.top: title.bottom
+        anchors.topMargin: Theme.spacingSmall / 2
+        height: Theme.hairline
+        color: Theme.separator
+    }
+
+    Column {
+        visible: root.hasTool
+        anchors.left: thumbnail.right
+        anchors.right: separator.left
+        anchors.top: divider.bottom
+        anchors.leftMargin: Theme.spacing
+        anchors.rightMargin: Theme.spacing
+        anchors.topMargin: Theme.spacingSmall
 
         Column {
             spacing: 4
@@ -155,14 +177,16 @@ Rectangle {
         font.bold: true
     }
 
-    // ── The offsets, right of a separator ───────────────────────────────
+    // ── The offsets, right of a separator, at the card's bottom ─────────
+    // The separator starts under the divider - at the top with no tool.
     Rectangle {
         id: separator
         anchors.right: offsets.left
         anchors.rightMargin: Theme.spacing
-        anchors.top: parent.top
+        anchors.top: root.hasTool ? divider.bottom : parent.top
         anchors.bottom: parent.bottom
-        anchors.margins: root.cardPadding
+        anchors.topMargin: root.hasTool ? Theme.spacingSmall : root.cardPadding
+        anchors.bottomMargin: root.cardPadding
         width: Theme.hairline
         color: Theme.separator
     }
@@ -171,8 +195,8 @@ Rectangle {
         id: offsets
         anchors.right: parent.right
         anchors.rightMargin: Theme.spacing
-        anchors.top: parent.top
-        anchors.topMargin: root.cardPadding
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: root.cardPadding
         width: root.offsetsWidth
         xOffset: root.xOffset
         zOffset: root.zOffset
