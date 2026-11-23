@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 from teachinlathe.conversational.model.data_types import (
-    DefineProfile, FinishingDirection, PassType, ProfileContour, ProfileRoughing, Profiling, ProfilingType, Program,
+    DefineProfile, FinishingDirection, PassType, ProfileRoughing, Profiling, ProfilingType, Program,
     Strategy, Turning, TurningFinish,
 )
 from teachinlathe.conversational.model.factories import make_default_operation, make_new_program
@@ -36,17 +36,21 @@ def next_profile_id(program) -> int:
     return (max(existing_ids) + 1) if existing_ids else 1
 
 
-def insert_default_operation(program, op_type: str, insert_index: int):
-    new_op = make_default_operation(op_type)
-    if op_type in ("defineProfile", "importDxfProfile"):
-        new_op.profile_id = next_profile_id(program)
+def insert_default_operation(program, op_type: str, insert_index: int, make=make_default_operation):
+    """A new operation of ``op_type`` at ``insert_index``, as ``make`` makes
+    it (``make(op_type, profiling_type=...)``: the factory's, unless given
+    another). Returns where it went."""
     ops = program.operations
     idx = max(0, min(insert_index, len(ops)))
-    if isinstance(new_op, (ProfileRoughing, ProfileContour)):
-        # it cuts the last profile above it, until another is picked
-        above = [op for op in ops[:idx] if isinstance(op, DefineProfile)]
-        if above:
-            new_op.profilingParameters.profile_id = int(above[-1].profile_id)
+    # a roughing or contour cuts the last profile above it, until another is
+    # picked - OD or ID as it is
+    above = [op for op in ops[:idx] if isinstance(op, DefineProfile)] \
+        if op_type in ("profileRoughing", "profileContour") else []
+    new_op = make(op_type, profiling_type=above[-1].profile_type if above else None)
+    if op_type in ("defineProfile", "importDxfProfile"):
+        new_op.profile_id = next_profile_id(program)
+    if above:
+        new_op.profilingParameters.profile_id = int(above[-1].profile_id)
     ops.insert(idx, new_op)
     renumber_operations(ops)
     return idx
@@ -104,8 +108,10 @@ def add_profiling_finish(program, index: int):
     return insert_idx
 
 
-def add_turning_finish(program, index: int):
-    """Add a contour finish that follows this Turning's embedded profile."""
+def add_turning_finish(program, index: int, make=make_default_operation):
+    """Add a contour finish that follows this Turning's embedded profile:
+    as ``make`` makes one, with the Turning's tool, speeds and feeds and
+    inspection stop."""
     if not (0 <= index < len(program.operations)) or not isinstance(program.operations[index], Turning):
         raise TypeError("Selected operation is not Turning")
     parent = program.operations[index]
@@ -113,7 +119,7 @@ def add_turning_finish(program, index: int):
                      if isinstance(op, TurningFinish) and op.parentOrder == parent.order), None)
     if existing is not None:
         return existing
-    finish = make_default_operation("turningFinish")
+    finish = make("turningFinish")
     finish.parentOrder = parent.order
     finish.p1X = float(parent.geometryParameters.xStart)
     finish.p1Z = float(parent.geometryParameters.zStart)
@@ -129,12 +135,13 @@ def add_turning_finish(program, index: int):
     return index + 1
 
 
-def add_profile_contour(program, index: int) -> int:
+def add_profile_contour(program, index: int, make=make_default_operation) -> int:
     """For what the Profile Roughing at ``index`` leaves: a Profile Contour on
     its profile, with its tool, from its P1, its initial stock the roughing's
     stock to leave (inherited, so it follows it), finished toward Z+ after
     radial passes and toward Z- after any other - after the roughing and the
-    rest roughings following it on the same profile. Returns where it went."""
+    rest roughings following it on the same profile. The rest is as ``make``
+    makes a contour. Returns where it went."""
     if not (0 <= index < len(program.operations)) or not isinstance(program.operations[index], ProfileRoughing):
         raise TypeError("Selected operation is not Profile Roughing")
     ops = program.operations
@@ -145,10 +152,9 @@ def add_profile_contour(program, index: int) -> int:
            and int(ops[insert_at].profilingParameters.profile_id or 0) == profile_id):
         insert_at += 1
 
-    contour = make_default_operation("profileContour")
+    contour = make("profileContour", profiling_type=parent.profileRoughingStrategy.profiling_type)
     contour.profilingParameters = copy.deepcopy(parent.profilingParameters)
     contour.toolRef = parent.toolRef
-    contour.profileContourStrategy.profiling_type = parent.profileRoughingStrategy.profiling_type
     contour.profileContourStrategy.finishing_direction = (
         FinishingDirection.TOWARDS_Z_PLUS if parent.profileRoughingStrategy.pass_type is PassType.RADIAL
         else FinishingDirection.TOWARDS_Z_MINUS)

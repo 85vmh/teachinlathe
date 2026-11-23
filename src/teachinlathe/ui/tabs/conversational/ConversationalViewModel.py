@@ -678,7 +678,7 @@ class ConversationalViewModel(QObject):
         if self.current_program is None:
             return
         try:
-            updated = self.use_case.update_operation(self.current_program, op_type, index, to_py(payload) or {})
+            updated = self.use_case.edit_operation(self.current_program, op_type, index, to_py(payload) or {})
         except Exception as e:
             LOG.error("%s update failed: %s", op_type, e)
             return

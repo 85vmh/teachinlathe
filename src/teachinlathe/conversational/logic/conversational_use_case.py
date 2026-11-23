@@ -90,7 +90,14 @@ from teachinlathe.conversational.model.updaters import (
     apply_turning_geometry_update,
     apply_turnable_operation_update,
 )
+from teachinlathe.conversational.model.factories import make_default_operation
+from teachinlathe.conversational.model.operation_defaults import (
+    defaults_key, profiling_type_of, remembered_values,
+)
 from teachinlathe.conversational.logic import program_tools
+from teachinlathe.conversational.store.operation_defaults_store import (
+    OPERATION_DEFAULTS_FILE, OperationDefaultsStore,
+)
 from teachinlathe.conversational.store.program_loader import load_programs_from_folder
 from teachinlathe.conversational.store.program_store import save_program_to_disk
 from teachinlathe.core.ini_repository import ini_repository
@@ -123,9 +130,17 @@ def _set_if_given(op, payload, key, attr, convert):
 
 
 class ConversationalUseCase:
-    def __init__(self, programs_dir: str = PROGRAMS_DIR, ini=None, tools=None) -> None:
+    def __init__(self, programs_dir: str = PROGRAMS_DIR, ini=None, tools=None, defaults=None) -> None:
         self.programs_dir = programs_dir
         self._ini = ini_repository() if ini is None else ini
+        # what a new operation starts with from the last of its type: the
+        # file in the machine's config directory, unless given another store
+        # (in memory, with an ini that has no config directory)
+        if defaults is None:
+            config_dir = getattr(self._ini, "config_dir", None)
+            defaults = OperationDefaultsStore(
+                os.path.join(config_dir, OPERATION_DEFAULTS_FILE) if config_dir else None)
+        self._defaults = defaults
         # where tools are looked up: the Tool Library, unless given another
         # (a ToolSnapshot)
         self._tools = tools
@@ -411,7 +426,16 @@ class ConversationalUseCase:
         return op_type in operation_types
 
     def insert_operation(self, program: Program, op_type: str, index: int) -> int:
-        return insert_default_operation(program, op_type, index)
+        return insert_default_operation(program, op_type, index, make=self._new_operation)
+
+    def _new_operation(self, op_type: str, profiling_type=None):
+        """A new operation of ``op_type``: the factory's, with the last values
+        the operator gave one of its type (operation_defaults)."""
+        op = make_default_operation(op_type, profiling_type=profiling_type)
+        patch = self._defaults.patch_for(defaults_key(op_type, profiling_type))
+        if patch:
+            self._updaters[op_type][1](op, patch)
+        return op
 
     def insert_define_profile(self, program: Program, profile_type: str, index: int) -> int:
         return insert_define_profile(program, profile_type, index)
@@ -433,7 +457,7 @@ class ConversationalUseCase:
         return add_profiling_finish(program, index)
 
     def add_turning_finish(self, program: Program, index: int) -> int:
-        return add_turning_finish(program, index)
+        return add_turning_finish(program, index, make=self._new_operation)
 
     def add_rest_roughing(self, program: Program, index: int) -> int:
         """For what the Profile Roughing at ``index`` leaves: right after it,
@@ -451,7 +475,7 @@ class ConversationalUseCase:
         """For what the Profile Roughing at ``index`` leaves: a Profile Contour
         on its profile, from its P1, with its stock to leave (add_profile_contour).
         Returns where it went."""
-        return add_profile_contour(program, index)
+        return add_profile_contour(program, index, make=self._new_operation)
 
     def use_tool(self, program: Program, op_index: int, tool_no: int,
                  toolchange_position: PredefinedPosition = PredefinedPosition.G28,
@@ -480,9 +504,23 @@ class ConversationalUseCase:
         op.is_optional_block = bool(checked)
         return True
 
-    def update_operation(self, program: Program, op_type: str, index: int, payload: dict) -> bool:
-        """Applies what an operation's editor sent. False when the operation
+    def edit_operation(self, program: Program, op_type: str, index: int, payload: dict) -> bool:
+        """What the operator changed in an operation's editor: applied
+        (update_operation), and the operation, as it is then, what a new one
+        of its type starts with (operation_defaults). False when the operation
         at ``index`` is not one of ``op_type``."""
+        if not self.update_operation(program, op_type, index, payload):
+            return False
+        op = self.operation(program, index)
+        key = defaults_key(op_type, profiling_type_of(op))
+        if key is not None:
+            self._defaults.remember(key, remembered_values(op_type, op.to_dict()))
+        return True
+
+    def update_operation(self, program: Program, op_type: str, index: int, payload: dict) -> bool:
+        """Applies ``payload`` to the operation at ``index`` - an editor's
+        (edit_operation) or complete_operations'. False when it is not one of
+        ``op_type``."""
         op_class, update = self._updaters[op_type]
         op = self.operation(program, index)
         if op is None or (op_class is not None and not isinstance(op, op_class)):

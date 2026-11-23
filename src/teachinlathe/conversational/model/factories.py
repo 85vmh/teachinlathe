@@ -77,7 +77,10 @@ def _speeds(rpm=1000, feed_rate=None, feed_rate_2=None):
                           feed_rate=feed_rate, feed_rate_2=feed_rate_2)
 
 
-def make_default_operation(op_type: str, order: int = 1):
+def make_default_operation(op_type: str, order: int = 1, profiling_type=None):
+    """A new operation of ``op_type``, with the factory's values; a Profile
+    Roughing or Contour cutting ``profiling_type`` (OD when not given)."""
+    profiling_type = ProfilingType(profiling_type) if profiling_type else ProfilingType.OD
     m1_default = M1Parameters(include_m1=False, inspect_position=InspectPosition.G28)
 
     if op_type == "positionAt":
@@ -165,7 +168,7 @@ def make_default_operation(op_type: str, order: int = 1):
             cuttingParameters=CuttingParameters(doc=0.5, retract=1.0),
             profilingParameters=ProfilingParameters(profile_id=1, xStart=0.0, zStart=2.0),
             profileRoughingStrategy=ProfileRoughingStrategy(
-                profiling_type=ProfilingType.OD,
+                profiling_type=profiling_type,
                 pass_type=PassType.AXIAL,
             ),
             stockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
@@ -176,7 +179,7 @@ def make_default_operation(op_type: str, order: int = 1):
             order=order, type=op_type, generate_gcode=True, is_optional_block=False,
             speedsAndFeeds=_speeds(feed_rate=0.1),
             profilingParameters=ProfilingParameters(profile_id=1, xStart=0.0, zStart=0.0),
-            profileContourStrategy=ProfileContourStrategy(profiling_type=ProfilingType.OD),
+            profileContourStrategy=ProfileContourStrategy(profiling_type=profiling_type),
             initialStockToLeave=StockToLeave(stockToLeaveX=0.0, stockToLeaveZ=0.0),
             passesCount=2,
             m1Parameters=M1Parameters(include_m1=False, inspect_position=InspectPosition.G28),
