@@ -14,6 +14,7 @@ if str(SRC) not in sys.path:
 import linuxcnc  # noqa: E402
 from PyQt6.QtCore import QCoreApplication  # noqa: E402
 
+from teachinlathe.core.no_program import NO_PROGRAM, loaded_program  # noqa: E402
 from teachinlathe.core.program_repository import ProgramRepository  # noqa: E402
 
 
@@ -201,7 +202,62 @@ def test_reload_with_nothing_loaded_does_nothing(repo):
     assert cmd.opened == []
 
 
-def test_clear_closes_the_program(repo):
-    r, _, _, cmd = repo()
+# ── no program: the empty one loaded in its place (core.no_program) ─────
+#
+# LinuxCNC cannot close a program: program_open("") fails ("can't open") and
+# leaves stat.file as it was, which a reset of the interpreter opens again.
+
+
+def test_clear_loads_the_empty_program(repo):
+    r, _, _, cmd = repo(FakeStat(file="/nc/part.ngc"))
     assert r.clear() is True
-    assert cmd.opened == [""]
+    assert cmd.opened == [NO_PROGRAM]
+    assert cmd.waits == 1
+
+
+def test_clear_is_refused_while_a_program_runs(repo):
+    r, _, _, cmd = repo(FakeStat(file="/nc/part.ngc", interp_state=linuxcnc.INTERP_READING))
+    assert r.clear() is False
+    assert cmd.opened == []
+
+
+def test_the_empty_program_loaded_is_none(repo):
+    r, _, _, _ = repo(FakeStat(file=NO_PROGRAM))
+    assert r.current_file == ""
+    assert r.reload() is False
+
+
+def test_load_of_nothing_unloads(repo):
+    r, _, _, cmd = repo(FakeStat(file="/nc/part.ngc"))
+    assert r.load("") is True
+    assert cmd.opened == [NO_PROGRAM]
+
+
+def test_a_program_gone_from_the_disk_is_unloaded(repo, tmp_path):
+    gone = tmp_path / "M10x1.ngc"
+    r, _, _, cmd = repo(FakeStat(file=str(gone)))
+    assert r.clear_if_missing() is True
+    assert cmd.opened == [NO_PROGRAM]
+
+
+def test_a_program_still_there_or_none_is_left_loaded(repo, tmp_path):
+    there = tmp_path / "part.ngc"
+    there.write_text("M2\n")
+    for file in (str(there), "", NO_PROGRAM):
+        r, _, _, cmd = repo(FakeStat(file=file))
+        assert r.clear_if_missing() is False
+        assert cmd.opened == []
+
+
+def test_the_empty_program_does_nothing_when_run():
+    """Run - the button, or cycle start - on no program: no M2, which would
+    stop the spindle and reset the modal state; between % it ends at once."""
+    text = Path(NO_PROGRAM).read_text()
+    code = [line for line in text.splitlines() if not line.startswith("(")]
+    assert code == ["%", "%"]
+
+
+def test_loaded_program_is_the_absolute_path_or_none():
+    assert loaded_program("") == ""
+    assert loaded_program(NO_PROGRAM) == ""
+    assert loaded_program("/nc/../nc/part.ngc") == "/nc/part.ngc"

@@ -181,6 +181,8 @@ class FileSystemViewModel(QObject):
     copyCompleted = pyqtSignal(str, arguments=["destinationPath"])
     copyFailed = pyqtSignal(str, arguments=["errorMessage"])
     deleteFailed = pyqtSignal(str, arguments=["errorMessage"])
+    #: a file or folder was deleted here (what was in it, gone with it)
+    entryDeleted = pyqtSignal(str, arguments=["absolutePath"])
     fileSelected = pyqtSignal(str, arguments=["absolutePath"])
     fileOpenRequested = pyqtSignal(str, arguments=["absolutePath"])
     unmountingChanged = pyqtSignal()
@@ -603,6 +605,7 @@ class FileSystemViewModel(QObject):
             self.selectionChanged.emit()
         self._forget_listing()
         self.entriesChanged.emit()
+        self.entryDeleted.emit(abs_path)
 
     @pyqtSlot()
     def copySelectedToUsbStickPrograms(self) -> None:

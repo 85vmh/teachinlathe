@@ -396,3 +396,29 @@ def test_the_unmount_waits_for_the_counts_walking_the_drive(made, tree, tmp_path
     # no new count started on the drive meanwhile
     vm.entries
     assert not vm._count_workers
+
+
+# ── deleting ────────────────────────────────────────────────────────────
+
+def test_a_deletion_is_said_with_what_was_deleted(made, tree):
+    vm = _browser(made, tree)
+    deleted = QSignalSpy(vm.entryDeleted)
+
+    vm.deleteEntry("a.dxf")
+    vm.deleteEntry("parts")
+
+    assert [list(args) for args in deleted] == [[str(tree / "a.dxf")], [str(tree / "parts")]]
+    assert not (tree / "a.dxf").exists() and not (tree / "parts").exists()
+
+
+def test_a_deletion_that_fails_is_not_said(made, tree, monkeypatch):
+    vm = _browser(made, tree)
+    deleted, failed = QSignalSpy(vm.entryDeleted), QSignalSpy(vm.deleteFailed)
+
+    def refuse(path):
+        raise PermissionError("read-only")
+    monkeypatch.setattr(os, "remove", refuse)
+    vm.deleteEntry("a.dxf")
+
+    assert len(deleted) == 0
+    assert len(failed) == 1

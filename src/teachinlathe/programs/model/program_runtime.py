@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 import linuxcnc
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
+from teachinlathe.core.no_program import loaded_program
 from teachinlathe.diagnostics.model import operations
 from teachinlathe.diagnostics.model.spans import timed
 
@@ -98,8 +99,8 @@ class ProgramRuntimeStore(QObject):
             return next_snapshot
 
     def _build_snapshot(self, stat):
-        machine_file_value = getattr(stat, 'file', '') or ''
-        machine_file = os.path.abspath(machine_file_value) if machine_file_value else ''
+        # "" for none - the empty program loaded in its place (core.no_program) too
+        machine_file = loaded_program(getattr(stat, 'file', '') or '')
 
         return ProgramRuntimeSnapshot(
             machine_file=machine_file,

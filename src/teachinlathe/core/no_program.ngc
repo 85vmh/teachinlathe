@@ -1,0 +1,4 @@
+%
+(TeachInLathe: no program loaded - LinuxCNC cannot close one, this is loaded in its place.)
+(Between percent signs, with no M2: run, it does nothing - no spindle stop, no modal reset.)
+%

@@ -33,6 +33,7 @@ from PyQt6.QtOpenGL import (QOpenGLFramebufferObject,
 from PyQt6.QtQml import qmlRegisterType
 from PyQt6.QtQuick import QQuickFramebufferObject
 
+from teachinlathe.core.no_program import NO_PROGRAM
 from teachinlathe.diagnostics.model import operations
 from teachinlathe.diagnostics.model.spans import timed
 from teachinlathe.programs.model import backplot_lifecycle as gauge
@@ -385,6 +386,25 @@ class LatheBackplotCanon(_HostBase):
     def set_visible(self, visible):
         self.lifecycle.set_visible(visible)
 
+    def _show_missing_program(self, missing, stat):
+        """``missing``, the program to show, is not on the disk: the empty
+        program drawn in its place, not the toolpath of one that is no more.
+        Said once; read again only once another program is to be shown (or
+        invalidatePreview), not at every tool change or touch off after."""
+        # this tool and origin taken as read: poll does not come back for them
+        self._last_preview_tool_signature = self._tool_signature(stat)
+        self._last_preview_wcs_signature = self._wcs_signature(stat)
+        if missing == NO_PROGRAM:
+            LOG.error("the empty program is missing from the installation: %s", NO_PROGRAM)
+            self._current_file = missing
+            return
+        if missing == self._missing_file and self._current_file == missing:
+            return
+        LOG.warning("the program %s is not on the disk: the plot shows none", missing)
+        self._missing_file = missing
+        self._reload_preview(NO_PROGRAM, sync_task=False)
+        self._current_file = missing
+
     def trail_stats(self):
         """The trail, for the diagnostics: its points, the logger's limit,
         what it takes, its flushes - and how often the plot polled, drew and
@@ -433,6 +453,8 @@ class LatheBackplotCanon(_HostBase):
         self.current_view = 'y'
         self._pending_default_view = False
         self._last_preview_tool_signature = None
+        # the program last found not on the disk (_show_missing_program)
+        self._missing_file = None
         self._last_preview_wcs_signature = None
         # the tool offsets (the TLO button): shown when the operator has them
         # on, or while the run is away at M6, G28 or G30 (_follow_excursion)
@@ -1102,6 +1124,12 @@ class LatheBackplotCanon(_HostBase):
             self._report_line_weights()
 
     @staticmethod
+    def _tool_signature(stat):
+        """The current loaded tool and its offsets: the preview is read again
+        when they change outside AUTO (poll)."""
+        return stat.tool_in_spindle, tuple(stat.tool_offset)
+
+    @staticmethod
     def _wcs_signature(stat):
         return (stat.g5x_index, tuple(stat.g5x_offset), stat.rotation_xy)
 
@@ -1177,6 +1205,14 @@ class LatheBackplotCanon(_HostBase):
             elif not filename and not runtime_file:
                 return
 
+            # The program gone from the disk (deleted, moved, its stick pulled
+            # out) while it is shown: a tool change or a touch off read it
+            # again here, and open() raised out of the poll timer - which
+            # aborts the app. Shown as none instead, said once, not read again.
+            if not os.path.isfile(filename):
+                self._show_missing_program(os.path.abspath(filename), stat)
+                return
+
             with open(filename, 'r', encoding='utf-8', errors='replace') as handle:
                 lines = handle.readlines()
             progress = Progress(2, len(lines))
@@ -1207,8 +1243,7 @@ class LatheBackplotCanon(_HostBase):
             self.invalidate_static()
             canon = None
             try:
-                self._last_preview_tool_signature = (
-                    stat.tool_in_spindle, tuple(stat.tool_offset))
+                self._last_preview_tool_signature = self._tool_signature(stat)
                 self._last_preview_wcs_signature = self._wcs_signature(stat)
                 self.preview_origin = (tuple(stat.g5x_offset), tuple(stat.g92_offset), float(stat.rotation_xy))
                 random = int(self.inifile.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
@@ -1301,7 +1336,7 @@ class LatheBackplotCanon(_HostBase):
         machine_file = os.path.abspath(stat.file) if stat.file else ''
         call_level = int(getattr(stat, 'call_level', 0) or 0)
         task_mode = stat.task_mode
-        tool_signature = (stat.tool_in_spindle, tuple(stat.tool_offset))
+        tool_signature = self._tool_signature(stat)
         source = stat
         # Read each poll, not only on a tool change: the tool in the holder
         # can be edited in the Tool Library while it stays in the spindle.

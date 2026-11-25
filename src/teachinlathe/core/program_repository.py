@@ -15,6 +15,7 @@ import linuxcnc
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from .command_repository import command_repository
+from .no_program import NO_PROGRAM, loaded_program
 from .status_repository import status_repository
 
 log = logging.getLogger(__name__)
@@ -115,20 +116,36 @@ class ProgramRepository(QObject):
         return self.load(requested)
 
     def clear(self) -> bool:
-        """Close the loaded program."""
-        log.debug("clearing the loaded program")
-        self._cmd.program_open("".encode("utf-8"))
+        """No program loaded: the empty one (NO_PROGRAM) opened in its place -
+        LinuxCNC has no way to close one. Not while one runs."""
+        if self._status.stat.interp_state != linuxcnc.INTERP_IDLE:
+            log.warning("the program is not unloaded: one is running")
+            return False
+        log.info("unloading the program (%s)", self.current_file or "none")
+        self._cmd.program_open(NO_PROGRAM.encode("utf-8"))
+        self._cmd.wait_complete()
         return True
+
+    def clear_if_missing(self) -> bool:
+        """Unloads the program when its file is gone from the disk (deleted,
+        moved, its stick pulled out): the Run button and the backplot would
+        read it again. True when it was unloaded."""
+        current = self.current_file
+        if not current or os.path.isfile(current):
+            return False
+        log.warning("the loaded program %s is gone from the disk", current)
+        return self.clear()
 
     @property
     def current_file(self) -> str:
-        """Absolute path of the loaded program, or "" when none is."""
+        """Absolute path of the loaded program, or "" when none is (the
+        empty one, loaded for none, included)."""
         try:
             name = getattr(self._status.stat, "file", "") or ""
         except Exception:
             log.exception("could not read the loaded program")
             return ""
-        return os.path.abspath(name) if name else ""
+        return loaded_program(name)
 
 
 _INSTANCE: Optional[ProgramRepository] = None

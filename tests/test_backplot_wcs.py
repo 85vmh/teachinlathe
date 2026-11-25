@@ -1,45 +1,21 @@
 """WCS touch off must rebuild geometry using the live, unsaved offset."""
 
-from types import SimpleNamespace
-
 import pytest
 
 linuxcnc = pytest.importorskip("linuxcnc")
 pytest.importorskip("rs274.glcanon_scene")
 
 from teachinlathe.ui.tabs.programs.backplot import lathe_backplot_item as module
+from backplot_fakes import plot, status
 
 Canon = module.LatheBackplotCanon
-
-
-def status():
-    return SimpleNamespace(
-        poll=lambda: None, file="/tmp/program.ngc", call_level=0,
-        task_mode=linuxcnc.MODE_MDI, interp_state=linuxcnc.INTERP_IDLE,
-        tool_in_spindle=1, tool_offset=(0.0,) * 9,
-        g5x_index=1, g5x_offset=(0.0,) * 9, rotation_xy=0.0,
-        actual_position=(0.0,) * 9, joint_actual_position=(0.0,) * 9,
-        homed=(1,) * 9, g92_offset=(0.0,) * 9, limit=(0,) * 9,
-        motion_mode=0,
-    )
 
 
 def host(monkeypatch):
     monkeypatch.setattr(module.tool_source, "describe", lambda tool: None)
     stat = status()
     reloads = []
-    obj = SimpleNamespace(
-        stat=stat, _perf=None, _program_file=stat.file,
-        _current_file=stat.file, _pending_default_view=False,
-        _last_preview_tool_signature=(stat.tool_in_spindle, stat.tool_offset),
-        _last_preview_wcs_signature=Canon._wcs_signature(stat),
-        _wcs_signature=Canon._wcs_signature,
-        _pixel_quantum=lambda: 0, soft_limits=lambda: (),
-        logger=SimpleNamespace(npts=0), source=SimpleNamespace(poll=lambda: None),
-        fingerprint=None, update=lambda: None,
-        _show_thread_plan=lambda: False, invalidate_static=lambda: None,
-        _follow_excursion=lambda: None,
-    )
+    obj = plot(stat)
 
     def reload(filename, *, sync_task):
         reloads.append((filename, sync_task))

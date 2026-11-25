@@ -20,6 +20,7 @@ include = [
     "src/teachinlathe/**/*.js",
     "src/teachinlathe/**/*.json",
     "src/teachinlathe/**/qmldir",
+    "src/teachinlathe/**/*.ngc",
     "src/teachinlathe/ui/common/images/*"
 ]
 

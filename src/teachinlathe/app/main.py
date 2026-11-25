@@ -34,6 +34,21 @@ def _report_crashes():
         log.warning("crashes will not be traced to %s: %s", CRASH_FILE, exc)
 
 
+def _log_uncaught(exc_type, exc, tb):
+    """An exception nothing caught - out of a slot, a timer, a QML call -
+    logged (CRITICAL: the Events list shows it) instead of the app aborted.
+    PyQt6 aborts on one only while sys.excepthook is Python's own; aborted,
+    the display took LinuxCNC down with it, whatever the machine was doing."""
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc, tb)
+        return
+    log.critical("uncaught exception, the app keeps running", exc_info=(exc_type, exc, tb))
+
+
+def install_exception_hook():
+    sys.excepthook = _log_uncaught
+
+
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(
         prog='teachinlathe', description=PACKAGE_DOC.splitlines()[0])
@@ -60,6 +75,7 @@ def main(argv=None):
     args = parse_args(argv)
     configure_logging(level=args.log_level, log_file=args.log_file)
     _report_crashes()
+    install_exception_hook()
 
     if args.ini:
         os.environ['INI_FILE_NAME'] = os.path.abspath(args.ini)

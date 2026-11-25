@@ -165,6 +165,7 @@ class ProgramsViewModel(QObject):
         self._file_system.deleteFailed.connect(lambda msg: self._shell.showToast("Delete failed: %s" % msg))
         self._file_system.copyFailed.connect(lambda msg: self._shell.showToast("Copy failed: %s" % msg))
         self._file_system.unmountReported.connect(self._shell.showToast)
+        self._file_system.entryDeleted.connect(self._bridge.forgetFilesGone)
 
         # the threads of the programs read (with their parts, below), for
         # both plots to draw as the threading tooth's Vs

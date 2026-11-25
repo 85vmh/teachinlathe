@@ -12,6 +12,13 @@ def load_or_reload_program(path: str) -> None:
     program_repository().load_or_reload(path)
 
 
+def unload_program_if_missing() -> None:
+    """Unload the machine's program when its file is no longer on the disk."""
+    from teachinlathe.core.program_repository import program_repository
+
+    program_repository().clear_if_missing()
+
+
 class FileSystemBridge(QObject):
     """The selected program's path, text and syntax highlighting, and the
     requests to load it or switch between the Programs panes.
@@ -79,6 +86,18 @@ class FileSystemBridge(QObject):
         load_or_reload_program(path)
         self._emit_content(path)
         self.screenChangeRequested.emit(1)
+
+    def forgetFilesGone(self, _deleted_path: str = '') -> None:
+        """Something was deleted (FileSystemViewModel.entryDeleted): the file
+        shown, and the program the machine has loaded, may have gone with it -
+        neither is kept (a tool change would have the backplot read it again)."""
+        unload_program_if_missing()
+        if not self._current_file_path or os.path.isfile(self._current_file_path):
+            return
+        self._current_file_path = ''
+        self._current_content = ''
+        self.fileContentChanged.emit(self._current_content)
+        self.filePathChanged.emit(self._current_file_path)
 
     def refreshCurrentFile(self):
         if self._current_file_path:
