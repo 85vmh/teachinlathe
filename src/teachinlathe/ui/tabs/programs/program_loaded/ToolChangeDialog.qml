@@ -3,10 +3,8 @@ import QtQuick.Layouts
 import theme
 import "../../tool_library/ToolTitles.js" as ToolTitles
 
-// The tool the program asks for, while the machine waits for it. Modal: till
-// the change is answered, with the machine's Cycle Start or Cycle Abort,
-// nothing else on the screen takes a touch - and what is behind is dimmed to
-// say so.
+// The tool the program asks for, while the machine waits for it - answered
+// with the machine's Cycle Start or Cycle Abort.
 ProgramPromptDialog {
     id: root
 
@@ -20,23 +18,24 @@ ProgramPromptDialog {
                                           success: root.startColor })
 
     visible: enabledForMode && viewModel.requested
-    modal: true
-    dim: true
 
-    ProgramPromptDialog.Line {
+    ProgramPromptDialog.Title {
         text: "Tool Change"
-        font.pixelSize: Theme.fontTitle
-        font.bold: true
     }
 
     ProgramPromptDialog.Line {
-        // The tool as the Manual Turning list names it, its comment after.
-        readonly property string toolTitle: !root.viewModel || !root.viewModel.toolView ? ""
+        // The tool as the Manual Turning list names it.
+        readonly property string toolTitle: !root.viewModel.toolView ? ""
             : ToolTitles.listTitle(root.viewModel.toolView, root.titleColors)
-              + (root.viewModel.toolComment === "" ? ""
-                 : " (" + root.escapeHtml(root.viewModel.toolComment) + ")")
         text: "Please load <b>" + root.escapeHtml(root.viewModel.toolNoText) + "</b>"
             + (toolTitle.length > 0 ? " [" + toolTitle + "]" : "")
+    }
+
+    // its comment, on a line of its own under it
+    ProgramPromptDialog.Line {
+        visible: root.viewModel.toolComment !== ""
+        text: "(" + root.escapeHtml(root.viewModel.toolComment) + ")"
+        font.italic: true
     }
 
     Item { Layout.preferredHeight: Theme.spacingLarge }

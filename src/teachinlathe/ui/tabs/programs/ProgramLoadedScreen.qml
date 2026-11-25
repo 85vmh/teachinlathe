@@ -41,10 +41,6 @@ Item {
     // How far three fingers have to travel together, in px, for the swipe
     // that clears the plot.
     readonly property int clearSwipeDistance: 80
-    // view state: the toast shown
-    property bool toolChangedToastVisible: false
-    // view state: the toast shown - the tool it says is loaded
-    property int toolChangedToastTool: 0
 
     function withPlot(callback) {
         var view = root.simulation ? simulationBackplot : machineBackplot
@@ -60,12 +56,6 @@ Item {
         var toolChange = root.toolChangeViewModel()
         if (toolChange)
             toolChange.refreshFromHal()
-    }
-
-    function showToolChangedToast(toolNo) {
-        root.toolChangedToastTool = toolNo
-        root.toolChangedToastVisible = true
-        toolChangedToastTimer.restart()
     }
 
     Component.onCompleted: root.refreshToolChangeFromHal()
@@ -251,64 +241,20 @@ Item {
         onVisibleChanged: if (visible && !root.simulation) machineBackplot.plot.refresh()
     }
 
-    Connections {
-        target: root.toolChangeViewModel()
-        function onToolChangedPulsed(toolNo) { root.showToolChangedToast(toolNo) }
-    }
-
-    // The program waits, paused, for Cycle Start after a tool change: the
-    // toast that says so stays until the motion resumes - or the program is
-    // stopped - not for a fixed time. Only when no pause comes does it go
-    // after a few seconds.
-    readonly property var pauseResume: root.viewModel.actions ? root.viewModel.actions.pauseResumeAction : null
-    Connections {
-        target: root.pauseResume
-        function onActiveChanged(active) { if (!active) root.toolChangedToastVisible = false }
-    }
-
-    Timer {
-        id: toolChangedToastTimer
-        interval: 5000
-        repeat: false
-        onTriggered: if (!(root.pauseResume && root.pauseResume.active)) root.toolChangedToastVisible = false
-    }
-
-    // Tool loaded: a passing message, not modal - Cycle Start, at the machine,
-    // goes on - the backplot showing a little through it.
-    ProgramPromptDialog {
-        id: toolChangedToast
-        area: root.codeArea
-        centreY: root.lowCentreY
-        fill: "#cc303030"
-        modal: false
-        dim: false
-        z: 1200
-        visible: !root.simulation && root.toolChangedToastVisible && root.shown
-
-        ProgramPromptDialog.Line {
-            text: "<b>Tool " + (root.toolChangedToastTool > 0 ? root.toolChangedToastTool : "?") + " loaded</b>"
-        }
-
-        ProgramPromptDialog.Line {
-            text: toolChangedToast.press("Cycle Start", toolChangedToast.startColor, "to resume the motion")
-        }
-    }
-
-    // Program Completed: modal - till it is answered, with the machine's
-    // Cycle Start or Cycle Abort, nothing on the screen takes a touch, and
-    // what is behind is dimmed to say so.
+    // Program Completed: answered with the machine's Cycle Start or Cycle Abort.
     ProgramPromptDialog {
         id: programCompletedDialog
         area: root.codeArea
         centreY: root.lowCentreY
-        modal: true
-        dim: true
         z: 1300
         visible: !root.simulation && root.shown && root.viewModel.programCompletedVisible
 
+        ProgramPromptDialog.Title {
+            text: "Program Completed"
+        }
+
         ProgramPromptDialog.Line {
-            text: "<b>Program Completed</b><br/>["
-                + programCompletedDialog.escapeHtml(root.viewModel.programCompletedName) + "]"
+            text: "[" + programCompletedDialog.escapeHtml(root.viewModel.programCompletedName) + "]"
         }
 
         Item { Layout.preferredHeight: Theme.spacingLarge }

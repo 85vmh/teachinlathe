@@ -7,6 +7,5 @@ o<m6_remap> sub
     M5  (stop the spindle)
     M6  (move to TOOL_CHANGE_POSITION, then changes the tool)
     G43 (apply tool length offset)
-    M0  (confirm the tool change with a cycle start)
 
 o<m6_remap> endsub

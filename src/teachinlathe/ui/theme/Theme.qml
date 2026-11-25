@@ -40,6 +40,7 @@ QtObject {
     readonly property int fontBody:    16   // the default (151 uses)
     readonly property int fontLarge:   18   // sub-headings
     readonly property int fontTitle:   20   // screen titles
+    readonly property int fontPromptTitle: 26   // a run prompt's title (Tool Change, Program Completed), read from the machine
 
     // ── Metrics ─────────────────────────────────────────────────────────────
     //

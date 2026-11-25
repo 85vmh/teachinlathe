@@ -168,13 +168,6 @@ class SimulatedRunSource(ProgramRunSource):
                 # Represented by the owning operation's filled circle, never
                 # as a separate mark on the seek bar.
                 continue
-            if (mark.kind is MarkKind.STOP and mark.label == StopKind.PROGRAM_STOP.value
-                    and index > 0 and marks[index - 1].kind is MarkKind.TOOL_CHANGE
-                    and marks[index - 1].time == mark.time):
-                # The M6 remap waits with an M0 immediately after loading the
-                # tool. The filled operation circle already communicates that
-                # event; keep the wait in playback, but not as a yellow line.
-                continue
             changes_tool = False
             if mark.kind is MarkKind.OPERATION:
                 for following in marks[index + 1:]:
