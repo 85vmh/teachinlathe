@@ -35,6 +35,7 @@ class AppShellBridge(QObject):
         self._last_command = ""
         self._feature_controllers = feature_controllers or {}
         self._title = ""
+        self._title_action = ""
         self._left_actions = []
         self._right_actions = []
         self._status_summary = ""
@@ -79,6 +80,12 @@ class AppShellBridge(QObject):
     @pyqtProperty(str, notify=titleChanged)
     def title(self):
         return self._title
+
+    @pyqtProperty(str, notify=titleChanged)
+    def titleAction(self):
+        """The header action a tap on the title triggers, or "" when the
+        title is only a title (a tab's header state's ``title_action``)."""
+        return self._title_action
 
     @pyqtProperty(bool, notify=headerVisibleChanged)
     def headerVisible(self):
@@ -181,6 +188,7 @@ class AppShellBridge(QObject):
     def _refresh(self):
         current_tab = self._nav_store.currentTab
         title = self._nav_store.currentTitle
+        title_action = ""
         left_actions = []
         right_actions = []
 
@@ -191,14 +199,16 @@ class AppShellBridge(QObject):
             except Exception:
                 header_state = {}
             title = header_state.get("title") or title
+            title_action = str(header_state.get("title_action") or "")
             left_actions = list(header_state.get("left_actions") or [])
             right_actions = list(header_state.get("right_actions") or [])
 
-        title_changed = self._title != title
+        title_changed = self._title != title or self._title_action != title_action
         left_changed = self._left_actions != left_actions
         right_changed = self._right_actions != right_actions
 
         self._title = title
+        self._title_action = title_action
         self._left_actions = left_actions
         self._right_actions = right_actions
 

@@ -13,6 +13,8 @@ Rectangle {
     readonly property var leftActions: AppShellBridge.leftActions
     readonly property var rightActions: AppShellBridge.rightActions
     readonly property string titleText: AppShellBridge.title
+    // a tap on the title does this, where the screen has it (▾ after it)
+    readonly property string titleAction: AppShellBridge.titleAction
     readonly property alias customArea: customArea
 
     Rectangle {
@@ -45,13 +47,22 @@ Rectangle {
     Text {
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.42, 720)
-        text: root.titleText
-        color: Theme.foreground
+        text: root.titleAction ? root.titleText + "  \u25BE" : root.titleText
+        color: titleArea.pressed ? Theme.accent : Theme.foreground
         font.pixelSize: 23
         font.bold: true
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
+
+        MouseArea {
+            id: titleArea
+            anchors.centerIn: parent
+            width: Math.min(parent.width, parent.contentWidth + 2 * Theme.spacing)
+            height: root.height
+            enabled: root.titleAction !== ""
+            onClicked: AppShellBridge.triggerHeaderAction(root.titleAction)
+        }
     }
 
     RowLayout {

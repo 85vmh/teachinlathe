@@ -27,3 +27,6 @@ class FileSystemLocation:
     name: str
     root_path: str
     location_type: LocationType
+    #: browsed folder by folder, with the path and the filters - or the
+    #: files of its root alone
+    browses_folders: bool = False

@@ -902,11 +902,14 @@ class GrooveFinishingEditorViewModel(GrooveEditorViewModel):
 
 class DefineProfileEditorViewModel(OperationEditorViewModel):
     """A profile drawn by hand or read from a drawing: its summary in the
-    details pane, the full screen editor, and the DXF import screen."""
+    details pane and the full screen editor."""
     update_type = "defineProfile"
 
     #: What it shows from the program changed: the operation, or what is around it.
     defineProfileChanged = pyqtSignal()
+    #: OD or ID to be chosen again (``chooseProfileType``), for the profile
+    #: with this id, which is now this ("od" / "id").
+    profileTypeChoiceRequested = pyqtSignal(int, str, arguments=["profileId", "profileType"])
 
     def __init__(self, tab, program, index, operation, parent=None):
         super().__init__(tab, program, index, operation, parent)
@@ -915,6 +918,26 @@ class DefineProfileEditorViewModel(OperationEditorViewModel):
     @pyqtProperty("QVariant", notify=defineProfileChanged)
     def workpiece(self):
         return self._use_case.workpiece(self._program)
+
+    @pyqtProperty(str, notify=defineProfileChanged)
+    def editorTitle(self):
+        """The profile editor's title: the operation as it is now (its OD or
+        ID can change on it)."""
+        if self._op is None:
+            return ""
+        return f"Op#{self._op.order} {self._op.display_name()}"
+
+    @pyqtProperty(bool, notify=defineProfileChanged)
+    def profileTypeChangeable(self):
+        """Whether OD or ID can be chosen again: an imported profile's alone -
+        a drawn one is made OD or ID, and stays."""
+        return self._op is not None and self._op.PROFILE_TYPE_CHANGEABLE
+
+    @pyqtSlot()
+    def chooseProfileType(self):
+        """OD or ID asked to be chosen again: profileTypeChoiceRequested."""
+        if self.profileTypeChangeable:
+            self.profileTypeChoiceRequested.emit(int(self._op.profile_id), self._op.profile_type.value)
 
     @pyqtSlot()
     def openEditor(self):
@@ -958,15 +981,6 @@ class DefineProfileEditorViewModel(OperationEditorViewModel):
     def setPrimitives(self, primitives):
         """All the primitives, as the canvas changed them (a run's diameter)."""
         self._edit_primitives(profile_editing.renumbered(to_py(primitives) or []))
-
-    @pyqtSlot(str, result="QVariant")
-    def previewDxf(self, dxf_file_path):
-        """The profile the drawing would give this one."""
-        return self._use_case.preview_dxf_profile(self._program, self._index, dxf_file_path)
-
-    @pyqtSlot(str)
-    def importDxf(self, dxf_file_path):
-        self._tab.import_dxf_profile(self._index, dxf_file_path)
 
 
 class DefineRadialProfileEditorViewModel(OperationEditorViewModel):

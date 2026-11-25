@@ -5,7 +5,6 @@ import QtQuick.Layouts
 import tabs.conversational
 import tabs.conversational.define_radial_profile
 import tabs.conversational.profile_canvas
-import common.touchable_input
 import theme
 import common
 
@@ -20,8 +19,6 @@ Item {
     // primitives, sent to the editor, which the profile then shows.
     required property var editor
     readonly property var op: editor.operation
-    readonly property bool isDxfProfile: op.type === "importDxfProfile"
-    readonly property int    profileId: op.profile_id !== undefined ? Math.round(Number(op.profile_id)) : 0
     readonly property string profileType: op.profile_type !== undefined ? String(op.profile_type) : "od"
     readonly property var    primitives: op.profile_primitives || []
     readonly property var    workpiece: op.workpiece || ({})
@@ -137,8 +134,6 @@ Item {
         }
     }
 
-    IntValidator { id: intVal; bottom: 1; top: 999 }
-
     // ── Screen background ────────────────────────────────────────────────────────
     // the window's, round the two panes - as on the program's screen (ChildScreen)
     Rectangle {
@@ -176,75 +171,6 @@ Item {
                     // the gap between the box and the buttons' card: the
                     // spacing between two cards
                     spacing: Theme.spacingSmall
-
-                    // Profile ID + Type row: a DXF's alone. A Define Profile
-                    // got its id and its type when it was created.
-                    Item {
-                        visible: root.isDxfProfile
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 80
-                        Layout.leftMargin: 12; Layout.rightMargin: 12
-
-                        // Left half: Profile ID
-                        RowLayout {
-                            anchors { left: parent.left; right: centerDivider.left; top: parent.top; bottom: parent.bottom }
-                            spacing: Theme.spacingSmall
-                            Label {
-                                text: "Profile ID:"
-                                font.pointSize: 11; font.family: "Noto Sans"
-                                color: Theme.foreground
-                            }
-                            NumpadField {
-                                Layout.preferredWidth: 70
-                                settingName: "defineProfile.profile_id"
-                                validatorObject: intVal
-                                value: root.profileId
-                                formatter: function(v) { return (v == null) ? "" : String(Math.round(Number(v))) }
-                                hAlign: Text.AlignHCenter
-                                onOpenRequested: function(field) { root.openNumPadRequested(field) }
-                                onValueCommitted: function(value) { root.editor.edit({ profile_id: Math.round(value) }) }
-                            }
-                        }
-
-                        Rectangle {
-                            id: centerDivider
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: Theme.hairline; height: Theme.inputHeight; color: Theme.separator
-                        }
-
-                        // Right half: Type OD/ID
-                        RowLayout {
-                            anchors { left: centerDivider.right; right: parent.right; top: parent.top; bottom: parent.bottom }
-                            spacing: Theme.spacingSmall
-                            Item { Layout.preferredWidth: 8 }
-                            Label {
-                                text: "Type:"
-                                font.pointSize: 11; font.family: "Noto Sans"
-                                color: Theme.foreground
-                            }
-                            ModelRadioButton {
-                                text: "OD"
-                                font.pointSize: 11; font.family: "Noto Sans"
-                                checked: root.profileType === "od"
-                                onChosen: root.editor.edit({ profile_type: "od" })
-                            }
-                            ModelRadioButton {
-                                text: "ID"
-                                font.pointSize: 11; font.family: "Noto Sans"
-                                checked: root.profileType === "id"
-                                onChosen: root.editor.edit({ profile_type: "id" })
-                            }
-                        }
-                    }
-
-                    // Divider
-                    Rectangle {
-                        visible: root.isDxfProfile
-                        Layout.fillWidth: true; height: 1
-                        color: Theme.surfaceAlt
-                        Layout.leftMargin: 4; Layout.rightMargin: 4
-                    }
 
                     // Scrollable primitive cards
                     // in the box, as far in from its edges as two cards are apart

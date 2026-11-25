@@ -30,7 +30,8 @@ Card {
     readonly property int headerFontSize:  Theme.tableHeaderFontSize
     readonly property int itemFontSize:    16
     readonly property int metaFontSize:    16
-    readonly property int iconFontSize:    14
+    // the row's icon, before its name
+    readonly property int iconSize:        32
 
     // ── Colors ──────────────────────────────────────────────────────────────
     readonly property color sepColor:  Theme.outline
@@ -146,6 +147,9 @@ Card {
                 id: fileRow
                 width: ListView.view.width
                 height: root.rowHeight
+                // the file chosen (the Up row is never chosen)
+                readonly property bool isSelected: !modelData.isUp
+                                                   && modelData.relativePath === root.viewModel.selectedEntryPath
                 readonly property bool hasFolderCount: modelData.folderFileCountDisplay !== undefined
                                                        && modelData.folderFileCountDisplay !== ""
 
@@ -164,13 +168,13 @@ Card {
                         root.viewModel.deleteEntry(modelData.relativePath)
                 }
 
-                contentColor: modelData.isSelected
+                contentColor: fileRow.isSelected
                               ? root.rowSelect
                               : (rowArea.containsMouse
                                  ? root.rowHover
                                  : (index % 2 === 0 ? root.rowEven : root.rowOdd))
-                contentBorderWidth: modelData.isSelected ? 2 : 0
-                contentBorderColor: modelData.isSelected ? Theme.accent : "transparent"
+                contentBorderWidth: fileRow.isSelected ? 2 : 0
+                contentBorderColor: fileRow.isSelected ? Theme.accent : "transparent"
 
                 MouseArea {
                     id: rowArea
@@ -194,33 +198,16 @@ Card {
                         spacing: Theme.spacingSmall
                         clip: true
 
-                        // Up-arrow text for ".." entry; image icons for dirs and files
-                        Text {
-                            visible: modelData.isUp
-                            text: "↑"
-                            color: Theme.warning
-                            font.pixelSize: root.iconFontSize
-                            font.bold: true
-                            Layout.alignment: Qt.AlignVCenter
-                            Layout.preferredWidth: 22
-                        }
+                        // the row's icon: the folder above (Up), a folder,
+                        // a drawing, a G-code file (the view model's choice)
                         Image {
-                            visible: !modelData.isUp && modelData.isDir
-                            source: Images.url("folder-icon.svg")
-                            sourceSize.width: 24; sourceSize.height: 24
-                            width: 22; height: 22
+                            source: Images.url(modelData.icon)
+                            // rasterised at twice its size: sharp on the touch screen
+                            sourceSize.width: 2 * root.iconSize; sourceSize.height: 2 * root.iconSize
                             fillMode: Image.PreserveAspectFit
                             Layout.alignment: Qt.AlignVCenter
-                            Layout.preferredWidth: 22
-                        }
-                        Image {
-                            visible: !modelData.isUp && !modelData.isDir
-                            source: Images.url("gcode.png")
-                            sourceSize.width: 24; sourceSize.height: 24
-                            width: 22; height: 22
-                            fillMode: Image.PreserveAspectFit
-                            Layout.alignment: Qt.AlignVCenter
-                            Layout.preferredWidth: 22
+                            Layout.preferredWidth: root.iconSize
+                            Layout.preferredHeight: root.iconSize
                         }
 
                         Text {
@@ -229,6 +216,7 @@ Card {
                             text: modelData.name
                             color: modelData.isDir ? Theme.foregroundMuted : Theme.surfaceInverse
                             font.pixelSize: root.itemFontSize
+                            font.bold: modelData.isUp
                             font.family: "DejaVu Sans Mono"
                             elide: Text.ElideRight
                             verticalAlignment: Text.AlignVCenter

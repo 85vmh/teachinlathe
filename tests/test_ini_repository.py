@@ -108,3 +108,22 @@ def test_unreadable_ini_falls_back_instead_of_raising():
     assert repo.axis_limits("X") is None
     assert repo.find("DISPLAY", "PROGRAM_PREFIX") is None
     assert os.path.exists(repo.program_prefix)
+
+
+# ── [TeachInLathe] SYNCTHING_FOLDER ─────────────────────────────────────
+
+def test_syncthing_folder_is_read_from_the_ini(ini, tmp_path):
+    repo = ini(f"[TeachInLathe]\nSYNCTHING_FOLDER = {tmp_path}/shared\n")
+    assert repo.syncthing_folder == f"{tmp_path}/shared"
+
+
+def test_syncthing_folder_relative_is_next_to_the_ini(ini, tmp_path):
+    repo = ini("[TeachInLathe]\nSYNCTHING_FOLDER = shared\n")
+    assert repo.syncthing_folder == os.path.join(str(tmp_path), "shared")
+
+
+def test_syncthing_folder_not_set_is_sync_in_home_with_a_warning(ini, caplog):
+    repo = ini("[DISPLAY]\nDISPLAY = teachinlathe\n")
+    with caplog.at_level("WARNING"):
+        assert repo.syncthing_folder == os.path.expanduser("~/Sync")
+    assert "SYNCTHING_FOLDER not set" in caplog.text

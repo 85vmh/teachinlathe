@@ -80,6 +80,27 @@ Item {
         }
     }
 
+    // the profile editor's (DefineProfileEditorViewModel); the other editors have none
+    Connections {
+        target: root.viewModel.editor
+        ignoreUnknownSignals: true
+        function onProfileTypeChoiceRequested(profileId, profileType) {
+            profileTypePopup.profileId = profileId
+            profileTypePopup.currentType = profileType
+            profileTypePopup.open()
+        }
+    }
+
+    // An imported profile's OD or ID, chosen again on its editor's title
+    NewProfilePopup {
+        id: profileTypePopup
+        // view state: the profile the open dialog is for, as it was when opened
+        property string currentType: "od"
+        title: "Imported Profile"
+        caption: "Profile P" + profileId + " is now " + currentType.toUpperCase()
+        onProfileTypeChosen: function(profileType) { root.viewModel.editor.edit({ profile_type: profileType }) }
+    }
+
     Component.onCompleted: syncStack()
 
     StackView {

@@ -3,6 +3,7 @@
 package's __init__, before anything here is imported."""
 
 import argparse
+import faulthandler
 import logging
 import os
 import signal
@@ -17,6 +18,20 @@ from teachinlathe.app.app_identity import APPLICATION_DISPLAY_NAME, APPLICATION_
 from teachinlathe.app.logging_setup import configure as configure_logging
 
 log = logging.getLogger(__name__)
+
+#: Where a crash (a segfault in Qt, an abort) writes every thread's Python
+#: stack: LinuxCNC's terminal shows only "Segmentation fault".
+CRASH_FILE = os.path.expanduser("~/teachinlathe_crash.log")
+_crash_file = None
+
+
+def _report_crashes():
+    global _crash_file
+    try:
+        _crash_file = open(CRASH_FILE, "a", buffering=1)
+        faulthandler.enable(file=_crash_file, all_threads=True)
+    except OSError as exc:
+        log.warning("crashes will not be traced to %s: %s", CRASH_FILE, exc)
 
 
 def parse_args(argv=None):
@@ -44,6 +59,7 @@ def parse_args(argv=None):
 def main(argv=None):
     args = parse_args(argv)
     configure_logging(level=args.log_level, log_file=args.log_file)
+    _report_crashes()
 
     if args.ini:
         os.environ['INI_FILE_NAME'] = os.path.abspath(args.ini)

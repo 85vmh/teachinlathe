@@ -58,6 +58,12 @@ TOOL_TABLE = "TOOL_TABLE"
 #: What LinuxCNC reads when TOOL_TABLE is not set, next to the INI.
 DEFAULT_TOOL_TABLE = "tool.tbl"
 
+# [TeachInLathe] - this application's own
+TEACHINLATHE = "TeachInLathe"
+SYNCTHING_FOLDER = "SYNCTHING_FOLDER"
+#: What SYNCTHING_FOLDER is when the INI does not say.
+SYNCTHING_FOLDER_FALLBACK = "~/Sync"
+
 # [AXIS_<letter>], e.g. [AXIS_X]
 AXIS_SECTION = "AXIS_{}"
 AXIS_UNITS = "UNITS"
@@ -164,6 +170,16 @@ class IniRepository:
         log.warning("'%s' does not exist either, using the home directory",
                     NC_FILES_FALLBACK)
         return os.path.expanduser("~/")
+
+    @property
+    def syncthing_folder(self) -> str:
+        """``[TeachInLathe] SYNCTHING_FOLDER``: the folder SyncThing keeps in
+        step with the other machines - programs and drawings brought in from
+        them. ``~/Sync`` when the INI does not say."""
+        if not self.find(TEACHINLATHE, SYNCTHING_FOLDER):
+            log.warning("[%s] %s not set in the INI, using '%s'",
+                        TEACHINLATHE, SYNCTHING_FOLDER, SYNCTHING_FOLDER_FALLBACK)
+        return self.file_path(TEACHINLATHE, SYNCTHING_FOLDER, default=SYNCTHING_FOLDER_FALLBACK)
 
     @property
     def conversational_gcode_dir(self) -> str:

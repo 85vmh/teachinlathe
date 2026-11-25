@@ -34,9 +34,8 @@ QtObject {
 
     readonly property string fontFamily: "Noto Sans"
 
-    readonly property int fontXSmall:  12   // the file browser's breadcrumbs and
-                                            // counts, where 11 and 12 were used
-                                            // interchangeably
+    readonly property int fontXSmall:  12   // the smallest text (counts), where
+                                            // 11 and 12 were used interchangeably
     readonly property int fontSmall:   14   // option labels, units, helper text
     readonly property int fontBody:    16   // the default (151 uses)
     readonly property int fontLarge:   18   // sub-headings

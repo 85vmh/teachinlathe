@@ -30,6 +30,7 @@ from teachinlathe.conversational.model.data_types import (
     GrooveFinishing,
     GrooveRoughing,
     Header,
+    ImportDxfProfile,
     Knurling,
     Operation,
     Parting,
@@ -107,10 +108,6 @@ log = logging.getLogger(__name__)
 #: Where the conversational programs are kept, one JSON file each.
 PROGRAMS_DIR = "/home/cnc/Work/teachinlathe/conversational"
 
-#: Where the DXF import screen looks for drawings, under [DISPLAY] PROGRAM_PREFIX
-#: beside the conversational G-code and JSON folders.
-DXF_PROFILE_SUBFOLDER = "DXF Profiles"
-
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
@@ -144,6 +141,9 @@ class ConversationalUseCase:
         # where tools are looked up: the Tool Library, unless given another
         # (a ToolSnapshot)
         self._tools = tools
+        # the last drawing read (_read_dxf): its (path, mtime, size), its
+        # segments, and the profile each turn of it gave
+        self._dxf_read = None
         # The edit each operation type takes, and the class it must be.
         self._updaters = {
             "positionAt": (None, self._update_position_at),
@@ -173,8 +173,9 @@ class ConversationalUseCase:
         return tool_library_repository()
 
     @property
-    def dxf_profiles_dir(self) -> str:
-        return os.path.join(self._ini.program_prefix, DXF_PROFILE_SUBFOLDER)
+    def syncthing_folder(self) -> str:
+        """Where SyncThing brings drawings in from the other machines."""
+        return self._ini.syncthing_folder
 
     # ── programs ────────────────────────────────────────────────────────────
 
@@ -575,49 +576,61 @@ class ConversationalUseCase:
                         pass
             header.workpiece = wp
 
-    def import_dxf_profile(self, program: Program, op_index: int, dxf_file_path: str) -> bool:
-        """Reads the drawing into the Define Profile at ``op_index``. Raises
-        when the drawing cannot be read; False when there is no such profile."""
-        from teachinlathe.conversational.store.dxf_profile_importer import read_dxf_profile
+    def add_dxf_profile(self, program: Program, index: int, dxf_file_path: str,
+                        quarter_turns: int = 0) -> int:
+        """A new Import DXF Profile at ``index``, its primitives read from the
+        drawing, turned ``quarter_turns`` times 90° counter-clockwise. Raises
+        when the drawing cannot be read - and then nothing is added. Returns
+        where it went."""
+        # read first: a drawing that gives no profile adds nothing
+        primitives = self._read_dxf(dxf_file_path, quarter_turns).primitives
+        at = self.insert_operation(program, ImportDxfProfile.TYPE, index)
+        apply_define_profile_update(self.operation(program, at), {"profile_primitives": primitives})
+        return at
 
+    def import_dxf_profile(self, program: Program, op_index: int, dxf_file_path: str,
+                           quarter_turns: int = 0) -> bool:
+        """Reads the drawing, turned as for ``add_dxf_profile``, into the
+        primitives of the Define Profile at ``op_index``. Raises when the
+        drawing cannot be read; False when there is no such profile."""
         op = self.operation(program, op_index)
         if not isinstance(op, DefineProfile):
             return False
-        payload = read_dxf_profile(str(dxf_file_path), **self._dxf_target(op, dxf_file_path))
-        apply_define_profile_update(op, payload)
-        if hasattr(op, "dxfFilePath"):
-            op.dxfFilePath = str(dxf_file_path)
+        apply_define_profile_update(op, {"profile_primitives": self._read_dxf(dxf_file_path, quarter_turns).primitives})
         return True
 
-    def preview_dxf_profile(self, program: Program, op_index: int, dxf_file_path: str) -> dict:
-        """The profile the drawing would give the Define Profile at ``op_index``."""
+    def preview_dxf_profile(self, dxf_file_path: str, quarter_turns: int = 0) -> dict:
+        """The profile the drawing, turned as for ``add_dxf_profile``, gives,
+        and whether the drawing says which is the lathe's axis
+        (``symmetryAmbiguous``: not)."""
         try:
-            from teachinlathe.conversational.store.dxf_profile_importer import read_dxf_profile
-
-            op = self.operation(program, op_index)
-            if not isinstance(op, DefineProfile):
-                return {"ok": False, "error": "No DXF profile operation is active."}
-            target = self._dxf_target(op, dxf_file_path)
-            payload = read_dxf_profile(str(dxf_file_path), **target)
-            return {
-                "ok": True,
-                "error": "",
-                "profileType": payload.get("profile_type", target["profile_type"]),
-                "primitives": payload.get("profile_primitives", []),
-            }
+            profile = self._read_dxf(dxf_file_path, quarter_turns)
         except Exception as e:
-            return {"ok": False, "error": str(e), "profileType": "od", "primitives": []}
+            return {"ok": False, "error": str(e), "primitives": [],
+                    "symmetryAmbiguous": bool(getattr(e, "symmetry_ambiguous", False))}
+        return {"ok": True, "error": "", "primitives": profile.primitives,
+                "symmetryAmbiguous": profile.symmetry_ambiguous}
 
-    @staticmethod
-    def _dxf_target(op, dxf_file_path):
-        profile_type = getattr(op, "profile_type", "od")
-        return {
-            "profile_id": int(getattr(op, "profile_id", 1) or 1),
-            "profile_type": profile_type.value if hasattr(profile_type, "value") else str(profile_type or "od"),
-            "order": int(getattr(op, "order", 1) or 1),
-            "operation_type": "importDxfProfile",
-            "dxf_file_path": str(dxf_file_path),
-        }
+    def _read_dxf(self, dxf_file_path: str, quarter_turns: int):
+        """The profile the drawing gives, turned ``quarter_turns`` times. The
+        drawing is parsed, and each turn of it worked out, once while it stays
+        as it is: previewing it turned, then importing it, reads nothing again."""
+        from teachinlathe.conversational.store.dxf_profile_importer import (
+            profile_from_segments, read_dxf_segments)
+
+        path = str(dxf_file_path)
+        try:
+            st = os.stat(path)
+        except OSError:
+            key = None  # not there: the importer says so, in its own words
+        else:
+            key = (path, st.st_mtime_ns, st.st_size)
+        if key is None or self._dxf_read is None or self._dxf_read[0] != key:
+            self._dxf_read = (key, read_dxf_segments(path), {})
+        _key, segments, profiles = self._dxf_read
+        if quarter_turns not in profiles:
+            profiles[quarter_turns] = profile_from_segments(segments, quarter_turns=quarter_turns)
+        return profiles[quarter_turns]
 
     # ── what the editor's screens show ──────────────────────────────────────
 
@@ -648,7 +661,7 @@ class ConversationalUseCase:
     @staticmethod
     def with_workpiece(program: Optional[Program], payload):
         """A profile's payload carries the program's workpiece, for the drawing."""
-        if not isinstance(payload, dict) or payload.get("type") not in ("defineProfile", "importDxfProfile"):
+        if not isinstance(payload, dict) or payload.get("type") not in (DefineProfile.TYPE, ImportDxfProfile.TYPE):
             return payload
         workpiece = program.header.workpiece if program is not None else None
         if workpiece is not None and hasattr(workpiece, "to_dict"):

@@ -56,8 +56,8 @@ def program_locations(ini):
         FileSystemLocation("Generated Programs", ini.conversational_gcode_dir, LocationType.GENERATED),
         FileSystemLocation("USB Stick Programs",
                            os.path.join(ini.program_prefix, USB_STICK_SUBFOLDER), LocationType.USB_STICK),
-        FileSystemLocation("SyncThing Programs", os.path.expanduser("~/Sync"), LocationType.SYNCTHING),
-        FileSystemLocation("Home", os.path.expanduser("~"), LocationType.HOME),
+        FileSystemLocation("SyncThing Programs", ini.syncthing_folder, LocationType.SYNCTHING),
+        FileSystemLocation("Home", os.path.expanduser("~"), LocationType.HOME, browses_folders=True),
     ]
 
 
@@ -164,6 +164,7 @@ class ProgramsViewModel(QObject):
         # reports one: a toast, plus an entry in the events drawer.
         self._file_system.deleteFailed.connect(lambda msg: self._shell.showToast("Delete failed: %s" % msg))
         self._file_system.copyFailed.connect(lambda msg: self._shell.showToast("Copy failed: %s" % msg))
+        self._file_system.unmountReported.connect(self._shell.showToast)
 
         # the threads of the programs read (with their parts, below), for
         # both plots to draw as the threading tooth's Vs

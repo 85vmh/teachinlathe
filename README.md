@@ -25,8 +25,9 @@ DISPLAY = teachinlathe
 PROGRAM_PREFIX = /path/to/programs
 ```
 
-Conversational output (`Conversational Gcode`, `Conversational Json`) and the
-DXF import folder (`DXF Profiles`) live under `PROGRAM_PREFIX`.
+Conversational output (`Conversational Gcode`, `Conversational Json`) lives
+under `PROGRAM_PREFIX`. DXF drawings are imported from a USB stick or from the
+SyncThing folder (`~/Sync`); none is kept.
 
 ## Run from a checkout
 

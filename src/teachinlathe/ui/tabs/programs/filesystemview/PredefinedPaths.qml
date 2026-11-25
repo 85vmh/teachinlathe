@@ -4,11 +4,12 @@ import theme
 import common
 
 // A card over the file list: the predefined locations (Generated Programs,
-// USB Stick, SyncThing, Home), as tabs equally wide - one highlighted only
-// when the browser is at the root of that location - each an icon and its name
-// on two lines; under them, in Home alone, the path in it (NavigationBar: up,
-// the breadcrumb, the Folders / NGC filters). Every other location is the root
-// of a folder of files, with no path to show.
+// USB Stick, SyncThing, Home), as tabs equally wide - the one the browser is
+// in highlighted, at its root or in a folder of it - each an icon and its name
+// on two lines, and an Unmount on the right when a drive is shown; under them,
+// where the location is browsed folder by folder (Home, a mounted drive), the
+// path in it (NavigationBar: the breadcrumb, and the filters' button).
+// Every other location is the root of a folder of files, with no path to show.
 Card {
     id: root
     required property var viewModel
@@ -17,8 +18,9 @@ Card {
     // an icon and two lines of text beside it
     readonly property int tabsHeight: Theme.inputHeight
     readonly property int iconSize: 28
-    readonly property int pathHeight: 38
-    readonly property bool pathShown: viewModel.isInHome
+    // as tall as the tabs: every part of it a finger wide
+    readonly property int pathHeight: tabsHeight
+    readonly property bool pathShown: viewModel.browsesFolders
 
     implicitHeight: 2 * Theme.cardInset + tabsHeight + (pathShown ? Theme.hairline + pathHeight : 0)
 
@@ -130,6 +132,22 @@ Card {
                         visible: index < root.locs.length - 1
                     }
                 }
+            }
+
+            // on the right of the drive shown: unmounts it, for it to be pulled
+            // out (a stick and an exit); greyed while it is being unmounted
+            SquareIconButton {
+                readonly property real iconAspect: 802.34 / 292   // usb_unmount.svg
+                visible: root.viewModel.isInMountedMedia
+                enabled: root.viewModel.canUnmount
+                iconSource: Images.url("usb_unmount.svg")
+                padding: 6
+                implicitHeight: root.tabsHeight - Theme.spacingSmall
+                implicitWidth: (implicitHeight - 2 * padding) * iconAspect + 2 * padding
+                Layout.alignment: Qt.AlignVCenter
+                Layout.leftMargin: Theme.spacingSmall
+                Layout.rightMargin: Theme.spacingSmall
+                onClicked: root.viewModel.unmountCurrentDrive()
             }
         }
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Turn 90° counter-clockwise: an arrow round to the left (Feather's rotate-ccw, MIT) -->
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#212121" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+<polyline points="1 4 1 10 7 10"/>
+<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+</svg>

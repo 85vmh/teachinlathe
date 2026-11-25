@@ -10,13 +10,13 @@ import theme
 Item {
     id: root
     required property var viewModel
-    property bool showActionBar: true
     // The file list's swipe to delete.
     property bool showActions: true
+    // The copy to the USB stick (a browser that only picks a file has none).
+    property bool showActionBar: true
     // The action bar only has something to offer on mounted media (copying
     // to the USB stick); deleting is a swipe on the list's rows.
-    readonly property bool actionBarShown: showActionBar
-                                           && viewModel.isInMountedMedia
+    readonly property bool actionBarShown: showActionBar && viewModel.isInMountedMedia
 
     ColumnLayout {
         anchors.fill: parent

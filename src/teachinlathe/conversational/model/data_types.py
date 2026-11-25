@@ -1331,12 +1331,17 @@ class ArcTo(ProfilePrimitive):
 class DefineProfile(Operation):
     #: what its name starts with: drawn here, or read from a DXF drawing
     NAME_PREFIX: ClassVar[str] = "Define"
+    #: its "type" in the program's JSON
+    TYPE: ClassVar[str] = "defineProfile"
+    #: whether OD or ID can be chosen again after it is made: a drawn
+    #: profile's is chosen as it is created, and stays
+    PROFILE_TYPE_CHANGEABLE: ClassVar[bool] = False
     profile_id:         int
     profile_type:       ProfilingType
     profile_primitives: List[ProfilePrimitive]
 
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "DefineProfile":
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "DefineProfile":
         raw = data.get("profile_primitives", [])
         primitives = []
         for i, p in enumerate(raw):
@@ -1348,9 +1353,9 @@ class DefineProfile(Operation):
             profile_type = ProfilingType(str(data.get("profile_type", "od")).lower())
         except ValueError:
             profile_type = ProfilingType.OD
-        return DefineProfile(
+        return cls(
             order=int(data["order"]),
-            type=data["type"],
+            type=data.get("type", cls.TYPE),
             generate_gcode=bool(data.get("generate_gcode", True)),
             is_optional_block=bool(data.get("is_optional_block", False)),
             profile_id=int(data.get("profile_id", 0)),
@@ -1374,38 +1379,12 @@ class DefineProfile(Operation):
 
 @dataclass
 class ImportDxfProfile(DefineProfile):
-    NAME_PREFIX: ClassVar[str] = "Import DXF"
-    dxfFilePath: str = ""
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "ImportDxfProfile":
-        raw = data.get("profile_primitives", [])
-        primitives = []
-        for i, p in enumerate(raw):
-            p_data = dict(p)
-            if "primitive_id" not in p_data:
-                p_data["primitive_id"] = i + 1
-            primitives.append(ProfilePrimitive.from_dict(p_data))
-        try:
-            profile_type = ProfilingType(str(data.get("profile_type", "od")).lower())
-        except ValueError:
-            profile_type = ProfilingType.OD
-        return ImportDxfProfile(
-            order=int(data["order"]),
-            type=data.get("type", "importDxfProfile"),
-            generate_gcode=bool(data.get("generate_gcode", True)),
-            is_optional_block=bool(data.get("is_optional_block", False)),
-            profile_id=int(data.get("profile_id", 0)),
-            profile_type=profile_type,
-            profile_primitives=primitives,
-            dxfFilePath=str(data.get("dxfFilePath", "")),
-        )
-
-    def to_dict(self) -> Dict[str, Any]:
-        base = super().to_dict()
-        base["type"] = "importDxfProfile"
-        base["dxfFilePath"] = self.dxfFilePath
-        return base
+    """A Define Profile read from a drawing. The drawing is nothing to it
+    after: only its primitives are kept, not where it was read from."""
+    NAME_PREFIX: ClassVar[str] = "Imported"
+    TYPE: ClassVar[str] = "importDxfProfile"
+    #: the drawing does not say whether it is OD or ID
+    PROFILE_TYPE_CHANGEABLE: ClassVar[bool] = True
 
 
 # ------------------------ Radial Profile Primitives --------------------------

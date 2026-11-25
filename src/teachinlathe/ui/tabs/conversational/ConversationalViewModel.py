@@ -27,13 +27,13 @@ from PyQt6.QtCore import QObject, QTimer, pyqtProperty, pyqtSignal, pyqtSlot
 from teachinlathe.conversational.logic.conversational_use_case import ConversationalUseCase
 from teachinlathe.conversational.logic.plan_worker import BackgroundPlanner
 from teachinlathe.conversational.gcode.gcode_builder import GcodeRefused, ToolsNotReady
-from teachinlathe.conversational.model.data_types import Program
+from teachinlathe.conversational.model.data_types import ImportDxfProfile, Program
 from teachinlathe.core.positions_bridge import PositionsBridge
 from teachinlathe.core.settings_repository import GCODE_PROGRESS_DELAY_MS, settings_repository
 from teachinlathe.ui.common.images import image_url
 from teachinlathe.ui.common.touchable_input.numpad_dialog_viewmodel import NumpadDialogViewModel
 from teachinlathe.ui.tabs.conversational.OperationEditorViewModel import (
-    EMPTY_PREVIEW, editor_for, qml_preview, to_py,
+    EMPTY_PREVIEW, DefineProfileEditorViewModel, editor_for, qml_preview, to_py,
 )
 from teachinlathe.ui.tabs.conversational.ProgramListModel import OperationListModel, ProgramListModel
 from teachinlathe.ui.tabs.conversational.qml_adapter import (
@@ -89,9 +89,19 @@ class ConversationalViewModel(QObject):
         self._full_screen = False
         self._editor_title = ""
         self._dxf_selected_path = ""
-        # what the drawing chosen gives the profile: {ok, error, profileType, primitives}
+        # what the drawing chosen gives the profile: {ok, error, profileType,
+        # primitives, symmetryAmbiguous}
         self._dxf_preview = None
         self._dxf_error = ""
+        # how many times 90° counter-clockwise the drawing chosen is turned,
+        # where it does not say which is the lathe's axis
+        self._dxf_quarter_turns = 0
+        # What the import screen imports into: a new Import DXF Profile at
+        # _dxf_insert_index - added only once a drawing is read into it, so
+        # that leaving the screen without one leaves the program as it was -
+        # then that operation, _dxf_op_index, the drawing read into it again.
+        self._dxf_insert_index = 0
+        self._dxf_op_index = None
         self._editor = None
         # The editor before this one, kept until the next: the screen it was
         # on may still hold it while it moves to the new one.
@@ -122,18 +132,25 @@ class ConversationalViewModel(QObject):
         # The tools a program can change to, for the editors' tool pickers.
         self.touched_off_tools = TouchedOffToolsModel(parent=self)
 
-        dxf_profile_folder = self.use_case.dxf_profiles_dir
-        os.makedirs(dxf_profile_folder, exist_ok=True)
+        # A drawing is read where it is - a stick, or what SyncThing brought
+        # in - into the profile, and is nothing to it after: none is kept here.
         self._dxf_file_system_view_model = FileSystemViewModel(
-            [FileSystemLocation("DXF Profiles", dxf_profile_folder, LocationType.HOME)],
+            [FileSystemLocation("SyncThing", self.use_case.syncthing_folder, LocationType.SYNCTHING,
+                                browses_folders=True)],
             self,
             file_extensions=(".dxf",),
             file_filter_label="DXF",
             allow_file_filter_toggle=False,
-            mounted_media_exclusive=True,
+            # the drawings alone, until the folders are asked for
+            show_folders=False,
+            prefers_mounted_media=True,
             show_recursive_folder_file_counts=True,
+            hides_empty_folders=True,
+            drives_tab="USB Stick",
         )
         self._dxf_file_system_view_model.selectionChanged.connect(self._on_dxf_selection)
+        if shell is not None:
+            self._dxf_file_system_view_model.unmountReported.connect(shell.showToast)
 
     # ── what the screens bind to ────────────────────────────────────────────
 
@@ -158,7 +175,7 @@ class ConversationalViewModel(QObject):
 
     @pyqtProperty(QObject, constant=True)
     def dxfFileSystemViewModel(self):
-        """The DXF Profiles folder, for the import screen."""
+        """Where the import screen finds drawings: the sticks, SyncThing."""
         return self._dxf_file_system_view_model
 
     @pyqtProperty(str, notify=dxfChanged)
@@ -169,8 +186,24 @@ class ConversationalViewModel(QObject):
     @pyqtProperty("QVariant", notify=dxfChanged)
     def dxfPreview(self):
         """The profile the chosen drawing gives - {ok, error, profileType,
-        primitives} - or None with none chosen."""
+        primitives, symmetryAmbiguous} - or None with none chosen."""
         return self._dxf_preview
+
+    @pyqtProperty(bool, notify=dxfChanged)
+    def dxfRotatable(self):
+        """Whether the chosen drawing is to be turned (rotateDxf) for the
+        lathe's axis: it is symmetric both ways, and does not say which -
+        whether or not it gives a profile as it is turned now."""
+        return bool(self._dxf_preview and self._dxf_preview.get("symmetryAmbiguous"))
+
+    @pyqtSlot(int)
+    def rotateDxf(self, quarter_turns):
+        """The chosen drawing turned 90° ``quarter_turns`` times more:
+        counter-clockwise (1, left) or clockwise (-1, right)."""
+        if not self.dxfRotatable:
+            return
+        self._dxf_quarter_turns = (self._dxf_quarter_turns + int(quarter_turns)) % 4
+        self._preview_dxf()
 
     @pyqtProperty(str, notify=dxfChanged)
     def dxfError(self):
@@ -186,12 +219,19 @@ class ConversationalViewModel(QObject):
             self._choose_dxf(self._dxf_file_system_view_model.selectedAbsolutePath)
 
     def _choose_dxf(self, path):
-        """The drawing ``path`` chosen: previewed for the open profile."""
+        """The drawing ``path`` chosen: previewed for the open profile, as it
+        is drawn."""
         self._dxf_selected_path = str(path or "")
+        self._dxf_quarter_turns = 0
+        self._preview_dxf()
+
+    def _preview_dxf(self):
         self._dxf_error = ""
         self._dxf_preview = None
-        if self._dxf_selected_path and self._editor is not None and hasattr(self._editor, "previewDxf"):
-            self._dxf_preview = to_py(self._editor.previewDxf(self._dxf_selected_path))
+        if self._dxf_selected_path:
+            self._dxf_preview = dict(
+                self.use_case.preview_dxf_profile(self._dxf_selected_path, self._dxf_quarter_turns),
+                profileType=self._dxf_profile_type())
         self.dxfChanged.emit()
         self.headerStateChanged.emit()
 
@@ -269,9 +309,6 @@ class ConversationalViewModel(QObject):
             self._dxf_preview = None
             self._dxf_error = ""
             self.dxfChanged.emit()
-        # what the drawing chosen gives the profile: {ok, error, profileType, primitives}
-        self._dxf_preview = None
-        self._dxf_error = ""
         full_screen = self._top in EDITOR_SCREENS
         if full_screen != self._full_screen and self._shell is not None:
             if full_screen:
@@ -306,10 +343,17 @@ class ConversationalViewModel(QObject):
     # ── the app shell's header ──────────────────────────────────────────────
 
     def getHeaderState(self):
+        title_action = ""
         left_actions = []
         right_actions = []
         if self._top in EDITOR_SCREENS:
-            title = "Import DXF Profile" if self._top == DXF_IMPORT else self._editor_title
+            profile_editor = self._profile_editor()
+            if profile_editor is not None:
+                title = profile_editor.editorTitle
+                if profile_editor.profileTypeChangeable:
+                    title_action = "profile_type"
+            else:
+                title = "Import DXF Profile" if self._top == DXF_IMPORT else self._editor_title
             left_actions.append({"id": "back", "text": "← Back", "enabled": True})
             if self._top == DXF_IMPORT:
                 right_actions.append({"id": "import_dxf", "text": "Import DXF",
@@ -330,9 +374,16 @@ class ConversationalViewModel(QObject):
 
         return {
             "title": title,
+            "title_action": title_action,
             "left_actions": left_actions,
             "right_actions": right_actions,
         }
+
+    def _profile_editor(self):
+        """The editor of the profile the profile editor screen is open on, or None."""
+        if self._top == PROFILE_EDITOR and isinstance(self._editor, DefineProfileEditorViewModel):
+            return self._editor
+        return None
 
     def triggerHeaderAction(self, action_id):
         if action_id == "back":
@@ -340,8 +391,12 @@ class ConversationalViewModel(QObject):
         elif action_id == "done":
             self._done()
         elif action_id == "import_dxf":
-            if self._dxf_selected_path and self._editor is not None:
-                self._editor.importDxf(self._dxf_selected_path)
+            if self._dxf_selected_path:
+                self._import_dxf()
+        elif action_id == "profile_type":
+            profile_editor = self._profile_editor()
+            if profile_editor is not None:
+                profile_editor.chooseProfileType()
         elif action_id == "create_new":
             self.addNewProgram()
         elif action_id == "build_gcode":
@@ -590,6 +645,10 @@ class ConversationalViewModel(QObject):
         if not self.use_case.is_operation_type(op_type):
             LOG.error("unknown operation type %r", op_type)
             return
+        if op_type == ImportDxfProfile.TYPE:
+            # added once a drawing is imported, not before
+            self._open_dxf_import(insert_index)
+            return
         try:
             idx = self.use_case.insert_operation(prog, op_type, insert_index)
         except Exception as e:
@@ -622,7 +681,6 @@ class ConversationalViewModel(QObject):
         # The profiles are drawn as soon as they are added.
         open_editor = {
             "defineProfile": self.open_profile_editor,
-            "importDxfProfile": self._open_dxf_import,
             "defineRadialProfile": self.open_radial_profile_editor,
         }.get(op_type)
         if open_editor is not None:
@@ -833,8 +891,8 @@ class ConversationalViewModel(QObject):
         self._push(screen)
 
     def open_profile_editor(self, op_index):
-        op = self.use_case.operation(self.current_program, op_index)
-        self._open_editor(op_index, PROFILE_EDITOR, f"Op#{op.order} {op.display_name()}")
+        # its title is the profile's as it is now (getHeaderState)
+        self._open_editor(op_index, PROFILE_EDITOR)
 
     def open_radial_profile_editor(self, op_index):
         op_order = self.use_case.operation_payload(self.current_program, op_index).get("order", "")
@@ -853,25 +911,40 @@ class ConversationalViewModel(QObject):
         canvas draws them (qml_adapter.expanded_profile_payload)."""
         return expanded_profile_payload(to_py(primitives))
 
-    def _open_dxf_import(self, op_index):
-        self._open_editor(op_index, DXF_IMPORT)
-        # the drawing it was last imported from, if any
-        operation = self._editor.operation if self._editor is not None else {}
-        self._choose_dxf((operation or {}).get("dxfFilePath") or "")
+    def _open_dxf_import(self, insert_index):
+        """The import screen, for a new Import DXF Profile at ``insert_index``."""
+        self._dxf_insert_index = insert_index
+        self._dxf_op_index = None
+        self._push(DXF_IMPORT)
+        # the stick as it is now: plugged in or swapped since, files added
+        self._dxf_file_system_view_model.rescan()
+        self._choose_dxf("")
 
-    def import_dxf_profile(self, op_index, dxf_file_path):
-        """The drawing chosen on the import screen: read into the profile,
-        then shown in the profile editor."""
-        if self.current_program is None:
+    def _dxf_profile_type(self):
+        """OD or ID, as the profile imported into is: a new one's is OD."""
+        if self._dxf_op_index is None or self.current_program is None:
+            return "od"
+        op = self.use_case.operation(self.current_program, self._dxf_op_index)
+        return op.profile_type.value if op is not None else "od"
+
+    def _import_dxf(self):
+        """The drawing chosen on the import screen, turned as it is shown
+        there: read into a new profile - or, back on the screen from its
+        editor, into the one it made - then shown in the profile editor."""
+        prog = self.current_program
+        if prog is None:
             return
+        path, turns = self._dxf_selected_path, self._dxf_quarter_turns
         try:
-            if not self.use_case.import_dxf_profile(self.current_program, op_index, dxf_file_path):
+            if self._dxf_op_index is None:
+                self._dxf_op_index = self.use_case.add_dxf_profile(prog, self._dxf_insert_index, path, turns)
+            elif not self.use_case.import_dxf_profile(prog, self._dxf_op_index, path, turns):
                 return
         except Exception as e:
             LOG.error("DXF import failed: %s", e)
             self._dxf_error = str(e)
             self.dxfChanged.emit()
             return
-        self.current_op_index = op_index
+        self.current_op_index = self._dxf_op_index
         self._save_current_program()
-        self.open_profile_editor(op_index)
+        self.open_profile_editor(self._dxf_op_index)
