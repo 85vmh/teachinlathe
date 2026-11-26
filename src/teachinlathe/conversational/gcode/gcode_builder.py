@@ -39,6 +39,7 @@ from .operations import (
     generate_threading_gcode,
 )
 from .operations.groove_common import blade_touch_point_comment
+from .operations.profiling.operation_input import groove_cut, mounted_tool_of, profile_cut
 from .toolpath import GcodeEmitter
 
 log = logging.getLogger(__name__)
@@ -244,7 +245,7 @@ def program_toolpath(program: Program, tools, program_name: str = "") -> GcodeEm
             # G28/G30 (toolchange_position) are kept on the tool but not used: M6
             # goes to the machine's tool change position
             path.tool_change(tool.tool_holder_id, list_title(tools.tool_in(tool.tool_holder_id)))
-            if isinstance(op, (GrooveRoughing, GrooveBidirectional, GrooveFinishing)):
+            if isinstance(op, (GrooveRoughing, GrooveBidirectional, GrooveFinishing, Parting)):
                 mounted_tool = MountedTool.of(tools, tool.tool_holder_id)
                 if mounted_tool is not None and mounted_tool.blade is not None:
                     path.code(blade_touch_point_comment(mounted_tool))
@@ -315,7 +316,6 @@ def _lines(generator):
 def _cut_on_emitter(toolpath):
     """For a Profile Roughing's or Contour's generator on the emitter, from
     what it is cut against in the program (a ProfileCut): toolpath(cut, path)."""
-    from .operations.profiling.operation_input import profile_cut
     return lambda path, op, program, op_index, tools, return_to_start=False: toolpath(
         profile_cut(program, op_index, op, tools, path.stock.before(path.z_origin)), path, return_to_start)
 
@@ -323,9 +323,13 @@ def _cut_on_emitter(toolpath):
 def _groove_on_emitter(toolpath):
     """For a Groove Roughing's or Finishing's generator on the emitter, from
     what it is cut against in the program (a GrooveCut): toolpath(cut, path)."""
-    from .operations.profiling.operation_input import groove_cut
     return lambda path, op, program, op_index, tools, return_to_start=False: toolpath(
         groove_cut(program, op_index, op, tools, path.stock.before(path.z_origin)), path)
+
+
+def _write_parting(path, op, program, op_index, tools, return_to_start=False):
+    # the blade's touched-off point, for its Z+ edge to be at Z Pos
+    parting_toolpath(op, path, mounted_tool_of(program, op, tools))
 
 
 def _write_tapping(path, op, program, op_index, tools, return_to_start=False):
@@ -357,7 +361,7 @@ _WRITERS = {
     Profiling: _lines(generate_profiling_gcode),
     Threading: _lines(generate_threading_gcode),
     G33Threading: _on_emitter(g33_threading_toolpath),
-    Parting: _on_emitter(parting_toolpath),
+    Parting: _write_parting,
     ProfileRoughing: _cut_on_emitter(profile_roughing_toolpath),
     ProfileContour: _cut_on_emitter(profile_contour_toolpath),
     GrooveRoughing: _groove_on_emitter(groove_roughing_toolpath),

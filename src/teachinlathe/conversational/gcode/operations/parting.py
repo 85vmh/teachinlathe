@@ -2,18 +2,33 @@ from teachinlathe.conversational.model.data_types import BlendType, Parting
 
 from ..helpers.spindle import build_feed_gcode, build_spindle_gcode
 from ..toolpath import GcodeEmitter, OperationPreview
+from .groove_common import blade_control, blade_width
 
 
+def part_side_offset(tool) -> float:
+    """How far along Z- the point blade ``tool`` (a MountedTool, or None) was
+    touched off on is from its Z+ edge - the one on the part's side: 0 for
+    its right corner, half its width for its middle, its width for its left
+    corner. 0 for no blade."""
+    return blade_width(tool) * (1 - blade_control(tool)) / 2.0
 
-def parting_toolpath(op: Parting, path: GcodeEmitter, program=None):
+
+def parting_toolpath(op: Parting, path: GcodeEmitter, tool=None):
     """``op``'s G-code, and its moves, onto ``path``: an edge break first
     when it has one, then in to X End, the feed changing at the second feed's
     X, and back out to the clearance. F is written twice: G95 F after the
-    spindle, F with the second feed."""
+    spindle, F with the second feed.
+
+    Z Pos is where the part is cut off: the blade's Z+ edge goes there,
+    whatever point of it was touched off on (``tool``, the MountedTool it
+    cuts with) - the part is as long as from Z0 to Z Pos, not a blade's width
+    shorter. Without ``tool`` (the editor's drawing), the moves are of that
+    edge."""
     spindle = op.speedsAndFeeds
     parting = op.partingParameters
     edge_break = op.edgeBreak
-    x_start, z_pos = parting.xStart, parting.zPos
+    x_start = parting.xStart
+    z_pos = parting.zPos - part_side_offset(tool)
     # the clearance is a radius, X a diameter: the blade starts and retracts
     # here
     x_clear = x_start + 2 * parting.x_clearance

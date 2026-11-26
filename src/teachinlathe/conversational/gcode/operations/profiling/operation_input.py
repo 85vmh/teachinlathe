@@ -22,6 +22,7 @@ from teachinlathe.conversational.model.data_types import (
     StartPoint as ProfileStart,
     StockToLeave, Turning, TurningFinish,
 )
+from teachinlathe.conversational.logic import program_tools
 from teachinlathe.tooling.model.data_types import CuttingTool, MountedTool
 
 from ...config import retract_of
@@ -74,8 +75,6 @@ def profile_cut(program: Program, op_index: int, op, tools, stock=None) -> Profi
     ``tools``: where its tool is looked up (the Tool Library, a ToolSnapshot);
     only a tool still as chosen is taken. ``stock``: what it finds there, a
     StockBefore."""
-    from teachinlathe.conversational.logic import program_tools
-
     above = program.operations[:max(op_index, 0)]
     profile = inline_turning_profile(op) if isinstance(op, Turning) else None
     if isinstance(op, TurningFinish):
@@ -285,22 +284,27 @@ class GrooveCut:
         return self.op.radial_profile_id
 
 
+def mounted_tool_of(program: Program, op, tools):
+    """The MountedTool ``op`` of ``program`` cuts with, from ``tools``; None
+    when it has none or is not as it was chosen (program_tools.check_for)."""
+    check = program_tools.check_for(program, op, tools)
+    if check.status is not program_tools.ToolStatus.OK:
+        return None
+    return MountedTool.of(tools, check.tool_holder_id)
+
+
 def groove_cut(program: Program, op_index: int, op, tools, stock=None) -> GrooveCut:
     """``op`` - the groove operation at ``op_index`` of
     ``program``, or a draft of it - with what it is cut against there.
     ``tools``: where its tool is looked up; only a tool still as chosen is
     taken. ``stock``: what it finds there, a StockBefore."""
-    from teachinlathe.conversational.logic import program_tools
-
     cut = GrooveCut(op)
     above = program.operations[:max(op_index, 0)]
     profile_id = cut.profile_id
     # the first of its id above it, as the G-code takes it
     radial_profile = next((o for o in above if isinstance(o, DefineRadialProfile)
                            and int(o.profile_id) == profile_id), None) if profile_id else None
-    check = program_tools.check_for(program, op, tools)
-    tool = (MountedTool.of(tools, check.tool_holder_id)
-            if check.status is program_tools.ToolStatus.OK else None)
+    tool = mounted_tool_of(program, op, tools)
     roughing_stock = None
     if isinstance(op, GrooveFinishing):
         # what the last roughing of its profile above left
