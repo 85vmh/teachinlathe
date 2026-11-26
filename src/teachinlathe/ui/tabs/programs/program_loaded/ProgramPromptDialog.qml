@@ -61,7 +61,7 @@ Popup {
         Layout.fillWidth: true
         textFormat: Text.RichText
         color: Theme.surface
-        font.pixelSize: Theme.fontLarge
+        font.pixelSize: Theme.fontPromptLine
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
     }

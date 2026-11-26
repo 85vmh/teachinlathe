@@ -27,8 +27,11 @@ ProgramPromptDialog {
         // The tool as the Manual Turning list names it.
         readonly property string toolTitle: !root.viewModel.toolView ? ""
             : ToolTitles.listTitle(root.viewModel.toolView, root.titleColors)
-        text: "Please load <b>" + root.escapeHtml(root.viewModel.toolNoText) + "</b>"
-            + (toolTitle.length > 0 ? " [" + toolTitle + "]" : "")
+        // two spaces either side of the tool number (&nbsp;: rich text
+        // collapses spaces); none after it at the end of the line
+        text: "Load&nbsp;&nbsp;<span style=\"font-size:" + Theme.fontPromptTool + "px\"><b>"
+            + root.escapeHtml(root.viewModel.toolNoText) + "</b></span>"
+            + (toolTitle.length > 0 ? "&nbsp;&nbsp;[" + toolTitle + "]" : "")
     }
 
     // its comment, on a line of its own under it
